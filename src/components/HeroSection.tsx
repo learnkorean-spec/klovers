@@ -25,7 +25,7 @@ const HeroSection = () => {
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-accent mb-6 leading-tight">
             Learn Korean Your Way —{" "}
-            <span className="text-primary">From Hangul to Advanced Fluency</span>
+            <span className="bg-primary text-primary-foreground px-2">From Hangul to Advanced Fluency</span>
           </h1>
 
           <p className="text-lg md:text-xl text-accent/80 mb-8 max-w-2xl mx-auto">
