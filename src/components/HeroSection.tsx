@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText } from "lucide-react";
-import heroImage from "@/assets/hero-korean.jpg";
+import heroVideo from "@/assets/hero-korea-video.mp4";
 
 const HeroSection = () => {
   return (
@@ -8,11 +8,17 @@ const HeroSection = () => {
       id="home"
       className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden"
     >
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      >
+      {/* Background Video */}
+      <div className="absolute inset-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-foreground/70" />
       </div>
 
