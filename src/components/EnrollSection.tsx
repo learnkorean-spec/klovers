@@ -62,8 +62,8 @@ const EnrollSection = () => {
               </div>
 
               <CardContent className="pt-12 pb-6 px-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
-                  <step.icon className="h-8 w-8 text-primary group-hover:text-primary-foreground transition-colors" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                  <step.icon className="h-8 w-8 text-primary-foreground transition-colors" />
                 </div>
 
                 <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -87,7 +87,7 @@ const EnrollSection = () => {
                 )}
 
                 {!step.link && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-primary font-medium">
+                  <div className="flex items-center justify-center gap-2 text-sm text-foreground font-medium">
                     <CheckCircle2 className="h-4 w-4" />
                     We'll reach out to you!
                   </div>

@@ -70,7 +70,7 @@ const PricingSection = () => {
         {/* Group Classes */}
         <div className="mb-16">
           <div className="flex items-center justify-center gap-3 mb-8">
-            <Users className="h-6 w-6 text-primary" />
+            <Users className="h-6 w-6 text-foreground" />
             <h3 className="text-2xl font-bold text-foreground">
               Group Classes
             </h3>
@@ -103,18 +103,18 @@ const PricingSection = () => {
                 </CardHeader>
                 <CardContent className="text-center">
                   <div className="mb-4">
-                    <span className="text-4xl font-bold text-primary">
+                    <span className="text-4xl font-bold text-foreground">
                       {plan.price}
                     </span>
                     <span className="text-muted-foreground ml-1">EGP</span>
                   </div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="h-4 w-4 text-foreground" />
                       {plan.classes}
                     </li>
                     <li className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="h-4 w-4 text-foreground" />
                       {plan.frequency}
                     </li>
                   </ul>
@@ -134,7 +134,7 @@ const PricingSection = () => {
         {/* Private Classes */}
         <div>
           <div className="flex items-center justify-center gap-3 mb-8">
-            <User className="h-6 w-6 text-primary" />
+            <User className="h-6 w-6 text-foreground" />
             <h3 className="text-2xl font-bold text-foreground">
               Private Classes
             </h3>
@@ -154,18 +154,18 @@ const PricingSection = () => {
                 </CardHeader>
                 <CardContent className="text-center">
                   <div className="mb-4">
-                    <span className="text-4xl font-bold text-primary">
+                    <span className="text-4xl font-bold text-foreground">
                       {plan.price}
                     </span>
                     <span className="text-muted-foreground ml-1">EGP</span>
                   </div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="h-4 w-4 text-foreground" />
                       {plan.classes}
                     </li>
                     <li className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="h-4 w-4 text-foreground" />
                       {plan.frequency}
                     </li>
                   </ul>
