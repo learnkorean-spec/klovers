@@ -2,68 +2,68 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, User, Check } from "lucide-react";
-
-const groupPricing = [
-  {
-    duration: "1 Month",
-    classes: "4 classes",
-    frequency: "Once per week",
-    price: "1000",
-    color: "border-green-500/50",
-    popular: false,
-  },
-  {
-    duration: "3 Months",
-    classes: "12 classes",
-    frequency: "Once per week",
-    price: "2900",
-    color: "border-primary",
-    popular: true,
-  },
-  {
-    duration: "6 Months",
-    classes: "24 classes",
-    frequency: "Once per week",
-    price: "5400",
-    color: "border-blue-500/50",
-    popular: false,
-  },
-];
-
-const privatePricing = [
-  {
-    duration: "1 Month",
-    classes: "4 classes",
-    frequency: "Once per week",
-    price: "1300",
-  },
-  {
-    duration: "3 Months",
-    classes: "12 classes",
-    frequency: "Once per week",
-    price: "3700",
-  },
-  {
-    duration: "6 Months",
-    classes: "24 classes",
-    frequency: "Once per week",
-    price: "5400",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PricingSection = () => {
+  const { t } = useLanguage();
+
+  const groupPricing = [
+    {
+      duration: t("pricing.1month"),
+      classes: t("pricing.4classes"),
+      frequency: t("pricing.oncePerWeek"),
+      price: "1000",
+      popular: false,
+    },
+    {
+      duration: t("pricing.3months"),
+      classes: t("pricing.12classes"),
+      frequency: t("pricing.oncePerWeek"),
+      price: "2900",
+      popular: true,
+    },
+    {
+      duration: t("pricing.6months"),
+      classes: t("pricing.24classes"),
+      frequency: t("pricing.oncePerWeek"),
+      price: "5400",
+      popular: false,
+    },
+  ];
+
+  const privatePricing = [
+    {
+      duration: t("pricing.1month"),
+      classes: t("pricing.4classes"),
+      frequency: t("pricing.oncePerWeek"),
+      price: "1300",
+    },
+    {
+      duration: t("pricing.3months"),
+      classes: t("pricing.12classes"),
+      frequency: t("pricing.oncePerWeek"),
+      price: "3700",
+    },
+    {
+      duration: t("pricing.6months"),
+      classes: t("pricing.24classes"),
+      frequency: t("pricing.oncePerWeek"),
+      price: "5400",
+    },
+  ];
+
   return (
     <section id="pricing" className="py-20 bg-card">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">
-            💰 Pricing
+            {t("pricing.badge")}
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Choose Group or Individual Classes
+            {t("pricing.title")}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Flexible pricing options to fit your learning style and budget
+            {t("pricing.subtitle")}
           </p>
         </div>
 
@@ -72,10 +72,10 @@ const PricingSection = () => {
           <div className="flex items-center justify-center gap-3 mb-8">
             <Users className="h-6 w-6 text-foreground" />
             <h3 className="text-2xl font-bold text-foreground">
-              Group Classes
+              {t("pricing.group")}
             </h3>
             <Badge className="bg-primary text-primary-foreground">
-              Discounted for Egyptian Students 🇪🇬
+              {t("pricing.groupBadge")}
             </Badge>
           </div>
 
@@ -92,7 +92,7 @@ const PricingSection = () => {
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground">
-                      Most Popular
+                      {t("pricing.mostPopular")}
                     </Badge>
                   </div>
                 )}
@@ -106,7 +106,9 @@ const PricingSection = () => {
                     <span className="text-4xl font-bold text-foreground">
                       {plan.price}
                     </span>
-                    <span className="text-muted-foreground ml-1">EGP</span>
+                    <span className="text-muted-foreground ms-1">
+                      {t("pricing.currency")}
+                    </span>
                   </div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -123,7 +125,7 @@ const PricingSection = () => {
                     variant={plan.popular ? "default" : "outline"}
                     asChild
                   >
-                    <a href="#enroll">Get Started</a>
+                    <a href="#enroll">{t("pricing.getStarted")}</a>
                   </Button>
                 </CardContent>
               </Card>
@@ -136,9 +138,9 @@ const PricingSection = () => {
           <div className="flex items-center justify-center gap-3 mb-8">
             <User className="h-6 w-6 text-foreground" />
             <h3 className="text-2xl font-bold text-foreground">
-              Private Classes
+              {t("pricing.private")}
             </h3>
-            <Badge variant="secondary">Individual</Badge>
+            <Badge variant="secondary">{t("pricing.individual")}</Badge>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -157,7 +159,9 @@ const PricingSection = () => {
                     <span className="text-4xl font-bold text-foreground">
                       {plan.price}
                     </span>
-                    <span className="text-muted-foreground ml-1">EGP</span>
+                    <span className="text-muted-foreground ms-1">
+                      {t("pricing.currency")}
+                    </span>
                   </div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -170,7 +174,7 @@ const PricingSection = () => {
                     </li>
                   </ul>
                   <Button className="w-full" variant="outline" asChild>
-                    <a href="#enroll">Get Started</a>
+                    <a href="#enroll">{t("pricing.getStarted")}</a>
                   </Button>
                 </CardContent>
               </Card>
