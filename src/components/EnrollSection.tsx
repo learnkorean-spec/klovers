@@ -2,50 +2,49 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, FileText, CheckCircle2 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+
+const steps = [
+  {
+    number: "1",
+    icon: MessageCircle,
+    title: "Join Our Telegram Group",
+    description: "Stay updated with announcements and course news.",
+    link: "https://t.me/+Fu5T7d4wLMsxNDY9",
+    buttonText: "Join Telegram",
+  },
+  {
+    number: "2",
+    icon: FileText,
+    title: "Complete the Registration Form",
+    description: "Fill in your details so we can reserve your spot.",
+    link: "https://tally.so/r/nr4eal",
+    buttonText: "Fill Form",
+  },
+  {
+    number: "3",
+    icon: CheckCircle2,
+    title: "Confirm Your Enrollment",
+    description:
+      "After joining and submitting the form, our team will contact you with the next steps.",
+    link: null,
+    buttonText: null,
+  },
+];
 
 const EnrollSection = () => {
-  const { t } = useLanguage();
-
-  const steps = [
-    {
-      number: "1",
-      icon: MessageCircle,
-      title: t("enroll.step1.title"),
-      description: t("enroll.step1.desc"),
-      link: "https://t.me/+Fu5T7d4wLMsxNDY9",
-      buttonText: t("enroll.step1.button"),
-    },
-    {
-      number: "2",
-      icon: FileText,
-      title: t("enroll.step2.title"),
-      description: t("enroll.step2.desc"),
-      link: "https://tally.so/r/nr4eal",
-      buttonText: t("enroll.step2.button"),
-    },
-    {
-      number: "3",
-      icon: CheckCircle2,
-      title: t("enroll.step3.title"),
-      description: t("enroll.step3.desc"),
-      link: null,
-      buttonText: null,
-    },
-  ];
-
   return (
     <section id="enroll" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">
-            {t("enroll.badge")}
+            📝 How to Enroll
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            {t("enroll.title")}
+            Join K-Lovers Korean Courses Today
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            {t("enroll.subtitle")}
+            At K-Lovers, enrolling is simple and fast. Follow these 3 steps to
+            secure your spot!
           </p>
         </div>
 
@@ -56,7 +55,7 @@ const EnrollSection = () => {
               className="relative group hover:shadow-xl transition-all duration-300 border-border hover:border-primary/50 overflow-hidden"
             >
               {/* Step Number */}
-              <div className="absolute -top-2 -start-2 w-12 h-12 bg-primary rounded-br-2xl flex items-center justify-center">
+              <div className="absolute -top-2 -left-2 w-12 h-12 bg-primary rounded-br-2xl flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-xl">
                   {step.number}
                 </span>
@@ -90,14 +89,14 @@ const EnrollSection = () => {
                 {!step.link && (
                   <div className="flex items-center justify-center gap-2 text-sm text-foreground font-medium">
                     <CheckCircle2 className="h-4 w-4" />
-                    {t("enroll.step3.status")}
+                    We'll reach out to you!
                   </div>
                 )}
               </CardContent>
 
               {/* Connector Line */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -end-4 w-8 h-0.5 bg-border" />
+                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-border" />
               )}
             </Card>
           ))}

@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Instagram, Facebook } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 const Footer = () => {
-  const { t } = useLanguage();
-
   return (
     <footer className="bg-foreground text-background py-12">
       <div className="container mx-auto px-4">
@@ -16,32 +13,44 @@ const Footer = () => {
               <span className="font-bold text-xl">K-Lovers</span>
             </div>
             <p className="text-background/70 text-sm">
-              {t("footer.tagline")}
+              Learn Korean. Love the Culture. Speak with Confidence.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">{t("footer.quickLinks")}</h4>
+            <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#courses" className="text-background/70 hover:text-primary text-sm transition-colors">
-                  {t("nav.courses")}
+                <a
+                  href="#courses"
+                  className="text-background/70 hover:text-primary text-sm transition-colors"
+                >
+                  Courses
                 </a>
               </li>
               <li>
-                <a href="#pricing" className="text-background/70 hover:text-primary text-sm transition-colors">
-                  {t("nav.pricing")}
+                <a
+                  href="#pricing"
+                  className="text-background/70 hover:text-primary text-sm transition-colors"
+                >
+                  Pricing
                 </a>
               </li>
               <li>
-                <a href="#enroll" className="text-background/70 hover:text-primary text-sm transition-colors">
-                  {t("nav.enroll")}
+                <a
+                  href="#enroll"
+                  className="text-background/70 hover:text-primary text-sm transition-colors"
+                >
+                  How to Enroll
                 </a>
               </li>
               <li>
-                <a href="#faq" className="text-background/70 hover:text-primary text-sm transition-colors">
-                  {t("nav.faq")}
+                <a
+                  href="#faq"
+                  className="text-background/70 hover:text-primary text-sm transition-colors"
+                >
+                  FAQ
                 </a>
               </li>
             </ul>
@@ -49,7 +58,7 @@ const Footer = () => {
 
           {/* Community */}
           <div>
-            <h4 className="font-semibold mb-4">{t("footer.community")}</h4>
+            <h4 className="font-semibold mb-4">Join Our Community</h4>
             <div className="flex gap-3">
               <Button
                 size="icon"
@@ -57,7 +66,12 @@ const Footer = () => {
                 className="bg-transparent border-background/30 hover:bg-primary hover:border-primary"
                 asChild
               >
-                <a href="https://t.me/+Fu5T7d4wLMsxNDY9" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                <a
+                  href="https://t.me/+Fu5T7d4wLMsxNDY9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Telegram"
+                >
                   <MessageCircle className="h-5 w-5" />
                 </a>
               </Button>
@@ -88,7 +102,8 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-background/20 pt-8 text-center">
           <p className="text-background/50 text-sm">
-            © {new Date().getFullYear()} {t("footer.copyright")}
+            © {new Date().getFullYear()} K-Lovers Korean Courses. All rights
+            reserved.
           </p>
         </div>
       </div>
