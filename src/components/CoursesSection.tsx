@@ -1,95 +1,68 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
-
-const courses = [
-  {
-    level: "Level 0",
-    title: "Hangul Course",
-    color: "bg-green-500",
-    description: "Learn the Korean alphabet",
-    features: [
-      "Hangul reading & writing",
-      "Sound and pronunciation practice",
-      "Basic words",
-      "Writing guides, audio & worksheets",
-    ],
-  },
-  {
-    level: "Level 1-2",
-    title: "Beginner Course",
-    color: "bg-blue-500",
-    description: "Build your basics",
-    features: [
-      "Self-introduction & daily conversations",
-      "Essential grammar and vocabulary",
-      "Beginner learning materials",
-      "Speaking practice",
-    ],
-  },
-  {
-    level: "Level 3-4",
-    title: "Intermediate Course",
-    color: "bg-orange-500",
-    description: "Use Korean with confidence",
-    features: [
-      "Grammar in real conversations",
-      "Reading texts & comprehension",
-      "Practice tests",
-      "TOPIK-style questions",
-    ],
-  },
-  {
-    level: "Level 5-6",
-    title: "Advanced Course",
-    color: "bg-red-500",
-    description: "Master fluency & cultural depth",
-    features: [
-      "Advanced grammar structures",
-      "Reading articles",
-      "Cultural discussions",
-      "Idiomatic expressions",
-    ],
-  },
-  {
-    level: "Special",
-    title: "Reading & Speaking",
-    color: "bg-purple-500",
-    description: "Improve fluency and pronunciation",
-    features: [
-      "Speaking & pronunciation practice",
-      "Reading Korean texts",
-      "Building confidence in conversation",
-    ],
-  },
-  {
-    level: "TOPIK",
-    title: "TOPIK Preparation",
-    color: "bg-primary",
-    description: "Prepare for the official exam",
-    features: [
-      "Listening, Reading & Writing practice",
-      "Exam strategies & tips",
-      "Full mock tests",
-      "Complete preparation materials",
-    ],
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const CoursesSection = () => {
+  const { t } = useLanguage();
+
+  const courses = [
+    {
+      level: "Level 0",
+      title: t("course.hangul.title"),
+      color: "bg-green-500",
+      description: t("course.hangul.desc"),
+      features: [t("course.hangul.f1"), t("course.hangul.f2"), t("course.hangul.f3"), t("course.hangul.f4")],
+    },
+    {
+      level: "Level 1-2",
+      title: t("course.beginner.title"),
+      color: "bg-blue-500",
+      description: t("course.beginner.desc"),
+      features: [t("course.beginner.f1"), t("course.beginner.f2"), t("course.beginner.f3"), t("course.beginner.f4")],
+    },
+    {
+      level: "Level 3-4",
+      title: t("course.intermediate.title"),
+      color: "bg-orange-500",
+      description: t("course.intermediate.desc"),
+      features: [t("course.intermediate.f1"), t("course.intermediate.f2"), t("course.intermediate.f3"), t("course.intermediate.f4")],
+    },
+    {
+      level: "Level 5-6",
+      title: t("course.advanced.title"),
+      color: "bg-red-500",
+      description: t("course.advanced.desc"),
+      features: [t("course.advanced.f1"), t("course.advanced.f2"), t("course.advanced.f3"), t("course.advanced.f4")],
+    },
+    {
+      level: "Special",
+      title: t("course.reading.title"),
+      color: "bg-purple-500",
+      description: t("course.reading.desc"),
+      features: [t("course.reading.f1"), t("course.reading.f2"), t("course.reading.f3")],
+    },
+    {
+      level: "TOPIK",
+      title: t("course.topik.title"),
+      color: "bg-primary",
+      description: t("course.topik.desc"),
+      features: [t("course.topik.f1"), t("course.topik.f2"), t("course.topik.f3"), t("course.topik.f4")],
+    },
+  ];
+
   return (
     <section id="courses" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">
-            📚 Courses & Levels
+            {t("courses.badge")}
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Choose the Level That Matches Your Journey
+            {t("courses.title")}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            From complete beginners to advanced learners, we have the perfect
-            course for you
+            {t("courses.subtitle")}
           </p>
         </div>
 
@@ -101,9 +74,7 @@ const CoursesSection = () => {
             >
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span
-                    className={`w-3 h-3 rounded-full ${course.color}`}
-                  />
+                  <span className={`w-3 h-3 rounded-full ${course.color}`} />
                   <span className="text-sm font-medium text-muted-foreground">
                     {course.level}
                   </span>

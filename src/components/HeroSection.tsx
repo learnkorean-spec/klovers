@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText } from "lucide-react";
 import heroVideo from "@/assets/hero-korea-video.mp4";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HeroSection = () => {
+  const { t } = useLanguage();
+
   return (
     <section
       id="home"
@@ -26,30 +29,36 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto">
           <span className="inline-block px-4 py-2 rounded-full bg-primary/20 text-background text-sm font-medium mb-6 border border-primary/30">
-            🎓 Learn Korean. Connect with Culture. Speak with Confidence.
+            {t("hero.badge")}
           </span>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-background mb-6 leading-tight">
-            Learn Korean Your Way —{" "}
-            <span className="bg-primary text-primary-foreground px-2">From Hangul to Advanced Fluency</span>
+            {t("hero.title1")}{" "}
+            <span className="bg-primary text-primary-foreground px-2">
+              {t("hero.title2")}
+            </span>
           </h1>
 
           <p className="text-lg md:text-xl text-background/80 mb-8 max-w-2xl mx-auto">
-            Join K-Lovers and start your Korean language journey with structured
-            courses, expert guidance, and a supportive learning community.
+            {t("hero.description")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild className="gap-2">
               <a href="#courses">
                 <BookOpen className="h-5 w-5" />
-                View Courses
+                {t("hero.viewCourses")}
               </a>
             </Button>
-            <Button size="lg" variant="outline" asChild className="gap-2 bg-background/10 border-background/30 text-background hover:bg-background/20">
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="gap-2 bg-background/10 border-background/30 text-background hover:bg-background/20"
+            >
               <a href="#enroll">
                 <FileText className="h-5 w-5" />
-                Enroll Now
+                {t("nav.enrollNow")}
               </a>
             </Button>
           </div>
