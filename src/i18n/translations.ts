@@ -29,13 +29,16 @@ export const translations = {
       ],
     },
     teacher: {
-      title: "Meet Your Teacher",
-      name: "Riham",
-      bio: "Riham has taught 2,000+ students using structured and interactive methods. With years of experience in Korean language education, she creates an engaging and supportive learning environment for every student.",
+      title: "Meet Our Teaching Team",
+      name: "Reham Elshrkawy",
+      bio1: "KLovers is led by Reham Elshrkawy, a passionate Korean language instructor who has taught over 2,000 students from diverse backgrounds and proficiency levels.",
+      bio2: "With a structured and interactive teaching approach, Reham focuses on helping students build real speaking confidence step by step.",
+      bio3: "Alongside Reham, KLovers works with a carefully selected team of qualified Korean language instructors who follow the same teaching standards — structured lessons, interactive methods, and real-life communication focus.",
+      bio4: "Together, the KLovers teaching team ensures every student receives professional guidance and a supportive learning environment.",
       highlights: [
-        { label: "2,000+", description: "Students Taught" },
+        { label: "2,000+", description: "Students" },
         { label: "Structured", description: "Curriculum" },
-        { label: "Live", description: "Classes" },
+        { label: "Professional", description: "Teaching Team" },
       ],
     },
     howItWorks: {
@@ -274,13 +277,16 @@ export const translations = {
       ],
     },
     teacher: {
-      title: "تعرّف على معلمتك",
-      name: "ريهام",
-      bio: "درّست ريهام أكثر من 2,000 طالب باستخدام أساليب منظمة وتفاعلية. بخبرة سنوات في تعليم اللغة الكورية، تخلق بيئة تعليمية جذابة وداعمة لكل طالب.",
+      title: "تعرّف على فريق التدريس",
+      name: "ريهام الشرقاوي",
+      bio1: "يقود KLovers ريهام الشرقاوي، مدرّسة لغة كورية شغوفة درّست أكثر من 2,000 طالب من خلفيات ومستويات متنوعة.",
+      bio2: "بنهج تدريسي منظم وتفاعلي، تركز ريهام على مساعدة الطلاب في بناء ثقة حقيقية بالتحدث خطوة بخطوة.",
+      bio3: "إلى جانب ريهام، يعمل KLovers مع فريق مختار بعناية من مدرسي اللغة الكورية المؤهلين الذين يتبعون نفس معايير التدريس — دروس منظمة وأساليب تفاعلية وتركيز على التواصل الواقعي.",
+      bio4: "معًا، يضمن فريق تدريس KLovers حصول كل طالب على توجيه مهني وبيئة تعليمية داعمة.",
       highlights: [
         { label: "+2,000", description: "طالب" },
         { label: "منهج", description: "منظم" },
-        { label: "حصص", description: "مباشرة" },
+        { label: "فريق", description: "تدريس محترف" },
       ],
     },
     howItWorks: {
