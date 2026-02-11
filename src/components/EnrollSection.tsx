@@ -1,7 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, FileText, CheckCircle2 } from "lucide-react";
+import {
+  MessageCircle,
+  FileText,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  Heart,
+} from "lucide-react";
 
 const steps = [
   {
@@ -23,7 +30,7 @@ const steps = [
   {
     number: "3",
     icon: CheckCircle2,
-    title: "Confirm Your Enrollment",
+    title: "Confirm Your Enrollment & Payment",
     description:
       "After joining and submitting the form, our team will contact you with the next steps.",
     link: null,
@@ -35,6 +42,16 @@ const EnrollSection = () => {
   return (
     <section id="enroll" className="py-20 bg-background">
       <div className="container mx-auto px-4">
+        {/* Urgency Banner */}
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-6 py-3 text-sm font-medium text-foreground animate-pulse">
+            <Clock className="h-5 w-5 text-destructive shrink-0" />
+            <span>
+              🔥 Spots are limited! Enroll now before classes fill up.
+            </span>
+          </div>
+        </div>
+
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">
             📝 How to Enroll
@@ -87,9 +104,28 @@ const EnrollSection = () => {
                 )}
 
                 {!step.link && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-foreground font-medium">
-                    <CheckCircle2 className="h-4 w-4" />
-                    We'll reach out to you!
+                  <div className="space-y-3">
+                    {/* Discount highlights */}
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-primary/50"
+                      >
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        🇪🇬 Egypt Discount
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-primary/50"
+                      >
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        🇲🇾 Malaysia Discount
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-sm text-foreground font-medium">
+                      <Heart className="h-4 w-4 text-destructive" />
+                      We'll reach out to you!
+                    </div>
                   </div>
                 )}
               </CardContent>
