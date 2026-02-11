@@ -19,22 +19,22 @@ const HeroSection = () => {
         >
           <source src={heroVideo} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-foreground/70" />
+        <div className="absolute inset-0 bg-black/75" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto">
-          <span className="inline-block px-4 py-2 rounded-full bg-primary/20 text-primary-foreground text-sm font-medium mb-6 border border-primary/30">
+          <span className="inline-block px-5 py-2.5 rounded-full bg-primary/30 text-white text-sm font-semibold mb-6 border border-primary/40 backdrop-blur-sm shadow-lg">
             🎓 Learn Korean. Connect with Culture. Speak with Confidence.
           </span>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-accent mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
             Learn Korean Your Way —{" "}
-            <span className="bg-primary text-primary-foreground px-2">From Hangul to Advanced Fluency</span>
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-md shadow-lg">From Hangul to Advanced Fluency</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-accent/80 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-md font-medium">
             Join K-Lovers and start your Korean language journey with structured
             courses, expert guidance, and a supportive learning community.
           </p>
@@ -46,7 +46,7 @@ const HeroSection = () => {
                 View Courses
               </a>
             </Button>
-            <Button size="lg" variant="outline" asChild className="gap-2 bg-accent/10 border-accent/30 text-accent hover:bg-accent/20">
+            <Button size="lg" variant="outline" asChild className="gap-2 bg-white/10 border-white/40 text-white hover:bg-white/20 backdrop-blur-sm">
               <a href="#enroll">
                 <FileText className="h-5 w-5" />
                 Enroll Now
