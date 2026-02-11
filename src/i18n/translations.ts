@@ -1,0 +1,268 @@
+export const translations = {
+  en: {
+    header: {
+      home: "Home",
+      courses: "Courses",
+      pricing: "Pricing",
+      enroll: "How to Enroll",
+      faq: "FAQ",
+      enrollNow: "Enroll Now",
+      langToggle: "العربية",
+    },
+    hero: {
+      badge: "🎓 Learn Korean. Connect with Culture. Speak with Confidence.",
+      title1: "Learn Korean Your Way —",
+      title2: "From Hangul to Advanced Fluency",
+      subtitle: "Join K-Lovers and start your Korean language journey with structured courses, expert guidance, and a supportive learning community.",
+      viewCourses: "View Courses",
+      enrollNow: "Enroll Now",
+    },
+    why: {
+      title: "Why K-Lovers?",
+      subtitle: "Everything you need to master Korean in one place",
+      features: [
+        { title: "Structured Levels", description: "From Hangul to Advanced fluency" },
+        { title: "Flexible Classes", description: "Group & private options available" },
+        { title: "Speaking-Focused", description: "Practical conversation lessons" },
+        { title: "TOPIK Prep", description: "Exam preparation courses" },
+        { title: "Supportive Community", description: "Learn with fellow K-Lovers" },
+        { title: "Special Discounts", description: "For Egyptian students 🇪🇬" },
+      ],
+    },
+    courses: {
+      badge: "📚 Courses & Levels",
+      title: "Choose the Level That Matches Your Journey",
+      subtitle: "From complete beginners to advanced learners, we have the perfect course for you",
+      items: [
+        {
+          level: "Level 0", title: "Hangul Course", description: "Learn the Korean alphabet",
+          features: ["Hangul reading & writing", "Sound and pronunciation practice", "Basic words", "Writing guides, audio & worksheets"],
+        },
+        {
+          level: "Level 1-2", title: "Beginner Course", description: "Build your basics",
+          features: ["Self-introduction & daily conversations", "Essential grammar and vocabulary", "Beginner learning materials", "Speaking practice"],
+        },
+        {
+          level: "Level 3-4", title: "Intermediate Course", description: "Use Korean with confidence",
+          features: ["Grammar in real conversations", "Reading texts & comprehension", "Practice tests", "TOPIK-style questions"],
+        },
+        {
+          level: "Level 5-6", title: "Advanced Course", description: "Master fluency & cultural depth",
+          features: ["Advanced grammar structures", "Reading articles", "Cultural discussions", "Idiomatic expressions"],
+        },
+        {
+          level: "Special", title: "Reading & Speaking", description: "Improve fluency and pronunciation",
+          features: ["Speaking & pronunciation practice", "Reading Korean texts", "Building confidence in conversation"],
+        },
+        {
+          level: "TOPIK", title: "TOPIK Preparation", description: "Prepare for the official exam",
+          features: ["Listening, Reading & Writing practice", "Exam strategies & tips", "Full mock tests", "Complete preparation materials"],
+        },
+      ],
+    },
+    pricing: {
+      badge: "💰 Pricing",
+      title: "Flexible Plans for Every Klover",
+      subtitle: "💡 Choose your country to see your exclusive Klovers tier and discounted price!",
+      selectCountry: "Select your country",
+      oncePerWeek: "Once per week classes",
+      groupPrivate: "Group & private options",
+      priorityScheduling: "Priority scheduling",
+      availableIn: "Available in",
+      getStartedNow: "Get Started Now",
+      getStarted: "Get Started",
+      tiers: {
+        local: {
+          name: "Local Klovers", tagline: "Starter",
+          description: "Perfect for beginners! Start your Korean journey at a special discounted price.",
+          discountLabel: "Discounted for Egyptian Students 🇪🇬",
+        },
+        regional: {
+          name: "Regional Klovers", tagline: "Explorer",
+          description: "For learners ready to explore Korean language and culture. Special discount for Malaysia students!",
+          discountLabel: "Discounted for Malaysian Students 🇲🇾",
+        },
+        global: {
+          name: "Global Klovers", tagline: "Master",
+          description: "Full premium experience for advanced learners and serious Korean enthusiasts.",
+        },
+      },
+      durations: {
+        "1 Month": "1 Month",
+        "3 Months": "3 Months",
+        "6 Months": "6 Months",
+      },
+      classes: {
+        "4 classes": "4 classes",
+        "12 classes": "12 classes",
+        "24 classes": "24 classes",
+      },
+    },
+    enroll: {
+      urgency: "🔥 Spots are limited! Enroll now before classes fill up.",
+      badge: "📝 How to Enroll",
+      title: "Join K-Lovers Korean Courses Today",
+      subtitle: "At K-Lovers, enrolling is simple and fast. Follow these 3 steps to secure your spot!",
+      steps: [
+        { title: "Join Our Telegram Group", description: "Stay updated with announcements and course news.", buttonText: "Join Telegram" },
+        { title: "Complete the Registration Form", description: "Fill in your details so we can reserve your spot.", buttonText: "Fill Form" },
+        { title: "Confirm Your Enrollment & Payment", description: "After joining and submitting the form, our team will contact you with the next steps." },
+      ],
+      egyptDiscount: "🇪🇬 Egypt Discount",
+      malaysiaDiscount: "🇲🇾 Malaysia Discount",
+      reachOut: "We'll reach out to you!",
+    },
+    faq: {
+      badge: "❓ FAQ",
+      title: "Frequently Asked Questions",
+      subtitle: "Got questions? We've got answers!",
+      items: [
+        { question: "Do I need prior knowledge of Korean?", answer: "No — we offer a Hangul course specifically designed for absolute beginners. You'll learn the Korean alphabet from scratch before moving on to vocabulary and grammar." },
+        { question: "Are classes online or offline?", answer: "All our classes are conducted online, making it convenient for you to learn from anywhere. You just need a stable internet connection and a device to join the sessions." },
+        { question: "Is there a placement test?", answer: "Yes, we offer a placement test to help you choose the right level. This ensures you're placed in a class that matches your current Korean proficiency." },
+        { question: "Do I get a certificate?", answer: "Yes, after successfully completing your course, you will receive a certificate of completion from K-Lovers that you can add to your portfolio or resume." },
+        { question: "What is the class schedule?", answer: "Classes are held once per week. The specific day and time will be coordinated with your group or instructor to find the most convenient schedule for everyone." },
+        { question: "Can I switch from group to private classes?", answer: "Yes! You can switch between class types. Simply contact our team and we'll help you make the transition smoothly." },
+      ],
+    },
+    footer: {
+      tagline: "Learn Korean. Love the Culture. Speak with Confidence.",
+      quickLinks: "Quick Links",
+      joinCommunity: "Join Our Community",
+      copyright: "K-Lovers Korean Courses. All rights reserved.",
+    },
+  },
+  ar: {
+    header: {
+      home: "الرئيسية",
+      courses: "الدورات",
+      pricing: "الأسعار",
+      enroll: "كيفية التسجيل",
+      faq: "الأسئلة الشائعة",
+      enrollNow: "سجّل الآن",
+      langToggle: "English",
+    },
+    hero: {
+      badge: "🎓 تعلّم الكورية. تواصل مع الثقافة. تحدّث بثقة.",
+      title1: "تعلّم الكورية بطريقتك —",
+      title2: "من الهانغول إلى الطلاقة المتقدمة",
+      subtitle: "انضم إلى K-Lovers وابدأ رحلتك في تعلّم اللغة الكورية مع دورات منظمة وإرشاد متخصص ومجتمع تعليمي داعم.",
+      viewCourses: "عرض الدورات",
+      enrollNow: "سجّل الآن",
+    },
+    why: {
+      title: "لماذا K-Lovers؟",
+      subtitle: "كل ما تحتاجه لإتقان الكورية في مكان واحد",
+      features: [
+        { title: "مستويات منظمة", description: "من الهانغول إلى الطلاقة المتقدمة" },
+        { title: "حصص مرنة", description: "خيارات جماعية وخاصة متاحة" },
+        { title: "تركيز على المحادثة", description: "دروس محادثة عملية" },
+        { title: "إعداد TOPIK", description: "دورات تحضيرية للامتحان" },
+        { title: "مجتمع داعم", description: "تعلّم مع محبي الكورية" },
+        { title: "خصومات خاصة", description: "للطلاب المصريين 🇪🇬" },
+      ],
+    },
+    courses: {
+      badge: "📚 الدورات والمستويات",
+      title: "اختر المستوى الذي يناسب رحلتك",
+      subtitle: "من المبتدئين تمامًا إلى المتعلمين المتقدمين، لدينا الدورة المثالية لك",
+      items: [
+        {
+          level: "المستوى 0", title: "دورة الهانغول", description: "تعلّم الأبجدية الكورية",
+          features: ["قراءة وكتابة الهانغول", "تمارين النطق والأصوات", "كلمات أساسية", "أدلة كتابة وصوتيات وأوراق عمل"],
+        },
+        {
+          level: "المستوى 1-2", title: "دورة المبتدئين", description: "ابنِ أساسياتك",
+          features: ["تقديم النفس والمحادثات اليومية", "القواعد والمفردات الأساسية", "مواد تعليمية للمبتدئين", "تمارين المحادثة"],
+        },
+        {
+          level: "المستوى 3-4", title: "الدورة المتوسطة", description: "استخدم الكورية بثقة",
+          features: ["القواعد في المحادثات الحقيقية", "قراءة النصوص والفهم", "اختبارات تدريبية", "أسئلة بنمط TOPIK"],
+        },
+        {
+          level: "المستوى 5-6", title: "الدورة المتقدمة", description: "إتقان الطلاقة والعمق الثقافي",
+          features: ["تراكيب نحوية متقدمة", "قراءة المقالات", "نقاشات ثقافية", "تعبيرات اصطلاحية"],
+        },
+        {
+          level: "خاص", title: "القراءة والمحادثة", description: "حسّن طلاقتك ونطقك",
+          features: ["تمارين المحادثة والنطق", "قراءة نصوص كورية", "بناء الثقة في المحادثة"],
+        },
+        {
+          level: "TOPIK", title: "تحضير TOPIK", description: "استعد للامتحان الرسمي",
+          features: ["تمارين الاستماع والقراءة والكتابة", "استراتيجيات ونصائح الامتحان", "اختبارات تجريبية كاملة", "مواد تحضيرية شاملة"],
+        },
+      ],
+    },
+    pricing: {
+      badge: "💰 الأسعار",
+      title: "خطط مرنة لكل محب للكورية",
+      subtitle: "💡 اختر بلدك لمعرفة فئة Klovers الخاصة بك والسعر المخفض!",
+      selectCountry: "اختر بلدك",
+      oncePerWeek: "حصص مرة في الأسبوع",
+      groupPrivate: "خيارات جماعية وخاصة",
+      priorityScheduling: "جدولة بالأولوية",
+      availableIn: "متاح في",
+      getStartedNow: "ابدأ الآن",
+      getStarted: "ابدأ",
+      tiers: {
+        local: {
+          name: "Klovers المحلي", tagline: "مبتدئ",
+          description: "مثالي للمبتدئين! ابدأ رحلتك في تعلّم الكورية بسعر مخفض خاص.",
+          discountLabel: "خصم للطلاب المصريين 🇪🇬",
+        },
+        regional: {
+          name: "Klovers الإقليمي", tagline: "مستكشف",
+          description: "للمتعلمين المستعدين لاستكشاف اللغة والثقافة الكورية. خصم خاص لطلاب ماليزيا!",
+          discountLabel: "خصم للطلاب الماليزيين 🇲🇾",
+        },
+        global: {
+          name: "Klovers العالمي", tagline: "محترف",
+          description: "تجربة متميزة كاملة للمتعلمين المتقدمين وعشاق الكورية الجادين.",
+        },
+      },
+      durations: {
+        "1 Month": "شهر واحد",
+        "3 Months": "3 أشهر",
+        "6 Months": "6 أشهر",
+      },
+      classes: {
+        "4 classes": "4 حصص",
+        "12 classes": "12 حصة",
+        "24 classes": "24 حصة",
+      },
+    },
+    enroll: {
+      urgency: "🔥 الأماكن محدودة! سجّل الآن قبل امتلاء الحصص.",
+      badge: "📝 كيفية التسجيل",
+      title: "انضم إلى دورات K-Lovers الكورية اليوم",
+      subtitle: "في K-Lovers، التسجيل بسيط وسريع. اتبع هذه الخطوات الثلاث لحجز مكانك!",
+      steps: [
+        { title: "انضم إلى مجموعة التيليجرام", description: "ابقَ على اطلاع بالإعلانات وأخبار الدورات.", buttonText: "انضم للتيليجرام" },
+        { title: "أكمل نموذج التسجيل", description: "املأ بياناتك حتى نتمكن من حجز مكانك.", buttonText: "املأ النموذج" },
+        { title: "أكّد تسجيلك والدفع", description: "بعد الانضمام وتقديم النموذج، سيتواصل معك فريقنا بالخطوات التالية." },
+      ],
+      egyptDiscount: "🇪🇬 خصم مصر",
+      malaysiaDiscount: "🇲🇾 خصم ماليزيا",
+      reachOut: "سنتواصل معك!",
+    },
+    faq: {
+      badge: "❓ الأسئلة الشائعة",
+      title: "الأسئلة المتكررة",
+      subtitle: "لديك أسئلة؟ لدينا الإجابات!",
+      items: [
+        { question: "هل أحتاج إلى معرفة مسبقة بالكورية؟", answer: "لا — نقدم دورة هانغول مصممة خصيصًا للمبتدئين تمامًا. ستتعلم الأبجدية الكورية من الصفر قبل الانتقال إلى المفردات والقواعد." },
+        { question: "هل الحصص أونلاين أم حضورية؟", answer: "جميع حصصنا تُقدم أونلاين، مما يسهل عليك التعلم من أي مكان. تحتاج فقط إلى اتصال إنترنت مستقر وجهاز للانضمام إلى الجلسات." },
+        { question: "هل يوجد اختبار تحديد مستوى؟", answer: "نعم، نقدم اختبار تحديد مستوى لمساعدتك في اختيار المستوى المناسب. يضمن هذا وضعك في حصة تتناسب مع مستواك الحالي في الكورية." },
+        { question: "هل أحصل على شهادة؟", answer: "نعم، بعد إكمال دورتك بنجاح، ستحصل على شهادة إتمام من K-Lovers يمكنك إضافتها إلى ملفك الشخصي أو سيرتك الذاتية." },
+        { question: "ما هو جدول الحصص؟", answer: "تُعقد الحصص مرة واحدة في الأسبوع. سيتم تنسيق اليوم والوقت المحددين مع مجموعتك أو معلمك لإيجاد الجدول الأنسب للجميع." },
+        { question: "هل يمكنني التحويل من حصص جماعية إلى خاصة؟", answer: "نعم! يمكنك التبديل بين أنواع الحصص. تواصل مع فريقنا وسنساعدك في الانتقال بسلاسة." },
+      ],
+    },
+    footer: {
+      tagline: "تعلّم الكورية. أحب الثقافة. تحدّث بثقة.",
+      quickLinks: "روابط سريعة",
+      joinCommunity: "انضم إلى مجتمعنا",
+      copyright: "K-Lovers دورات كورية. جميع الحقوق محفوظة.",
+    },
+  },
+};
