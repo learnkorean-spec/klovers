@@ -1,26 +1,28 @@
 
-# Contact Page Upgrade
 
-## What's changing
+## Fix 2 Remaining Warn-Level Security Issues
 
-1. **Add Subject field** to the contact form (between Email and Message)
-2. **Send form via email** using a `mailto:` link to `reham.elshrkawy@gmail.com` with subject and body pre-filled, then show a success toast
-3. **Update WhatsApp button** with the correct community link, WhatsApp green styling, and "Join Our WhatsApp Community" text
+### Issue 1: Remove "Anyone can submit leads" RLS Policy
 
-## Technical Details
+The `leads` table currently has a permissive INSERT policy for anonymous users. Since the `submit-lead` backend function now handles all lead submissions using the service role key (which bypasses RLS), this public INSERT policy is unnecessary and a security risk.
 
-### 1. ContactPage.tsx changes
-- Add `subject` to form state
-- Add a Subject input field between Email and Message
-- On submit, open a `mailto:reham.elshrkawy@gmail.com` link with the subject and body (name + message) encoded, then show success toast and reset form
-- Replace the current WhatsApp button with a green (`#25D366`) rounded button linking to `https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq?mode=gi_t`
+**Fix:** Run a database migration to drop this policy.
 
-### 2. Translation updates (translations.ts)
-- Add `form.subject`, `form.subjectPlaceholder`, and update `whatsapp` text in both English and Arabic:
-  - EN: subject = "Subject", placeholder = "What is this about?", whatsapp = "Join Our WhatsApp Community"
-  - AR: subject = "الموضوع", placeholder = "ما هو موضوع رسالتك؟", whatsapp = "انضم لمجتمعنا على واتساب"
+```sql
+DROP POLICY "Anyone can submit leads" ON public.leads;
+```
 
-### 3. WhatsApp button styling
-- Background: `bg-[#25D366]` with `hover:bg-[#1ebe5d]`
-- White text, rounded-full, WhatsApp icon (MessageCircle from lucide)
-- Fully responsive
+### Issue 2: Enable Leaked Password Protection
+
+The authentication system currently does not check submitted passwords against known leaked/breached password databases. Enabling this adds a layer of protection against credential stuffing.
+
+**Fix:** Use the configure-auth tool to enable the `hibp` (Have I Been Pwned) leaked password protection setting.
+
+### Technical Steps
+
+1. **Database migration** -- single SQL statement to drop the RLS policy
+2. **Auth configuration** -- enable leaked password protection via the auth config tool
+3. **Delete resolved security findings** from the scan results
+
+No code file changes are needed.
+
