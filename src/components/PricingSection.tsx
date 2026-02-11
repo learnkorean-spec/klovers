@@ -9,120 +9,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, MapPin, Globe, Star, Crown, Sparkles } from "lucide-react";
+import { Check, MapPin, Star, Crown, Globe, Sparkles } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type TierKey = "local" | "regional" | "global";
 
-interface TierInfo {
-  key: TierKey;
-  name: string;
-  tagline: string;
-  icon: React.ReactNode;
-  description: string;
-  prices: { duration: string; classes: string; usd: number; local?: string }[];
-  countries: string[];
-  discountCountry?: string;
-  discountLabel?: string;
-}
+const tierIcons: Record<TierKey, React.ReactNode> = {
+  local: <Star className="h-6 w-6" />,
+  regional: <Globe className="h-6 w-6" />,
+  global: <Crown className="h-6 w-6" />,
+};
 
-const tiers: TierInfo[] = [
-  {
-    key: "local",
-    name: "Local Klovers",
-    tagline: "Starter",
-    icon: <Star className="h-6 w-6" />,
-    description:
-      "Perfect for beginners! Start your Korean journey at a special discounted price.",
-    prices: [
-      { duration: "1 Month", classes: "4 classes", usd: 25, local: "~1,170 EGP" },
-      { duration: "3 Months", classes: "12 classes", usd: 70, local: "~3,276 EGP" },
-      { duration: "6 Months", classes: "24 classes", usd: 130, local: "~6,110 EGP" },
-    ],
-    countries: [
-      "Egypt",
-      "Morocco",
-      "Tunisia",
-      "Algeria",
-      "Libya",
-      "Jordan",
-      "Lebanon",
-      "Iraq",
-      "Syria",
-      "Sudan",
-      "Yemen",
-    ],
-    discountCountry: "Egypt",
-    discountLabel: "Discounted for Egyptian Students 🇪🇬",
-  },
-  {
-    key: "regional",
-    name: "Regional Klovers",
-    tagline: "Explorer",
-    icon: <Globe className="h-6 w-6" />,
-    description:
-      "For learners ready to explore Korean language and culture. Special discount for Malaysia students!",
-    prices: [
-      { duration: "1 Month", classes: "4 classes", usd: 40 },
-      { duration: "3 Months", classes: "12 classes", usd: 110 },
-      { duration: "6 Months", classes: "24 classes", usd: 200 },
-    ],
-    countries: [
-      "Malaysia",
-      "Indonesia",
-      "Thailand",
-      "Vietnam",
-      "Philippines",
-      "India",
-      "Pakistan",
-      "Brazil",
-      "Mexico",
-      "Colombia",
-      "Argentina",
-      "Turkey",
-    ],
-    discountCountry: "Malaysia",
-    discountLabel: "Discounted for Malaysian Students 🇲🇾",
-  },
-  {
-    key: "global",
-    name: "Global Klovers",
-    tagline: "Master",
-    icon: <Crown className="h-6 w-6" />,
-    description:
-      "Full premium experience for advanced learners and serious Korean enthusiasts.",
-    prices: [
-      { duration: "1 Month", classes: "4 classes", usd: 60 },
-      { duration: "3 Months", classes: "12 classes", usd: 170 },
-      { duration: "6 Months", classes: "24 classes", usd: 300 },
-    ],
-    countries: [
-      "UAE",
-      "Saudi Arabia",
-      "Qatar",
-      "Bahrain",
-      "Oman",
-      "Kuwait",
-      "United States",
-      "United Kingdom",
-      "Germany",
-      "France",
-      "Canada",
-      "Australia",
-      "Japan",
-      "South Korea",
-      "China",
-    ],
-  },
-];
+const tierPrices: Record<TierKey, { duration: string; classes: string; usd: number; local?: string }[]> = {
+  local: [
+    { duration: "1 Month", classes: "4 classes", usd: 25, local: "~1,170 EGP" },
+    { duration: "3 Months", classes: "12 classes", usd: 70, local: "~3,276 EGP" },
+    { duration: "6 Months", classes: "24 classes", usd: 130, local: "~6,110 EGP" },
+  ],
+  regional: [
+    { duration: "1 Month", classes: "4 classes", usd: 40 },
+    { duration: "3 Months", classes: "12 classes", usd: 110 },
+    { duration: "6 Months", classes: "24 classes", usd: 200 },
+  ],
+  global: [
+    { duration: "1 Month", classes: "4 classes", usd: 60 },
+    { duration: "3 Months", classes: "12 classes", usd: 170 },
+    { duration: "6 Months", classes: "24 classes", usd: 300 },
+  ],
+};
 
-const allCountries = tiers.flatMap((t) =>
-  t.countries.map((c) => ({ country: c, tier: t.key }))
+const tierCountries: Record<TierKey, string[]> = {
+  local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
+  regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
+  global: ["UAE", "Saudi Arabia", "Qatar", "Bahrain", "Oman", "Kuwait", "United States", "United Kingdom", "Germany", "France", "Canada", "Australia", "Japan", "South Korea", "China"],
+};
+
+const discountCountries: Partial<Record<TierKey, string>> = {
+  local: "Egypt",
+  regional: "Malaysia",
+};
+
+const tierKeys: TierKey[] = ["local", "regional", "global"];
+
+const allCountries = tierKeys.flatMap((key) =>
+  tierCountries[key].map((c) => ({ country: c, tier: key }))
 );
 allCountries.sort((a, b) => a.country.localeCompare(b.country));
 
 const PricingSection = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [activeTier, setActiveTier] = useState<TierKey | null>(null);
+  const { t } = useLanguage();
 
   const handleCountryChange = (country: string) => {
     setSelectedCountry(country);
@@ -133,26 +70,23 @@ const PricingSection = () => {
   return (
     <section id="pricing" className="py-20 bg-card">
       <div className="container mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">
-            💰 Pricing
+            {t("pricing", "badge")}
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Flexible Plans for Every Klover
+            {t("pricing", "title")}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-            💡 Choose your country to see your exclusive Klovers tier and
-            discounted price!
+            {t("pricing", "subtitle")}
           </p>
 
-          {/* Country Selector */}
           <div className="max-w-sm mx-auto">
             <Select value={selectedCountry} onValueChange={handleCountryChange}>
               <SelectTrigger className="w-full text-base">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Select your country" />
+                  <SelectValue placeholder={t("pricing", "selectCountry")} />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -166,16 +100,18 @@ const PricingSection = () => {
           </div>
         </div>
 
-        {/* Tiers */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {tiers.map((tier) => {
-            const isActive = activeTier === tier.key;
-            const isDiscountedCountry =
-              selectedCountry === tier.discountCountry;
+          {tierKeys.map((tierKey) => {
+            const isActive = activeTier === tierKey;
+            const isDiscountedCountry = selectedCountry === discountCountries[tierKey];
+            const tierT = (key: string) => {
+              const val = t("pricing", `tiers.${tierKey}.${key}`);
+              return val !== `tiers.${tierKey}.${key}` ? val : "";
+            };
 
             return (
               <Card
-                key={tier.key}
+                key={tierKey}
                 className={`relative transition-all duration-500 ${
                   isActive
                     ? "border-2 border-primary scale-105 shadow-xl ring-2 ring-primary/20"
@@ -184,7 +120,6 @@ const PricingSection = () => {
                     : "border-border hover:border-primary/50 hover:shadow-lg"
                 }`}
               >
-                {/* Tier Badge */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-2">
                   <Badge
                     className={
@@ -193,7 +128,7 @@ const PricingSection = () => {
                         : "bg-secondary text-secondary-foreground"
                     }
                   >
-                    {tier.tagline}
+                    {tierT("tagline") || tierKey}
                   </Badge>
                   {isDiscountedCountry && (
                     <Badge className="bg-destructive text-destructive-foreground animate-pulse">
@@ -211,30 +146,28 @@ const PricingSection = () => {
                           : "bg-muted text-muted-foreground"
                       } transition-colors`}
                     >
-                      {tier.icon}
+                      {tierIcons[tierKey]}
                     </div>
                   </div>
                   <CardTitle className="text-xl text-foreground">
-                    {tier.name}
+                    {tierT("name") || tierKey}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">
-                    {tier.description}
+                    {tierT("description")}
                   </p>
                 </CardHeader>
 
                 <CardContent className="pt-4">
-                  {/* Discount label */}
-                  {tier.discountLabel && (
+                  {tierT("discountLabel") && (
                     <div className="text-center mb-4">
                       <Badge variant="outline" className="text-xs">
-                        {tier.discountLabel}
+                        {tierT("discountLabel")}
                       </Badge>
                     </div>
                   )}
 
-                  {/* Pricing rows */}
                   <div className="space-y-3 mb-6">
-                    {tier.prices.map((price) => (
+                    {tierPrices[tierKey].map((price) => (
                       <div
                         key={price.duration}
                         className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
@@ -243,10 +176,10 @@ const PricingSection = () => {
                       >
                         <div>
                           <p className="font-semibold text-foreground text-sm">
-                            {price.duration}
+                            {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {price.classes}
+                            {t("pricing", `classes.${price.classes}`) !== `classes.${price.classes}` ? t("pricing", `classes.${price.classes}`) : price.classes}
                           </p>
                         </div>
                         <div className="text-right">
@@ -263,31 +196,29 @@ const PricingSection = () => {
                     ))}
                   </div>
 
-                  {/* Features */}
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Check className="h-4 w-4 text-foreground shrink-0" />
-                      Once per week classes
+                      {t("pricing", "oncePerWeek")}
                     </li>
                     <li className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Check className="h-4 w-4 text-foreground shrink-0" />
-                      Group & private options
+                      {t("pricing", "groupPrivate")}
                     </li>
-                    {tier.key === "global" && (
+                    {tierKey === "global" && (
                       <li className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Check className="h-4 w-4 text-foreground shrink-0" />
-                        Priority scheduling
+                        {t("pricing", "priorityScheduling")}
                       </li>
                     )}
                   </ul>
 
-                  {/* Countries list */}
                   <div className="mb-6">
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                      Available in
+                      {t("pricing", "availableIn")}
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {tier.countries.map((c) => (
+                      {tierCountries[tierKey].map((c) => (
                         <span
                           key={c}
                           className={`text-xs px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
@@ -310,7 +241,7 @@ const PricingSection = () => {
                     asChild
                   >
                     <a href="#enroll">
-                      {isActive ? "Get Started Now" : "Get Started"}
+                      {isActive ? t("pricing", "getStartedNow") : t("pricing", "getStarted")}
                     </a>
                   </Button>
                 </CardContent>
