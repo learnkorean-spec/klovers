@@ -1,0 +1,1 @@
+DROP POLICY "Anyone can submit leads" ON public.leads;
