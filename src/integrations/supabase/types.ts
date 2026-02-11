@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_requests: {
+        Row: {
+          created_at: string
+          id: string
+          request_date: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_date: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_date?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          amount: number
+          classes_included: number
+          created_at: string
+          duration: number
+          id: string
+          plan_type: string
+          receipt_url: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tx_ref: string
+          unit_price: number
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          classes_included: number
+          created_at?: string
+          duration: number
+          id?: string
+          plan_type: string
+          receipt_url: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tx_ref: string
+          unit_price: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          classes_included?: number
+          created_at?: string
+          duration?: number
+          id?: string
+          plan_type?: string
+          receipt_url?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tx_ref?: string
+          unit_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           country: string | null
@@ -44,6 +122,42 @@ export type Database = {
           level?: string | null
           name?: string
           status?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          country: string
+          created_at: string
+          credits: number
+          email: string
+          id: string
+          level: string
+          name: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          country?: string
+          created_at?: string
+          credits?: number
+          email: string
+          id?: string
+          level?: string
+          name: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          credits?: number
+          email?: string
+          id?: string
+          level?: string
+          name?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }

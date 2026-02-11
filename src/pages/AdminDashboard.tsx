@@ -13,85 +13,77 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2 } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  country: string;
-  level: string;
-  goal: string;
-  status: string;
-  created_at: string;
+  id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
+}
+
+interface Enrollment {
+  id: string; user_id: string; plan_type: string; duration: number; classes_included: number;
+  amount: number; unit_price: number; tx_ref: string; receipt_url: string; status: string;
+  created_at: string; profiles?: { name: string; email: string } | null;
+}
+
+interface AttendanceReq {
+  id: string; user_id: string; request_date: string; status: string; created_at: string;
+  profiles?: { name: string; email: string; credits: number } | null;
 }
 
 const STATUS_OPTIONS = ["new", "contacted", "enrolled", "lost"];
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [attendanceReqs, setAttendanceReqs] = useState<AttendanceReq[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
-  const fetchLeads = async () => {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const fetchAll = async () => {
+    const [leadsRes, enrollRes, attendRes, profilesRes] = await Promise.all([
+      supabase.from("leads").select("*").order("created_at", { ascending: false }),
+      supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
+      supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("user_id, name, email, credits"),
+    ]);
 
-    if (error) {
-      console.error("Failed to fetch leads:", error.message);
-      toast({ title: "Error", description: "Unable to load leads. Please try again.", variant: "destructive" });
-    } else {
-      setLeads((data as Lead[]) || []);
+    const profileMap: Record<string, { name: string; email: string; credits: number }> = {};
+    if (profilesRes.data) {
+      (profilesRes.data as any[]).forEach((p) => { profileMap[p.user_id] = p; });
     }
+
+    if (leadsRes.data) setLeads(leadsRes.data as Lead[]);
+    if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
+    if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] || null })));
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchLeads();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
+  // --- Leads ---
   const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from("leads")
-      .update({ status: newStatus } as any)
-      .eq("id", id);
-
-    if (error) {
-      console.error("Failed to update lead status:", error.message);
-      toast({ title: "Error", description: "Failed to update status. Please try again.", variant: "destructive" });
-    } else {
-      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
-    }
+    const { error } = await supabase.from("leads").update({ status: newStatus } as any).eq("id", id);
+    if (error) { toast({ title: "Error", description: "Failed to update status.", variant: "destructive" }); }
+    else { setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))); }
   };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("leads").delete().eq("id", id);
-    if (error) {
-      console.error("Failed to delete lead:", error.message);
-      toast({ title: "Error", description: "Failed to delete lead. Please try again.", variant: "destructive" });
-    } else {
-      setLeads((prev) => prev.filter((l) => l.id !== id));
-      toast({ title: "Deleted" });
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin/login");
+    if (error) { toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }); }
+    else { setLeads((prev) => prev.filter((l) => l.id !== id)); toast({ title: "Deleted" }); }
   };
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
-      const matchesSearch =
-        !search ||
-        l.name.toLowerCase().includes(search.toLowerCase()) ||
-        l.email.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || l.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -99,137 +91,250 @@ const AdminDashboard = () => {
 
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Goal", "Status", "Date"];
-    const rows = filtered.map((l) => [
-      l.name, l.email, l.country, l.level, l.goal, l.status,
-      new Date(l.created_at).toLocaleDateString(),
-    ]);
+    const rows = filtered.map((l) => [l.name, l.email, l.country, l.level, l.goal, l.status, new Date(l.created_at).toLocaleDateString()]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
+
+  // --- Enrollments ---
+  const handleEnrollmentAction = async (enrollment: Enrollment, action: "APPROVED" | "REJECTED") => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const updates: any = { status: action, reviewed_at: new Date().toISOString(), reviewed_by: session.user.id };
+
+    // If editing unit_price, recalculate
+    const editedPrice = editingUnitPrice[enrollment.id];
+    if (editedPrice && action === "APPROVED") {
+      updates.unit_price = Number(editedPrice);
+    }
+
+    const { error } = await supabase.from("enrollments").update(updates).eq("id", enrollment.id);
+    if (error) { toast({ title: "Error", description: "Failed to update enrollment.", variant: "destructive" }); return; }
+
+    if (action === "APPROVED") {
+      // Add credits to profile
+      const { data: profile } = await supabase.from("profiles").select("credits").eq("user_id", enrollment.user_id).single();
+      const currentCredits = (profile as any)?.credits ?? 0;
+      await supabase.from("profiles").update({
+        credits: currentCredits + enrollment.classes_included,
+        status: "ACTIVE",
+      } as any).eq("user_id", enrollment.user_id);
+    }
+
+    toast({ title: `Enrollment ${action.toLowerCase()}` });
+    fetchAll();
+  };
+
+  // --- Attendance ---
+  const handleAttendanceAction = async (req: AttendanceReq, action: "APPROVED" | "REJECTED") => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabase.from("attendance_requests").update({
+      status: action, reviewed_at: new Date().toISOString(), reviewed_by: session.user.id,
+    } as any).eq("id", req.id);
+
+    if (error) { toast({ title: "Error", description: "Failed to update.", variant: "destructive" }); return; }
+
+    if (action === "APPROVED") {
+      const currentCredits = (req.profiles as any)?.credits ?? 0;
+      await supabase.from("profiles").update({ credits: currentCredits - 1 } as any).eq("user_id", req.user_id);
+    }
+
+    toast({ title: `Attendance ${action.toLowerCase()}` });
+    fetchAll();
+  };
+
+  const handleLogout = async () => { await supabase.auth.signOut(); navigate("/admin/login"); };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" /> Logout
-          </Button>
+          <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
         </div>
 
-        {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="Filter status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={exportCSV}>
-            <Download className="h-4 w-4 mr-2" /> Export CSV
-          </Button>
-        </div>
+        <Tabs defaultValue="enrollments">
+          <TabsList>
+            <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="leads">Leads</TabsTrigger>
+          </TabsList>
 
-        {/* Table */}
-        {loading ? (
-          <p className="text-muted-foreground text-center py-12">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground text-center py-12">No leads found.</p>
-        ) : (
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Country</TableHead>
-                  <TableHead className="hidden md:table-cell">Level</TableHead>
-                  <TableHead className="hidden lg:table-cell">Goal</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden sm:table-cell">Date</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((lead) => (
-                  <TableRow key={lead.id}>
-                    <TableCell className="font-medium">{lead.name}</TableCell>
-                    <TableCell>{lead.email}</TableCell>
-                    <TableCell className="hidden md:table-cell">{lead.country}</TableCell>
-                    <TableCell className="hidden md:table-cell">{lead.level}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{lead.goal}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={lead.status}
-                        onValueChange={(v) => handleStatusChange(lead.id, v)}
-                      >
-                        <SelectTrigger className="h-8 w-28">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_OPTIONS.map((s) => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">
-                      {new Date(lead.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete lead?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete {lead.name}'s record.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(lead.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
+          {/* ENROLLMENTS TAB */}
+          <TabsContent value="enrollments" className="space-y-4">
+            {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
+              <div className="space-y-4">
+                {enrollments.filter(e => e.status === "PENDING").length === 0 && (
+                  <p className="text-muted-foreground text-center py-8">No pending enrollments.</p>
+                )}
+                {enrollments.map((e) => (
+                  <Card key={e.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-foreground">{(e as any).profiles?.name || "Unknown"} — {(e as any).profiles?.email}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {e.plan_type} · {e.duration}mo · {e.classes_included} classes · ${e.amount} · Ref: {e.tx_ref}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Unit price:</span>
+                            {e.status === "PENDING" ? (
+                              <Input
+                                type="number"
+                                className="h-7 w-24"
+                                value={editingUnitPrice[e.id] ?? String(e.unit_price)}
+                                onChange={(ev) => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: ev.target.value }))}
+                              />
+                            ) : (
+                              <span className="text-sm font-medium text-foreground">${e.unit_price}</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={e.status === "APPROVED" ? "default" : e.status === "REJECTED" ? "destructive" : "secondary"}>
+                            {e.status}
+                          </Badge>
+                          <a href={e.receipt_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="sm"><Eye className="h-4 w-4 mr-1" /> Receipt</Button>
+                          </a>
+                          {e.status === "PENDING" && (
+                            <>
+                              <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
+                                <Check className="h-4 w-4 mr-1" /> Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleEnrollmentAction(e, "REJECTED")}>
+                                <X className="h-4 w-4 mr-1" /> Reject
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+              </div>
+            )}
+          </TabsContent>
 
-        <p className="text-xs text-muted-foreground text-center">
-          {filtered.length} lead{filtered.length !== 1 ? "s" : ""}
-        </p>
+          {/* ATTENDANCE TAB */}
+          <TabsContent value="attendance" className="space-y-4">
+            {attendanceReqs.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No attendance requests.</p>
+            ) : (
+              attendanceReqs.map((a) => (
+                <Card key={a.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-foreground">{(a as any).profiles?.name || "Unknown"}</p>
+                        <p className="text-sm text-muted-foreground">Date: {a.request_date} · Credits: {(a as any).profiles?.credits ?? 0}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
+                          {a.status}
+                        </Badge>
+                        {a.status === "PENDING" && (
+                          <>
+                            <Button size="sm" onClick={() => handleAttendanceAction(a, "APPROVED")}>
+                              <Check className="h-4 w-4 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleAttendanceAction(a, "REJECTED")}>
+                              <X className="h-4 w-4 mr-1" /> Reject
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          {/* LEADS TAB */}
+          <TabsContent value="leads" className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Filter status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
+            </div>
+
+            {loading ? (
+              <p className="text-muted-foreground text-center py-12">Loading...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-muted-foreground text-center py-12">No leads found.</p>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="hidden md:table-cell">Country</TableHead>
+                      <TableHead className="hidden md:table-cell">Level</TableHead>
+                      <TableHead className="hidden lg:table-cell">Goal</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden sm:table-cell">Date</TableHead>
+                      <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell className="font-medium">{lead.name}</TableCell>
+                        <TableCell>{lead.email}</TableCell>
+                        <TableCell className="hidden md:table-cell">{lead.country}</TableCell>
+                        <TableCell className="hidden md:table-cell">{lead.level}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{lead.goal}</TableCell>
+                        <TableCell>
+                          <Select value={lead.status} onValueChange={(v) => handleStatusChange(lead.id, v)}>
+                            <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
+                            <SelectContent>{STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete lead?</AlertDialogTitle>
+                                <AlertDialogDescription>This will permanently delete {lead.name}'s record.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(lead.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground text-center">{filtered.length} lead{filtered.length !== 1 ? "s" : ""}</p>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
