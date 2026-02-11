@@ -2,21 +2,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  MessageCircle,
-  FileText,
+  UserPlus,
+  CreditCard,
   CheckCircle2,
   Clock,
-  Sparkles,
-  Heart,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
 
-const stepIcons = [MessageCircle, FileText, CheckCircle2];
-const stepLinks = [
-  "https://t.me/+Fu5T7d4wLMsxNDY9",
-  "https://tally.so/r/nr4eal",
-  null,
-];
+const stepIcons = [UserPlus, CreditCard, CheckCircle2];
+const stepLinks = ["/signup", "/pricing", null];
 
 const EnrollSection = () => {
   const { t, tArray } = useLanguage();
@@ -76,28 +71,16 @@ const EnrollSection = () => {
 
                   {link && step.buttonText && (
                     <Button asChild className="w-full">
-                      <a href={link} target="_blank" rel="noopener noreferrer">
+                      <Link to={link}>
                         {step.buttonText}
-                      </a>
+                      </Link>
                     </Button>
                   )}
 
                   {!link && (
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap items-center justify-center gap-2">
-                        <Badge variant="outline" className="text-xs border-primary/50">
-                          <Sparkles className="h-3 w-3 mr-1" />
-                          {t("enroll", "egyptDiscount")}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs border-primary/50">
-                          <Sparkles className="h-3 w-3 mr-1" />
-                          {t("enroll", "malaysiaDiscount")}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-sm text-foreground font-medium">
-                        <Heart className="h-4 w-4 text-destructive" />
-                        {t("enroll", "reachOut")}
-                      </div>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground font-medium">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                      {t("enroll", "enrollNow") || "Enroll Now"}
                     </div>
                   )}
                 </CardContent>
