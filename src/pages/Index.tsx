@@ -1,10 +1,11 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import WhyKLovers from "@/components/WhyKLovers";
-import CoursesSection from "@/components/CoursesSection";
-import PricingSection from "@/components/PricingSection";
-import EnrollSection from "@/components/EnrollSection";
-import FAQSection from "@/components/FAQSection";
+import WhyLearnKorean from "@/components/WhyLearnKorean";
+import MeetTeacher from "@/components/MeetTeacher";
+import HowItWorks from "@/components/HowItWorks";
+import LearningRoadmap from "@/components/LearningRoadmap";
+import Testimonials from "@/components/Testimonials";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -13,11 +14,12 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <WhyKLovers />
-        <CoursesSection />
-        <PricingSection />
-        <EnrollSection />
-        <FAQSection />
+        <WhyLearnKorean />
+        <MeetTeacher />
+        <HowItWorks />
+        <LearningRoadmap />
+        <Testimonials />
+        <FinalCTA />
       </main>
       <Footer />
     </div>

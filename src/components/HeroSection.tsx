@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText } from "lucide-react";
+import { ArrowRight, DollarSign } from "lucide-react";
 import heroVideo from "@/assets/hero-korea-video.mp4";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -37,15 +37,15 @@ const HeroSection = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild className="gap-2">
-              <a href="#courses">
-                <BookOpen className="h-5 w-5" />
-                {t("hero", "viewCourses")}
+              <a href="#enroll">
+                <ArrowRight className="h-5 w-5" />
+                {t("hero", "startNow")}
               </a>
             </Button>
             <Button size="lg" variant="outline" asChild className="gap-2 bg-white/10 border-white/40 text-white hover:bg-white/20 backdrop-blur-sm">
-              <a href="#enroll">
-                <FileText className="h-5 w-5" />
-                {t("hero", "enrollNow")}
+              <a href="/pricing">
+                <DollarSign className="h-5 w-5" />
+                {t("hero", "viewPricing")}
               </a>
             </Button>
           </div>
