@@ -38,21 +38,21 @@ const tierPrices: Record<TierKey, { duration: string; classes: string; usd: numb
   ],
 };
 
-const privatePrices: Record<TierKey, { duration: string; usd: number }[]> = {
+const privatePrices: Record<TierKey, { duration: string; classes: string; usd: number }[]> = {
   local: [
-    { duration: "1 Month", usd: 50 },
-    { duration: "3 Months", usd: 140 },
-    { duration: "6 Months", usd: 250 },
+    { duration: "1 Month", classes: "4 classes", usd: 50 },
+    { duration: "3 Months", classes: "12 classes", usd: 140 },
+    { duration: "6 Months", classes: "24 classes", usd: 250 },
   ],
   regional: [
-    { duration: "1 Month", usd: 80 },
-    { duration: "3 Months", usd: 220 },
-    { duration: "6 Months", usd: 380 },
+    { duration: "1 Month", classes: "4 classes", usd: 80 },
+    { duration: "3 Months", classes: "12 classes", usd: 220 },
+    { duration: "6 Months", classes: "24 classes", usd: 380 },
   ],
   global: [
-    { duration: "1 Month", usd: 120 },
-    { duration: "3 Months", usd: 330 },
-    { duration: "6 Months", usd: 580 },
+    { duration: "1 Month", classes: "4 classes", usd: 120 },
+    { duration: "3 Months", classes: "12 classes", usd: 330 },
+    { duration: "6 Months", classes: "24 classes", usd: 580 },
   ],
 };
 
@@ -130,7 +130,7 @@ const PricingSection = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Group Classes
+                {t("pricing", "groupClasses")}
               </button>
               <button
                 onClick={() => setClassType("private")}
@@ -140,7 +140,7 @@ const PricingSection = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Private Classes
+                {t("pricing", "privateClasses")}
               </button>
             </div>
           </div>
@@ -252,6 +252,9 @@ const PricingSection = () => {
                             <p className="font-semibold text-foreground text-sm">
                               {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                             </p>
+                            <p className="text-xs text-muted-foreground">
+                              {t("pricing", `classes.${price.classes}`) !== `classes.${price.classes}` ? t("pricing", `classes.${price.classes}`) : price.classes}
+                            </p>
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-foreground">
@@ -264,19 +267,36 @@ const PricingSection = () => {
                   </div>
 
                   <ul className="space-y-2 mb-6">
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-foreground shrink-0" />
-                      {t("pricing", "oncePerWeek")}
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-foreground shrink-0" />
-                      {t("pricing", "groupPrivate")}
-                    </li>
-                    {tierKey === "global" && (
-                      <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Check className="h-4 w-4 text-foreground shrink-0" />
-                        {t("pricing", "priorityScheduling")}
-                      </li>
+                    {classType === "group" ? (
+                      <>
+                        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          {t("pricing", "groupBenefits.oncePerWeek")}
+                        </li>
+                        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          {t("pricing", "groupBenefits.groupEnvironment")}
+                        </li>
+                        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          {t("pricing", "groupBenefits.structuredCurriculum")}
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          {t("pricing", "privateBenefits.privateSessions")}
+                        </li>
+                        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          {t("pricing", "privateBenefits.flexibleScheduling")}
+                        </li>
+                        <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          {t("pricing", "privateBenefits.personalFeedback")}
+                        </li>
+                      </>
                     )}
                   </ul>
 
