@@ -19,19 +19,19 @@ const HeroSection = () => {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="max-w-4xl mx-auto">
-          <span className="inline-block px-5 py-2.5 rounded-full bg-primary/30 text-white text-sm font-semibold mb-6 border border-primary/40 backdrop-blur-sm shadow-lg">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <span className="inline-block px-4 py-2 rounded-full bg-white/10 text-white/90 text-sm font-medium border border-white/20 backdrop-blur-md tracking-wide uppercase">
             {t("hero", "badge")}
           </span>
 
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1] tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">
             {t("hero", "title1")}{" "}
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-md shadow-lg">
+            <span className="text-primary drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]">
               {t("hero", "title2")}
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-md font-medium">
+          <p className="text-base md:text-lg text-white/80 max-w-xl mx-auto leading-relaxed drop-shadow-md">
             {t("hero", "subtitle")}
           </p>
 
