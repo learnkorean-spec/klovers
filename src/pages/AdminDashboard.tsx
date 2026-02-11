@@ -44,7 +44,8 @@ const AdminDashboard = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("Failed to fetch leads:", error.message);
+      toast({ title: "Error", description: "Unable to load leads. Please try again.", variant: "destructive" });
     } else {
       setLeads((data as Lead[]) || []);
     }
@@ -62,7 +63,8 @@ const AdminDashboard = () => {
       .eq("id", id);
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("Failed to update lead status:", error.message);
+      toast({ title: "Error", description: "Failed to update status. Please try again.", variant: "destructive" });
     } else {
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
     }
@@ -71,7 +73,8 @@ const AdminDashboard = () => {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("leads").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("Failed to delete lead:", error.message);
+      toast({ title: "Error", description: "Failed to delete lead. Please try again.", variant: "destructive" });
     } else {
       setLeads((prev) => prev.filter((l) => l.id !== id));
       toast({ title: "Deleted" });
