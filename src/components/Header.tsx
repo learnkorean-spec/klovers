@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, toggleLanguage } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const navLinks = [
     { href: "/", label: t("header", "home") },
@@ -49,9 +58,20 @@ const Header = () => {
               <Globe className="h-4 w-4" />
               {t("header", "langToggle")}
             </Button>
-            <Button asChild>
-              <Link to="/pricing">{t("header", "enrollNow")}</Link>
-            </Button>
+            {user ? (
+              <Button asChild>
+                <Link to="/dashboard">My Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/login">Log In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           <button
@@ -84,9 +104,20 @@ const Header = () => {
                 <Globe className="h-4 w-4" />
                 {t("header", "langToggle")}
               </Button>
-              <Button asChild className="w-full">
-                <Link to="/pricing">{t("header", "enrollNow")}</Link>
-              </Button>
+              {user ? (
+                <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                  <Link to="/dashboard">My Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/login">Log In</Link>
+                  </Button>
+                  <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/signup">Sign Up</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         )}
