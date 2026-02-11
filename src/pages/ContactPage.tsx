@@ -16,11 +16,11 @@ const ContactPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const body = `From: ${form.name} (${form.email})%0D%0A%0D%0A${encodeURIComponent(form.message)}`;
-    const subject = encodeURIComponent(form.subject);
-    window.open(`mailto:reham.elshrkawy@gmail.com?subject=${subject}&body=${body}`, "_self");
-    toast({ title: "Message sent!", description: "Your email client should open shortly." });
+    toast({ title: "Thank you!", description: "Please continue in our Telegram group." });
     setForm({ name: "", email: "", subject: "", message: "" });
+    setTimeout(() => {
+      window.open("https://t.me/+Fu5T7d4wLMsxNDY9", "_blank");
+    }, 1500);
   };
 
   return (
