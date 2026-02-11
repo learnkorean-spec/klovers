@@ -130,8 +130,8 @@ export const translations = {
     aboutPage: {
       title: "About K-Lovers",
       story: {
-        title: "Riham's Story",
-        content: "K-Lovers was founded by Riham, a passionate Korean language educator who discovered her love for Korean through K-Drama and K-Pop. After years of studying and teaching Korean, she created K-Lovers to make Korean language education accessible, structured, and enjoyable for Arabic-speaking students worldwide. What started as small tutoring sessions has grown into a thriving community of 2,000+ students across the Middle East and Southeast Asia.",
+        title: "Reham's Story",
+        content: "K-Lovers was founded by Reham, a passionate Korean language educator who discovered her love for Korean through K-Drama and K-Pop. After years of studying and teaching Korean, she created K-Lovers to make Korean language education accessible, structured, and enjoyable for Arabic-speaking students worldwide. What started as small tutoring sessions has grown into a thriving community of 2,000+ students across the Middle East and Southeast Asia.",
       },
       philosophy: {
         title: "Teaching Philosophy",
