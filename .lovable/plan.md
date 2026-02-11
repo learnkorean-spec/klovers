@@ -1,40 +1,40 @@
 
-# Add Arabic/English Language Toggle
+# Update Teaching Team Section & Replace Hero Video
 
 ## Overview
-Add a language switcher button to the header that toggles between English and Arabic, with full RTL support for Arabic. The button will show "العربية" when in English mode and "English" when in Arabic mode, matching the reference screenshot.
+Two changes: (1) Redesign the "Meet Your Teacher" section into a professional academy-style "Meet Our Teaching Team" section with updated content and a 2-column layout, and (2) replace the hero video with a fresh, higher-quality cinematic video.
 
-## What Will Change
+## Changes
 
-### 1. Language Context (new file)
-Create a React context (`src/contexts/LanguageContext.tsx`) to manage the current language state (`en` / `ar`) across the entire app. This will provide a `useLanguage()` hook and handle setting `dir="rtl"` on the HTML element when Arabic is selected.
+### 1. Update Translations (`src/i18n/translations.ts`)
 
-### 2. Translations File (new file)
-Create `src/i18n/translations.ts` containing all UI text in both English and Arabic, organized by section (header, hero, courses, pricing, enrollment, FAQ, footer).
+**English `teacher` section** -- update to:
+- `title`: "Meet Our Teaching Team"
+- `name`: "Reham Elshrkawy"
+- `bio`: The 4-paragraph professional academy description provided
+- `highlights`: Updated to "2,000+ Students", "Structured Curriculum", "Professional Teaching Team"
 
-### 3. Header Update
-Add a language toggle button next to the "Enroll Now" CTA showing "العربية" or "English". Also available in the mobile menu.
+**Arabic `teacher` section** -- matching Arabic translations for the new content.
 
-### 4. Update All Sections
-Replace hardcoded English text with translated strings from the translations file in:
-- HeroSection
-- WhyKLovers
-- CoursesSection
-- PricingSection
-- EnrollSection
-- FAQSection
-- Footer
+### 2. Redesign `MeetTeacher.tsx` Component
 
-### 5. RTL Support
-When Arabic is selected:
-- Set `dir="rtl"` on the document
-- Layout automatically mirrors thanks to Tailwind's logical properties
-- Text alignment switches appropriately
+Transform from centered single-column to a clean 2-column layout:
+
+- **Left column**: Section title, the full multi-paragraph bio text, and highlight badges displayed as inline pill/badge elements
+- **Right column**: A larger teacher avatar/illustration area with a decorative background shape
+- Improved spacing (`py-24`), visual hierarchy with the title left-aligned above the text
+- Highlight badges styled as small rounded pills with icons (Users, BookOpen, Award) for a professional look
+- Fully responsive: stacks to single column on mobile
+- Keep the existing Card-based highlight grid below the 2-column area as an alternative, or integrate badges inline -- will use inline badges for a cleaner look
+
+### 3. Replace Hero Video
+
+Generate a new high-quality cinematic video of South Korea (temples, city streets, cultural scenes) and replace `src/assets/hero-korea-video.mp4`. No code changes needed in `HeroSection.tsx` since it already imports from this path.
 
 ## Technical Details
 
-- **State management**: React Context with `useState`, persisted via `localStorage`
-- **No new dependencies** needed -- pure React implementation
-- **RTL handling**: Toggle `document.documentElement.dir` between `ltr` and `rtl`
-- **Wrap `App` with `LanguageProvider`** so all components can access the language context
-- All existing component files will be updated to use `useLanguage()` hook and pull text from the translations object
+- **Files modified**: `src/i18n/translations.ts`, `src/components/MeetTeacher.tsx`, `src/assets/hero-korea-video.mp4`
+- **No new dependencies** required
+- Uses existing Badge component from `src/components/ui/badge.tsx` for highlight pills
+- Maintains RTL compatibility through the existing language context system
+- The bio will be split into multiple paragraphs using separate translation keys (`bio1`, `bio2`, `bio3`, `bio4`) for cleaner rendering
