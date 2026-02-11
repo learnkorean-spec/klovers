@@ -37,7 +37,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const tArray = (section: string, key: string): any[] => {
-    return (translations[language] as any)?.[section]?.[key] ?? [];
+    const keys = key.split(".");
+    let result: any = (translations[language] as any)?.[section];
+    for (const k of keys) {
+      result = result?.[k];
+    }
+    return Array.isArray(result) ? result : [];
   };
 
   return (
