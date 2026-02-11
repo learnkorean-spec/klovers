@@ -12,12 +12,15 @@ import { useToast } from "@/hooks/use-toast";
 const ContactPage = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "Message sent!", description: "We'll get back to you soon." });
-    setForm({ name: "", email: "", message: "" });
+    const body = `From: ${form.name} (${form.email})%0D%0A%0D%0A${encodeURIComponent(form.message)}`;
+    const subject = encodeURIComponent(form.subject);
+    window.open(`mailto:reham.elshrkawy@gmail.com?subject=${subject}&body=${body}`, "_self");
+    toast({ title: "Message sent!", description: "Your email client should open shortly." });
+    setForm({ name: "", email: "", subject: "", message: "" });
   };
 
   return (
@@ -64,6 +67,17 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1 block">
+                        {t("contactPage", "form.subject")}
+                      </label>
+                      <Input
+                        placeholder={t("contactPage", "form.subjectPlaceholder")}
+                        value={form.subject}
+                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">
                         {t("contactPage", "form.message")}
                       </label>
                       <Textarea
@@ -84,8 +98,12 @@ const ContactPage = () => {
 
               <div className="text-center">
                 <p className="text-muted-foreground mb-3">{t("contactPage", "or")}</p>
-                <Button variant="outline" size="lg" asChild className="gap-2">
-                  <a href="https://wa.me/message" target="_blank" rel="noopener noreferrer">
+                <Button
+                  size="lg"
+                  asChild
+                  className="gap-2 rounded-full bg-[#25D366] text-white hover:bg-[#1ebe5d]"
+                >
+                  <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq?mode=gi_t" target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="h-5 w-5" />
                     {t("contactPage", "whatsapp")}
                   </a>
