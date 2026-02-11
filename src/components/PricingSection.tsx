@@ -74,9 +74,12 @@ const allCountries = tierKeys.flatMap((key) =>
 );
 allCountries.sort((a, b) => a.country.localeCompare(b.country));
 
+type ClassType = "group" | "private";
+
 const PricingSection = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [activeTier, setActiveTier] = useState<TierKey | null>(null);
+  const [classType, setClassType] = useState<ClassType>("group");
   const { t } = useLanguage();
 
   const handleCountryChange = (country: string) => {
@@ -116,8 +119,32 @@ const PricingSection = () => {
               </SelectContent>
             </Select>
           </div>
-        </div>
 
+          <div className="flex justify-center mt-6">
+            <div className="inline-flex rounded-lg bg-muted p-1">
+              <button
+                onClick={() => setClassType("group")}
+                className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+                  classType === "group"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Group Classes
+              </button>
+              <button
+                onClick={() => setClassType("private")}
+                className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+                  classType === "private"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Private Classes
+              </button>
+            </div>
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {tierKeys.map((tierKey) => {
             const isActive = activeTier === tierKey;
@@ -184,58 +211,56 @@ const PricingSection = () => {
                     </div>
                   )}
 
-                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Group Classes</p>
                   <div className="space-y-3 mb-6">
-                    {tierPrices[tierKey].map((price) => (
-                      <div
-                        key={price.duration}
-                        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-                          isActive ? "bg-accent" : "bg-muted/50"
-                        }`}
-                      >
-                        <div>
-                          <p className="font-semibold text-foreground text-sm">
-                            {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {t("pricing", `classes.${price.classes}`) !== `classes.${price.classes}` ? t("pricing", `classes.${price.classes}`) : price.classes}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg text-foreground">
-                            ${price.usd}
-                          </p>
-                          {price.local && isActive && (
-                            <p className="text-xs text-muted-foreground">
-                              {price.local}
+                    {classType === "group" ? (
+                      tierPrices[tierKey].map((price) => (
+                        <div
+                          key={price.duration}
+                          className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                            isActive ? "bg-accent" : "bg-muted/50"
+                          }`}
+                        >
+                          <div>
+                            <p className="font-semibold text-foreground text-sm">
+                              {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                             </p>
-                          )}
+                            <p className="text-xs text-muted-foreground">
+                              {t("pricing", `classes.${price.classes}`) !== `classes.${price.classes}` ? t("pricing", `classes.${price.classes}`) : price.classes}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-foreground">
+                              ${price.usd}
+                            </p>
+                            {price.local && isActive && (
+                              <p className="text-xs text-muted-foreground">
+                                {price.local}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Private Classes</p>
-                  <div className="space-y-3 mb-6">
-                    {privatePrices[tierKey].map((price) => (
-                      <div
-                        key={`private-${price.duration}`}
-                        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-                          isActive ? "bg-accent" : "bg-muted/50"
-                        }`}
-                      >
-                        <div>
-                          <p className="font-semibold text-foreground text-sm">
-                            {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
-                          </p>
+                      ))
+                    ) : (
+                      privatePrices[tierKey].map((price) => (
+                        <div
+                          key={`private-${price.duration}`}
+                          className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                            isActive ? "bg-accent" : "bg-muted/50"
+                          }`}
+                        >
+                          <div>
+                            <p className="font-semibold text-foreground text-sm">
+                              {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-foreground">
+                              ${price.usd}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg text-foreground">
-                            ${price.usd}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
 
                   <ul className="space-y-2 mb-6">
