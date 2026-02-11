@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation } from "react-router-dom";
 
 const Header = () => {
@@ -23,7 +24,7 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl">🇰🇷</span>
+            <img src={kloversLogo} alt="K-Lovers" className="h-10 w-10 rounded-full object-cover" />
             <span className="font-bold text-xl text-foreground">K-Lovers</span>
           </Link>
 
