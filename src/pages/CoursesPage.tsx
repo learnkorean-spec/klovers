@@ -1,0 +1,57 @@
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import CoursesSection from "@/components/CoursesSection";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { BookOpen, Clock, RotateCcw } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const CoursesPage = () => {
+  const { t, tArray } = useLanguage();
+  const weeklyItems = tArray("courses", "weeklyStructure.items") as { title: string; description: string }[];
+  const weeklyIcons = [BookOpen, Clock, RotateCcw];
+
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <main className="pt-16">
+        <CoursesSection />
+
+        <section className="py-16 bg-card">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                {t("courses", "weeklyStructure.title")}
+              </h2>
+              <p className="text-muted-foreground">
+                {t("courses", "weeklyStructure.subtitle")}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              {weeklyItems.map((item, index) => {
+                const Icon = weeklyIcons[index];
+                return (
+                  <Card key={index} className="text-center border-border">
+                    <CardContent className="p-6">
+                      <Icon className="h-8 w-8 text-primary mx-auto mb-3" />
+                      <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            <div className="text-center mt-10">
+              <Button size="lg" asChild>
+                <a href="/pricing">{t("courses", "cta")}</a>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default CoursesPage;
