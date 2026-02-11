@@ -1,40 +1,26 @@
 
-# Update Teaching Team Section & Replace Hero Video
+# Contact Page Upgrade
 
-## Overview
-Two changes: (1) Redesign the "Meet Your Teacher" section into a professional academy-style "Meet Our Teaching Team" section with updated content and a 2-column layout, and (2) replace the hero video with a fresh, higher-quality cinematic video.
+## What's changing
 
-## Changes
-
-### 1. Update Translations (`src/i18n/translations.ts`)
-
-**English `teacher` section** -- update to:
-- `title`: "Meet Our Teaching Team"
-- `name`: "Reham Elshrkawy"
-- `bio`: The 4-paragraph professional academy description provided
-- `highlights`: Updated to "2,000+ Students", "Structured Curriculum", "Professional Teaching Team"
-
-**Arabic `teacher` section** -- matching Arabic translations for the new content.
-
-### 2. Redesign `MeetTeacher.tsx` Component
-
-Transform from centered single-column to a clean 2-column layout:
-
-- **Left column**: Section title, the full multi-paragraph bio text, and highlight badges displayed as inline pill/badge elements
-- **Right column**: A larger teacher avatar/illustration area with a decorative background shape
-- Improved spacing (`py-24`), visual hierarchy with the title left-aligned above the text
-- Highlight badges styled as small rounded pills with icons (Users, BookOpen, Award) for a professional look
-- Fully responsive: stacks to single column on mobile
-- Keep the existing Card-based highlight grid below the 2-column area as an alternative, or integrate badges inline -- will use inline badges for a cleaner look
-
-### 3. Replace Hero Video
-
-Generate a new high-quality cinematic video of South Korea (temples, city streets, cultural scenes) and replace `src/assets/hero-korea-video.mp4`. No code changes needed in `HeroSection.tsx` since it already imports from this path.
+1. **Add Subject field** to the contact form (between Email and Message)
+2. **Send form via email** using a `mailto:` link to `reham.elshrkawy@gmail.com` with subject and body pre-filled, then show a success toast
+3. **Update WhatsApp button** with the correct community link, WhatsApp green styling, and "Join Our WhatsApp Community" text
 
 ## Technical Details
 
-- **Files modified**: `src/i18n/translations.ts`, `src/components/MeetTeacher.tsx`, `src/assets/hero-korea-video.mp4`
-- **No new dependencies** required
-- Uses existing Badge component from `src/components/ui/badge.tsx` for highlight pills
-- Maintains RTL compatibility through the existing language context system
-- The bio will be split into multiple paragraphs using separate translation keys (`bio1`, `bio2`, `bio3`, `bio4`) for cleaner rendering
+### 1. ContactPage.tsx changes
+- Add `subject` to form state
+- Add a Subject input field between Email and Message
+- On submit, open a `mailto:reham.elshrkawy@gmail.com` link with the subject and body (name + message) encoded, then show success toast and reset form
+- Replace the current WhatsApp button with a green (`#25D366`) rounded button linking to `https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq?mode=gi_t`
+
+### 2. Translation updates (translations.ts)
+- Add `form.subject`, `form.subjectPlaceholder`, and update `whatsapp` text in both English and Arabic:
+  - EN: subject = "Subject", placeholder = "What is this about?", whatsapp = "Join Our WhatsApp Community"
+  - AR: subject = "الموضوع", placeholder = "ما هو موضوع رسالتك؟", whatsapp = "انضم لمجتمعنا على واتساب"
+
+### 3. WhatsApp button styling
+- Background: `bg-[#25D366]` with `hover:bg-[#1ebe5d]`
+- White text, rounded-full, WhatsApp icon (MessageCircle from lucide)
+- Fully responsive
