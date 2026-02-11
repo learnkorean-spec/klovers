@@ -166,13 +166,15 @@ export const translations = {
       form: {
         name: "Your Name",
         email: "Your Email",
+        subject: "Subject",
+        subjectPlaceholder: "What is this about?",
         message: "Your Message",
         send: "Send Message",
         namePlaceholder: "Enter your name",
         emailPlaceholder: "Enter your email",
         messagePlaceholder: "How can we help you?",
       },
-      whatsapp: "Chat on WhatsApp",
+      whatsapp: "Join Our WhatsApp Community",
       or: "Or reach us directly",
     },
     pricing: {
@@ -414,13 +416,15 @@ export const translations = {
       form: {
         name: "اسمك",
         email: "بريدك الإلكتروني",
+        subject: "الموضوع",
+        subjectPlaceholder: "ما هو موضوع رسالتك؟",
         message: "رسالتك",
         send: "إرسال الرسالة",
         namePlaceholder: "أدخل اسمك",
         emailPlaceholder: "أدخل بريدك الإلكتروني",
         messagePlaceholder: "كيف يمكننا مساعدتك؟",
       },
-      whatsapp: "تحدث عبر واتساب",
+      whatsapp: "انضم لمجتمعنا على واتساب",
       or: "أو تواصل معنا مباشرة",
     },
     pricing: {
