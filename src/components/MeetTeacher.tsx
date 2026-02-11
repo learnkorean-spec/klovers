@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Users, BookOpen, Award } from "lucide-react";
+import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 const highlightIcons = [Users, BookOpen, Award];
 
@@ -46,9 +47,11 @@ const MeetTeacher = () => {
           <div className="flex justify-center">
             <div className="relative">
               <div className="absolute -inset-4 rounded-full bg-primary/10 blur-2xl" />
-              <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-primary/20 border-4 border-primary/30 flex items-center justify-center">
-                <span className="text-7xl md:text-8xl">👩‍🏫</span>
-              </div>
+              <img
+                src={rehamPhoto}
+                alt="Reham Elshrkawy"
+                className="relative w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-primary/30"
+              />
             </div>
           </div>
         </div>
