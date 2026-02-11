@@ -38,6 +38,24 @@ const tierPrices: Record<TierKey, { duration: string; classes: string; usd: numb
   ],
 };
 
+const privatePrices: Record<TierKey, { duration: string; usd: number }[]> = {
+  local: [
+    { duration: "1 Month", usd: 50 },
+    { duration: "3 Months", usd: 140 },
+    { duration: "6 Months", usd: 250 },
+  ],
+  regional: [
+    { duration: "1 Month", usd: 80 },
+    { duration: "3 Months", usd: 220 },
+    { duration: "6 Months", usd: 380 },
+  ],
+  global: [
+    { duration: "1 Month", usd: 120 },
+    { duration: "3 Months", usd: 330 },
+    { duration: "6 Months", usd: 580 },
+  ],
+};
+
 const tierCountries: Record<TierKey, string[]> = {
   local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
   regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
@@ -166,6 +184,7 @@ const PricingSection = () => {
                     </div>
                   )}
 
+                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Group Classes</p>
                   <div className="space-y-3 mb-6">
                     {tierPrices[tierKey].map((price) => (
                       <div
@@ -191,6 +210,29 @@ const PricingSection = () => {
                               {price.local}
                             </p>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Private Classes</p>
+                  <div className="space-y-3 mb-6">
+                    {privatePrices[tierKey].map((price) => (
+                      <div
+                        key={`private-${price.duration}`}
+                        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                          isActive ? "bg-accent" : "bg-muted/50"
+                        }`}
+                      >
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">
+                            {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-foreground">
+                            ${price.usd}
+                          </p>
                         </div>
                       </div>
                     ))}
