@@ -200,6 +200,17 @@ const StudentDashboard = () => {
             </Card>
           )}
 
+          {enrollment && !isPending && enrollment.sessions_remaining <= 0 && (
+            <Card>
+              <CardContent className="pt-6 text-center space-y-3">
+                <AlertCircle className="h-10 w-10 mx-auto text-destructive" />
+                <h2 className="text-xl font-semibold text-foreground">No Sessions Remaining</h2>
+                <p className="text-muted-foreground">You've used all your sessions. Enroll again to continue learning.</p>
+                <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
+              </CardContent>
+            </Card>
+          )}
+
           {isActive && (
             <>
               {enrollment.plan_type === "GROUP" && !enrollment.matched_batch_id && (
