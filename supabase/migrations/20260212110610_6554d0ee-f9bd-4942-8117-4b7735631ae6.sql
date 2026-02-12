@@ -1,0 +1,1 @@
+ALTER TABLE public.enrollments ADD CONSTRAINT enrollments_tx_ref_unique UNIQUE (tx_ref);

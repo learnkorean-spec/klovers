@@ -110,6 +110,22 @@ serve(async (req) => {
         });
       }
 
+      // Idempotency: check if this payment was already processed
+      const txRef = (session.payment_intent as string) || session.id;
+
+      const { data: existingEnrollment } = await supabaseAdmin
+        .from("enrollments")
+        .select("id")
+        .eq("tx_ref", txRef)
+        .maybeSingle();
+
+      if (existingEnrollment) {
+        console.log(`Duplicate webhook for tx_ref ${txRef}, skipping`);
+        return new Response(JSON.stringify({ received: true, deduped: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // DERIVE plan details from Stripe line_items, NOT client metadata
       let plan: PlanInfo | null = null;
 
@@ -135,16 +151,14 @@ serve(async (req) => {
 
       const unitPrice = plan.classesIncluded > 0 ? plan.amount / plan.classesIncluded : 0;
 
-      // Find or create user by email
+      // Find or create user by email (efficient single-user lookup)
       let userId: string;
 
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(
-        (u) => u.email?.toLowerCase() === email.toLowerCase()
-      );
+      const { data: existingUserData, error: lookupError } =
+        await supabaseAdmin.auth.admin.getUserByEmail(email);
 
-      if (existingUser) {
-        userId = existingUser.id;
+      if (existingUserData?.user) {
+        userId = existingUserData.user.id;
         console.log(`Found existing user: ${userId}`);
       } else {
         // Generate a random temp password
@@ -183,7 +197,7 @@ serve(async (req) => {
         }
       }
 
-      // Create enrollment with APPROVED status (using service_role, bypasses RLS)
+      // Create enrollment with APPROVED status
       await supabaseAdmin.from("enrollments").insert({
         user_id: userId,
         plan_type: plan.classType,
@@ -191,7 +205,7 @@ serve(async (req) => {
         classes_included: plan.classesIncluded,
         amount: plan.amount,
         unit_price: unitPrice,
-        tx_ref: (session.payment_intent as string) || session.id,
+        tx_ref: txRef,
         receipt_url: `stripe:${session.id}`,
         status: "APPROVED",
       });
