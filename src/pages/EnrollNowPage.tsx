@@ -106,12 +106,12 @@ const EnrollNowPage = () => {
       <main className="container mx-auto px-4 py-12 max-w-2xl">
         {/* Progress */}
         <div className="flex items-center justify-center gap-4 mb-8">
-          <div className={`flex items-center gap-2 ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
+          <div className={`flex items-center gap-2 ${step >= 1 ? "text-foreground" : "text-muted-foreground"}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1</div>
             <span className="text-sm font-medium hidden sm:inline">Choose Plan</span>
           </div>
           <div className={`w-12 h-0.5 ${step >= 2 ? "bg-primary" : "bg-border"}`} />
-          <div className={`flex items-center gap-2 ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
+          <div className={`flex items-center gap-2 ${step >= 2 ? "text-foreground" : "text-muted-foreground"}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2</div>
             <span className="text-sm font-medium hidden sm:inline">Pay & Enroll</span>
           </div>
@@ -229,7 +229,7 @@ const EnrollNowPage = () => {
                       <p className="font-bold text-foreground">{d} {d === 1 ? "Month" : "Months"}</p>
                       <p className="text-xs text-muted-foreground">{durationClasses[d]} classes</p>
                       {tier && (
-                        <p className="text-sm font-semibold text-primary mt-1">${tierPrices[tier][classType][d]}</p>
+                        <p className="text-sm font-bold text-foreground mt-1">${tierPrices[tier][classType][d]}</p>
                       )}
                     </button>
                   ))}
