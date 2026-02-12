@@ -43,6 +43,7 @@ const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [attendanceReqs, setAttendanceReqs] = useState<AttendanceReq[]>([]);
+  const [profiles, setProfiles] = useState<{ user_id: string; name: string; email: string; country: string; level: string; credits: number; status: string; created_at: string }[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,7 @@ const AdminDashboard = () => {
     if (leadsRes.data) setLeads(leadsRes.data as Lead[]);
     if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
     if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] || null })));
+    if (profilesRes.data) setProfiles(profilesRes.data as any[]);
     setLoading(false);
   };
 
@@ -193,16 +195,58 @@ const AdminDashboard = () => {
           <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
         </div>
 
-        <Tabs defaultValue="enrollments">
+        <Tabs defaultValue="students">
           <TabsList>
-            <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="leads">Leads</TabsTrigger>
+            <TabsTrigger value="students">Students ({profiles.length})</TabsTrigger>
+            <TabsTrigger value="enrollments">Enrollments ({enrollments.length})</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance ({attendanceReqs.length})</TabsTrigger>
+            <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
           </TabsList>
+
+          {/* STUDENTS TAB */}
+          <TabsContent value="students" className="space-y-4">
+            {loading ? (
+              <p className="text-muted-foreground text-center py-8">Loading...</p>
+            ) : profiles.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No students registered yet.</p>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="hidden md:table-cell">Country</TableHead>
+                      <TableHead className="hidden md:table-cell">Level</TableHead>
+                      <TableHead>Credits</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden sm:table-cell">Joined</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {profiles.map((p) => (
+                      <TableRow key={p.user_id}>
+                        <TableCell className="font-medium">{p.name || "—"}</TableCell>
+                        <TableCell>{p.email}</TableCell>
+                        <TableCell className="hidden md:table-cell">{p.country || "—"}</TableCell>
+                        <TableCell className="hidden md:table-cell">{p.level || "—"}</TableCell>
+                        <TableCell>{p.credits}</TableCell>
+                        <TableCell>
+                          <Badge variant={p.status === "ACTIVE" ? "default" : "secondary"}>{p.status}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground text-center">{profiles.length} student{profiles.length !== 1 ? "s" : ""}</p>
+          </TabsContent>
 
           <TabsContent value="enrollments" className="space-y-4">
             {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
-              <Tabs defaultValue="pending">
+              <Tabs defaultValue="approved">
                 <TabsList>
                   <TabsTrigger value="pending">Pending Review</TabsTrigger>
                   <TabsTrigger value="approved">Approved</TabsTrigger>
