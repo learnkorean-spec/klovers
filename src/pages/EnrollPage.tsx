@@ -72,8 +72,7 @@ const EnrollPage = () => {
       return;
     }
 
-    // Update profile status
-    await supabase.from("profiles").update({ status: "PENDING_PAYMENT" } as any).eq("user_id", userId);
+    // Profile status is now managed server-side; no client update needed
 
     toast({ title: "Enrollment submitted!", description: "We'll review your payment shortly." });
     setLoading(false);
