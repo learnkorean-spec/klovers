@@ -1,28 +1,31 @@
 
 
-## Fix 2 Remaining Warn-Level Security Issues
+## Integrate Stripe Payments
 
-### Issue 1: Remove "Anyone can submit leads" RLS Policy
+### Overview
+Replace the current manual payment flow (pay externally, upload receipt, wait for approval) with direct Stripe checkout. Students will be able to pay online and get instant enrollment confirmation.
 
-The `leads` table currently has a permissive INSERT policy for anonymous users. Since the `submit-lead` backend function now handles all lead submissions using the service role key (which bypasses RLS), this public INSERT policy is unnecessary and a security risk.
+### Current State
+- 18 product combinations: 3 tiers (Local/Regional/Global) x 2 types (Group/Private) x 3 durations (1/3/6 months)
+- Manual flow: student pays externally, uploads receipt image, admin reviews and approves
+- Prices are hardcoded in `PricingSection.tsx`
 
-**Fix:** Run a database migration to drop this policy.
-
-```sql
-DROP POLICY "Anyone can submit leads" ON public.leads;
-```
-
-### Issue 2: Enable Leaked Password Protection
-
-The authentication system currently does not check submitted passwords against known leaked/breached password databases. Enabling this adds a layer of protection against credential stuffing.
-
-**Fix:** Use the configure-auth tool to enable the `hibp` (Have I Been Pwned) leaked password protection setting.
+### What Will Change
+1. **Enable Stripe** -- Connect your Stripe account to this project
+2. **Create Stripe Products/Prices** -- Set up all 18 pricing combinations as Stripe products
+3. **Add Checkout Flow** -- When a student clicks "Get Started" on a pricing card, they are taken to a Stripe Checkout session
+4. **Handle Payment Confirmation** -- A backend function (webhook) listens for successful payments and automatically creates the enrollment + updates the student profile (no manual admin approval needed for paid enrollments)
+5. **Keep Manual Option** -- Optionally keep the receipt upload flow for students who cannot pay via Stripe (e.g., local bank transfers)
 
 ### Technical Steps
+1. Enable Stripe integration (this will provide more detailed implementation tools)
+2. Create Stripe products and prices for all plan combinations
+3. Create a backend function for Stripe checkout session creation
+4. Create a webhook backend function to handle payment success events
+5. Update the pricing page buttons to trigger Stripe checkout
+6. Auto-approve enrollments on successful payment
 
-1. **Database migration** -- single SQL statement to drop the RLS policy
-2. **Auth configuration** -- enable leaked password protection via the auth config tool
-3. **Delete resolved security findings** from the scan results
-
-No code file changes are needed.
+### What You Will Need
+- A Stripe account (free to create at stripe.com)
+- Your Stripe secret key (found in the Stripe Dashboard under Developers > API Keys)
 
