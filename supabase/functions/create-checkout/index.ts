@@ -1,20 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
-const ALLOWED_ORIGINS = [
-  "https://klovers.lovable.app",
-  "https://id-preview--21511a91-fdcf-46bb-950e-98f5a8707807.lovable.app",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  };
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 
 // Server-side price map — client NEVER sends priceId
 type TierKey = "local" | "regional" | "global";
@@ -87,8 +78,6 @@ function isRateLimited(ip: string): boolean {
 }
 
 serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -137,16 +126,15 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || ALLOWED_ORIGINS[0];
-    const safeOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    const origin = req.headers.get("origin") || "https://klovers.lovable.app";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
       line_items: [{ price: priceEntry.priceId, quantity: 1 }],
       mode: "payment",
-      success_url: `${safeOrigin}/dashboard?payment=success`,
-      cancel_url: `${safeOrigin}/pricing?payment=canceled`,
+      success_url: `${origin}/dashboard?payment=success`,
+      cancel_url: `${origin}/pricing?payment=canceled`,
       metadata: {
         name: name.slice(0, 100),
         email: email.slice(0, 254),
