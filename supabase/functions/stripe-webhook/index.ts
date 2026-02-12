@@ -24,17 +24,26 @@ serve(async (req) => {
   );
 
   try {
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET is not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook secret not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
+    if (!sig) {
+      return new Response(
+        JSON.stringify({ error: "Missing stripe-signature header" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     let event: Stripe.Event;
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-
-    if (webhookSecret && sig) {
-      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(body) as Stripe.Event;
-    }
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
