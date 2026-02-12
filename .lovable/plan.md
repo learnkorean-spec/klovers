@@ -1,86 +1,55 @@
 
 
-## Refactor: Payment + Approval Separation
+## Fix: Student Dashboard Enrollment-Aware Logic
 
-Separate payment tracking from admin approval across the enrollment system, with zero data loss.
+Update `src/pages/StudentDashboard.tsx` to fetch the user's latest enrollment and conditionally render sections based on enrollment state.
 
-### Step 1 -- Database Migration (safe, additive)
+### Changes
 
-Add 4 new columns to `enrollments` table:
-- `payment_status` (text, default `'UNPAID'`)
-- `approval_status` (text, default `'PENDING'`)
-- `payment_provider` (text, nullable)
-- `admin_review_required` (boolean, default `false`)
+**1. Add enrollment state**
 
-Then backfill existing rows from the old `status` column:
-- `status = 'APPROVED'` maps to `payment_status = 'PAID'`, `approval_status = 'APPROVED'`
-- `status = 'REJECTED'` maps to `payment_status = 'UNPAID'`, `approval_status = 'REJECTED'`
-- `status = 'PENDING'` maps to `payment_status = 'UNPAID'`, `approval_status = 'PENDING'`, `admin_review_required = true`
+Fetch the latest enrollment for the logged-in user during the `load` effect:
 
-Infer `payment_provider` from `receipt_url`: if it starts with `stripe:` then `'stripe'`, otherwise `'manual'`.
-
-The old `status` column is kept untouched.
-
-### Step 2 -- Stripe Webhook Update
-
-**File: `supabase/functions/stripe-webhook/index.ts`**
-
-Update the enrollment insert (around line 201) to include the new columns:
-- `payment_status: 'PAID'`
-- `payment_provider: 'stripe'`
-- `approval_status: 'APPROVED'`
-- `admin_review_required: false`
-
-Keep `status: 'APPROVED'` for backward compatibility.
-
-### Step 3 -- Manual Enrollment Page Update
-
-**File: `src/pages/EnrollPage.tsx`**
-
-Update the insert (around line 56) to include:
-- `payment_provider: 'manual'`
-- `payment_status: 'UNPAID'`
-- `approval_status: 'PENDING'`
-- `admin_review_required: true`
-
-Keep `status: 'PENDING'` for backward compatibility.
-
-### Step 4 -- Admin Dashboard Refactor
-
-**File: `src/pages/AdminDashboard.tsx`**
-
-Update the `Enrollment` interface to add the new fields.
-
-Replace the enrollments tab with 3 sub-tabs:
-- **Pending Review** -- `admin_review_required === true && approval_status === 'PENDING'`
-- **Approved** -- `approval_status === 'APPROVED'`
-- **Rejected** -- `approval_status === 'REJECTED'`
-
-Each sub-tab shows an empty state when its list is empty.
-
-Update `handleEnrollmentAction`:
-- Approve: set `approval_status = 'APPROVED'`; if manual, also set `payment_status = 'PAID'`; keep writing old `status` too
-- Reject: set `approval_status = 'REJECTED'`; keep writing old `status` too
-
-Display `payment_provider` badge on each enrollment card (Stripe vs Manual).
-
-### Step 5 -- No Changes to Student Dashboard
-
-The `StudentDashboard` reads from `profiles.status` and `profiles.credits`, not from `enrollments.status`. No changes needed there.
-
-### Technical Details
-
-```text
-enrollments table (after migration)
--------------------------------------
-existing columns   | new columns
--------------------------------------
-status (kept)      | payment_status
-                   | approval_status
-                   | payment_provider
-                   | admin_review_required
--------------------------------------
+```
+SELECT approval_status, payment_status, sessions_remaining, sessions_total, plan_type, matched_batch_id
+FROM enrollments
+WHERE user_id = session.user.id
+ORDER BY created_at DESC
+LIMIT 1
 ```
 
-All writes will populate BOTH old and new columns during the transition period. The old `status` column can be dropped in a future cleanup once everything is validated.
+Store in a new `Enrollment | null` state.
 
+**2. Replace "Credits remaining" with "Sessions remaining"**
+
+The top summary card currently shows `profile.credits` labeled "Credits remaining". Change it to show `enrollment.sessions_remaining` labeled "Sessions remaining". If no enrollment, show 0.
+
+**3. Conditional rendering logic**
+
+Derive a helper:
+- `isActive` = enrollment exists AND `approval_status === 'APPROVED'` AND `payment_status === 'PAID'` AND `sessions_remaining > 0`
+- `isPending` = enrollment exists AND (`approval_status === 'PENDING'` OR `payment_status !== 'PAID'`)
+
+Then:
+
+- **No enrollment at all**: Hide attendance section entirely. Show a "No Active Plan" card with title, message ("You don't have an active plan yet. Enroll to start your classes."), and an "Enroll Now" button linking to `/enroll-now`.
+
+- **Enrollment exists but pending/unpaid**: Hide attendance section. Show an info card: "Your enrollment is pending approval."
+
+- **Active enrollment (isActive)**: Show the Request Attendance section and Attendance History as they are now. If `plan_type === 'GROUP'` and `matched_batch_id` is null, also show a note: "Awaiting batch assignment."
+
+**4. Update status display**
+
+Use enrollment data for status instead of profile credits:
+- If `isActive`: show "ACTIVE"
+- If `isPending`: show "PENDING"
+- If enrollment exists but `sessions_remaining <= 0`: show "OVERDUE"
+- No enrollment: show "NEW"
+
+**5. Safe null handling**
+
+All enrollment reads use optional chaining (`enrollment?.sessions_remaining ?? 0`). No errors if enrollment is null.
+
+### Technical Summary
+
+Only one file changes: `src/pages/StudentDashboard.tsx`. No database or backend changes needed -- just reading from the existing `enrollments` table which already has RLS allowing users to view their own enrollments.
