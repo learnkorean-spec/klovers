@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { LogOut, BookOpen, Calendar } from "lucide-react";
+import { LogOut, BookOpen, Calendar, AlertCircle, Info } from "lucide-react";
 
 interface Profile {
   name: string;
@@ -17,6 +17,15 @@ interface Profile {
   credits: number;
   level: string;
   country: string;
+}
+
+interface Enrollment {
+  approval_status: string;
+  payment_status: string;
+  sessions_remaining: number;
+  sessions_total: number;
+  plan_type: string;
+  matched_batch_id: string | null;
 }
 
 interface AttendanceRequest {
@@ -28,31 +37,67 @@ interface AttendanceRequest {
 
 const StudentDashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRequest[]>([]);
   const [requestDate, setRequestDate] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const isActive =
+    !!enrollment &&
+    enrollment.approval_status === "APPROVED" &&
+    enrollment.payment_status === "PAID" &&
+    enrollment.sessions_remaining > 0;
+
+  const isPending =
+    !!enrollment &&
+    (enrollment.approval_status === "PENDING" || enrollment.payment_status !== "PAID");
+
+  const displayStatus = isActive
+    ? "ACTIVE"
+    : isPending
+      ? "PENDING"
+      : enrollment && enrollment.sessions_remaining <= 0
+        ? "OVERDUE"
+        : "NEW";
+
+  const statusColor = (s: string) => {
+    switch (s) {
+      case "ACTIVE": return "default";
+      case "OVERDUE": return "destructive";
+      case "PENDING": return "secondary";
+      default: return "outline";
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
+      const [profileRes, enrollmentRes, attendanceRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single(),
+        supabase
+          .from("enrollments")
+          .select("approval_status, payment_status, sessions_remaining, sessions_total, plan_type, matched_batch_id")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("attendance_requests")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false }),
+      ]);
 
-      if (profileData) setProfile(profileData as any);
-
-      const { data: attendanceData } = await supabase
-        .from("attendance_requests")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
-
-      if (attendanceData) setAttendance(attendanceData as any);
+      if (profileRes.data) setProfile(profileRes.data as any);
+      if (enrollmentRes.data) setEnrollment(enrollmentRes.data);
+      if (attendanceRes.data) setAttendance(attendanceRes.data as any);
       setLoading(false);
     };
     load();
@@ -73,7 +118,6 @@ const StudentDashboard = () => {
     } else {
       toast({ title: "Attendance requested" });
       setRequestDate("");
-      // Refresh
       const { data } = await supabase
         .from("attendance_requests")
         .select("*")
@@ -86,19 +130,6 @@ const StudentDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
-  };
-
-  const displayStatus = profile?.credits !== undefined && profile.credits <= 0 && profile.status === "ACTIVE"
-    ? "OVERDUE"
-    : profile?.status || "NEW";
-
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "ACTIVE": return "default";
-      case "OVERDUE": return "destructive";
-      case "PENDING_PAYMENT": return "secondary";
-      default: return "outline";
-    }
   };
 
   if (loading) {
@@ -127,8 +158,8 @@ const StudentDashboard = () => {
             <Card>
               <CardContent className="pt-6 text-center">
                 <BookOpen className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-3xl font-bold text-foreground">{profile?.credits ?? 0}</p>
-                <p className="text-sm text-muted-foreground">Credits remaining</p>
+                <p className="text-3xl font-bold text-foreground">{enrollment?.sessions_remaining ?? 0}</p>
+                <p className="text-sm text-muted-foreground">Sessions remaining</p>
               </CardContent>
             </Card>
             <Card>
@@ -148,40 +179,73 @@ const StudentDashboard = () => {
             </Card>
           </div>
 
-          {/* Request attendance */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="h-5 w-5" /> Request Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-3">
-                <Input type="date" value={requestDate} onChange={(e) => setRequestDate(e.target.value)} />
-                <Button onClick={handleRequestAttendance} disabled={!requestDate}>Request</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Attendance history */}
-          {attendance.length > 0 && (
+          {/* Conditional sections based on enrollment state */}
+          {!enrollment && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Attendance History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {attendance.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                      <span className="text-sm text-foreground">{a.request_date}</span>
-                      <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
-                        {a.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="pt-6 text-center space-y-3">
+                <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground" />
+                <h2 className="text-xl font-semibold text-foreground">No Active Plan</h2>
+                <p className="text-muted-foreground">You don't have an active plan yet. Enroll to start your classes.</p>
+                <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
               </CardContent>
             </Card>
+          )}
+
+          {enrollment && isPending && (
+            <Card>
+              <CardContent className="pt-6 text-center space-y-2">
+                <Info className="h-10 w-10 mx-auto text-muted-foreground" />
+                <p className="text-muted-foreground">Your enrollment is pending approval.</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {isActive && (
+            <>
+              {enrollment.plan_type === "GROUP" && !enrollment.matched_batch_id && (
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <p className="text-sm text-muted-foreground">Awaiting batch assignment.</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Request attendance */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="h-5 w-5" /> Request Attendance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-3">
+                    <Input type="date" value={requestDate} onChange={(e) => setRequestDate(e.target.value)} />
+                    <Button onClick={handleRequestAttendance} disabled={!requestDate}>Request</Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Attendance history */}
+              {attendance.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Attendance History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {attendance.map((a) => (
+                        <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                          <span className="text-sm text-foreground">{a.request_date}</span>
+                          <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
+                            {a.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
 
           {/* Enroll CTA */}
