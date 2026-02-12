@@ -67,6 +67,8 @@ const EnrollPage = () => {
       payment_provider: "manual",
       approval_status: "PENDING",
       admin_review_required: true,
+      sessions_total: classesIncluded,
+      sessions_remaining: classesIncluded,
     } as any);
 
     if (insertError) {
