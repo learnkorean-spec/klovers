@@ -208,6 +208,10 @@ serve(async (req) => {
         tx_ref: txRef,
         receipt_url: `stripe:${session.id}`,
         status: "APPROVED",
+        payment_status: "PAID",
+        payment_provider: "stripe",
+        approval_status: "APPROVED",
+        admin_review_required: false,
       });
 
       // Update profile: add credits and set status
