@@ -1,0 +1,1 @@
+ALTER TABLE public.enrollments ADD COLUMN payment_method text;
