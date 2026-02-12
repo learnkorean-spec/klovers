@@ -212,6 +212,9 @@ serve(async (req) => {
         payment_provider: "stripe",
         approval_status: "APPROVED",
         admin_review_required: false,
+        sessions_total: plan.classesIncluded,
+        sessions_remaining: plan.classesIncluded,
+        stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
       });
 
       // Update profile: add credits and set status
