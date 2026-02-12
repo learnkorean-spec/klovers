@@ -15,7 +15,7 @@ import {
 import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getStripePrice, type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
+import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -76,22 +76,14 @@ const EnrollNowPage = () => {
       return;
     }
 
-    const priceInfo = getStripePrice(tier, classType, duration);
-    if (!priceInfo) {
-      toast({ title: "Error", description: "Could not find price for this selection.", variant: "destructive" });
-      return;
-    }
-
     setLoading(true);
     try {
+      // Send only tier/classType/duration — server maps to price
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
-          priceId: priceInfo.priceId,
           tier,
           classType,
           duration,
-          classesIncluded: priceInfo.classesIncluded,
-          amount: priceInfo.amount,
           name: name.trim(),
           email: email.trim().toLowerCase(),
         },
