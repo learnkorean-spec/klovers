@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X, Globe, UserCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,6 +30,11 @@ const Header = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
   const navLinks = [
     { href: "/", label: t("header", "home") },
@@ -58,19 +75,44 @@ const Header = () => {
               <Globe className="h-4 w-4" />
               {t("header", "langToggle")}
             </Button>
+
+            {/* Account Icon */}
             {user ? (
-              <Button asChild>
-                <Link to="/dashboard">My Dashboard</Link>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative p-2 rounded-full transition-all duration-200 hover:bg-accent group">
+                    <UserCircle className="h-6 w-6 text-primary transition-transform duration-200 group-hover:scale-110" />
+                    <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    My Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/courses")}>
+                    My Courses
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <>
-                <Button variant="outline" asChild>
-                  <Link to="/login">Log In</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/signup">Sign Up</Link>
-                </Button>
-              </>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="p-2 rounded-full transition-all duration-200 hover:bg-accent group"
+                  >
+                    <UserCircle className="h-6 w-6 text-muted-foreground transition-transform duration-200 group-hover:scale-110" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Sign in / Register</TooltipContent>
+              </Tooltip>
             )}
           </div>
 
@@ -105,18 +147,18 @@ const Header = () => {
                 {t("header", "langToggle")}
               </Button>
               {user ? (
-                <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Link to="/dashboard">My Dashboard</Link>
-                </Button>
-              ) : (
                 <>
                   <Button variant="outline" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/login">Log In</Link>
+                    <Link to="/dashboard">My Dashboard</Link>
                   </Button>
-                  <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/signup">Sign Up</Link>
+                  <Button variant="ghost" className="w-full justify-start" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
+                    Logout
                   </Button>
                 </>
+              ) : (
+                <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                  <Link to="/login">Sign In / Register</Link>
+                </Button>
               )}
             </div>
           </nav>

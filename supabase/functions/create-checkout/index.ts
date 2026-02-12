@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Server-side price map — client NEVER sends priceId
 type TierKey = "local" | "regional" | "global";
 type ClassType = "group" | "private";
 type Duration = 1 | 3 | 6;
@@ -61,7 +61,6 @@ const VALID_TIERS: TierKey[] = ["local", "regional", "global"];
 const VALID_CLASS_TYPES: ClassType[] = ["group", "private"];
 const VALID_DURATIONS: Duration[] = [1, 3, 6];
 
-// Simple in-memory rate limiter
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 3600_000;
 const RATE_LIMIT_MAX = 5;
@@ -95,7 +94,7 @@ serve(async (req) => {
       );
     }
 
-    const { tier, classType, duration, name, email } = await req.json();
+    const { tier, classType, duration, name, email, schedule } = await req.json();
 
     // Validate inputs
     if (!email || typeof email !== "string") throw new Error("Missing email");
@@ -106,18 +105,39 @@ serve(async (req) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) throw new Error("Invalid email format");
 
-    // Validate tier, classType, duration
     if (!VALID_TIERS.includes(tier)) throw new Error("Invalid tier");
     if (!VALID_CLASS_TYPES.includes(classType)) throw new Error("Invalid classType");
     if (!VALID_DURATIONS.includes(Number(duration) as Duration)) throw new Error("Invalid duration");
 
-    // Server-side price lookup — NO priceId from client
     const priceEntry = priceMap[tier as TierKey]?.[classType as ClassType]?.[Number(duration) as Duration];
     if (!priceEntry) throw new Error("No price found for selection");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Check if user is first-time (server-side discount validation)
+    let applyDiscount = false;
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Look up user by email to check enrollment history
+    const { data: userData } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    if (userData?.user) {
+      const { count } = await supabaseAdmin
+        .from("enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userData.user.id)
+        .eq("payment_status", "PAID");
+
+      if (count === 0) applyDiscount = true;
+    } else {
+      // New user = first time
+      applyDiscount = true;
+    }
 
     // Find existing Stripe customer by email
     const customers = await stripe.customers.list({ email, limit: 1 });
@@ -128,11 +148,34 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://klovers.lovable.app";
 
+    // Build discounts array if applicable
+    const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
+    if (applyDiscount) {
+      // Create a one-time 10% coupon
+      const coupon = await stripe.coupons.create({
+        percent_off: 10,
+        duration: "once",
+        name: "First-time student discount",
+      });
+      discounts.push({ coupon: coupon.id });
+    }
+
+    // Serialize schedule into metadata (Stripe metadata values must be strings, max 500 chars)
+    const scheduleStr = schedule
+      ? JSON.stringify({
+          tz: schedule.timezone?.slice(0, 50),
+          days: schedule.preferred_days?.slice(0, 2),
+          time: schedule.preferred_time?.slice(0, 30),
+          start: schedule.preferred_start?.slice(0, 30),
+        })
+      : "";
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
       line_items: [{ price: priceEntry.priceId, quantity: 1 }],
       mode: "payment",
+      ...(discounts.length > 0 ? { discounts } : {}),
       success_url: `${origin}/dashboard?payment=success`,
       cancel_url: `${origin}/pricing?payment=canceled`,
       metadata: {
@@ -141,6 +184,8 @@ serve(async (req) => {
         tier: tier,
         class_type: classType,
         duration: String(duration),
+        schedule: scheduleStr.slice(0, 500),
+        first_time_discount: applyDiscount ? "true" : "false",
       },
     });
 

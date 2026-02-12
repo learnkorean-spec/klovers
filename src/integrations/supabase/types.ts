@@ -165,6 +165,9 @@ export type Database = {
           payment_provider: string | null
           payment_status: string
           plan_type: string
+          preferred_days: string[] | null
+          preferred_start: string | null
+          preferred_time: string | null
           receipt_url: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -172,6 +175,7 @@ export type Database = {
           sessions_total: number
           status: string
           stripe_payment_intent_id: string | null
+          timezone: string | null
           tx_ref: string
           unit_price: number
           user_id: string
@@ -189,6 +193,9 @@ export type Database = {
           payment_provider?: string | null
           payment_status?: string
           plan_type: string
+          preferred_days?: string[] | null
+          preferred_start?: string | null
+          preferred_time?: string | null
           receipt_url: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -196,6 +203,7 @@ export type Database = {
           sessions_total?: number
           status?: string
           stripe_payment_intent_id?: string | null
+          timezone?: string | null
           tx_ref: string
           unit_price: number
           user_id: string
@@ -213,6 +221,9 @@ export type Database = {
           payment_provider?: string | null
           payment_status?: string
           plan_type?: string
+          preferred_days?: string[] | null
+          preferred_start?: string | null
+          preferred_time?: string | null
           receipt_url?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -220,6 +231,7 @@ export type Database = {
           sessions_total?: number
           status?: string
           stripe_payment_intent_id?: string | null
+          timezone?: string | null
           tx_ref?: string
           unit_price?: number
           user_id?: string

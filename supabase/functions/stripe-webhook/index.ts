@@ -17,7 +17,6 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-// Server-side price/credits map — derive from Stripe price ID, NOT client metadata
 type TierKey = "local" | "regional" | "global";
 type ClassType = "group" | "private";
 type Duration = 1 | 3 | 6;
@@ -31,27 +30,21 @@ interface PlanInfo {
 }
 
 const priceIdToPlan: Record<string, PlanInfo> = {
-  // Local Group
   "price_1SzuGyP5xKnfzufHDEWn3gYQ": { tier: "local", classType: "group", duration: 1, amount: 25, classesIncluded: 4 },
   "price_1SzuHIP5xKnfzufHopangw1F": { tier: "local", classType: "group", duration: 3, amount: 70, classesIncluded: 12 },
   "price_1SzuHdP5xKnfzufHOnyjqTdp": { tier: "local", classType: "group", duration: 6, amount: 130, classesIncluded: 24 },
-  // Local Private
   "price_1SzuJfP5xKnfzufHInig8j7K": { tier: "local", classType: "private", duration: 1, amount: 50, classesIncluded: 4 },
   "price_1SzuJxP5xKnfzufHfeHITx65": { tier: "local", classType: "private", duration: 3, amount: 140, classesIncluded: 12 },
   "price_1SzuKHP5xKnfzufHv2F9RQxh": { tier: "local", classType: "private", duration: 6, amount: 250, classesIncluded: 24 },
-  // Regional Group
   "price_1SzuHyP5xKnfzufH95Ft0goD": { tier: "regional", classType: "group", duration: 1, amount: 40, classesIncluded: 4 },
   "price_1SzuIFP5xKnfzufHVP5B37k0": { tier: "regional", classType: "group", duration: 3, amount: 110, classesIncluded: 12 },
   "price_1SzuIVP5xKnfzufHiKQZNrcN": { tier: "regional", classType: "group", duration: 6, amount: 200, classesIncluded: 24 },
-  // Regional Private
   "price_1SzuKcP5xKnfzufH5GZEy8qJ": { tier: "regional", classType: "private", duration: 1, amount: 80, classesIncluded: 4 },
   "price_1SzuKrP5xKnfzufHBdVWXoWm": { tier: "regional", classType: "private", duration: 3, amount: 220, classesIncluded: 12 },
   "price_1SzuLKP5xKnfzufHqCc6Z88A": { tier: "regional", classType: "private", duration: 6, amount: 380, classesIncluded: 24 },
-  // Global Group
   "price_1SzuIkP5xKnfzufHUoR4BcIy": { tier: "global", classType: "group", duration: 1, amount: 60, classesIncluded: 4 },
   "price_1SzuJ3P5xKnfzufHxh1lTYg6": { tier: "global", classType: "group", duration: 3, amount: 170, classesIncluded: 12 },
   "price_1SzuJMP5xKnfzufHERVUIwAG": { tier: "global", classType: "group", duration: 6, amount: 300, classesIncluded: 24 },
-  // Global Private
   "price_1SzuLZP5xKnfzufH4JcNbPF5": { tier: "global", classType: "private", duration: 1, amount: 120, classesIncluded: 4 },
   "price_1SzuLpP5xKnfzufHd9EcgWs2": { tier: "global", classType: "private", duration: 3, amount: 330, classesIncluded: 12 },
   "price_1SzuM4P5xKnfzufHQWJXvZWW": { tier: "global", classType: "private", duration: 6, amount: 580, classesIncluded: 24 },
@@ -110,9 +103,8 @@ serve(async (req) => {
         });
       }
 
-      // Idempotency: check if this payment was already processed
+      // Idempotency
       const txRef = (session.payment_intent as string) || session.id;
-
       const { data: existingEnrollment } = await supabaseAdmin
         .from("enrollments")
         .select("id")
@@ -126,10 +118,8 @@ serve(async (req) => {
         });
       }
 
-      // DERIVE plan details from Stripe line_items, NOT client metadata
+      // Derive plan from line items
       let plan: PlanInfo | null = null;
-
-      // Retrieve the session with line_items expanded
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
         expand: ["line_items.data.price"],
       });
@@ -149,21 +139,24 @@ serve(async (req) => {
         });
       }
 
-      const unitPrice = plan.classesIncluded > 0 ? plan.amount / plan.classesIncluded : 0;
+      // Use actual amount paid (after discount) from Stripe
+      const actualAmount = (session.amount_total ?? plan.amount * 100) / 100;
+      const unitPrice = plan.classesIncluded > 0 ? actualAmount / plan.classesIncluded : 0;
 
-      // Find or create user by email (efficient single-user lookup)
+      // Parse schedule from metadata
+      let scheduleData: { tz?: string; days?: string[]; time?: string; start?: string } = {};
+      try {
+        if (meta?.schedule) scheduleData = JSON.parse(meta.schedule);
+      } catch { /* ignore */ }
+
+      // Find or create user
       let userId: string;
-
-      const { data: existingUserData, error: lookupError } =
-        await supabaseAdmin.auth.admin.getUserByEmail(email);
+      const { data: existingUserData } = await supabaseAdmin.auth.admin.getUserByEmail(email);
 
       if (existingUserData?.user) {
         userId = existingUserData.user.id;
-        console.log(`Found existing user: ${userId}`);
       } else {
-        // Generate a random temp password
         const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
-
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password: tempPassword,
@@ -172,38 +165,26 @@ serve(async (req) => {
         });
 
         if (createError || !newUser.user) {
-          console.error("Failed to create user:", createError?.message);
           throw new Error(`Failed to create user: ${createError?.message}`);
         }
 
         userId = newUser.user.id;
-        console.log(`Created new user: ${userId} with email: ${email}`);
 
-        // Ensure profile name is set
         await supabaseAdmin
           .from("profiles")
           .update({ name, email })
           .eq("user_id", userId);
 
-        // Send password reset email so user can set their own password
-        const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-          type: "recovery",
-          email,
-        });
-        if (resetError) {
-          console.error("Failed to send password reset:", resetError.message);
-        } else {
-          console.log(`Password reset email sent to ${email}`);
-        }
+        await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email });
       }
 
-      // Create enrollment with APPROVED status
+      // Create enrollment with schedule data
       await supabaseAdmin.from("enrollments").insert({
         user_id: userId,
         plan_type: plan.classType,
         duration: plan.duration,
         classes_included: plan.classesIncluded,
-        amount: plan.amount,
+        amount: actualAmount,
         unit_price: unitPrice,
         tx_ref: txRef,
         receipt_url: `stripe:${session.id}`,
@@ -215,40 +196,32 @@ serve(async (req) => {
         sessions_total: plan.classesIncluded,
         sessions_remaining: plan.classesIncluded,
         stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        timezone: scheduleData.tz || null,
+        preferred_days: scheduleData.days || null,
+        preferred_time: scheduleData.time || null,
+        preferred_start: scheduleData.start || null,
       });
 
-      // Update profile: add credits and set status
+      // Update profile
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("credits")
         .eq("user_id", userId)
         .single();
 
-      const currentCredits = profile?.credits || 0;
-
       await supabaseAdmin
         .from("profiles")
         .update({
           status: "ACTIVE",
-          credits: currentCredits + plan.classesIncluded,
+          credits: (profile?.credits || 0) + plan.classesIncluded,
         })
         .eq("user_id", userId);
 
-      console.log(`Enrollment created for user ${userId}: ${plan.classesIncluded} classes, $${plan.amount}`);
+      console.log(`Enrollment created for user ${userId}: ${plan.classesIncluded} classes, $${actualAmount}`);
 
-      // Send confirmation email server-side
+      // Send confirmation email
       try {
         const emailLang = existingUserData?.user?.user_metadata?.language || "en";
-        const emailPayload = {
-          email,
-          name,
-          plan_type: plan.classType,
-          duration: plan.duration,
-          sessions_total: plan.classesIncluded,
-          amount: plan.amount,
-          language: emailLang,
-        };
-        
         const emailRes = await fetch(
           `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-confirmation-email`,
           {
@@ -257,14 +230,18 @@ serve(async (req) => {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
             },
-            body: JSON.stringify(emailPayload),
+            body: JSON.stringify({
+              email,
+              name,
+              plan_type: plan.classType,
+              duration: plan.duration,
+              sessions_total: plan.classesIncluded,
+              amount: actualAmount,
+              language: emailLang,
+            }),
           }
         );
-        if (!emailRes.ok) {
-          console.error("Failed to send confirmation email:", await emailRes.text());
-        } else {
-          console.log("Confirmation email sent successfully");
-        }
+        if (!emailRes.ok) console.error("Failed to send confirmation email:", await emailRes.text());
       } catch (emailErr) {
         console.error("Email sending error:", emailErr);
       }
