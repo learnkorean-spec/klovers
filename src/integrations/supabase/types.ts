@@ -46,11 +46,15 @@ export type Database = {
       }
       enrollments: {
         Row: {
+          admin_review_required: boolean
           amount: number
+          approval_status: string
           classes_included: number
           created_at: string
           duration: number
           id: string
+          payment_provider: string | null
+          payment_status: string
           plan_type: string
           receipt_url: string
           reviewed_at: string | null
@@ -61,11 +65,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_review_required?: boolean
           amount: number
+          approval_status?: string
           classes_included: number
           created_at?: string
           duration: number
           id?: string
+          payment_provider?: string | null
+          payment_status?: string
           plan_type: string
           receipt_url: string
           reviewed_at?: string | null
@@ -76,11 +84,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_review_required?: boolean
           amount?: number
+          approval_status?: string
           classes_included?: number
           created_at?: string
           duration?: number
           id?: string
+          payment_provider?: string | null
+          payment_status?: string
           plan_type?: string
           receipt_url?: string
           reviewed_at?: string | null

@@ -27,6 +27,8 @@ interface Lead {
 interface Enrollment {
   id: string; user_id: string; plan_type: string; duration: number; classes_included: number;
   amount: number; unit_price: number; tx_ref: string; receipt_url: string; status: string;
+  payment_status: string; approval_status: string; payment_provider: string | null;
+  admin_review_required: boolean;
   created_at: string; profiles?: { name: string; email: string } | null;
 }
 
@@ -104,7 +106,19 @@ const AdminDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const updates: any = { status: action, reviewed_at: new Date().toISOString(), reviewed_by: session.user.id };
+    const updates: any = {
+      status: action,
+      approval_status: action,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: session.user.id,
+    };
+
+    if (action === "APPROVED" && enrollment.payment_provider === "manual") {
+      updates.payment_status = "PAID";
+    }
+    if (action === "REJECTED") {
+      updates.payment_status = "UNPAID";
+    }
 
     // Validate and apply edited unit_price
     const editedPrice = editingUnitPrice[enrollment.id];
@@ -129,7 +143,6 @@ const AdminDashboard = () => {
     if (error) { toast({ title: "Error", description: "Failed to update enrollment.", variant: "destructive" }); return; }
 
     if (action === "APPROVED") {
-      // Add credits atomically via RPC
       const { error: creditError } = await supabase.rpc("add_credits", {
         _user_id: enrollment.user_id,
         _amount: enrollment.classes_included,
@@ -187,81 +200,98 @@ const AdminDashboard = () => {
             <TabsTrigger value="leads">Leads</TabsTrigger>
           </TabsList>
 
-          {/* ENROLLMENTS TAB */}
           <TabsContent value="enrollments" className="space-y-4">
             {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
-              <div className="space-y-4">
-                {enrollments.filter(e => e.status === "PENDING").length === 0 && (
-                  <p className="text-muted-foreground text-center py-8">No pending enrollments.</p>
-                )}
-                {enrollments.map((e) => (
-                  <Card key={e.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="space-y-1">
-                          <p className="font-semibold text-foreground">{(e as any).profiles?.name || "Unknown"} — {(e as any).profiles?.email}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {e.plan_type} · {e.duration}mo · {e.classes_included} classes · ${e.amount} · Ref: {e.tx_ref}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Unit price:</span>
-                            {e.status === "PENDING" ? (
-                              <Input
-                                type="number"
-                                className="h-7 w-24"
-                                min="0.01"
-                                max="10000"
-                                step="0.01"
-                                value={editingUnitPrice[e.id] ?? String(e.unit_price)}
-                                onChange={(ev) => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: ev.target.value }))}
-                              />
-                            ) : (
-                              <span className="text-sm font-medium text-foreground">${e.unit_price}</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={e.status === "APPROVED" ? "default" : e.status === "REJECTED" ? "destructive" : "secondary"}>
-                            {e.status}
-                          </Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              // For Stripe-based enrollments, receipt_url starts with "stripe:"
-                              if (e.receipt_url.startsWith("stripe:")) {
-                                toast({ title: "Stripe receipt", description: "This enrollment was paid via Stripe." });
-                                return;
-                              }
-                              const { data, error } = await supabase.storage
-                                .from("receipts")
-                                .createSignedUrl(e.receipt_url, 600); // 10 min expiry
-                              if (error || !data?.signedUrl) {
-                                toast({ title: "Error", description: "Could not load receipt.", variant: "destructive" });
-                                return;
-                              }
-                              window.open(data.signedUrl, "_blank");
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" /> Receipt
-                          </Button>
-                          {e.status === "PENDING" && (
-                            <>
-                              <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
-                                <Check className="h-4 w-4 mr-1" /> Approve
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleEnrollmentAction(e, "REJECTED")}>
-                                <X className="h-4 w-4 mr-1" /> Reject
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Tabs defaultValue="pending">
+                <TabsList>
+                  <TabsTrigger value="pending">Pending Review</TabsTrigger>
+                  <TabsTrigger value="approved">Approved</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                </TabsList>
+
+                {(["pending", "approved", "rejected"] as const).map((tab) => {
+                  const filtered = enrollments.filter((e) => {
+                    if (tab === "pending") return e.admin_review_required && e.approval_status === "PENDING";
+                    if (tab === "approved") return e.approval_status === "APPROVED";
+                    return e.approval_status === "REJECTED";
+                  });
+                  return (
+                    <TabsContent key={tab} value={tab} className="space-y-4">
+                      {filtered.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">No {tab} enrollments.</p>
+                      ) : filtered.map((e) => (
+                        <Card key={e.id}>
+                          <CardContent className="pt-6">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="space-y-1">
+                                <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {e.plan_type} · {e.duration}mo · {e.classes_included} classes · ${e.amount} · Ref: {e.tx_ref}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-muted-foreground">Unit price:</span>
+                                  {e.approval_status === "PENDING" && e.admin_review_required ? (
+                                    <Input
+                                      type="number"
+                                      className="h-7 w-24"
+                                      min="0.01"
+                                      max="10000"
+                                      step="0.01"
+                                      value={editingUnitPrice[e.id] ?? String(e.unit_price)}
+                                      onChange={(ev) => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: ev.target.value }))}
+                                    />
+                                  ) : (
+                                    <span className="text-sm font-medium text-foreground">${e.unit_price}</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={e.payment_provider === "stripe" ? "default" : "secondary"}>
+                                  {e.payment_provider === "stripe" ? "Stripe" : "Manual"}
+                                </Badge>
+                                <Badge variant={e.approval_status === "APPROVED" ? "default" : e.approval_status === "REJECTED" ? "destructive" : "secondary"}>
+                                  {e.approval_status}
+                                </Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (e.receipt_url.startsWith("stripe:")) {
+                                      toast({ title: "Stripe receipt", description: "This enrollment was paid via Stripe." });
+                                      return;
+                                    }
+                                    const { data, error } = await supabase.storage
+                                      .from("receipts")
+                                      .createSignedUrl(e.receipt_url, 600);
+                                    if (error || !data?.signedUrl) {
+                                      toast({ title: "Error", description: "Could not load receipt.", variant: "destructive" });
+                                      return;
+                                    }
+                                    window.open(data.signedUrl, "_blank");
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" /> Receipt
+                                </Button>
+                                {e.approval_status === "PENDING" && e.admin_review_required && (
+                                  <>
+                                    <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
+                                      <Check className="h-4 w-4 mr-1" /> Approve
+                                    </Button>
+                                    <Button size="sm" variant="destructive" onClick={() => handleEnrollmentAction(e, "REJECTED")}>
+                                      <X className="h-4 w-4 mr-1" /> Reject
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </TabsContent>
+                  );
+                })}
+              </Tabs>
             )}
           </TabsContent>
 

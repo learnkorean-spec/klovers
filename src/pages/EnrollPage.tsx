@@ -63,6 +63,10 @@ const EnrollPage = () => {
       tx_ref: txRef,
       receipt_url: filePath,
       status: "PENDING",
+      payment_status: "UNPAID",
+      payment_provider: "manual",
+      approval_status: "PENDING",
+      admin_review_required: true,
     } as any);
 
     if (insertError) {
