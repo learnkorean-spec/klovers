@@ -225,9 +225,27 @@ const AdminDashboard = () => {
                           <Badge variant={e.status === "APPROVED" ? "default" : e.status === "REJECTED" ? "destructive" : "secondary"}>
                             {e.status}
                           </Badge>
-                          <a href={e.receipt_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm"><Eye className="h-4 w-4 mr-1" /> Receipt</Button>
-                          </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              // For Stripe-based enrollments, receipt_url starts with "stripe:"
+                              if (e.receipt_url.startsWith("stripe:")) {
+                                toast({ title: "Stripe receipt", description: "This enrollment was paid via Stripe." });
+                                return;
+                              }
+                              const { data, error } = await supabase.storage
+                                .from("receipts")
+                                .createSignedUrl(e.receipt_url, 600); // 10 min expiry
+                              if (error || !data?.signedUrl) {
+                                toast({ title: "Error", description: "Could not load receipt.", variant: "destructive" });
+                                return;
+                              }
+                              window.open(data.signedUrl, "_blank");
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" /> Receipt
+                          </Button>
                           {e.status === "PENDING" && (
                             <>
                               <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>

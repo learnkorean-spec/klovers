@@ -51,8 +51,7 @@ const EnrollPage = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(filePath);
-
+    // Store the file path (not a public URL) so receipts stay protected by RLS
     // Insert enrollment
     const { error: insertError } = await supabase.from("enrollments").insert({
       user_id: userId,
@@ -62,7 +61,7 @@ const EnrollPage = () => {
       amount: Number(amount),
       unit_price: Number(unitPrice),
       tx_ref: txRef,
-      receipt_url: urlData.publicUrl,
+      receipt_url: filePath,
       status: "PENDING",
     } as any);
 
