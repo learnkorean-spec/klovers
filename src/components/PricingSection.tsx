@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/select";
 import { Check, MapPin, Star, Crown, Globe, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
-import { getStripePrice } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 
 type TierKey = "local" | "regional" | "global";
@@ -85,7 +83,6 @@ const PricingSection = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [activeTier, setActiveTier] = useState<TierKey | null>(null);
   const [classType, setClassType] = useState<ClassType>("group");
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const { t } = useLanguage();
 
   const handleCountryChange = (country: string) => {
@@ -328,60 +325,20 @@ const PricingSection = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Select
-                      onValueChange={async (dur) => {
-                        const duration = Number(dur) as 1 | 3 | 6;
-                        const priceInfo = getStripePrice(tierKey, classType, duration);
-                        if (!priceInfo) return;
-
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (!session) {
-                          navigate("/login");
-                          return;
-                        }
-
-                        const loadingKey = `${tierKey}-${dur}`;
-                        setCheckoutLoading(loadingKey);
-
-                        try {
-                          const { data, error } = await supabase.functions.invoke("create-checkout", {
-                            body: {
-                              priceId: priceInfo.priceId,
-                              tier: tierKey,
-                              classType,
-                              duration,
-                              classesIncluded: priceInfo.classesIncluded,
-                              amount: priceInfo.amount,
-                            },
-                          });
-
-                          if (error) throw error;
-                          if (data?.url) {
-                            window.open(data.url, "_blank");
-                          }
-                        } catch (err: any) {
-                          toast({ title: "Checkout error", description: err.message, variant: "destructive" });
-                        } finally {
-                          setCheckoutLoading(null);
-                        }
+                    <Button
+                      className="w-full"
+                      variant={isActive ? "default" : "outline"}
+                      size="lg"
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          classType,
+                          country: selectedCountry || "",
+                        });
+                        navigate(`/enroll-now?${params.toString()}`);
                       }}
                     >
-                      <SelectTrigger asChild>
-                        <Button
-                          className="w-full"
-                          variant={isActive ? "default" : "outline"}
-                          size="lg"
-                          disabled={checkoutLoading !== null}
-                        >
-                          {checkoutLoading?.startsWith(tierKey) ? "Redirecting..." : isActive ? t("pricing", "getStartedNow") : t("pricing", "getStarted")}
-                        </Button>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 Month</SelectItem>
-                        <SelectItem value="3">3 Months</SelectItem>
-                        <SelectItem value="6">6 Months</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      {isActive ? t("pricing", "getStartedNow") : t("pricing", "getStarted")}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
