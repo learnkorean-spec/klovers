@@ -235,6 +235,39 @@ serve(async (req) => {
         .eq("user_id", userId);
 
       console.log(`Enrollment created for user ${userId}: ${plan.classesIncluded} classes, $${plan.amount}`);
+
+      // Send confirmation email server-side
+      try {
+        const emailLang = existingUserData?.user?.user_metadata?.language || "en";
+        const emailPayload = {
+          email,
+          name,
+          plan_type: plan.classType,
+          duration: plan.duration,
+          sessions_total: plan.classesIncluded,
+          amount: plan.amount,
+          language: emailLang,
+        };
+        
+        const emailRes = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-confirmation-email`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+            },
+            body: JSON.stringify(emailPayload),
+          }
+        );
+        if (!emailRes.ok) {
+          console.error("Failed to send confirmation email:", await emailRes.text());
+        } else {
+          console.log("Confirmation email sent successfully");
+        }
+      } catch (emailErr) {
+        console.error("Email sending error:", emailErr);
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {
