@@ -1,55 +1,38 @@
 
 
-## Fix: Student Dashboard Enrollment-Aware Logic
+## Fix: Admin Dashboard - Show Student Names and Emails
 
-Update `src/pages/StudentDashboard.tsx` to fetch the user's latest enrollment and conditionally render sections based on enrollment state.
+### Problem
 
-### Changes
+Two issues prevent the admin from seeing user information:
 
-**1. Add enrollment state**
+1. **Wrong default subtab**: The Enrollments tab defaults to "Pending Review", but all current enrollments are APPROVED. The admin sees an empty list and thinks no data exists.
+2. **No Students view**: There is no dedicated tab to see all registered users (profiles). The admin can only see users who have enrollments or attendance requests.
 
-Fetch the latest enrollment for the logged-in user during the `load` effect:
+### Solution
 
-```
-SELECT approval_status, payment_status, sessions_remaining, sessions_total, plan_type, matched_batch_id
-FROM enrollments
-WHERE user_id = session.user.id
-ORDER BY created_at DESC
-LIMIT 1
-```
+**1. Add a "Students" tab to the admin dashboard**
 
-Store in a new `Enrollment | null` state.
+Add a new top-level tab called "Students" that displays all registered profiles from the database in a table format:
+- Columns: Name, Email, Country, Level, Credits, Status, Joined date
+- This gives the admin a complete view of all signed-up users regardless of enrollment status.
 
-**2. Replace "Credits remaining" with "Sessions remaining"**
+**2. Change default enrollment subtab to "approved"**
 
-The top summary card currently shows `profile.credits` labeled "Credits remaining". Change it to show `enrollment.sessions_remaining` labeled "Sessions remaining". If no enrollment, show 0.
+Since most enrollments will be approved, default to showing the "Approved" subtab instead of "Pending Review" so the admin immediately sees active data.
 
-**3. Conditional rendering logic**
+**3. Add student count badges to tabs**
 
-Derive a helper:
-- `isActive` = enrollment exists AND `approval_status === 'APPROVED'` AND `payment_status === 'PAID'` AND `sessions_remaining > 0`
-- `isPending` = enrollment exists AND (`approval_status === 'PENDING'` OR `payment_status !== 'PAID'`)
+Show counts on tab triggers (e.g., "Students (3)", "Enrollments (2)") so the admin can quickly see which tabs have data.
 
-Then:
+### Technical Details
 
-- **No enrollment at all**: Hide attendance section entirely. Show a "No Active Plan" card with title, message ("You don't have an active plan yet. Enroll to start your classes."), and an "Enroll Now" button linking to `/enroll-now`.
+**File changed**: `src/pages/AdminDashboard.tsx`
 
-- **Enrollment exists but pending/unpaid**: Hide attendance section. Show an info card: "Your enrollment is pending approval."
+- Add `Students` to the top-level `TabsList` (before Enrollments)
+- Create a `TabsContent` for students that renders a `Table` listing all profiles from `profilesRes.data`
+- Store profiles in a new `profiles` state array (currently only stored as a map)
+- Change `<Tabs defaultValue="pending">` to `<Tabs defaultValue="approved">` inside Enrollments
+- Add count badges to each tab trigger using the existing data arrays
 
-- **Active enrollment (isActive)**: Show the Request Attendance section and Attendance History as they are now. If `plan_type === 'GROUP'` and `matched_batch_id` is null, also show a note: "Awaiting batch assignment."
-
-**4. Update status display**
-
-Use enrollment data for status instead of profile credits:
-- If `isActive`: show "ACTIVE"
-- If `isPending`: show "PENDING"
-- If enrollment exists but `sessions_remaining <= 0`: show "OVERDUE"
-- No enrollment: show "NEW"
-
-**5. Safe null handling**
-
-All enrollment reads use optional chaining (`enrollment?.sessions_remaining ?? 0`). No errors if enrollment is null.
-
-### Technical Summary
-
-Only one file changes: `src/pages/StudentDashboard.tsx`. No database or backend changes needed -- just reading from the existing `enrollments` table which already has RLS allowing users to view their own enrollments.
+No database or RLS changes needed -- the admin already has SELECT access to the profiles table.
