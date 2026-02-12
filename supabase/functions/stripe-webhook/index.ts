@@ -33,7 +33,6 @@ serve(async (req) => {
     if (webhookSecret && sig) {
       event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
     } else {
-      // Fallback: parse body directly (dev mode)
       event = JSON.parse(body) as Stripe.Event;
     }
 
@@ -41,29 +40,69 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const meta = session.metadata;
 
-      if (!meta?.user_id) {
-        console.error("No user_id in metadata");
+      const email = meta?.email || session.customer_email;
+      const name = meta?.name || "";
+
+      if (!email) {
+        console.error("No email in metadata or session");
         return new Response(JSON.stringify({ received: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const userId = meta.user_id;
-      const classesIncluded = Number(meta.classes_included) || 0;
-      const amount = Number(meta.amount) || 0;
-      const duration = Number(meta.duration) || 1;
+      const classesIncluded = Number(meta?.classes_included) || 0;
+      const amount = Number(meta?.amount) || 0;
+      const duration = Number(meta?.duration) || 1;
       const unitPrice = classesIncluded > 0 ? amount / classesIncluded : 0;
+
+      // Find or create user by email
+      let userId: string;
+
+      // Check if user exists
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase()
+      );
+
+      if (existingUser) {
+        userId = existingUser.id;
+        console.log(`Found existing user: ${userId}`);
+      } else {
+        // Generate a random temp password
+        const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
+
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { name },
+        });
+
+        if (createError || !newUser.user) {
+          console.error("Failed to create user:", createError?.message);
+          throw new Error(`Failed to create user: ${createError?.message}`);
+        }
+
+        userId = newUser.user.id;
+        console.log(`Created new user: ${userId} with email: ${email}`);
+
+        // The handle_new_user trigger creates the profile, but let's ensure name is set
+        await supabaseAdmin
+          .from("profiles")
+          .update({ name, email })
+          .eq("user_id", userId);
+      }
 
       // Create enrollment with APPROVED status
       await supabaseAdmin.from("enrollments").insert({
         user_id: userId,
-        plan_type: meta.class_type || "group",
+        plan_type: meta?.class_type || "group",
         duration,
         classes_included: classesIncluded,
         amount,
         unit_price: unitPrice,
-        tx_ref: session.payment_intent as string || session.id,
-        receipt_url: session.receipt_url || `stripe:${session.id}`,
+        tx_ref: (session.payment_intent as string) || session.id,
+        receipt_url: `stripe:${session.id}`,
         status: "APPROVED",
       });
 
@@ -84,7 +123,7 @@ serve(async (req) => {
         })
         .eq("user_id", userId);
 
-      console.log(`Enrollment created for user ${userId}: ${classesIncluded} classes`);
+      console.log(`Enrollment created for user ${userId}: ${classesIncluded} classes, $${amount}`);
     }
 
     return new Response(JSON.stringify({ received: true }), {
