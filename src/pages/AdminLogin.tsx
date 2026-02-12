@@ -20,8 +20,7 @@ const AdminLogin = () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      console.error("Login failed:", error.message);
-      toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
+      toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
       setLoading(false);
       return;
     }
@@ -36,7 +35,7 @@ const AdminLogin = () => {
 
     if (roleError || !roleData) {
       await supabase.auth.signOut();
-      toast({ title: "Access denied", description: "You are not an admin.", variant: "destructive" });
+      toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
       setLoading(false);
       return;
     }
