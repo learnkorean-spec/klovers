@@ -1,26 +1,20 @@
 
+## Fix: Progress Stepper Hidden Behind Fixed Header
 
-## Fix: Bright Yellow Text Readability
+The progress stepper on the `/enroll-now` page is being clipped by the fixed-position header because the main content area doesn't account for the header's height.
 
-The problem is that price text and step indicators use `text-primary`, which maps to pure bright yellow (`hsl(60, 100%, 50%)`) -- nearly invisible on white backgrounds.
+### Change
 
-### Changes
+**File: `src/pages/EnrollNowPage.tsx` (line 106)**
 
-**File: `src/pages/EnrollNowPage.tsx`**
+Add `pt-24` (top padding) to push content below the fixed header, replacing the current `py-12`:
 
-Replace all instances of `text-primary` used for readable text with `text-foreground` or a darker alternative:
+```
+// Before
+<main className="container mx-auto px-4 py-12 max-w-2xl">
 
-1. **Duration price labels** (line 232): Change `text-primary` to `text-foreground` so prices like "$25", "$70", "$130" display in black instead of bright yellow.
+// After
+<main className="container mx-auto px-4 pt-24 pb-12 max-w-2xl">
+```
 
-2. **Step indicator text** (lines 109, 114): Change `text-primary` to `text-foreground` so "Choose Plan" and "Pay & Enroll" labels are readable.
-
-3. **Keep `bg-primary`** on buttons and step circles untouched -- yellow works fine as a background with black foreground text.
-
-### Technical Details
-
-- Line 109: `text-primary` -> `text-foreground`
-- Line 114: `text-primary` -> `text-foreground`  
-- Line 232: `text-primary` -> `text-foreground font-bold`
-
-No other files need changes. The core design system colors remain intact -- this only fixes text contrast in the enrollment page.
-
+This adds 96px of top padding (enough to clear the 64px header plus spacing) while keeping 48px bottom padding.
