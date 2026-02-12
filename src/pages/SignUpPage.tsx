@@ -35,19 +35,10 @@ const SignUpPage = () => {
     });
 
     if (error) {
-      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+      toast({ title: "Sign up failed", description: "Could not create account. Please try again.", variant: "destructive" });
       setLoading(false);
       return;
     }
-
-    // Update profile with extra fields after trigger creates it
-    // Small delay to allow trigger to fire
-    setTimeout(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await supabase.from("profiles").update({ country, level } as any).eq("user_id", session.user.id);
-      }
-    }, 1000);
 
     toast({ title: "Check your email", description: "We sent you a verification link." });
     setLoading(false);
