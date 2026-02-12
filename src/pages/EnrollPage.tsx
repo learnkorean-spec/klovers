@@ -88,23 +88,13 @@ const EnrollPage = () => {
       return;
     }
 
-    const { error: insertError } = await supabase.from("enrollments").insert({
-      user_id: userId,
-      plan_type: planType,
-      duration: Number(duration),
-      classes_included: classesIncluded,
-      amount: price,
-      unit_price: Number(unitPrice),
-      tx_ref: txRef,
-      receipt_url: filePath,
-      status: "PENDING",
-      payment_status: "UNPAID",
-      payment_provider: "manual",
-      approval_status: "PENDING",
-      admin_review_required: true,
-      sessions_total: classesIncluded,
-      sessions_remaining: classesIncluded,
-    } as any);
+    const { error: insertError } = await supabase.rpc("submit_manual_enrollment", {
+      _plan_type: planType,
+      _duration: Number(duration),
+      _amount: price,
+      _tx_ref: txRef,
+      _receipt_url: filePath,
+    });
 
     if (insertError) {
       toast({ title: "Error", description: "Failed to submit enrollment.", variant: "destructive" });
