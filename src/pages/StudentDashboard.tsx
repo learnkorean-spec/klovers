@@ -157,7 +157,7 @@ const StudentDashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <BookOpen className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <BookOpen className="h-8 w-8 mx-auto mb-2 text-foreground" />
                 <p className="text-3xl font-bold text-foreground">{enrollment?.sessions_remaining ?? 0}</p>
                 <p className="text-sm text-muted-foreground">Sessions remaining</p>
               </CardContent>
