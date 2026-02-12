@@ -106,10 +106,23 @@ const AdminDashboard = () => {
 
     const updates: any = { status: action, reviewed_at: new Date().toISOString(), reviewed_by: session.user.id };
 
-    // If editing unit_price, recalculate
+    // Validate and apply edited unit_price
     const editedPrice = editingUnitPrice[enrollment.id];
     if (editedPrice && action === "APPROVED") {
-      updates.unit_price = Number(editedPrice);
+      const price = Number(editedPrice);
+      if (isNaN(price)) {
+        toast({ title: "Invalid price", description: "Unit price must be a valid number.", variant: "destructive" });
+        return;
+      }
+      if (price <= 0) {
+        toast({ title: "Invalid price", description: "Unit price must be greater than zero.", variant: "destructive" });
+        return;
+      }
+      if (price > 10000) {
+        toast({ title: "Invalid price", description: "Unit price seems too high. Please verify.", variant: "destructive" });
+        return;
+      }
+      updates.unit_price = price;
     }
 
     const { error } = await supabase.from("enrollments").update(updates).eq("id", enrollment.id);
@@ -196,6 +209,9 @@ const AdminDashboard = () => {
                               <Input
                                 type="number"
                                 className="h-7 w-24"
+                                min="0.01"
+                                max="10000"
+                                step="0.01"
                                 value={editingUnitPrice[e.id] ?? String(e.unit_price)}
                                 onChange={(ev) => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: ev.target.value }))}
                               />
