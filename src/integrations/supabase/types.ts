@@ -44,6 +44,113 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_members: {
+        Row: {
+          added_at: string
+          batch_id: string
+          enrollment_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          batch_id: string
+          enrollment_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          batch_id?: string
+          enrollment_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_members_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_members_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batches: {
+        Row: {
+          capacity: number
+          course_id: string
+          created_at: string
+          id: string
+          level: string
+          status: string
+        }
+        Insert: {
+          capacity?: number
+          course_id: string
+          created_at?: string
+          id?: string
+          level?: string
+          status?: string
+        }
+        Update: {
+          capacity?: number
+          course_id?: string
+          created_at?: string
+          id?: string
+          level?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batches_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          level: string
+          price_amount: number
+          sessions_included: number
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          level?: string
+          price_amount?: number
+          sessions_included?: number
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          level?: string
+          price_amount?: number
+          sessions_included?: number
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           admin_review_required: boolean
@@ -53,13 +160,18 @@ export type Database = {
           created_at: string
           duration: number
           id: string
+          matched_at: string | null
+          matched_batch_id: string | null
           payment_provider: string | null
           payment_status: string
           plan_type: string
           receipt_url: string
           reviewed_at: string | null
           reviewed_by: string | null
+          sessions_remaining: number
+          sessions_total: number
           status: string
+          stripe_payment_intent_id: string | null
           tx_ref: string
           unit_price: number
           user_id: string
@@ -72,13 +184,18 @@ export type Database = {
           created_at?: string
           duration: number
           id?: string
+          matched_at?: string | null
+          matched_batch_id?: string | null
           payment_provider?: string | null
           payment_status?: string
           plan_type: string
           receipt_url: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sessions_remaining?: number
+          sessions_total?: number
           status?: string
+          stripe_payment_intent_id?: string | null
           tx_ref: string
           unit_price: number
           user_id: string
@@ -91,18 +208,31 @@ export type Database = {
           created_at?: string
           duration?: number
           id?: string
+          matched_at?: string | null
+          matched_batch_id?: string | null
           payment_provider?: string | null
           payment_status?: string
           plan_type?: string
           receipt_url?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sessions_remaining?: number
+          sessions_total?: number
           status?: string
+          stripe_payment_intent_id?: string | null
           tx_ref?: string
           unit_price?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_enrollments_matched_batch"
+            columns: ["matched_batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
