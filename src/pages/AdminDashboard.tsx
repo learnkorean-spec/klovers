@@ -271,6 +271,7 @@ const AdminDashboard = () => {
                                 <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
                                 <p className="text-sm text-muted-foreground">
                                   {e.plan_type} · {e.duration}mo · {e.classes_included} classes · ${e.amount} · Ref: {e.tx_ref}
+                                  {(e as any).payment_method && <> · <span className="font-medium">{(e as any).payment_method === 'vodafone_cash' ? 'Vodafone Cash' : (e as any).payment_method === 'instapay' ? 'InstaPay' : (e as any).payment_method}</span></>}
                                 </p>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-muted-foreground">Unit price:</span>

@@ -37,6 +37,7 @@ function getTierForCountry(country: string): TierKey | null {
 const EnrollPage = () => {
   const [planType, setPlanType] = useState<ClassType | "">("");
   const [duration, setDuration] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [txRef, setTxRef] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,7 +75,7 @@ const EnrollPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!receiptFile || !userId || !planType || !duration || price === null) return;
+    if (!receiptFile || !userId || !planType || !duration || !paymentMethod || price === null) return;
     setLoading(true);
 
     const filePath = `${userId}/${Date.now()}-${receiptFile.name}`;
@@ -88,15 +89,16 @@ const EnrollPage = () => {
       return;
     }
 
-    const { error: insertError } = await supabase.rpc("submit_manual_enrollment", {
+    const { data: enrollmentId, error: insertError } = await supabase.rpc("submit_manual_enrollment", {
       _plan_type: planType,
       _duration: Number(duration),
       _amount: price,
       _tx_ref: txRef,
       _receipt_url: filePath,
-    });
+      _payment_method: paymentMethod,
+    } as any);
 
-    if (insertError) {
+    if (insertError || !enrollmentId) {
       toast({ title: "Error", description: "Failed to submit enrollment.", variant: "destructive" });
       setLoading(false);
       return;
@@ -152,6 +154,14 @@ const EnrollPage = () => {
                 </div>
               )}
 
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vodafone_cash">Vodafone Cash</SelectItem>
+                  <SelectItem value="instapay">InstaPay</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Input
                 placeholder="Transaction reference"
                 value={txRef}
@@ -169,7 +179,7 @@ const EnrollPage = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || !planType || !duration || price === null}>
+              <Button type="submit" className="w-full" disabled={loading || !planType || !duration || !paymentMethod || price === null}>
                 {loading ? "Submitting..." : "Submit Enrollment"}
               </Button>
             </form>

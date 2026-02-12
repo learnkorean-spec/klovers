@@ -162,6 +162,7 @@ export type Database = {
           id: string
           matched_at: string | null
           matched_batch_id: string | null
+          payment_method: string | null
           payment_provider: string | null
           payment_status: string
           plan_type: string
@@ -190,6 +191,7 @@ export type Database = {
           id?: string
           matched_at?: string | null
           matched_batch_id?: string | null
+          payment_method?: string | null
           payment_provider?: string | null
           payment_status?: string
           plan_type: string
@@ -218,6 +220,7 @@ export type Database = {
           id?: string
           matched_at?: string | null
           matched_batch_id?: string | null
+          payment_method?: string | null
           payment_provider?: string | null
           payment_status?: string
           plan_type?: string
@@ -350,16 +353,28 @@ export type Database = {
         }
         Returns: boolean
       }
-      submit_manual_enrollment: {
-        Args: {
-          _amount: number
-          _duration: number
-          _plan_type: string
-          _receipt_url: string
-          _tx_ref: string
-        }
-        Returns: string
-      }
+      submit_manual_enrollment:
+        | {
+            Args: {
+              _amount: number
+              _duration: number
+              _plan_type: string
+              _receipt_url: string
+              _tx_ref: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _amount: number
+              _duration: number
+              _payment_method?: string
+              _plan_type: string
+              _receipt_url: string
+              _tx_ref: string
+            }
+            Returns: string
+          }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
