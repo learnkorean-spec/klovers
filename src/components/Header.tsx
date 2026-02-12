@@ -81,7 +81,7 @@ const Header = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="relative p-2 rounded-full transition-all duration-200 hover:bg-accent group">
-                    <UserCircle className="h-6 w-6 text-primary transition-transform duration-200 group-hover:scale-110" />
+                    <UserCircle className="h-6 w-6 text-foreground transition-transform duration-200 group-hover:scale-110" />
                     <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
                   </button>
                 </DropdownMenuTrigger>
