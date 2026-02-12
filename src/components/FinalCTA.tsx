@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
 
 const FinalCTA = () => {
   const { t } = useLanguage();
@@ -15,10 +16,10 @@ const FinalCTA = () => {
           {t("finalCta", "subtitle")}
         </p>
         <Button size="lg" variant="secondary" asChild className="gap-2">
-          <a href="#enroll">
+          <Link to="/enroll-now">
             {t("finalCta", "button")}
             <ArrowRight className="h-5 w-5" />
-          </a>
+          </Link>
         </Button>
       </div>
     </section>

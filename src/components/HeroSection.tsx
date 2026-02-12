@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, DollarSign } from "lucide-react";
 import heroVideo from "@/assets/hero-korea-video.mp4";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -37,16 +38,16 @@ const HeroSection = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild className="gap-2">
-              <a href="#enroll">
+              <Link to="/enroll-now">
                 <ArrowRight className="h-5 w-5" />
                 {t("hero", "startNow")}
-              </a>
+              </Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="gap-2 bg-white/10 border-white/40 text-white hover:bg-white/20 backdrop-blur-sm">
-              <a href="/pricing">
+              <Link to="/pricing">
                 <DollarSign className="h-5 w-5" />
                 {t("hero", "viewPricing")}
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
