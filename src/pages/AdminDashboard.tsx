@@ -116,13 +116,15 @@ const AdminDashboard = () => {
     if (error) { toast({ title: "Error", description: "Failed to update enrollment.", variant: "destructive" }); return; }
 
     if (action === "APPROVED") {
-      // Add credits to profile
-      const { data: profile } = await supabase.from("profiles").select("credits").eq("user_id", enrollment.user_id).single();
-      const currentCredits = (profile as any)?.credits ?? 0;
-      await supabase.from("profiles").update({
-        credits: currentCredits + enrollment.classes_included,
-        status: "ACTIVE",
-      } as any).eq("user_id", enrollment.user_id);
+      // Add credits atomically via RPC
+      const { error: creditError } = await supabase.rpc("add_credits", {
+        _user_id: enrollment.user_id,
+        _amount: enrollment.classes_included,
+      });
+      if (creditError) {
+        toast({ title: "Error", description: "Failed to add credits.", variant: "destructive" });
+        return;
+      }
     }
 
     toast({ title: `Enrollment ${action.toLowerCase()}` });
@@ -141,8 +143,14 @@ const AdminDashboard = () => {
     if (error) { toast({ title: "Error", description: "Failed to update.", variant: "destructive" }); return; }
 
     if (action === "APPROVED") {
-      const currentCredits = (req.profiles as any)?.credits ?? 0;
-      await supabase.from("profiles").update({ credits: currentCredits - 1 } as any).eq("user_id", req.user_id);
+      // Deduct credit atomically via RPC
+      const { error: creditError } = await supabase.rpc("deduct_credit", {
+        _user_id: req.user_id,
+      });
+      if (creditError) {
+        toast({ title: "Error", description: "Insufficient credits or failed to deduct.", variant: "destructive" });
+        return;
+      }
     }
 
     toast({ title: `Attendance ${action.toLowerCase()}` });
