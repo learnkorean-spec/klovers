@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +43,7 @@ const LoginPage = () => {
     if (roleData) {
       navigate("/admin");
     } else {
-      navigate("/dashboard");
+      navigate(redirectTo || "/dashboard");
     }
   };
 
@@ -64,7 +66,7 @@ const LoginPage = () => {
                 <Link to="/forgot-password" className="text-primary underline">Forgot password?</Link>
               </p>
               <p className="text-sm text-center text-muted-foreground">
-                Don't have an account? <Link to="/signup" className="text-primary underline">Sign up</Link>
+                Don't have an account? <Link to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"} className="text-primary underline">Sign up</Link>
               </p>
             </form>
           </CardContent>

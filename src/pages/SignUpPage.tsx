@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ const SignUpPage = () => {
   const [level, setLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +50,7 @@ const SignUpPage = () => {
 
     toast({ title: "Check your email", description: "We sent you a verification link." });
     setLoading(false);
-    navigate("/login");
+    navigate(redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login");
   };
 
   return (
@@ -80,7 +82,7 @@ const SignUpPage = () => {
                 {loading ? "Creating account..." : "Sign Up"}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                Already have an account? <Link to="/login" className="text-primary underline">Log in</Link>
+                Already have an account? <Link to={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login"} className="text-primary underline">Log in</Link>
               </p>
             </form>
           </CardContent>
