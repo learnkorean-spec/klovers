@@ -384,6 +384,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      revert_enrollment: {
+        Args: { _enrollment_id: string }
+        Returns: undefined
+      }
       submit_egypt_payment: {
         Args: {
           _enrollment_id: string

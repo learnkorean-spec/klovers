@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Lead {
@@ -49,6 +49,7 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
+  const [studentFilter, setStudentFilter] = useState("all");
   const navigate = useNavigate();
 
   const fetchAll = async () => {
@@ -160,6 +161,18 @@ const AdminDashboard = () => {
     fetchAll();
   };
 
+  const handleRevertEnrollment = async (enrollment: Enrollment) => {
+    const { error } = await supabase.rpc("revert_enrollment", {
+      _enrollment_id: enrollment.id,
+    } as any);
+    if (error) {
+      toast({ title: "Error", description: error.message || "Failed to revert enrollment.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Enrollment reverted to pending, credits deducted." });
+    fetchAll();
+  };
+
   // --- Attendance ---
   const handleAttendanceAction = async (req: AttendanceReq, action: "APPROVED" | "REJECTED") => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -208,41 +221,84 @@ const AdminDashboard = () => {
           <TabsContent value="students" className="space-y-4">
             {loading ? (
               <p className="text-muted-foreground text-center py-8">Loading...</p>
-            ) : profiles.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No students registered yet.</p>
             ) : (
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="hidden md:table-cell">Country</TableHead>
-                      <TableHead className="hidden md:table-cell">Level</TableHead>
-                      <TableHead>Credits</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden sm:table-cell">Joined</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {profiles.map((p) => (
-                      <TableRow key={p.user_id}>
-                        <TableCell className="font-medium">{p.name || "—"}</TableCell>
-                        <TableCell>{p.email}</TableCell>
-                        <TableCell className="hidden md:table-cell">{p.country || "—"}</TableCell>
-                        <TableCell className="hidden md:table-cell">{p.level || "—"}</TableCell>
-                        <TableCell>{p.credits}</TableCell>
-                        <TableCell>
-                          <Badge variant={p.status === "ACTIVE" ? "default" : "secondary"}>{p.status}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <>
+                <Tabs value={studentFilter} onValueChange={setStudentFilter}>
+                  <TabsList>
+                    <TabsTrigger value="all">All ({profiles.length})</TabsTrigger>
+                    <TabsTrigger value="confirmed">
+                      Confirmed ({profiles.filter(p => p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")).length})
+                    </TabsTrigger>
+                    <TabsTrigger value="leads">
+                      Leads ({profiles.filter(p => p.status === "NEW" || (!enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED"))).length})
+                    </TabsTrigger>
+                    <TabsTrigger value="stripe">
+                      Stripe ({profiles.filter(p => enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")).length})
+                    </TabsTrigger>
+                    <TabsTrigger value="egypt">
+                      Egypt Manual ({profiles.filter(p => enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")).length})
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {(() => {
+                  const filteredProfiles = profiles.filter(p => {
+                    if (studentFilter === "confirmed") return p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED");
+                    if (studentFilter === "leads") return p.status === "NEW" || (!enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED"));
+                    if (studentFilter === "stripe") return enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED");
+                    if (studentFilter === "egypt") return enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual");
+                    return true;
+                  });
+
+                  if (filteredProfiles.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
+
+                  return (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead className="hidden md:table-cell">Country</TableHead>
+                            <TableHead className="hidden md:table-cell">Level</TableHead>
+                            <TableHead>Credits</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="hidden md:table-cell">Source</TableHead>
+                            <TableHead className="hidden sm:table-cell">Joined</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredProfiles.map((p) => {
+                            const userEnrollments = enrollments.filter(e => e.user_id === p.user_id);
+                            const source = userEnrollments.some(e => e.payment_provider === "stripe") ? "Stripe"
+                              : userEnrollments.some(e => e.payment_provider === "egypt_manual") ? "Egypt"
+                              : userEnrollments.some(e => e.payment_provider === "manual") ? "Manual"
+                              : "—";
+                            return (
+                              <TableRow key={p.user_id}>
+                                <TableCell className="font-medium">{p.name || "—"}</TableCell>
+                                <TableCell>{p.email}</TableCell>
+                                <TableCell className="hidden md:table-cell">{p.country || "—"}</TableCell>
+                                <TableCell className="hidden md:table-cell">{p.level || "—"}</TableCell>
+                                <TableCell>{p.credits}</TableCell>
+                                <TableCell>
+                                  <Badge variant={p.status === "ACTIVE" ? "default" : "secondary"}>{p.status}</Badge>
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                  <Badge variant="outline">{source}</Badge>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })()}
+                <p className="text-xs text-muted-foreground text-center">{profiles.length} total student{profiles.length !== 1 ? "s" : ""}</p>
+              </>
             )}
-            <p className="text-xs text-muted-foreground text-center">{profiles.length} student{profiles.length !== 1 ? "s" : ""}</p>
           </TabsContent>
 
           <TabsContent value="enrollments" className="space-y-4">
@@ -352,6 +408,27 @@ const AdminDashboard = () => {
                                       <X className="h-4 w-4 mr-1" /> Reject
                                     </Button>
                                   </>
+                                )}
+                                {e.approval_status === "APPROVED" && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button size="sm" variant="outline">
+                                        <Undo2 className="h-4 w-4 mr-1" /> Revert
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Revert approval?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will move the enrollment back to Pending and deduct {e.classes_included} credits from the student.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleRevertEnrollment(e)}>Revert</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 )}
                               </div>
                             </div>
