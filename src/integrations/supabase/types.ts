@@ -129,6 +129,69 @@ export type Database = {
           },
         ]
       }
+      blog_posts: {
+        Row: {
+          article_type: string
+          author: string
+          content: string
+          created_at: string
+          cta_text: string | null
+          cta_url: string | null
+          description: string
+          hero_alt: string | null
+          hero_caption: string | null
+          hero_image: string | null
+          id: string
+          keywords: string[] | null
+          lang: string
+          published: boolean
+          published_at: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          article_type?: string
+          author?: string
+          content?: string
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string
+          hero_alt?: string | null
+          hero_caption?: string | null
+          hero_image?: string | null
+          id?: string
+          keywords?: string[] | null
+          lang?: string
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          article_type?: string
+          author?: string
+          content?: string
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string
+          hero_alt?: string | null
+          hero_caption?: string | null
+          hero_image?: string | null
+          id?: string
+          keywords?: string[] | null
+          lang?: string
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           created_at: string

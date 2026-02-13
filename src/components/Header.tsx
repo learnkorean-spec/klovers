@@ -43,6 +43,7 @@ const Header = () => {
     { href: "/about", label: t("header", "about") },
     { href: "/faq", label: t("header", "faq") },
     { href: "/contact", label: t("header", "contact") },
+    { href: "/blog", label: "Blog" },
   ];
 
   return (

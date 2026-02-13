@@ -21,6 +21,7 @@ import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle } f
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import BlogManager from "@/components/admin/BlogManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -289,6 +290,7 @@ const AdminDashboard = () => {
               })()}
             </TabsTrigger>
             <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
+            <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
 
           {/* STUDENTS TAB */}
@@ -705,6 +707,11 @@ const AdminDashboard = () => {
               </div>
             ) : null}
             <p className="text-xs text-muted-foreground text-center">{filtered.length} lead{filtered.length !== 1 ? "s" : ""}</p>
+          </TabsContent>
+
+          {/* BLOG TAB */}
+          <TabsContent value="blog" className="space-y-4">
+            <BlogManager />
           </TabsContent>
         </Tabs>
       </div>
