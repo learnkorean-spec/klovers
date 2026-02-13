@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, email, country, level, goal } = body;
+    const { name, email, country, level, goal, plan_type, duration, schedule, timezone, source } = body;
 
     // Server-side validation
     if (!name || typeof name !== "string" || name.trim().length === 0 || name.length > 100) {
@@ -103,6 +103,11 @@ Deno.serve(async (req) => {
       country: country?.trim() || "",
       level: level?.trim() || "",
       goal: goal?.trim() || "",
+      plan_type: plan_type?.trim() || "",
+      duration: duration?.trim() || "",
+      schedule: schedule?.trim() || "",
+      timezone: timezone?.trim() || "",
+      source: source?.trim() || "enroll",
       status: "new",
     });
 

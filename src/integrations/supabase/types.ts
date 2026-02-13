@@ -280,32 +280,47 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          duration: string | null
           email: string
           goal: string | null
           id: string
           level: string | null
           name: string
+          plan_type: string | null
+          schedule: string | null
+          source: string | null
           status: string
+          timezone: string | null
         }
         Insert: {
           country?: string | null
           created_at?: string
+          duration?: string | null
           email: string
           goal?: string | null
           id?: string
           level?: string | null
           name: string
+          plan_type?: string | null
+          schedule?: string | null
+          source?: string | null
           status?: string
+          timezone?: string | null
         }
         Update: {
           country?: string | null
           created_at?: string
+          duration?: string | null
           email?: string
           goal?: string | null
           id?: string
           level?: string | null
           name?: string
+          plan_type?: string | null
+          schedule?: string | null
+          source?: string | null
           status?: string
+          timezone?: string | null
         }
         Relationships: []
       }
