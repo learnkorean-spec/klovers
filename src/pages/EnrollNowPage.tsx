@@ -127,8 +127,8 @@ const EnrollNowPage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: "Please log in", description: "You need to be logged in to place an order.", variant: "destructive" });
-        nav("/login");
+      toast({ title: "Please log in", description: "You need to be logged in to place an order.", variant: "destructive" });
+        nav(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         return;
       }
       const { data, error } = await supabase.rpc("create_egypt_order", {
