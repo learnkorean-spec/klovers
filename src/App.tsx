@@ -22,6 +22,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import EgyptPaymentPage from "./pages/EgyptPaymentPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,8 @@ const App = () => (
             <Route path="/enroll-now" element={<EnrollNowPage />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/pay/:enrollmentId" element={<EgyptPaymentPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
