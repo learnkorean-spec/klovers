@@ -20,8 +20,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles, TrendingUp } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 
 interface BlogPost {
   id: string;
@@ -33,6 +34,9 @@ interface BlogPost {
   hero_image: string;
   hero_alt: string;
   hero_caption: string;
+  hero_image_2: string;
+  hero_alt_2: string;
+  hero_caption_2: string;
   cta_text: string;
   cta_url: string;
   content: string;
@@ -42,6 +46,7 @@ interface BlogPost {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  seo_score: number;
 }
 
 const ARTICLE_TYPES = [
@@ -61,13 +66,81 @@ const emptyPost = (): Partial<BlogPost> => ({
   hero_image: "",
   hero_alt: "",
   hero_caption: "",
+  hero_image_2: "",
+  hero_alt_2: "",
+  hero_caption_2: "",
   cta_text: "",
   cta_url: "",
   content: "",
   author: "KLovers Team",
   lang: "en",
   published: false,
+  seo_score: 0,
 });
+
+/** Calculate SEO score out of 100 */
+const calculateSeoScore = (post: Partial<BlogPost>, keywords: string): number => {
+  let score = 0;
+  const kws = keywords.split(",").map(k => k.trim()).filter(Boolean);
+
+  // Title: exists (5) + length 30-60 chars (10) + contains keyword (5)
+  if (post.title) {
+    score += 5;
+    if (post.title.length >= 30 && post.title.length <= 60) score += 10;
+    else if (post.title.length > 0) score += 3;
+    if (kws.some(k => post.title!.toLowerCase().includes(k.toLowerCase()))) score += 5;
+  }
+
+  // Description: exists (5) + length 120-160 chars (10) + contains keyword (5)
+  if (post.description) {
+    score += 5;
+    if (post.description.length >= 120 && post.description.length <= 160) score += 10;
+    else if (post.description.length >= 50) score += 5;
+    if (kws.some(k => post.description!.toLowerCase().includes(k.toLowerCase()))) score += 5;
+  }
+
+  // Content: exists (5) + 300+ words (10) + 800+ words (5) + keyword density (5)
+  if (post.content) {
+    score += 5;
+    const wordCount = post.content.split(/\s+/).length;
+    if (wordCount >= 800) score += 15;
+    else if (wordCount >= 300) score += 10;
+    else if (wordCount >= 100) score += 5;
+
+    // Has headings
+    if (/^##?\s/m.test(post.content)) score += 5;
+  }
+
+  // Hero image 1: exists (5) + alt text (5)
+  if (post.hero_image) { score += 5; }
+  if (post.hero_alt && post.hero_alt.length > 10) score += 5;
+
+  // Hero image 2: exists (3) + alt text (2)
+  if (post.hero_image_2) score += 3;
+  if (post.hero_alt_2 && post.hero_alt_2.length > 10) score += 2;
+
+  // Keywords: 3+ keywords (5)
+  if (kws.length >= 3) score += 5;
+  else if (kws.length >= 1) score += 2;
+
+  // CTA: exists (5)
+  if (post.cta_text && post.cta_url) score += 5;
+
+  return Math.min(score, 100);
+};
+
+const getSeoColor = (score: number) => {
+  if (score >= 80) return "text-green-600";
+  if (score >= 50) return "text-yellow-600";
+  return "text-destructive";
+};
+
+const getSeoLabel = (score: number) => {
+  if (score >= 80) return "Excellent";
+  if (score >= 60) return "Good";
+  if (score >= 40) return "Needs Work";
+  return "Poor";
+};
 
 const BlogManager = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -77,8 +150,12 @@ const BlogManager = () => {
   const [editing, setEditing] = useState<Partial<BlogPost>>(emptyPost());
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatingImage2, setGeneratingImage2] = useState(false);
   const [keywordsInput, setKeywordsInput] = useState("");
+
+  const liveScore = calculateSeoScore(editing, keywordsInput);
 
   const fetchPosts = async () => {
     const { data } = await supabase
@@ -102,7 +179,7 @@ const BlogManager = () => {
 
   const openEdit = (post: BlogPost) => {
     setEditing({ ...post });
-    setKeywordsInput(post.keywords.join(", "));
+    setKeywordsInput((post.keywords || []).join(", "));
     setDialogOpen(true);
   };
 
@@ -113,6 +190,7 @@ const BlogManager = () => {
     }
 
     setSaving(true);
+    const seoScore = calculateSeoScore(editing, keywordsInput);
     const payload = {
       title: editing.title,
       slug: editing.slug,
@@ -122,6 +200,9 @@ const BlogManager = () => {
       hero_image: editing.hero_image || "",
       hero_alt: editing.hero_alt || "",
       hero_caption: editing.hero_caption || "",
+      hero_image_2: editing.hero_image_2 || "",
+      hero_alt_2: editing.hero_alt_2 || "",
+      hero_caption_2: editing.hero_caption_2 || "",
       cta_text: editing.cta_text || "",
       cta_url: editing.cta_url || "",
       content: editing.content,
@@ -129,6 +210,7 @@ const BlogManager = () => {
       lang: editing.lang || "en",
       published: editing.published || false,
       published_at: editing.published ? (editing.published_at || new Date().toISOString()) : null,
+      seo_score: seoScore,
     };
 
     let error;
@@ -171,22 +253,68 @@ const BlogManager = () => {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageNum: 1 | 2) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    const setUploadState = imageNum === 1 ? setUploading : setUploading2;
+    setUploadState(true);
     const ext = file.name.split(".").pop();
     const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("blog-images").upload(path, file);
     if (error) {
       toast({ title: "Upload error", description: error.message, variant: "destructive" });
-      setUploading(false);
+      setUploadState(false);
       return;
     }
     const { data: urlData } = supabase.storage.from("blog-images").getPublicUrl(path);
-    setEditing((prev) => ({ ...prev, hero_image: urlData.publicUrl }));
-    setUploading(false);
+    if (imageNum === 1) {
+      setEditing((prev) => ({ ...prev, hero_image: urlData.publicUrl }));
+    } else {
+      setEditing((prev) => ({ ...prev, hero_image_2: urlData.publicUrl }));
+    }
+    setUploadState(false);
     toast({ title: "Image uploaded" });
+  };
+
+  const generateAiImage = async (imageNum: 1 | 2) => {
+    if (!editing.title) {
+      toast({ title: "Title required", description: "Enter a title first.", variant: "destructive" });
+      return;
+    }
+    const setGen = imageNum === 1 ? setGeneratingImage : setGeneratingImage2;
+    setGen(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-blog-image", {
+        body: {
+          title: editing.title + (imageNum === 2 ? " - visual guide" : ""),
+          description: editing.description || "",
+          article_type: editing.article_type || "longform",
+          keywords: keywordsInput.split(",").map((k) => k.trim()).filter(Boolean),
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (imageNum === 1) {
+        setEditing((prev) => ({
+          ...prev,
+          hero_image: data.hero_image,
+          hero_alt: data.hero_alt,
+          hero_caption: data.hero_caption,
+        }));
+      } else {
+        setEditing((prev) => ({
+          ...prev,
+          hero_image_2: data.hero_image,
+          hero_alt_2: data.hero_alt,
+          hero_caption_2: data.hero_caption,
+        }));
+      }
+      toast({ title: `SEO image ${imageNum} generated!` });
+    } catch (e: any) {
+      toast({ title: "Generation failed", description: e.message || "Try again", variant: "destructive" });
+    } finally {
+      setGen(false);
+    }
   };
 
   const filtered = posts.filter(
@@ -216,6 +344,7 @@ const BlogManager = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>SEO Score</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -227,6 +356,14 @@ const BlogManager = () => {
                   <TableCell className="font-medium max-w-[200px] truncate">{post.title}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{post.article_type}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Progress value={post.seo_score || 0} className="w-16 h-2" />
+                      <span className={`text-xs font-semibold ${getSeoColor(post.seo_score || 0)}`}>
+                        {post.seo_score || 0}%
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={post.published ? "default" : "secondary"}>
@@ -271,6 +408,21 @@ const BlogManager = () => {
           <DialogHeader>
             <DialogTitle>{editing.id ? "Edit Post" : "New Post"}</DialogTitle>
           </DialogHeader>
+
+          {/* Live SEO Score */}
+          <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium text-foreground">SEO Score</span>
+                <span className={`text-sm font-bold ${getSeoColor(liveScore)}`}>
+                  {liveScore}% — {getSeoLabel(liveScore)}
+                </span>
+              </div>
+              <Progress value={liveScore} className="h-2" />
+            </div>
+          </div>
+
           <div className="grid gap-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -286,6 +438,7 @@ const BlogManager = () => {
                     }));
                   }}
                 />
+                <p className="text-xs text-muted-foreground">{(editing.title || "").length}/60 chars (30-60 ideal)</p>
               </div>
               <div className="space-y-2">
                 <Label>Slug *</Label>
@@ -300,6 +453,7 @@ const BlogManager = () => {
                 onChange={(e) => setEditing((prev) => ({ ...prev, description: e.target.value }))}
                 rows={2}
               />
+              <p className="text-xs text-muted-foreground">{(editing.description || "").length}/160 chars (120-160 ideal)</p>
             </div>
 
             <div className="grid sm:grid-cols-3 gap-4">
@@ -333,49 +487,20 @@ const BlogManager = () => {
             <div className="space-y-2">
               <Label>Keywords (comma-separated)</Label>
               <Input value={keywordsInput} onChange={(e) => setKeywordsInput(e.target.value)} placeholder="korean, learn, beginner" />
+              <p className="text-xs text-muted-foreground">3+ keywords recommended for SEO</p>
             </div>
 
-            <div className="space-y-2">
+            {/* Hero Image 1 */}
+            <div className="space-y-2 p-3 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label>Hero Image</Label>
+                <Label className="text-sm font-semibold">Hero Image 1 (Primary)</Label>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs"
+                  variant="outline" size="sm" className="gap-1.5 text-xs"
                   disabled={generatingImage || !editing.title}
-                  onClick={async () => {
-                    if (!editing.title) {
-                      toast({ title: "Title required", description: "Enter a title first to generate a relevant image.", variant: "destructive" });
-                      return;
-                    }
-                    setGeneratingImage(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke("generate-blog-image", {
-                        body: {
-                          title: editing.title,
-                          description: editing.description || "",
-                          article_type: editing.article_type || "longform",
-                          keywords: keywordsInput.split(",").map((k) => k.trim()).filter(Boolean),
-                        },
-                      });
-                      if (error) throw error;
-                      if (data?.error) throw new Error(data.error);
-                      setEditing((prev) => ({
-                        ...prev,
-                        hero_image: data.hero_image,
-                        hero_alt: data.hero_alt,
-                        hero_caption: data.hero_caption,
-                      }));
-                      toast({ title: "SEO hero image generated!" });
-                    } catch (e: any) {
-                      toast({ title: "Generation failed", description: e.message || "Try again", variant: "destructive" });
-                    } finally {
-                      setGeneratingImage(false);
-                    }
-                  }}
+                  onClick={() => generateAiImage(1)}
                 >
                   <Sparkles className="h-3.5 w-3.5" />
-                  {generatingImage ? "Generating..." : "Auto-generate (AI)"}
+                  {generatingImage ? "Generating..." : "AI Generate"}
                 </Button>
               </div>
               <div className="grid sm:grid-cols-3 gap-4">
@@ -385,7 +510,7 @@ const BlogManager = () => {
                     <Button variant="outline" size="icon" asChild className="relative" disabled={uploading}>
                       <label>
                         <Upload className="h-4 w-4" />
-                        <input type="file" accept="image/*" className="sr-only" onChange={handleImageUpload} />
+                        <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleImageUpload(e, 1)} />
                       </label>
                     </Button>
                   </div>
@@ -394,12 +519,51 @@ const BlogManager = () => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Hero Alt (SEO)</Label>
+                  <Label className="text-xs">Alt Text (SEO)</Label>
                   <Input value={editing.hero_alt || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Hero Caption</Label>
+                  <Label className="text-xs">Caption</Label>
                   <Input value={editing.hero_caption || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption: e.target.value }))} />
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Image 2 */}
+            <div className="space-y-2 p-3 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Hero Image 2 (Secondary)</Label>
+                <Button
+                  variant="outline" size="sm" className="gap-1.5 text-xs"
+                  disabled={generatingImage2 || !editing.title}
+                  onClick={() => generateAiImage(2)}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {generatingImage2 ? "Generating..." : "AI Generate"}
+                </Button>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input value={editing.hero_image_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_image_2: e.target.value }))} placeholder="URL or upload" className="flex-1" />
+                    <Button variant="outline" size="icon" asChild className="relative" disabled={uploading2}>
+                      <label>
+                        <Upload className="h-4 w-4" />
+                        <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleImageUpload(e, 2)} />
+                      </label>
+                    </Button>
+                  </div>
+                  {editing.hero_image_2 && (
+                    <img src={editing.hero_image_2} alt="Preview 2" className="h-24 w-full object-cover rounded mt-1" />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Alt Text (SEO)</Label>
+                  <Input value={editing.hero_alt_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt_2: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Caption</Label>
+                  <Input value={editing.hero_caption_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption_2: e.target.value }))} />
                 </div>
               </div>
             </div>

@@ -139,13 +139,17 @@ export type Database = {
           cta_url: string | null
           description: string
           hero_alt: string | null
+          hero_alt_2: string | null
           hero_caption: string | null
+          hero_caption_2: string | null
           hero_image: string | null
+          hero_image_2: string | null
           id: string
           keywords: string[] | null
           lang: string
           published: boolean
           published_at: string | null
+          seo_score: number | null
           slug: string
           title: string
           updated_at: string
@@ -159,13 +163,17 @@ export type Database = {
           cta_url?: string | null
           description?: string
           hero_alt?: string | null
+          hero_alt_2?: string | null
           hero_caption?: string | null
+          hero_caption_2?: string | null
           hero_image?: string | null
+          hero_image_2?: string | null
           id?: string
           keywords?: string[] | null
           lang?: string
           published?: boolean
           published_at?: string | null
+          seo_score?: number | null
           slug: string
           title: string
           updated_at?: string
@@ -179,13 +187,17 @@ export type Database = {
           cta_url?: string | null
           description?: string
           hero_alt?: string | null
+          hero_alt_2?: string | null
           hero_caption?: string | null
+          hero_caption_2?: string | null
           hero_image?: string | null
+          hero_image_2?: string | null
           id?: string
           keywords?: string[] | null
           lang?: string
           published?: boolean
           published_at?: string | null
+          seo_score?: number | null
           slug?: string
           title?: string
           updated_at?: string

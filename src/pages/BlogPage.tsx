@@ -58,7 +58,7 @@ const BlogPage = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               K-Lovers Blog
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-foreground/70 max-w-2xl mx-auto text-lg">
               Tips, guides, and insights for your Korean learning journey.
             </p>
           </div>
@@ -78,7 +78,7 @@ const BlogPage = () => {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">No articles published yet. Check back soon!</p>
+            <p className="text-center text-foreground/60 py-12 text-lg">No articles published yet. Check back soon!</p>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {posts.map((post) => (
@@ -105,10 +105,10 @@ const BlogPage = () => {
                       </h2>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      <p className="text-sm text-foreground/70 line-clamp-3 mb-4 leading-relaxed">
                         {post.description}
                       </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs text-foreground/60">
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           {post.author}
@@ -118,7 +118,7 @@ const BlogPage = () => {
                           {new Date(post.published_at || post.created_at).toLocaleDateString()}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-primary text-sm font-medium mt-3 group-hover:gap-2 transition-all">
+                      <div className="flex items-center gap-1 text-primary text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
                         Read more <ArrowRight className="h-4 w-4" />
                       </div>
                     </CardContent>
