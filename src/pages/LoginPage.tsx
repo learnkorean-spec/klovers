@@ -43,7 +43,11 @@ const LoginPage = () => {
     if (roleData) {
       navigate("/admin");
     } else {
-      navigate(redirectTo || "/dashboard");
+      // Check for saved enrollment redirect if no explicit redirect param
+      const savedRedirect = localStorage.getItem("enroll_redirect");
+      const finalRedirect = redirectTo || savedRedirect || "/dashboard";
+      if (savedRedirect) localStorage.removeItem("enroll_redirect");
+      navigate(finalRedirect);
     }
   };
 

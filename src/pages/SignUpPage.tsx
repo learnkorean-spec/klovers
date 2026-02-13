@@ -27,11 +27,16 @@ const SignUpPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Build the email redirect so the user lands back on the login page with the enrollment redirect intact
+    const emailRedirect = redirectTo
+      ? `${window.location.origin}/login?redirect=${encodeURIComponent(redirectTo)}`
+      : window.location.origin;
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: emailRedirect,
         data: { name, country, level },
       },
     });
@@ -48,6 +53,10 @@ const SignUpPage = () => {
       return;
     }
 
+    // Store redirect in localStorage as fallback in case the email link loses context
+    if (redirectTo) {
+      localStorage.setItem("enroll_redirect", redirectTo);
+    }
     toast({ title: "Check your email", description: "We sent you a verification link." });
     setLoading(false);
     navigate(redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login");
