@@ -82,7 +82,7 @@ const SignUpPage = () => {
                 {loading ? "Creating account..." : "Sign Up"}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                Already have an account? <Link to={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login"} className="text-primary underline">Log in</Link>
+                Already have an account? <Link to={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login"} className="text-foreground font-semibold underline">Log in</Link>
               </p>
             </form>
           </CardContent>
