@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface BlogPost {
@@ -77,6 +77,7 @@ const BlogManager = () => {
   const [editing, setEditing] = useState<Partial<BlogPost>>(emptyPost());
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [keywordsInput, setKeywordsInput] = useState("");
 
   const fetchPosts = async () => {
@@ -334,29 +335,72 @@ const BlogManager = () => {
               <Input value={keywordsInput} onChange={(e) => setKeywordsInput(e.target.value)} placeholder="korean, learn, beginner" />
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <Label>Hero Image</Label>
-                <div className="flex gap-2">
-                  <Input value={editing.hero_image || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_image: e.target.value }))} placeholder="URL or upload" className="flex-1" />
-                  <Button variant="outline" size="icon" asChild className="relative" disabled={uploading}>
-                    <label>
-                      <Upload className="h-4 w-4" />
-                      <input type="file" accept="image/*" className="sr-only" onChange={handleImageUpload} />
-                    </label>
-                  </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  disabled={generatingImage || !editing.title}
+                  onClick={async () => {
+                    if (!editing.title) {
+                      toast({ title: "Title required", description: "Enter a title first to generate a relevant image.", variant: "destructive" });
+                      return;
+                    }
+                    setGeneratingImage(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("generate-blog-image", {
+                        body: {
+                          title: editing.title,
+                          description: editing.description || "",
+                          article_type: editing.article_type || "longform",
+                          keywords: keywordsInput.split(",").map((k) => k.trim()).filter(Boolean),
+                        },
+                      });
+                      if (error) throw error;
+                      if (data?.error) throw new Error(data.error);
+                      setEditing((prev) => ({
+                        ...prev,
+                        hero_image: data.hero_image,
+                        hero_alt: data.hero_alt,
+                        hero_caption: data.hero_caption,
+                      }));
+                      toast({ title: "SEO hero image generated!" });
+                    } catch (e: any) {
+                      toast({ title: "Generation failed", description: e.message || "Try again", variant: "destructive" });
+                    } finally {
+                      setGeneratingImage(false);
+                    }
+                  }}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {generatingImage ? "Generating..." : "Auto-generate (AI)"}
+                </Button>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input value={editing.hero_image || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_image: e.target.value }))} placeholder="URL or upload" className="flex-1" />
+                    <Button variant="outline" size="icon" asChild className="relative" disabled={uploading}>
+                      <label>
+                        <Upload className="h-4 w-4" />
+                        <input type="file" accept="image/*" className="sr-only" onChange={handleImageUpload} />
+                      </label>
+                    </Button>
+                  </div>
+                  {editing.hero_image && (
+                    <img src={editing.hero_image} alt="Preview" className="h-24 w-full object-cover rounded mt-1" />
+                  )}
                 </div>
-                {editing.hero_image && (
-                  <img src={editing.hero_image} alt="Preview" className="h-24 w-full object-cover rounded mt-1" />
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Hero Alt</Label>
-                <Input value={editing.hero_alt || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Hero Caption</Label>
-                <Input value={editing.hero_caption || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption: e.target.value }))} />
+                <div className="space-y-2">
+                  <Label>Hero Alt (SEO)</Label>
+                  <Input value={editing.hero_alt || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hero Caption</Label>
+                  <Input value={editing.hero_caption || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption: e.target.value }))} />
+                </div>
               </div>
             </div>
 
