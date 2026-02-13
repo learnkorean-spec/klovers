@@ -159,6 +159,11 @@ const EnrollNowPage = () => {
           country: selectedCountry,
           level: classType,
           goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")} ${preferredTime}, tz:${timezone}`,
+          plan_type: classType,
+          duration: `${duration}mo`,
+          schedule: `${preferredDays.join("/")} ${preferredTime}`,
+          timezone: timezone,
+          source: isEgypt ? "egypt" : "stripe",
         },
       });
       if (error) {

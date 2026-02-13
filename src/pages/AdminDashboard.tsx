@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
+  plan_type: string; duration: string; schedule: string; timezone: string; source: string;
 }
 
 interface Enrollment {
@@ -40,7 +41,7 @@ interface AttendanceReq {
   profiles?: { name: string; email: string; credits: number } | null;
 }
 
-const STATUS_OPTIONS = ["new", "contacted", "enrolled", "lost"];
+const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -76,7 +77,29 @@ const AdminDashboard = () => {
       setLeadsError(msg);
       toast({ title: "Leads query failed", description: leadsRes.error.message, variant: "destructive" });
     } else {
-      setLeads(leadsRes.data as Lead[]);
+      // Auto-derive status from enrollments by matching email
+      const enrichedLeads = (leadsRes.data as Lead[]).map((lead) => {
+        const matchingEnrollments = enrollRes.data
+          ? (enrollRes.data as any[]).filter((e) => {
+              const profile = profileMap[e.user_id];
+              return profile && profile.email.toLowerCase() === lead.email.toLowerCase();
+            })
+          : [];
+
+        let autoStatus = lead.status;
+        if (matchingEnrollments.length > 0) {
+          const hasApproved = matchingEnrollments.some((e: any) => e.approval_status === "APPROVED");
+          const hasRejected = matchingEnrollments.some((e: any) => e.approval_status === "REJECTED");
+          const hasPending = matchingEnrollments.some((e: any) =>
+            ["PENDING", "PENDING_PAYMENT", "UNDER_REVIEW"].includes(e.approval_status)
+          );
+          if (hasApproved) autoStatus = "enrolled";
+          else if (hasRejected && !hasPending) autoStatus = "rejected";
+          else if (hasPending) autoStatus = "contacted";
+        }
+        return { ...lead, status: autoStatus };
+      });
+      setLeads(enrichedLeads);
     }
 
     if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
@@ -109,9 +132,9 @@ const AdminDashboard = () => {
   }, [leads, search, statusFilter]);
 
   const exportCSV = () => {
-    const headers = ["Name", "Email", "Country", "Level", "Goal", "Status", "Date"];
-    const rows = filtered.map((l) => [l.name, l.email, l.country, l.level, l.goal, l.status, new Date(l.created_at).toLocaleDateString()]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Date"];
+    const rows = filtered.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, new Date(l.created_at).toLocaleDateString()]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c || ""}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
@@ -566,8 +589,10 @@ const AdminDashboard = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead className="hidden md:table-cell">Country</TableHead>
-                      <TableHead className="hidden md:table-cell">Level</TableHead>
-                      <TableHead className="hidden lg:table-cell">Goal</TableHead>
+                      <TableHead className="hidden md:table-cell">Plan</TableHead>
+                      <TableHead className="hidden md:table-cell">Duration</TableHead>
+                      <TableHead className="hidden lg:table-cell">Schedule</TableHead>
+                      <TableHead className="hidden lg:table-cell">Timezone</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="hidden sm:table-cell">Date</TableHead>
                       <TableHead className="w-10"></TableHead>
@@ -578,14 +603,22 @@ const AdminDashboard = () => {
                       <TableRow key={lead.id}>
                         <TableCell className="font-medium">{lead.name}</TableCell>
                         <TableCell>{lead.email}</TableCell>
-                        <TableCell className="hidden md:table-cell">{lead.country}</TableCell>
-                        <TableCell className="hidden md:table-cell">{lead.level}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{lead.goal}</TableCell>
+                        <TableCell className="hidden md:table-cell">{lead.country || "—"}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {lead.plan_type ? <Badge variant="outline">{lead.plan_type}</Badge> : "—"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{lead.duration || "—"}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs">{lead.schedule || "—"}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs">{lead.timezone || "—"}</TableCell>
                         <TableCell>
-                          <Select value={lead.status} onValueChange={(v) => handleStatusChange(lead.id, v)}>
-                            <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
-                            <SelectContent>{STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                          </Select>
+                          <Badge variant={
+                            lead.status === "enrolled" ? "default"
+                            : lead.status === "rejected" ? "destructive"
+                            : lead.status === "contacted" ? "secondary"
+                            : "outline"
+                          }>
+                            {lead.status}
+                          </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
