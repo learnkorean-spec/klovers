@@ -20,6 +20,9 @@ interface BlogPost {
   hero_image: string;
   hero_alt: string;
   hero_caption: string;
+  hero_image_2: string;
+  hero_alt_2: string;
+  hero_caption_2: string;
   cta_text: string;
   cta_url: string;
   content: string;
@@ -101,20 +104,21 @@ const BlogPostPage = () => {
 
           <div className="flex items-center gap-2 mb-4">
             <Badge variant="outline">{typeLabel[post.article_type] || post.article_type}</Badge>
-            <span className="text-sm text-muted-foreground flex items-center gap-1">
+            <span className="text-sm text-foreground flex items-center gap-1">
               <User className="h-3 w-3" />{post.author}
             </span>
-            <span className="text-sm text-muted-foreground flex items-center gap-1">
+            <span className="text-sm text-foreground flex items-center gap-1">
               <CalendarDays className="h-3 w-3" />
               {new Date(post.published_at || post.created_at).toLocaleDateString()}
             </span>
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{post.title}</h1>
-          <p className="text-lg text-muted-foreground mb-6">{post.description}</p>
+          <p className="text-lg text-foreground/80 mb-6 leading-relaxed">{post.description}</p>
 
+          {/* Hero Image 1 */}
           {post.hero_image && (
-            <figure className="mb-8">
+            <figure className="mb-6">
               <img
                 src={post.hero_image}
                 alt={post.hero_alt || post.title}
@@ -128,11 +132,33 @@ const BlogPostPage = () => {
             </figure>
           )}
 
-          <div className="prose prose-neutral dark:prose-invert max-w-none
-            prose-headings:text-foreground prose-p:text-foreground/90
-            prose-a:text-primary prose-strong:text-foreground
-            prose-blockquote:border-primary prose-blockquote:text-muted-foreground
-            prose-li:text-foreground/90 prose-code:text-primary
+          {/* Hero Image 2 */}
+          {post.hero_image_2 && (
+            <figure className="mb-8">
+              <img
+                src={post.hero_image_2}
+                alt={post.hero_alt_2 || post.title}
+                className="w-full rounded-lg object-cover max-h-[400px]"
+              />
+              {post.hero_caption_2 && (
+                <figcaption className="text-sm text-muted-foreground mt-2 text-center italic">
+                  {post.hero_caption_2}
+                </figcaption>
+              )}
+            </figure>
+          )}
+
+          <div className="prose prose-lg max-w-none
+            prose-headings:text-foreground prose-headings:font-bold
+            prose-p:text-foreground prose-p:leading-relaxed prose-p:text-base
+            prose-a:text-primary prose-a:font-semibold prose-a:underline
+            prose-strong:text-foreground prose-strong:font-bold
+            prose-blockquote:border-primary prose-blockquote:text-foreground/80
+            prose-li:text-foreground prose-li:text-base
+            prose-code:text-primary prose-code:font-semibold
+            prose-ul:text-foreground prose-ol:text-foreground
+            prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
+            prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
           ">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {post.content}
@@ -152,7 +178,7 @@ const BlogPostPage = () => {
             </div>
           )}
 
-          {post.keywords.length > 0 && (
+          {post.keywords && post.keywords.length > 0 && (
             <div className="mt-8 flex flex-wrap gap-2">
               {post.keywords.map((kw) => (
                 <Badge key={kw} variant="secondary" className="text-xs">{kw}</Badge>
