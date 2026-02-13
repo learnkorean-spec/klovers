@@ -43,6 +43,7 @@ const StudentDashboard = () => {
   const [attendance, setAttendance] = useState<AttendanceRequest[]>([]);
   const [requestDate, setRequestDate] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const isPendingPayment = !!enrollment && enrollment.approval_status === "PENDING_PAYMENT";
@@ -115,20 +116,26 @@ const StudentDashboard = () => {
   }, [navigate]);
 
   const handleRequestAttendance = async () => {
-    if (!requestDate) return;
+    if (!requestDate || !enrollment) return;
+    setSubmitting(true);
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) { setSubmitting(false); return; }
 
     const { error } = await supabase.from("attendance_requests").insert({
       user_id: session.user.id,
+      enrollment_id: enrollment.id,
       request_date: requestDate,
     } as any);
 
     if (error) {
-      toast({ title: "Error", description: "Failed to submit request.", variant: "destructive" });
+      const msg = error.message?.includes("duplicate")
+        ? "You already have a request for this date."
+        : "Failed to submit request.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } else {
       toast({ title: "Attendance requested" });
       setRequestDate("");
+      // Refetch attendance
       const { data } = await supabase
         .from("attendance_requests")
         .select("*")
@@ -136,6 +143,7 @@ const StudentDashboard = () => {
         .order("created_at", { ascending: false });
       if (data) setAttendance(data as any);
     }
+    setSubmitting(false);
   };
 
   const handleLogout = async () => {
@@ -232,7 +240,7 @@ const StudentDashboard = () => {
             </Card>
           )}
 
-          {enrollment && !isPending && enrollment.sessions_remaining <= 0 && (
+          {enrollment && !isPending && !isPendingPayment && !isUnderReview && !isActive && enrollment.sessions_remaining <= 0 && (
             <Card>
               <CardContent className="pt-6 text-center space-y-3">
                 <AlertCircle className="h-10 w-10 mx-auto text-destructive" />
@@ -263,7 +271,9 @@ const StudentDashboard = () => {
                 <CardContent>
                   <div className="flex gap-3">
                     <Input type="date" value={requestDate} onChange={(e) => setRequestDate(e.target.value)} />
-                    <Button onClick={handleRequestAttendance} disabled={!requestDate}>Request</Button>
+                    <Button onClick={handleRequestAttendance} disabled={!requestDate || submitting}>
+                      {submitting ? "Submitting..." : "Request"}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

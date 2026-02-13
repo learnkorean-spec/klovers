@@ -31,7 +31,7 @@ interface Enrollment {
   id: string; user_id: string; plan_type: string; duration: number; classes_included: number;
   amount: number; unit_price: number; tx_ref: string; receipt_url: string; status: string;
   payment_status: string; approval_status: string; payment_provider: string | null;
-  admin_review_required: boolean;
+  admin_review_required: boolean; sessions_remaining: number;
   created_at: string; profiles?: { name: string; email: string } | null;
   currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
 }
@@ -211,27 +211,25 @@ const AdminDashboard = () => {
 
   // --- Attendance ---
   const handleAttendanceAction = async (req: AttendanceReq, action: "APPROVED" | "REJECTED") => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { error } = await supabase.from("attendance_requests").update({
-      status: action, reviewed_at: new Date().toISOString(), reviewed_by: session.user.id,
-    } as any).eq("id", req.id);
-
-    if (error) { toast({ title: "Error", description: "Failed to update.", variant: "destructive" }); return; }
-
     if (action === "APPROVED") {
-      // Deduct credit atomically via RPC
-      const { error: creditError } = await supabase.rpc("deduct_credit", {
-        _user_id: req.user_id,
-      });
-      if (creditError) {
-        toast({ title: "Error", description: "Insufficient credits or failed to deduct.", variant: "destructive" });
+      const { data, error } = await supabase.rpc("approve_attendance_request", {
+        _request_id: req.id,
+      } as any);
+      if (error) {
+        toast({ title: "Error", description: error.message || "Failed to approve.", variant: "destructive" });
         return;
       }
+      toast({ title: "Attendance approved", description: `Sessions remaining: ${data}` });
+    } else {
+      const { error } = await supabase.rpc("reject_attendance_request", {
+        _request_id: req.id,
+      } as any);
+      if (error) {
+        toast({ title: "Error", description: error.message || "Failed to reject.", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Attendance rejected" });
     }
-
-    toast({ title: `Attendance ${action.toLowerCase()}` });
     fetchAll();
   };
 
@@ -513,13 +511,15 @@ const AdminDashboard = () => {
             {attendanceReqs.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No attendance requests.</p>
             ) : (
-              attendanceReqs.map((a) => (
+              attendanceReqs.map((a) => {
+                const userEnrollment = enrollments.find(e => e.user_id === a.user_id && e.approval_status === "APPROVED" && e.payment_status === "PAID");
+                return (
                 <Card key={a.id}>
                   <CardContent className="pt-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <p className="font-semibold text-foreground">{(a as any).profiles?.name || "Unknown"}</p>
-                        <p className="text-sm text-muted-foreground">Date: {a.request_date} · Credits: {(a as any).profiles?.credits ?? 0}</p>
+                        <p className="text-sm text-muted-foreground">Date: {a.request_date} · Sessions left: {userEnrollment?.sessions_remaining ?? 0}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
@@ -539,7 +539,8 @@ const AdminDashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))
+                );
+              })
             )}
           </TabsContent>
 
