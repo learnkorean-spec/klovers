@@ -1,28 +1,29 @@
 
 
-## Fix: Reset Password Page Not Working
+## Fix: Students Tab Missing Profile Data
 
 ### Problem
-The reset password page fails with "Could not update password. The link may have expired" because:
+The Students tab currently fetches incomplete profile data — only `user_id, name, email, credits`. This means the Country, Level, Status, and Joined date columns are either empty or broken. The Students tab should display the same richness of data as the Leads tab.
 
-1. **No session handling**: When the user clicks the email reset link, they arrive at `/reset-password` with auth tokens in the URL hash. The page doesn't wait for the authentication client to process these tokens and establish a session before showing the form.
-2. **Misleading error messages**: When the actual error is "same password" (user enters their current password), the page shows a generic "link expired" message instead.
+### Changes
 
-### Fix
+**File: `src/pages/AdminDashboard.tsx`**
 
-**File: `src/pages/ResetPasswordPage.tsx`**
+1. **Fix the profiles query** to fetch all fields: change  
+   `supabase.from("profiles").select("user_id, name, email, credits")`  
+   to  
+   `supabase.from("profiles").select("user_id, name, email, credits, country, level, status, created_at")`
 
-- Add a `sessionReady` state (starts `false`) and an `useEffect` that listens to `onAuthStateChange` for the `PASSWORD_RECOVERY` event
-- Show a loading spinner until the recovery session is established
-- If the session fails to establish (e.g., expired link), show an error state with a link back to forgot-password
-- Improve error handling: detect "same_password" error and show a specific message ("New password must be different from your current password")
-- After successful update, sign the user out to force a clean login with the new password
+2. **Update the profileMap type** to include the new fields (`country`, `level`, `status`, `created_at`) so they propagate correctly to enrollment and attendance records.
 
-### Changes Summary
+3. **Add a search bar** to the Students tab (matching the Leads tab pattern) so admins can filter students by name or email.
 
-| File | Change |
-|------|--------|
-| `src/pages/ResetPasswordPage.tsx` | Add `PASSWORD_RECOVERY` event listener, loading state, expired-link state, and better error messages |
+4. **Add an Export CSV button** for the Students tab so admins can download student data just like they can for leads.
 
-No other files are affected. The `ForgotPasswordPage` redirect URL is already correct.
+This ensures registered users show their complete data (country, level, credits, status, join date, payment source) in the Students tab, fully matching the data richness of the Leads tab.
 
+### Technical Details
+
+- The `profiles` state type at line 47 already declares `country`, `level`, `status`, `created_at` but the query at line 60 does not fetch them -- this is the root bug.
+- The table columns at lines 260-268 already render these fields, they just appear blank because the data is never fetched.
+- Adding search + export follows the exact same pattern already used in the Leads tab (lines 90-106).
