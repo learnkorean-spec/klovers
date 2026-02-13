@@ -11,7 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 
 const stepIcons = [UserPlus, CreditCard, CheckCircle2];
-const stepLinks = ["/signup", "/pricing", null];
+const stepLinks = ["/signup", "/pricing", "/enroll-now"];
 
 const EnrollSection = () => {
   const { t, tArray } = useLanguage();
@@ -69,20 +69,11 @@ const EnrollSection = () => {
                     {step.description}
                   </p>
 
-                  {link && step.buttonText && (
-                    <Button asChild className="w-full">
-                      <Link to={link}>
-                        {step.buttonText}
-                      </Link>
-                    </Button>
-                  )}
-
-                  {!link && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground font-medium">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                      {t("enroll", "enrollNow") || "Enroll Now"}
-                    </div>
-                  )}
+                  <Button asChild className="w-full">
+                    <Link to={link}>
+                      {step.buttonText || t("enroll", "enrollNow") || "Enroll Now"}
+                    </Link>
+                  </Button>
                 </CardContent>
 
                 {index < steps.length - 1 && (

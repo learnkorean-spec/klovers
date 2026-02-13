@@ -135,7 +135,13 @@ const EnrollNowPage = () => {
         _plan_type: classType,
         _duration: duration,
       } as any);
-      if (error) throw error;
+      if (error) {
+        console.log("Egypt order RPC error:", error);
+        const desc = error.message?.includes("not found") || error.code === "PGRST202"
+          ? "Backend function 'create_egypt_order' is missing or not accessible. Please contact support."
+          : error.message;
+        throw new Error(desc);
+      }
       nav(`/pay/${data}`);
     } catch (err: any) {
       toast({ title: "Order error", description: err.message, variant: "destructive" });
@@ -176,7 +182,17 @@ const EnrollNowPage = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log("create-checkout invoke error:", error);
+        const desc = error.message?.includes("FunctionNotFound") || error.message?.includes("404")
+          ? "Backend function 'create-checkout' is not deployed. Please contact support."
+          : error.message;
+        throw new Error(desc);
+      }
+      if (data?.error) {
+        console.log("create-checkout returned error:", data.error);
+        throw new Error(data.error);
+      }
       if (data?.url) {
         window.open(data.url, "_blank");
       }
@@ -220,6 +236,7 @@ const EnrollNowPage = () => {
                 <Label>Class Type</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
+                    type="button"
                     onClick={() => setClassType("group")}
                     className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
                       classType === "group" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
@@ -230,6 +247,7 @@ const EnrollNowPage = () => {
                     <span className="text-xs text-muted-foreground">Learn with others</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setClassType("private")}
                     className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
                       classType === "private" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
@@ -271,6 +289,7 @@ const EnrollNowPage = () => {
                     <div className="grid grid-cols-3 gap-3">
                       {([1, 3, 6] as Duration[]).map((d) => (
                         <button
+                          type="button"
                           key={d}
                           onClick={() => setDuration(d)}
                           className={`p-3 rounded-lg border-2 transition-all text-center ${
@@ -294,9 +313,14 @@ const EnrollNowPage = () => {
                 </div>
               )}
 
-              <Button className="w-full" size="lg" disabled={!canProceedStep1} onClick={() => setStep(2)}>
+              <Button type="button" className="w-full" size="lg" disabled={!canProceedStep1} onClick={() => setStep(2)}>
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+              {!canProceedStep1 && (
+                <p className="text-xs text-destructive text-center">
+                  {!selectedCountry ? "Please select your country." : !duration ? "Please choose a duration." : ""}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
@@ -306,7 +330,7 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
@@ -339,6 +363,7 @@ const EnrollNowPage = () => {
                 <div className="flex flex-wrap gap-2">
                   {WEEKDAYS.map((day) => (
                     <button
+                      type="button"
                       key={day}
                       onClick={() => toggleDay(day)}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
@@ -359,6 +384,7 @@ const EnrollNowPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {TIME_WINDOWS.map((tw) => (
                     <button
+                      type="button"
                       key={tw}
                       onClick={() => setPreferredTime(tw)}
                       className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
@@ -377,6 +403,7 @@ const EnrollNowPage = () => {
                 <div className="grid grid-cols-3 gap-2">
                   {START_OPTIONS.map((opt) => (
                     <button
+                      type="button"
                       key={opt}
                       onClick={() => setStartOption(opt)}
                       className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
@@ -401,9 +428,14 @@ const EnrollNowPage = () => {
                 Your schedule will be confirmed within 24 hours after payment.
               </p>
 
-              <Button className="w-full" size="lg" disabled={!canProceedStep2} onClick={() => setStep(3)}>
+              <Button type="button" className="w-full" size="lg" disabled={!canProceedStep2} onClick={() => setStep(3)}>
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+              {!canProceedStep2 && (
+                <p className="text-xs text-destructive text-center">
+                  {preferredDays.length === 0 ? "Please select preferred days." : !preferredTime ? "Please choose a time window." : !startOption ? "Please pick a start date option." : startOption === "Specific date" && !specificDate ? "Please enter a specific date." : ""}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
@@ -413,7 +445,7 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
@@ -491,6 +523,7 @@ const EnrollNowPage = () => {
               </div>
 
               <Button
+                type="button"
                 className="w-full"
                 size="lg"
                 disabled={isEgypt ? (!duration || loading) : (!duration || !name.trim() || !email.trim() || loading)}
@@ -508,6 +541,11 @@ const EnrollNowPage = () => {
                   </>
                 )}
               </Button>
+              {!isEgypt && (!name.trim() || !email.trim()) && (
+                <p className="text-xs text-destructive text-center">
+                  {!name.trim() ? "Please enter your full name." : "Please enter your email address."}
+                </p>
+              )}
 
               <p className="text-xs text-center text-muted-foreground">
                 {isEgypt

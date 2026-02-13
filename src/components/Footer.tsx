@@ -40,10 +40,10 @@ const Footer = () => {
                 </a>
               </Button>
               <Button size="icon" variant="outline" className="bg-transparent border-background/30 hover:bg-primary hover:border-primary" asChild>
-                <a href="#" aria-label="Instagram"><Instagram className="h-5 w-5" /></a>
+                <a href="https://instagram.com/klovers.kr" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram className="h-5 w-5" /></a>
               </Button>
               <Button size="icon" variant="outline" className="bg-transparent border-background/30 hover:bg-primary hover:border-primary" asChild>
-                <a href="#" aria-label="Facebook"><Facebook className="h-5 w-5" /></a>
+                <a href="https://facebook.com/klovers.kr" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook className="h-5 w-5" /></a>
               </Button>
             </div>
           </div>
