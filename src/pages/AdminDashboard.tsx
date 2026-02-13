@@ -247,7 +247,7 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="students">
           <TabsList>
-            <TabsTrigger value="students">Students ({profiles.length})</TabsTrigger>
+            <TabsTrigger value="students">Klovers Students ({profiles.length})</TabsTrigger>
             <TabsTrigger value="enrollments">Enrollments ({enrollments.length})</TabsTrigger>
             <TabsTrigger value="attendance">Attendance ({attendanceReqs.length})</TabsTrigger>
             <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
