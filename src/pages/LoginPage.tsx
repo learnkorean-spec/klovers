@@ -21,7 +21,11 @@ const LoginPage = () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
+      let description = "Invalid email or password.";
+      if (error.message?.includes("Email not confirmed")) {
+        description = "Your email is not confirmed. Please check your inbox for a verification link.";
+      }
+      toast({ title: "Login failed", description, variant: "destructive" });
       setLoading(false);
       return;
     }
@@ -56,6 +60,9 @@ const LoginPage = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Log In"}
               </Button>
+              <p className="text-sm text-center text-muted-foreground">
+                <Link to="/forgot-password" className="text-primary underline">Forgot password?</Link>
+              </p>
               <p className="text-sm text-center text-muted-foreground">
                 Don't have an account? <Link to="/signup" className="text-primary underline">Sign up</Link>
               </p>
