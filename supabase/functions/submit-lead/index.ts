@@ -97,6 +97,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check for duplicate lead email
+    const { data: existingLead } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingLead) {
+      // Silently succeed – don't reveal that the email exists
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { error } = await supabase.from("leads").insert({
       name: name.trim(),
       email: email.trim().toLowerCase(),
