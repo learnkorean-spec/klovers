@@ -63,10 +63,10 @@ const LoginPage = () => {
                 {loading ? "Signing in..." : "Log In"}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                <Link to="/forgot-password" className="text-primary underline">Forgot password?</Link>
+                <Link to="/forgot-password" className="text-foreground font-semibold underline">Forgot password?</Link>
               </p>
               <p className="text-sm text-center text-muted-foreground">
-                Don't have an account? <Link to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"} className="text-primary underline">Sign up</Link>
+                Don't have an account? <Link to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"} className="text-foreground font-semibold underline">Sign up</Link>
               </p>
             </form>
           </CardContent>
