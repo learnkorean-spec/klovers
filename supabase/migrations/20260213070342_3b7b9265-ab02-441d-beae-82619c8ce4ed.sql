@@ -1,0 +1,2 @@
+ALTER TABLE public.enrollments DROP CONSTRAINT enrollments_status_check;
+ALTER TABLE public.enrollments ADD CONSTRAINT enrollments_status_check CHECK (status IN ('PENDING', 'PENDING_PAYMENT', 'APPROVED', 'REJECTED', 'ACTIVE', 'EXPIRED'));
