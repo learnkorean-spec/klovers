@@ -17,6 +17,7 @@ export type Database = {
       attendance_requests: {
         Row: {
           created_at: string
+          enrollment_id: string
           id: string
           request_date: string
           reviewed_at: string | null
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          enrollment_id: string
           id?: string
           request_date: string
           reviewed_at?: string | null
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          enrollment_id?: string
           id?: string
           request_date?: string
           reviewed_at?: string | null
@@ -42,7 +45,15 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "attendance_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       batch_members: {
         Row: {
@@ -387,6 +398,10 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: number
       }
+      approve_attendance_request: {
+        Args: { _request_id: string }
+        Returns: number
+      }
       create_egypt_order: {
         Args: { _duration: number; _plan_type: string }
         Returns: string
@@ -398,6 +413,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      reject_attendance_request: {
+        Args: { _request_id: string }
+        Returns: undefined
       }
       revert_enrollment: {
         Args: { _enrollment_id: string }
