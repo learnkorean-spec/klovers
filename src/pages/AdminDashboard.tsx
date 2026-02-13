@@ -247,10 +247,10 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="students">
           <TabsList>
-            <TabsTrigger value="students">Klovers Students ({profiles.length})</TabsTrigger>
+            <TabsTrigger value="students">Leads ({profiles.length})</TabsTrigger>
             <TabsTrigger value="enrollments">Enrollments ({enrollments.length})</TabsTrigger>
             <TabsTrigger value="attendance">Attendance ({attendanceReqs.length})</TabsTrigger>
-            <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
+            <TabsTrigger value="leads">Klovers Students ({leads.length})</TabsTrigger>
           </TabsList>
 
           {/* STUDENTS TAB */}
