@@ -46,6 +46,7 @@ const AdminDashboard = () => {
   const [attendanceReqs, setAttendanceReqs] = useState<AttendanceReq[]>([]);
   const [profiles, setProfiles] = useState<{ user_id: string; name: string; email: string; country: string; level: string; credits: number; status: string; created_at: string }[]>([]);
   const [search, setSearch] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
@@ -57,10 +58,10 @@ const AdminDashboard = () => {
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("user_id, name, email, credits"),
+      supabase.from("profiles").select("user_id, name, email, credits, country, level, status, created_at"),
     ]);
 
-    const profileMap: Record<string, { name: string; email: string; credits: number }> = {};
+    const profileMap: Record<string, { name: string; email: string; credits: number; country: string; level: string; status: string; created_at: string }> = {};
     if (profilesRes.data) {
       (profilesRes.data as any[]).forEach((p) => { profileMap[p.user_id] = p; });
     }
@@ -241,16 +242,46 @@ const AdminDashboard = () => {
                   </TabsList>
                 </Tabs>
 
-                {(() => {
-                  const filteredProfiles = profiles.filter(p => {
-                    if (studentFilter === "confirmed") return p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED");
-                    if (studentFilter === "leads") return p.status === "NEW" || (!enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED"));
-                    if (studentFilter === "stripe") return enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED");
-                    if (studentFilter === "egypt") return enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual");
-                    return true;
-                  });
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const data = profiles.filter(p => {
+                      const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
+                      const matchesFilter = studentFilter === "all" ? true
+                        : studentFilter === "confirmed" ? p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
+                        : studentFilter === "leads" ? p.status === "NEW" || !enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
+                        : studentFilter === "stripe" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")
+                        : studentFilter === "egypt" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")
+                        : true;
+                      return matchesSearch && matchesFilter;
+                    });
+                    const headers = ["Name", "Email", "Country", "Level", "Credits", "Status", "Joined"];
+                    const rows = data.map(p => [p.name, p.email, p.country, p.level, p.credits, p.status, new Date(p.created_at).toLocaleDateString()]);
+                    const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+                    const blob = new Blob([csv], { type: "text/csv" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a"); a.href = url; a.download = `students-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+                    URL.revokeObjectURL(url);
+                  }}>
+                    <Download className="h-4 w-4 mr-1" /> Export CSV
+                  </Button>
+                </div>
 
-                  if (filteredProfiles.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
+                {(() => {
+                   const filteredProfiles = profiles.filter(p => {
+                     const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
+                     const matchesFilter = studentFilter === "confirmed" ? p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
+                       : studentFilter === "leads" ? p.status === "NEW" || (!enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED"))
+                       : studentFilter === "stripe" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")
+                       : studentFilter === "egypt" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")
+                       : true;
+                     return matchesSearch && matchesFilter;
+                   });
+
+                   if (filteredProfiles.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
 
                   return (
                     <div className="border rounded-lg overflow-hidden">
