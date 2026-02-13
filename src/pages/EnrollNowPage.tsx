@@ -12,13 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useNavigate } from "react-router-dom";
 
 type Step = 1 | 2 | 3;
 
@@ -37,6 +38,11 @@ const tierPrices: Record<TierKey, Record<ClassType, Record<Duration, number>>> =
   local: { group: { 1: 25, 3: 70, 6: 130 }, private: { 1: 50, 3: 140, 6: 250 } },
   regional: { group: { 1: 40, 3: 110, 6: 200 }, private: { 1: 80, 3: 220, 6: 380 } },
   global: { group: { 1: 60, 3: 170, 6: 300 }, private: { 1: 120, 3: 330, 6: 580 } },
+};
+
+const egpPrices: Record<ClassType, Record<Duration, number>> = {
+  group: { 1: 1200, 3: 3300, 6: 6100 },
+  private: { 1: 2350, 3: 6600, 6: 11750 },
 };
 
 const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
@@ -58,6 +64,8 @@ const EnrollNowPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const nav = useNavigate();
+  const isEgypt = selectedCountry === "Egypt";
 
   // Schedule preferences
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -96,10 +104,11 @@ const EnrollNowPage = () => {
 
   const originalPrice = useMemo(() => {
     if (!tier || !duration) return null;
+    if (isEgypt) return egpPrices[classType][duration];
     return tierPrices[tier][classType][duration];
-  }, [tier, classType, duration]);
+  }, [tier, classType, duration, isEgypt]);
 
-  const discountAmount = isFirstTime && originalPrice ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
+  const discountAmount = isFirstTime && originalPrice && !isEgypt ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
   const finalPrice = originalPrice ? originalPrice - discountAmount : null;
 
   const canProceedStep1 = !!selectedCountry && !!tier && !!duration;
@@ -112,8 +121,36 @@ const EnrollNowPage = () => {
 
   const canProceedStep2 = preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate);
 
+  const handleEgyptOrder = async () => {
+    if (!duration) return;
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Please log in", description: "You need to be logged in to place an order.", variant: "destructive" });
+        nav("/login");
+        return;
+      }
+      const { data, error } = await supabase.rpc("create_egypt_order", {
+        _plan_type: classType,
+        _duration: duration,
+      } as any);
+      if (error) throw error;
+      nav(`/pay/${data}`);
+    } catch (err: any) {
+      toast({ title: "Order error", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePay = async () => {
     if (!tier || !duration || !name.trim() || !email.trim() || !finalPrice) return;
+
+    if (isEgypt) {
+      await handleEgyptOrder();
+      return;
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -242,7 +279,7 @@ const EnrollNowPage = () => {
                         >
                           <p className="font-bold text-foreground">{d} {d === 1 ? "Month" : "Months"}</p>
                           <p className="text-xs text-muted-foreground">{durationClasses[d]} classes</p>
-                          <p className="text-sm font-bold text-foreground mt-1">${tierPrices[tier][classType][d]}</p>
+                          <p className="text-sm font-bold text-foreground mt-1">{isEgypt ? `${egpPrices[classType][d].toLocaleString()} EGP` : `$${tierPrices[tier][classType][d]}`}</p>
                         </button>
                       ))}
                     </div>
@@ -250,7 +287,7 @@ const EnrollNowPage = () => {
                 </>
               )}
 
-              {isFirstTime && (
+              {isFirstTime && !isEgypt && (
                 <div className="bg-accent rounded-lg p-3 flex items-center gap-2 text-sm">
                   <PartyPopper className="h-5 w-5 text-primary flex-shrink-0" />
                   <span className="text-accent-foreground font-medium">🎉 Welcome! 10% first-time student discount will be applied.</span>
@@ -420,8 +457,8 @@ const EnrollNowPage = () => {
                     <span className="text-muted-foreground">
                       {classType === "group" ? "Group" : "Private"} · {duration} {duration === 1 ? "month" : "months"} ({durationClasses[duration]} classes)
                     </span>
-                    <span className={`font-bold text-foreground ${isFirstTime ? "line-through text-muted-foreground" : ""}`}>
-                      ${originalPrice}
+                    <span className={`font-bold text-foreground ${isFirstTime && !isEgypt ? "line-through text-muted-foreground" : ""}`}>
+                      {isEgypt ? `${originalPrice.toLocaleString()} EGP` : `$${originalPrice}`}
                     </span>
                   </div>
 
@@ -434,12 +471,12 @@ const EnrollNowPage = () => {
 
                   <div className="border-t border-border pt-2 flex justify-between">
                     <span className="font-semibold text-foreground">Total</span>
-                    <span className="font-bold text-lg text-foreground">${finalPrice.toFixed(2)}</span>
+                    <span className="font-bold text-lg text-foreground">{isEgypt ? `${finalPrice.toLocaleString()} EGP` : `$${finalPrice.toFixed(2)}`}</span>
                   </div>
 
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>{durationClasses[duration]} classes included</span>
-                    <span>${(finalPrice / durationClasses[duration]).toFixed(2)}/class</span>
+                    <span>{isEgypt ? `${Math.round(finalPrice / durationClasses[duration]).toLocaleString()} EGP/class` : `$${(finalPrice / durationClasses[duration]).toFixed(2)}/class`}</span>
                   </div>
                 </div>
               )}
@@ -456,10 +493,15 @@ const EnrollNowPage = () => {
               <Button
                 className="w-full"
                 size="lg"
-                disabled={!duration || !name.trim() || !email.trim() || loading}
+                disabled={isEgypt ? (!duration || loading) : (!duration || !name.trim() || !email.trim() || loading)}
                 onClick={handlePay}
               >
-                {loading ? "Redirecting to payment..." : (
+                {loading ? (isEgypt ? "Creating order..." : "Redirecting to payment...") : isEgypt ? (
+                  <>
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Confirm Order ({finalPrice?.toLocaleString() ?? "—"} EGP)
+                  </>
+                ) : (
                   <>
                     <CreditCard className="mr-2 h-4 w-4" />
                     Pay ${finalPrice?.toFixed(2) ?? "—"} Now
@@ -468,7 +510,9 @@ const EnrollNowPage = () => {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Secure payment via Stripe. Your account will be created automatically after payment.
+                {isEgypt
+                  ? "You'll be redirected to upload your payment receipt."
+                  : "Secure payment via Stripe. Your account will be created automatically after payment."}
               </p>
             </CardContent>
           </Card>

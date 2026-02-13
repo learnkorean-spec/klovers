@@ -20,12 +20,14 @@ interface Profile {
 }
 
 interface Enrollment {
+  id: string;
   approval_status: string;
   payment_status: string;
   sessions_remaining: number;
   sessions_total: number;
   plan_type: string;
   matched_batch_id: string | null;
+  currency?: string;
 }
 
 interface AttendanceRequest {
@@ -43,6 +45,9 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const isPendingPayment = !!enrollment && enrollment.approval_status === "PENDING_PAYMENT";
+  const isUnderReview = !!enrollment && enrollment.approval_status === "UNDER_REVIEW";
+
   const isActive =
     !!enrollment &&
     enrollment.approval_status === "APPROVED" &&
@@ -51,15 +56,21 @@ const StudentDashboard = () => {
 
   const isPending =
     !!enrollment &&
+    !isPendingPayment &&
+    !isUnderReview &&
     (enrollment.approval_status === "PENDING" || enrollment.payment_status !== "PAID");
 
   const displayStatus = isActive
     ? "ACTIVE"
-    : isPending
-      ? "PENDING"
-      : enrollment && enrollment.sessions_remaining <= 0
-        ? "OVERDUE"
-        : "NEW";
+    : isPendingPayment
+      ? "PENDING PAYMENT"
+      : isUnderReview
+        ? "UNDER REVIEW"
+        : isPending
+          ? "PENDING"
+          : enrollment && enrollment.sessions_remaining <= 0
+            ? "OVERDUE"
+            : "NEW";
 
   const statusColor = (s: string) => {
     switch (s) {
@@ -83,7 +94,7 @@ const StudentDashboard = () => {
           .single(),
         supabase
           .from("enrollments")
-          .select("approval_status, payment_status, sessions_remaining, sessions_total, plan_type, matched_batch_id")
+          .select("id, approval_status, payment_status, sessions_remaining, sessions_total, plan_type, matched_batch_id, currency")
           .eq("user_id", session.user.id)
           .order("created_at", { ascending: false })
           .limit(1)
@@ -187,6 +198,27 @@ const StudentDashboard = () => {
                 <h2 className="text-xl font-semibold text-foreground">No Active Plan</h2>
                 <p className="text-muted-foreground">You don't have an active plan yet. Enroll to start your classes.</p>
                 <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {enrollment && isPendingPayment && (
+            <Card>
+              <CardContent className="pt-6 text-center space-y-3">
+                <AlertCircle className="h-10 w-10 mx-auto text-primary" />
+                <h2 className="text-xl font-semibold text-foreground">Complete Your Payment</h2>
+                <p className="text-muted-foreground">Your order has been created. Please upload your payment receipt.</p>
+                <Button onClick={() => navigate(`/pay/${enrollment.id}`)} size="lg">Upload Payment Receipt</Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {enrollment && isUnderReview && (
+            <Card>
+              <CardContent className="pt-6 text-center space-y-2">
+                <Info className="h-10 w-10 mx-auto text-primary" />
+                <h2 className="text-xl font-semibold text-foreground">Payment Under Review</h2>
+                <p className="text-muted-foreground">Your payment receipt is being reviewed. We'll notify you once it's approved.</p>
               </CardContent>
             </Card>
           )}

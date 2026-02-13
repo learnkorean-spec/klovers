@@ -151,6 +151,24 @@ export type Database = {
         }
         Relationships: []
       }
+      egp_prices: {
+        Row: {
+          amount_egp: number
+          duration: number
+          plan_type: string
+        }
+        Insert: {
+          amount_egp: number
+          duration: number
+          plan_type: string
+        }
+        Update: {
+          amount_egp?: number
+          duration?: number
+          plan_type?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           admin_review_required: boolean
@@ -158,10 +176,13 @@ export type Database = {
           approval_status: string
           classes_included: number
           created_at: string
+          currency: string
+          due_at: string | null
           duration: number
           id: string
           matched_at: string | null
           matched_batch_id: string | null
+          payment_date: string | null
           payment_method: string | null
           payment_provider: string | null
           payment_status: string
@@ -187,10 +208,13 @@ export type Database = {
           approval_status?: string
           classes_included: number
           created_at?: string
+          currency?: string
+          due_at?: string | null
           duration: number
           id?: string
           matched_at?: string | null
           matched_batch_id?: string | null
+          payment_date?: string | null
           payment_method?: string | null
           payment_provider?: string | null
           payment_status?: string
@@ -216,10 +240,13 @@ export type Database = {
           approval_status?: string
           classes_included?: number
           created_at?: string
+          currency?: string
+          due_at?: string | null
           duration?: number
           id?: string
           matched_at?: string | null
           matched_batch_id?: string | null
+          payment_date?: string | null
           payment_method?: string | null
           payment_provider?: string | null
           payment_status?: string
@@ -345,6 +372,10 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: number
       }
+      create_egypt_order: {
+        Args: { _duration: number; _plan_type: string }
+        Returns: string
+      }
       deduct_credit: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
@@ -352,6 +383,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      submit_egypt_payment: {
+        Args: {
+          _enrollment_id: string
+          _payment_date: string
+          _payment_method: string
+          _receipt_url: string
+          _tx_ref?: string
+        }
+        Returns: undefined
       }
       submit_manual_enrollment:
         | {

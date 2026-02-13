@@ -19,6 +19,7 @@ import LoginPage from "./pages/LoginPage";
 import EnrollPage from "./pages/EnrollPage";
 import EnrollNowPage from "./pages/EnrollNowPage";
 import StudentDashboard from "./pages/StudentDashboard";
+import EgyptPaymentPage from "./pages/EgyptPaymentPage";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/enroll" element={<EnrollPage />} />
             <Route path="/enroll-now" element={<EnrollNowPage />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/pay/:enrollmentId" element={<EgyptPaymentPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
