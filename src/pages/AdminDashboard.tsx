@@ -255,27 +255,40 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="students">
           <TabsList>
-            <TabsTrigger value="students">Leads ({profiles.length})</TabsTrigger>
+            <TabsTrigger value="students">Students ({profiles.length})</TabsTrigger>
             <TabsTrigger value="enrollments" className="relative">
               Enrollments ({enrollments.length})
               {(() => {
-                const actionable = enrollments.filter(e => e.approval_status === "UNDER_REVIEW" || (e.admin_review_required && e.approval_status === "PENDING")).length;
+                const actionable = enrollments.filter(e =>
+                  e.approval_status === "UNDER_REVIEW" ||
+                  e.approval_status === "PENDING_PAYMENT" ||
+                  (e.approval_status === "PENDING" && e.admin_review_required)
+                ).length;
                 return actionable > 0 ? (
-                  <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
-                    {actionable}
+                  <span className="absolute -top-1 -right-1 flex flex-col items-center">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                      {actionable}
+                    </span>
+                    <span className="text-[8px] text-destructive font-medium mt-0.5 whitespace-nowrap">Action needed</span>
                   </span>
                 ) : null;
               })()}
             </TabsTrigger>
             <TabsTrigger value="attendance" className="relative">
               Attendance ({attendanceReqs.length})
-              {attendanceReqs.filter(a => a.status === "PENDING").length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
-                  {attendanceReqs.filter(a => a.status === "PENDING").length}
-                </span>
-              )}
+              {(() => {
+                const pending = attendanceReqs.filter(a => a.status === "PENDING").length;
+                return pending > 0 ? (
+                  <span className="absolute -top-1 -right-1 flex flex-col items-center">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                      {pending}
+                    </span>
+                    <span className="text-[8px] text-destructive font-medium mt-0.5 whitespace-nowrap">Pending</span>
+                  </span>
+                ) : null;
+              })()}
             </TabsTrigger>
-            <TabsTrigger value="leads">Klovers Students ({leads.length})</TabsTrigger>
+            <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
           </TabsList>
 
           {/* STUDENTS TAB */}
@@ -403,7 +416,7 @@ const AdminDashboard = () => {
                     Pending Payment ({enrollments.filter(e => e.approval_status === "PENDING_PAYMENT").length})
                   </TabsTrigger>
                   <TabsTrigger value="pending">
-                    Pending Review ({enrollments.filter(e => e.admin_review_required && e.approval_status === "PENDING").length})
+                    Pending ({enrollments.filter(e => e.approval_status === "PENDING").length})
                   </TabsTrigger>
                   <TabsTrigger value="approved">
                     Approved ({enrollments.filter(e => e.approval_status === "APPROVED").length})
@@ -417,7 +430,7 @@ const AdminDashboard = () => {
                   const filtered = enrollments.filter((e) => {
                     if (tab === "pending_payment") return e.approval_status === "PENDING_PAYMENT";
                     if (tab === "under_review") return e.approval_status === "UNDER_REVIEW";
-                    if (tab === "pending") return e.admin_review_required && e.approval_status === "PENDING";
+                    if (tab === "pending") return e.approval_status === "PENDING";
                     if (tab === "approved") return e.approval_status === "APPROVED";
                     return e.approval_status === "REJECTED";
                   });
