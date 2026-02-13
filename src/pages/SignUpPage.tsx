@@ -35,7 +35,13 @@ const SignUpPage = () => {
     });
 
     if (error) {
-      toast({ title: "Sign up failed", description: "Could not create account. Please try again.", variant: "destructive" });
+      let description = "Could not create account. Please try again.";
+      if (error.message?.includes("already registered")) {
+        description = "An account with this email already exists. Please log in instead.";
+      } else if (error.message?.includes("rate limit")) {
+        description = "Too many attempts. Please wait a moment and try again.";
+      }
+      toast({ title: "Sign up failed", description, variant: "destructive" });
       setLoading(false);
       return;
     }

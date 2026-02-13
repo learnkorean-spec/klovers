@@ -20,6 +20,8 @@ import EnrollPage from "./pages/EnrollPage";
 import EnrollNowPage from "./pages/EnrollNowPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import EgyptPaymentPage from "./pages/EgyptPaymentPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const App = () => (
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/enroll" element={<EnrollPage />} />
             <Route path="/enroll-now" element={<EnrollNowPage />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
