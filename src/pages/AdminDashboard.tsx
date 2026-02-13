@@ -256,8 +256,22 @@ const AdminDashboard = () => {
         <Tabs defaultValue="students">
           <TabsList>
             <TabsTrigger value="students">Leads ({profiles.length})</TabsTrigger>
-            <TabsTrigger value="enrollments">Enrollments ({enrollments.length})</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance ({attendanceReqs.length})</TabsTrigger>
+            <TabsTrigger value="enrollments" className="relative">
+              Enrollments ({enrollments.length})
+              {enrollments.filter(e => e.approval_status === "UNDER_REVIEW" || e.approval_status === "PENDING" || e.approval_status === "PENDING_PAYMENT").length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                  {enrollments.filter(e => e.approval_status === "UNDER_REVIEW" || e.approval_status === "PENDING" || e.approval_status === "PENDING_PAYMENT").length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="relative">
+              Attendance ({attendanceReqs.length})
+              {attendanceReqs.filter(a => a.status === "PENDING").length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                  {attendanceReqs.filter(a => a.status === "PENDING").length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="leads">Klovers Students ({leads.length})</TabsTrigger>
           </TabsList>
 
