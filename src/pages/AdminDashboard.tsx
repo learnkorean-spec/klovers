@@ -209,6 +209,16 @@ const AdminDashboard = () => {
     fetchAll();
   };
 
+  const handleDeleteEnrollment = async (enrollmentId: string) => {
+    const { error } = await supabase.from("enrollments").delete().eq("id", enrollmentId);
+    if (error) {
+      toast({ title: "Error", description: error.message || "Failed to delete enrollment.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Enrollment deleted" });
+    fetchAll();
+  };
+
   // --- Attendance ---
   const handleAttendanceAction = async (req: AttendanceReq, action: "APPROVED" | "REJECTED") => {
     if (action === "APPROVED") {
@@ -494,6 +504,25 @@ const AdminDashboard = () => {
                                     </AlertDialogContent>
                                   </AlertDialog>
                                 )}
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="ghost">
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete enrollment?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete this enrollment record for {e.profiles?.name || "this student"}.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteEnrollment(e.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             </div>
                           </CardContent>
