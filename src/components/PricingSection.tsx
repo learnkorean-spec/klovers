@@ -40,6 +40,18 @@ const tierPrices: Record<TierKey, { duration: string; classes: string; usd: numb
   ],
 };
 
+const egpGroupPrices = [
+  { duration: "1 Month", classes: "4 classes", egp: 1200 },
+  { duration: "3 Months", classes: "12 classes", egp: 3300 },
+  { duration: "6 Months", classes: "24 classes", egp: 6100 },
+];
+
+const egpPrivatePrices = [
+  { duration: "1 Month", classes: "4 classes", egp: 2350 },
+  { duration: "3 Months", classes: "12 classes", egp: 6600 },
+  { duration: "6 Months", classes: "24 classes", egp: 11750 },
+];
+
 const privatePrices: Record<TierKey, { duration: string; classes: string; usd: number }[]> = {
   local: [
     { duration: "1 Month", classes: "4 classes", usd: 50 },
@@ -216,7 +228,7 @@ const PricingSection = () => {
 
                   <div className="space-y-3 mb-6">
                     {classType === "group" ? (
-                      tierPrices[tierKey].map((price) => (
+                      (selectedCountry === "Egypt" && tierKey === "local" ? egpGroupPrices : tierPrices[tierKey]).map((price: any) => (
                         <div
                           key={price.duration}
                           className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
@@ -233,9 +245,9 @@ const PricingSection = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-foreground">
-                              ${price.usd}
+                              {price.egp ? `${price.egp.toLocaleString()} EGP` : `$${price.usd}`}
                             </p>
-                            {price.local && isActive && (
+                            {price.local && isActive && !price.egp && (
                               <p className="text-xs text-muted-foreground">
                                 {price.local}
                               </p>
@@ -244,7 +256,7 @@ const PricingSection = () => {
                         </div>
                       ))
                     ) : (
-                      privatePrices[tierKey].map((price) => (
+                      (selectedCountry === "Egypt" && tierKey === "local" ? egpPrivatePrices : privatePrices[tierKey]).map((price: any) => (
                         <div
                           key={`private-${price.duration}`}
                           className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
@@ -261,7 +273,7 @@ const PricingSection = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-foreground">
-                              ${price.usd}
+                              {price.egp ? `${price.egp.toLocaleString()} EGP` : `$${price.usd}`}
                             </p>
                           </div>
                         </div>

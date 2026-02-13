@@ -30,6 +30,7 @@ interface Enrollment {
   payment_status: string; approval_status: string; payment_provider: string | null;
   admin_review_required: boolean;
   created_at: string; profiles?: { name: string; email: string } | null;
+  currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
 }
 
 interface AttendanceReq {
@@ -248,13 +249,17 @@ const AdminDashboard = () => {
             {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
               <Tabs defaultValue="approved">
                 <TabsList>
+                  <TabsTrigger value="pending_payment">Pending Payment</TabsTrigger>
+                  <TabsTrigger value="under_review">Under Review</TabsTrigger>
                   <TabsTrigger value="pending">Pending Review</TabsTrigger>
                   <TabsTrigger value="approved">Approved</TabsTrigger>
                   <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
 
-                {(["pending", "approved", "rejected"] as const).map((tab) => {
+                {(["pending_payment", "under_review", "pending", "approved", "rejected"] as const).map((tab) => {
                   const filtered = enrollments.filter((e) => {
+                    if (tab === "pending_payment") return e.approval_status === "PENDING_PAYMENT";
+                    if (tab === "under_review") return e.approval_status === "UNDER_REVIEW";
                     if (tab === "pending") return e.admin_review_required && e.approval_status === "PENDING";
                     if (tab === "approved") return e.approval_status === "APPROVED";
                     return e.approval_status === "REJECTED";
@@ -270,8 +275,10 @@ const AdminDashboard = () => {
                               <div className="space-y-1">
                                 <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {e.plan_type} · {e.duration}mo · {e.classes_included} classes · ${e.amount} · Ref: {e.tx_ref}
-                                  {(e as any).payment_method && <> · <span className="font-medium">{(e as any).payment_method === 'vodafone_cash' ? 'Vodafone Cash' : (e as any).payment_method === 'instapay' ? 'InstaPay' : (e as any).payment_method}</span></>}
+                                  {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {e.currency === 'EGP' ? `${e.amount.toLocaleString()} EGP` : `$${e.amount}`} · Ref: {e.tx_ref || '—'}
+                                  {e.payment_method && <> · <span className="font-medium">{e.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : e.payment_method === 'instapay' ? 'InstaPay' : e.payment_method === 'bank_transfer' ? 'Bank Transfer' : e.payment_method}</span></>}
+                                  {e.payment_date && <> · Paid: {e.payment_date}</>}
+                                  {e.due_at && e.approval_status === 'PENDING_PAYMENT' && <> · Due: {new Date(e.due_at).toLocaleString()}</>}
                                 </p>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-muted-foreground">Unit price:</span>
@@ -318,7 +325,7 @@ const AdminDashboard = () => {
                                 >
                                   <Eye className="h-4 w-4 mr-1" /> Receipt
                                 </Button>
-                                {e.approval_status === "PENDING" && e.admin_review_required && (
+                                {(e.approval_status === "PENDING" && e.admin_review_required || e.approval_status === "UNDER_REVIEW") && (
                                   <>
                                     <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
                                       <Check className="h-4 w-4 mr-1" /> Approve
