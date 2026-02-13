@@ -116,7 +116,7 @@ const AdminDashboard = () => {
       reviewed_by: session.user.id,
     };
 
-    if (action === "APPROVED" && enrollment.payment_provider === "manual") {
+    if (action === "APPROVED" && (enrollment.payment_provider === "manual" || enrollment.payment_provider === "egypt_manual")) {
       updates.payment_status = "PAID";
     }
     if (action === "REJECTED") {
@@ -247,13 +247,23 @@ const AdminDashboard = () => {
 
           <TabsContent value="enrollments" className="space-y-4">
             {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
-              <Tabs defaultValue="approved">
+              <Tabs defaultValue="under_review">
                 <TabsList>
-                  <TabsTrigger value="pending_payment">Pending Payment</TabsTrigger>
-                  <TabsTrigger value="under_review">Under Review</TabsTrigger>
-                  <TabsTrigger value="pending">Pending Review</TabsTrigger>
-                  <TabsTrigger value="approved">Approved</TabsTrigger>
-                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  <TabsTrigger value="under_review">
+                    Under Review ({enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length})
+                  </TabsTrigger>
+                  <TabsTrigger value="pending_payment">
+                    Pending Payment ({enrollments.filter(e => e.approval_status === "PENDING_PAYMENT").length})
+                  </TabsTrigger>
+                  <TabsTrigger value="pending">
+                    Pending Review ({enrollments.filter(e => e.admin_review_required && e.approval_status === "PENDING").length})
+                  </TabsTrigger>
+                  <TabsTrigger value="approved">
+                    Approved ({enrollments.filter(e => e.approval_status === "APPROVED").length})
+                  </TabsTrigger>
+                  <TabsTrigger value="rejected">
+                    Rejected ({enrollments.filter(e => e.approval_status === "REJECTED").length})
+                  </TabsTrigger>
                 </TabsList>
 
                 {(["pending_payment", "under_review", "pending", "approved", "rejected"] as const).map((tab) => {
@@ -305,6 +315,7 @@ const AdminDashboard = () => {
                                 <Badge variant={e.approval_status === "APPROVED" ? "default" : e.approval_status === "REJECTED" ? "destructive" : "secondary"}>
                                   {e.approval_status}
                                 </Badge>
+                {e.receipt_url && e.receipt_url.length > 0 && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -313,6 +324,12 @@ const AdminDashboard = () => {
                                       toast({ title: "Stripe receipt", description: "This enrollment was paid via Stripe." });
                                       return;
                                     }
+                                    // Full URLs (old manual uploads) - open directly
+                                    if (e.receipt_url.startsWith("http")) {
+                                      window.open(e.receipt_url, "_blank");
+                                      return;
+                                    }
+                                    // Relative paths (Egypt uploads) - create signed URL
                                     const { data, error } = await supabase.storage
                                       .from("receipts")
                                       .createSignedUrl(e.receipt_url, 600);
@@ -325,6 +342,7 @@ const AdminDashboard = () => {
                                 >
                                   <Eye className="h-4 w-4 mr-1" /> Receipt
                                 </Button>
+                                )}
                                 {(e.approval_status === "PENDING" && e.admin_review_required || e.approval_status === "UNDER_REVIEW") && (
                                   <>
                                     <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
