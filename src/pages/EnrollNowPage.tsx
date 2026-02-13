@@ -55,24 +55,30 @@ const EnrollNowPage = () => {
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
 
-  const [step, setStep] = useState<Step>(1);
+  const initialStep = Number(searchParams.get("step")) as Step;
+  const [step, setStep] = useState<Step>(initialStep === 2 || initialStep === 3 ? initialStep : 1);
   const [classType, setClassType] = useState<ClassType>(
     (searchParams.get("classType") as ClassType) || "group"
   );
   const [selectedCountry, setSelectedCountry] = useState(searchParams.get("country") || "");
-  const [duration, setDuration] = useState<Duration | null>(null);
+  const [duration, setDuration] = useState<Duration | null>(
+    searchParams.get("duration") ? (Number(searchParams.get("duration")) as Duration) : null
+  );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
   const isEgypt = selectedCountry === "Egypt";
 
-  // Schedule preferences
-  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [preferredDays, setPreferredDays] = useState<string[]>([]);
-  const [preferredTime, setPreferredTime] = useState("");
-  const [startOption, setStartOption] = useState("");
-  const [specificDate, setSpecificDate] = useState("");
+  // Schedule preferences — restore from URL if returning from signup
+  const [timezone, setTimezone] = useState(() => searchParams.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [preferredDays, setPreferredDays] = useState<string[]>(() => {
+    const d = searchParams.get("days");
+    return d ? d.split(",") : [];
+  });
+  const [preferredTime, setPreferredTime] = useState(searchParams.get("time") || "");
+  const [startOption, setStartOption] = useState(searchParams.get("start") || "");
+  const [specificDate, setSpecificDate] = useState(searchParams.get("date") || "");
 
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -119,6 +125,32 @@ const EnrollNowPage = () => {
     );
   };
 
+  // Build a URL that preserves all current selections so user can return after signup
+  const buildReturnUrl = (targetStep: Step) => {
+    const params = new URLSearchParams();
+    params.set("classType", classType);
+    if (selectedCountry) params.set("country", selectedCountry);
+    if (duration) params.set("duration", String(duration));
+    params.set("step", String(targetStep));
+    if (preferredDays.length) params.set("days", preferredDays.join(","));
+    if (preferredTime) params.set("time", preferredTime);
+    if (startOption) params.set("start", startOption);
+    if (specificDate) params.set("date", specificDate);
+    if (timezone) params.set("tz", timezone);
+    return `/enroll-now?${params.toString()}`;
+  };
+
+  const handleGoToStep3 = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      const returnUrl = buildReturnUrl(3);
+      toast({ title: "Account required", description: "Please create an account or log in to continue.", variant: "destructive" });
+      nav(`/signup?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    setStep(3);
+  };
+
   const canProceedStep2 = preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate);
 
   const handleEgyptOrder = async () => {
@@ -127,8 +159,9 @@ const EnrollNowPage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-      toast({ title: "Please log in", description: "You need to be logged in to place an order.", variant: "destructive" });
-        nav(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        const returnUrl = buildReturnUrl(3);
+        toast({ title: "Please log in", description: "You need to be logged in to place an order.", variant: "destructive" });
+        nav(`/login?redirect=${encodeURIComponent(returnUrl)}`);
         return;
       }
       const { data, error } = await supabase.rpc("create_egypt_order", {
@@ -458,7 +491,7 @@ const EnrollNowPage = () => {
                 Your schedule will be confirmed within 24 hours after payment.
               </p>
 
-              <Button type="button" className="w-full" size="lg" disabled={!canProceedStep2} onClick={() => setStep(3)}>
+              <Button type="button" className="w-full" size="lg" disabled={!canProceedStep2} onClick={handleGoToStep3}>
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {!canProceedStep2 && (
