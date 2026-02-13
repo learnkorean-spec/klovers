@@ -150,10 +150,32 @@ const EnrollNowPage = () => {
     }
   };
 
+  const submitLead = async () => {
+    try {
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          country: selectedCountry,
+          level: classType,
+          goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")} ${preferredTime}, tz:${timezone}`,
+        },
+      });
+      if (error) {
+        console.error("Lead submit failed:", error);
+        toast({ title: "Lead capture failed", description: error.message, variant: "destructive" });
+      }
+    } catch (err) {
+      console.error("Lead submit error:", err);
+    }
+  };
+
   const handlePay = async () => {
     if (!tier || !duration || !name.trim() || !email.trim() || !finalPrice) return;
 
     if (isEgypt) {
+      // Submit lead async before Egypt order
+      submitLead();
       await handleEgyptOrder();
       return;
     }
@@ -166,6 +188,9 @@ const EnrollNowPage = () => {
 
     setLoading(true);
     try {
+      // Submit lead async (don't block checkout)
+      submitLead();
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           tier,

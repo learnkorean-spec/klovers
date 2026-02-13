@@ -17,7 +17,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2 } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 
 interface Lead {
@@ -51,9 +53,11 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
+  const [leadsError, setLeadsError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchAll = async () => {
+    setLeadsError(null);
     const [leadsRes, enrollRes, attendRes, profilesRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
@@ -66,7 +70,15 @@ const AdminDashboard = () => {
       (profilesRes.data as any[]).forEach((p) => { profileMap[p.user_id] = p; });
     }
 
-    if (leadsRes.data) setLeads(leadsRes.data as Lead[]);
+    if (leadsRes.error) {
+      const msg = `Leads query failed: ${leadsRes.error.message} (code: ${leadsRes.error.code})`;
+      console.error(msg, leadsRes.error);
+      setLeadsError(msg);
+      toast({ title: "Leads query failed", description: leadsRes.error.message, variant: "destructive" });
+    } else {
+      setLeads(leadsRes.data as Lead[]);
+    }
+
     if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
     if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] || null })));
     if (profilesRes.data) setProfiles(profilesRes.data as any[]);
@@ -525,11 +537,28 @@ const AdminDashboard = () => {
               <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
             </div>
 
+            {leadsError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Query Error</AlertTitle>
+                <AlertDescription>{leadsError}</AlertDescription>
+              </Alert>
+            )}
+
             {loading ? (
-              <p className="text-muted-foreground text-center py-12">Loading...</p>
-            ) : filtered.length === 0 ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex gap-4 items-center">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-5 w-24 hidden md:block" />
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 && !leadsError ? (
               <p className="text-muted-foreground text-center py-12">No leads found.</p>
-            ) : (
+            ) : !leadsError ? (
               <div className="border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -581,7 +610,7 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               </div>
-            )}
+            ) : null}
             <p className="text-xs text-muted-foreground text-center">{filtered.length} lead{filtered.length !== 1 ? "s" : ""}</p>
           </TabsContent>
         </Tabs>
