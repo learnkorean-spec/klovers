@@ -109,7 +109,7 @@ const Header = () => {
                     onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`)}
                     className="p-2 rounded-full transition-all duration-200 hover:bg-accent group"
                   >
-                    <UserCircle className="h-6 w-6 text-muted-foreground transition-transform duration-200 group-hover:scale-110" />
+                    <UserCircle className="h-6 w-6 text-foreground transition-transform duration-200 group-hover:scale-110" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Sign in / Register</TooltipContent>
