@@ -246,6 +246,16 @@ const StudentDashboard = () => {
                       </Badge>
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
+                    <div className="rounded-lg bg-primary/10 p-3 text-center">
+                      <span className="text-xs text-muted-foreground">Remaining Classes</span>
+                      <p className="text-2xl font-bold text-primary">{student.total_classes - student.used_classes}</p>
+                    </div>
+                    <div className="rounded-lg bg-destructive/10 p-3 text-center">
+                      <span className="text-xs text-muted-foreground">Balance Due</span>
+                      <p className="text-2xl font-bold text-destructive">${(student.total_classes - student.used_classes) * student.price_per_class}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
