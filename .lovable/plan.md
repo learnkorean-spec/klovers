@@ -1,27 +1,36 @@
 
 
-## Plan: Fix Auth Page Text Readability + Clear Data
+## Add Group Assignment Dropdown for Active Students
 
-### 1. Clear Leads Data
-Leads table is already empty (0 records). No action needed here.
+### What This Does
+When a student is active (paid and approved), a "Group Name" dropdown will appear in the table and in the edit form, allowing you to assign students to named groups (e.g., "Group A - Beginners", "Group B - Intermediate"). This makes it easy to manage students by group or individually.
 
-### 2. Fix Text Color on Sign Up and Login Pages
+### How It Works
 
-**Problem:** Links like "Log in" and "Sign up" use `text-primary` which is bright yellow — nearly invisible on a white card background.
+1. **New database column**: Add a `group_name` column to the `students` table to store the assigned group.
 
-**Solution:** Replace `text-primary` with `text-foreground` (black) and keep the underline for link affordance. This applies to:
+2. **New database table**: Create a `student_groups` table to hold the list of available group names that appear in the dropdown. You can manage these groups (add/remove) directly from the admin panel.
 
-- **SignUpPage.tsx** (line 85): "Log in" link — change `text-primary underline` to `text-foreground font-semibold underline`
-- **LoginPage.tsx** (line 66): "Forgot password?" link — same change
-- **LoginPage.tsx** (line 69): "Sign up" link — same change
+3. **Table view update**: For students with status "student" (active), a dropdown will appear in the table row allowing quick group assignment without opening the edit dialog.
 
-This ensures all clickable text on auth pages has strong contrast (black on white) while remaining visually distinct via underline and bold weight, consistent with the brand's accessibility guidelines.
+4. **Edit form update**: The Add/Edit Student dialog will also include a Group Name dropdown (visible when status is "student").
+
+5. **Filter by group**: A new filter option will be added to the toolbar so you can view all students in a specific group at once.
+
+---
 
 ### Technical Details
 
-**Files to modify:**
-- `src/pages/SignUpPage.tsx` — line 85: update link class
-- `src/pages/LoginPage.tsx` — lines 66, 69: update link classes
+**Database migration:**
+- Add `group_name TEXT DEFAULT ''` column to `students` table
+- Create `student_groups` table with columns: `id UUID`, `name TEXT UNIQUE`, `created_at TIMESTAMP`
+- RLS: admin-only management, public read for authenticated users
 
-**Class change:** `text-primary underline` becomes `text-foreground font-semibold underline`
+**StudentManager.tsx changes:**
+- Fetch available groups from `student_groups` on load
+- Add inline `Select` dropdown in the table for active students in the "Package" or a new "Group" column
+- On dropdown change, update `students.group_name` directly via Supabase
+- Add group name dropdown to the Add/Edit dialog form
+- Add group filter to the toolbar alongside the status filter
+- Add a small "Manage Groups" button to create/delete group names
 
