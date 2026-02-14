@@ -180,12 +180,8 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              {/* Attendance Calendar & Stats */}
-              <AttendanceCalendar
-                days={calendarDays}
-                totalClasses={student.total_classes}
-                usedClasses={student.used_classes}
-              />
+              {/* Interactive Attendance Calendar */}
+              <StudentAttendanceRequest userId={userId} />
 
               {/* Package Info */}
               <Card>
@@ -217,9 +213,6 @@ const StudentDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Individual Attendance Requests */}
-              <StudentAttendanceRequest userId={userId} />
 
               {/* Group Attendance */}
               <StudentGroupAttendance />
