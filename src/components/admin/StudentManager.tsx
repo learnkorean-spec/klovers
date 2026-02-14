@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Search, Download, Trash2, Plus, Edit, CheckCircle, Users, UserCheck, UserX } from "lucide-react";
+import { Search, Download, Trash2, Plus, Edit, CheckCircle, Users, UserCheck, UserX, Settings } from "lucide-react";
 
 interface Student {
   id: string;
@@ -39,6 +39,13 @@ interface Student {
   payment_status: string;
   notes: string;
   created_at: string;
+  group_name: string;
+}
+
+interface StudentGroup {
+  id: string;
+  name: string;
+  created_at: string;
 }
 
 const EMPTY_FORM: Omit<Student, "id" | "remaining_classes" | "created_at"> = {
@@ -55,18 +62,30 @@ const EMPTY_FORM: Omit<Student, "id" | "remaining_classes" | "created_at"> = {
   price_per_class: 0,
   payment_status: "pending",
   notes: "",
+  group_name: "",
 };
 
 const StudentManager = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [groupFilter, setGroupFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [markingAttendance, setMarkingAttendance] = useState<string | null>(null);
+
+  // Groups state
+  const [groups, setGroups] = useState<StudentGroup[]>([]);
+  const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+
+  const fetchGroups = async () => {
+    const { data } = await supabase.from("student_groups").select("*").order("name") as { data: StudentGroup[] | null };
+    setGroups(data || []);
+  };
 
   const fetchStudents = async () => {
     // Fetch all three sources in parallel
@@ -80,7 +99,10 @@ const StudentManager = () => {
       toast({ title: "Error loading students", description: studentsRes.error.message, variant: "destructive" });
     }
 
-    const existingStudents: Student[] = (studentsRes.data as any[]) || [];
+    const existingStudents: Student[] = ((studentsRes.data as any[]) || []).map(s => ({
+      ...s,
+      group_name: s.group_name || "",
+    }));
     const existingEmails = new Set(existingStudents.map(s => s.email.toLowerCase()));
 
     // Add leads not already in students table
@@ -106,6 +128,7 @@ const StudentManager = () => {
           payment_status: "pending",
           notes: `Source: ${l.source || "enroll"} | Schedule: ${l.schedule || "—"}`,
           created_at: l.created_at,
+          group_name: "",
         };
       });
 
@@ -132,6 +155,7 @@ const StudentManager = () => {
           payment_status: "pending",
           notes: `Registered user (${p.status})`,
           created_at: p.created_at,
+          group_name: "",
         };
       });
 
@@ -139,7 +163,10 @@ const StudentManager = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => {
+    fetchStudents();
+    fetchGroups();
+  }, []);
 
   const filtered = useMemo(() => {
     return students.filter((s) => {
@@ -147,9 +174,10 @@ const StudentManager = () => {
         s.full_name.toLowerCase().includes(search.toLowerCase()) ||
         s.email.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "all" || s.status === statusFilter;
-      return matchSearch && matchStatus;
+      const matchGroup = groupFilter === "all" || s.group_name === groupFilter || (groupFilter === "unassigned" && !s.group_name);
+      return matchSearch && matchStatus && matchGroup;
     });
-  }, [students, search, statusFilter]);
+  }, [students, search, statusFilter, groupFilter]);
 
   const stats = useMemo(() => ({
     total: students.length,
@@ -180,6 +208,7 @@ const StudentManager = () => {
       price_per_class: s.price_per_class,
       payment_status: s.payment_status,
       notes: s.notes,
+      group_name: s.group_name || "",
     });
     setDialogOpen(true);
   };
@@ -205,6 +234,7 @@ const StudentManager = () => {
       price_per_class: Number(form.price_per_class) || 0,
       payment_status: form.payment_status,
       notes: form.notes.trim(),
+      group_name: form.group_name,
     };
 
     if (editingId) {
@@ -264,10 +294,45 @@ const StudentManager = () => {
     }
   };
 
+  const handleGroupChange = async (studentId: string, groupName: string) => {
+    const value = groupName === "unassigned" ? "" : groupName;
+    const { error } = await supabase.from("students").update({ group_name: value } as any).eq("id", studentId);
+    if (error) {
+      toast({ title: "Error assigning group", description: error.message, variant: "destructive" });
+    } else {
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, group_name: value } : s));
+      toast({ title: "Group updated" });
+    }
+  };
+
+  const handleAddGroup = async () => {
+    const name = newGroupName.trim();
+    if (!name) return;
+    const { error } = await supabase.from("student_groups").insert({ name } as any);
+    if (error) {
+      const msg = error.message?.includes("duplicate") ? "Group name already exists." : error.message;
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    } else {
+      toast({ title: "Group added" });
+      setNewGroupName("");
+      fetchGroups();
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    const { error } = await supabase.from("student_groups").delete().eq("id", groupId);
+    if (error) {
+      toast({ title: "Error deleting group", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Group deleted" });
+      fetchGroups();
+    }
+  };
+
   const exportCSV = () => {
-    const headers = ["Name", "Email", "Phone", "Country", "Status", "Course", "Package", "Total Classes", "Used", "Remaining", "Total Paid", "Price/Class", "Payment", "Notes", "Created"];
+    const headers = ["Name", "Email", "Phone", "Country", "Status", "Group", "Course", "Package", "Total Classes", "Used", "Remaining", "Total Paid", "Price/Class", "Payment", "Notes", "Created"];
     const rows = filtered.map(s => [
-      s.full_name, s.email, s.phone, s.country, s.status, s.course_type, s.package_name,
+      s.full_name, s.email, s.phone, s.country, s.status, s.group_name, s.course_type, s.package_name,
       s.total_classes, s.used_classes, s.remaining_classes, s.total_paid, s.price_per_class,
       s.payment_status, s.notes, new Date(s.created_at).toLocaleDateString(),
     ]);
@@ -344,6 +409,19 @@ const StudentManager = () => {
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={groupFilter} onValueChange={setGroupFilter}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="All Groups" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Groups</SelectItem>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {groups.map(g => (
+              <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={() => setManageGroupsOpen(true)} title="Manage Groups">
+          <Settings className="h-4 w-4 mr-1" /> Groups
+        </Button>
         <Button onClick={openAdd} size="sm"><Plus className="h-4 w-4 mr-1" /> Add</Button>
         <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
       </div>
@@ -356,6 +434,7 @@ const StudentManager = () => {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Group</TableHead>
               <TableHead>Package</TableHead>
               <TableHead className="text-center">Classes</TableHead>
               <TableHead className="text-right">Paid</TableHead>
@@ -367,7 +446,7 @@ const StudentManager = () => {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   No students found.
                 </TableCell>
               </TableRow>
@@ -377,6 +456,26 @@ const StudentManager = () => {
                   <TableCell className="font-medium">{s.full_name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{s.email}</TableCell>
                   <TableCell>{statusBadge(s.status)}</TableCell>
+                  <TableCell>
+                    {s.status === "student" ? (
+                      <Select
+                        value={s.group_name || "unassigned"}
+                        onValueChange={(v) => handleGroupChange(s.id, v)}
+                      >
+                        <SelectTrigger className="h-8 w-[140px] text-xs">
+                          <SelectValue placeholder="Assign group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">— None —</SelectItem>
+                          {groups.map(g => (
+                            <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm">{s.package_name || "—"}</TableCell>
                   <TableCell className="text-center">
                     <span className="text-sm">{s.used_classes}/{s.total_classes}</span>
@@ -474,6 +573,20 @@ const StudentManager = () => {
                 <Input value={form.course_type} onChange={(e) => setForm(f => ({ ...f, course_type: e.target.value }))} placeholder="e.g. Group, Private" />
               </div>
             </div>
+            {form.status === "student" && (
+              <div>
+                <label className="text-sm font-medium text-foreground">Group Name</label>
+                <Select value={form.group_name || "unassigned"} onValueChange={(v) => setForm(f => ({ ...f, group_name: v === "unassigned" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">— None —</SelectItem>
+                    {groups.map(g => (
+                      <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium text-foreground">Package Name</label>
               <Input value={form.package_name} onChange={(e) => setForm(f => ({ ...f, package_name: e.target.value }))} placeholder="e.g. 3-Month Group" />
@@ -522,6 +635,52 @@ const StudentManager = () => {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : editingId ? "Update" : "Add Student"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Groups Dialog */}
+      <Dialog open={manageGroupsOpen} onOpenChange={setManageGroupsOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Manage Groups</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder="New group name..."
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddGroup()}
+              />
+              <Button size="sm" onClick={handleAddGroup}><Plus className="h-4 w-4" /></Button>
+            </div>
+            {groups.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No groups yet. Add one above.</p>
+            ) : (
+              <div className="space-y-1 max-h-60 overflow-y-auto">
+                {groups.map(g => (
+                  <div key={g.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                    <span className="text-sm text-foreground">{g.name}</span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete "{g.name}"?</AlertDialogTitle>
+                          <AlertDialogDescription>Students assigned to this group will become unassigned.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteGroup(g.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

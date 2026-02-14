@@ -478,6 +478,24 @@ export type Database = {
         }
         Relationships: []
       }
+      student_groups: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           country: string | null
@@ -485,6 +503,7 @@ export type Database = {
           created_at: string
           email: string
           full_name: string
+          group_name: string | null
           id: string
           notes: string | null
           package_name: string | null
@@ -504,6 +523,7 @@ export type Database = {
           created_at?: string
           email: string
           full_name: string
+          group_name?: string | null
           id?: string
           notes?: string | null
           package_name?: string | null
@@ -523,6 +543,7 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string
+          group_name?: string | null
           id?: string
           notes?: string | null
           package_name?: string | null
