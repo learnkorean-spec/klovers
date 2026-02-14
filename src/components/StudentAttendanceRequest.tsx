@@ -38,10 +38,8 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   const loadData = async () => {
     const { data: enrollments } = await supabase
       .from("enrollments")
-      .select("id, approval_status, payment_status, sessions_remaining")
+      .select("id")
       .eq("user_id", userId)
-      .eq("approval_status", "APPROVED")
-      .eq("payment_status", "PAID")
       .order("created_at", { ascending: false })
       .limit(1);
 
