@@ -151,11 +151,11 @@ const BlogPostPage = () => {
           <div className="prose prose-lg max-w-none
             prose-headings:text-foreground prose-headings:font-bold
             prose-p:text-foreground prose-p:leading-relaxed prose-p:text-base
-            prose-a:text-foreground prose-a:font-semibold prose-a:underline
+            prose-a:text-primary prose-a:font-semibold prose-a:underline
             prose-strong:text-foreground prose-strong:font-bold
-            prose-blockquote:border-foreground/30 prose-blockquote:text-foreground/80
+            prose-blockquote:border-primary prose-blockquote:text-foreground/80
             prose-li:text-foreground prose-li:text-base
-            prose-code:text-foreground prose-code:font-semibold
+            prose-code:text-primary prose-code:font-semibold
             prose-ul:text-foreground prose-ol:text-foreground
             prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
             prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
