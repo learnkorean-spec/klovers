@@ -153,7 +153,7 @@ const BlogPostPage = () => {
             prose-p:text-foreground prose-p:leading-relaxed prose-p:text-base
             prose-a:text-foreground prose-a:font-semibold prose-a:underline
             prose-strong:text-foreground prose-strong:font-bold
-            prose-blockquote:border-foreground prose-blockquote:text-foreground/80
+            prose-blockquote:border-primary prose-blockquote:text-foreground/80
             prose-li:text-foreground prose-li:text-base
             prose-code:text-foreground prose-code:font-semibold
             prose-ul:text-foreground prose-ol:text-foreground
