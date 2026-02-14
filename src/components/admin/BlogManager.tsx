@@ -57,10 +57,50 @@ const ARTICLE_TYPES = [
   { value: "review", label: "Review" },
 ];
 
+const CTA_URL_OPTIONS = [
+  { value: "/enroll-now", label: "Enroll Now" },
+  { value: "/courses", label: "Courses" },
+  { value: "/pricing", label: "Pricing" },
+  { value: "/contact", label: "Contact" },
+  { value: "/about", label: "About" },
+  { value: "/faq", label: "FAQ" },
+  { value: "/signup", label: "Sign Up" },
+  { value: "/blog", label: "Blog" },
+];
+
 const generateCtaText = (title: string) => {
   if (!title) return "Start learning Korean today";
   const short = title.length > 40 ? title.slice(0, 40).replace(/\s+\S*$/, "…") : title;
   return `Ready? ${short} — Enroll Now!`;
+};
+
+/** Analyze title + description to pick the best CTA URL */
+const generateCtaUrl = (title: string, description: string = "", articleType: string = "longform"): string => {
+  const text = `${title} ${description}`.toLowerCase();
+
+  // Pricing / cost related
+  if (/price|pricing|cost|fee|afford|budget|cheap|expensive|plan|subscription/i.test(text)) return "/pricing";
+
+  // FAQ / questions
+  if (/faq|question|ask|how does|what is|common/i.test(text)) return "/faq";
+
+  // Contact / inquiry
+  if (/contact|reach|email|call|inquiry|support|help/i.test(text)) return "/contact";
+
+  // About / story / team
+  if (/about|story|team|teacher|instructor|who we|our mission/i.test(text)) return "/about";
+
+  // Course detail / syllabus / curriculum
+  if (/course|syllabus|curriculum|class|lesson|program|level|topik|beginner|intermediate|advanced/i.test(text)) return "/courses";
+
+  // Sign up / register / join
+  if (/sign\s?up|register|join|create account|get started/i.test(text)) return "/signup";
+
+  // News articles link to blog
+  if (articleType === "news") return "/blog";
+
+  // Default: enroll
+  return "/enroll-now";
 };
 
 const emptyPost = (): Partial<BlogPost> => ({
@@ -442,7 +482,7 @@ const BlogManager = () => {
                       title,
                       slug: prev?.id ? prev.slug : generateSlug(title),
                       cta_text: generateCtaText(title),
-                      cta_url: "/enroll-now",
+                      cta_url: generateCtaUrl(title, prev?.description || "", prev?.article_type || "longform"),
                     }));
                   }}
                 />
@@ -458,7 +498,14 @@ const BlogManager = () => {
               <Label>Description (meta)</Label>
               <Textarea
                 value={editing.description || ""}
-                onChange={(e) => setEditing((prev) => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => {
+                  const description = e.target.value;
+                  setEditing((prev) => ({
+                    ...prev,
+                    description,
+                    cta_url: generateCtaUrl(prev?.title || "", description, prev?.article_type || "longform"),
+                  }));
+                }}
                 rows={2}
               />
               <p className="text-xs text-muted-foreground">{(editing.description || "").length}/160 chars (120-160 ideal)</p>
@@ -583,7 +630,30 @@ const BlogManager = () => {
               </div>
               <div className="space-y-2">
                 <Label>CTA URL</Label>
-                <Input value={editing.cta_url || ""} onChange={(e) => setEditing((prev) => ({ ...prev, cta_url: e.target.value }))} placeholder="/enroll-now" />
+                <div className="flex gap-2">
+                  <Select
+                    value={CTA_URL_OPTIONS.some(o => o.value === editing.cta_url) ? editing.cta_url : "custom"}
+                    onValueChange={(v) => {
+                      if (v !== "custom") setEditing((prev) => ({ ...prev, cta_url: v }));
+                    }}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CTA_URL_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                      <SelectItem value="custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={editing.cta_url || ""}
+                    onChange={(e) => setEditing((prev) => ({ ...prev, cta_url: e.target.value }))}
+                    placeholder="/enroll-now"
+                    className="flex-1"
+                  />
+                </div>
               </div>
             </div>
 
