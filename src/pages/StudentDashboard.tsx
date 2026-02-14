@@ -207,8 +207,43 @@ const StudentDashboard = () => {
                       <p className="font-medium text-foreground">{student.total_classes}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Price / Class:</span>
+                      <span className="text-muted-foreground">Used Classes:</span>
+                      <p className="font-medium text-foreground">{student.used_classes}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Remaining:</span>
+                      <p className="font-medium text-foreground">{student.total_classes - student.used_classes}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Payment Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" /> Payment Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-y-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Classes Paid For:</span>
+                      <p className="font-medium text-foreground">{student.total_classes}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total Paid:</span>
+                      <p className="font-medium text-foreground">${student.total_paid}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Price per Class:</span>
                       <p className="font-medium text-foreground">${student.price_per_class}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Payment Status:</span>
+                      <Badge variant={student.payment_status === "paid" ? "default" : "secondary"}>
+                        {student.payment_status}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
