@@ -118,7 +118,7 @@ const BlogPage = () => {
                           {new Date(post.published_at || post.created_at).toLocaleDateString()}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-primary text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
+                      <div className="flex items-center gap-1 text-foreground text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
                         Read more <ArrowRight className="h-4 w-4" />
                       </div>
                     </CardContent>
