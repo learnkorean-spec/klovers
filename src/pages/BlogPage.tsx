@@ -100,7 +100,7 @@ const BlogPage = () => {
                           {typeLabel[post.article_type] || post.article_type}
                         </Badge>
                       </div>
-                      <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                      <h2 className="text-lg font-semibold text-foreground group-hover:text-foreground/80 transition-colors line-clamp-2">
                         {post.title}
                       </h2>
                     </CardHeader>
