@@ -69,15 +69,73 @@ const StudentManager = () => {
   const [markingAttendance, setMarkingAttendance] = useState<string | null>(null);
 
   const fetchStudents = async () => {
-    const { data, error } = await supabase
-      .from("students")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast({ title: "Error loading students", description: error.message, variant: "destructive" });
-    } else {
-      setStudents((data as any[]) || []);
+    // Fetch all three sources in parallel
+    const [studentsRes, leadsRes, profilesRes] = await Promise.all([
+      supabase.from("students").select("*").order("created_at", { ascending: false }),
+      supabase.from("leads").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("*"),
+    ]);
+
+    if (studentsRes.error) {
+      toast({ title: "Error loading students", description: studentsRes.error.message, variant: "destructive" });
     }
+
+    const existingStudents: Student[] = (studentsRes.data as any[]) || [];
+    const existingEmails = new Set(existingStudents.map(s => s.email.toLowerCase()));
+
+    // Add leads not already in students table
+    const leadsData = (leadsRes.data as any[]) || [];
+    const leadEntries: Student[] = leadsData
+      .filter(l => !existingEmails.has(l.email.toLowerCase()))
+      .map(l => {
+        existingEmails.add(l.email.toLowerCase());
+        return {
+          id: l.id,
+          full_name: l.name,
+          email: l.email,
+          phone: "",
+          country: l.country || "",
+          status: "lead",
+          course_type: l.plan_type || "",
+          package_name: l.duration || "",
+          total_classes: 0,
+          used_classes: 0,
+          remaining_classes: 0,
+          total_paid: 0,
+          price_per_class: 0,
+          payment_status: "pending",
+          notes: `Source: ${l.source || "enroll"} | Schedule: ${l.schedule || "—"}`,
+          created_at: l.created_at,
+        };
+      });
+
+    // Add profiles (registered users) not already in students or leads
+    const profilesData = (profilesRes.data as any[]) || [];
+    const inactiveEntries: Student[] = profilesData
+      .filter(p => !existingEmails.has(p.email.toLowerCase()))
+      .map(p => {
+        existingEmails.add(p.email.toLowerCase());
+        return {
+          id: p.id,
+          full_name: p.name,
+          email: p.email,
+          phone: "",
+          country: p.country || "",
+          status: "inactive",
+          course_type: "",
+          package_name: "",
+          total_classes: 0,
+          used_classes: 0,
+          remaining_classes: 0,
+          total_paid: 0,
+          price_per_class: 0,
+          payment_status: "pending",
+          notes: `Registered user (${p.status})`,
+          created_at: p.created_at,
+        };
+      });
+
+    setStudents([...existingStudents, ...leadEntries, ...inactiveEntries]);
     setLoading(false);
   };
 
