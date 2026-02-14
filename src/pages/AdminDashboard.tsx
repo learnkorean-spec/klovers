@@ -58,24 +58,48 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
-  const [studentsData, setStudentsData] = useState<{ status: string; used_classes: number; total_classes: number }[]>([]);
+  const [studentsData, setStudentsData] = useState<any[]>([]);
+  const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
+  const [studentByEmail, setStudentByEmail] = useState<Record<string, any>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, profilesRes, studentsRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, profilesRes, studentsRes, batchMembersRes, groupsRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, name, email, credits, country, level, status, created_at"),
-      supabase.from("students").select("status, used_classes, total_classes"),
+      supabase.from("students").select("status, used_classes, total_classes, email, full_name, group_name, remaining_classes, price_per_class"),
+      supabase.from("batch_members").select("user_id, batch_id, member_status"),
+      supabase.from("student_groups").select("id, name"),
     ]);
 
     const profileMap: Record<string, { name: string; email: string; credits: number; country: string; level: string; status: string; created_at: string }> = {};
     if (profilesRes.data) {
       (profilesRes.data as any[]).forEach((p) => { profileMap[p.user_id] = p; });
+    }
+
+    // Build user → group name map
+    const groupNameMap: Record<string, string> = {};
+    if (groupsRes.data) {
+      (groupsRes.data as any[]).forEach((g: any) => { groupNameMap[g.id] = g.name; });
+    }
+    const _userGroupMap: Record<string, string> = {};
+    if (batchMembersRes.data) {
+      (batchMembersRes.data as any[]).forEach((bm: any) => {
+        if (bm.member_status === "active" && groupNameMap[bm.batch_id]) {
+          _userGroupMap[bm.user_id] = groupNameMap[bm.batch_id];
+        }
+      });
+    }
+
+    // Build email → student record map
+    const _studentByEmail: Record<string, any> = {};
+    if (studentsRes.data) {
+      (studentsRes.data as any[]).forEach((s: any) => { _studentByEmail[s.email?.toLowerCase()] = s; });
     }
 
     if (leadsRes.error) {
@@ -113,6 +137,8 @@ const AdminDashboard = () => {
     if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] || null })));
     if (profilesRes.data) setProfiles(profilesRes.data as any[]);
     if (studentsRes.data) setStudentsData(studentsRes.data as any[]);
+    setUserGroupMap(_userGroupMap);
+    setStudentByEmail(_studentByEmail);
     setLoading(false);
   };
 
@@ -666,6 +692,9 @@ const AdminDashboard = () => {
                 const approvedCount = requests.filter(r => r.status === "APPROVED").length;
                 const rejectedCount = requests.filter(r => r.status === "REJECTED").length;
                 const userEnrollment = enrollments.find(e => e.user_id === userId && e.approval_status === "APPROVED" && e.payment_status === "PAID");
+                const groupName = userGroupMap[userId];
+                const studentRecord = studentByEmail[email?.toLowerCase()];
+                const remainingClasses = studentRecord ? (studentRecord.total_classes - studentRecord.used_classes) : null;
 
                 return (
                   <Card key={userId}>
@@ -673,7 +702,12 @@ const AdminDashboard = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
                           <p className="font-semibold text-foreground">{name}</p>
-                          <p className="text-xs text-muted-foreground">{email} · Sessions left: {userEnrollment?.sessions_remaining ?? 0}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {email}
+                            {groupName && <> · <span className="font-medium text-foreground">Group: {groupName}</span></>}
+                            {remainingClasses !== null && <> · Classes left: <span className="font-medium text-foreground">{remainingClasses}</span></>}
+                            {userEnrollment && <> · Sessions left: {userEnrollment.sessions_remaining}</>}
+                          </p>
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <Badge variant="secondary">{requests.length} total</Badge>
