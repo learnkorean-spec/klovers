@@ -97,7 +97,7 @@ const BlogPostPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-24 pb-16">
-        <article className="container mx-auto px-4 max-w-3xl">
+        <article className="container mx-auto px-4 max-w-[750px]">
           <Link to="/blog" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
             <ArrowLeft className="h-4 w-4 mr-1" />Back to Blog
           </Link>
