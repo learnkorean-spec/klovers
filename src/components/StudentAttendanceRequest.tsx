@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock } from "lucide-react";
 
 interface AttendanceRequest {
   id: string;
@@ -25,9 +28,64 @@ const statusConfig: Record<string, { label: string; icon: React.ElementType; var
   REJECTED: { label: "Rejected", icon: XCircle, variant: "destructive", color: "text-destructive" },
 };
 
+interface EligibleEnrollment {
+  id: string;
+  approval_status: string;
+  payment_status: string;
+  sessions_remaining: number;
+}
+
+const checkEligibility = async (userId: string): Promise<EligibleEnrollment | null> => {
+  const { data } = await supabase
+    .from("enrollments")
+    .select("id, approval_status, payment_status, sessions_remaining")
+    .eq("user_id", userId)
+    .eq("approval_status", "APPROVED")
+    .eq("payment_status", "PAID")
+    .gt("sessions_remaining", 0)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  return data && data.length > 0 ? data[0] : null;
+};
+
+const LockedCard = () => {
+  const navigate = useNavigate();
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Lock className="h-5 w-5 text-muted-foreground" />
+          Attendance is available after payment
+        </CardTitle>
+        <CardDescription>
+          Complete enrollment and payment to unlock attendance tracking.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex gap-3">
+        <Button onClick={() => navigate("/enroll-now")}>Enroll Now</Button>
+        <Button variant="outline" onClick={() => navigate("/student")}>View My Enrollments</Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+const LoadingSkeleton = () => (
+  <Card>
+    <CardHeader className="pb-2">
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="h-3 w-60 mt-2" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-[280px] w-full" />
+    </CardContent>
+  </Card>
+);
+
 const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => {
   const [requests, setRequests] = useState<AttendanceRequest[]>([]);
   const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -36,16 +94,17 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   }, [userId]);
 
   const loadData = async () => {
-    const { data: enrollments } = await supabase
-      .from("enrollments")
-      .select("id")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const eligible = await checkEligibility(userId);
 
-    if (enrollments && enrollments.length > 0) {
-      setEnrollmentId(enrollments[0].id);
+    if (!eligible) {
+      setUnlocked(false);
+      setEnrollmentId(null);
+      setLoading(false);
+      return;
     }
+
+    setUnlocked(true);
+    setEnrollmentId(eligible.id);
 
     const { data: reqs } = await supabase
       .from("attendance_requests")
@@ -60,8 +119,15 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   const handleDateSelect = async (date: Date | undefined) => {
     if (!date || !enrollmentId || submitting) return;
 
-    const dateStr = format(date, "yyyy-MM-dd");
+    // Safety re-check
+    const eligible = await checkEligibility(userId);
+    if (!eligible) {
+      setUnlocked(false);
+      toast({ title: "You need an active paid enrollment", description: "Please enroll and complete payment first.", variant: "destructive" });
+      return;
+    }
 
+    const dateStr = format(date, "yyyy-MM-dd");
     const exists = requests.find(r => r.request_date === dateStr && r.status !== "REJECTED");
     if (exists) {
       toast({ title: "Already requested", description: "You already have a request for this date.", variant: "destructive" });
@@ -86,7 +152,6 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     setSubmitting(false);
   };
 
-  // Build modifier sets for calendar highlighting
   const approvedDates = useMemo(
     () => requests.filter(r => r.status === "APPROVED").map(r => new Date(r.request_date + "T00:00:00")),
     [requests]
@@ -112,22 +177,18 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
   };
 
-  if (loading) return null;
+  if (loading) return <LoadingSkeleton />;
+  if (!unlocked) return <LockedCard />;
 
   return (
     <div className="space-y-4">
-      {/* Interactive Calendar */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarIcon className="h-5 w-5" />
             My Class Dates
           </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {enrollmentId
-              ? "Tap a date to mark your attendance"
-              : "You need an active enrollment to add dates"}
-          </p>
+          <p className="text-xs text-muted-foreground">Tap a date to mark your attendance</p>
           <div className="flex gap-3 flex-wrap mt-1">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-primary" />
@@ -152,16 +213,15 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
           <Calendar
             mode="single"
             selected={undefined}
-            onSelect={enrollmentId ? handleDateSelect : undefined}
+            onSelect={handleDateSelect}
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
-            disabled={!enrollmentId ? () => true : (date) => date > new Date() || date < new Date("2024-01-01")}
+            disabled={(date) => date > new Date() || date < new Date("2024-01-01")}
             className={cn("p-3 pointer-events-auto w-full")}
           />
         </CardContent>
       </Card>
 
-      {/* Written list of requests */}
       {requests.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -173,19 +233,14 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                 const cfg = statusConfig[r.status] || statusConfig.PENDING;
                 const Icon = cfg.icon;
                 return (
-                  <div
-                    key={r.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/30 transition-colors"
-                  >
+                  <div key={r.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={cn("w-9 h-9 rounded-full flex items-center justify-center bg-muted", cfg.color)}>
                         <Icon className="h-4 w-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground">{formatDate(r.request_date)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Submitted {new Date(r.created_at).toLocaleDateString()}
-                        </p>
+                        <p className="text-xs text-muted-foreground">Submitted {new Date(r.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <Badge variant={cfg.variant}>{cfg.label}</Badge>
