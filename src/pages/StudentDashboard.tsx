@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
+import AttendanceCalendar from "@/components/AttendanceCalendar";
 import AvatarUpload from "@/components/AvatarUpload";
 import { LogOut, BookOpen, DollarSign, Calendar, AlertCircle } from "lucide-react";
 
@@ -34,9 +35,15 @@ interface AttendanceEntry {
   notes: string;
 }
 
+interface AttendanceDay {
+  date: string;
+  status: "present" | "absent" | "late" | "excused";
+}
+
 const StudentDashboard = () => {
   const [student, setStudent] = useState<StudentRecord | null>(null);
   const [attendance, setAttendance] = useState<AttendanceEntry[]>([]);
+  const [calendarDays, setCalendarDays] = useState<AttendanceDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -77,6 +84,31 @@ const StudentDashboard = () => {
           .order("marked_at", { ascending: false });
         if (attendData) setAttendance(attendData as any);
       }
+
+      // Fetch group attendance for calendar
+      const { data: groupAtt } = await supabase
+        .from("group_attendance")
+        .select("status, session_id")
+        .eq("user_id", session.user.id);
+
+      if (groupAtt && groupAtt.length > 0) {
+        const sessionIds = [...new Set(groupAtt.map(a => a.session_id))];
+        const { data: sessions } = await supabase
+          .from("group_sessions")
+          .select("id, session_date")
+          .in("id", sessionIds);
+
+        const sessionDateMap: Record<string, string> = {};
+        (sessions || []).forEach(s => { sessionDateMap[s.id] = s.session_date; });
+
+        const calDays: AttendanceDay[] = groupAtt.map(a => ({
+          date: sessionDateMap[a.session_id] || "",
+          status: a.status as AttendanceDay["status"],
+        })).filter(d => d.date);
+
+        setCalendarDays(calDays);
+      }
+
       setLoading(false);
     };
     load();
@@ -147,38 +179,12 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="pt-4 text-center">
-                    <BookOpen className="h-6 w-6 mx-auto mb-1 text-primary" />
-                    <p className="text-2xl font-bold text-foreground">{student.remaining_classes}</p>
-                    <p className="text-xs text-muted-foreground">Remaining</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 text-center">
-                    <Calendar className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                    <p className="text-2xl font-bold text-foreground">{student.used_classes}</p>
-                    <p className="text-xs text-muted-foreground">Used</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 text-center">
-                    <DollarSign className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                    <p className="text-2xl font-bold text-foreground">${student.total_paid}</p>
-                    <p className="text-xs text-muted-foreground">Total Paid</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Status</p>
-                    <Badge variant={student.payment_status === "paid" ? "default" : "secondary"} className="text-sm">
-                      {student.payment_status.toUpperCase()}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Attendance Calendar & Stats */}
+              <AttendanceCalendar
+                days={calendarDays}
+                totalClasses={student.total_classes}
+                usedClasses={student.used_classes}
+              />
 
               {/* Package Info */}
               <Card>
