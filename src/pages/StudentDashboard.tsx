@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
+import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AttendanceCalendar from "@/components/AttendanceCalendar";
 import AvatarUpload from "@/components/AvatarUpload";
 import { LogOut, BookOpen, DollarSign, Calendar, AlertCircle } from "lucide-react";
@@ -216,6 +217,9 @@ const StudentDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Individual Attendance Requests */}
+              <StudentAttendanceRequest userId={userId} />
 
               {/* Group Attendance */}
               <StudentGroupAttendance />
