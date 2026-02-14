@@ -1,22 +1,19 @@
 
 
-## Approve a Test Enrollment for Calendar Testing
+## Add Remaining Balance and Classes to Student Dashboard
 
-### What We'll Do
-Run a data update to mark the most recent enrollment for user `b4e727d8-d008-41d1-8e8d-09fefe286b87` (elshrkawyhossam@gmail.com) as APPROVED and PAID, so the calendar becomes fully interactive for testing.
+### What's Being Added
+Two new highlighted fields in the Payment Details card:
 
-### Change
-A single SQL update (no schema change):
+1. **Remaining Classes** -- calculated as `total_classes - used_classes`
+2. **Amount Still Owed** -- calculated as `remaining_classes * price_per_class` (the cost of unused classes)
 
-```sql
-UPDATE enrollments
-SET approval_status = 'APPROVED',
-    payment_status = 'PAID',
-    status = 'APPROVED'
-WHERE id = '1fe3ba62-6001-46e8-8906-1f4ce3a1756c';
-```
+### Where
+In the **Payment Details** card in `src/pages/StudentDashboard.tsx`, add two new grid items after the existing fields:
 
-This is the most recent enrollment (private, 6-month plan). After this, the student dashboard calendar will be fully clickable for that account.
+- **"Remaining Classes"**: Shows `total_classes - used_classes` with a visual highlight (e.g., bold color or badge) so it stands out
+- **"Balance Due"**: Shows `(total_classes - used_classes) * price_per_class` formatted as currency -- this tells the student how much value remains in their package
 
-### Note
-The previous code change already relaxed the enrollment filter, so the calendar should work with any enrollment status. But approving one ensures the full end-to-end flow (including the `sync_student_on_approval` trigger) fires correctly, giving the student a complete record.
+### Technical Detail
+No database changes needed. Both values are computed from existing `students` table fields (`total_classes`, `used_classes`, `price_per_class`). The change is purely in the Payment Details card UI within `StudentDashboard.tsx`.
+
