@@ -12,7 +12,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Check, RefreshCw } from "lucide-react";
+import { Plus, Check, RefreshCw, User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Group {
   id: string;
@@ -265,6 +266,28 @@ const GroupAttendanceManager = () => {
             </Button>
           </CardHeader>
           <CardContent>
+            {/* Animated student avatars */}
+            {!loading && attendanceRows.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-5">
+                {attendanceRows.map((row, i) => (
+                  <div
+                    key={row.id + "-avatar"}
+                    className="flex flex-col items-center gap-1 animate-fade-in"
+                    style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
+                  >
+                    <Avatar className="h-10 w-10 border-2 border-primary/30 transition-transform duration-200 hover:scale-110">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                        {(row.student_name || "?").slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-[10px] text-muted-foreground max-w-[56px] truncate text-center">
+                      {row.student_name?.split(" ")[0] || "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {loading ? (
               <p className="text-muted-foreground text-center py-4">Loading...</p>
             ) : attendanceRows.length === 0 ? (
