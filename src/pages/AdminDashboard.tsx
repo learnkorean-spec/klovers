@@ -257,7 +257,7 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="students">
           <TabsList>
-            <TabsTrigger value="students">Students ({profiles.length})</TabsTrigger>
+            <TabsTrigger value="students">Users ({profiles.length})</TabsTrigger>
             <TabsTrigger value="enrollments" className="relative">
               Enrollments ({enrollments.length})
               {(() => {
@@ -290,7 +290,7 @@ const AdminDashboard = () => {
                 ) : null;
               })()}
             </TabsTrigger>
-            <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
+            <TabsTrigger value="leads">Our Students ({leads.length})</TabsTrigger>
             <TabsTrigger value="manage">Manage Students</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
