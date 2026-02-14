@@ -57,6 +57,12 @@ const ARTICLE_TYPES = [
   { value: "review", label: "Review" },
 ];
 
+const generateCtaText = (title: string) => {
+  if (!title) return "Start learning Korean today";
+  const short = title.length > 40 ? title.slice(0, 40).replace(/\s+\S*$/, "…") : title;
+  return `Ready? ${short} — Enroll Now!`;
+};
+
 const emptyPost = (): Partial<BlogPost> => ({
   title: "",
   slug: "",
@@ -69,8 +75,8 @@ const emptyPost = (): Partial<BlogPost> => ({
   hero_image_2: "",
   hero_alt_2: "",
   hero_caption_2: "",
-  cta_text: "",
-  cta_url: "",
+  cta_text: "Start learning Korean today",
+  cta_url: "/enroll-now",
   content: "",
   author: "KLovers Team",
   lang: "en",
@@ -435,6 +441,8 @@ const BlogManager = () => {
                       ...prev,
                       title,
                       slug: prev?.id ? prev.slug : generateSlug(title),
+                      cta_text: generateCtaText(title),
+                      cta_url: prev?.cta_url || "/enroll-now",
                     }));
                   }}
                 />
