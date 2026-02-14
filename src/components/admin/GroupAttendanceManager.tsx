@@ -18,6 +18,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface Group {
   id: string;
   name: string;
+  schedule_day?: string | null;
+  schedule_time?: string | null;
+  schedule_timezone?: string | null;
+  level?: string | null;
+  capacity?: number | null;
 }
 
 interface Session {
@@ -54,7 +59,7 @@ const GroupAttendanceManager = () => {
 
   // Load groups
   useEffect(() => {
-    supabase.from("student_groups").select("id, name").order("name").then(({ data }) => {
+    supabase.from("student_groups").select("id, name, schedule_day, schedule_time, schedule_timezone, level, capacity").order("name").then(({ data }) => {
       if (data) setGroups(data);
     });
   }, []);
@@ -222,12 +227,40 @@ const GroupAttendanceManager = () => {
               <Select value={selectedGroup} onValueChange={(v) => { setSelectedGroup(v); setSelectedSession(""); }}>
                 <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
                 <SelectContent>
-                  {groups.map(g => (
-                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                  ))}
+                  {groups.map(g => {
+                    const schedule = [g.schedule_day, g.schedule_time].filter(Boolean).join(" · ");
+                    return (
+                      <SelectItem key={g.id} value={g.id}>
+                        <span className="font-medium">{g.name}</span>
+                        {schedule && <span className="text-muted-foreground ml-2 text-xs">({schedule})</span>}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
-            </div>
+          </div>
+
+          {/* Selected group info */}
+          {selectedGroup && (() => {
+            const g = groups.find(gr => gr.id === selectedGroup);
+            if (!g) return null;
+            const infoParts = [
+              g.schedule_day && `📅 ${g.schedule_day}`,
+              g.schedule_time && `🕐 ${g.schedule_time}`,
+              g.schedule_timezone && `🌍 ${g.schedule_timezone}`,
+              g.level && `📚 ${g.level}`,
+              g.capacity != null && `👥 ${g.capacity} seats`,
+            ].filter(Boolean);
+            return infoParts.length > 0 ? (
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                {infoParts.map((info, i) => (
+                  <Badge key={i} variant="outline" className="font-normal">{info}</Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No schedule details set for this group.</p>
+            );
+          })()}
             <div className="space-y-1">
               <Label>Date</Label>
               <Input type="date" value={sessionDate} onChange={e => setSessionDate(e.target.value)} />

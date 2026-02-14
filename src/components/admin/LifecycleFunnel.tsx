@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, UserPlus, UserCheck, CreditCard, GraduationCap, Award } from "lucide-react";
+import { UserPlus, Users, CreditCard, GraduationCap, Award, ArrowRight } from "lucide-react";
 
 interface FunnelProps {
   leadsCount: number;
@@ -10,11 +10,11 @@ interface FunnelProps {
 }
 
 const stages = [
-  { key: "leads", label: "Leads", icon: UserPlus, color: "text-blue-500" },
-  { key: "registered", label: "Registered", icon: Users, color: "text-indigo-500" },
-  { key: "enrolled", label: "Enrolled", icon: CreditCard, color: "text-amber-500" },
-  { key: "active", label: "Active", icon: GraduationCap, color: "text-emerald-500" },
-  { key: "completed", label: "Completed", icon: Award, color: "text-primary" },
+  { key: "leads", label: "Leads", icon: UserPlus, bgClass: "bg-blue-500/10", textClass: "text-blue-600" },
+  { key: "registered", label: "Registered", icon: Users, bgClass: "bg-indigo-500/10", textClass: "text-indigo-600" },
+  { key: "enrolled", label: "Enrolled", icon: CreditCard, bgClass: "bg-amber-500/10", textClass: "text-amber-600" },
+  { key: "active", label: "Active", icon: GraduationCap, bgClass: "bg-emerald-500/10", textClass: "text-emerald-600" },
+  { key: "completed", label: "Completed", icon: Award, bgClass: "bg-primary/10", textClass: "text-primary" },
 ];
 
 const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCount, completedCount }: FunnelProps) => {
@@ -29,19 +29,21 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
   return (
     <Card>
       <CardContent className="pt-6">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">Student Lifecycle</h3>
-        <div className="flex items-center justify-between gap-1">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-5 uppercase tracking-wide">Student Lifecycle</h3>
+        <div className="flex items-center justify-between gap-0">
           {stages.map((stage, i) => {
             const Icon = stage.icon;
             return (
-              <div key={stage.key} className="flex items-center gap-1 flex-1">
-                <div className="flex flex-col items-center text-center flex-1 min-w-0">
-                  <Icon className={`h-5 w-5 ${stage.color} mb-1`} />
-                  <p className="text-xl font-bold text-foreground">{counts[stage.key]}</p>
-                  <p className="text-[10px] text-muted-foreground truncate w-full">{stage.label}</p>
+              <div key={stage.key} className="flex items-center flex-1 min-w-0">
+                <div className="flex flex-col items-center text-center flex-1 min-w-0 group">
+                  <div className={`rounded-full p-2.5 ${stage.bgClass} mb-2 transition-transform duration-200 group-hover:scale-110`}>
+                    <Icon className={`h-5 w-5 ${stage.textClass}`} />
+                  </div>
+                  <p className="text-2xl font-bold text-foreground leading-none">{counts[stage.key]}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 truncate w-full">{stage.label}</p>
                 </div>
                 {i < stages.length - 1 && (
-                  <span className="text-muted-foreground/40 text-lg shrink-0">→</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/30 shrink-0 mx-0.5" />
                 )}
               </div>
             );
