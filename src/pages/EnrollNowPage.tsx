@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck } from "lucide-react";
+import SchedulePicker from "@/components/SchedulePicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
@@ -80,6 +81,10 @@ const EnrollNowPage = () => {
   const [startOption, setStartOption] = useState(searchParams.get("start") || "");
   const [specificDate, setSpecificDate] = useState(searchParams.get("date") || "");
 
+  // Schedule slot selection
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(searchParams.get("groupId") || null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string>(searchParams.get("groupName") || "");
+
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -137,6 +142,8 @@ const EnrollNowPage = () => {
     if (startOption) params.set("start", startOption);
     if (specificDate) params.set("date", specificDate);
     if (timezone) params.set("tz", timezone);
+    if (selectedGroupId) params.set("groupId", selectedGroupId);
+    if (selectedGroupName) params.set("groupName", selectedGroupName);
     return `/enroll-now?${params.toString()}`;
   };
 
@@ -151,7 +158,7 @@ const EnrollNowPage = () => {
     setStep(3);
   };
 
-  const canProceedStep2 = preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate);
+  const canProceedStep2 = !!selectedGroupId || (preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate));
 
   const handleEgyptOrder = async () => {
     if (!duration) return;
@@ -405,87 +412,105 @@ const EnrollNowPage = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Timezone */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Timezone</Label>
-                <Select value={timezone} onValueChange={setTimezone}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Intl as any).supportedValuesOf("timeZone").map((tz: string) => (
-                      <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Slot Picker */}
+              <SchedulePicker
+                courseType={classType}
+                userTimezone={timezone}
+                selectedGroupId={selectedGroupId}
+                onSelect={(groupId, groupName) => {
+                  setSelectedGroupId(groupId || null);
+                  setSelectedGroupName(groupName || "");
+                }}
+              />
 
-              {/* Preferred Days */}
-              <div className="space-y-2">
-                <Label>Preferred Weekdays (select up to 2)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {WEEKDAYS.map((day) => (
-                    <button
-                      type="button"
-                      key={day}
-                      onClick={() => toggleDay(day)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                        preferredDays.includes(day)
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border text-muted-foreground hover:border-primary/50"
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Fallback free-text preferences if no slots configured */}
+              {!selectedGroupId && (
+                <>
+                  <div className="border-t border-border pt-4">
+                    <p className="text-sm text-muted-foreground mb-3">Or set manual preferences:</p>
+                  </div>
 
-              {/* Time Window */}
-              <div className="space-y-2">
-                <Label>Preferred Time</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {TIME_WINDOWS.map((tw) => (
-                    <button
-                      type="button"
-                      key={tw}
-                      onClick={() => setPreferredTime(tw)}
-                      className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
-                        preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-foreground font-medium">{tw}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* Timezone */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Timezone</Label>
+                    <Select value={timezone} onValueChange={setTimezone}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Intl as any).supportedValuesOf("timeZone").map((tz: string) => (
+                          <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Start Date */}
-              <div className="space-y-2">
-                <Label>Preferred Start Date</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {START_OPTIONS.map((opt) => (
-                    <button
-                      type="button"
-                      key={opt}
-                      onClick={() => setStartOption(opt)}
-                      className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
-                        startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-foreground font-medium">{opt}</span>
-                    </button>
-                  ))}
-                </div>
-                {startOption === "Specific date" && (
-                  <Input
-                    type="date"
-                    value={specificDate}
-                    onChange={(e) => setSpecificDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                )}
-              </div>
+                  {/* Preferred Days */}
+                  <div className="space-y-2">
+                    <Label>Preferred Weekdays (select up to 2)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {WEEKDAYS.map((day) => (
+                        <button
+                          type="button"
+                          key={day}
+                          onClick={() => toggleDay(day)}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                            preferredDays.includes(day)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border text-muted-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Time Window */}
+                  <div className="space-y-2">
+                    <Label>Preferred Time</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {TIME_WINDOWS.map((tw) => (
+                        <button
+                          type="button"
+                          key={tw}
+                          onClick={() => setPreferredTime(tw)}
+                          className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
+                            preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <span className="text-foreground font-medium">{tw}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Start Date */}
+                  <div className="space-y-2">
+                    <Label>Preferred Start Date</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {START_OPTIONS.map((opt) => (
+                        <button
+                          type="button"
+                          key={opt}
+                          onClick={() => setStartOption(opt)}
+                          className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
+                            startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <span className="text-foreground font-medium">{opt}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {startOption === "Specific date" && (
+                      <Input
+                        type="date"
+                        value={specificDate}
+                        onChange={(e) => setSpecificDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
 
               <p className="text-xs text-muted-foreground text-center">
                 Your schedule will be confirmed within 24 hours after payment.
@@ -496,7 +521,7 @@ const EnrollNowPage = () => {
               </Button>
               {!canProceedStep2 && (
                 <p className="text-xs text-destructive text-center">
-                  {preferredDays.length === 0 ? "Please select preferred days." : !preferredTime ? "Please choose a time window." : !startOption ? "Please pick a start date option." : startOption === "Specific date" && !specificDate ? "Please enter a specific date." : ""}
+                  Please select a schedule slot or set manual preferences above.
                 </p>
               )}
             </CardContent>
@@ -579,9 +604,15 @@ const EnrollNowPage = () => {
               {/* Schedule Summary */}
               <div className="bg-muted rounded-lg p-4 space-y-1">
                 <p className="text-sm font-medium text-foreground">Schedule Preferences</p>
-                <p className="text-xs text-muted-foreground">Days: {preferredDays.join(", ")}</p>
-                <p className="text-xs text-muted-foreground">Time: {preferredTime}</p>
-                <p className="text-xs text-muted-foreground">Start: {startOption === "Specific date" ? specificDate : startOption}</p>
+                {selectedGroupId ? (
+                  <p className="text-xs text-muted-foreground">Selected slot: {selectedGroupName}</p>
+                ) : (
+                  <>
+                    <p className="text-xs text-muted-foreground">Days: {preferredDays.join(", ")}</p>
+                    <p className="text-xs text-muted-foreground">Time: {preferredTime}</p>
+                    <p className="text-xs text-muted-foreground">Start: {startOption === "Specific date" ? specificDate : startOption}</p>
+                  </>
+                )}
                 <p className="text-xs text-muted-foreground">Timezone: {timezone}</p>
               </div>
 

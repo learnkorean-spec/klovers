@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ import BlogManager from "@/components/admin/BlogManager";
 import StudentManager from "@/components/admin/StudentManager";
 import LifecycleFunnel from "@/components/admin/LifecycleFunnel";
 import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
+import AdminNotifications from "@/components/admin/AdminNotifications";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -198,6 +199,61 @@ const AdminDashboard = () => {
         toast({ title: "Error", description: "Failed to add credits.", variant: "destructive" });
         return;
       }
+
+      // Try to assign student to their chosen schedule group
+      try {
+        const { data: pref } = await supabase
+          .from("student_schedule_preferences" as any)
+          .select("group_id")
+          .eq("user_id", enrollment.user_id)
+          .maybeSingle();
+
+        if (pref && (pref as any).group_id) {
+          const groupId = (pref as any).group_id;
+
+          // Check capacity
+          const { data: group } = await supabase
+            .from("student_groups")
+            .select("capacity, name")
+            .eq("id", groupId)
+            .single();
+
+          const { count: memberCount } = await supabase
+            .from("batch_members")
+            .select("id", { count: "exact", head: true })
+            .eq("batch_id", groupId);
+
+          const seatsLeft = (group as any)?.capacity - (memberCount || 0);
+
+          if (seatsLeft > 0) {
+            // Assign to group
+            await supabase.from("batch_members").insert({
+              batch_id: groupId,
+              user_id: enrollment.user_id,
+              enrollment_id: enrollment.id,
+              member_status: "active",
+            } as any);
+            toast({ title: "Assigned to group", description: (group as any)?.name });
+          } else {
+            // Waitlist
+            await supabase.from("batch_members").insert({
+              batch_id: groupId,
+              user_id: enrollment.user_id,
+              enrollment_id: enrollment.id,
+              member_status: "waitlist",
+            } as any);
+            await supabase.from("admin_notifications" as any).insert({
+              message: `Group "${(group as any)?.name}" full at approval time for ${enrollment.profiles?.name || "student"}. Needs reassignment.`,
+              type: "waitlist",
+              related_user_id: enrollment.user_id,
+              related_group_id: groupId,
+            } as any);
+            toast({ title: "Warning", description: "Group full — student added to waitlist.", variant: "destructive" });
+          }
+        }
+      } catch (err) {
+        console.error("Group assignment error:", err);
+      }
     }
 
     toast({ title: `Enrollment ${action.toLowerCase()}` });
@@ -306,6 +362,9 @@ const AdminDashboard = () => {
             <TabsTrigger value="leads">Our Students ({leads.length})</TabsTrigger>
             <TabsTrigger value="manage">Manage Students</TabsTrigger>
             <TabsTrigger value="group-attendance">Group Attendance</TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="h-4 w-4 mr-1" /> Notifications
+            </TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
 
@@ -733,6 +792,11 @@ const AdminDashboard = () => {
           {/* GROUP ATTENDANCE TAB */}
           <TabsContent value="group-attendance" className="space-y-4">
             <GroupAttendanceManager />
+          </TabsContent>
+
+          {/* NOTIFICATIONS TAB */}
+          <TabsContent value="notifications" className="space-y-4">
+            <AdminNotifications />
           </TabsContent>
 
           {/* BLOG TAB */}
