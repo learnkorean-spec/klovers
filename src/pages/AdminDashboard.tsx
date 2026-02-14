@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import BlogManager from "@/components/admin/BlogManager";
 import StudentManager from "@/components/admin/StudentManager";
+import LifecycleFunnel from "@/components/admin/LifecycleFunnel";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -55,17 +56,19 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
+  const [studentsData, setStudentsData] = useState<{ status: string; used_classes: number; total_classes: number }[]>([]);
   const [studentFilter, setStudentFilter] = useState("all");
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, profilesRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, profilesRes, studentsRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, name, email, credits, country, level, status, created_at"),
+      supabase.from("students").select("status, used_classes, total_classes"),
     ]);
 
     const profileMap: Record<string, { name: string; email: string; credits: number; country: string; level: string; status: string; created_at: string }> = {};
@@ -107,6 +110,7 @@ const AdminDashboard = () => {
     if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
     if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] || null })));
     if (profilesRes.data) setProfiles(profilesRes.data as any[]);
+    if (studentsRes.data) setStudentsData(studentsRes.data as any[]);
     setLoading(false);
   };
 
@@ -254,6 +258,14 @@ const AdminDashboard = () => {
           <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
           <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
         </div>
+
+        <LifecycleFunnel
+          leadsCount={leads.length}
+          registeredCount={profiles.length}
+          enrolledCount={enrollments.filter(e => e.approval_status === "APPROVED").length}
+          activeCount={studentsData.filter(s => s.status === "student" && s.used_classes < s.total_classes).length}
+          completedCount={studentsData.filter(s => s.used_classes >= s.total_classes && s.total_classes > 0).length}
+        />
 
         <Tabs defaultValue="students">
           <TabsList>

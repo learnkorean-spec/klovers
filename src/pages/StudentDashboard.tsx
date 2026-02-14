@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import JourneyStepper from "@/components/JourneyStepper";
 import { LogOut, BookOpen, DollarSign, Calendar, AlertCircle } from "lucide-react";
 
 interface StudentRecord {
@@ -107,6 +108,21 @@ const StudentDashboard = () => {
               <div>
                 <p className="text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{student.full_name}</span></p>
               </div>
+
+              {/* Journey Progress */}
+              <Card>
+                <CardContent className="pt-6">
+                  <JourneyStepper
+                    currentStage={
+                      student.used_classes >= student.total_classes && student.total_classes > 0
+                        ? 3 // Completed
+                        : student.status === "student"
+                        ? 2 // Active
+                        : 1 // Enrolled
+                    }
+                  />
+                </CardContent>
+              </Card>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
