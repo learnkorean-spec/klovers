@@ -394,6 +394,73 @@ export type Database = {
           },
         ]
       }
+      group_attendance: {
+        Row: {
+          admin_approved: boolean
+          created_at: string
+          id: string
+          session_id: string
+          source: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_approved?: boolean
+          created_at?: string
+          id?: string
+          session_id: string
+          source?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_approved?: boolean
+          created_at?: string
+          id?: string
+          session_id?: string
+          source?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_sessions: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          session_date: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          session_date: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          session_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_sessions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           country: string | null
@@ -589,6 +656,10 @@ export type Database = {
       approve_attendance_request: {
         Args: { _request_id: string }
         Returns: number
+      }
+      approve_group_attendance: {
+        Args: { _attendance_id: string }
+        Returns: undefined
       }
       create_egypt_order: {
         Args: { _duration: number; _plan_type: string }

@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import BlogManager from "@/components/admin/BlogManager";
 import StudentManager from "@/components/admin/StudentManager";
 import LifecycleFunnel from "@/components/admin/LifecycleFunnel";
+import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -304,6 +305,7 @@ const AdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="leads">Our Students ({leads.length})</TabsTrigger>
             <TabsTrigger value="manage">Manage Students</TabsTrigger>
+            <TabsTrigger value="group-attendance">Group Attendance</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
 
@@ -726,6 +728,11 @@ const AdminDashboard = () => {
           {/* MANAGE STUDENTS TAB */}
           <TabsContent value="manage" className="space-y-4">
             <StudentManager />
+          </TabsContent>
+
+          {/* GROUP ATTENDANCE TAB */}
+          <TabsContent value="group-attendance" className="space-y-4">
+            <GroupAttendanceManager />
           </TabsContent>
 
           {/* BLOG TAB */}
