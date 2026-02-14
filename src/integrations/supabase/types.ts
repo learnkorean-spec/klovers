@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_log: {
+        Row: {
+          id: string
+          marked_at: string
+          marked_by: string
+          notes: string | null
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          marked_at?: string
+          marked_by: string
+          notes?: string | null
+          student_id: string
+        }
+        Update: {
+          id?: string
+          marked_at?: string
+          marked_by?: string
+          notes?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_log_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_requests: {
         Row: {
           created_at: string
@@ -446,6 +478,66 @@ export type Database = {
         }
         Relationships: []
       }
+      students: {
+        Row: {
+          country: string | null
+          course_type: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          notes: string | null
+          package_name: string | null
+          payment_status: string
+          phone: string | null
+          price_per_class: number
+          remaining_classes: number | null
+          status: string
+          total_classes: number
+          total_paid: number
+          updated_at: string
+          used_classes: number
+        }
+        Insert: {
+          country?: string | null
+          course_type?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          package_name?: string | null
+          payment_status?: string
+          phone?: string | null
+          price_per_class?: number
+          remaining_classes?: number | null
+          status?: string
+          total_classes?: number
+          total_paid?: number
+          updated_at?: string
+          used_classes?: number
+        }
+        Update: {
+          country?: string | null
+          course_type?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          package_name?: string | null
+          payment_status?: string
+          phone?: string | null
+          price_per_class?: number
+          remaining_classes?: number | null
+          status?: string
+          total_classes?: number
+          total_paid?: number
+          updated_at?: string
+          used_classes?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -488,6 +580,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_student_attendance: {
+        Args: { _notes?: string; _student_id: string }
+        Returns: number
       }
       reject_attendance_request: {
         Args: { _request_id: string }
