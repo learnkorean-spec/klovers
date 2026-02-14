@@ -22,6 +22,7 @@ interface StudentRecord {
   total_paid: number;
   price_per_class: number;
   payment_status: string;
+  group_name: string;
 }
 
 interface AttendanceEntry {
@@ -154,6 +155,10 @@ const StudentDashboard = () => {
                     <div>
                       <span className="text-muted-foreground">Course Type:</span>
                       <p className="font-medium text-foreground">{student.course_type || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Group:</span>
+                      <p className="font-medium text-foreground">{student.group_name || "—"}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Total Classes:</span>
