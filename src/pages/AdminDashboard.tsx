@@ -646,38 +646,87 @@ const AdminDashboard = () => {
           <TabsContent value="attendance" className="space-y-4">
             {attendanceReqs.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No attendance requests.</p>
-            ) : (
-              attendanceReqs.map((a) => {
-                const userEnrollment = enrollments.find(e => e.user_id === a.user_id && e.approval_status === "APPROVED" && e.payment_status === "PAID");
+            ) : (() => {
+              // Group attendance requests by user
+              const byUser: Record<string, { name: string; email: string; requests: typeof attendanceReqs }> = {};
+              attendanceReqs.forEach((a) => {
+                const key = a.user_id;
+                if (!byUser[key]) {
+                  byUser[key] = {
+                    name: (a as any).profiles?.name || "Unknown",
+                    email: (a as any).profiles?.email || "",
+                    requests: [],
+                  };
+                }
+                byUser[key].requests.push(a);
+              });
+
+              return Object.entries(byUser).map(([userId, { name, email, requests }]) => {
+                const pendingCount = requests.filter(r => r.status === "PENDING").length;
+                const approvedCount = requests.filter(r => r.status === "APPROVED").length;
+                const rejectedCount = requests.filter(r => r.status === "REJECTED").length;
+                const userEnrollment = enrollments.find(e => e.user_id === userId && e.approval_status === "APPROVED" && e.payment_status === "PAID");
+
                 return (
-                <Card key={a.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-foreground">{(a as any).profiles?.name || "Unknown"}</p>
-                        <p className="text-sm text-muted-foreground">Date: {a.request_date} · Sessions left: {userEnrollment?.sessions_remaining ?? 0}</p>
+                  <Card key={userId}>
+                    <CardContent className="pt-6 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-foreground">{name}</p>
+                          <p className="text-xs text-muted-foreground">{email} · Sessions left: {userEnrollment?.sessions_remaining ?? 0}</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <Badge variant="secondary">{requests.length} total</Badge>
+                          {approvedCount > 0 && <Badge variant="default">{approvedCount} approved</Badge>}
+                          {pendingCount > 0 && <Badge variant="outline" className="border-yellow-500 text-yellow-600">{pendingCount} pending</Badge>}
+                          {rejectedCount > 0 && <Badge variant="destructive">{rejectedCount} rejected</Badge>}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
-                          {a.status}
-                        </Badge>
-                        {a.status === "PENDING" && (
-                          <>
-                            <Button size="sm" onClick={() => handleAttendanceAction(a, "APPROVED")}>
-                              <Check className="h-4 w-4 mr-1" /> Approve
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleAttendanceAction(a, "REJECTED")}>
-                              <X className="h-4 w-4 mr-1" /> Reject
-                            </Button>
-                          </>
-                        )}
+
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Submitted</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {requests.map((a) => (
+                              <TableRow key={a.id}>
+                                <TableCell className="font-medium text-foreground">{a.request_date}</TableCell>
+                                <TableCell className="text-muted-foreground text-xs">
+                                  {new Date(a.created_at).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
+                                    {a.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {a.status === "PENDING" && (
+                                    <div className="flex items-center justify-end gap-1">
+                                      <Button size="sm" onClick={() => handleAttendanceAction(a, "APPROVED")}>
+                                        <Check className="h-4 w-4 mr-1" /> Approve
+                                      </Button>
+                                      <Button size="sm" variant="destructive" onClick={() => handleAttendanceAction(a, "REJECTED")}>
+                                        <X className="h-4 w-4 mr-1" /> Reject
+                                      </Button>
+                                    </div>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
                 );
-              })
-            )}
+              });
+            })()}
           </TabsContent>
 
           {/* LEADS TAB */}
