@@ -339,8 +339,10 @@ export type Database = {
           due_at: string | null
           duration: number
           id: string
+          last_reminder_at: string | null
           matched_at: string | null
           matched_batch_id: string | null
+          negative_since: string | null
           payment_date: string | null
           payment_method: string | null
           payment_provider: string | null
@@ -350,6 +352,7 @@ export type Database = {
           preferred_start: string | null
           preferred_time: string | null
           receipt_url: string
+          reminder_count: number
           reviewed_at: string | null
           reviewed_by: string | null
           sessions_remaining: number
@@ -371,8 +374,10 @@ export type Database = {
           due_at?: string | null
           duration: number
           id?: string
+          last_reminder_at?: string | null
           matched_at?: string | null
           matched_batch_id?: string | null
+          negative_since?: string | null
           payment_date?: string | null
           payment_method?: string | null
           payment_provider?: string | null
@@ -382,6 +387,7 @@ export type Database = {
           preferred_start?: string | null
           preferred_time?: string | null
           receipt_url: string
+          reminder_count?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
           sessions_remaining?: number
@@ -403,8 +409,10 @@ export type Database = {
           due_at?: string | null
           duration?: number
           id?: string
+          last_reminder_at?: string | null
           matched_at?: string | null
           matched_batch_id?: string | null
+          negative_since?: string | null
           payment_date?: string | null
           payment_method?: string | null
           payment_provider?: string | null
@@ -414,6 +422,7 @@ export type Database = {
           preferred_start?: string | null
           preferred_time?: string | null
           receipt_url?: string
+          reminder_count?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
           sessions_remaining?: number

@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock, AlertTriangle } from "lucide-react";
 
 interface AttendanceRequest {
   id: string;
@@ -35,14 +35,13 @@ interface EligibleEnrollment {
   sessions_remaining: number;
 }
 
-const checkEligibility = async (userId: string): Promise<EligibleEnrollment | null> => {
+const fetchActiveEnrollment = async (userId: string): Promise<EligibleEnrollment | null> => {
   const { data } = await supabase
     .from("enrollments")
     .select("id, approval_status, payment_status, sessions_remaining")
     .eq("user_id", userId)
     .eq("approval_status", "APPROVED")
     .eq("payment_status", "PAID")
-    .gt("sessions_remaining", 0)
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -70,6 +69,24 @@ const LockedCard = () => {
   );
 };
 
+const NegativeBalanceBanner = ({ overCount }: { overCount: number }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="flex items-start gap-3 p-4 rounded-lg border border-destructive/50 bg-destructive/10 mb-4">
+      <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+      <div className="flex-1 space-y-1">
+        <p className="text-sm font-medium text-foreground">You're over your package</p>
+        <p className="text-xs text-muted-foreground">
+          You've exceeded your package by {overCount} {overCount === 1 ? "class" : "classes"}. Please renew to avoid interruptions.
+        </p>
+        <Button size="sm" variant="destructive" className="mt-2" onClick={() => navigate("/enroll-now")}>
+          Renew Package
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const LoadingSkeleton = () => (
   <Card>
     <CardHeader className="pb-2">
@@ -84,7 +101,7 @@ const LoadingSkeleton = () => (
 
 const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => {
   const [requests, setRequests] = useState<AttendanceRequest[]>([]);
-  const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
+  const [enrollment, setEnrollment] = useState<EligibleEnrollment | null>(null);
   const [unlocked, setUnlocked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -94,17 +111,17 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   }, [userId]);
 
   const loadData = async () => {
-    const eligible = await checkEligibility(userId);
+    const eligible = await fetchActiveEnrollment(userId);
 
     if (!eligible) {
       setUnlocked(false);
-      setEnrollmentId(null);
+      setEnrollment(null);
       setLoading(false);
       return;
     }
 
     setUnlocked(true);
-    setEnrollmentId(eligible.id);
+    setEnrollment(eligible);
 
     const { data: reqs } = await supabase
       .from("attendance_requests")
@@ -117,12 +134,13 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   };
 
   const handleDateSelect = async (date: Date | undefined) => {
-    if (!date || !enrollmentId || submitting) return;
+    if (!date || !enrollment || submitting) return;
 
-    // Safety re-check
-    const eligible = await checkEligibility(userId);
+    // Safety re-check: must still be PAID + APPROVED
+    const eligible = await fetchActiveEnrollment(userId);
     if (!eligible) {
       setUnlocked(false);
+      setEnrollment(null);
       toast({ title: "You need an active paid enrollment", description: "Please enroll and complete payment first.", variant: "destructive" });
       return;
     }
@@ -139,7 +157,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
       .from("attendance_requests")
       .insert({
         user_id: userId,
-        enrollment_id: enrollmentId,
+        enrollment_id: enrollment.id,
         request_date: dateStr,
       } as any);
 
@@ -180,6 +198,9 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   if (loading) return <LoadingSkeleton />;
   if (!unlocked) return <LockedCard />;
 
+  const isNegative = enrollment && enrollment.sessions_remaining < 0;
+  const overCount = isNegative ? Math.abs(enrollment.sessions_remaining) : 0;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -205,6 +226,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
           </div>
         </CardHeader>
         <CardContent>
+          {isNegative && <NegativeBalanceBanner overCount={overCount} />}
           {submitting && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <Loader2 className="h-4 w-4 animate-spin" /> Submitting…
