@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import WhyLearnKorean from "@/components/WhyLearnKorean";
 import MeetTeacher from "@/components/MeetTeacher";
 import HowItWorks from "@/components/HowItWorks";
+import StudentJourney from "@/components/StudentJourney";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import Testimonials from "@/components/Testimonials";
 import FinalCTA from "@/components/FinalCTA";
@@ -17,6 +18,7 @@ const Index = () => {
         <WhyLearnKorean />
         <MeetTeacher />
         <HowItWorks />
+        <StudentJourney />
         <LearningRoadmap />
         <Testimonials />
         <FinalCTA />
