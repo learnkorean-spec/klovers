@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
+import AvatarUpload from "@/components/AvatarUpload";
 import { LogOut, BookOpen, DollarSign, Calendar, AlertCircle } from "lucide-react";
 
 interface StudentRecord {
@@ -37,12 +38,27 @@ const StudentDashboard = () => {
   const [student, setStudent] = useState<StudentRecord | null>(null);
   const [attendance, setAttendance] = useState<AttendanceEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
+      setUserId(session.user.id);
+
+      // Fetch profile for avatar
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("avatar_url, name")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (profile) {
+        setAvatarUrl((profile as any).avatar_url || "");
+        setUserName((profile as any).name || "");
+      }
 
       // Fetch student record by matching email
       const { data: studentData } = await supabase
@@ -105,8 +121,14 @@ const StudentDashboard = () => {
             </Card>
           ) : (
             <>
-              {/* Welcome */}
-              <div>
+              {/* Avatar Upload + Welcome */}
+              <div className="space-y-3">
+                <AvatarUpload
+                  userId={userId}
+                  currentUrl={avatarUrl}
+                  name={userName || student.full_name}
+                  onUploaded={(url) => setAvatarUrl(url)}
+                />
                 <p className="text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{student.full_name}</span></p>
               </div>
 

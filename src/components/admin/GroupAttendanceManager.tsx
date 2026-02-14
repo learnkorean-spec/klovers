@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Check, RefreshCw, User } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Group {
   id: string;
@@ -37,6 +37,7 @@ interface AttendanceRow {
   // joined
   student_name?: string;
   student_email?: string;
+  student_avatar?: string;
 }
 
 const STATUS_OPTIONS = ["present", "absent", "late", "excused"] as const;
@@ -95,17 +96,18 @@ const GroupAttendanceManager = () => {
     const userIds = rows.map((r: any) => r.user_id);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, name, email")
+      .select("user_id, name, email, avatar_url")
       .in("user_id", userIds);
 
-    const profileMap: Record<string, { name: string; email: string }> = {};
-    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
+    const profileMap: Record<string, { name: string; email: string; avatar_url: string }> = {};
+    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email, avatar_url: p.avatar_url || "" }; });
 
     setAttendanceRows(
       (rows as any[]).map((r) => ({
         ...r,
         student_name: profileMap[r.user_id]?.name || "Unknown",
         student_email: profileMap[r.user_id]?.email || "",
+        student_avatar: profileMap[r.user_id]?.avatar_url || "",
       }))
     );
     setLoading(false);
@@ -276,6 +278,9 @@ const GroupAttendanceManager = () => {
                     style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
                   >
                     <Avatar className="h-10 w-10 border-2 border-primary/30 transition-transform duration-200 hover:scale-110">
+                      {row.student_avatar && (
+                        <AvatarImage src={row.student_avatar} alt={row.student_name || "Student"} />
+                      )}
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                         {(row.student_name || "?").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -308,9 +313,17 @@ const GroupAttendanceManager = () => {
                     {attendanceRows.map(row => (
                       <TableRow key={row.id}>
                         <TableCell>
-                          <div>
-                            <p className="font-medium text-foreground">{row.student_name}</p>
-                            <p className="text-xs text-muted-foreground">{row.student_email}</p>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              {row.student_avatar && <AvatarImage src={row.student_avatar} alt={row.student_name || ""} />}
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {(row.student_name || "?").slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-foreground">{row.student_name}</p>
+                              <p className="text-xs text-muted-foreground">{row.student_email}</p>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
