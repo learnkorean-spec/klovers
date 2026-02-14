@@ -88,16 +88,31 @@ const StudentManager = () => {
   };
 
   const fetchStudents = async () => {
-    // Fetch all three sources in parallel
-    const [studentsRes, leadsRes, profilesRes] = await Promise.all([
+    // Fetch all sources in parallel
+    const [studentsRes, leadsRes, profilesRes, enrollmentsRes] = await Promise.all([
       supabase.from("students").select("*").order("created_at", { ascending: false }),
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*"),
+      supabase.from("enrollments").select("*"),
     ]);
 
     if (studentsRes.error) {
       toast({ title: "Error loading students", description: studentsRes.error.message, variant: "destructive" });
     }
+
+    // Build email→enrollment map from profiles + enrollments
+    const profilesByUserId: Record<string, { email: string }> = {};
+    ((profilesRes.data as any[]) || []).forEach(p => { profilesByUserId[p.user_id] = { email: p.email }; });
+
+    const enrollmentsByEmail: Record<string, any[]> = {};
+    ((enrollmentsRes.data as any[]) || []).forEach(e => {
+      const profile = profilesByUserId[e.user_id];
+      if (profile) {
+        const key = profile.email.toLowerCase();
+        if (!enrollmentsByEmail[key]) enrollmentsByEmail[key] = [];
+        enrollmentsByEmail[key].push(e);
+      }
+    });
 
     const existingStudents: Student[] = ((studentsRes.data as any[]) || []).map(s => ({
       ...s,
@@ -105,12 +120,18 @@ const StudentManager = () => {
     }));
     const existingEmails = new Set(existingStudents.map(s => s.email.toLowerCase()));
 
-    // Add leads not already in students table
+    // Add leads not already in students table, enriched with enrollment data
     const leadsData = (leadsRes.data as any[]) || [];
     const leadEntries: Student[] = leadsData
       .filter(l => !existingEmails.has(l.email.toLowerCase()))
       .map(l => {
         existingEmails.add(l.email.toLowerCase());
+
+        // Find best enrollment for this lead
+        const enrollments = enrollmentsByEmail[l.email.toLowerCase()] || [];
+        const approved = enrollments.find(e => e.approval_status === "APPROVED" && e.payment_status === "PAID");
+        const best = approved || enrollments[0];
+
         return {
           id: l.id,
           full_name: l.name,
@@ -118,14 +139,14 @@ const StudentManager = () => {
           phone: "",
           country: l.country || "",
           status: "lead",
-          course_type: l.plan_type || "",
-          package_name: l.duration || "",
-          total_classes: 0,
+          course_type: best?.plan_type || l.plan_type || "",
+          package_name: best ? `${best.plan_type} ${best.duration}mo` : (l.duration || ""),
+          total_classes: best?.classes_included || 0,
           used_classes: 0,
-          remaining_classes: 0,
-          total_paid: 0,
-          price_per_class: 0,
-          payment_status: "pending",
+          remaining_classes: best?.classes_included || 0,
+          total_paid: best?.amount || 0,
+          price_per_class: best?.unit_price || 0,
+          payment_status: best?.payment_status === "PAID" ? "paid" : "pending",
           notes: `Source: ${l.source || "enroll"} | Schedule: ${l.schedule || "—"}`,
           created_at: l.created_at,
           group_name: "",
