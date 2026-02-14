@@ -1,19 +1,35 @@
 
 
-## Add Remaining Balance and Classes to Student Dashboard
+## Gate Attendance Calendar Behind Paid Enrollment
 
-### What's Being Added
-Two new highlighted fields in the Payment Details card:
+### Problem
+Currently, the attendance calendar renders for any logged-in student -- even those who haven't paid or don't have an active enrollment. This is confusing and should be locked.
 
-1. **Remaining Classes** -- calculated as `total_classes - used_classes`
-2. **Amount Still Owed** -- calculated as `remaining_classes * price_per_class` (the cost of unused classes)
+### Changes
 
-### Where
-In the **Payment Details** card in `src/pages/StudentDashboard.tsx`, add two new grid items after the existing fields:
+**File: `src/components/StudentAttendanceRequest.tsx`**
 
-- **"Remaining Classes"**: Shows `total_classes - used_classes` with a visual highlight (e.g., bold color or badge) so it stands out
-- **"Balance Due"**: Shows `(total_classes - used_classes) * price_per_class` formatted as currency -- this tells the student how much value remains in their package
+1. **Add enrollment eligibility check on mount**
+   - Fetch the user's latest enrollment and check: `approval_status = 'APPROVED'` AND `payment_status = 'PAID'` AND `sessions_remaining > 0`
+   - Store an `unlocked` boolean in state (default `false`)
 
-### Technical Detail
-No database changes needed. Both values are computed from existing `students` table fields (`total_classes`, `used_classes`, `price_per_class`). The change is purely in the Payment Details card UI within `StudentDashboard.tsx`.
+2. **Show a skeleton/loader while checking**
+   - Replace the current `if (loading) return null` with a small Skeleton placeholder inside a Card
+
+3. **Render a "Locked" card when not eligible**
+   - Title: "Attendance is available after payment"
+   - Description: "Complete enrollment and payment to unlock attendance tracking."
+   - Primary button: "Enroll Now" linking to `/enroll-now`
+   - No calendar, no date picker, no history list
+
+4. **Re-check before submitting a date (safety guard)**
+   - In `handleDateSelect`, re-fetch the enrollment status before inserting
+   - If no longer eligible, show a toast: "You need an active paid enrollment" and block the insert
+
+### Technical Details
+
+- Uses existing `supabase` client and UI components (Card, Button, Skeleton, toast)
+- One additional query on mount (already querying enrollments, just expanding the SELECT)
+- No database or schema changes needed
+- Matches existing styling patterns in the dashboard
 
