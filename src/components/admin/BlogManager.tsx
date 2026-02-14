@@ -442,7 +442,7 @@ const BlogManager = () => {
                       title,
                       slug: prev?.id ? prev.slug : generateSlug(title),
                       cta_text: generateCtaText(title),
-                      cta_url: prev?.cta_url || "/enroll-now",
+                      cta_url: "/enroll-now",
                     }));
                   }}
                 />
