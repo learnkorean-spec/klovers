@@ -2,12 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, AlertCircle, CalendarDays } from "lucide-react";
 
 interface SessionRow {
   attendance_id: string;
@@ -19,6 +15,13 @@ interface SessionRow {
   admin_approved: boolean;
 }
 
+const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
+  present: { icon: CheckCircle2, label: "Present", color: "text-primary" },
+  absent: { icon: XCircle, label: "Absent", color: "text-destructive" },
+  late: { icon: Clock, label: "Late", color: "text-secondary-foreground" },
+  excused: { icon: AlertCircle, label: "Excused", color: "text-muted-foreground" },
+};
+
 const StudentGroupAttendance = () => {
   const [rows, setRows] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +32,6 @@ const StudentGroupAttendance = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Get all attendance records for this user
     const { data: attendance, error } = await supabase
       .from("group_attendance")
       .select("id, session_id, status, source, admin_approved")
@@ -41,14 +43,12 @@ const StudentGroupAttendance = () => {
       return;
     }
 
-    // Get session details
     const sessionIds = [...new Set((attendance as any[]).map(a => a.session_id))];
     const { data: sessions } = await supabase
       .from("group_sessions")
       .select("id, session_date, group_id")
       .in("id", sessionIds);
 
-    // Get group names
     const groupIds = [...new Set((sessions || []).map((s: any) => s.group_id))];
     const { data: groups } = await supabase
       .from("student_groups")
@@ -77,78 +77,52 @@ const StudentGroupAttendance = () => {
     setLoading(false);
   };
 
-  const markPresent = async (attendanceId: string) => {
-    const { error } = await supabase
-      .from("group_attendance")
-      .update({ status: "present", source: "student" } as any)
-      .eq("id", attendanceId);
+  if (loading || rows.length === 0) return null;
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    toast({ title: "Marked as present", description: "Waiting for admin approval" });
-    setRows(prev =>
-      prev.map(r => r.attendance_id === attendanceId ? { ...r, status: "present", source: "student" } : r)
-    );
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   };
-
-  if (loading) return null;
-  if (rows.length === 0) return null;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Group Attendance</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <CalendarDays className="h-5 w-5" />
+          Session History
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Group</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Approved</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map(r => (
-                <TableRow key={r.attendance_id}>
-                  <TableCell className="font-medium">{r.session_date}</TableCell>
-                  <TableCell>{r.group_name}</TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      r.status === "present" ? "default"
-                      : r.status === "late" ? "secondary"
-                      : r.status === "excused" ? "outline"
-                      : "destructive"
-                    }>
-                      {r.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {r.admin_approved ? (
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Pending</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {!r.admin_approved && r.status !== "present" ? (
-                      <Button size="sm" variant="outline" onClick={() => markPresent(r.attendance_id)}>
-                        Mark Present
-                      </Button>
-                    ) : r.status === "present" && !r.admin_approved ? (
-                      <span className="text-xs text-muted-foreground">Awaiting approval</span>
-                    ) : null}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="space-y-2">
+          {rows.map((r) => {
+            const cfg = statusConfig[r.status] || statusConfig.absent;
+            const Icon = cfg.icon;
+            return (
+              <div
+                key={r.attendance_id}
+                className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-accent/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center bg-muted ${cfg.color}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{formatDate(r.session_date)}</p>
+                    <p className="text-xs text-muted-foreground">{r.group_name}</p>
+                  </div>
+                </div>
+                <Badge variant={
+                  r.status === "present" ? "default"
+                  : r.status === "late" ? "secondary"
+                  : r.status === "excused" ? "outline"
+                  : "destructive"
+                }>
+                  {cfg.label}
+                </Badge>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

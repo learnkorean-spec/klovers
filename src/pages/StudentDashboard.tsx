@@ -137,7 +137,7 @@ const StudentDashboard = () => {
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" /> Logout
             </Button>
           </div>
@@ -153,27 +153,27 @@ const StudentDashboard = () => {
             </Card>
           ) : (
             <>
-              {/* Avatar Upload + Welcome */}
-              <div className="space-y-3">
-                <AvatarUpload
-                  userId={userId}
-                  currentUrl={avatarUrl}
-                  name={userName || student.full_name}
-                  onUploaded={(url) => setAvatarUrl(url)}
-                />
-                <p className="text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{student.full_name}</span></p>
-              </div>
-
-              {/* Journey Progress */}
+              {/* Welcome + Avatar + Journey */}
               <Card>
                 <CardContent className="pt-6">
+                  <div className="flex items-center gap-4 mb-6">
+                    <AvatarUpload
+                      userId={userId}
+                      currentUrl={avatarUrl}
+                      name={userName || student.full_name}
+                      onUploaded={(url) => setAvatarUrl(url)}
+                    />
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Welcome back, <span className="font-semibold text-foreground">{student.full_name}</span>
+                  </p>
                   <JourneyStepper
                     currentStage={
                       student.used_classes >= student.total_classes && student.total_classes > 0
-                        ? 3 // Completed
+                        ? 3
                         : student.status === "student"
-                        ? 2 // Active
-                        : 1 // Enrolled
+                        ? 2
+                        : 1
                     }
                   />
                 </CardContent>
