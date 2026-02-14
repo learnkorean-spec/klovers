@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          related_group_id: string | null
+          related_user_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          related_group_id?: string | null
+          related_user_id?: string | null
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          related_group_id?: string | null
+          related_user_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_related_group_id_fkey"
+            columns: ["related_group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_log: {
         Row: {
           id: string
@@ -93,6 +131,7 @@ export type Database = {
           batch_id: string
           enrollment_id: string
           id: string
+          member_status: string
           user_id: string
         }
         Insert: {
@@ -100,6 +139,7 @@ export type Database = {
           batch_id: string
           enrollment_id: string
           id?: string
+          member_status?: string
           user_id: string
         }
         Update: {
@@ -107,6 +147,7 @@ export type Database = {
           batch_id?: string
           enrollment_id?: string
           id?: string
+          member_status?: string
           user_id?: string
         }
         Relationships: [
@@ -547,21 +588,74 @@ export type Database = {
       }
       student_groups: {
         Row: {
+          capacity: number | null
+          course_type: string | null
           created_at: string
           id: string
+          level: string | null
           name: string
+          schedule_day: string | null
+          schedule_time: string | null
+          schedule_timezone: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          course_type?: string | null
+          created_at?: string
+          id?: string
+          level?: string | null
+          name: string
+          schedule_day?: string | null
+          schedule_time?: string | null
+          schedule_timezone?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          course_type?: string | null
+          created_at?: string
+          id?: string
+          level?: string | null
+          name?: string
+          schedule_day?: string | null
+          schedule_time?: string | null
+          schedule_timezone?: string | null
+        }
+        Relationships: []
+      }
+      student_schedule_preferences: {
+        Row: {
+          created_at: string
+          group_id: string | null
+          id: string
+          level: string | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
+          group_id?: string | null
           id?: string
-          name: string
+          level?: string | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
+          group_id?: string | null
           id?: string
-          name?: string
+          level?: string | null
+          updated_at?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_schedule_preferences_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
