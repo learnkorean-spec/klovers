@@ -574,6 +574,7 @@ export type Database = {
         Returns: string
       }
       deduct_credit: { Args: { _user_id: string }; Returns: number }
+      get_auth_email: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
