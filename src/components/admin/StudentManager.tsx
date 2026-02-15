@@ -92,9 +92,26 @@ interface StudentGroup {
   created_at: string;
 }
 
+const COURSE_TYPES = [
+  { value: "group", label: "Group" },
+  { value: "private", label: "Private" },
+];
+
+const COURSE_LEVELS = [
+  { value: "hangul", label: "Hangul (Level 0)" },
+  { value: "beginner-1", label: "Beginner 1" },
+  { value: "beginner-2", label: "Beginner 2" },
+  { value: "intermediate-3", label: "Intermediate 3" },
+  { value: "intermediate-4", label: "Intermediate 4" },
+  { value: "advanced-5", label: "Advanced 5" },
+  { value: "advanced-6", label: "Advanced 6" },
+  { value: "reading-speaking", label: "Reading & Speaking" },
+  { value: "topik", label: "TOPIK Preparation" },
+];
+
 const EMPTY_STUDENT_FORM = {
   full_name: "", email: "", phone: "", country: "", status: "lead",
-  course_type: "", notes: "", group_name: "",
+  course_type: "", level: "", notes: "", group_name: "",
 };
 
 const EMPTY_PACKAGE_FORM = {
@@ -216,7 +233,7 @@ const StudentManager = () => {
     setEditingStudentId(s.id);
     setStudentForm({
       full_name: s.full_name, email: s.email, phone: s.phone, country: s.country,
-      status: s.status, course_type: s.course_type, notes: s.notes,
+      status: s.status, course_type: s.course_type, level: "", notes: s.notes,
       group_name: s.group_name || "",
     });
     setStudentDialogOpen(true);
@@ -687,10 +704,26 @@ const StudentManager = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Course Type</label>
-                <Input value={studentForm.course_type} onChange={(e) => setStudentForm(f => ({ ...f, course_type: e.target.value }))} placeholder="e.g. Group, Private" />
+                <Select value={studentForm.course_type || "none"} onValueChange={(v) => setStudentForm(f => ({ ...f, course_type: v === "none" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Select —</SelectItem>
+                    {COURSE_TYPES.map(ct => <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            {studentForm.status === "student" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-foreground">Level</label>
+                <Select value={studentForm.level || "none"} onValueChange={(v) => setStudentForm(f => ({ ...f, level: v === "none" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Select —</SelectItem>
+                    {COURSE_LEVELS.map(cl => <SelectItem key={cl.value} value={cl.value}>{cl.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Group Name</label>
                 <Select value={studentForm.group_name || "unassigned"} onValueChange={(v) => setStudentForm(f => ({ ...f, group_name: v === "unassigned" ? "" : v }))}>
@@ -701,7 +734,7 @@ const StudentManager = () => {
                   </SelectContent>
                 </Select>
               </div>
-            )}
+            </div>
             <div>
               <label className="text-sm font-medium text-foreground">Notes</label>
               <Textarea value={studentForm.notes} onChange={(e) => setStudentForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
