@@ -103,6 +103,7 @@ export type Database = {
           marked_at: string
           marked_by: string
           notes: string | null
+          session_date: string | null
           student_id: string
         }
         Insert: {
@@ -110,6 +111,7 @@ export type Database = {
           marked_at?: string
           marked_by: string
           notes?: string | null
+          session_date?: string | null
           student_id: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           marked_at?: string
           marked_by?: string
           notes?: string | null
+          session_date?: string | null
           student_id?: string
         }
         Relationships: [
