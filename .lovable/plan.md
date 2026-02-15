@@ -1,53 +1,49 @@
 
+# Plan: Student Attendance Editing + Backend Fix
 
-## Admin Dashboard UI Redesign
+## Overview
+Enable students to cancel their own PENDING attendance requests, and fix backend issues in the attendance system including RLS gaps and data consistency.
 
-Pure visual/layout changes -- no logic, data fetching, or action handlers are modified.
+## Changes
 
-### 1. Header Bar
-- Replace current loose flex wrapper with a compact sticky header bar
-- Add `border-b` separator, reduce padding to `py-3 px-4`
-- Title left, Logout button right, tighter spacing
+### 1. Database: Allow Students to Delete PENDING Requests
+- Add an RLS DELETE policy on `attendance_requests` so students can delete their own records, but only when status is still `PENDING`
+- Policy: `auth.uid() = user_id AND status = 'PENDING'`
 
-### 2. LifecycleFunnel (separate component file)
-- Remove the arrows between stages
-- Switch from single flex row to a responsive CSS grid: `grid-cols-2 sm:grid-cols-3 md:grid-cols-5`
-- Each metric becomes a small standalone card (icon + number + label) with reduced height
-- Remove the wrapping Card -- use individual mini-cards or just styled divs
+### 2. Student Dashboard: Add Cancel Button on Pending Requests
+In `src/components/StudentAttendanceRequest.tsx`:
+- Add a cancel/delete button (trash icon or "Cancel" button) next to each PENDING attendance request in the Attendance History list
+- When clicked, show a confirmation dialog, then delete the row from `attendance_requests`
+- Refresh the list after deletion
+- Only show the button for PENDING status requests (not APPROVED or REJECTED)
 
-### 3. Main Tabs (scrollable + badge cleanup)
-- TabsList gets: `w-full overflow-x-auto flex gap-1 whitespace-nowrap`
-- Each TabsTrigger: `shrink-0 rounded-full px-3 py-1.5 text-sm`
-- Remove the stacked "Action needed" / "Pending" text under the red badge dots
-- Keep only the small red Badge circle with count, positioned inline (right side of trigger text)
+### 3. Admin Attendance Tab Backend Fix
+In `src/pages/AdminDashboard.tsx`:
+- The attendance tab currently enriches requests with profile data from the overview map, but `credits` is hardcoded to `0` -- update to use `sessions_remaining` from the overview record
+- After approve/reject, the `fetchAll()` call already refreshes data; verify this chain works properly
 
-### 4. Students Tab Filters (responsive)
-- Desktop: keep as horizontal TabsList with same scrollable treatment as main tabs
-- Mobile: replace nested Tabs with a `Select` dropdown (All / Confirmed / Leads / Stripe / Egypt Manual) using `useIsMobile()` hook
-- Counts still shown in parentheses
+### 4. Fix Console Warning in StudentManager
+- The console shows a warning about `AlertDialog` receiving refs on function components -- wrap the triggering element properly with `asChild`
 
-### 5. Search + Export Row
-- Desktop: single clean row (`flex gap-2`)
-- Mobile: stacked (`flex-col`)
-- Export button: icon-only (`size="icon"`) on mobile, full text on desktop -- controlled via `useIsMobile()`
+## Technical Details
 
-### 6. Table Improvements
-- Reduce cell padding: override TableCell/TableHead with `py-2 px-3`
-- Email column: add `max-w-[220px] truncate` with a Tooltip wrapper showing full email on hover
-- Add zebra striping: `even:bg-muted/30` on TableRow
-- Add hover: `hover:bg-muted/50` (already partially present)
-- Sticky header: wrap table in a `max-h-[600px] overflow-auto` div, TableHeader row gets `sticky top-0 bg-background z-10`
+### SQL Migration
+```sql
+-- Allow students to delete their own PENDING attendance requests
+CREATE POLICY "Users can delete own pending attendance"
+  ON public.attendance_requests
+  FOR DELETE
+  USING (auth.uid() = user_id AND status = 'PENDING');
+```
 
-### Files Changed
+### Frontend Changes (StudentAttendanceRequest.tsx)
+- Import `Trash2` icon and `AlertDialog` components
+- Add a delete handler that calls `supabase.from("attendance_requests").delete().eq("id", requestId)`
+- Add cancel button with confirmation dialog next to each PENDING request row
+- Refresh data after successful deletion
 
-| File | What changes |
-|------|-------------|
-| `src/pages/AdminDashboard.tsx` | Header, TabsList classes, badge layout, Students filter responsive logic, search/export row, table styling, import `useIsMobile` and `Tooltip` |
-| `src/components/admin/LifecycleFunnel.tsx` | Grid layout, remove arrows, mini-card style per metric |
-
-### Technical Notes
-- Import `useIsMobile` from `@/hooks/use-mobile`
-- Import `Tooltip, TooltipTrigger, TooltipContent, TooltipProvider` for email truncation
-- All changes are className / layout only -- zero logic changes
-- Enrollment cards, attendance cards, and other tab contents keep their current structure
-
+### Files Modified
+1. **New migration** -- RLS policy for DELETE on `attendance_requests`
+2. **`src/components/StudentAttendanceRequest.tsx`** -- Add cancel button for PENDING requests
+3. **`src/pages/AdminDashboard.tsx`** -- Fix credits display in attendance tab to use overview data
+4. **`src/components/admin/StudentManager.tsx`** -- Fix AlertDialog ref warning
