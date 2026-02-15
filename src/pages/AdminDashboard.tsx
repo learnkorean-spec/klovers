@@ -154,7 +154,21 @@ const AdminDashboard = () => {
     }
 
     if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
-    if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] ? { ...profileMap[a.user_id], credits: 0 } : null })));
+    if (attendRes.data) {
+      const overviewMap: Record<string, any> = {};
+      if (overviewRes.data) {
+        (overviewRes.data as any[]).forEach((r: any) => { overviewMap[r.user_id] = r; });
+      }
+      setAttendanceReqs((attendRes.data as any[]).map((a) => {
+        const ov = overviewMap[a.user_id];
+        return {
+          ...a,
+          profiles: profileMap[a.user_id]
+            ? { ...profileMap[a.user_id], credits: ov?.sessions_remaining ?? 0 }
+            : null,
+        };
+      }));
+    }
     if (overviewRes.data) setOverviewRows(overviewRes.data as any[]);
     setUserGroupMap(_userGroupMap);
     setLoading(false);
