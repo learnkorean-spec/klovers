@@ -350,16 +350,19 @@ const AdminDashboard = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        {/* Compact header */}
-        <div className="sticky top-0 z-20 bg-background border-b">
-          <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4">
-            <h1 className="text-lg font-bold text-foreground">Admin Dashboard</h1>
-            <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
+      <div className="min-h-screen bg-muted/30">
+        {/* Header */}
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
+          <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 md:px-6">
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-xs text-muted-foreground">Manage students, enrollments & content</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
           <LifecycleFunnel
             leadsCount={leads.length}
             registeredCount={profiles.length}
@@ -369,91 +372,103 @@ const AdminDashboard = () => {
           />
 
           <Tabs defaultValue="students">
-            <TabsList className="w-full overflow-x-auto flex gap-1 whitespace-nowrap h-auto p-1 bg-muted">
-              <TabsTrigger value="students" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
+            <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
+              <TabsTrigger value="students" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
                 Users ({profiles.length})
               </TabsTrigger>
-              <TabsTrigger value="enrollments" className="shrink-0 rounded-full px-3 py-1.5 text-sm gap-1.5">
-                Enrollments ({enrollments.length})
+              <TabsTrigger value="enrollments" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                Enrollments
                 {actionableEnrollments > 0 && (
-                  <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px]">{actionableEnrollments}</Badge>
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{actionableEnrollments}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="attendance" className="shrink-0 rounded-full px-3 py-1.5 text-sm gap-1.5">
-                Attendance ({attendanceReqs.length})
+              <TabsTrigger value="attendance" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                Attendance
                 {pendingAttendance > 0 && (
-                  <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px]">{pendingAttendance}</Badge>
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{pendingAttendance}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="leads" className="shrink-0 rounded-full px-3 py-1.5 text-sm">Our Students ({leads.length})</TabsTrigger>
-              <TabsTrigger value="manage" className="shrink-0 rounded-full px-3 py-1.5 text-sm">Manage Students</TabsTrigger>
-              <TabsTrigger value="group-attendance" className="shrink-0 rounded-full px-3 py-1.5 text-sm">Group Attendance</TabsTrigger>
-              <TabsTrigger value="notifications" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                <Bell className="h-4 w-4 mr-1" /> Notifications
+              <TabsTrigger value="leads" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Our Students</TabsTrigger>
+              <TabsTrigger value="manage" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Manage</TabsTrigger>
+              <TabsTrigger value="group-attendance" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Groups</TabsTrigger>
+              <TabsTrigger value="notifications" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
-              <TabsTrigger value="blog" className="shrink-0 rounded-full px-3 py-1.5 text-sm">Blog</TabsTrigger>
+              <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
             </TabsList>
 
             {/* STUDENTS TAB */}
-            <TabsContent value="students" className="space-y-4">
+            <TabsContent value="students">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">Users</CardTitle>
+                      <p className="text-xs text-muted-foreground">{profiles.length} total</p>
+                    </div>
+                    {/* Responsive student filters */}
+                    {isMobile ? (
+                      <Select value={studentFilter} onValueChange={setStudentFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {studentFilterOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex gap-2 overflow-x-auto whitespace-nowrap">
+                        {studentFilterOptions.map(opt => (
+                          <Button
+                            key={opt.value}
+                            variant={studentFilter === opt.value ? "default" : "outline"}
+                            size="sm"
+                            className="rounded-full text-xs"
+                            onClick={() => setStudentFilter(opt.value)}
+                          >
+                            {opt.label}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    {/* Search + Export */}
+                    <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
+                      </div>
+                      <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => {
+                        const data = profiles.filter(p => {
+                          const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
+                          const matchesFilter = studentFilter === "all" ? true
+                            : studentFilter === "confirmed" ? p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
+                            : studentFilter === "leads" ? p.status === "NEW" || !enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
+                            : studentFilter === "stripe" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")
+                            : studentFilter === "egypt" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")
+                            : true;
+                          return matchesSearch && matchesFilter;
+                        });
+                        const headers = ["Name", "Email", "Country", "Level", "Credits", "Status", "Joined"];
+                        const rows = data.map(p => [p.name, p.email, p.country, p.level, p.credits, p.status, new Date(p.created_at).toLocaleDateString()]);
+                        const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+                        const blob = new Blob([csv], { type: "text/csv" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a"); a.href = url; a.download = `students-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+                        URL.revokeObjectURL(url);
+                      }}>
+                        <Download className="h-4 w-4" />
+                        {!isMobile && <span className="ml-1">Export CSV</span>}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
               {loading ? (
                 <p className="text-muted-foreground text-center py-8">Loading...</p>
               ) : (
                 <>
-                  {/* Responsive student filters */}
-                  {isMobile ? (
-                    <Select value={studentFilter} onValueChange={setStudentFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {studentFilterOptions.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Tabs value={studentFilter} onValueChange={setStudentFilter}>
-                      <TabsList className="w-full overflow-x-auto flex gap-1 whitespace-nowrap h-auto p-1">
-                        {studentFilterOptions.map(opt => (
-                          <TabsTrigger key={opt.value} value={opt.value} className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                            {opt.label}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-                    </Tabs>
-                  )}
-
-                  {/* Search + Export */}
-                  <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
-                    </div>
-                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => {
-                      const data = profiles.filter(p => {
-                        const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
-                        const matchesFilter = studentFilter === "all" ? true
-                          : studentFilter === "confirmed" ? p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
-                          : studentFilter === "leads" ? p.status === "NEW" || !enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
-                          : studentFilter === "stripe" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")
-                          : studentFilter === "egypt" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")
-                          : true;
-                        return matchesSearch && matchesFilter;
-                      });
-                      const headers = ["Name", "Email", "Country", "Level", "Credits", "Status", "Joined"];
-                      const rows = data.map(p => [p.name, p.email, p.country, p.level, p.credits, p.status, new Date(p.created_at).toLocaleDateString()]);
-                      const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
-                      const blob = new Blob([csv], { type: "text/csv" });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a"); a.href = url; a.download = `students-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-                      URL.revokeObjectURL(url);
-                    }}>
-                      <Download className="h-4 w-4" />
-                      {!isMobile && <span className="ml-1">Export CSV</span>}
-                    </Button>
-                  </div>
-
                   {(() => {
                      const filteredProfiles = profiles.filter(p => {
                        const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
@@ -468,18 +483,18 @@ const AdminDashboard = () => {
                      if (filteredProfiles.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
 
                     return (
-                      <div className="border rounded-lg max-h-[600px] overflow-auto">
+                      <div className="border rounded-xl max-h-[600px] overflow-auto">
                         <Table>
                           <TableHeader>
-                            <TableRow className="sticky top-0 bg-background z-10">
-                              <TableHead className="py-2 px-3">Name</TableHead>
-                              <TableHead className="py-2 px-3">Email</TableHead>
-                              <TableHead className="py-2 px-3 hidden md:table-cell">Country</TableHead>
-                              <TableHead className="py-2 px-3 hidden md:table-cell">Level</TableHead>
-                              <TableHead className="py-2 px-3">Credits</TableHead>
-                              <TableHead className="py-2 px-3">Status</TableHead>
-                              <TableHead className="py-2 px-3 hidden md:table-cell">Source</TableHead>
-                              <TableHead className="py-2 px-3 hidden sm:table-cell">Joined</TableHead>
+                            <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
+                              <TableHead className="py-3 px-3 font-semibold">Name</TableHead>
+                              <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
+                              <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
+                              <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Level</TableHead>
+                              <TableHead className="py-3 px-3 font-semibold text-center">Credits</TableHead>
+                              <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
+                              <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
+                              <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Joined</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -490,26 +505,26 @@ const AdminDashboard = () => {
                                 : userEnrollments.some(e => e.payment_provider === "manual") ? "Manual"
                                 : "—";
                               return (
-                                <TableRow key={p.user_id} className="even:bg-muted/30 hover:bg-muted/50">
-                                  <TableCell className="py-2 px-3 font-medium">{p.name || "—"}</TableCell>
-                                  <TableCell className="py-2 px-3">
+                                <TableRow key={p.user_id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
+                                  <TableCell className="py-3 px-3 font-medium">{p.name || "—"}</TableCell>
+                                  <TableCell className="py-3 px-3">
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <span className="block max-w-[220px] truncate">{p.email}</span>
+                                        <span className="block max-w-[240px] truncate">{p.email}</span>
                                       </TooltipTrigger>
                                       <TooltipContent>{p.email}</TooltipContent>
                                     </Tooltip>
                                   </TableCell>
-                                  <TableCell className="py-2 px-3 hidden md:table-cell">{p.country || "—"}</TableCell>
-                                  <TableCell className="py-2 px-3 hidden md:table-cell">{p.level || "—"}</TableCell>
-                                  <TableCell className="py-2 px-3">{p.credits}</TableCell>
-                                  <TableCell className="py-2 px-3">
-                                    <Badge variant={p.status === "ACTIVE" ? "default" : "secondary"}>{p.status}</Badge>
+                                  <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{p.country || "—"}</TableCell>
+                                  <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{p.level || "—"}</TableCell>
+                                  <TableCell className="py-3 px-3 text-center font-mono">{p.credits}</TableCell>
+                                  <TableCell className="py-3 px-3">
+                                    <Badge variant={p.status === "ACTIVE" ? "default" : "secondary"} className="text-xs">{p.status}</Badge>
                                   </TableCell>
-                                  <TableCell className="py-2 px-3 hidden md:table-cell">
-                                    <Badge variant="outline">{source}</Badge>
+                                  <TableCell className="py-3 px-3 hidden md:table-cell">
+                                    <Badge variant="outline" className="text-xs">{source}</Badge>
                                   </TableCell>
-                                  <TableCell className="py-2 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                                  <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
                                 </TableRow>
                               );
                             })}
@@ -518,31 +533,33 @@ const AdminDashboard = () => {
                       </div>
                     );
                   })()}
-                  <p className="text-xs text-muted-foreground text-center">{profiles.length} total student{profiles.length !== 1 ? "s" : ""}</p>
                 </>
               )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="enrollments" className="space-y-4">
+            <TabsContent value="enrollments">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base">Enrollments</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
               {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
                 <Tabs defaultValue="under_review">
-                  <TabsList className="w-full overflow-x-auto flex gap-1 whitespace-nowrap h-auto p-1">
-                    <TabsTrigger value="under_review" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                      Under Review ({enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length})
-                    </TabsTrigger>
-                    <TabsTrigger value="pending_payment" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                      Pending Payment ({enrollments.filter(e => e.approval_status === "PENDING_PAYMENT").length})
-                    </TabsTrigger>
-                    <TabsTrigger value="pending" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                      Pending ({enrollments.filter(e => e.approval_status === "PENDING").length})
-                    </TabsTrigger>
-                    <TabsTrigger value="approved" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                      Approved ({enrollments.filter(e => e.approval_status === "APPROVED").length})
-                    </TabsTrigger>
-                    <TabsTrigger value="rejected" className="shrink-0 rounded-full px-3 py-1.5 text-sm">
-                      Rejected ({enrollments.filter(e => e.approval_status === "REJECTED").length})
-                    </TabsTrigger>
-                  </TabsList>
+                  <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3">
+                    {[
+                      { value: "under_review", label: "Under Review", count: enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length },
+                      { value: "pending_payment", label: "Pending Payment", count: enrollments.filter(e => e.approval_status === "PENDING_PAYMENT").length },
+                      { value: "pending", label: "Pending", count: enrollments.filter(e => e.approval_status === "PENDING").length },
+                      { value: "approved", label: "Approved", count: enrollments.filter(e => e.approval_status === "APPROVED").length },
+                      { value: "rejected", label: "Rejected", count: enrollments.filter(e => e.approval_status === "REJECTED").length },
+                    ].map(t => (
+                      <TabsTrigger key={t.value} value={t.value} className="shrink-0 rounded-full px-4 py-2 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
+                        {t.label} ({t.count})
+                      </TabsTrigger>
+                    ))}
+                  </div>
 
                   {(["pending_payment", "under_review", "pending", "approved", "rejected"] as const).map((tab) => {
                     const filtered = enrollments.filter((e) => {
@@ -679,6 +696,8 @@ const AdminDashboard = () => {
                   })}
                 </Tabs>
               )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* ATTENDANCE TAB */}
@@ -776,24 +795,32 @@ const AdminDashboard = () => {
             </TabsContent>
 
             {/* LEADS TAB */}
-            <TabsContent value="leads" className="space-y-4">
-              <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Filter status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
-                  <Download className="h-4 w-4" />
-                  {!isMobile && <span className="ml-1">Export CSV</span>}
-                </Button>
-              </div>
+            <TabsContent value="leads">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Our Students</CardTitle>
+                    <p className="text-xs text-muted-foreground">{filtered.length} lead{filtered.length !== 1 ? "s" : ""}</p>
+                  </div>
+                  <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Filter status" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
+                      <Download className="h-4 w-4" />
+                      {!isMobile && <span className="ml-1">Export CSV</span>}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-4">
 
               {leadsError && (
                 <Alert variant="destructive">
@@ -817,53 +844,53 @@ const AdminDashboard = () => {
               ) : filtered.length === 0 && !leadsError ? (
                 <p className="text-muted-foreground text-center py-12">No leads found.</p>
               ) : !leadsError ? (
-                <div className="border rounded-lg max-h-[600px] overflow-auto">
+                <div className="border rounded-xl max-h-[600px] overflow-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="sticky top-0 bg-background z-10">
-                        <TableHead className="py-2 px-3">Name</TableHead>
-                        <TableHead className="py-2 px-3">Email</TableHead>
-                        <TableHead className="py-2 px-3 hidden md:table-cell">Country</TableHead>
-                        <TableHead className="py-2 px-3 hidden md:table-cell">Plan</TableHead>
-                        <TableHead className="py-2 px-3 hidden md:table-cell">Duration</TableHead>
-                        <TableHead className="py-2 px-3 hidden lg:table-cell">Schedule</TableHead>
-                        <TableHead className="py-2 px-3 hidden lg:table-cell">Timezone</TableHead>
-                        <TableHead className="py-2 px-3">Status</TableHead>
-                        <TableHead className="py-2 px-3 hidden sm:table-cell">Date</TableHead>
-                        <TableHead className="py-2 px-3 w-10"></TableHead>
+                      <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
+                        <TableHead className="py-3 px-3 font-semibold">Name</TableHead>
+                        <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
+                        <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
+                        <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Plan</TableHead>
+                        <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Duration</TableHead>
+                        <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Schedule</TableHead>
+                        <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Timezone</TableHead>
+                        <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
+                        <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Date</TableHead>
+                        <TableHead className="py-3 px-3 w-10"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filtered.map((lead) => (
-                        <TableRow key={lead.id} className="even:bg-muted/30 hover:bg-muted/50">
-                          <TableCell className="py-2 px-3 font-medium">{lead.name}</TableCell>
-                          <TableCell className="py-2 px-3">
+                        <TableRow key={lead.id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
+                          <TableCell className="py-3 px-3 font-medium">{lead.name}</TableCell>
+                          <TableCell className="py-3 px-3">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="block max-w-[220px] truncate">{lead.email}</span>
+                                <span className="block max-w-[240px] truncate">{lead.email}</span>
                               </TooltipTrigger>
                               <TooltipContent>{lead.email}</TooltipContent>
                             </Tooltip>
                           </TableCell>
-                          <TableCell className="py-2 px-3 hidden md:table-cell">{lead.country || "—"}</TableCell>
-                          <TableCell className="py-2 px-3 hidden md:table-cell">
-                            {lead.plan_type ? <Badge variant="outline">{lead.plan_type}</Badge> : "—"}
+                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{lead.country || "—"}</TableCell>
+                          <TableCell className="py-3 px-3 hidden md:table-cell">
+                            {lead.plan_type ? <Badge variant="outline" className="text-xs">{lead.plan_type}</Badge> : "—"}
                           </TableCell>
-                          <TableCell className="py-2 px-3 hidden md:table-cell">{lead.duration || "—"}</TableCell>
-                          <TableCell className="py-2 px-3 hidden lg:table-cell text-xs">{lead.schedule || "—"}</TableCell>
-                          <TableCell className="py-2 px-3 hidden lg:table-cell text-xs">{lead.timezone || "—"}</TableCell>
-                          <TableCell className="py-2 px-3">
+                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{lead.duration || "—"}</TableCell>
+                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">{lead.schedule || "—"}</TableCell>
+                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">{lead.timezone || "—"}</TableCell>
+                          <TableCell className="py-3 px-3">
                             <Badge variant={
                               lead.status === "enrolled" ? "default"
                               : lead.status === "rejected" ? "destructive"
                               : lead.status === "contacted" ? "secondary"
                               : "outline"
-                            }>
+                            } className="text-xs">
                               {lead.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-2 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="py-2 px-3">
+                          <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="py-3 px-3">
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -886,27 +913,40 @@ const AdminDashboard = () => {
                   </Table>
                 </div>
               ) : null}
-              <p className="text-xs text-muted-foreground text-center">{filtered.length} lead{filtered.length !== 1 ? "s" : ""}</p>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* MANAGE STUDENTS TAB */}
-            <TabsContent value="manage" className="space-y-4">
-              <StudentManager />
+            <TabsContent value="manage">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Manage Students</CardTitle></CardHeader>
+                <CardContent className="pt-0"><StudentManager /></CardContent>
+              </Card>
             </TabsContent>
 
             {/* GROUP ATTENDANCE TAB */}
-            <TabsContent value="group-attendance" className="space-y-4">
-              <GroupAttendanceManager />
+            <TabsContent value="group-attendance">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Group Attendance</CardTitle></CardHeader>
+                <CardContent className="pt-0"><GroupAttendanceManager /></CardContent>
+              </Card>
             </TabsContent>
 
             {/* NOTIFICATIONS TAB */}
-            <TabsContent value="notifications" className="space-y-4">
-              <AdminNotifications />
+            <TabsContent value="notifications">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Notifications</CardTitle></CardHeader>
+                <CardContent className="pt-0"><AdminNotifications /></CardContent>
+              </Card>
             </TabsContent>
 
             {/* BLOG TAB */}
-            <TabsContent value="blog" className="space-y-4">
-              <BlogManager />
+            <TabsContent value="blog">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Blog Manager</CardTitle></CardHeader>
+                <CardContent className="pt-0"><BlogManager /></CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
