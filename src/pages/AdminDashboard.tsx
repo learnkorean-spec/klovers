@@ -334,14 +334,93 @@ const AdminDashboard = () => {
   ).length;
   const pendingAttendance = attendanceReqs.filter(a => a.status === "PENDING").length;
 
-  // Student filter counts
-  const confirmedCount = profiles.filter(p => p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")).length;
-  const leadsProfileCount = profiles.filter(p => p.status === "NEW" || (!enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED"))).length;
-  const stripeCount = profiles.filter(p => enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")).length;
-  const egyptCount = profiles.filter(p => enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")).length;
+  // === UNIFIED DATASET: profiles + latest enrollment ===
+  interface UnifiedUser {
+    user_id: string;
+    name: string;
+    email: string;
+    country: string;
+    level: string;
+    joined_at: string;
+    // from latest enrollment
+    payment_status: string | null;
+    approval_status: string | null;
+    payment_method: string | null;
+    payment_provider: string | null;
+    sessions_total: number;
+    sessions_remaining: number;
+    enrollment_created_at: string | null;
+    // derived
+    ui_status: string;
+    source_label: string;
+  }
+
+  const unifiedUsers: UnifiedUser[] = useMemo(() => {
+    return profiles.map(p => {
+      // Find latest enrollment for this user
+      const userEnrollments = enrollments
+        .filter(e => e.user_id === p.user_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const latest = userEnrollments[0] || null;
+
+      const isConfirmed = latest?.approval_status === "APPROVED" && latest?.payment_status === "PAID";
+      const sessionsRemaining = latest?.sessions_remaining ?? 0;
+
+      let ui_status = "LEAD";
+      if (!latest) {
+        ui_status = "LEAD";
+      } else if (sessionsRemaining <= -3 && isConfirmed) {
+        ui_status = "LOCKED";
+      } else if (isConfirmed && sessionsRemaining === 0) {
+        ui_status = "COMPLETED";
+      } else if (isConfirmed && sessionsRemaining > -3) {
+        ui_status = "ACTIVE";
+      } else {
+        ui_status = "LEAD";
+      }
+
+      // Source label
+      let source_label = "—";
+      if (latest?.payment_provider === "stripe") source_label = "Stripe";
+      else if (latest?.payment_provider === "egypt_manual") source_label = "Egypt";
+      else if (latest?.payment_provider === "manual") source_label = "Manual";
+      else if (latest?.payment_method === "vodafone_cash" || latest?.payment_method === "instapay") source_label = "Egypt";
+
+      return {
+        user_id: p.user_id,
+        name: p.name,
+        email: p.email,
+        country: p.country,
+        level: p.level,
+        joined_at: p.created_at,
+        payment_status: latest?.payment_status ?? null,
+        approval_status: latest?.approval_status ?? null,
+        payment_method: latest?.payment_method ?? null,
+        payment_provider: latest?.payment_provider ?? null,
+        sessions_total: latest?.sessions_remaining !== undefined ? (latest as any).sessions_total ?? 0 : 0,
+        sessions_remaining: sessionsRemaining,
+        enrollment_created_at: latest?.created_at ?? null,
+        ui_status,
+        source_label,
+      };
+    });
+  }, [profiles, enrollments]);
+
+  // Lifecycle counts from unified dataset
+  const lifecycleLeads = unifiedUsers.filter(u => u.ui_status === "LEAD").length;
+  const lifecycleActive = unifiedUsers.filter(u => u.ui_status === "ACTIVE").length;
+  const lifecycleCompleted = unifiedUsers.filter(u => u.ui_status === "COMPLETED").length;
+  const lifecycleLocked = unifiedUsers.filter(u => u.ui_status === "LOCKED").length;
+  const lifecycleConfirmedTotal = unifiedUsers.filter(u => ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.ui_status)).length;
+
+  // Filter counts from unified dataset
+  const confirmedCount = lifecycleConfirmedTotal;
+  const leadsProfileCount = lifecycleLeads;
+  const stripeCount = unifiedUsers.filter(u => u.source_label === "Stripe").length;
+  const egyptCount = unifiedUsers.filter(u => u.source_label === "Egypt").length;
 
   const studentFilterOptions = [
-    { value: "all", label: `All (${profiles.length})` },
+    { value: "all", label: `All (${unifiedUsers.length})` },
     { value: "confirmed", label: `Confirmed (${confirmedCount})` },
     { value: "leads", label: `Leads (${leadsProfileCount})` },
     { value: "stripe", label: `Stripe (${stripeCount})` },
@@ -364,17 +443,17 @@ const AdminDashboard = () => {
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
           <LifecycleFunnel
-            leadsCount={leads.length}
-            registeredCount={profiles.length}
-            enrolledCount={enrollments.filter(e => e.approval_status === "APPROVED").length}
-            activeCount={studentsData.filter(s => s.status === "student" && s.used_classes < s.total_classes).length}
-            completedCount={studentsData.filter(s => s.used_classes >= s.total_classes && s.total_classes > 0).length}
+            leadsCount={lifecycleLeads}
+            registeredCount={unifiedUsers.length}
+            enrolledCount={lifecycleConfirmedTotal}
+            activeCount={lifecycleActive}
+            completedCount={lifecycleCompleted + lifecycleLocked}
           />
 
           <Tabs defaultValue="students">
             <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
               <TabsTrigger value="students" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
-                Users ({profiles.length})
+                Users ({unifiedUsers.length})
               </TabsTrigger>
               <TabsTrigger value="enrollments" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 Enrollments
@@ -402,9 +481,9 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4">
                   <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
+                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base">Users</CardTitle>
-                      <p className="text-xs text-muted-foreground">{profiles.length} total</p>
+                      <p className="text-xs text-muted-foreground">{unifiedUsers.length} total</p>
                     </div>
                     {/* Responsive student filters */}
                     {isMobile ? (
@@ -440,18 +519,17 @@ const AdminDashboard = () => {
                         <Input placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
                       </div>
                       <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => {
-                        const data = profiles.filter(p => {
-                          const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
-                          const matchesFilter = studentFilter === "all" ? true
-                            : studentFilter === "confirmed" ? p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
-                            : studentFilter === "leads" ? p.status === "NEW" || !enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
-                            : studentFilter === "stripe" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")
-                            : studentFilter === "egypt" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")
+                        const data = unifiedUsers.filter(u => {
+                          const matchesSearch = !studentSearch || u.name.toLowerCase().includes(studentSearch.toLowerCase()) || u.email.toLowerCase().includes(studentSearch.toLowerCase());
+                          const matchesFilter = studentFilter === "confirmed" ? ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.ui_status)
+                            : studentFilter === "leads" ? u.ui_status === "LEAD"
+                            : studentFilter === "stripe" ? u.source_label === "Stripe"
+                            : studentFilter === "egypt" ? u.source_label === "Egypt"
                             : true;
                           return matchesSearch && matchesFilter;
                         });
-                        const headers = ["Name", "Email", "Country", "Level", "Credits", "Status", "Joined"];
-                        const rows = data.map(p => [p.name, p.email, p.country, p.level, p.credits, p.status, new Date(p.created_at).toLocaleDateString()]);
+                        const headers = ["Name", "Email", "Country", "Level", "Remaining Sessions", "Status", "Source", "Joined"];
+                        const rows = data.map(u => [u.name, u.email, u.country, u.level, u.sessions_remaining, u.ui_status, u.source_label, new Date(u.joined_at).toLocaleDateString()]);
                         const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
                         const blob = new Blob([csv], { type: "text/csv" });
                         const url = URL.createObjectURL(blob);
@@ -470,17 +548,17 @@ const AdminDashboard = () => {
               ) : (
                 <>
                   {(() => {
-                     const filteredProfiles = profiles.filter(p => {
-                       const matchesSearch = !studentSearch || p.name.toLowerCase().includes(studentSearch.toLowerCase()) || p.email.toLowerCase().includes(studentSearch.toLowerCase());
-                       const matchesFilter = studentFilter === "confirmed" ? p.status === "ACTIVE" && enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED")
-                         : studentFilter === "leads" ? p.status === "NEW" || (!enrollments.some(e => e.user_id === p.user_id && e.approval_status === "APPROVED"))
-                         : studentFilter === "stripe" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "stripe" && e.approval_status === "APPROVED")
-                         : studentFilter === "egypt" ? enrollments.some(e => e.user_id === p.user_id && e.payment_provider === "egypt_manual")
+                     const filteredUsers = unifiedUsers.filter(u => {
+                       const matchesSearch = !studentSearch || u.name.toLowerCase().includes(studentSearch.toLowerCase()) || u.email.toLowerCase().includes(studentSearch.toLowerCase());
+                       const matchesFilter = studentFilter === "confirmed" ? ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.ui_status)
+                         : studentFilter === "leads" ? u.ui_status === "LEAD"
+                         : studentFilter === "stripe" ? u.source_label === "Stripe"
+                         : studentFilter === "egypt" ? u.source_label === "Egypt"
                          : true;
                        return matchesSearch && matchesFilter;
                      });
 
-                     if (filteredProfiles.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
+                     if (filteredUsers.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
 
                     return (
                       <div className="border rounded-xl max-h-[600px] overflow-auto">
@@ -491,43 +569,36 @@ const AdminDashboard = () => {
                               <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
                               <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
                               <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Level</TableHead>
-                              <TableHead className="py-3 px-3 font-semibold text-center">Credits</TableHead>
+                              <TableHead className="py-3 px-3 font-semibold text-center">Remaining</TableHead>
                               <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
                               <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
                               <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Joined</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {filteredProfiles.map((p) => {
-                              const userEnrollments = enrollments.filter(e => e.user_id === p.user_id);
-                              const source = userEnrollments.some(e => e.payment_provider === "stripe") ? "Stripe"
-                                : userEnrollments.some(e => e.payment_provider === "egypt_manual") ? "Egypt"
-                                : userEnrollments.some(e => e.payment_provider === "manual") ? "Manual"
-                                : "—";
-                              return (
-                                <TableRow key={p.user_id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
-                                  <TableCell className="py-3 px-3 font-medium">{p.name || "—"}</TableCell>
-                                  <TableCell className="py-3 px-3">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="block max-w-[240px] truncate">{p.email}</span>
-                                      </TooltipTrigger>
-                                      <TooltipContent>{p.email}</TooltipContent>
-                                    </Tooltip>
-                                  </TableCell>
-                                  <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{p.country || "—"}</TableCell>
-                                  <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{p.level || "—"}</TableCell>
-                                  <TableCell className="py-3 px-3 text-center font-mono">{p.credits}</TableCell>
-                                  <TableCell className="py-3 px-3">
-                                    <Badge variant={p.status === "ACTIVE" ? "default" : "secondary"} className="text-xs">{p.status}</Badge>
-                                  </TableCell>
-                                  <TableCell className="py-3 px-3 hidden md:table-cell">
-                                    <Badge variant="outline" className="text-xs">{source}</Badge>
-                                  </TableCell>
-                                  <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
-                                </TableRow>
-                              );
-                            })}
+                            {filteredUsers.map((u) => (
+                              <TableRow key={u.user_id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
+                                <TableCell className="py-3 px-3 font-medium">{u.name || "—"}</TableCell>
+                                <TableCell className="py-3 px-3">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="block max-w-[240px] truncate">{u.email}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{u.email}</TooltipContent>
+                                  </Tooltip>
+                                </TableCell>
+                                <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
+                                <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
+                                <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
+                                <TableCell className="py-3 px-3">
+                                  <Badge variant={u.ui_status === "ACTIVE" ? "default" : u.ui_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.ui_status}</Badge>
+                                </TableCell>
+                                <TableCell className="py-3 px-3 hidden md:table-cell">
+                                  <Badge variant="outline" className="text-xs">{u.source_label}</Badge>
+                                </TableCell>
+                                <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(u.joined_at).toLocaleDateString()}</TableCell>
+                              </TableRow>
+                            ))}
                           </TableBody>
                         </Table>
                       </div>
