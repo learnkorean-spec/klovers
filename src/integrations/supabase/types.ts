@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_attendance_log: {
+        Row: {
+          created_at: string
+          created_by: string
+          enrollment_id: string
+          id: string
+          session_date: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          enrollment_id: string
+          id?: string
+          session_date: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          enrollment_id?: string
+          id?: string
+          session_date?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_attendance_log_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_student_overview"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "admin_attendance_log_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_notifications: {
         Row: {
           created_at: string
@@ -769,6 +814,7 @@ export type Database = {
       admin_student_overview: {
         Row: {
           amount: number | null
+          amount_due: number | null
           approval_status: string | null
           country: string | null
           currency: string | null
@@ -780,6 +826,7 @@ export type Database = {
           joined_at: string | null
           level: string | null
           name: string | null
+          negative_sessions: number | null
           payment_method: string | null
           payment_provider: string | null
           payment_status: string | null
@@ -787,6 +834,7 @@ export type Database = {
           sessions_remaining: number | null
           sessions_total: number | null
           source_label: string | null
+          unit_price: number | null
           user_id: string | null
         }
         Relationships: []
@@ -795,6 +843,18 @@ export type Database = {
     Functions: {
       add_credits: {
         Args: { _amount: number; _user_id: string }
+        Returns: number
+      }
+      admin_add_attendance: {
+        Args: {
+          p_enrollment_id: string
+          p_note?: string
+          p_session_date: string
+        }
+        Returns: number
+      }
+      admin_remove_attendance: {
+        Args: { p_enrollment_id: string; p_session_date: string }
         Returns: number
       }
       approve_attendance_request: {

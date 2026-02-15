@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +29,7 @@ import StudentManager from "@/components/admin/StudentManager";
 import LifecycleFunnel from "@/components/admin/LifecycleFunnel";
 import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
 import AdminNotifications from "@/components/admin/AdminNotifications";
+import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -69,6 +71,9 @@ interface OverviewRow {
   currency: string | null;
   derived_status: string;
   source_label: string;
+  unit_price: number | null;
+  negative_sessions: number;
+  amount_due: number;
 }
 
 const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
@@ -88,6 +93,7 @@ const AdminDashboard = () => {
   const [studentFilter, setStudentFilter] = useState("all");
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -508,6 +514,8 @@ const AdminDashboard = () => {
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Level</TableHead>
                           <TableHead className="py-3 px-3 font-semibold text-center">Remaining</TableHead>
+                          <TableHead className="py-3 px-3 font-semibold text-center">Negative</TableHead>
+                          <TableHead className="py-3 px-3 font-semibold text-right">Amount Due</TableHead>
                           <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
                           <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Joined</TableHead>
@@ -515,7 +523,7 @@ const AdminDashboard = () => {
                       </TableHeader>
                       <TableBody>
                         {pagedUsers.map((u) => (
-                          <TableRow key={u.user_id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
+                          <TableRow key={u.user_id} className={cn("odd:bg-muted/30 hover:bg-muted/50 transition cursor-pointer", selectedStudentId === u.user_id && "ring-2 ring-primary/40")} onClick={() => setSelectedStudentId(selectedStudentId === u.user_id ? null : (u.enrollment_id ? u.user_id : null))}>
                             <TableCell className="py-3 px-3 font-medium">{u.name || "—"}</TableCell>
                             <TableCell className="py-3 px-3">
                               <Tooltip>
@@ -528,6 +536,8 @@ const AdminDashboard = () => {
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
+                            <TableCell className="py-3 px-3 text-center font-mono">{u.negative_sessions > 0 ? <span className="text-destructive">{u.negative_sessions}</span> : "—"}</TableCell>
+                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{u.amount_due.toLocaleString()}</span> : "—"}</TableCell>
                             <TableCell className="py-3 px-3">
                               <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.derived_status}</Badge>
                             </TableCell>
@@ -560,6 +570,26 @@ const AdminDashboard = () => {
               )}
                 </CardContent>
               </Card>
+
+              {/* Attendance Panel */}
+              {selectedStudentId && (() => {
+                const student = overviewRows.find(u => u.user_id === selectedStudentId);
+                if (!student || !student.enrollment_id) return null;
+                return (
+                  <AdminAttendancePanel
+                    enrollmentId={student.enrollment_id}
+                    userId={student.user_id}
+                    studentName={student.name || student.email}
+                    sessionsRemaining={student.sessions_remaining}
+                    negativeSessions={student.negative_sessions}
+                    amountDue={student.amount_due}
+                    currency={student.currency}
+                    derivedStatus={student.derived_status}
+                    onClose={() => setSelectedStudentId(null)}
+                    onUpdated={fetchAll}
+                  />
+                );
+              })()}
             </TabsContent>
 
             <TabsContent value="enrollments">
