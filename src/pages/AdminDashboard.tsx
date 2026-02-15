@@ -547,7 +547,7 @@ const AdminDashboard = () => {
                 <CardContent className="pt-0">
               {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
                 <Tabs defaultValue="under_review">
-                  <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3">
+                  <TabsList className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3 h-auto bg-transparent p-0 w-full">
                     {[
                       { value: "under_review", label: "Under Review", count: enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length },
                       { value: "pending_payment", label: "Pending Payment", count: enrollments.filter(e => e.approval_status === "PENDING_PAYMENT").length },
@@ -559,7 +559,7 @@ const AdminDashboard = () => {
                         {t.label} ({t.count})
                       </TabsTrigger>
                     ))}
-                  </div>
+                  </TabsList>
 
                   {(["pending_payment", "under_review", "pending", "approved", "rejected"] as const).map((tab) => {
                     const filtered = enrollments.filter((e) => {
