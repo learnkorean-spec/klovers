@@ -196,12 +196,14 @@ const StudentManager = () => {
       return;
     }
     setSaving(true);
+    const totalClasses = Number(form.total_classes) || 0;
+    const computedPricePerClass = totalClasses > 0 ? Math.round(((Number(form.total_paid) || 0) / totalClasses) * 100) / 100 : 0;
     const payload = {
       full_name: form.full_name.trim(), email: form.email.trim().toLowerCase(),
       phone: form.phone.trim(), country: form.country.trim(), status: form.status,
       course_type: form.course_type.trim(), package_name: form.package_name.trim(),
-      total_classes: Number(form.total_classes) || 0, used_classes: Number(form.used_classes) || 0,
-      total_paid: Number(form.total_paid) || 0, price_per_class: Number(form.price_per_class) || 0,
+      total_classes: totalClasses, used_classes: Number(form.used_classes) || 0,
+      total_paid: Number(form.total_paid) || 0, price_per_class: computedPricePerClass,
       payment_status: form.payment_status, notes: form.notes.trim(), group_name: form.group_name,
     };
     if (editingId) {
@@ -592,7 +594,7 @@ const StudentManager = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Remaining</label>
-                <Input type="number" disabled value={Math.max(0, (Number(form.total_classes) || 0) - (Number(form.used_classes) || 0))} />
+                <Input type="number" disabled value={(Number(form.total_classes) || 0) - (Number(form.used_classes) || 0)} />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -602,7 +604,7 @@ const StudentManager = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Price / Class</label>
-                <Input type="number" min={0} value={form.price_per_class} onChange={(e) => setForm(f => ({ ...f, price_per_class: Number(e.target.value) }))} />
+                <Input type="number" disabled value={Number(form.total_classes) > 0 ? Math.round((Number(form.total_paid) / Number(form.total_classes)) * 100) / 100 : 0} />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Payment Status</label>
