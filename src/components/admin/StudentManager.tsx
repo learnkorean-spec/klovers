@@ -21,7 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Search, Download, Trash2, Plus, Edit, CheckCircle, Users, UserCheck, UserX, Settings } from "lucide-react";
+import { Search, Download, Trash2, Plus, Edit, CheckCircle, Users, UserCheck, UserX, Settings, CalendarDays } from "lucide-react";
+import LegacyAttendancePanel from "./LegacyAttendancePanel";
 
 // Overview row from admin_student_overview view
 interface OverviewRow {
@@ -101,6 +102,7 @@ const StudentManager = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [markingAttendance, setMarkingAttendance] = useState<string | null>(null);
+  const [attendancePanelStudent, setAttendancePanelStudent] = useState<LegacyStudent | null>(null);
 
   // Groups
   const [groups, setGroups] = useState<StudentGroup[]>([]);
@@ -473,9 +475,8 @@ const StudentManager = () => {
                       <TableCell>{paymentBadge(s.payment_status)}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="outline" size="sm" onClick={() => handleMarkAttendance(s.id)}
-                            disabled={markingAttendance === s.id || s.remaining_classes <= 0} title="Mark Attendance">
-                            <CheckCircle className="h-3.5 w-3.5" />
+                          <Button variant="outline" size="sm" onClick={() => setAttendancePanelStudent(s)} title="Manage Dates">
+                            <CalendarDays className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => openEdit(s)} title="Edit">
                             <Edit className="h-3.5 w-3.5" />
@@ -501,6 +502,20 @@ const StudentManager = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Attendance Panel for selected student */}
+          {attendancePanelStudent && (
+            <div className="mt-4">
+              <LegacyAttendancePanel
+                studentId={attendancePanelStudent.id}
+                studentName={attendancePanelStudent.full_name}
+                totalClasses={attendancePanelStudent.total_classes}
+                pricePerClass={attendancePanelStudent.price_per_class}
+                onClose={() => setAttendancePanelStudent(null)}
+                onUpdated={fetchLegacyStudents}
+              />
             </div>
           )}
         </TabsContent>
