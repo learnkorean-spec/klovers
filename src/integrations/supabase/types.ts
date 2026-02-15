@@ -120,6 +120,13 @@ export type Database = {
             foreignKeyName: "attendance_requests_enrollment_id_fkey"
             columns: ["enrollment_id"]
             isOneToOne: false
+            referencedRelation: "admin_student_overview"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "attendance_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
             referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
@@ -157,6 +164,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "batches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_members_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "admin_student_overview"
+            referencedColumns: ["enrollment_id"]
           },
           {
             foreignKeyName: "batch_members_enrollment_id_fkey"
@@ -752,7 +766,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_student_overview: {
+        Row: {
+          amount: number | null
+          approval_status: string | null
+          country: string | null
+          currency: string | null
+          derived_status: string | null
+          duration: number | null
+          email: string | null
+          enrollment_created_at: string | null
+          enrollment_id: string | null
+          joined_at: string | null
+          level: string | null
+          name: string | null
+          payment_method: string | null
+          payment_provider: string | null
+          payment_status: string | null
+          plan_type: string | null
+          sessions_remaining: number | null
+          sessions_total: number | null
+          source_label: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_credits: {

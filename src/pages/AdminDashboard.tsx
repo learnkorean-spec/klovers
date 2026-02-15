@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -48,41 +48,66 @@ interface AttendanceReq {
   profiles?: { name: string; email: string; credits: number } | null;
 }
 
+interface OverviewRow {
+  user_id: string;
+  name: string;
+  email: string;
+  country: string;
+  level: string;
+  joined_at: string;
+  enrollment_id: string | null;
+  payment_status: string | null;
+  approval_status: string | null;
+  payment_method: string | null;
+  payment_provider: string | null;
+  sessions_total: number;
+  sessions_remaining: number;
+  enrollment_created_at: string | null;
+  plan_type: string | null;
+  duration: number | null;
+  amount: number | null;
+  currency: string | null;
+  derived_status: string;
+  source_label: string;
+}
+
 const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
+const PAGE_SIZE = 25;
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [attendanceReqs, setAttendanceReqs] = useState<AttendanceReq[]>([]);
-  const [profiles, setProfiles] = useState<{ user_id: string; name: string; email: string; country: string; level: string; credits: number; status: string; created_at: string }[]>([]);
+  const [overviewRows, setOverviewRows] = useState<OverviewRow[]>([]);
   const [search, setSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
-  const [studentsData, setStudentsData] = useState<any[]>([]);
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentByEmail, setStudentByEmail] = useState<Record<string, any>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [leadsError, setLeadsError] = useState<string | null>(null);
+  const [studentPage, setStudentPage] = useState(0);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, profilesRes, studentsRes, batchMembersRes, groupsRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, studentsRes, batchMembersRes, groupsRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("user_id, name, email, credits, country, level, status, created_at"),
+      supabase.from("admin_student_overview" as any).select("*"),
       supabase.from("students").select("status, used_classes, total_classes, email, full_name, group_name, remaining_classes, price_per_class"),
       supabase.from("batch_members").select("user_id, batch_id, member_status"),
       supabase.from("student_groups").select("id, name"),
     ]);
 
-    const profileMap: Record<string, { name: string; email: string; credits: number; country: string; level: string; status: string; created_at: string }> = {};
-    if (profilesRes.data) {
-      (profilesRes.data as any[]).forEach((p) => { profileMap[p.user_id] = p; });
+    // Build profile map from overview for enrollment enrichment
+    const profileMap: Record<string, { name: string; email: string }> = {};
+    if (overviewRes.data) {
+      (overviewRes.data as any[]).forEach((r: any) => { profileMap[r.user_id] = { name: r.name, email: r.email }; });
     }
 
     const groupNameMap: Record<string, string> = {};
@@ -134,9 +159,8 @@ const AdminDashboard = () => {
     }
 
     if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
-    if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] || null })));
-    if (profilesRes.data) setProfiles(profilesRes.data as any[]);
-    if (studentsRes.data) setStudentsData(studentsRes.data as any[]);
+    if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] ? { ...profileMap[a.user_id], credits: 0 } : null })));
+    if (overviewRes.data) setOverviewRows(overviewRes.data as any[]);
     setUserGroupMap(_userGroupMap);
     setStudentByEmail(_studentByEmail);
     setLoading(false);
@@ -334,93 +358,40 @@ const AdminDashboard = () => {
   ).length;
   const pendingAttendance = attendanceReqs.filter(a => a.status === "PENDING").length;
 
-  // === UNIFIED DATASET: profiles + latest enrollment ===
-  interface UnifiedUser {
-    user_id: string;
-    name: string;
-    email: string;
-    country: string;
-    level: string;
-    joined_at: string;
-    // from latest enrollment
-    payment_status: string | null;
-    approval_status: string | null;
-    payment_method: string | null;
-    payment_provider: string | null;
-    sessions_total: number;
-    sessions_remaining: number;
-    enrollment_created_at: string | null;
-    // derived
-    ui_status: string;
-    source_label: string;
-  }
+  // === UNIFIED DATASET from DB view ===
+  const lifecycleLeads = overviewRows.filter(u => u.derived_status === "LEAD").length;
+  const lifecycleActive = overviewRows.filter(u => u.derived_status === "ACTIVE").length;
+  const lifecycleCompleted = overviewRows.filter(u => u.derived_status === "COMPLETED").length;
+  const lifecycleLocked = overviewRows.filter(u => u.derived_status === "LOCKED").length;
+  const lifecycleConfirmedTotal = overviewRows.filter(u => ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.derived_status)).length;
 
-  const unifiedUsers: UnifiedUser[] = useMemo(() => {
-    return profiles.map(p => {
-      // Find latest enrollment for this user
-      const userEnrollments = enrollments
-        .filter(e => e.user_id === p.user_id)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      const latest = userEnrollments[0] || null;
-
-      const isConfirmed = latest?.approval_status === "APPROVED" && latest?.payment_status === "PAID";
-      const sessionsRemaining = latest?.sessions_remaining ?? 0;
-
-      let ui_status = "LEAD";
-      if (!latest) {
-        ui_status = "LEAD";
-      } else if (sessionsRemaining <= -3 && isConfirmed) {
-        ui_status = "LOCKED";
-      } else if (isConfirmed && sessionsRemaining === 0) {
-        ui_status = "COMPLETED";
-      } else if (isConfirmed && sessionsRemaining > -3) {
-        ui_status = "ACTIVE";
-      } else {
-        ui_status = "LEAD";
-      }
-
-      // Source label
-      let source_label = "—";
-      if (latest?.payment_provider === "stripe") source_label = "Stripe";
-      else if (latest?.payment_provider === "egypt_manual") source_label = "Egypt";
-      else if (latest?.payment_provider === "manual") source_label = "Manual";
-      else if (latest?.payment_method === "vodafone_cash" || latest?.payment_method === "instapay") source_label = "Egypt";
-
-      return {
-        user_id: p.user_id,
-        name: p.name,
-        email: p.email,
-        country: p.country,
-        level: p.level,
-        joined_at: p.created_at,
-        payment_status: latest?.payment_status ?? null,
-        approval_status: latest?.approval_status ?? null,
-        payment_method: latest?.payment_method ?? null,
-        payment_provider: latest?.payment_provider ?? null,
-        sessions_total: latest?.sessions_remaining !== undefined ? (latest as any).sessions_total ?? 0 : 0,
-        sessions_remaining: sessionsRemaining,
-        enrollment_created_at: latest?.created_at ?? null,
-        ui_status,
-        source_label,
-      };
-    });
-  }, [profiles, enrollments]);
-
-  // Lifecycle counts from unified dataset
-  const lifecycleLeads = unifiedUsers.filter(u => u.ui_status === "LEAD").length;
-  const lifecycleActive = unifiedUsers.filter(u => u.ui_status === "ACTIVE").length;
-  const lifecycleCompleted = unifiedUsers.filter(u => u.ui_status === "COMPLETED").length;
-  const lifecycleLocked = unifiedUsers.filter(u => u.ui_status === "LOCKED").length;
-  const lifecycleConfirmedTotal = unifiedUsers.filter(u => ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.ui_status)).length;
-
-  // Filter counts from unified dataset
   const confirmedCount = lifecycleConfirmedTotal;
   const leadsProfileCount = lifecycleLeads;
-  const stripeCount = unifiedUsers.filter(u => u.source_label === "Stripe").length;
-  const egyptCount = unifiedUsers.filter(u => u.source_label === "Egypt").length;
+  const stripeCount = overviewRows.filter(u => u.source_label === "Stripe").length;
+  const egyptCount = overviewRows.filter(u => u.source_label === "Egypt").length;
+
+  // Filtered + searched users from view
+  const filteredUsers = useMemo(() => {
+    return overviewRows.filter(u => {
+      const matchesSearch = !studentSearch || u.name?.toLowerCase().includes(studentSearch.toLowerCase()) || u.email?.toLowerCase().includes(studentSearch.toLowerCase());
+      const matchesFilter = studentFilter === "confirmed" ? ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.derived_status)
+        : studentFilter === "leads" ? u.derived_status === "LEAD"
+        : studentFilter === "stripe" ? u.source_label === "Stripe"
+        : studentFilter === "egypt" ? u.source_label === "Egypt"
+        : true;
+      return matchesSearch && matchesFilter;
+    });
+  }, [overviewRows, studentSearch, studentFilter]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const pagedUsers = filteredUsers.slice(studentPage * PAGE_SIZE, (studentPage + 1) * PAGE_SIZE);
+
+  // Reset page when filters change
+  useEffect(() => { setStudentPage(0); }, [studentSearch, studentFilter]);
 
   const studentFilterOptions = [
-    { value: "all", label: `All (${unifiedUsers.length})` },
+    { value: "all", label: `All (${overviewRows.length})` },
     { value: "confirmed", label: `Confirmed (${confirmedCount})` },
     { value: "leads", label: `Leads (${leadsProfileCount})` },
     { value: "stripe", label: `Stripe (${stripeCount})` },
@@ -444,7 +415,7 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
           <LifecycleFunnel
             leadsCount={lifecycleLeads}
-            registeredCount={unifiedUsers.length}
+            registeredCount={overviewRows.length}
             enrolledCount={lifecycleConfirmedTotal}
             activeCount={lifecycleActive}
             completedCount={lifecycleCompleted + lifecycleLocked}
@@ -453,7 +424,7 @@ const AdminDashboard = () => {
           <Tabs defaultValue="students">
             <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
               <TabsTrigger value="students" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
-                Users ({unifiedUsers.length})
+                Users ({overviewRows.length})
               </TabsTrigger>
               <TabsTrigger value="enrollments" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 Enrollments
@@ -483,7 +454,7 @@ const AdminDashboard = () => {
                   <div className="flex flex-col gap-4">
                      <div className="flex items-center justify-between">
                       <CardTitle className="text-base">Users</CardTitle>
-                      <p className="text-xs text-muted-foreground">{unifiedUsers.length} total</p>
+                      <p className="text-xs text-muted-foreground">{filteredUsers.length} of {overviewRows.length}</p>
                     </div>
                     {/* Responsive student filters */}
                     {isMobile ? (
@@ -516,20 +487,11 @@ const AdminDashboard = () => {
                     <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
+                        <Input placeholder="Search by name or email..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
                       </div>
                       <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => {
-                        const data = unifiedUsers.filter(u => {
-                          const matchesSearch = !studentSearch || u.name.toLowerCase().includes(studentSearch.toLowerCase()) || u.email.toLowerCase().includes(studentSearch.toLowerCase());
-                          const matchesFilter = studentFilter === "confirmed" ? ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.ui_status)
-                            : studentFilter === "leads" ? u.ui_status === "LEAD"
-                            : studentFilter === "stripe" ? u.source_label === "Stripe"
-                            : studentFilter === "egypt" ? u.source_label === "Egypt"
-                            : true;
-                          return matchesSearch && matchesFilter;
-                        });
                         const headers = ["Name", "Email", "Country", "Level", "Remaining Sessions", "Status", "Source", "Joined"];
-                        const rows = data.map(u => [u.name, u.email, u.country, u.level, u.sessions_remaining, u.ui_status, u.source_label, new Date(u.joined_at).toLocaleDateString()]);
+                        const rows = filteredUsers.map(u => [u.name, u.email, u.country, u.level, u.sessions_remaining, u.derived_status, u.source_label, new Date(u.joined_at).toLocaleDateString()]);
                         const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
                         const blob = new Blob([csv], { type: "text/csv" });
                         const url = URL.createObjectURL(blob);
@@ -545,65 +507,67 @@ const AdminDashboard = () => {
                 <CardContent className="pt-0">
               {loading ? (
                 <p className="text-muted-foreground text-center py-8">Loading...</p>
+              ) : filteredUsers.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No students found.</p>
               ) : (
                 <>
-                  {(() => {
-                     const filteredUsers = unifiedUsers.filter(u => {
-                       const matchesSearch = !studentSearch || u.name.toLowerCase().includes(studentSearch.toLowerCase()) || u.email.toLowerCase().includes(studentSearch.toLowerCase());
-                       const matchesFilter = studentFilter === "confirmed" ? ["ACTIVE", "COMPLETED", "LOCKED"].includes(u.ui_status)
-                         : studentFilter === "leads" ? u.ui_status === "LEAD"
-                         : studentFilter === "stripe" ? u.source_label === "Stripe"
-                         : studentFilter === "egypt" ? u.source_label === "Egypt"
-                         : true;
-                       return matchesSearch && matchesFilter;
-                     });
-
-                     if (filteredUsers.length === 0) return <p className="text-muted-foreground text-center py-8">No students found.</p>;
-
-                    return (
-                      <div className="border rounded-xl max-h-[600px] overflow-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
-                              <TableHead className="py-3 px-3 font-semibold">Name</TableHead>
-                              <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
-                              <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
-                              <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Level</TableHead>
-                              <TableHead className="py-3 px-3 font-semibold text-center">Remaining</TableHead>
-                              <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
-                              <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
-                              <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Joined</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredUsers.map((u) => (
-                              <TableRow key={u.user_id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
-                                <TableCell className="py-3 px-3 font-medium">{u.name || "—"}</TableCell>
-                                <TableCell className="py-3 px-3">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="block max-w-[240px] truncate">{u.email}</span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>{u.email}</TooltipContent>
-                                  </Tooltip>
-                                </TableCell>
-                                <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
-                                <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
-                                <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
-                                <TableCell className="py-3 px-3">
-                                  <Badge variant={u.ui_status === "ACTIVE" ? "default" : u.ui_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.ui_status}</Badge>
-                                </TableCell>
-                                <TableCell className="py-3 px-3 hidden md:table-cell">
-                                  <Badge variant="outline" className="text-xs">{u.source_label}</Badge>
-                                </TableCell>
-                                <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(u.joined_at).toLocaleDateString()}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                  <div className="border rounded-xl overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
+                          <TableHead className="py-3 px-3 font-semibold">Name</TableHead>
+                          <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
+                          <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
+                          <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Level</TableHead>
+                          <TableHead className="py-3 px-3 font-semibold text-center">Remaining</TableHead>
+                          <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
+                          <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
+                          <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Joined</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pagedUsers.map((u) => (
+                          <TableRow key={u.user_id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
+                            <TableCell className="py-3 px-3 font-medium">{u.name || "—"}</TableCell>
+                            <TableCell className="py-3 px-3">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="block max-w-[240px] truncate">{u.email}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>{u.email}</TooltipContent>
+                              </Tooltip>
+                            </TableCell>
+                            <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
+                            <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
+                            <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
+                            <TableCell className="py-3 px-3">
+                              <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.derived_status}</Badge>
+                            </TableCell>
+                            <TableCell className="py-3 px-3 hidden md:table-cell">
+                              <Badge variant="outline" className="text-xs">{u.source_label}</Badge>
+                            </TableCell>
+                            <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(u.joined_at).toLocaleDateString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-4">
+                      <p className="text-xs text-muted-foreground">
+                        Page {studentPage + 1} of {totalPages} · {filteredUsers.length} results
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage === 0} onClick={() => setStudentPage(p => p - 1)}>
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage >= totalPages - 1} onClick={() => setStudentPage(p => p + 1)}>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
-                    );
-                  })()}
+                    </div>
+                  )}
                 </>
               )}
                 </CardContent>
