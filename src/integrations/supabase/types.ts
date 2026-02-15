@@ -103,6 +103,7 @@ export type Database = {
           marked_at: string
           marked_by: string
           notes: string | null
+          package_id: string | null
           session_date: string | null
           student_id: string
         }
@@ -111,6 +112,7 @@ export type Database = {
           marked_at?: string
           marked_by: string
           notes?: string | null
+          package_id?: string | null
           session_date?: string | null
           student_id: string
         }
@@ -119,10 +121,18 @@ export type Database = {
           marked_at?: string
           marked_by?: string
           notes?: string | null
+          package_id?: string | null
           session_date?: string | null
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_log_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "student_packages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_log_student_id_fkey"
             columns: ["student_id"]
@@ -695,6 +705,56 @@ export type Database = {
           schedule_timezone?: string | null
         }
         Relationships: []
+      }
+      student_packages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          package_name: string
+          payment_status: string
+          price_per_class: number
+          student_id: string
+          total_classes: number
+          total_paid: number
+          used_classes: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          package_name?: string
+          payment_status?: string
+          price_per_class?: number
+          student_id: string
+          total_classes?: number
+          total_paid?: number
+          used_classes?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          package_name?: string
+          payment_status?: string
+          price_per_class?: number
+          student_id?: string
+          total_classes?: number
+          total_paid?: number
+          used_classes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_packages_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_schedule_preferences: {
         Row: {

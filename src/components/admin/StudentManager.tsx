@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Search, Download, Trash2, Plus, Edit, CheckCircle, Users, UserCheck, UserX, Settings, CalendarDays } from "lucide-react";
+import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History } from "lucide-react";
 import LegacyAttendancePanel from "./LegacyAttendancePanel";
 
 // Overview row from admin_student_overview view
@@ -51,7 +51,7 @@ interface OverviewRow {
   amount_due: number;
 }
 
-// Legacy student from students table (for legacy CRUD tab)
+// Legacy student from students table
 interface LegacyStudent {
   id: string;
   full_name: string;
@@ -72,20 +72,37 @@ interface LegacyStudent {
   group_name: string;
 }
 
+interface StudentPackage {
+  id: string;
+  student_id: string;
+  package_name: string;
+  total_classes: number;
+  used_classes: number;
+  total_paid: number;
+  price_per_class: number;
+  payment_status: string;
+  is_active: boolean;
+  notes: string;
+  created_at: string;
+}
+
 interface StudentGroup {
   id: string;
   name: string;
   created_at: string;
 }
 
-const EMPTY_FORM: Omit<LegacyStudent, "id" | "remaining_classes" | "created_at"> = {
+const EMPTY_STUDENT_FORM = {
   full_name: "", email: "", phone: "", country: "", status: "lead",
-  course_type: "", package_name: "", total_classes: 0, used_classes: 0,
-  total_paid: 0, price_per_class: 0, payment_status: "pending", notes: "", group_name: "",
+  course_type: "", notes: "", group_name: "",
+};
+
+const EMPTY_PACKAGE_FORM = {
+  package_name: "", total_classes: 0, total_paid: 0, payment_status: "pending",
 };
 
 const StudentManager = () => {
-  // Overview (single source of truth)
+  // Overview
   const [overviewRows, setOverviewRows] = useState<OverviewRow[]>([]);
   const [overviewSearch, setOverviewSearch] = useState("");
   const [overviewFilter, setOverviewFilter] = useState("all");
@@ -97,12 +114,31 @@ const StudentManager = () => {
   const [legacyStatusFilter, setLegacyStatusFilter] = useState("all");
   const [legacyGroupFilter, setLegacyGroupFilter] = useState("all");
   const [legacyLoading, setLegacyLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+
+  // Student dialog (add/edit student info)
+  const [studentDialogOpen, setStudentDialogOpen] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [studentForm, setStudentForm] = useState(EMPTY_STUDENT_FORM);
   const [saving, setSaving] = useState(false);
-  const [markingAttendance, setMarkingAttendance] = useState<string | null>(null);
-  const [attendancePanelStudent, setAttendancePanelStudent] = useState<LegacyStudent | null>(null);
+
+  // Package dialog (add new package to student)
+  const [packageDialogOpen, setPackageDialogOpen] = useState(false);
+  const [packageStudentId, setPackageStudentId] = useState<string | null>(null);
+  const [packageStudentName, setPackageStudentName] = useState("");
+  const [packageForm, setPackageForm] = useState(EMPTY_PACKAGE_FORM);
+  const [savingPackage, setSavingPackage] = useState(false);
+
+  // Package history dialog
+  const [packagesDialogOpen, setPackagesDialogOpen] = useState(false);
+  const [packagesForStudent, setPackagesForStudent] = useState<StudentPackage[]>([]);
+  const [packagesStudentName, setPackagesStudentName] = useState("");
+  const [packagesLoading, setPackagesLoading] = useState(false);
+
+  // Attendance panel
+  const [attendancePackage, setAttendancePackage] = useState<{
+    packageId: string; studentId: string; studentName: string;
+    packageName: string; totalClasses: number; pricePerClass: number;
+  } | null>(null);
 
   // Groups
   const [groups, setGroups] = useState<StudentGroup[]>([]);
@@ -117,9 +153,7 @@ const StudentManager = () => {
   const fetchOverview = async () => {
     setOverviewLoading(true);
     const { data, error } = await supabase.from("admin_student_overview" as any).select("*");
-    if (error) {
-      toast({ title: "Error loading overview", description: error.message, variant: "destructive" });
-    }
+    if (error) toast({ title: "Error loading overview", description: error.message, variant: "destructive" });
     setOverviewRows((data as any[]) || []);
     setOverviewLoading(false);
   };
@@ -127,20 +161,14 @@ const StudentManager = () => {
   const fetchLegacyStudents = async () => {
     setLegacyLoading(true);
     const { data, error } = await supabase.from("students").select("*").order("created_at", { ascending: false });
-    if (error) {
-      toast({ title: "Error loading students", description: error.message, variant: "destructive" });
-    }
+    if (error) toast({ title: "Error loading students", description: error.message, variant: "destructive" });
     setLegacyStudents(((data as any[]) || []).map(s => ({ ...s, group_name: s.group_name || "" })));
     setLegacyLoading(false);
   };
 
-  useEffect(() => {
-    fetchOverview();
-    fetchLegacyStudents();
-    fetchGroups();
-  }, []);
+  useEffect(() => { fetchOverview(); fetchLegacyStudents(); fetchGroups(); }, []);
 
-  // === OVERVIEW TAB LOGIC ===
+  // === OVERVIEW TAB ===
   const filteredOverview = useMemo(() => {
     return overviewRows.filter(u => {
       const matchesSearch = !overviewSearch ||
@@ -165,7 +193,7 @@ const StudentManager = () => {
     completed: overviewRows.filter(u => ["COMPLETED", "LOCKED"].includes(u.derived_status)).length,
   }), [overviewRows]);
 
-  // === LEGACY TAB LOGIC ===
+  // === LEGACY TAB ===
   const filteredLegacy = useMemo(() => {
     return legacyStudents.filter((s) => {
       const matchSearch = !legacySearch ||
@@ -177,68 +205,156 @@ const StudentManager = () => {
     });
   }, [legacyStudents, legacySearch, legacyStatusFilter, legacyGroupFilter]);
 
-  const openAdd = () => { setEditingId(null); setForm(EMPTY_FORM); setDialogOpen(true); };
-  const openEdit = (s: LegacyStudent) => {
-    setEditingId(s.id);
-    setForm({
-      full_name: s.full_name, email: s.email, phone: s.phone, country: s.country,
-      status: s.status, course_type: s.course_type, package_name: s.package_name,
-      total_classes: s.total_classes, used_classes: s.used_classes, total_paid: s.total_paid,
-      price_per_class: s.price_per_class, payment_status: s.payment_status, notes: s.notes,
-      group_name: s.group_name || "",
-    });
-    setDialogOpen(true);
+  // === STUDENT CRUD ===
+  const openAddStudent = () => {
+    setEditingStudentId(null);
+    setStudentForm(EMPTY_STUDENT_FORM);
+    setStudentDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!form.full_name.trim() || !form.email.trim()) {
+  const openEditStudent = (s: LegacyStudent) => {
+    setEditingStudentId(s.id);
+    setStudentForm({
+      full_name: s.full_name, email: s.email, phone: s.phone, country: s.country,
+      status: s.status, course_type: s.course_type, notes: s.notes,
+      group_name: s.group_name || "",
+    });
+    setStudentDialogOpen(true);
+  };
+
+  const handleSaveStudent = async () => {
+    if (!studentForm.full_name.trim() || !studentForm.email.trim()) {
       toast({ title: "Name and email are required", variant: "destructive" });
       return;
     }
     setSaving(true);
-    const totalClasses = Number(form.total_classes) || 0;
-    const computedPricePerClass = totalClasses > 0 ? Math.round(((Number(form.total_paid) || 0) / totalClasses) * 100) / 100 : 0;
+    const email = studentForm.email.trim().toLowerCase();
     const payload = {
-      full_name: form.full_name.trim(), email: form.email.trim().toLowerCase(),
-      phone: form.phone.trim(), country: form.country.trim(), status: form.status,
-      course_type: form.course_type.trim(), package_name: form.package_name.trim(),
-      total_classes: totalClasses, used_classes: Number(form.used_classes) || 0,
-      total_paid: Number(form.total_paid) || 0, price_per_class: computedPricePerClass,
-      payment_status: form.payment_status, notes: form.notes.trim(), group_name: form.group_name,
+      full_name: studentForm.full_name.trim(), email,
+      phone: studentForm.phone.trim(), country: studentForm.country.trim(),
+      status: studentForm.status, course_type: studentForm.course_type.trim(),
+      notes: studentForm.notes.trim(), group_name: studentForm.group_name,
     };
-    if (editingId) {
-      const { error } = await supabase.from("students").update(payload as any).eq("id", editingId);
+
+    if (editingStudentId) {
+      // Editing existing student
+      const { error } = await supabase.from("students").update(payload as any).eq("id", editingStudentId);
       if (error) toast({ title: "Error updating", description: error.message, variant: "destructive" });
       else toast({ title: "Student updated" });
     } else {
-      const { error } = await supabase.from("students").insert(payload as any);
-      if (error) {
-        const msg = error.message?.includes("duplicate") ? "A student with this email already exists." : error.message;
-        toast({ title: "Error adding student", description: msg, variant: "destructive" });
-      } else toast({ title: "Student added" });
+      // Check if email already exists
+      const { data: existing } = await supabase
+        .from("students").select("id").eq("email", email).maybeSingle();
+
+      if (existing) {
+        // Update existing student info
+        const { error } = await supabase.from("students").update(payload as any).eq("id", (existing as any).id);
+        if (error) toast({ title: "Error updating", description: error.message, variant: "destructive" });
+        else toast({ title: "Student already exists", description: "Data updated successfully." });
+      } else {
+        // Insert new student
+        const { error } = await supabase.from("students").insert(payload as any);
+        if (error) toast({ title: "Error adding student", description: error.message, variant: "destructive" });
+        else toast({ title: "Student added" });
+      }
     }
+
     setSaving(false);
-    setDialogOpen(false);
+    setStudentDialogOpen(false);
     fetchLegacyStudents();
   };
 
+  // === PACKAGE CRUD ===
+  const openAddPackage = (student: LegacyStudent) => {
+    setPackageStudentId(student.id);
+    setPackageStudentName(student.full_name);
+    setPackageForm(EMPTY_PACKAGE_FORM);
+    setPackageDialogOpen(true);
+  };
+
+  const handleSavePackage = async () => {
+    if (!packageStudentId) return;
+    const totalClasses = Number(packageForm.total_classes) || 0;
+    const totalPaid = Number(packageForm.total_paid) || 0;
+    const pricePerClass = totalClasses > 0 ? Math.round((totalPaid / totalClasses) * 100) / 100 : 0;
+
+    setSavingPackage(true);
+
+    // Deactivate existing active packages for this student
+    await supabase
+      .from("student_packages" as any)
+      .update({ is_active: false } as any)
+      .eq("student_id", packageStudentId)
+      .eq("is_active", true);
+
+    // Insert new active package
+    const { error } = await supabase
+      .from("student_packages" as any)
+      .insert({
+        student_id: packageStudentId,
+        package_name: packageForm.package_name.trim(),
+        total_classes: totalClasses,
+        used_classes: 0,
+        total_paid: totalPaid,
+        price_per_class: pricePerClass,
+        payment_status: packageForm.payment_status,
+        is_active: true,
+      } as any);
+
+    if (error) {
+      toast({ title: "Error adding package", description: error.message, variant: "destructive" });
+    } else {
+      // Sync students table with the new package info
+      await supabase.from("students").update({
+        package_name: packageForm.package_name.trim(),
+        total_classes: totalClasses,
+        used_classes: 0,
+        total_paid: totalPaid,
+        price_per_class: pricePerClass,
+        payment_status: packageForm.payment_status,
+      } as any).eq("id", packageStudentId);
+
+      toast({ title: "Package added", description: `New package for ${packageStudentName}` });
+      fetchLegacyStudents();
+    }
+    setSavingPackage(false);
+    setPackageDialogOpen(false);
+  };
+
+  // === PACKAGE HISTORY ===
+  const openPackageHistory = async (student: LegacyStudent) => {
+    setPackagesStudentName(student.full_name);
+    setPackagesLoading(true);
+    setPackagesDialogOpen(true);
+
+    const { data, error } = await supabase
+      .from("student_packages" as any)
+      .select("*")
+      .eq("student_id", student.id)
+      .order("created_at", { ascending: false });
+
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    setPackagesForStudent((data as any[]) || []);
+    setPackagesLoading(false);
+  };
+
+  const openAttendanceForPackage = (pkg: StudentPackage, studentName: string) => {
+    setAttendancePackage({
+      packageId: pkg.id,
+      studentId: pkg.student_id,
+      studentName,
+      packageName: pkg.package_name,
+      totalClasses: pkg.total_classes,
+      pricePerClass: pkg.price_per_class,
+    });
+    setPackagesDialogOpen(false);
+  };
+
+  // === STUDENT ACTIONS ===
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("students").delete().eq("id", id);
     if (error) toast({ title: "Error deleting", description: error.message, variant: "destructive" });
     else { toast({ title: "Student deleted" }); fetchLegacyStudents(); }
-  };
-
-  const handleMarkAttendance = async (studentId: string) => {
-    setMarkingAttendance(studentId);
-    const { data, error } = await supabase.rpc("mark_student_attendance", { _student_id: studentId } as any);
-    if (error) {
-      const msg = error.message?.includes("No remaining") ? "No remaining classes for this student." : error.message;
-      toast({ title: "Error", description: msg, variant: "destructive" });
-    } else {
-      toast({ title: "Attendance marked", description: `Remaining classes: ${data}` });
-      fetchLegacyStudents();
-    }
-    setMarkingAttendance(null);
   };
 
   const handleGroupChange = async (studentId: string, groupName: string) => {
@@ -307,9 +423,8 @@ const StudentManager = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW TAB — single source of truth */}
+        {/* OVERVIEW TAB */}
         <TabsContent value="overview">
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <Card><CardContent className="pt-4 text-center">
               <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
@@ -333,7 +448,6 @@ const StudentManager = () => {
             </CardContent></Card>
           </div>
 
-          {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -354,7 +468,6 @@ const StudentManager = () => {
             <Button variant="outline" size="sm" onClick={exportOverviewCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
           </div>
 
-          {/* Table */}
           {overviewLoading ? (
             <p className="text-muted-foreground text-center py-8">Loading...</p>
           ) : filteredOverview.length === 0 ? (
@@ -399,7 +512,7 @@ const StudentManager = () => {
           )}
         </TabsContent>
 
-        {/* LEGACY MANUAL STUDENTS TAB */}
+        {/* LEGACY MANUAL TAB */}
         <TabsContent value="legacy">
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
@@ -426,7 +539,7 @@ const StudentManager = () => {
             <Button variant="outline" size="sm" onClick={() => setManageGroupsOpen(true)} title="Manage Groups">
               <Settings className="h-4 w-4 mr-1" /> Groups
             </Button>
-            <Button onClick={openAdd} size="sm"><Plus className="h-4 w-4 mr-1" /> Add</Button>
+            <Button onClick={openAddStudent} size="sm"><Plus className="h-4 w-4 mr-1" /> Add</Button>
           </div>
 
           {legacyLoading ? (
@@ -452,108 +565,118 @@ const StudentManager = () => {
                     <TableRow>
                       <TableCell colSpan={9} className="text-center text-muted-foreground py-8">No students found.</TableCell>
                     </TableRow>
-                  ) : filteredLegacy.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.full_name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{s.email}</TableCell>
-                      <TableCell>{statusBadge(s.status)}</TableCell>
-                      <TableCell>
-                        {s.status === "student" ? (
-                          <Select value={s.group_name || "unassigned"} onValueChange={(v) => handleGroupChange(s.id, v)}>
-                            <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Assign group" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="unassigned">— None —</SelectItem>
-                              {groups.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        ) : <span className="text-xs text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-sm">{s.package_name || "—"}</TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-sm">{s.used_classes}/{s.total_classes}</span>
-                        <span className="text-xs text-muted-foreground ml-1">({s.remaining_classes} left)</span>
-                      </TableCell>
-                      <TableCell className="text-right text-sm">${s.total_paid}</TableCell>
-                      <TableCell>{paymentBadge(s.payment_status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="outline" size="sm" onClick={() => setAttendancePanelStudent(s)} title="Manage Dates">
-                            <CalendarDays className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => openEdit(s)} title="Edit">
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm" title="Delete"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete {s.full_name}?</AlertDialogTitle>
-                                <AlertDialogDescription>This will permanently remove this student.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(s.id)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  ) : filteredLegacy.map((s) => {
+                    const remaining = s.total_classes - s.used_classes;
+                    return (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.full_name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{s.email}</TableCell>
+                        <TableCell>{statusBadge(s.status)}</TableCell>
+                        <TableCell>
+                          {s.status === "student" ? (
+                            <Select value={s.group_name || "unassigned"} onValueChange={(v) => handleGroupChange(s.id, v)}>
+                              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Assign group" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unassigned">— None —</SelectItem>
+                                {groups.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          ) : <span className="text-xs text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell className="text-sm">{s.package_name || "—"}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-sm">{s.used_classes}/{s.total_classes}</span>
+                          <span className={`text-xs ml-1 ${remaining < 0 ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                            ({remaining} left)
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-sm">${s.total_paid}</TableCell>
+                        <TableCell>{paymentBadge(s.payment_status)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="outline" size="sm" onClick={() => openPackageHistory(s)} title="View Packages">
+                              <History className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => openAddPackage(s)} title="Add Package">
+                              <Package className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => openEditStudent(s)} title="Edit">
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" title="Delete"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete {s.full_name}?</AlertDialogTitle>
+                                  <AlertDialogDescription>This will permanently remove this student and all their packages.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(s.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           )}
 
-          {/* Attendance Panel for selected student */}
-          {attendancePanelStudent && (
+          {/* Attendance Panel */}
+          {attendancePackage && (
             <div className="mt-4">
               <LegacyAttendancePanel
-                studentId={attendancePanelStudent.id}
-                studentName={attendancePanelStudent.full_name}
-                totalClasses={attendancePanelStudent.total_classes}
-                pricePerClass={attendancePanelStudent.price_per_class}
-                onClose={() => setAttendancePanelStudent(null)}
-                onUpdated={fetchLegacyStudents}
+                packageId={attendancePackage.packageId}
+                studentId={attendancePackage.studentId}
+                studentName={attendancePackage.studentName}
+                packageName={attendancePackage.packageName}
+                totalClasses={attendancePackage.totalClasses}
+                pricePerClass={attendancePackage.pricePerClass}
+                onClose={() => setAttendancePackage(null)}
+                onUpdated={() => { fetchLegacyStudents(); }}
               />
             </div>
           )}
         </TabsContent>
       </Tabs>
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Add/Edit Student Dialog */}
+      <Dialog open={studentDialogOpen} onOpenChange={setStudentDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Student" : "Add Student"}</DialogTitle>
+            <DialogTitle>{editingStudentId ? "Edit Student" : "Add Student"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Full Name *</label>
-                <Input value={form.full_name} onChange={(e) => setForm(f => ({ ...f, full_name: e.target.value }))} />
+                <Input value={studentForm.full_name} onChange={(e) => setStudentForm(f => ({ ...f, full_name: e.target.value }))} />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Email *</label>
-                <Input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} />
+                <Input type="email" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Phone</label>
-                <Input value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} />
+                <Input value={studentForm.phone} onChange={(e) => setStudentForm(f => ({ ...f, phone: e.target.value }))} />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Country</label>
-                <Input value={form.country} onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))} />
+                <Input value={studentForm.country} onChange={(e) => setStudentForm(f => ({ ...f, country: e.target.value }))} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Status</label>
-                <Select value={form.status} onValueChange={(v) => setForm(f => ({ ...f, status: v }))}>
+                <Select value={studentForm.status} onValueChange={(v) => setStudentForm(f => ({ ...f, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="lead">Lead</SelectItem>
@@ -564,13 +687,13 @@ const StudentManager = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Course Type</label>
-                <Input value={form.course_type} onChange={(e) => setForm(f => ({ ...f, course_type: e.target.value }))} placeholder="e.g. Group, Private" />
+                <Input value={studentForm.course_type} onChange={(e) => setStudentForm(f => ({ ...f, course_type: e.target.value }))} placeholder="e.g. Group, Private" />
               </div>
             </div>
-            {form.status === "student" && (
+            {studentForm.status === "student" && (
               <div>
                 <label className="text-sm font-medium text-foreground">Group Name</label>
-                <Select value={form.group_name || "unassigned"} onValueChange={(v) => setForm(f => ({ ...f, group_name: v === "unassigned" ? "" : v }))}>
+                <Select value={studentForm.group_name || "unassigned"} onValueChange={(v) => setStudentForm(f => ({ ...f, group_name: v === "unassigned" ? "" : v }))}>
                   <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">— None —</SelectItem>
@@ -580,35 +703,46 @@ const StudentManager = () => {
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-foreground">Package Name</label>
-              <Input value={form.package_name} onChange={(e) => setForm(f => ({ ...f, package_name: e.target.value }))} placeholder="e.g. 3-Month Group" />
+              <label className="text-sm font-medium text-foreground">Notes</label>
+              <Textarea value={studentForm.notes} onChange={(e) => setStudentForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStudentDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveStudent} disabled={saving}>{saving ? "Saving..." : editingStudentId ? "Update" : "Add Student"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Package Dialog */}
+      <Dialog open={packageDialogOpen} onOpenChange={setPackageDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Package — {packageStudentName}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <label className="text-sm font-medium text-foreground">Package Name</label>
+              <Input value={packageForm.package_name} onChange={(e) => setPackageForm(f => ({ ...f, package_name: e.target.value }))} placeholder="e.g. 3-Month Group" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Total Classes</label>
-                <Input type="number" min={0} value={form.total_classes} onChange={(e) => setForm(f => ({ ...f, total_classes: Number(e.target.value) }))} />
+                <Input type="number" min={0} value={packageForm.total_classes} onChange={(e) => setPackageForm(f => ({ ...f, total_classes: Number(e.target.value) }))} />
               </div>
-              <div>
-                <label className="text-sm font-medium text-foreground">Used Classes</label>
-                <Input type="number" min={0} value={form.used_classes} onChange={(e) => setForm(f => ({ ...f, used_classes: Number(e.target.value) }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground">Remaining</label>
-                <Input type="number" disabled value={(Number(form.total_classes) || 0) - (Number(form.used_classes) || 0)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Total Paid</label>
-                <Input type="number" min={0} value={form.total_paid} onChange={(e) => setForm(f => ({ ...f, total_paid: Number(e.target.value) }))} />
+                <Input type="number" min={0} value={packageForm.total_paid} onChange={(e) => setPackageForm(f => ({ ...f, total_paid: Number(e.target.value) }))} />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Price / Class</label>
-                <Input type="number" disabled value={Number(form.total_classes) > 0 ? Math.round((Number(form.total_paid) / Number(form.total_classes)) * 100) / 100 : 0} />
+                <Input type="number" disabled value={Number(packageForm.total_classes) > 0 ? Math.round((Number(packageForm.total_paid) / Number(packageForm.total_classes)) * 100) / 100 : 0} />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Payment Status</label>
-                <Select value={form.payment_status} onValueChange={(v) => setForm(f => ({ ...f, payment_status: v }))}>
+                <Select value={packageForm.payment_status} onValueChange={(v) => setPackageForm(f => ({ ...f, payment_status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="paid">Paid</SelectItem>
@@ -618,15 +752,80 @@ const StudentManager = () => {
                 </Select>
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Notes</label>
-              <Textarea value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
-            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : editingId ? "Update" : "Add Student"}</Button>
+            <Button variant="outline" onClick={() => setPackageDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSavePackage} disabled={savingPackage}>{savingPackage ? "Saving..." : "Add Package"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Package History Dialog */}
+      <Dialog open={packagesDialogOpen} onOpenChange={setPackagesDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Packages — {packagesStudentName}</DialogTitle>
+          </DialogHeader>
+          {packagesLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+          ) : packagesForStudent.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No packages found.</p>
+          ) : (
+            <div className="space-y-3">
+              {packagesForStudent.map((pkg) => {
+                const remaining = pkg.total_classes - pkg.used_classes;
+                const extra = remaining < 0 ? Math.abs(remaining) : 0;
+                const due = extra * pkg.price_per_class;
+                return (
+                  <Card key={pkg.id} className={pkg.is_active ? "border-primary/30" : "opacity-70"}>
+                    <CardContent className="pt-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">{pkg.package_name || "Unnamed"}</span>
+                          {pkg.is_active ? (
+                            <Badge variant="default" className="text-xs">Active</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">Previous</Badge>
+                          )}
+                          {paymentBadge(pkg.payment_status)}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => openAttendanceForPackage(pkg, packagesStudentName)}>
+                          <CalendarDays className="h-3.5 w-3.5 mr-1" /> Dates
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 text-sm">
+                        <div>
+                          <span className="text-xs text-muted-foreground">Total</span>
+                          <p className="font-medium text-foreground">{pkg.total_classes}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground">Used</span>
+                          <p className="font-medium text-foreground">{pkg.used_classes}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground">Remaining</span>
+                          <p className={`font-medium ${remaining < 0 ? "text-destructive" : "text-foreground"}`}>{remaining}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground">Paid</span>
+                          <p className="font-medium text-foreground">${pkg.total_paid}</p>
+                        </div>
+                      </div>
+                      {extra > 0 && (
+                        <div className="text-xs text-destructive bg-destructive/10 rounded p-2">
+                          {extra} extra session{extra !== 1 ? "s" : ""} — Amount due: ${due.toFixed(2)}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Added: {new Date(pkg.created_at).toLocaleDateString()}
+                        {pkg.price_per_class > 0 && ` • $${pkg.price_per_class}/class`}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
