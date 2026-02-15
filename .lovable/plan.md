@@ -1,78 +1,64 @@
 
 
-# Plan: Improve Student Dashboard with Enrollment-Based Attendance and Payment Tracking
+# Plan: Enable Manual Student Data Entry with Attendance Dates
 
-## Problem
-The Student Dashboard currently pulls data from the legacy `students` table (which uses `total_classes`, `used_classes`, `price_per_class`), but the real source of truth is the `enrollments` table (`sessions_total`, `sessions_remaining`, `unit_price`). The dashboard also shows incorrect "Balance Due" calculations and doesn't dynamically reflect attendance-based billing.
+## What This Does
+Enhances the existing "Legacy Manual" tab in the admin Manage Students section so you can:
+- Add/edit students with their full info (already works)
+- Input individual attendance dates for each student (new feature)
+- See all attendance dates listed per student
+- Automatically calculate remaining sessions and amount due from the actual attendance records
+
+## Current Limitation
+Right now, the "Mark Attendance" button on each student just adds +1 to a counter without recording which date was attended. There's no way to enter historical dates or see which specific days a student attended.
 
 ## Changes
 
-### 1. Refactor StudentDashboard to use `enrollments` as primary data source
-Replace the legacy `students` table query with a direct read from `enrollments` (latest APPROVED+PAID enrollment for the logged-in user). This ensures all numbers come from the same source the admin sees.
+### 1. Add an Attendance Dates Panel for Legacy Students
+When the admin clicks a student row (or a new "Dates" button), a side panel opens showing:
+- A calendar to pick and add attendance dates
+- A list of all recorded attendance dates with delete option
+- Auto-calculated stats: total attended, remaining, extra sessions, amount due
 
-**Data fetched:**
-- `sessions_total` (package size)
-- `sessions_remaining` (auto-decremented by RPCs)
-- `unit_price` (price per session)
-- `amount` (total package price)
-- `currency` (USD or EGP)
-- `plan_type`, `duration`
+### 2. Use the Existing `attendance_log` Table for Date Records
+The `attendance_log` table already stores `student_id`, `marked_at`, and `notes`. We will use this to store individual session dates for legacy students, adding a `session_date` column so admins can backdate entries.
 
-**Computed on the frontend:**
-- `total_attended = sessions_total - sessions_remaining`
-- `remaining = sessions_remaining` (if >= 0, show "X sessions remaining")
-- `extra_sessions = Math.abs(sessions_remaining)` (if < 0, show "X extra sessions")
-- `amount_due = extra_sessions * unit_price` (only when negative)
-
-### 2. Redesign the Package + Payment cards into a unified Summary Card
-Merge the separate "Package Details" and "Payment Details" cards into one clear summary card with:
-- Package info (plan type, duration, total sessions, price paid)
-- A prominent stats row: Total Attended / Remaining / Extra Sessions / Amount Due
-- Conditional messaging:
-  - Green state: "You have X sessions remaining"
-  - Red state: "You have X extra sessions. Amount due: (currency)(amount)"
-- Remove the misleading legacy "Balance Due" calculation that was `remaining * price_per_class`
-
-### 3. Keep legacy `students` table as fallback
-If no enrollment is found but a `students` record exists, show the old view (backwards compatibility). If neither exists, show the "No Active Plan" card.
-
-### 4. No database changes needed
-All required data already exists in the `enrollments` table and is maintained by the existing RPCs (`approve_attendance_request`, `admin_add_attendance`). No new tables, views, or functions required.
+### 3. Update Legacy Student Display
+- Replace the simple "Used/Total" counter with a count derived from actual attendance log records
+- Show remaining and extra sessions with amount due calculation
+- Keep the existing Add/Edit form for student info
 
 ## Technical Details
 
-### File: `src/pages/StudentDashboard.tsx`
+### Database Migration
+Add a `session_date` column to `attendance_log` so admins can record specific dates (not just "marked now"):
 
-**Data loading changes:**
-```typescript
-// Fetch latest APPROVED+PAID enrollment
-const { data: enrollmentData } = await supabase
-  .from("enrollments")
-  .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency")
-  .eq("user_id", session.user.id)
-  .eq("approval_status", "APPROVED")
-  .eq("payment_status", "PAID")
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .maybeSingle();
+```sql
+ALTER TABLE public.attendance_log
+  ADD COLUMN IF NOT EXISTS session_date date DEFAULT CURRENT_DATE;
+
+-- Add unique constraint to prevent duplicate dates per student
+ALTER TABLE public.attendance_log
+  ADD CONSTRAINT unique_student_session_date UNIQUE (student_id, session_date);
 ```
 
-**Computed values:**
-```typescript
-const totalAttended = enrollment.sessions_total - enrollment.sessions_remaining;
-const remaining = enrollment.sessions_remaining;
-const extraSessions = remaining < 0 ? Math.abs(remaining) : 0;
-const amountDue = extraSessions * enrollment.unit_price;
-const currLabel = enrollment.currency === "EGP" ? "LE" : "$";
-```
+### New Component: `LegacyAttendancePanel`
+A panel similar to `AdminAttendancePanel` but for legacy `students` table entries:
+- Calendar with date picker
+- Insert into `attendance_log` with `student_id` and chosen `session_date`
+- Delete attendance records
+- Show computed stats:
+  - `total_attended = count of attendance_log records`
+  - `remaining = total_classes - total_attended`
+  - `extra = remaining < 0 ? abs(remaining) : 0`
+  - `amount_due = extra * price_per_class`
 
-**UI restructure:**
-- Replace the two separate Package/Payment cards with a single "My Package" card
-- Add a 3-column stats row: "Attended" / "Remaining" / "Amount Due"
-- Show conditional message based on `remaining` sign
-- Keep the `StudentAttendanceRequest` calendar component as-is (it already reads from enrollments)
-- Keep `StudentGroupAttendance` and attendance history sections
+### Update `StudentManager.tsx`
+- Add a "Dates" button to each legacy student row
+- When clicked, show the `LegacyAttendancePanel` inline or as a dialog
+- Sync `used_classes` on the `students` table whenever attendance dates are added/removed (keeps the counter accurate)
 
-### Files Modified
-1. `src/pages/StudentDashboard.tsx` -- Refactor to use enrollments data, redesign summary UI
-
+### Files to Create/Modify
+1. **New migration** -- Add `session_date` column and unique constraint to `attendance_log`
+2. **New component**: `src/components/admin/LegacyAttendancePanel.tsx` -- Calendar-based attendance date entry for legacy students
+3. **Modified**: `src/components/admin/StudentManager.tsx` -- Add "Dates" button and integrate the attendance panel
