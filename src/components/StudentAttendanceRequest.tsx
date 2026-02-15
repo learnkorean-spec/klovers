@@ -9,7 +9,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock, AlertTriangle } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock, AlertTriangle, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface AttendanceRequest {
   id: string;
@@ -113,6 +118,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   const [unlocked, setUnlocked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -176,6 +182,21 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
       loadData();
     }
     setSubmitting(false);
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    setDeleting(requestId);
+    const { error } = await supabase
+      .from("attendance_requests")
+      .delete()
+      .eq("id", requestId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Request cancelled", description: "Your pending attendance request has been removed." });
+      loadData();
+    }
+    setDeleting(null);
   };
 
   const approvedDates = useMemo(
@@ -276,7 +297,41 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                         <p className="text-xs text-muted-foreground">Submitted {new Date(r.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                      {r.status === "PENDING" && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              disabled={deleting === r.id}
+                            >
+                              {deleting === r.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove your pending attendance request for {formatDate(r.request_date)}.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleCancelRequest(r.id)}>
+                                Cancel Request
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
                   </div>
                 );
               })}
