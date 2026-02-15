@@ -1,4 +1,5 @@
 import { UserPlus, Users, CreditCard, GraduationCap, Award } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface FunnelProps {
   leadsCount: number;
@@ -26,22 +27,21 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
       {stages.map((stage) => {
         const Icon = stage.icon;
         return (
-          <div
-            key={stage.key}
-            className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50"
-          >
-            <div className={`rounded-full p-2 ${stage.bgClass} shrink-0`}>
-              <Icon className={`h-4 w-4 ${stage.textClass}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold text-foreground leading-none">{counts[stage.key]}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{stage.label}</p>
-            </div>
-          </div>
+          <Card key={stage.key} className="rounded-2xl">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`rounded-xl p-2.5 ${stage.bgClass} shrink-0`}>
+                <Icon className={`h-5 w-5 ${stage.textClass}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl font-bold text-foreground leading-none">{counts[stage.key]}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stage.label}</p>
+              </div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>
