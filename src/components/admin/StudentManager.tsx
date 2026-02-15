@@ -45,6 +45,9 @@ interface OverviewRow {
   currency: string | null;
   derived_status: string;
   source_label: string;
+  unit_price: number | null;
+  negative_sessions: number;
+  amount_due: number;
 }
 
 // Legacy student from students table (for legacy CRUD tab)
