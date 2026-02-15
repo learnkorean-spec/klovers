@@ -1,5 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, Users, CreditCard, GraduationCap, Award, ArrowRight } from "lucide-react";
+import { UserPlus, Users, CreditCard, GraduationCap, Award } from "lucide-react";
 
 interface FunnelProps {
   leadsCount: number;
@@ -27,30 +26,25 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-5 uppercase tracking-wide">Student Lifecycle</h3>
-        <div className="flex items-center justify-between gap-0">
-          {stages.map((stage, i) => {
-            const Icon = stage.icon;
-            return (
-              <div key={stage.key} className="flex items-center flex-1 min-w-0">
-                <div className="flex flex-col items-center text-center flex-1 min-w-0 group">
-                  <div className={`rounded-full p-2.5 ${stage.bgClass} mb-2 transition-transform duration-200 group-hover:scale-110`}>
-                    <Icon className={`h-5 w-5 ${stage.textClass}`} />
-                  </div>
-                  <p className="text-2xl font-bold text-foreground leading-none">{counts[stage.key]}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1 truncate w-full">{stage.label}</p>
-                </div>
-                {i < stages.length - 1 && (
-                  <ArrowRight className="h-4 w-4 text-muted-foreground/30 shrink-0 mx-0.5" />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      {stages.map((stage) => {
+        const Icon = stage.icon;
+        return (
+          <div
+            key={stage.key}
+            className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50"
+          >
+            <div className={`rounded-full p-2 ${stage.bgClass} shrink-0`}>
+              <Icon className={`h-4 w-4 ${stage.textClass}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl font-bold text-foreground leading-none">{counts[stage.key]}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{stage.label}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
