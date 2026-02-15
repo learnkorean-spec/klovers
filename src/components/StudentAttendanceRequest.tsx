@@ -48,36 +48,44 @@ const fetchActiveEnrollment = async (userId: string): Promise<EligibleEnrollment
   return data && data.length > 0 ? data[0] : null;
 };
 
-const LockedCard = () => {
+const NEGATIVE_LIMIT = -3;
+
+const LockedCard = ({ reason }: { reason?: "unpaid" | "limit" }) => {
   const navigate = useNavigate();
+  const isLimit = reason === "limit";
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Lock className="h-5 w-5 text-muted-foreground" />
-          Attendance is available after payment
+          {isLimit ? "Reached limit (−3). Renew required." : "Attendance is available after payment"}
         </CardTitle>
         <CardDescription>
-          Complete enrollment and payment to unlock attendance tracking.
+          {isLimit
+            ? "You've used 3 extra classes beyond your package. Please renew to continue."
+            : "Complete enrollment and payment to unlock attendance tracking."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex gap-3">
-        <Button onClick={() => navigate("/enroll-now")}>Enroll Now</Button>
+        <Button onClick={() => navigate(isLimit ? "/courses" : "/enroll-now")}>
+          {isLimit ? "Renew Package" : "Enroll Now"}
+        </Button>
         <Button variant="outline" onClick={() => navigate("/student")}>View My Enrollments</Button>
       </CardContent>
     </Card>
   );
 };
 
-const NegativeBalanceBanner = ({ overCount }: { overCount: number }) => {
+const NegativeBalanceBanner = ({ remaining }: { remaining: number }) => {
   const navigate = useNavigate();
+  const overCount = Math.abs(remaining);
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg border border-destructive/50 bg-destructive/10 mb-4">
       <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
       <div className="flex-1 space-y-1">
-        <p className="text-sm font-medium text-foreground">You're over your package</p>
+        <p className="text-sm font-medium text-foreground">Balance negative ({remaining})</p>
         <p className="text-xs text-muted-foreground">
-          You've exceeded your package by {overCount} {overCount === 1 ? "class" : "classes"}. Please renew to avoid interruptions.
+          You've exceeded your package by {overCount} {overCount === 1 ? "class" : "classes"}. Allowed until −3. A reminder will be sent.
         </p>
         <Button size="sm" variant="destructive" className="mt-2" onClick={() => navigate("/enroll-now")}>
           Renew Package
@@ -196,10 +204,13 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   };
 
   if (loading) return <LoadingSkeleton />;
-  if (!unlocked) return <LockedCard />;
+  if (!unlocked) return <LockedCard reason="unpaid" />;
 
-  const isNegative = enrollment && enrollment.sessions_remaining < 0;
-  const overCount = isNegative ? Math.abs(enrollment.sessions_remaining) : 0;
+  const remaining = enrollment?.sessions_remaining ?? 0;
+  const isLocked = remaining <= NEGATIVE_LIMIT;
+  const isNegative = remaining < 0;
+
+  if (isLocked) return <LockedCard reason="limit" />;
 
   return (
     <div className="space-y-4">
@@ -226,7 +237,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
           </div>
         </CardHeader>
         <CardContent>
-          {isNegative && <NegativeBalanceBanner overCount={overCount} />}
+          {isNegative && <NegativeBalanceBanner remaining={remaining} />}
           {submitting && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <Loader2 className="h-4 w-4 animate-spin" /> Submitting…
