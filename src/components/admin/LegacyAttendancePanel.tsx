@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface LegacyAttendancePanelProps {
+  packageId: string;
   studentId: string;
   studentName: string;
+  packageName: string;
   totalClasses: number;
   pricePerClass: number;
   onClose: () => void;
@@ -30,8 +32,8 @@ interface AttendanceRecord {
 }
 
 const LegacyAttendancePanel = ({
-  studentId, studentName, totalClasses, pricePerClass,
-  onClose, onUpdated,
+  packageId, studentId, studentName, packageName,
+  totalClasses, pricePerClass, onClose, onUpdated,
 }: LegacyAttendancePanelProps) => {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,7 @@ const LegacyAttendancePanel = ({
       .from("attendance_log")
       .select("id, session_date, marked_at")
       .eq("student_id", studentId)
+      .eq("package_id", packageId)
       .order("session_date", { ascending: false });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -52,7 +55,7 @@ const LegacyAttendancePanel = ({
     setLoading(false);
   };
 
-  useEffect(() => { fetchRecords(); }, [studentId]);
+  useEffect(() => { fetchRecords(); }, [packageId, studentId]);
 
   const totalAttended = records.length;
   const remaining = totalClasses - totalAttended;
@@ -72,7 +75,6 @@ const LegacyAttendancePanel = ({
     setAdding(true);
     const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-    // Get current user for marked_by
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({ title: "Not authenticated", variant: "destructive" });
@@ -86,6 +88,7 @@ const LegacyAttendancePanel = ({
         student_id: studentId,
         marked_by: user.id,
         session_date: dateStr,
+        package_id: packageId,
         notes: "",
       } as any);
 
@@ -95,11 +98,11 @@ const LegacyAttendancePanel = ({
         : error.message;
       toast({ title: "Error", description: msg, variant: "destructive" });
     } else {
-      // Sync used_classes on the students table
+      // Sync used_classes on the package
       await supabase
-        .from("students")
+        .from("student_packages" as any)
         .update({ used_classes: totalAttended + 1 } as any)
-        .eq("id", studentId);
+        .eq("id", packageId);
 
       toast({ title: "Attendance added", description: `Date: ${dateStr}` });
       setSelectedDate(undefined);
@@ -118,11 +121,10 @@ const LegacyAttendancePanel = ({
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      // Sync used_classes
       await supabase
-        .from("students")
+        .from("student_packages" as any)
         .update({ used_classes: Math.max(0, totalAttended - 1) } as any)
-        .eq("id", studentId);
+        .eq("id", packageId);
 
       toast({ title: "Attendance removed" });
       fetchRecords();
@@ -146,6 +148,7 @@ const LegacyAttendancePanel = ({
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarCheck className="h-5 w-5" />
             Attendance — {studentName}
+            {packageName && <span className="text-xs text-muted-foreground font-normal">({packageName})</span>}
           </CardTitle>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -166,7 +169,6 @@ const LegacyAttendancePanel = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Calendar */}
         <Calendar
           mode="single"
           selected={selectedDate}
@@ -182,7 +184,6 @@ const LegacyAttendancePanel = ({
           </div>
         </div>
 
-        {/* Add button */}
         <Button
           onClick={handleAddAttendance}
           disabled={adding || !selectedDate}
@@ -193,7 +194,6 @@ const LegacyAttendancePanel = ({
           {adding ? "Adding..." : selectedDate ? `Add attendance for ${format(selectedDate, "MMM d, yyyy")}` : "Select a date to add"}
         </Button>
 
-        {/* Record list */}
         {loading ? (
           <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
         ) : records.length === 0 ? (
