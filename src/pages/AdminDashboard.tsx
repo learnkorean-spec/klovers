@@ -85,7 +85,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
-  const [studentByEmail, setStudentByEmail] = useState<Record<string, any>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
@@ -94,20 +93,23 @@ const AdminDashboard = () => {
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, studentsRes, batchMembersRes, groupsRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, batchMembersRes, groupsRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("admin_student_overview" as any).select("*"),
-      supabase.from("students").select("status, used_classes, total_classes, email, full_name, group_name, remaining_classes, price_per_class"),
       supabase.from("batch_members").select("user_id, batch_id, member_status"),
       supabase.from("student_groups").select("id, name"),
     ]);
 
     // Build profile map from overview for enrollment enrichment
     const profileMap: Record<string, { name: string; email: string }> = {};
+    const overviewByEmail: Record<string, any> = {};
     if (overviewRes.data) {
-      (overviewRes.data as any[]).forEach((r: any) => { profileMap[r.user_id] = { name: r.name, email: r.email }; });
+      (overviewRes.data as any[]).forEach((r: any) => {
+        profileMap[r.user_id] = { name: r.name, email: r.email };
+        overviewByEmail[r.email?.toLowerCase()] = r;
+      });
     }
 
     const groupNameMap: Record<string, string> = {};
@@ -123,35 +125,22 @@ const AdminDashboard = () => {
       });
     }
 
-    const _studentByEmail: Record<string, any> = {};
-    if (studentsRes.data) {
-      (studentsRes.data as any[]).forEach((s: any) => { _studentByEmail[s.email?.toLowerCase()] = s; });
-    }
-
     if (leadsRes.error) {
       const msg = `Leads query failed: ${leadsRes.error.message} (code: ${leadsRes.error.code})`;
       console.error(msg, leadsRes.error);
       setLeadsError(msg);
       toast({ title: "Leads query failed", description: leadsRes.error.message, variant: "destructive" });
     } else {
+      // Derive lead status from overview (single source of truth)
       const enrichedLeads = (leadsRes.data as Lead[]).map((lead) => {
-        const matchingEnrollments = enrollRes.data
-          ? (enrollRes.data as any[]).filter((e) => {
-              const profile = profileMap[e.user_id];
-              return profile && profile.email.toLowerCase() === lead.email.toLowerCase();
-            })
-          : [];
-
+        const ov = overviewByEmail[lead.email.toLowerCase()];
         let autoStatus = lead.status;
-        if (matchingEnrollments.length > 0) {
-          const hasApproved = matchingEnrollments.some((e: any) => e.approval_status === "APPROVED");
-          const hasRejected = matchingEnrollments.some((e: any) => e.approval_status === "REJECTED");
-          const hasPending = matchingEnrollments.some((e: any) =>
-            ["PENDING", "PENDING_PAYMENT", "UNDER_REVIEW"].includes(e.approval_status)
-          );
-          if (hasApproved) autoStatus = "enrolled";
-          else if (hasRejected && !hasPending) autoStatus = "rejected";
-          else if (hasPending) autoStatus = "contacted";
+        if (ov) {
+          if (["ACTIVE", "COMPLETED", "LOCKED"].includes(ov.derived_status)) {
+            autoStatus = "enrolled";
+          } else if (ov.enrollment_id) {
+            autoStatus = "contacted";
+          }
         }
         return { ...lead, status: autoStatus };
       });
@@ -162,7 +151,6 @@ const AdminDashboard = () => {
     if (attendRes.data) setAttendanceReqs((attendRes.data as any[]).map((a) => ({ ...a, profiles: profileMap[a.user_id] ? { ...profileMap[a.user_id], credits: 0 } : null })));
     if (overviewRes.data) setOverviewRows(overviewRes.data as any[]);
     setUserGroupMap(_userGroupMap);
-    setStudentByEmail(_studentByEmail);
     setLoading(false);
   };
 
@@ -757,10 +745,9 @@ const AdminDashboard = () => {
                   const pendingCount = requests.filter(r => r.status === "PENDING").length;
                   const approvedCount = requests.filter(r => r.status === "APPROVED").length;
                   const rejectedCount = requests.filter(r => r.status === "REJECTED").length;
-                  const userEnrollment = enrollments.find(e => e.user_id === userId && e.approval_status === "APPROVED" && e.payment_status === "PAID");
                   const groupName = userGroupMap[userId];
-                  const studentRecord = studentByEmail[email?.toLowerCase()];
-                  const remainingClasses = studentRecord ? (studentRecord.total_classes - studentRecord.used_classes) : null;
+                  const overviewRecord = overviewRows.find(o => o.user_id === userId);
+                  const remainingSessions = overviewRecord?.sessions_remaining ?? null;
 
                   return (
                     <Card key={userId}>
@@ -771,8 +758,7 @@ const AdminDashboard = () => {
                             <p className="text-xs text-muted-foreground">
                               {email}
                               {groupName && <> · <span className="font-medium text-foreground">Group: {groupName}</span></>}
-                              {remainingClasses !== null && <> · Classes left: <span className="font-medium text-foreground">{remainingClasses}</span></>}
-                              {userEnrollment && <> · Sessions left: {userEnrollment.sessions_remaining}</>}
+                              {remainingSessions !== null && <> · Sessions left: <span className="font-medium text-foreground">{remainingSessions}</span></>}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 text-xs">
