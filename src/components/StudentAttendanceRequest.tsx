@@ -23,6 +23,13 @@ interface AttendanceRequest {
   created_at: string;
 }
 
+interface AdminAttendanceEntry {
+  id: string;
+  session_date: string;
+  status: string;
+  created_at: string;
+}
+
 interface StudentAttendanceRequestProps {
   userId: string;
 }
@@ -114,6 +121,7 @@ const LoadingSkeleton = () => (
 
 const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => {
   const [requests, setRequests] = useState<AttendanceRequest[]>([]);
+  const [adminDates, setAdminDates] = useState<AdminAttendanceEntry[]>([]);
   const [enrollment, setEnrollment] = useState<EligibleEnrollment | null>(null);
   const [unlocked, setUnlocked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -137,13 +145,21 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     setUnlocked(true);
     setEnrollment(eligible);
 
-    const { data: reqs } = await supabase
-      .from("attendance_requests")
-      .select("id, request_date, status, created_at")
-      .eq("user_id", userId)
-      .order("request_date", { ascending: false });
+    const [reqsRes, adminRes] = await Promise.all([
+      supabase
+        .from("attendance_requests")
+        .select("id, request_date, status, created_at")
+        .eq("user_id", userId)
+        .order("request_date", { ascending: false }),
+      supabase
+        .from("admin_attendance_log")
+        .select("id, session_date, status, created_at")
+        .eq("enrollment_id", eligible.id)
+        .order("session_date", { ascending: false }),
+    ]);
 
-    if (reqs) setRequests(reqs as AttendanceRequest[]);
+    if (reqsRes.data) setRequests(reqsRes.data as AttendanceRequest[]);
+    if (adminRes.data) setAdminDates(adminRes.data as AdminAttendanceEntry[]);
     setLoading(false);
   };
 
@@ -199,6 +215,10 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     setDeleting(null);
   };
 
+  const adminLoggedDates = useMemo(
+    () => adminDates.map(a => new Date(a.session_date + "T00:00:00")),
+    [adminDates]
+  );
   const approvedDates = useMemo(
     () => requests.filter(r => r.status === "APPROVED").map(r => new Date(r.request_date + "T00:00:00")),
     [requests]
@@ -212,8 +232,9 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     [requests]
   );
 
-  const modifiers = { approved: approvedDates, pending: pendingDates, rejected: rejectedDates };
+  const modifiers = { adminLogged: adminLoggedDates, approved: approvedDates, pending: pendingDates, rejected: rejectedDates };
   const modifiersStyles = {
+    adminLogged: { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: "9999px" },
     approved: { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: "9999px" },
     pending: { backgroundColor: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", borderRadius: "9999px" },
     rejected: { backgroundColor: "hsl(var(--destructive))", color: "hsl(var(--destructive-foreground))", borderRadius: "9999px" },
@@ -245,7 +266,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
           <div className="flex gap-3 flex-wrap mt-1">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-primary" />
-              <span className="text-xs text-muted-foreground">Approved</span>
+              <span className="text-xs text-muted-foreground">Attended</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-secondary" />
@@ -276,13 +297,32 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
         </CardContent>
       </Card>
 
-      {requests.length > 0 && (
+      {/* Session History — combines admin-logged and student requests */}
+      {(adminDates.length > 0 || requests.length > 0) && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Attendance History</CardTitle>
+            <CardTitle className="text-lg">Session History</CardTitle>
+            <p className="text-xs text-muted-foreground">{adminDates.length + requests.filter(r => r.status === "APPROVED").length} attended sessions</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
+              {/* Admin-logged sessions */}
+              {adminDates.map((a) => (
+                <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-muted text-primary">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{formatDate(a.session_date)}</p>
+                      <p className="text-xs text-muted-foreground">Logged by teacher</p>
+                    </div>
+                  </div>
+                  <Badge variant="default">Attended</Badge>
+                </div>
+              ))}
+
+              {/* Student-initiated requests */}
               {requests.map((r) => {
                 const cfg = statusConfig[r.status] || statusConfig.PENDING;
                 const Icon = cfg.icon;
@@ -294,7 +334,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground">{formatDate(r.request_date)}</p>
-                        <p className="text-xs text-muted-foreground">Submitted {new Date(r.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-muted-foreground">Self-reported</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
