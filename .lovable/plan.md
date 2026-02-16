@@ -1,64 +1,33 @@
 
 
-# Plan: Enable Manual Student Data Entry with Attendance Dates
+## Plan: Editable Leads + Confirmed-Only "Our Students"
 
-## What This Does
-Enhances the existing "Legacy Manual" tab in the admin Manage Students section so you can:
-- Add/edit students with their full info (already works)
-- Input individual attendance dates for each student (new feature)
-- See all attendance dates listed per student
-- Automatically calculate remaining sessions and amount due from the actual attendance records
+### What Changes
 
-## Current Limitation
-Right now, the "Mark Attendance" button on each student just adds +1 to a counter without recording which date was attended. There's no way to enter historical dates or see which specific days a student attended.
+**1. Make lead records editable inline**
+- Add an **Edit** button (pencil icon) to each row in the "Our Students" tab
+- Clicking Edit opens an inline editing mode or a dialog where the admin can modify: name, email, country, plan_type, duration, schedule, timezone, and status
+- Save updates to the `leads` table via Supabase
+- Cancel button to discard changes
 
-## Changes
+**2. Fix "Our Students" tab to show only confirmed students**
+- Rename the current "Our Students" tab logic so it filters leads to show **only** those with status "enrolled" or who have a matching PAID+APPROVED enrollment (from Stripe or manual Egypt payment)
+- Cross-reference leads with the `admin_student_overview` view to check if a lead's email matches a confirmed enrollment
+- Add a separate sub-filter or keep the existing status filter so admins can still browse
 
-### 1. Add an Attendance Dates Panel for Legacy Students
-When the admin clicks a student row (or a new "Dates" button), a side panel opens showing:
-- A calendar to pick and add attendance dates
-- A list of all recorded attendance dates with delete option
-- Auto-calculated stats: total attended, remaining, extra sessions, amount due
+**3. Lifecycle funnel sync**
+- The "Enrolled" count in the funnel will reflect only paid/confirmed students
+- "Leads" count reflects prospects who haven't paid yet
 
-### 2. Use the Existing `attendance_log` Table for Date Records
-The `attendance_log` table already stores `student_id`, `marked_at`, and `notes`. We will use this to store individual session dates for legacy students, adding a `session_date` column so admins can backdate entries.
+### Technical Details
 
-### 3. Update Legacy Student Display
-- Replace the simple "Used/Total" counter with a count derived from actual attendance log records
-- Show remaining and extra sessions with amount due calculation
-- Keep the existing Add/Edit form for student info
+**File: `src/pages/AdminDashboard.tsx`**
 
-## Technical Details
+- Add `editingLeadId` state and `editForm` state to track which lead is being edited
+- Add `handleEditLead` function to save updates to the `leads` table
+- Add pencil icon button in each table row that toggles edit mode
+- In edit mode, table cells become input fields / select dropdowns
+- Filter the "Our Students" tab: enrich leads with enrollment status from `admin_student_overview`, and by default show only leads whose email matches a PAID+APPROVED enrollment OR whose status is "enrolled"
+- Keep the status filter dropdown so admins can switch to see "all", "new", "contacted", etc.
 
-### Database Migration
-Add a `session_date` column to `attendance_log` so admins can record specific dates (not just "marked now"):
-
-```sql
-ALTER TABLE public.attendance_log
-  ADD COLUMN IF NOT EXISTS session_date date DEFAULT CURRENT_DATE;
-
--- Add unique constraint to prevent duplicate dates per student
-ALTER TABLE public.attendance_log
-  ADD CONSTRAINT unique_student_session_date UNIQUE (student_id, session_date);
-```
-
-### New Component: `LegacyAttendancePanel`
-A panel similar to `AdminAttendancePanel` but for legacy `students` table entries:
-- Calendar with date picker
-- Insert into `attendance_log` with `student_id` and chosen `session_date`
-- Delete attendance records
-- Show computed stats:
-  - `total_attended = count of attendance_log records`
-  - `remaining = total_classes - total_attended`
-  - `extra = remaining < 0 ? abs(remaining) : 0`
-  - `amount_due = extra * price_per_class`
-
-### Update `StudentManager.tsx`
-- Add a "Dates" button to each legacy student row
-- When clicked, show the `LegacyAttendancePanel` inline or as a dialog
-- Sync `used_classes` on the `students` table whenever attendance dates are added/removed (keeps the counter accurate)
-
-### Files to Create/Modify
-1. **New migration** -- Add `session_date` column and unique constraint to `attendance_log`
-2. **New component**: `src/components/admin/LegacyAttendancePanel.tsx` -- Calendar-based attendance date entry for legacy students
-3. **Modified**: `src/components/admin/StudentManager.tsx` -- Add "Dates" button and integrate the attendance panel
+**No database changes needed** - the `leads` table already supports admin UPDATE via RLS policy.
