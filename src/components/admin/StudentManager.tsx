@@ -114,8 +114,40 @@ const EMPTY_STUDENT_FORM = {
   course_type: "", level: "", notes: "", group_name: "",
 };
 
+// Bundle options derived from pricing tiers
+const BUNDLE_OPTIONS = [
+  // Local
+  { label: "Local Group 1mo", classType: "group", duration: 1, classes: 4, amount: 25 },
+  { label: "Local Group 3mo", classType: "group", duration: 3, classes: 12, amount: 70 },
+  { label: "Local Group 6mo", classType: "group", duration: 6, classes: 24, amount: 130 },
+  { label: "Local Private 1mo", classType: "private", duration: 1, classes: 4, amount: 50 },
+  { label: "Local Private 3mo", classType: "private", duration: 3, classes: 12, amount: 140 },
+  { label: "Local Private 6mo", classType: "private", duration: 6, classes: 24, amount: 250 },
+  // Regional
+  { label: "Regional Group 1mo", classType: "group", duration: 1, classes: 4, amount: 40 },
+  { label: "Regional Group 3mo", classType: "group", duration: 3, classes: 12, amount: 110 },
+  { label: "Regional Group 6mo", classType: "group", duration: 6, classes: 24, amount: 200 },
+  { label: "Regional Private 1mo", classType: "private", duration: 1, classes: 4, amount: 80 },
+  { label: "Regional Private 3mo", classType: "private", duration: 3, classes: 12, amount: 220 },
+  { label: "Regional Private 6mo", classType: "private", duration: 6, classes: 24, amount: 380 },
+  // Global
+  { label: "Global Group 1mo", classType: "group", duration: 1, classes: 4, amount: 60 },
+  { label: "Global Group 3mo", classType: "group", duration: 3, classes: 12, amount: 170 },
+  { label: "Global Group 6mo", classType: "group", duration: 6, classes: 24, amount: 300 },
+  { label: "Global Private 1mo", classType: "private", duration: 1, classes: 4, amount: 120 },
+  { label: "Global Private 3mo", classType: "private", duration: 3, classes: 12, amount: 330 },
+  { label: "Global Private 6mo", classType: "private", duration: 6, classes: 24, amount: 580 },
+  // Egypt EGP
+  { label: "Egypt Group 1mo (EGP)", classType: "group", duration: 1, classes: 4, amount: 1200 },
+  { label: "Egypt Group 3mo (EGP)", classType: "group", duration: 3, classes: 12, amount: 3300 },
+  { label: "Egypt Group 6mo (EGP)", classType: "group", duration: 6, classes: 24, amount: 6100 },
+  { label: "Egypt Private 1mo (EGP)", classType: "private", duration: 1, classes: 4, amount: 2350 },
+  { label: "Egypt Private 3mo (EGP)", classType: "private", duration: 3, classes: 12, amount: 6600 },
+  { label: "Egypt Private 6mo (EGP)", classType: "private", duration: 6, classes: 24, amount: 11750 },
+];
+
 const EMPTY_PACKAGE_FORM = {
-  package_name: "", total_classes: 0, total_paid: 0, payment_status: "pending",
+  package_name: "", total_classes: 0, total_paid: 0, payment_status: "paid",
 };
 
 const StudentManager = () => {
@@ -835,8 +867,31 @@ const StudentManager = () => {
           </DialogHeader>
           <div className="grid gap-3">
             <div>
+              <label className="text-sm font-medium text-foreground">Select Bundle</label>
+              <Select onValueChange={(v) => {
+                const bundle = BUNDLE_OPTIONS[Number(v)];
+                if (bundle) {
+                  setPackageForm({
+                    package_name: bundle.label,
+                    total_classes: bundle.classes,
+                    total_paid: bundle.amount,
+                    payment_status: "paid",
+                  });
+                }
+              }}>
+                <SelectTrigger><SelectValue placeholder="Choose a bundle..." /></SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {BUNDLE_OPTIONS.map((b, i) => (
+                    <SelectItem key={i} value={String(i)}>
+                      {b.label} — ${b.amount} ({b.classes} classes)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <label className="text-sm font-medium text-foreground">Package Name</label>
-              <Input value={packageForm.package_name} onChange={(e) => setPackageForm(f => ({ ...f, package_name: e.target.value }))} placeholder="e.g. 3-Month Group" />
+              <Input value={packageForm.package_name} onChange={(e) => setPackageForm(f => ({ ...f, package_name: e.target.value }))} placeholder="Auto-filled from bundle" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
