@@ -723,7 +723,18 @@ const StudentManager = () => {
                         </TableCell>
                         <TableCell className="text-sm">{s.package_name || "—"}</TableCell>
                         <TableCell className="text-center">
-                          <span className="text-sm">{s.used_classes}/{s.total_classes}</span>
+                          <span className="text-sm">
+                            {overview
+                              ? `${overview.sessions_total - overview.sessions_remaining}/${overview.sessions_total}`
+                              : `${s.used_classes}/${s.total_classes}`}
+                          </span>
+                          {overview ? (
+                            <span className={`text-xs ml-1 ${overview.sessions_remaining < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                              ({overview.sessions_remaining} left)
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground ml-1">({s.total_classes - s.used_classes} left)</span>
+                          )}
                         </TableCell>
                         <TableCell className={`text-center font-mono ${remaining < 0 ? "text-destructive font-semibold" : ""}`}>
                           {remaining}
@@ -734,7 +745,9 @@ const StudentManager = () => {
                         <TableCell className={`text-right font-mono ${amountDue > 0 ? "text-destructive font-semibold" : ""}`}>
                           {amountDue > 0 ? `${currency}${amountDue.toLocaleString()}` : "—"}
                         </TableCell>
-                        <TableCell className="text-right text-sm">${s.total_paid}</TableCell>
+                        <TableCell className="text-right text-sm">
+                          {overview ? `${currency}${Number(overview.amount || 0).toLocaleString()}` : `$${s.total_paid}`}
+                        </TableCell>
                         <TableCell>{paymentBadge(s.payment_status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-1">
