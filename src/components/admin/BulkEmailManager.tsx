@@ -32,19 +32,19 @@ const DEFAULT_HTML = `<!DOCTYPE html>
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-  <tr><td style="background:#8B5CF6;padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Welcome to K-Lovers! 🇰🇷</h1>
+  <tr><td style="background:#FFFF00;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#000000;font-size:24px;font-weight:700;">Welcome to K-Lovers! 🇰🇷</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">Your account is set up and ready. Whether you're a complete beginner or brushing up your skills, we're here to guide you every step of the way.</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
-      <a href="{{dashboard_url}}" style="background:#8B5CF6;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Start Learning Korean →</a>
+      <a href="{{dashboard_url}}" style="background:#000000;color:#FFFF00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Start Learning Korean →</a>
     </td></tr></table>
     <p style="color:#6B7280;font-size:14px;line-height:1.5;margin:0 0 8px;">Quick links:</p>
     <p style="margin:0 0 24px;">
-      <a href="{{courses_url}}" style="color:#8B5CF6;text-decoration:none;font-size:14px;">Browse Courses</a> &nbsp;•&nbsp;
-      <a href="{{dashboard_url}}" style="color:#8B5CF6;text-decoration:none;font-size:14px;">Your Dashboard</a>
+      <a href="{{courses_url}}" style="color:#000000;text-decoration:underline;font-size:14px;font-weight:600;">Browse Courses</a> &nbsp;•&nbsp;
+      <a href="{{dashboard_url}}" style="color:#000000;text-decoration:underline;font-size:14px;font-weight:600;">Your Dashboard</a>
     </p>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
     <p style="color:#6B7280;font-size:14px;margin:0;">Warm regards,<br><strong>Reham</strong>, Founder of K-Lovers</p>
