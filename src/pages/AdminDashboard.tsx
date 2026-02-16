@@ -356,6 +356,18 @@ const AdminDashboard = () => {
     fetchAll();
   };
 
+  const handleRevertAttendance = async (req: AttendanceReq) => {
+    const { error } = await supabase.rpc("revert_attendance_request" as any, {
+      _request_id: req.id,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message || "Failed to revert.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Reverted to pending", description: req.status === "APPROVED" ? "Session restored." : "Request is pending again." });
+    fetchAll();
+  };
+
   const handleLogout = async () => { await supabase.auth.signOut(); navigate("/admin/login"); };
 
   // Computed badge counts
@@ -836,7 +848,7 @@ const AdminDashboard = () => {
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="py-2 px-3 text-right">
-                                    {a.status === "PENDING" && (
+                                    {a.status === "PENDING" ? (
                                       <div className="flex items-center justify-end gap-1">
                                         <Button size="sm" onClick={() => handleAttendanceAction(a, "APPROVED")}>
                                           <Check className="h-4 w-4 mr-1" /> Approve
@@ -845,6 +857,10 @@ const AdminDashboard = () => {
                                           <X className="h-4 w-4 mr-1" /> Reject
                                         </Button>
                                       </div>
+                                    ) : (
+                                      <Button size="sm" variant="outline" onClick={() => handleRevertAttendance(a)}>
+                                        <Undo2 className="h-4 w-4 mr-1" /> Undo
+                                      </Button>
                                     )}
                                   </TableCell>
                                 </TableRow>

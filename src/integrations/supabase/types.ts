@@ -949,6 +949,10 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      revert_attendance_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       revert_enrollment: {
         Args: { _enrollment_id: string }
         Returns: undefined
