@@ -10,14 +10,100 @@ const corsHeaders = {
 interface EmailPayload {
   email: string;
   name: string;
-  plan_type: string;
-  duration: number;
-  sessions_total: number;
-  amount: number;
+  plan_type?: string;
+  duration?: number;
+  sessions_total?: number;
+  amount?: number;
   language?: string;
+  template?: "welcome" | "enrollment" | "group_match";
+  group_name?: string;
+  group_days?: string;
+  group_members?: string[];
 }
 
-function buildEnglishEmail(p: EmailPayload): { subject: string; html: string } {
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const FROM_EMAIL = "KLovers <onboarding@resend.dev>";
+
+async function sendEmail(to: string, subject: string, html: string) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend error: ${err}`);
+  }
+  return await res.json();
+}
+
+function buildWelcomeEmail(name: string, lang: string) {
+  if (lang === "ar") {
+    return {
+      subject: "مرحباً بك في KLovers! 🎉",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
+          <h1 style="color: #6d28d9;">مرحباً ${name}! 🇰🇷</h1>
+          <p>تم تسجيلك بنجاح في KLovers!</p>
+          <p>يمكنك الآن:</p>
+          <ul style="padding-right: 20px;">
+            <li>📖 قراءة مقالاتنا عن اللغة الكورية</li>
+            <li>📚 التسجيل في دوراتنا الجماعية أو الخاصة</li>
+            <li>🎯 بدء رحلتك في تعلم اللغة الكورية</li>
+          </ul>
+          <div style="margin: 24px 0;">
+            <a href="https://klovers.lovable.app/blog" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-left: 8px;">اقرأ المدونة</a>
+            <a href="https://klovers.lovable.app/enroll" style="background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">سجّل الآن</a>
+          </div>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+        </div>`,
+    };
+  }
+  return {
+    subject: "Welcome to KLovers! 🎉",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #6d28d9;">Welcome ${name}! 🇰🇷</h1>
+        <p>You've successfully registered with KLovers!</p>
+        <p>You can now:</p>
+        <ul>
+          <li>📖 Read our blog articles about Korean language & culture</li>
+          <li>📚 Enroll in our Group or Private Korean classes</li>
+          <li>🎯 Start your Korean learning journey</li>
+        </ul>
+        <div style="margin: 24px 0;">
+          <a href="https://klovers.lovable.app/blog" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-right: 8px;">Read the Blog</a>
+          <a href="https://klovers.lovable.app/enroll" style="background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Enroll Now</a>
+        </div>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
+      </div>`,
+  };
+}
+
+function buildEnrollmentEmail(p: EmailPayload) {
+  const isArabic = p.language === "ar";
+  if (isArabic) {
+    return {
+      subject: "KLovers — تم تأكيد التسجيل! 🎉",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
+          <h1 style="color: #6d28d9;">مرحباً بك في KLovers، ${p.name}!</h1>
+          <p>تم تأكيد تسجيلك. إليك التفاصيل:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الخطة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.plan_type === "group" ? "حصص جماعية" : "حصص خاصة"}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المدة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.duration} ${p.duration === 1 ? "شهر" : "أشهر"}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الحصص</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.sessions_total} حصة</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المبلغ المدفوع</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">$${p.amount}</td></tr>
+          </table>
+          <p>يمكنك الآن تسجيل الدخول إلى <a href="https://klovers.lovable.app/dashboard" style="color: #6d28d9;">لوحة الطالب</a> لإدارة حصصك.</p>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+        </div>`,
+    };
+  }
   return {
     subject: "KLovers — Enrollment Confirmed! 🎉",
     html: `
@@ -32,28 +118,47 @@ function buildEnglishEmail(p: EmailPayload): { subject: string; html: string } {
         </table>
         <p>You can now log in to your <a href="https://klovers.lovable.app/dashboard" style="color: #6d28d9;">Student Dashboard</a> to manage your sessions.</p>
         <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
-      </div>
-    `,
+      </div>`,
   };
 }
 
-function buildArabicEmail(p: EmailPayload): { subject: string; html: string } {
+function buildGroupMatchEmail(p: EmailPayload) {
+  const isArabic = p.language === "ar";
+  if (isArabic) {
+    return {
+      subject: "KLovers — تم تكوين مجموعتك! 🎓",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
+          <h1 style="color: #6d28d9;">أخبار رائعة يا ${p.name}! 🎉</h1>
+          <p>تم تكوين مجموعتك الدراسية!</p>
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; font-weight: bold;">📚 المجموعة: ${p.group_name}</p>
+            <p style="margin: 8px 0 0;">📅 الأيام: ${p.group_days}</p>
+          </div>
+          <p>سنتواصل معك قريباً بخصوص موعد أول حصة.</p>
+          <div style="margin: 24px 0;">
+            <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">لوحة الطالب</a>
+          </div>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+        </div>`,
+    };
+  }
   return {
-    subject: "KLovers — تم تأكيد التسجيل! 🎉",
+    subject: "KLovers — Your Group is Formed! 🎓",
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
-        <h1 style="color: #6d28d9;">مرحباً بك في KLovers، ${p.name}!</h1>
-        <p>تم تأكيد تسجيلك. إليك التفاصيل:</p>
-        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الخطة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.plan_type === "group" ? "حصص جماعية" : "حصص خاصة"}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المدة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.duration} ${p.duration === 1 ? "شهر" : "أشهر"}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الحصص</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.sessions_total} حصة</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المبلغ المدفوع</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">$${p.amount}</td></tr>
-        </table>
-        <p>يمكنك الآن تسجيل الدخول إلى <a href="https://klovers.lovable.app/dashboard" style="color: #6d28d9;">لوحة الطالب</a> لإدارة حصصك.</p>
-        <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
-      </div>
-    `,
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #6d28d9;">Great news, ${p.name}! 🎉</h1>
+        <p>Your study group has been formed!</p>
+        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p style="margin: 0; font-weight: bold;">📚 Group: ${p.group_name}</p>
+          <p style="margin: 8px 0 0;">📅 Days: ${p.group_days}</p>
+        </div>
+        <p>We'll contact you shortly with details about your first class.</p>
+        <div style="margin: 24px 0;">
+          <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Go to Dashboard</a>
+        </div>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
+      </div>`,
   };
 }
 
@@ -63,8 +168,12 @@ serve(async (req) => {
   }
 
   try {
+    if (!RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+
     const payload: EmailPayload = await req.json();
-    const { email, name, language } = payload;
+    const { email, name, language, template } = payload;
 
     if (!email || !name) {
       return new Response(JSON.stringify({ error: "Missing email or name" }), {
@@ -73,27 +182,27 @@ serve(async (req) => {
       });
     }
 
-    const isArabic = language === "ar";
-    const { subject, html } = isArabic ? buildArabicEmail(payload) : buildEnglishEmail(payload);
+    let subject: string;
+    let html: string;
 
-    // Use Supabase Auth admin to send email via the built-in SMTP
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
+    switch (template) {
+      case "welcome":
+        ({ subject, html } = buildWelcomeEmail(name, language || "en"));
+        break;
+      case "group_match":
+        ({ subject, html } = buildGroupMatchEmail(payload));
+        break;
+      case "enrollment":
+      default:
+        ({ subject, html } = buildEnrollmentEmail(payload));
+        break;
+    }
 
-    // Use the Lovable AI gateway to format and send via a simple fetch to a mail API
-    // For now, use Supabase's built-in invite mechanism as a workaround
-    // or log the email for manual sending until an SMTP service is configured
-    console.log(`Confirmation email prepared for ${email} (${isArabic ? "Arabic" : "English"})`);
-    console.log(`Subject: ${subject}`);
+    const result = await sendEmail(email, subject, html);
+    console.log(`Email sent to ${email} (${template || "enrollment"}):`, result);
 
-    // Store email record for audit
-    // In production, integrate with an email provider (Resend, SendGrid, etc.)
-    // For now, return success — the email content is logged server-side
     return new Response(
-      JSON.stringify({ success: true, message: "Confirmation email queued" }),
+      JSON.stringify({ success: true, message: "Email sent", id: result.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
