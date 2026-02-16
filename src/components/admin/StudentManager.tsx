@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History } from "lucide-react";
+import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History, Loader2 } from "lucide-react";
 import LegacyAttendancePanel from "./LegacyAttendancePanel";
 
 // Overview row from admin_student_overview view
@@ -137,6 +137,8 @@ const StudentManager = () => {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [studentForm, setStudentForm] = useState(EMPTY_STUDENT_FORM);
   const [saving, setSaving] = useState(false);
+  const [lookingUpEmail, setLookingUpEmail] = useState(false);
+  const [mergedEnrollment, setMergedEnrollment] = useState<any>(null);
 
   // Package dialog (add new package to student)
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
@@ -226,6 +228,7 @@ const StudentManager = () => {
   const openAddStudent = () => {
     setEditingStudentId(null);
     setStudentForm(EMPTY_STUDENT_FORM);
+    setMergedEnrollment(null);
     setStudentDialogOpen(true);
   };
 
@@ -236,7 +239,70 @@ const StudentManager = () => {
       status: s.status, course_type: s.course_type, level: "", notes: s.notes,
       group_name: s.group_name || "",
     });
+    setMergedEnrollment(null);
     setStudentDialogOpen(true);
+  };
+
+  // Auto-lookup existing data when email is entered in Add mode
+  const handleEmailBlur = async () => {
+    if (editingStudentId) return; // skip for edit mode
+    const email = studentForm.email.trim().toLowerCase();
+    if (!email || !email.includes("@")) return;
+
+    setLookingUpEmail(true);
+    const mergedFields: string[] = [];
+
+    try {
+      // Query all three sources in parallel
+      const [profileRes, enrollmentRes, leadRes] = await Promise.all([
+        supabase.from("profiles").select("name, country, level").eq("email", email).maybeSingle(),
+        supabase.from("admin_student_overview" as any).select("*").eq("email", email).maybeSingle(),
+        supabase.from("leads").select("*").eq("email", email).maybeSingle(),
+      ]);
+
+      const profile = profileRes.data as any;
+      const enrollment = enrollmentRes.data as any;
+      const lead = leadRes.data as any;
+
+      setStudentForm(prev => {
+        const updated = { ...prev };
+
+        // From profile
+        if (profile) {
+          if (!updated.full_name && profile.name) { updated.full_name = profile.name; mergedFields.push("name"); }
+          if (!updated.country && profile.country) { updated.country = profile.country; mergedFields.push("country"); }
+          if (!updated.level && profile.level) { updated.level = profile.level; mergedFields.push("level"); }
+        }
+
+        // From lead
+        if (lead) {
+          if (!updated.full_name && lead.name) { updated.full_name = lead.name; mergedFields.push("name"); }
+          if (!updated.country && lead.country) { updated.country = lead.country; mergedFields.push("country"); }
+        }
+
+        // From enrollment
+        if (enrollment) {
+          if (!updated.course_type && enrollment.plan_type) { updated.course_type = enrollment.plan_type; mergedFields.push("course type"); }
+          if (enrollment.payment_status === "PAID" && enrollment.approval_status === "APPROVED") {
+            updated.status = "student";
+            mergedFields.push("status→student");
+          }
+        }
+
+        return updated;
+      });
+
+      // Store enrollment data for use on save
+      setMergedEnrollment(enrollment);
+
+      if (mergedFields.length > 0) {
+        toast({ title: "Data found!", description: `Auto-filled: ${[...new Set(mergedFields)].join(", ")}` });
+      }
+    } catch (err) {
+      console.error("Email lookup error:", err);
+    } finally {
+      setLookingUpEmail(false);
+    }
   };
 
   const handleSaveStudent = async () => {
@@ -246,38 +312,51 @@ const StudentManager = () => {
     }
     setSaving(true);
     const email = studentForm.email.trim().toLowerCase();
-    const payload = {
+
+    // Build base payload
+    const payload: any = {
       full_name: studentForm.full_name.trim(), email,
       phone: studentForm.phone.trim(), country: studentForm.country.trim(),
       status: studentForm.status, course_type: studentForm.course_type.trim(),
       notes: studentForm.notes.trim(), group_name: studentForm.group_name,
     };
 
+    // Enrich with enrollment data when adding (not editing)
+    if (!editingStudentId && mergedEnrollment) {
+      const e = mergedEnrollment;
+      if (e.sessions_total) payload.total_classes = e.sessions_total;
+      if (e.amount) payload.total_paid = Number(e.amount);
+      if (e.unit_price) payload.price_per_class = Number(e.unit_price);
+      if (e.plan_type && !payload.course_type) payload.course_type = e.plan_type;
+      if (e.plan_type && e.duration) payload.package_name = `${e.plan_type} ${e.duration}mo`;
+      if (e.payment_status === "PAID") payload.payment_status = "paid";
+    }
+
     if (editingStudentId) {
-      // Editing existing student
-      const { error } = await supabase.from("students").update(payload as any).eq("id", editingStudentId);
+      const { error } = await supabase.from("students").update(payload).eq("id", editingStudentId);
       if (error) toast({ title: "Error updating", description: error.message, variant: "destructive" });
       else toast({ title: "Student updated" });
     } else {
-      // Check if email already exists
       const { data: existing } = await supabase
         .from("students").select("id").eq("email", email).maybeSingle();
 
       if (existing) {
-        // Update existing student info
-        const { error } = await supabase.from("students").update(payload as any).eq("id", (existing as any).id);
+        const { error } = await supabase.from("students").update(payload).eq("id", (existing as any).id);
         if (error) toast({ title: "Error updating", description: error.message, variant: "destructive" });
-        else toast({ title: "Student already exists", description: "Data updated successfully." });
+        else toast({ title: "Student merged", description: "Existing record updated with enrollment data." });
       } else {
-        // Insert new student
-        const { error } = await supabase.from("students").insert(payload as any);
+        const { error } = await supabase.from("students").insert(payload);
         if (error) toast({ title: "Error adding student", description: error.message, variant: "destructive" });
-        else toast({ title: "Student added" });
+        else toast({ title: "Student added", description: mergedEnrollment ? "Enrollment data merged." : undefined });
       }
+
+      // Sync lead status to enrolled
+      await supabase.from("leads").update({ status: "enrolled" } as any).eq("email", email).neq("status", "enrolled");
     }
 
     setSaving(false);
     setStudentDialogOpen(false);
+    setMergedEnrollment(null);
     fetchLegacyStudents();
   };
 
@@ -676,8 +755,9 @@ const StudentManager = () => {
                 <Input value={studentForm.full_name} onChange={(e) => setStudentForm(f => ({ ...f, full_name: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Email *</label>
-                <Input type="email" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} />
+                <label className="text-sm font-medium text-foreground">Email * {lookingUpEmail && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</label>
+                <Input type="email" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
+                {!editingStudentId && <p className="text-xs text-muted-foreground mt-0.5">Tab out to auto-lookup existing data</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
