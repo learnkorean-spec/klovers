@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,7 @@ import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
 import AdminNotifications from "@/components/admin/AdminNotifications";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 import GroupMatcher from "@/components/admin/GroupMatcher";
+import BulkEmailManager from "@/components/admin/BulkEmailManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -569,6 +570,9 @@ const AdminDashboard = () => {
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
               <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
+              <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                <Mail className="h-4 w-4" /> Campaigns
+              </TabsTrigger>
             </TabsList>
 
             {/* STUDENTS TAB */}
@@ -1200,6 +1204,11 @@ const AdminDashboard = () => {
                 <CardHeader className="pb-4"><CardTitle className="text-base">Blog Manager</CardTitle></CardHeader>
                 <CardContent className="pt-0"><BlogManager /></CardContent>
               </Card>
+            </TabsContent>
+
+            {/* CAMPAIGNS TAB */}
+            <TabsContent value="campaigns">
+              <BulkEmailManager />
             </TabsContent>
           </Tabs>
         </div>
