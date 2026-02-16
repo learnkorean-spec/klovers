@@ -685,6 +685,9 @@ const StudentManager = () => {
                     <TableHead>Group</TableHead>
                     <TableHead>Package</TableHead>
                     <TableHead className="text-center">Classes</TableHead>
+                    <TableHead className="text-center">Remaining</TableHead>
+                    <TableHead className="text-center">Negative</TableHead>
+                    <TableHead className="text-right">Amount Due</TableHead>
                     <TableHead className="text-right">Paid</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -693,10 +696,12 @@ const StudentManager = () => {
                 <TableBody>
                   {filteredLegacy.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center text-muted-foreground py-8">No students found.</TableCell>
+                      <TableCell colSpan={12} className="text-center text-muted-foreground py-8">No students found.</TableCell>
                     </TableRow>
                   ) : filteredLegacy.map((s) => {
                     const remaining = s.total_classes - s.used_classes;
+                    const negativeSessions = Math.max(0, -remaining);
+                    const amountDue = negativeSessions * s.price_per_class;
                     return (
                       <TableRow key={s.id}>
                         <TableCell className="font-medium">{s.full_name}</TableCell>
@@ -716,9 +721,15 @@ const StudentManager = () => {
                         <TableCell className="text-sm">{s.package_name || "—"}</TableCell>
                         <TableCell className="text-center">
                           <span className="text-sm">{s.used_classes}/{s.total_classes}</span>
-                          <span className={`text-xs ml-1 ${remaining < 0 ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                            ({remaining} left)
-                          </span>
+                        </TableCell>
+                        <TableCell className={`text-center font-mono ${remaining < 0 ? "text-destructive font-semibold" : ""}`}>
+                          {remaining}
+                        </TableCell>
+                        <TableCell className={`text-center font-mono ${negativeSessions > 0 ? "text-destructive font-semibold" : ""}`}>
+                          {negativeSessions > 0 ? negativeSessions : "—"}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${amountDue > 0 ? "text-destructive font-semibold" : ""}`}>
+                          {amountDue > 0 ? `$${amountDue.toLocaleString()}` : "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm">${s.total_paid}</TableCell>
                         <TableCell>{paymentBadge(s.payment_status)}</TableCell>
