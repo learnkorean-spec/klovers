@@ -699,9 +699,12 @@ const StudentManager = () => {
                       <TableCell colSpan={12} className="text-center text-muted-foreground py-8">No students found.</TableCell>
                     </TableRow>
                   ) : filteredLegacy.map((s) => {
-                    const remaining = s.total_classes - s.used_classes;
-                    const negativeSessions = Math.max(0, -remaining);
-                    const amountDue = negativeSessions * s.price_per_class;
+                    // Cross-reference with admin_student_overview for consistent data
+                    const overview = overviewRows.find(o => o.email?.toLowerCase() === s.email?.toLowerCase());
+                    const remaining = overview ? overview.sessions_remaining : (s.total_classes - s.used_classes);
+                    const negativeSessions = overview ? (overview.negative_sessions || 0) : Math.max(0, -remaining);
+                    const amountDue = overview ? (overview.amount_due || 0) : (negativeSessions * s.price_per_class);
+                    const currency = overview?.currency === "EGP" ? "LE" : "$";
                     return (
                       <TableRow key={s.id}>
                         <TableCell className="font-medium">{s.full_name}</TableCell>
@@ -729,7 +732,7 @@ const StudentManager = () => {
                           {negativeSessions > 0 ? negativeSessions : "—"}
                         </TableCell>
                         <TableCell className={`text-right font-mono ${amountDue > 0 ? "text-destructive font-semibold" : ""}`}>
-                          {amountDue > 0 ? `$${amountDue.toLocaleString()}` : "—"}
+                          {amountDue > 0 ? `${currency}${amountDue.toLocaleString()}` : "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm">${s.total_paid}</TableCell>
                         <TableCell>{paymentBadge(s.payment_status)}</TableCell>
