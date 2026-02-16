@@ -30,6 +30,7 @@ import LifecycleFunnel from "@/components/admin/LifecycleFunnel";
 import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
 import AdminNotifications from "@/components/admin/AdminNotifications";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
+import GroupMatcher from "@/components/admin/GroupMatcher";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -351,6 +352,62 @@ const AdminDashboard = () => {
       } catch (err) {
         console.error("Group assignment error:", err);
       }
+
+      // === GROUP MATCHING CHECK ===
+      if (enrollment.plan_type === "group") {
+        try {
+          const { data: unmatchedRaw } = await supabase
+            .from("enrollments")
+            .select("id, user_id, preferred_days, preferred_start")
+            .eq("approval_status", "APPROVED")
+            .eq("plan_type", "group")
+            .is("matched_batch_id", null)
+            .not("preferred_days", "is", null);
+
+          if (unmatchedRaw && unmatchedRaw.length >= 3) {
+            // Check for clusters of 3+ sharing at least 1 day + same start
+            const unmatched = unmatchedRaw as any[];
+            const clusterMap: Record<string, any[]> = {};
+            for (const e of unmatched) {
+              const days = e.preferred_days || [];
+              const start = e.preferred_start || "";
+              const key = `${[...days].sort().join(",")}|${start}`;
+              if (!clusterMap[key]) clusterMap[key] = [];
+              clusterMap[key].push(e);
+            }
+
+            // Merge overlapping clusters (same start, shared day)
+            const keys = Object.keys(clusterMap);
+            for (let i = 0; i < keys.length; i++) {
+              const [daysA, startA] = keys[i].split("|");
+              const daysAArr = daysA.split(",");
+              for (let j = i + 1; j < keys.length; j++) {
+                const [daysB, startB] = keys[j].split("|");
+                if (startA !== startB) continue;
+                const daysBArr = daysB.split(",");
+                if (daysAArr.some((d) => daysBArr.includes(d))) {
+                  clusterMap[keys[i]].push(...clusterMap[keys[j]]);
+                  delete clusterMap[keys[j]];
+                }
+              }
+            }
+
+            for (const [key, members] of Object.entries(clusterMap)) {
+              // Deduplicate
+              const unique = [...new Map(members.map((m: any) => [m.id, m])).values()];
+              if (unique.length >= 3) {
+                const [daysStr, start] = key.split("|");
+                await supabase.from("admin_notifications" as any).insert({
+                  message: `${unique.length} students ready for a group: ${daysStr.replace(/,/g, ", ")} / ${start}`,
+                  type: "group_match_ready",
+                } as any);
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Group matching check error:", err);
+        }
+      }
     }
 
     toast({ title: `Enrollment ${action.toLowerCase()}` });
@@ -507,6 +564,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="leads" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Our Students</TabsTrigger>
               <TabsTrigger value="manage" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Manage</TabsTrigger>
               <TabsTrigger value="group-attendance" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Groups</TabsTrigger>
+              <TabsTrigger value="group-matcher" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Matcher</TabsTrigger>
               <TabsTrigger value="notifications" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
@@ -1117,6 +1175,14 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Group Attendance</CardTitle></CardHeader>
                 <CardContent className="pt-0"><GroupAttendanceManager /></CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* GROUP MATCHER TAB */}
+            <TabsContent value="group-matcher">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Group Matcher</CardTitle></CardHeader>
+                <CardContent className="pt-0"><GroupMatcher /></CardContent>
               </Card>
             </TabsContent>
 

@@ -182,7 +182,19 @@ const EnrollNowPage = () => {
           : error.message;
         throw new Error(desc);
       }
-      nav(`/pay/${data}`);
+      // Save schedule preferences to the enrollment
+      const enrollmentId = data as string;
+      if (enrollmentId) {
+        const schedPrefs: any = {};
+        if (preferredDays.length > 0) schedPrefs.preferred_days = preferredDays;
+        if (preferredTime) schedPrefs.preferred_time = preferredTime;
+        if (startOption) schedPrefs.preferred_start = startOption === "Specific date" ? specificDate : startOption;
+        if (timezone) schedPrefs.timezone = timezone;
+        if (Object.keys(schedPrefs).length > 0) {
+          await supabase.from("enrollments").update(schedPrefs).eq("id", enrollmentId);
+        }
+      }
+      nav(`/pay/${enrollmentId}`);
     } catch (err: any) {
       toast({ title: "Order error", description: err.message, variant: "destructive" });
     } finally {
