@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -86,7 +86,7 @@ const AdminDashboard = () => {
   const [overviewRows, setOverviewRows] = useState<OverviewRow[]>([]);
   const [search, setSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("confirmed");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
@@ -94,6 +94,8 @@ const AdminDashboard = () => {
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -188,13 +190,57 @@ const AdminDashboard = () => {
     else { setLeads((prev) => prev.filter((l) => l.id !== id)); toast({ title: "Deleted" }); }
   };
 
+  const handleEditLead = async () => {
+    if (!editingLeadId) return;
+    const { error } = await supabase.from("leads").update({
+      name: editForm.name,
+      email: editForm.email,
+      country: editForm.country || "",
+      plan_type: editForm.plan_type || "",
+      duration: editForm.duration || "",
+      schedule: editForm.schedule || "",
+      timezone: editForm.timezone || "",
+      status: editForm.status || "new",
+    } as any).eq("id", editingLeadId);
+    if (error) {
+      toast({ title: "Error", description: "Failed to update lead.", variant: "destructive" });
+      return;
+    }
+    setLeads((prev) => prev.map((l) => l.id === editingLeadId ? { ...l, ...editForm } : l));
+    setEditingLeadId(null);
+    setEditForm({});
+    toast({ title: "Lead updated" });
+  };
+
+  const startEditLead = (lead: Lead) => {
+    setEditingLeadId(lead.id);
+    setEditForm({ ...lead });
+  };
+
+  const cancelEditLead = () => {
+    setEditingLeadId(null);
+    setEditForm({});
+  };
+
+  const confirmedEmails = useMemo(() => {
+    const emails = new Set<string>();
+    overviewRows.forEach((r) => {
+      if (r.payment_status === "PAID" && r.approval_status === "APPROVED" && r.email) {
+        emails.add(r.email.toLowerCase());
+      }
+    });
+    return emails;
+  }, [overviewRows]);
+
   const filtered = useMemo(() => {
     return leads.filter((l) => {
       const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === "all" || l.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const isConfirmed = l.status === "enrolled" || confirmedEmails.has(l.email.toLowerCase());
+      if (statusFilter === "confirmed") return matchesSearch && isConfirmed;
+      if (statusFilter === "all") return matchesSearch;
+      return matchesSearch && l.status === statusFilter;
     });
-  }, [leads, search, statusFilter]);
+  }, [leads, search, statusFilter, confirmedEmails]);
 
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Date"];
@@ -891,6 +937,7 @@ const AdminDashboard = () => {
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                       <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Filter status" /></SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="confirmed">Confirmed (Paid)</SelectItem>
                         <SelectItem value="all">All</SelectItem>
                         {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                       </SelectContent>
@@ -944,49 +991,108 @@ const AdminDashboard = () => {
                     <TableBody>
                       {filtered.map((lead) => (
                         <TableRow key={lead.id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
-                          <TableCell className="py-3 px-3 font-medium">{lead.name}</TableCell>
-                          <TableCell className="py-3 px-3">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="block max-w-[240px] truncate">{lead.email}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>{lead.email}</TooltipContent>
-                            </Tooltip>
+                          <TableCell className="py-3 px-3 font-medium">
+                            {editingLeadId === lead.id ? (
+                              <Input value={editForm.name || ""} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-sm" />
+                            ) : lead.name}
                           </TableCell>
-                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{lead.country || "—"}</TableCell>
+                          <TableCell className="py-3 px-3">
+                            {editingLeadId === lead.id ? (
+                              <Input value={editForm.email || ""} onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} className="h-8 text-sm" />
+                            ) : (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="block max-w-[240px] truncate">{lead.email}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>{lead.email}</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
+                            {editingLeadId === lead.id ? (
+                              <Input value={editForm.country || ""} onChange={(e) => setEditForm(f => ({ ...f, country: e.target.value }))} className="h-8 text-sm" />
+                            ) : lead.country || "—"}
+                          </TableCell>
                           <TableCell className="py-3 px-3 hidden md:table-cell">
-                            {lead.plan_type ? <Badge variant="outline" className="text-xs">{lead.plan_type}</Badge> : "—"}
+                            {editingLeadId === lead.id ? (
+                              <Select value={editForm.plan_type || ""} onValueChange={(v) => setEditForm(f => ({ ...f, plan_type: v }))}>
+                                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="group">group</SelectItem>
+                                  <SelectItem value="private">private</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : lead.plan_type ? <Badge variant="outline" className="text-xs">{lead.plan_type}</Badge> : "—"}
                           </TableCell>
-                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{lead.duration || "—"}</TableCell>
-                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">{lead.schedule || "—"}</TableCell>
-                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">{lead.timezone || "—"}</TableCell>
+                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
+                            {editingLeadId === lead.id ? (
+                              <Input value={editForm.duration || ""} onChange={(e) => setEditForm(f => ({ ...f, duration: e.target.value }))} className="h-8 text-sm w-20" />
+                            ) : lead.duration || "—"}
+                          </TableCell>
+                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
+                            {editingLeadId === lead.id ? (
+                              <Input value={editForm.schedule || ""} onChange={(e) => setEditForm(f => ({ ...f, schedule: e.target.value }))} className="h-8 text-sm" />
+                            ) : lead.schedule || "—"}
+                          </TableCell>
+                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
+                            {editingLeadId === lead.id ? (
+                              <Input value={editForm.timezone || ""} onChange={(e) => setEditForm(f => ({ ...f, timezone: e.target.value }))} className="h-8 text-sm" />
+                            ) : lead.timezone || "—"}
+                          </TableCell>
                           <TableCell className="py-3 px-3">
-                            <Badge variant={
-                              lead.status === "enrolled" ? "default"
-                              : lead.status === "rejected" ? "destructive"
-                              : lead.status === "contacted" ? "secondary"
-                              : "outline"
-                            } className="text-xs">
-                              {lead.status}
-                            </Badge>
+                            {editingLeadId === lead.id ? (
+                              <Select value={editForm.status || "new"} onValueChange={(v) => setEditForm(f => ({ ...f, status: v }))}>
+                                <SelectTrigger className="h-8 text-sm w-28"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant={
+                                lead.status === "enrolled" ? "default"
+                                : lead.status === "rejected" ? "destructive"
+                                : lead.status === "contacted" ? "secondary"
+                                : "outline"
+                              } className="text-xs">
+                                {lead.status}
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>
                           <TableCell className="py-3 px-3">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete lead?</AlertDialogTitle>
-                                  <AlertDialogDescription>This will permanently delete {lead.name}'s record.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(lead.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <div className="flex items-center gap-1">
+                              {editingLeadId === lead.id ? (
+                                <>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditLead}>
+                                    <Check className="h-4 w-4 text-primary" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEditLead}>
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)}>
+                                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete lead?</AlertDialogTitle>
+                                        <AlertDialogDescription>This will permanently delete {lead.name}'s record.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(lead.id)}>Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
