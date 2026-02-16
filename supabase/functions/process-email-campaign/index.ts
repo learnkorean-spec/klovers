@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "K-Lovers <hello@klovers.co>",
+          from: Deno.env.get("FROM_EMAIL") || "KLovers <onboarding@resend.dev>",
           to: [profile?.email || claims.claims.email],
           subject,
           html,
@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
                 Authorization: `Bearer ${RESEND_API_KEY}`,
               },
               body: JSON.stringify({
-                from: "K-Lovers <hello@klovers.co>",
+                from: Deno.env.get("FROM_EMAIL") || "KLovers <onboarding@resend.dev>",
                 to: [send.email],
                 subject: campaign.subject,
                 html,
