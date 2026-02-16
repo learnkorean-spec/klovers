@@ -125,12 +125,13 @@ serve(async (req) => {
     );
 
     // Look up user by email to check enrollment history
-    const { data: userData } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-    if (userData?.user) {
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+    const matchedUser = users?.find((u: any) => u.email === email);
+    if (matchedUser) {
       const { count } = await supabaseAdmin
         .from("enrollments")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", userData.user.id)
+        .eq("user_id", matchedUser.id)
         .eq("payment_status", "PAID");
 
       if (count === 0) applyDiscount = true;
