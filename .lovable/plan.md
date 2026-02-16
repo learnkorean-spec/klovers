@@ -1,33 +1,41 @@
 
 
-## Plan: Editable Leads + Confirmed-Only "Our Students"
+## Plan: Merge Student Data on Manual Add by Email
+
+### Problem
+When an admin adds a student manually in the "Legacy Manual" tab, the system does a basic upsert on the `students` table but does NOT pull in existing data from other tables (`profiles`, `enrollments`, `leads`, `admin_student_overview`). If a student already registered and paid, their enrollment data (plan type, classes, payment info) is lost when manually adding by name.
 
 ### What Changes
 
-**1. Make lead records editable inline**
-- Add an **Edit** button (pencil icon) to each row in the "Our Students" tab
-- Clicking Edit opens an inline editing mode or a dialog where the admin can modify: name, email, country, plan_type, duration, schedule, timezone, and status
-- Save updates to the `leads` table via Supabase
-- Cancel button to discard changes
+**1. Auto-populate form when email matches existing data**
+- When the admin types an email in the "Add Student" dialog and tabs/blurs out, automatically look up:
+  - `profiles` table (name, country, level)
+  - `admin_student_overview` view (plan_type, sessions_total, amount, payment_status, currency)
+  - `leads` table (goal, schedule, timezone)
+- Pre-fill the form fields with found data so the admin sees what already exists before saving
 
-**2. Fix "Our Students" tab to show only confirmed students**
-- Rename the current "Our Students" tab logic so it filters leads to show **only** those with status "enrolled" or who have a matching PAID+APPROVED enrollment (from Stripe or manual Egypt payment)
-- Cross-reference leads with the `admin_student_overview` view to check if a lead's email matches a confirmed enrollment
-- Add a separate sub-filter or keep the existing status filter so admins can still browse
+**2. Merge enrollment data into students table on save**
+- When saving a new student whose email matches an existing enrollment (from `admin_student_overview`), automatically populate:
+  - `course_type` from `plan_type`
+  - `package_name` from plan_type + duration
+  - `total_classes` from `sessions_total`
+  - `total_paid` from `amount`
+  - `price_per_class` from `unit_price`
+  - `payment_status` from enrollment payment status
+- Also sync the lead status to "enrolled" if a lead record exists
 
-**3. Lifecycle funnel sync**
-- The "Enrolled" count in the funnel will reflect only paid/confirmed students
-- "Leads" count reflects prospects who haven't paid yet
+**3. Smart merge logic**
+- Only overwrite empty/default fields -- if the admin typed a value, keep it
+- Show a toast confirming what data was merged
 
 ### Technical Details
 
-**File: `src/pages/AdminDashboard.tsx`**
+**File: `src/components/admin/StudentManager.tsx`**
 
-- Add `editingLeadId` state and `editForm` state to track which lead is being edited
-- Add `handleEditLead` function to save updates to the `leads` table
-- Add pencil icon button in each table row that toggles edit mode
-- In edit mode, table cells become input fields / select dropdowns
-- Filter the "Our Students" tab: enrich leads with enrollment status from `admin_student_overview`, and by default show only leads whose email matches a PAID+APPROVED enrollment OR whose status is "enrolled"
-- Keep the status filter dropdown so admins can switch to see "all", "new", "contacted", etc.
+- Add an `onBlur` handler on the email input in the Add Student dialog
+- On blur, query `profiles`, `admin_student_overview`, and `leads` by email
+- Merge found data into `studentForm` state (only fill empty fields)
+- In `handleSaveStudent`, when inserting/upserting, enrich the payload with enrollment data from `admin_student_overview`
+- After save, update the matching `leads` record status to "enrolled" if one exists
 
-**No database changes needed** - the `leads` table already supports admin UPDATE via RLS policy.
+**No database changes needed** -- all tables and views already exist with proper RLS policies for admin access.
