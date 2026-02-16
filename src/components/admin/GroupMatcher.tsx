@@ -197,7 +197,24 @@ const GroupMatcher = () => {
         throw new Error(updateError.message);
       }
 
-      toast({ title: "Group created!", description: `"${groupName}" with ${cluster.members.length} students.` });
+      // Send group match emails to all members
+      for (const member of cluster.members) {
+        try {
+          await supabase.functions.invoke("send-confirmation-email", {
+            body: {
+              email: member.email,
+              name: member.name,
+              template: "group_match",
+              group_name: groupName,
+              group_days: cluster.days.join(", "),
+            },
+          });
+        } catch (emailErr) {
+          console.error(`Failed to send group email to ${member.email}:`, emailErr);
+        }
+      }
+
+      toast({ title: "Group created!", description: `"${groupName}" with ${cluster.members.length} students. Emails sent!` });
       fetchUnmatched();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });

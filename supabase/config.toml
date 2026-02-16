@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.send-negative-balance-reminders]
 verify_jwt = false
+
+[functions.send-confirmation-email]
+verify_jwt = false
+
+[functions.send-test-emails]
+verify_jwt = false
