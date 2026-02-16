@@ -1,11 +1,22 @@
+import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, DollarSign } from "lucide-react";
 import heroVideo from "@/assets/hero-korea-video.mp4";
+import heroPoster from "@/assets/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   const { t } = useLanguage();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.load();
+      video.play().catch(() => {});
+    }
+  }, []);
 
   return (
     <section
@@ -13,7 +24,15 @@ const HeroSection = () => {
       className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden"
     >
       <div className="absolute inset-0">
-        <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+        <video
+          ref={videoRef}
+          poster={heroPoster}
+          preload="none"
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
           <source src={heroVideo} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-black/75" />
