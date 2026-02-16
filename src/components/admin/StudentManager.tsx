@@ -672,7 +672,7 @@ const StudentManager = () => {
             <Button onClick={openAddStudent} size="sm"><Plus className="h-4 w-4 mr-1" /> Add</Button>
           </div>
 
-          {legacyLoading ? (
+          {legacyLoading || overviewLoading ? (
             <p className="text-muted-foreground text-center py-8">Loading...</p>
           ) : (
             <div className="rounded-md border">
