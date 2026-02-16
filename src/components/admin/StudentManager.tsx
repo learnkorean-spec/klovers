@@ -147,7 +147,7 @@ const BUNDLE_OPTIONS = [
 ];
 
 const EMPTY_PACKAGE_FORM = {
-  package_name: "", total_classes: 0, total_paid: 0, payment_status: "paid",
+  package_name: "", total_classes: 0, total_paid: 0, payment_status: "paid", used_classes: 0,
 };
 
 const StudentManager = () => {
@@ -415,6 +415,8 @@ const StudentManager = () => {
       .eq("student_id", packageStudentId)
       .eq("is_active", true);
 
+    const usedClasses = Number(packageForm.used_classes) || 0;
+
     // Insert new active package
     const { error } = await supabase
       .from("student_packages" as any)
@@ -422,7 +424,7 @@ const StudentManager = () => {
         student_id: packageStudentId,
         package_name: packageForm.package_name.trim(),
         total_classes: totalClasses,
-        used_classes: 0,
+        used_classes: usedClasses,
         total_paid: totalPaid,
         price_per_class: pricePerClass,
         payment_status: packageForm.payment_status,
@@ -436,7 +438,7 @@ const StudentManager = () => {
       await supabase.from("students").update({
         package_name: packageForm.package_name.trim(),
         total_classes: totalClasses,
-        used_classes: 0,
+        used_classes: usedClasses,
         total_paid: totalPaid,
         price_per_class: pricePerClass,
         payment_status: packageForm.payment_status,
@@ -876,6 +878,7 @@ const StudentManager = () => {
                     total_classes: bundle.classes,
                     total_paid: bundle.amount,
                     payment_status: "paid",
+                    used_classes: 0,
                   });
                 }
               }}>
@@ -893,16 +896,27 @@ const StudentManager = () => {
               <label className="text-sm font-medium text-foreground">Package Name</label>
               <Input value={packageForm.package_name} onChange={(e) => setPackageForm(f => ({ ...f, package_name: e.target.value }))} placeholder="Auto-filled from bundle" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Total Classes</label>
                 <Input type="number" min={0} value={packageForm.total_classes} onChange={(e) => setPackageForm(f => ({ ...f, total_classes: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Extra (unpaid)</label>
+                <Input type="number" min={0} value={packageForm.used_classes} onChange={(e) => setPackageForm(f => ({ ...f, used_classes: Number(e.target.value) }))} placeholder="0" />
+                <p className="text-xs text-muted-foreground mt-0.5">Classes attended but not paid</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Total Paid</label>
                 <Input type="number" min={0} value={packageForm.total_paid} onChange={(e) => setPackageForm(f => ({ ...f, total_paid: Number(e.target.value) }))} />
               </div>
             </div>
+            {Number(packageForm.used_classes) > 0 && (
+              <div className="text-xs text-destructive bg-destructive/10 rounded p-2">
+                {packageForm.used_classes} extra unpaid session{Number(packageForm.used_classes) !== 1 ? "s" : ""} — Amount due: $
+                {(Number(packageForm.used_classes) * (Number(packageForm.total_classes) > 0 ? Math.round((Number(packageForm.total_paid) / Number(packageForm.total_classes)) * 100) / 100 : 0)).toFixed(2)}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground">Price / Class</label>
