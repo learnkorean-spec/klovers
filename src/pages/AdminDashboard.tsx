@@ -45,8 +45,9 @@ interface Enrollment {
   amount: number; unit_price: number; tx_ref: string; receipt_url: string; status: string;
   payment_status: string; approval_status: string; payment_provider: string | null;
   admin_review_required: boolean; sessions_remaining: number;
-  created_at: string; profiles?: { name: string; email: string } | null;
+  created_at: string; profiles?: { name: string; email: string; level?: string } | null;
   currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
+  preferred_days?: string[] | null; preferred_time?: string | null; timezone?: string | null;
 }
 
 interface AttendanceReq {
@@ -100,6 +101,10 @@ const AdminDashboard = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
+  const [editingEnrollLevel, setEditingEnrollLevel] = useState<Record<string, string>>({});
+  const [editingEnrollDays, setEditingEnrollDays] = useState<Record<string, string[]>>({});
+  const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
+  const SLOT_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -115,11 +120,11 @@ const AdminDashboard = () => {
     ]);
 
     // Build profile map from overview for enrollment enrichment
-    const profileMap: Record<string, { name: string; email: string }> = {};
+    const profileMap: Record<string, { name: string; email: string; level?: string }> = {};
     const overviewByEmail: Record<string, any> = {};
     if (overviewRes.data) {
       (overviewRes.data as any[]).forEach((r: any) => {
-        profileMap[r.user_id] = { name: r.name, email: r.email };
+        profileMap[r.user_id] = { name: r.name, email: r.email, level: r.level };
         overviewByEmail[r.email?.toLowerCase()] = r;
       });
     }
@@ -290,6 +295,18 @@ const AdminDashboard = () => {
         return;
       }
       updates.unit_price = price;
+    }
+
+    // Save admin-edited preferred_days to enrollment before approval
+    const editedDays = editingEnrollDays[enrollment.id];
+    if (editedDays && editedDays.length > 0) {
+      updates.preferred_days = editedDays;
+    }
+
+    // Save admin-edited level to profile before approval
+    const editedLevel = editingEnrollLevel[enrollment.id];
+    if (editedLevel && action === "APPROVED") {
+      await supabase.from("profiles").update({ level: editedLevel } as any).eq("user_id", enrollment.user_id);
     }
 
     const { error } = await supabase.from("enrollments").update(updates).eq("id", enrollment.id);
@@ -816,6 +833,61 @@ const AdminDashboard = () => {
                                       <span className="text-sm font-medium text-foreground">${e.unit_price}</span>
                                     )}
                                   </div>
+                                  {/* Editable Level & Preferred Days for pending enrollments */}
+                                  {(e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW") && e.plan_type === "group" && (
+                                    <div className="space-y-2 pt-2 border-t border-border">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm text-muted-foreground shrink-0">Level:</span>
+                                        <Select
+                                          value={editingEnrollLevel[e.id] ?? e.profiles?.level ?? ""}
+                                          onValueChange={(v) => setEditingEnrollLevel(prev => ({ ...prev, [e.id]: v }))}
+                                        >
+                                          <SelectTrigger className="h-7 w-44">
+                                            <SelectValue placeholder="Select level" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {SLOT_LEVELS.map(l => (
+                                              <SelectItem key={l} value={l}>{l}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm text-muted-foreground">Preferred days:</span>
+                                        <div className="flex flex-wrap gap-1.5 mt-1">
+                                          {SLOT_WEEKDAYS.map(day => {
+                                            const currentDays = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
+                                            const isSelected = currentDays.includes(day);
+                                            return (
+                                              <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => {
+                                                  const curr = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
+                                                  const next = isSelected ? curr.filter(d => d !== day) : [...curr, day];
+                                                  setEditingEnrollDays(prev => ({ ...prev, [e.id]: next }));
+                                                }}
+                                                className={cn(
+                                                  "px-2.5 py-1 rounded-full text-xs border transition-colors",
+                                                  isSelected
+                                                    ? "bg-primary text-primary-foreground border-primary"
+                                                    : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                                                )}
+                                              >
+                                                {day.slice(0, 3)}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Show existing preferences for approved enrollments */}
+                                  {e.approval_status === "APPROVED" && e.preferred_days && e.preferred_days.length > 0 && (
+                                    <p className="text-xs text-muted-foreground">
+                                      📅 {e.preferred_days.join(", ")} {e.preferred_time ? `· ${e.preferred_time}` : ""}
+                                    </p>
+                                  )}
                                   <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
