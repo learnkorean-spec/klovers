@@ -6,11 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Loader2, CheckCircle2, AlertCircle, Zap, XCircle, RefreshCw, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
+const COMMON_TIMEZONES = [
+  "Africa/Cairo", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+  "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Dubai", "Asia/Riyadh",
+  "Asia/Kolkata", "Asia/Tokyo", "Asia/Seoul", "Australia/Sydney", "Pacific/Auckland",
+];
 
 interface SlotInfo {
   id: string;
@@ -36,14 +43,98 @@ interface Student {
   slot_day: string | null;
   slot_time: string | null;
   slot_level: string | null;
+  slot_current_count: number;
+  slot_max_students: number;
 }
 
-type MatchStatus = "match" | "mismatch" | "unmatched";
+type MatchStatus = "ready" | "mismatch" | "incomplete" | "unmatched" | "capacity";
 
 const getStatus = (s: Student): MatchStatus => {
   if (!s.assigned_slot_id) return "unmatched";
-  if (s.slot_day && s.preferred_days?.includes(s.slot_day)) return "match";
+  if (!s.preferred_days || s.preferred_days.length === 0) return "incomplete";
+  if (s.slot_current_count >= s.slot_max_students) return "capacity";
+  if (s.slot_day && s.preferred_days.includes(s.slot_day)) return "ready";
   return "mismatch";
+};
+
+const STATUS_CONFIG: Record<MatchStatus, { label: string; reason: string; color: string }> = {
+  ready: { label: "Ready", reason: "Day match", color: "text-primary" },
+  mismatch: { label: "Mismatch", reason: "Day mismatch", color: "text-destructive" },
+  incomplete: { label: "Incomplete", reason: "No preferences set", color: "text-yellow-600" },
+  unmatched: { label: "Unmatched", reason: "No slot assigned", color: "text-muted-foreground" },
+  capacity: { label: "Capacity", reason: "Slot is full", color: "text-orange-600" },
+};
+
+interface ResetDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onResetDone: () => void;
+}
+
+const ResetDialog = ({ open, onOpenChange, onResetDone }: ResetDialogProps) => {
+  const [password, setPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!password.trim()) {
+      toast({ title: "Error", description: "Password is required.", variant: "destructive" });
+      return;
+    }
+    setResetting(true);
+    try {
+      const { data, error } = await supabase.rpc("reset_platform_data" as any, {
+        _reset_password: password,
+      });
+      if (error) {
+        toast({ title: "Reset failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Platform Reset", description: String(data) || "Reset completed." });
+        onResetDone();
+        onOpenChange(false);
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Reset failed.", variant: "destructive" });
+    }
+    setPassword("");
+    setResetting(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-destructive">
+            <ShieldAlert className="h-5 w-5" /> Full Platform Reset
+          </DialogTitle>
+          <DialogDescription className="text-destructive font-medium">
+            This will delete ALL users, enrollments, and assignments. This action is irreversible.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <p className="text-sm text-muted-foreground">
+            Only super admins can perform this action. Enter the reset password to proceed.
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="reset-password">Reset Password</Label>
+            <Input
+              id="reset-password"
+              type="password"
+              placeholder="Enter reset password…"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleReset()}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={resetting}>Cancel</Button>
+          <Button variant="destructive" onClick={handleReset} disabled={resetting || !password.trim()}>
+            {resetting ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Resetting…</> : "Reset Everything"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const BulkMatcher = () => {
@@ -54,6 +145,8 @@ const BulkMatcher = () => {
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editLevels, setEditLevels] = useState<Record<string, string>>({});
+  const [editTimezone, setEditTimezone] = useState<{ enrollId: string; tz: string } | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
 
   const fetchSlots = async () => {
     const { data } = await supabase
@@ -66,6 +159,8 @@ const BulkMatcher = () => {
 
   const fetchStudents = useCallback(async () => {
     setLoading(true);
+
+    // 1. Scoped: only approved + paid enrollments
     const { data: enrollments, error } = await supabase
       .from("enrollments")
       .select("id, user_id, plan_type, preferred_days, preferred_time, timezone")
@@ -73,32 +168,32 @@ const BulkMatcher = () => {
       .eq("payment_status", "PAID")
       .order("created_at", { ascending: false });
 
-    if (error || !enrollments) { setLoading(false); return; }
+    if (error || !enrollments || enrollments.length === 0) { setStudents([]); setLoading(false); return; }
 
+    const enrollmentIds = enrollments.map(e => e.id);
     const userIds = [...new Set(enrollments.map(e => e.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, name, email, level")
-      .in("user_id", userIds);
+
+    // 2. Parallel: profiles + preferences scoped by enrollment IDs
+    const [profilesRes, prefsRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, name, email, level").in("user_id", userIds),
+      supabase.from("student_slot_preferences" as any).select("enrollment_id, assigned_slot_id, match_status").in("enrollment_id", enrollmentIds),
+    ]);
 
     const profileMap: Record<string, { name: string; email: string; level: string }> = {};
-    profiles?.forEach(p => { profileMap[p.user_id] = { name: p.name, email: p.email, level: p.level || "" }; });
-
-    const { data: prefs } = await supabase
-      .from("student_slot_preferences" as any)
-      .select("enrollment_id, assigned_slot_id, match_status");
+    profilesRes.data?.forEach(p => { profileMap[p.user_id] = { name: p.name, email: p.email, level: p.level || "" }; });
 
     const prefMap: Record<string, string> = {};
-    (prefs as any[])?.forEach(p => { if (p.assigned_slot_id) prefMap[p.enrollment_id] = p.assigned_slot_id; });
+    (prefsRes.data as any[])?.forEach(p => { if (p.assigned_slot_id) prefMap[p.enrollment_id] = p.assigned_slot_id; });
 
+    // 3. Fetch only used slots
     const slotIds = [...new Set(Object.values(prefMap).filter(Boolean))];
-    const slotMap: Record<string, { day: string; time: string; course_level: string }> = {};
+    const slotMap: Record<string, { day: string; time: string; course_level: string; current_count: number; max_students: number }> = {};
     if (slotIds.length > 0) {
       const { data: slotsData } = await supabase
         .from("matching_slots" as any)
-        .select("id, day, time, course_level")
+        .select("id, day, time, course_level, current_count, max_students")
         .in("id", slotIds);
-      (slotsData as any[])?.forEach(s => { slotMap[s.id] = { day: s.day, time: s.time, course_level: s.course_level }; });
+      (slotsData as any[])?.forEach(s => { slotMap[s.id] = { day: s.day, time: s.time, course_level: s.course_level, current_count: s.current_count, max_students: s.max_students }; });
     }
 
     const enriched: Student[] = enrollments.map(e => {
@@ -119,6 +214,8 @@ const BulkMatcher = () => {
         slot_day: slot?.day || null,
         slot_time: slot?.time || null,
         slot_level: slot?.course_level || null,
+        slot_current_count: slot?.current_count || 0,
+        slot_max_students: slot?.max_students || 0,
       };
     });
 
@@ -128,12 +225,11 @@ const BulkMatcher = () => {
 
   useEffect(() => { fetchStudents(); fetchSlots(); }, [fetchStudents]);
 
-  // --- Optimistic helpers ---
   const updateStudent = (enrollId: string, patch: Partial<Student>) => {
     setStudents(prev => prev.map(s => s.enrollment_id === enrollId ? { ...s, ...patch } : s));
   };
 
-  // --- Actions ---
+  // --- RPC-based actions ---
   const handleToggleDay = async (student: Student, day: string) => {
     const newDays = student.preferred_days.includes(day)
       ? student.preferred_days.filter(d => d !== day)
@@ -141,16 +237,36 @@ const BulkMatcher = () => {
 
     updateStudent(student.enrollment_id, { preferred_days: newDays });
 
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ preferred_days: newDays } as any)
-      .eq("id", student.enrollment_id);
+    const { error } = await supabase.rpc("update_student_preferences" as any, {
+      _enrollment_id: student.enrollment_id,
+      _preferred_days: newDays,
+      _timezone: student.timezone || "",
+    });
 
     if (error) {
       updateStudent(student.enrollment_id, { preferred_days: student.preferred_days });
-      toast({ title: "Error", description: "Failed to update days.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to update days.", variant: "destructive" });
     } else {
       toast({ title: "Updated", description: `Preferred days updated for ${student.name}.` });
+    }
+  };
+
+  const handleTimezoneChange = async (student: Student, newTz: string) => {
+    const oldTz = student.timezone;
+    updateStudent(student.enrollment_id, { timezone: newTz });
+    setEditTimezone(null);
+
+    const { error } = await supabase.rpc("update_student_preferences" as any, {
+      _enrollment_id: student.enrollment_id,
+      _preferred_days: student.preferred_days,
+      _timezone: newTz,
+    });
+
+    if (error) {
+      updateStudent(student.enrollment_id, { timezone: oldTz });
+      toast({ title: "Error", description: error.message || "Failed to update timezone.", variant: "destructive" });
+    } else {
+      toast({ title: "Timezone updated", description: `${student.name} → ${newTz}` });
     }
   };
 
@@ -162,17 +278,15 @@ const BulkMatcher = () => {
     updateStudent(student.enrollment_id, { assigned_slot_id: null, slot_day: null, slot_time: null, slot_level: null });
     setSlots(prev => prev.map(s => s.id === oldSlotId ? { ...s, current_count: Math.max(0, s.current_count - 1) } : s));
 
-    try {
-      await supabase.from("student_slot_preferences" as any)
-        .update({ assigned_slot_id: null, match_status: "pending" } as any)
-        .eq("enrollment_id", student.enrollment_id);
-      await supabase.from("matching_slots" as any)
-        .update({ current_count: Math.max(0, (slots.find(s => s.id === oldSlotId)?.current_count || 1) - 1) } as any)
-        .eq("id", oldSlotId);
-      toast({ title: "Unmatched", description: `${student.name} removed from slot.` });
-    } catch {
+    const { error } = await supabase.rpc("unmatch_student_slot" as any, {
+      _enrollment_id: student.enrollment_id,
+    });
+
+    if (error) {
       fetchStudents(); fetchSlots();
-      toast({ title: "Error", description: "Failed to unmatch.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to unmatch.", variant: "destructive" });
+    } else {
+      toast({ title: "Unmatched", description: `${student.name} removed from slot.` });
     }
     setSavingId(null);
   };
@@ -189,6 +303,8 @@ const BulkMatcher = () => {
       slot_day: newSlot.day,
       slot_time: newSlot.time,
       slot_level: newSlot.course_level,
+      slot_current_count: newSlot.current_count + 1,
+      slot_max_students: newSlot.max_students,
     });
     setSlots(prev => prev.map(s => {
       if (s.id === oldSlotId) return { ...s, current_count: Math.max(0, s.current_count - 1) };
@@ -196,23 +312,16 @@ const BulkMatcher = () => {
       return s;
     }));
 
-    try {
-      if (oldSlotId) {
-        const oldSlot = slots.find(s => s.id === oldSlotId);
-        if (oldSlot) await supabase.from("matching_slots" as any).update({ current_count: Math.max(0, oldSlot.current_count - 1) } as any).eq("id", oldSlotId);
-      }
-      await supabase.from("matching_slots" as any).update({ current_count: newSlot.current_count + 1 } as any).eq("id", newSlotId);
+    const { error } = await supabase.rpc("reassign_student_slot" as any, {
+      _enrollment_id: student.enrollment_id,
+      _new_slot_id: newSlotId,
+    });
 
-      const { data: existingPref } = await supabase.from("student_slot_preferences" as any).select("id").eq("enrollment_id", student.enrollment_id).maybeSingle();
-      if (existingPref) {
-        await supabase.from("student_slot_preferences" as any).update({ assigned_slot_id: newSlotId, match_status: "matched" } as any).eq("enrollment_id", student.enrollment_id);
-      } else {
-        await supabase.from("student_slot_preferences" as any).insert({ user_id: student.user_id, enrollment_id: student.enrollment_id, selected_level: student.level, slot_1_id: newSlotId, assigned_slot_id: newSlotId, match_status: "matched" } as any);
-      }
-      toast({ title: "Reassigned", description: `${student.name} → ${newSlot.day} ${newSlot.time}` });
-    } catch {
+    if (error) {
       fetchStudents(); fetchSlots();
-      toast({ title: "Error", description: "Failed to reassign.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to reassign.", variant: "destructive" });
+    } else {
+      toast({ title: "Reassigned", description: `${student.name} → ${newSlot.day} ${newSlot.time}` });
     }
     setSavingId(null);
   };
@@ -220,9 +329,9 @@ const BulkMatcher = () => {
   const handleMatchAll = async () => {
     setMatching(true);
     let ok = 0, fail = 0;
-    const unmatched = students.filter(s => !s.assigned_slot_id);
+    const unmatchedStudents = students.filter(s => !s.assigned_slot_id);
 
-    for (const student of unmatched) {
+    for (const student of unmatchedStudents) {
       const level = editLevels[student.enrollment_id] || student.level;
       if (!level) { fail++; continue; }
       try {
@@ -247,9 +356,11 @@ const BulkMatcher = () => {
     return students.filter(s => !q || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
   }, [students, search]);
 
-  const matched = useMemo(() => filtered.filter(s => getStatus(s) === "match"), [filtered]);
+  const ready = useMemo(() => filtered.filter(s => getStatus(s) === "ready"), [filtered]);
   const mismatched = useMemo(() => filtered.filter(s => getStatus(s) === "mismatch"), [filtered]);
+  const incomplete = useMemo(() => filtered.filter(s => getStatus(s) === "incomplete"), [filtered]);
   const unmatched = useMemo(() => filtered.filter(s => getStatus(s) === "unmatched"), [filtered]);
+  const capacityFull = useMemo(() => filtered.filter(s => getStatus(s) === "capacity"), [filtered]);
 
   const mismatchByLevelAndType = useMemo(() => {
     const groups: Record<string, Student[]> = {};
@@ -301,8 +412,39 @@ const BulkMatcher = () => {
     );
   };
 
+  const TimezoneCell = ({ student }: { student: Student }) => {
+    const isEditing = editTimezone?.enrollId === student.enrollment_id;
+    if (isEditing) {
+      return (
+        <Select
+          defaultValue={editTimezone.tz}
+          onValueChange={v => handleTimezoneChange(student, v)}
+        >
+          <SelectTrigger className="h-7 text-xs w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {COMMON_TIMEZONES.map(tz => (
+              <SelectItem key={tz} value={tz} className="text-xs">{tz.replace(/_/g, " ")}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="text-xs text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+        onClick={() => setEditTimezone({ enrollId: student.enrollment_id, tz: student.timezone || "" })}
+      >
+        {student.timezone?.replace(/_/g, " ") || "Set…"}
+      </button>
+    );
+  };
+
   const StudentRow = ({ student }: { student: Student }) => {
     const status = getStatus(student);
+    const config = STATUS_CONFIG[status];
     return (
       <TableRow>
         <TableCell>
@@ -331,13 +473,16 @@ const BulkMatcher = () => {
         </TableCell>
         <TableCell>
           {student.assigned_slot_id ? (
-            <Badge variant={status === "match" ? "default" : "destructive"} className="text-xs whitespace-nowrap">
+            <Badge variant={status === "ready" ? "default" : "destructive"} className="text-xs whitespace-nowrap">
               {student.slot_day} {student.slot_time}
             </Badge>
           ) : <span className="text-xs text-muted-foreground">—</span>}
         </TableCell>
         <TableCell><DayChips student={student} /></TableCell>
-        <TableCell className="text-xs text-muted-foreground">{student.timezone?.replace(/_/g, " ") || "—"}</TableCell>
+        <TableCell><TimezoneCell student={student} /></TableCell>
+        <TableCell>
+          <span className={`text-[10px] font-medium ${config.color}`}>{config.reason}</span>
+        </TableCell>
         <TableCell>
           <div className="flex items-center gap-1">
             <SlotDropdown student={student} />
@@ -355,10 +500,10 @@ const BulkMatcher = () => {
 
   const Section = ({ title, icon, students: sectionStudents, variant }: {
     title: string; icon: React.ReactNode; students: Student[];
-    variant: "primary" | "destructive" | "muted";
+    variant: "primary" | "destructive" | "muted" | "warning";
   }) => {
     if (sectionStudents.length === 0) return null;
-    const borderClass = variant === "primary" ? "border-primary/30" : variant === "destructive" ? "border-destructive/30" : "";
+    const borderClass = variant === "primary" ? "border-primary/30" : variant === "destructive" ? "border-destructive/30" : variant === "warning" ? "border-yellow-500/30" : "";
     return (
       <Card className={borderClass}>
         <CardContent className="pt-4">
@@ -370,13 +515,14 @@ const BulkMatcher = () => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-        <TableRow>
+                <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Level</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Slot</TableHead>
                   <TableHead>Preferred Days</TableHead>
                   <TableHead>Timezone</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -390,15 +536,8 @@ const BulkMatcher = () => {
     );
   };
 
-
   const getSuggestions = (levelStudents: Student[], level: string) => {
     const levelSlots = slots.filter(s => s.course_level === level && s.current_count < s.max_students);
-    // Count how many students prefer each day
-    const dayCount: Record<string, number> = {};
-    levelStudents.forEach(s => {
-      s.preferred_days.forEach(d => { dayCount[d] = (dayCount[d] || 0) + 1; });
-    });
-    // Find slots that match the most preferred days
     const scored = levelSlots.map(slot => ({
       slot,
       studentsWhoPrefer: levelStudents.filter(s => s.preferred_days.includes(slot.day)).length,
@@ -409,7 +548,6 @@ const BulkMatcher = () => {
 
   const MismatchLevelGroup = ({ level, levelStudents }: { level: string; levelStudents: Student[] }) => {
     const suggestions = getSuggestions(levelStudents, level);
-    // Find common preferred days
     const dayCount: Record<string, number> = {};
     levelStudents.forEach(s => s.preferred_days.forEach(d => { dayCount[d] = (dayCount[d] || 0) + 1; }));
     const sortedDays = Object.entries(dayCount).sort((a, b) => b[1] - a[1]);
@@ -438,10 +576,7 @@ const BulkMatcher = () => {
             <span className="text-[10px] font-medium text-muted-foreground">💡 Best available slots:</span>
             {suggestions.map(({ slot, studentsWhoPrefer, available }) => (
               <div key={slot.id} className="flex items-center gap-1">
-                <Badge
-                  variant={studentsWhoPrefer > 0 ? "default" : "outline"}
-                  className="text-[10px] cursor-default"
-                >
+                <Badge variant={studentsWhoPrefer > 0 ? "default" : "outline"} className="text-[10px] cursor-default">
                   {slot.day} {slot.time}
                 </Badge>
                 <span className="text-[10px] text-muted-foreground">
@@ -462,6 +597,7 @@ const BulkMatcher = () => {
                 <TableHead>Current Slot</TableHead>
                 <TableHead>Preferred Days</TableHead>
                 <TableHead>Timezone</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -481,7 +617,7 @@ const BulkMatcher = () => {
         <div>
           <h3 className="font-semibold text-foreground">Bulk Slot Matcher</h3>
           <p className="text-sm text-muted-foreground">
-            {students.length} total · <span className="text-primary">{matched.length} matched</span> · <span className="text-destructive">{mismatched.length} mismatch</span> · {unmatched.length} unmatched
+            {students.length} total · <span className="text-primary">{ready.length} ready</span> · <span className="text-destructive">{mismatched.length} mismatch</span> · <span className="text-yellow-600">{incomplete.length} incomplete</span> · <span className="text-orange-600">{capacityFull.length} capacity</span> · {unmatched.length} unmatched
           </p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
@@ -498,11 +634,20 @@ const BulkMatcher = () => {
               {matching ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Matching…</> : <><Zap className="h-3.5 w-3.5 mr-1" /> Match All ({unmatched.length})</>}
             </Button>
           )}
+          <Button variant="destructive" size="sm" onClick={() => setResetOpen(true)}>
+            <ShieldAlert className="h-3.5 w-3.5 mr-1" /> Full Reset
+          </Button>
         </div>
       </div>
 
       {/* Sections */}
-      <Section title="Match — Ready" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} students={matched} variant="primary" />
+      <Section title="Ready — Day Match" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} students={ready} variant="primary" />
+
+      {/* Capacity section */}
+      <Section title="Capacity — Slot Full" icon={<Ban className="h-4 w-4 text-orange-600" />} students={capacityFull} variant="warning" />
+
+      {/* Incomplete section */}
+      <Section title="Incomplete — No Preferences" icon={<AlertTriangle className="h-4 w-4 text-yellow-600" />} students={incomplete} variant="warning" />
 
       {/* Mismatch — grouped by level with suggestions */}
       {mismatched.length > 0 && (
@@ -530,6 +675,8 @@ const BulkMatcher = () => {
           <p className="font-medium">No enrolled students found</p>
         </div>
       )}
+
+      <ResetDialog open={resetOpen} onOpenChange={setResetOpen} onResetDone={() => { fetchStudents(); fetchSlots(); }} />
     </div>
   );
 };
