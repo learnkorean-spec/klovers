@@ -10,7 +10,8 @@ import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, Info } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface EnrollmentRecord {
   id: string;
@@ -31,6 +32,7 @@ const StudentDashboard = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("");
   const [hasNoData, setHasNoData] = useState(false);
+  const [missingInfo, setMissingInfo] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,7 +43,7 @@ const StudentDashboard = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("avatar_url, name")
+        .select("avatar_url, name, level, country")
         .eq("user_id", session.user.id)
         .maybeSingle();
       if (profile) {
@@ -52,7 +54,7 @@ const StudentDashboard = () => {
       // Fetch ALL approved+paid enrollments
       const { data: enrollmentData } = await supabase
         .from("enrollments")
-        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at")
+        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone")
         .eq("user_id", session.user.id)
         .eq("approval_status", "APPROVED")
         .eq("payment_status", "PAID")
@@ -60,6 +62,19 @@ const StudentDashboard = () => {
 
       if (enrollmentData && enrollmentData.length > 0) {
         setEnrollments(enrollmentData as EnrollmentRecord[]);
+
+        // Check for missing information across profile + enrollments
+        const missing: string[] = [];
+        const p = profile as any;
+        if (!p?.name || p.name.trim() === "") missing.push("Full name");
+        if (!p?.level || p.level.trim() === "") missing.push("Korean level");
+        if (!p?.country || p.country.trim() === "") missing.push("Country");
+
+        const latestEnroll = enrollmentData[0] as any;
+        if (!latestEnroll.preferred_days || latestEnroll.preferred_days.length === 0) missing.push("Preferred class days");
+        if (!latestEnroll.timezone || latestEnroll.timezone.trim() === "") missing.push("Timezone");
+
+        setMissingInfo(missing);
       } else {
         setHasNoData(true);
       }
@@ -128,6 +143,22 @@ const StudentDashboard = () => {
                   <JourneyStepper currentStage={2} />
                 </CardContent>
               </Card>
+
+              {/* Missing Info Alert */}
+              {missingInfo.length > 0 && (
+                <Alert variant="destructive" className="border-destructive/50 bg-destructive/5">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>We need a few details from you</AlertTitle>
+                  <AlertDescription>
+                    <p className="mb-2 text-sm">Please contact us or update the following so we can finalize your schedule:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      {missingInfo.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />
