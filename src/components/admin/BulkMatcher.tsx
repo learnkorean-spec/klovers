@@ -251,12 +251,14 @@ const BulkMatcher = () => {
   const mismatched = useMemo(() => filtered.filter(s => getStatus(s) === "mismatch"), [filtered]);
   const unmatched = useMemo(() => filtered.filter(s => getStatus(s) === "unmatched"), [filtered]);
 
-  const mismatchByLevel = useMemo(() => {
+  const mismatchByLevelAndType = useMemo(() => {
     const groups: Record<string, Student[]> = {};
     mismatched.forEach(s => {
       const lvl = s.level || "Unknown";
-      if (!groups[lvl]) groups[lvl] = [];
-      groups[lvl].push(s);
+      const type = s.plan_type === "private" ? "Private" : "Group";
+      const key = `${lvl} — ${type}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
     });
     return groups;
   }, [mismatched]);
@@ -323,6 +325,11 @@ const BulkMatcher = () => {
           )}
         </TableCell>
         <TableCell>
+          <Badge variant={student.plan_type === "private" ? "secondary" : "outline"} className="text-[10px] capitalize">
+            {student.plan_type || "—"}
+          </Badge>
+        </TableCell>
+        <TableCell>
           {student.assigned_slot_id ? (
             <Badge variant={status === "match" ? "default" : "destructive"} className="text-xs whitespace-nowrap">
               {student.slot_day} {student.slot_time}
@@ -363,9 +370,10 @@ const BulkMatcher = () => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
+        <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Level</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Slot</TableHead>
                   <TableHead>Preferred Days</TableHead>
                   <TableHead>Timezone</TableHead>
@@ -450,6 +458,7 @@ const BulkMatcher = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Level</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Current Slot</TableHead>
                 <TableHead>Preferred Days</TableHead>
                 <TableHead>Timezone</TableHead>
@@ -501,13 +510,13 @@ const BulkMatcher = () => {
           <CardContent className="pt-4 space-y-4">
             <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-destructive" />
-              Mismatch — Grouped by Level
+              Mismatch — Grouped by Level & Type
               <Badge variant="outline" className="ml-1 text-[10px]">{mismatched.length}</Badge>
             </h4>
-            {Object.entries(mismatchByLevel)
+            {Object.entries(mismatchByLevelAndType)
               .sort(([a], [b]) => a.localeCompare(b))
-              .map(([level, students]) => (
-                <MismatchLevelGroup key={level} level={level} levelStudents={students} />
+              .map(([level, levelStudents]) => (
+                <MismatchLevelGroup key={level} level={level} levelStudents={levelStudents as Student[]} />
               ))}
           </CardContent>
         </Card>
