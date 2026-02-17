@@ -702,6 +702,45 @@ export type Database = {
         }
         Relationships: []
       }
+      matching_slots: {
+        Row: {
+          course_level: string
+          created_at: string
+          current_count: number
+          day: string
+          id: string
+          max_students: number
+          min_students: number
+          status: string
+          time: string
+          timezone: string
+        }
+        Insert: {
+          course_level?: string
+          created_at?: string
+          current_count?: number
+          day: string
+          id?: string
+          max_students?: number
+          min_students?: number
+          status?: string
+          time: string
+          timezone?: string
+        }
+        Update: {
+          course_level?: string
+          created_at?: string
+          current_count?: number
+          day?: string
+          id?: string
+          max_students?: number
+          min_students?: number
+          status?: string
+          time?: string
+          timezone?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -862,6 +901,88 @@ export type Database = {
           },
         ]
       }
+      student_slot_preferences: {
+        Row: {
+          assigned_slot_id: string | null
+          created_at: string
+          enrollment_id: string | null
+          id: string
+          match_status: string
+          selected_level: string
+          slot_1_id: string | null
+          slot_2_id: string | null
+          slot_3_id: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_slot_id?: string | null
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          match_status?: string
+          selected_level?: string
+          slot_1_id?: string | null
+          slot_2_id?: string | null
+          slot_3_id?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_slot_id?: string | null
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          match_status?: string
+          selected_level?: string
+          slot_1_id?: string | null
+          slot_2_id?: string | null
+          slot_3_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_slot_preferences_assigned_slot_id_fkey"
+            columns: ["assigned_slot_id"]
+            isOneToOne: false
+            referencedRelation: "matching_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_student_overview"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_slot_1_id_fkey"
+            columns: ["slot_1_id"]
+            isOneToOne: false
+            referencedRelation: "matching_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_slot_2_id_fkey"
+            columns: ["slot_2_id"]
+            isOneToOne: false
+            referencedRelation: "matching_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_slot_3_id_fkey"
+            columns: ["slot_3_id"]
+            isOneToOne: false
+            referencedRelation: "matching_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           country: string | null
@@ -999,6 +1120,7 @@ export type Database = {
         Args: { _attendance_id: string }
         Returns: undefined
       }
+      auto_match_student: { Args: { _preference_id: string }; Returns: string }
       create_egypt_order: {
         Args: { _duration: number; _plan_type: string }
         Returns: string

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
+import SlotRanker from "@/components/SlotRanker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
@@ -424,14 +425,12 @@ const EnrollNowPage = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Slot Picker */}
-              <SchedulePicker
-                courseType={classType}
-                userTimezone={timezone}
-                selectedGroupId={selectedGroupId}
-                onSelect={(groupId, groupName) => {
-                  setSelectedGroupId(groupId || null);
-                  setSelectedGroupName(groupName || "");
+              {/* Slot Ranker — ranked 3-pick system */}
+              <SlotRanker
+                selectedLevel=""
+                onComplete={(assignedSlotId, preferenceId) => {
+                  setSelectedGroupId(assignedSlotId || null);
+                  setSelectedGroupName(preferenceId || "");
                 }}
               />
 

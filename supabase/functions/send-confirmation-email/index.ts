@@ -15,10 +15,14 @@ interface EmailPayload {
   sessions_total?: number;
   amount?: number;
   language?: string;
-  template?: "welcome" | "enrollment" | "group_match";
+  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed";
   group_name?: string;
   group_days?: string;
   group_members?: string[];
+  slot_day?: string;
+  slot_time?: string;
+  slot_timezone?: string;
+  slot_level?: string;
 }
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -162,6 +166,48 @@ function buildGroupMatchEmail(p: EmailPayload) {
   };
 }
 
+function buildSlotConfirmedEmail(p: EmailPayload) {
+  const isArabic = p.language === "ar";
+  if (isArabic) {
+    return {
+      subject: "KLovers — تم تأكيد مجموعتك! 🎓",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
+          <h1 style="color: #6d28d9;">أخبار رائعة يا ${p.name}! 🎉</h1>
+          <p>تم تأكيد مجموعتك الدراسية!</p>
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; font-weight: bold;">📅 ${p.slot_day} - ${p.slot_time}</p>
+            <p style="margin: 8px 0 0;">🌍 ${p.slot_timezone || "Africa/Cairo"}</p>
+            <p style="margin: 8px 0 0;">📚 المستوى: ${p.slot_level}</p>
+          </div>
+          <p>سنتواصل معك قريباً بخصوص موعد أول حصة.</p>
+          <div style="margin: 24px 0;">
+            <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">لوحة الطالب</a>
+          </div>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+        </div>`,
+    };
+  }
+  return {
+    subject: "KLovers — Your Group is Confirmed! 🎓",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #6d28d9;">Great news, ${p.name}! 🎉</h1>
+        <p>Your study group has been confirmed and is ready to start!</p>
+        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p style="margin: 0; font-weight: bold;">📅 ${p.slot_day} at ${p.slot_time}</p>
+          <p style="margin: 8px 0 0;">🌍 ${(p.slot_timezone || "Africa/Cairo").replace(/_/g, " ")}</p>
+          <p style="margin: 8px 0 0;">📚 Level: ${p.slot_level}</p>
+        </div>
+        <p>We'll contact you shortly with details about your first class.</p>
+        <div style="margin: 24px 0;">
+          <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Go to Dashboard</a>
+        </div>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
+      </div>`,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -191,6 +237,9 @@ serve(async (req) => {
         break;
       case "group_match":
         ({ subject, html } = buildGroupMatchEmail(payload));
+        break;
+      case "slot_confirmed":
+        ({ subject, html } = buildSlotConfirmedEmail(payload));
         break;
       case "enrollment":
       default:

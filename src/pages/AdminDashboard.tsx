@@ -32,6 +32,7 @@ import AdminNotifications from "@/components/admin/AdminNotifications";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 import GroupMatcher from "@/components/admin/GroupMatcher";
 import BulkEmailManager from "@/components/admin/BulkEmailManager";
+import SlotManager from "@/components/admin/SlotManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -569,6 +570,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="notifications" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
+              <TabsTrigger value="slots" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Slots</TabsTrigger>
               <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
               <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Mail className="h-4 w-4" /> Campaigns
@@ -1209,6 +1211,14 @@ const AdminDashboard = () => {
             {/* CAMPAIGNS TAB */}
             <TabsContent value="campaigns">
               <BulkEmailManager />
+            </TabsContent>
+
+            {/* SLOTS TAB */}
+            <TabsContent value="slots">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Matching Slots</CardTitle></CardHeader>
+                <CardContent><SlotManager /></CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
