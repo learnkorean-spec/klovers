@@ -59,6 +59,39 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          enrollment_id: string | null
+          field: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          enrollment_id?: string | null
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          enrollment_id?: string | null
+          field?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string
@@ -1073,6 +1106,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_reset_log: {
+        Row: {
+          admin_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reset_type: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reset_type?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reset_type?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1169,9 +1226,17 @@ export type Database = {
         Args: { _enrollment_id: string }
         Returns: string
       }
+      reassign_student_slot: {
+        Args: { _enrollment_id: string; _new_slot_id: string }
+        Returns: undefined
+      }
       reject_attendance_request: {
         Args: { _request_id: string }
         Returns: undefined
+      }
+      reset_platform_data: {
+        Args: { _reset_password: string }
+        Returns: string
       }
       revert_attendance_request: {
         Args: { _request_id: string }
@@ -1213,6 +1278,18 @@ export type Database = {
             }
             Returns: string
           }
+      unmatch_student_slot: {
+        Args: { _enrollment_id: string }
+        Returns: undefined
+      }
+      update_student_preferences: {
+        Args: {
+          _enrollment_id: string
+          _preferred_days: string[]
+          _timezone: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
