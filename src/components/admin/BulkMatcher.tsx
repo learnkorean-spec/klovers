@@ -251,6 +251,16 @@ const BulkMatcher = () => {
   const mismatched = useMemo(() => filtered.filter(s => getStatus(s) === "mismatch"), [filtered]);
   const unmatched = useMemo(() => filtered.filter(s => getStatus(s) === "unmatched"), [filtered]);
 
+  const mismatchByLevel = useMemo(() => {
+    const groups: Record<string, Student[]> = {};
+    mismatched.forEach(s => {
+      const lvl = s.level || "Unknown";
+      if (!groups[lvl]) groups[lvl] = [];
+      groups[lvl].push(s);
+    });
+    return groups;
+  }, [mismatched]);
+
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading…</p>;
 
   const DayChips = ({ student }: { student: Student }) => (
@@ -372,6 +382,89 @@ const BulkMatcher = () => {
     );
   };
 
+
+  const getSuggestions = (levelStudents: Student[], level: string) => {
+    const levelSlots = slots.filter(s => s.course_level === level && s.current_count < s.max_students);
+    // Count how many students prefer each day
+    const dayCount: Record<string, number> = {};
+    levelStudents.forEach(s => {
+      s.preferred_days.forEach(d => { dayCount[d] = (dayCount[d] || 0) + 1; });
+    });
+    // Find slots that match the most preferred days
+    const scored = levelSlots.map(slot => ({
+      slot,
+      studentsWhoPrefer: levelStudents.filter(s => s.preferred_days.includes(slot.day)).length,
+      available: slot.max_students - slot.current_count,
+    })).sort((a, b) => b.studentsWhoPrefer - a.studentsWhoPrefer);
+    return scored.slice(0, 3);
+  };
+
+  const MismatchLevelGroup = ({ level, levelStudents }: { level: string; levelStudents: Student[] }) => {
+    const suggestions = getSuggestions(levelStudents, level);
+    // Find common preferred days
+    const dayCount: Record<string, number> = {};
+    levelStudents.forEach(s => s.preferred_days.forEach(d => { dayCount[d] = (dayCount[d] || 0) + 1; }));
+    const sortedDays = Object.entries(dayCount).sort((a, b) => b[1] - a[1]);
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs font-semibold">{level}</Badge>
+            <span className="text-xs text-muted-foreground">{levelStudents.length} student{levelStudents.length > 1 ? "s" : ""}</span>
+          </div>
+          {sortedDays.length > 0 && (
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span>Most preferred:</span>
+              {sortedDays.slice(0, 3).map(([day, count]) => (
+                <Badge key={day} variant="secondary" className="text-[10px] px-1.5 py-0">
+                  {day.slice(0, 3)} ({count}/{levelStudents.length})
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {suggestions.length > 0 && (
+          <div className="bg-muted/50 rounded-md p-2 flex flex-wrap gap-2 items-center">
+            <span className="text-[10px] font-medium text-muted-foreground">💡 Best available slots:</span>
+            {suggestions.map(({ slot, studentsWhoPrefer, available }) => (
+              <div key={slot.id} className="flex items-center gap-1">
+                <Badge
+                  variant={studentsWhoPrefer > 0 ? "default" : "outline"}
+                  className="text-[10px] cursor-default"
+                >
+                  {slot.day} {slot.time}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">
+                  {studentsWhoPrefer}/{levelStudents.length} prefer · {available} seats
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead>Current Slot</TableHead>
+                <TableHead>Preferred Days</TableHead>
+                <TableHead>Timezone</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {levelStudents.map(s => <StudentRow key={s.enrollment_id} student={s} />)}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -401,7 +494,25 @@ const BulkMatcher = () => {
 
       {/* Sections */}
       <Section title="Match — Ready" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} students={matched} variant="primary" />
-      <Section title="Mismatch — Review Needed" icon={<AlertCircle className="h-4 w-4 text-destructive" />} students={mismatched} variant="destructive" />
+
+      {/* Mismatch — grouped by level with suggestions */}
+      {mismatched.length > 0 && (
+        <Card className="border-destructive/30">
+          <CardContent className="pt-4 space-y-4">
+            <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              Mismatch — Grouped by Level
+              <Badge variant="outline" className="ml-1 text-[10px]">{mismatched.length}</Badge>
+            </h4>
+            {Object.entries(mismatchByLevel)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([level, students]) => (
+                <MismatchLevelGroup key={level} level={level} levelStudents={students} />
+              ))}
+          </CardContent>
+        </Card>
+      )}
+
       <Section title="Unmatched" icon={<Users className="h-4 w-4 text-muted-foreground" />} students={unmatched} variant="muted" />
 
       {students.length === 0 && (
