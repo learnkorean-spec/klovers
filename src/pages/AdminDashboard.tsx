@@ -33,6 +33,7 @@ import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 import GroupMatcher from "@/components/admin/GroupMatcher";
 import BulkEmailManager from "@/components/admin/BulkEmailManager";
 import SlotManager from "@/components/admin/SlotManager";
+import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -1215,10 +1216,18 @@ const AdminDashboard = () => {
 
             {/* SLOTS TAB */}
             <TabsContent value="slots">
-              <Card className="rounded-2xl">
-                <CardHeader className="pb-4"><CardTitle className="text-base">Matching Slots</CardTitle></CardHeader>
-                <CardContent><SlotManager /></CardContent>
-              </Card>
+              <div className="space-y-6">
+                <Card className="rounded-2xl">
+                  <CardHeader className="pb-4"><CardTitle className="text-base">Matching Slots</CardTitle></CardHeader>
+                  <CardContent><SlotManager /></CardContent>
+                </Card>
+                <Card className="rounded-2xl">
+                  <CardHeader className="pb-4"><CardTitle className="text-base">Schedule Preference Options</CardTitle>
+                    <p className="text-sm text-muted-foreground">Edit the weekdays, time windows, and start date options shown to students during enrollment.</p>
+                  </CardHeader>
+                  <CardContent><ScheduleOptionsManager /></CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

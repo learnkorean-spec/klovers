@@ -49,9 +49,10 @@ const egpPrices: Record<ClassType, Record<Duration, number>> = {
 
 const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
 
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const TIME_WINDOWS = ["Morning (9am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–9pm)"];
-const START_OPTIONS = ["ASAP", "Next week", "Specific date"];
+// These are now fetched from DB (schedule_options table)
+const FALLBACK_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const FALLBACK_TIME_WINDOWS = ["Morning (9am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–9pm)"];
+const FALLBACK_START_OPTIONS = ["ASAP", "Next week", "Specific date"];
 
 const EnrollNowPage = () => {
   const [searchParams] = useSearchParams();
@@ -89,6 +90,31 @@ const EnrollNowPage = () => {
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Dynamic schedule options from DB
+  const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
+  const [timeWindows, setTimeWindows] = useState<string[]>(FALLBACK_TIME_WINDOWS);
+  const [startOptions, setStartOptions] = useState<string[]>(FALLBACK_START_OPTIONS);
+
+  useEffect(() => {
+    const fetchScheduleOptions = async () => {
+      const { data } = await supabase
+        .from("schedule_options" as any)
+        .select("category, label, sort_order")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (data && (data as any[]).length > 0) {
+        const items = data as any[];
+        const wk = items.filter((i: any) => i.category === "weekday").map((i: any) => i.label);
+        const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
+        const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
+        if (wk.length) setWeekdays(wk);
+        if (tw.length) setTimeWindows(tw);
+        if (so.length) setStartOptions(so);
+      }
+    };
+    fetchScheduleOptions();
+  }, []);
 
   useEffect(() => {
     const checkFirstTime = async () => {
@@ -458,7 +484,7 @@ const EnrollNowPage = () => {
                   <div className="space-y-2">
                     <Label>Preferred Weekdays (select up to 2)</Label>
                     <div className="flex flex-wrap gap-2">
-                      {WEEKDAYS.map((day) => (
+                      {weekdays.map((day) => (
                         <button
                           type="button"
                           key={day}
@@ -479,7 +505,7 @@ const EnrollNowPage = () => {
                   <div className="space-y-2">
                     <Label>Preferred Time</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {TIME_WINDOWS.map((tw) => (
+                      {timeWindows.map((tw) => (
                         <button
                           type="button"
                           key={tw}
@@ -498,7 +524,7 @@ const EnrollNowPage = () => {
                   <div className="space-y-2">
                     <Label>Preferred Start Date</Label>
                     <div className="grid grid-cols-3 gap-2">
-                      {START_OPTIONS.map((opt) => (
+                      {startOptions.map((opt) => (
                         <button
                           type="button"
                           key={opt}
