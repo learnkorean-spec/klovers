@@ -15,7 +15,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Pencil, GripVertical } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ScheduleOption {
   id: string;
@@ -40,6 +41,7 @@ const ScheduleOptionsManager = () => {
   const [newCategory, setNewCategory] = useState("weekday");
   const [newLabel, setNewLabel] = useState("");
   const [newSortOrder, setNewSortOrder] = useState(0);
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
   const fetchOptions = async () => {
     setLoading(true);
@@ -132,43 +134,56 @@ const ScheduleOptionsManager = () => {
         </Button>
       </div>
 
-      {grouped.map((group) => (
-        <div key={group.value} className="space-y-2">
-          <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Label</TableHead>
-                <TableHead>Order</TableHead>
-                <TableHead>Active</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {group.items.map((opt) => (
-                <TableRow key={opt.id}>
-                  <TableCell className="font-medium">{opt.label}</TableCell>
-                  <TableCell>{opt.sort_order}</TableCell>
-                  <TableCell>
-                    <Switch checked={opt.is_active} onCheckedChange={() => handleToggleActive(opt)} />
-                  </TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditingOption({ ...opt })}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(opt.id)} className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {group.items.length === 0 && (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No options</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      ))}
+      {grouped.map((group) => {
+        const isCollapsed = collapsedCategories[group.value] ?? false;
+        return (
+          <Collapsible key={group.value} open={!isCollapsed} onOpenChange={(open) => setCollapsedCategories(prev => ({ ...prev, [group.value]: !open }))}>
+            <div className="space-y-2">
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors w-full text-left py-1">
+                  {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {group.label}
+                  <Badge variant="secondary" className="ml-1 text-xs">{group.items.length}</Badge>
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Label</TableHead>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Active</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.items.map((opt) => (
+                      <TableRow key={opt.id}>
+                        <TableCell className="font-medium">{opt.label}</TableCell>
+                        <TableCell>{opt.sort_order}</TableCell>
+                        <TableCell>
+                          <Switch checked={opt.is_active} onCheckedChange={() => handleToggleActive(opt)} />
+                        </TableCell>
+                        <TableCell className="text-right space-x-1">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingOption({ ...opt })}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(opt.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {group.items.length === 0 && (
+                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No options</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        );
+      })}
 
       {/* Add Dialog */}
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
