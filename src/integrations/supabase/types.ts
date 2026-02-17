@@ -976,14 +976,14 @@ export type Database = {
           {
             foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
             columns: ["enrollment_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "admin_student_overview"
             referencedColumns: ["enrollment_id"]
           },
           {
             foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
             columns: ["enrollment_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
@@ -1164,6 +1164,10 @@ export type Database = {
       mark_student_attendance: {
         Args: { _notes?: string; _student_id: string }
         Returns: number
+      }
+      match_enrollment_to_slot: {
+        Args: { _enrollment_id: string }
+        Returns: string
       }
       reject_attendance_request: {
         Args: { _request_id: string }
