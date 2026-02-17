@@ -32,8 +32,8 @@ const StudentJourney = () => {
             return (
               <div key={i} className="flex items-center gap-2 md:flex-col md:gap-0 md:flex-1">
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-2 border-2 border-primary/30">
-                    <Icon className="h-6 w-6 text-primary" />
+                  <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mb-2 border-2 border-foreground/20 shadow-sm">
+                    <Icon className="h-6 w-6 text-foreground" />
                   </div>
                   <span className="text-sm font-medium text-foreground">{isAr ? step.labelAr : step.labelEn}</span>
                 </div>
