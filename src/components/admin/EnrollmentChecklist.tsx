@@ -5,12 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle2, XCircle, AlertTriangle, Info, Search, Download,
   RefreshCw, Loader2, Filter, ChevronRight, ShieldCheck, ShieldAlert, ShieldX,
+  Pencil, Save, X,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { fetchEnrollmentChecklists, type EnrollmentChecklist as ChecklistData, type ChecklistItem, type OverallState } from "@/lib/checklistEngine";
 import { toast } from "@/hooks/use-toast";
+
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const COMMON_TIMEZONES = [
+  "Africa/Cairo", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+  "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Dubai", "Asia/Riyadh",
+  "Asia/Kolkata", "Asia/Tokyo", "Asia/Seoul", "Australia/Sydney", "Pacific/Auckland",
+];
 
 /* ─── State badge helper ─── */
 const STATE_CONFIG: Record<OverallState, { label: string; icon: React.ReactNode; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -28,21 +38,212 @@ const statusIcon = (status: ChecklistItem["status"]) => {
   }
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  approve_payment: "Mark Payment Approved",
-  send_email: "Send Confirmation Email",
-  update_preferences: "Update Preferences",
-  fix_timezone: "Fix Timezone",
-  assign_slot: "Assign Slot",
-};
+/* ─── Inline Editors ─── */
+function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSaved }: {
+  enrollmentId: string; currentDays: string[]; currentTimezone: string; onSaved: () => void;
+}) {
+  const [days, setDays] = useState<string[]>(currentDays);
+  const [saving, setSaving] = useState(false);
+
+  const toggle = (day: string) => setDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.rpc("update_student_preferences" as any, {
+      _enrollment_id: enrollmentId,
+      _preferred_days: days,
+      _timezone: currentTimezone || "Africa/Cairo",
+    });
+    setSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Saved", description: "Preferred days updated." }); onSaved(); }
+  };
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
+      <p className="text-xs font-medium text-foreground">Select preferred days:</p>
+      <div className="flex flex-wrap gap-1.5">
+        {WEEKDAYS.map(day => (
+          <button key={day} type="button" onClick={() => toggle(day)}
+            className={`px-2.5 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
+              days.includes(day) ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"
+            }`}>
+            {day.slice(0, 3)}
+          </button>
+        ))}
+      </div>
+      <Button size="sm" onClick={save} disabled={saving || days.length === 0} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save Days
+      </Button>
+    </div>
+  );
+}
+
+function TimezoneEditor({ enrollmentId, currentDays, currentTimezone, onSaved }: {
+  enrollmentId: string; currentDays: string[]; currentTimezone: string; onSaved: () => void;
+}) {
+  const [tz, setTz] = useState(currentTimezone || "Africa/Cairo");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.rpc("update_student_preferences" as any, {
+      _enrollment_id: enrollmentId,
+      _preferred_days: currentDays || [],
+      _timezone: tz,
+    });
+    setSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Saved", description: `Timezone set to ${tz}.` }); onSaved(); }
+  };
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
+      <p className="text-xs font-medium text-foreground">Select timezone:</p>
+      <Select value={tz} onValueChange={setTz}>
+        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {COMMON_TIMEZONES.map(t => <SelectItem key={t} value={t} className="text-xs">{t.replace(/_/g, " ")}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Button size="sm" onClick={save} disabled={saving} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save Timezone
+      </Button>
+    </div>
+  );
+}
+
+function PaymentApprover({ enrollmentId, onSaved }: { enrollmentId: string; onSaved: () => void; }) {
+  const [saving, setSaving] = useState(false);
+
+  const approve = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("enrollments")
+      .update({ payment_status: "PAID", approval_status: "APPROVED", reviewed_at: new Date().toISOString() } as any)
+      .eq("id", enrollmentId);
+    setSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Approved", description: "Payment marked as approved & paid." }); onSaved(); }
+  };
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
+      <p className="text-xs text-muted-foreground">This will mark the enrollment as PAID + APPROVED.</p>
+      <Button size="sm" onClick={approve} disabled={saving} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle2 className="h-3 w-3 mr-1" />} Approve Payment
+      </Button>
+    </div>
+  );
+}
+
+function PaymentDateEditor({ enrollmentId, currentDate, onSaved }: { enrollmentId: string; currentDate: string | null; onSaved: () => void; }) {
+  const [date, setDate] = useState(currentDate || new Date().toISOString().slice(0, 10));
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("enrollments")
+      .update({ payment_date: date } as any)
+      .eq("id", enrollmentId);
+    setSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Saved", description: "Payment date updated." }); onSaved(); }
+  };
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
+      <p className="text-xs font-medium text-foreground">Set payment date:</p>
+      <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="h-8 text-xs w-44" />
+      <Button size="sm" onClick={save} disabled={saving} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save Date
+      </Button>
+    </div>
+  );
+}
+
+function SlotAssigner({ enrollmentId, slots, onSaved }: { enrollmentId: string; slots: any[]; onSaved: () => void; }) {
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+
+  const available = slots.filter(s => s.current_count < s.max_students);
+
+  const assign = async () => {
+    if (!selectedSlot) return;
+    setSaving(true);
+    const { error } = await supabase.rpc("reassign_student_slot" as any, {
+      _enrollment_id: enrollmentId,
+      _new_slot_id: selectedSlot,
+    });
+    setSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Assigned", description: "Slot assigned successfully." }); onSaved(); }
+  };
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
+      <p className="text-xs font-medium text-foreground">Assign to a slot:</p>
+      <Select value={selectedSlot} onValueChange={setSelectedSlot}>
+        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select slot…" /></SelectTrigger>
+        <SelectContent>
+          {available.map(s => (
+            <SelectItem key={s.id} value={s.id} className="text-xs">
+              {s.day} {s.time} ({s.course_level}) — {s.current_count}/{s.max_students}
+            </SelectItem>
+          ))}
+          {available.length === 0 && <p className="text-xs text-muted-foreground px-2 py-1">No slots available</p>}
+        </SelectContent>
+      </Select>
+      <Button size="sm" onClick={assign} disabled={saving || !selectedSlot} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Assign Slot
+      </Button>
+    </div>
+  );
+}
+
+function PaymentMethodEditor({ enrollmentId, currentMethod, onSaved }: { enrollmentId: string; currentMethod: string | null; onSaved: () => void; }) {
+  const methods = ["vodafone_cash", "instapay", "bank_transfer", "stripe"];
+  const [method, setMethod] = useState(currentMethod || "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("enrollments")
+      .update({ payment_method: method } as any)
+      .eq("id", enrollmentId);
+    setSaving(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Saved", description: "Payment method updated." }); onSaved(); }
+  };
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
+      <p className="text-xs font-medium text-foreground">Set payment method:</p>
+      <Select value={method} onValueChange={setMethod}>
+        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select method…" /></SelectTrigger>
+        <SelectContent>
+          {methods.map(m => <SelectItem key={m} value={m} className="text-xs capitalize">{m.replace(/_/g, " ")}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Button size="sm" onClick={save} disabled={saving || !method} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save Method
+      </Button>
+    </div>
+  );
+}
 
 /* ─── Side panel for one student ─── */
-function ChecklistPanel({ data, open, onClose, onAction }: {
+function ChecklistPanel({ data, open, onClose, onRefresh, slots }: {
   data: ChecklistData | null;
   open: boolean;
   onClose: () => void;
-  onAction: (enrollmentId: string, action: string) => void;
+  onRefresh: () => void;
+  slots: any[];
 }) {
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+
   if (!data) return null;
   const cfg = STATE_CONFIG[data.overall_state];
 
@@ -53,28 +254,94 @@ function ChecklistPanel({ data, open, onClose, onAction }: {
     info: data.items.filter(i => i.status === "INFO"),
   };
 
+  const toggleAction = (key: string) => setExpandedAction(prev => prev === key ? null : key);
+
+  const handleSaved = () => {
+    setExpandedAction(null);
+    onRefresh();
+  };
+
+  // Derive enrollment data from checklist for editors
+  const currentDays = (() => {
+    const item = data.items.find(i => i.key === "preferred_days");
+    if (!item || item.status !== "PASS") return [];
+    return item.details.split(", ").filter(Boolean);
+  })();
+  const currentTimezone = (() => {
+    const item = data.items.find(i => i.key === "timezone");
+    return item?.status === "PASS" ? item.details : "";
+  })();
+  const currentPaymentDate = (() => {
+    const item = data.items.find(i => i.key === "payment_date");
+    return item?.status === "PASS" ? item.details : null;
+  })();
+  const currentPaymentMethod = (() => {
+    const item = data.items.find(i => i.key === "payment_method");
+    return item?.status === "PASS" ? item.details : null;
+  })();
+
+  const renderEditor = (item: ChecklistItem) => {
+    if (expandedAction !== item.key) return null;
+
+    switch (item.action || item.key) {
+      case "update_preferences":
+        return <PreferredDaysEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
+      case "fix_timezone":
+        return <TimezoneEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
+      case "approve_payment":
+        return <PaymentApprover enrollmentId={data.enrollment_id} onSaved={handleSaved} />;
+      case "assign_slot":
+        return <SlotAssigner enrollmentId={data.enrollment_id} slots={slots} onSaved={handleSaved} />;
+      default:
+        // For items without specific editor, provide generic based on key
+        if (item.key === "payment_date") return <PaymentDateEditor enrollmentId={data.enrollment_id} currentDate={currentPaymentDate} onSaved={handleSaved} />;
+        if (item.key === "payment_method") return <PaymentMethodEditor enrollmentId={data.enrollment_id} currentMethod={currentPaymentMethod} onSaved={handleSaved} />;
+        if (item.key === "timezone") return <TimezoneEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
+        if (item.key === "preferred_days" || item.key === "preference_exists") return <PreferredDaysEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
+        if (item.key === "slot_assigned") return <SlotAssigner enrollmentId={data.enrollment_id} slots={slots} onSaved={handleSaved} />;
+        return null;
+    }
+  };
+
+  const isEditable = (item: ChecklistItem) => {
+    if (item.status === "PASS") return false;
+    const editableKeys = ["preferred_days", "preference_exists", "timezone", "payment_approved", "payment_date", "payment_method", "slot_assigned", "confirmation_email", "group_assigned"];
+    return editableKeys.includes(item.key) || !!item.action;
+  };
+
+  const getActionLabel = (item: ChecklistItem) => {
+    if (item.action === "approve_payment") return "Approve";
+    if (item.action === "send_email") return "Send Email";
+    if (item.key === "payment_date") return "Set Date";
+    if (item.key === "payment_method") return "Set Method";
+    return "Edit";
+  };
+
   const renderItems = (items: ChecklistItem[]) => (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {items.map(item => (
-        <div key={item.key} className="flex items-start gap-2 py-1.5 border-b border-border/50 last:border-0">
-          {statusIcon(item.status)}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">{item.label}</p>
-            <p className="text-xs text-muted-foreground">{item.details}</p>
+        <div key={item.key}>
+          <div className="flex items-start gap-2 py-2 border-b border-border/50 last:border-0">
+            {statusIcon(item.status)}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">{item.label}</p>
+              <p className="text-xs text-muted-foreground">{item.details}</p>
+            </div>
+            {isEditable(item) && (
+              <Button size="sm" variant={expandedAction === item.key ? "secondary" : "outline"} className="h-7 text-xs shrink-0 gap-1"
+                onClick={() => toggleAction(item.key)}>
+                {expandedAction === item.key ? <><X className="h-3 w-3" /> Close</> : <><Pencil className="h-3 w-3" /> {getActionLabel(item)}</>}
+              </Button>
+            )}
           </div>
-          {item.action && item.status !== "PASS" && (
-            <Button size="sm" variant="outline" className="h-7 text-xs shrink-0"
-              onClick={() => onAction(data.enrollment_id, item.action!)}>
-              {ACTION_LABELS[item.action] || item.action}
-            </Button>
-          )}
+          {renderEditor(item)}
         </div>
       ))}
     </div>
   );
 
   return (
-    <Sheet open={open} onOpenChange={v => !v && onClose()}>
+    <Sheet open={open} onOpenChange={v => { if (!v) { setExpandedAction(null); onClose(); } }}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
@@ -162,12 +429,17 @@ export default function EnrollmentChecklistManager({ onAction }: {
   const [stateFilter, setStateFilter] = useState<OverallState | "ALL">("ALL");
   const [missingFilter, setMissingFilter] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [slots, setSlots] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchEnrollmentChecklists();
+      const [data, slotsRes] = await Promise.all([
+        fetchEnrollmentChecklists(),
+        supabase.from("matching_slots").select("*").order("course_level").order("day"),
+      ]);
       setChecklists(data);
+      setSlots(slotsRes.data || []);
     } catch (err: any) {
       toast({ title: "Error loading checklists", description: err.message, variant: "destructive" });
     }
@@ -325,7 +597,7 @@ export default function EnrollmentChecklistManager({ onAction }: {
       </div>
 
       {/* Side panel */}
-      <ChecklistPanel data={selected} open={!!selectedId} onClose={() => setSelectedId(null)} onAction={onAction} />
+      <ChecklistPanel data={selected} open={!!selectedId} onClose={() => setSelectedId(null)} onRefresh={load} slots={slots} />
     </div>
   );
 }
