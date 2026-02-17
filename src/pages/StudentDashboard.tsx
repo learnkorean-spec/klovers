@@ -10,7 +10,7 @@ import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package } from "lucide-react";
 
 interface EnrollmentRecord {
   id: string;
@@ -21,38 +21,15 @@ interface EnrollmentRecord {
   unit_price: number;
   amount: number;
   currency: string;
-}
-
-interface StudentRecord {
-  id: string;
-  full_name: string;
-  email: string;
-  status: string;
-  course_type: string;
-  package_name: string;
-  total_classes: number;
-  used_classes: number;
-  remaining_classes: number;
-  total_paid: number;
-  price_per_class: number;
-  payment_status: string;
-  group_name: string;
-}
-
-interface AttendanceEntry {
-  id: string;
-  marked_at: string;
-  notes: string;
+  created_at: string;
 }
 
 const StudentDashboard = () => {
-  const [enrollment, setEnrollment] = useState<EnrollmentRecord | null>(null);
-  const [student, setStudent] = useState<StudentRecord | null>(null);
-  const [attendance, setAttendance] = useState<AttendanceEntry[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string>("");
-  const [avatarUrl, setAvatarUrl] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
+  const [userId, setUserId] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [userName, setUserName] = useState("");
   const [hasNoData, setHasNoData] = useState(false);
   const navigate = useNavigate();
 
@@ -62,7 +39,6 @@ const StudentDashboard = () => {
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
 
-      // Fetch profile for avatar
       const { data: profile } = await supabase
         .from("profiles")
         .select("avatar_url, name")
@@ -73,39 +49,19 @@ const StudentDashboard = () => {
         setUserName((profile as any).name || "");
       }
 
-      // Fetch latest APPROVED+PAID enrollment
+      // Fetch ALL approved+paid enrollments
       const { data: enrollmentData } = await supabase
         .from("enrollments")
-        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency")
+        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at")
         .eq("user_id", session.user.id)
         .eq("approval_status", "APPROVED")
         .eq("payment_status", "PAID")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
 
-      if (enrollmentData) {
-        setEnrollment(enrollmentData as EnrollmentRecord);
+      if (enrollmentData && enrollmentData.length > 0) {
+        setEnrollments(enrollmentData as EnrollmentRecord[]);
       } else {
-        // Fallback: legacy students table
-        const { data: studentData } = await supabase
-          .from("students")
-          .select("*")
-          .eq("email", session.user.email!)
-          .maybeSingle();
-
-        if (studentData) {
-          setStudent(studentData as any);
-          // Fetch legacy attendance log
-          const { data: attendData } = await supabase
-            .from("attendance_log")
-            .select("id, marked_at, notes")
-            .eq("student_id", (studentData as any).id)
-            .order("marked_at", { ascending: false });
-          if (attendData) setAttendance(attendData as any);
-        } else {
-          setHasNoData(true);
-        }
+        setHasNoData(true);
       }
 
       setLoading(false);
@@ -129,13 +85,7 @@ const StudentDashboard = () => {
     );
   }
 
-  // Computed values for enrollment
-  const totalAttended = enrollment ? enrollment.sessions_total - enrollment.sessions_remaining : 0;
-  const remaining = enrollment ? enrollment.sessions_remaining : 0;
-  const extraSessions = remaining < 0 ? Math.abs(remaining) : 0;
-  const amountDue = extraSessions * (enrollment?.unit_price || 0);
-  const currLabel = enrollment?.currency === "EGP" ? "LE" : "$";
-  const displayName = userName || student?.full_name || "Student";
+  const displayName = userName || "Student";
 
   return (
     <div className="min-h-screen">
@@ -154,180 +104,99 @@ const StudentDashboard = () => {
               <CardContent className="pt-6 text-center space-y-3">
                 <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground" />
                 <h2 className="text-xl font-semibold text-foreground">No Active Plan</h2>
-                <p className="text-muted-foreground">You don't have an active plan yet. Contact us to get started.</p>
+                <p className="text-muted-foreground">You don't have an active plan yet.</p>
                 <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
               </CardContent>
             </Card>
-          ) : enrollment ? (
+          ) : (
             <>
-              {/* Welcome + Avatar + Journey */}
+              {/* Welcome + Avatar */}
               <Card>
                 <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-4 mb-4">
                     <AvatarUpload
                       userId={userId}
                       currentUrl={avatarUrl}
                       name={displayName}
                       onUploaded={(url) => setAvatarUrl(url)}
                     />
+                    <div>
+                      <p className="font-semibold text-foreground text-lg">{displayName}</p>
+                      <p className="text-sm text-muted-foreground">{enrollments.length} active package{enrollments.length !== 1 ? "s" : ""}</p>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground mb-4">
-                    Welcome back, <span className="font-semibold text-foreground">{displayName}</span>
-                  </p>
-                  <JourneyStepper
-                    currentStage={
-                      enrollment.sessions_remaining <= 0 && enrollment.sessions_total > 0 ? 3 : 2
-                    }
-                  />
+                  <JourneyStepper currentStage={2} />
                 </CardContent>
               </Card>
 
-              {/* Attendance Calendar */}
+              {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />
 
-              {/* Unified Package & Payment Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">My Package</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-y-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Plan:</span>
-                      <p className="font-medium text-foreground capitalize">{enrollment.plan_type}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Duration:</span>
-                      <p className="font-medium text-foreground">{enrollment.duration} month{enrollment.duration > 1 ? "s" : ""}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Package Size:</span>
-                      <p className="font-medium text-foreground">{enrollment.sessions_total} sessions</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Price Paid:</span>
-                      <p className="font-medium text-foreground">{currLabel}{enrollment.amount}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Price per Session:</span>
-                      <p className="font-medium text-foreground">{currLabel}{enrollment.unit_price}</p>
-                    </div>
-                  </div>
+              {/* All Packages */}
+              {enrollments.map((enrollment, idx) => {
+                const attended = enrollment.sessions_total - enrollment.sessions_remaining;
+                const remaining = enrollment.sessions_remaining;
+                const extra = remaining < 0 ? Math.abs(remaining) : 0;
+                const due = extra * enrollment.unit_price;
+                const curr = enrollment.currency === "EGP" ? "LE" : "$";
 
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
-                    <div className="rounded-lg bg-accent/50 p-3 text-center">
-                      <span className="text-xs text-muted-foreground">Attended</span>
-                      <p className="text-2xl font-bold text-foreground">{totalAttended}</p>
-                    </div>
-                    <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                      <span className="text-xs text-muted-foreground">
-                        {remaining >= 0 ? "Remaining" : "Extra Sessions"}
-                      </span>
-                      <p className={`text-2xl font-bold ${remaining >= 0 ? "text-primary" : "text-destructive"}`}>
-                        {remaining >= 0 ? remaining : extraSessions}
-                      </p>
-                    </div>
-                    <div className={`rounded-lg p-3 text-center ${amountDue > 0 ? "bg-destructive/10" : "bg-accent/50"}`}>
-                      <span className="text-xs text-muted-foreground">Amount Due</span>
-                      <p className={`text-2xl font-bold ${amountDue > 0 ? "text-destructive" : "text-foreground"}`}>
-                        {currLabel}{amountDue}
-                      </p>
-                    </div>
-                  </div>
+                return (
+                  <Card key={enrollment.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          <span className="capitalize">{enrollment.plan_type}</span> — {enrollment.duration}mo
+                        </CardTitle>
+                        <Badge variant={remaining >= 0 ? "default" : "destructive"}>
+                          {remaining >= 0 ? `${remaining} left` : `${extra} extra`}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Stats */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-lg bg-accent/50 p-3 text-center">
+                          <span className="text-xs text-muted-foreground">Attended</span>
+                          <p className="text-xl font-bold text-foreground">{attended}</p>
+                        </div>
+                        <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+                          <span className="text-xs text-muted-foreground">
+                            {remaining >= 0 ? "Remaining" : "Extra"}
+                          </span>
+                          <p className={`text-xl font-bold ${remaining >= 0 ? "text-primary" : "text-destructive"}`}>
+                            {remaining >= 0 ? remaining : extra}
+                          </p>
+                        </div>
+                        <div className={`rounded-lg p-3 text-center ${due > 0 ? "bg-destructive/10" : "bg-accent/50"}`}>
+                          <span className="text-xs text-muted-foreground">Due</span>
+                          <p className={`text-xl font-bold ${due > 0 ? "text-destructive" : "text-foreground"}`}>
+                            {curr}{due}
+                          </p>
+                        </div>
+                      </div>
 
-                  {/* Status Message */}
-                  {remaining >= 0 ? (
-                    <div className="flex items-center gap-2 text-sm text-primary bg-primary/5 rounded-lg p-3">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <span>You have <strong>{remaining}</strong> session{remaining !== 1 ? "s" : ""} remaining</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-3">
-                      <AlertTriangle className="h-4 w-4 shrink-0" />
-                      <span>You have <strong>{extraSessions}</strong> extra session{extraSessions !== 1 ? "s" : ""}. Amount due: <strong>{currLabel}{amountDue}</strong></span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                      {/* Status */}
+                      {remaining >= 0 ? (
+                        <div className="flex items-center gap-2 text-sm text-primary bg-primary/5 rounded-lg p-2">
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          <span><strong>{remaining}</strong> session{remaining !== 1 ? "s" : ""} remaining</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
+                          <AlertTriangle className="h-4 w-4 shrink-0" />
+                          <span><strong>{extra}</strong> extra — Due: <strong>{curr}{due}</strong></span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
 
               {/* Group Attendance */}
               <StudentGroupAttendance />
             </>
-          ) : student ? (
-            /* Legacy fallback for students without enrollments */
-            <>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 mb-6">
-                    <AvatarUpload
-                      userId={userId}
-                      currentUrl={avatarUrl}
-                      name={userName || student.full_name}
-                      onUploaded={(url) => setAvatarUrl(url)}
-                    />
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    Welcome back, <span className="font-semibold text-foreground">{student.full_name}</span>
-                  </p>
-                  <JourneyStepper
-                    currentStage={
-                      student.used_classes >= student.total_classes && student.total_classes > 0 ? 3
-                        : student.status === "student" ? 2 : 1
-                    }
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Package Details (Legacy)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-y-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Package:</span>
-                      <p className="font-medium text-foreground">{student.package_name || "—"}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Total Classes:</span>
-                      <p className="font-medium text-foreground">{student.total_classes}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Used:</span>
-                      <p className="font-medium text-foreground">{student.used_classes}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Remaining:</span>
-                      <p className="font-medium text-foreground">{student.total_classes - student.used_classes}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <StudentGroupAttendance />
-
-              {attendance.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Attendance History</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {attendance.map((a) => (
-                        <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                          <span className="text-sm text-foreground">
-                            {new Date(a.marked_at).toLocaleDateString()} — {new Date(a.marked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          {a.notes && <span className="text-xs text-muted-foreground">{a.notes}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          ) : null}
+          )}
         </div>
       </main>
       <Footer />
