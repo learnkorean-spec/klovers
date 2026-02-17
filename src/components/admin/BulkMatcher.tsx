@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban, ClipboardCheck } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import EnrollmentChecklistManager from "./EnrollmentChecklist";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
@@ -374,6 +376,32 @@ const BulkMatcher = () => {
     return groups;
   }, [mismatched]);
 
+  const handleChecklistAction = useCallback((enrollmentId: string, action: string) => {
+    const student = students.find(s => s.enrollment_id === enrollmentId);
+    switch (action) {
+      case "approve_payment":
+        toast({ title: "Action", description: `Open enrollment ${enrollmentId.slice(0, 8)} in Enrollments tab to approve payment.` });
+        break;
+      case "send_email":
+        toast({ title: "Action", description: `Use Campaigns tab to send confirmation to ${student?.name || "student"}.` });
+        break;
+      case "update_preferences":
+        if (student) toast({ title: "Update Preferences", description: `Use day chips & timezone controls in Matcher for ${student.name}.` });
+        break;
+      case "fix_timezone":
+        if (student) {
+          setEditTimezone({ enrollId: enrollmentId, tz: student.timezone || "" });
+          toast({ title: "Fix Timezone", description: `Switch to Matcher tab to edit timezone for ${student.name}.` });
+        }
+        break;
+      case "assign_slot":
+        toast({ title: "Assign Slot", description: `Use the Matcher view to assign a slot for enrollment ${enrollmentId.slice(0, 8)}.` });
+        break;
+      default:
+        toast({ title: "Action", description: `${action} for ${enrollmentId.slice(0, 8)}` });
+    }
+  }, [students]);
+
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading…</p>;
 
   const DayChips = ({ student }: { student: Student }) => (
@@ -609,75 +637,90 @@ const BulkMatcher = () => {
       </div>
     );
   };
-
   return (
-    <div className="space-y-4">
-      {/* Header */}
+    <Tabs defaultValue="matcher" className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h3 className="font-semibold text-foreground">Bulk Slot Matcher</h3>
-          <p className="text-sm text-muted-foreground">
-            {students.length} total · <span className="text-primary">{ready.length} ready</span> · <span className="text-destructive">{mismatched.length} mismatch</span> · <span className="text-yellow-600">{incomplete.length} incomplete</span> · <span className="text-orange-600">{capacityFull.length} capacity</span> · {unmatched.length} unmatched
-          </p>
-        </div>
+        <TabsList>
+          <TabsTrigger value="matcher" className="gap-1.5">
+            <Users className="h-3.5 w-3.5" /> Slot Matcher
+          </TabsTrigger>
+          <TabsTrigger value="checklist" className="gap-1.5">
+            <ClipboardCheck className="h-3.5 w-3.5" /> Enrollment Checklist
+          </TabsTrigger>
+        </TabsList>
         <div className="flex gap-2 flex-wrap items-center">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search name/email…" value={search} onChange={e => setSearch(e.target.value)}
-              className="h-8 text-xs pl-7 w-48" />
-          </div>
-          <Button variant="outline" size="sm" onClick={() => { fetchStudents(); fetchSlots(); }}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
-          </Button>
-          {unmatched.length > 0 && (
-            <Button size="sm" onClick={handleMatchAll} disabled={matching}>
-              {matching ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Matching…</> : <><Zap className="h-3.5 w-3.5 mr-1" /> Match All ({unmatched.length})</>}
-            </Button>
-          )}
           <Button variant="destructive" size="sm" onClick={() => setResetOpen(true)}>
             <ShieldAlert className="h-3.5 w-3.5 mr-1" /> Full Reset
           </Button>
         </div>
       </div>
 
-      {/* Sections */}
-      <Section title="Ready — Day Match" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} students={ready} variant="primary" />
+      <TabsContent value="matcher">
+        <div className="space-y-4">
+          {/* Matcher Header */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="font-semibold text-foreground">Bulk Slot Matcher</h3>
+              <p className="text-sm text-muted-foreground">
+                {students.length} total · <span className="text-primary">{ready.length} ready</span> · <span className="text-destructive">{mismatched.length} mismatch</span> · <span className="text-yellow-600">{incomplete.length} incomplete</span> · <span className="text-orange-600">{capacityFull.length} capacity</span> · {unmatched.length} unmatched
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap items-center">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input placeholder="Search name/email…" value={search} onChange={e => setSearch(e.target.value)}
+                  className="h-8 text-xs pl-7 w-48" />
+              </div>
+              <Button variant="outline" size="sm" onClick={() => { fetchStudents(); fetchSlots(); }}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
+              </Button>
+              {unmatched.length > 0 && (
+                <Button size="sm" onClick={handleMatchAll} disabled={matching}>
+                  {matching ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Matching…</> : <><Zap className="h-3.5 w-3.5 mr-1" /> Match All ({unmatched.length})</>}
+                </Button>
+              )}
+            </div>
+          </div>
 
-      {/* Capacity section */}
-      <Section title="Capacity — Slot Full" icon={<Ban className="h-4 w-4 text-orange-600" />} students={capacityFull} variant="warning" />
+          {/* Sections */}
+          <Section title="Ready — Day Match" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} students={ready} variant="primary" />
+          <Section title="Capacity — Slot Full" icon={<Ban className="h-4 w-4 text-orange-600" />} students={capacityFull} variant="warning" />
+          <Section title="Incomplete — No Preferences" icon={<AlertTriangle className="h-4 w-4 text-yellow-600" />} students={incomplete} variant="warning" />
 
-      {/* Incomplete section */}
-      <Section title="Incomplete — No Preferences" icon={<AlertTriangle className="h-4 w-4 text-yellow-600" />} students={incomplete} variant="warning" />
+          {mismatched.length > 0 && (
+            <Card className="border-destructive/30">
+              <CardContent className="pt-4 space-y-4">
+                <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  Mismatch — Grouped by Level & Type
+                  <Badge variant="outline" className="ml-1 text-[10px]">{mismatched.length}</Badge>
+                </h4>
+                {Object.entries(mismatchByLevelAndType)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([level, levelStudents]) => (
+                    <MismatchLevelGroup key={level} level={level} levelStudents={levelStudents as Student[]} />
+                  ))}
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Mismatch — grouped by level with suggestions */}
-      {mismatched.length > 0 && (
-        <Card className="border-destructive/30">
-          <CardContent className="pt-4 space-y-4">
-            <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-destructive" />
-              Mismatch — Grouped by Level & Type
-              <Badge variant="outline" className="ml-1 text-[10px]">{mismatched.length}</Badge>
-            </h4>
-            {Object.entries(mismatchByLevelAndType)
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([level, levelStudents]) => (
-                <MismatchLevelGroup key={level} level={level} levelStudents={levelStudents as Student[]} />
-              ))}
-          </CardContent>
-        </Card>
-      )}
+          <Section title="Unmatched" icon={<Users className="h-4 w-4 text-muted-foreground" />} students={unmatched} variant="muted" />
 
-      <Section title="Unmatched" icon={<Users className="h-4 w-4 text-muted-foreground" />} students={unmatched} variant="muted" />
-
-      {students.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
-          <p className="font-medium">No enrolled students found</p>
+          {students.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">No enrolled students found</p>
+            </div>
+          )}
         </div>
-      )}
+      </TabsContent>
+
+      <TabsContent value="checklist">
+        <EnrollmentChecklistManager onAction={handleChecklistAction} />
+      </TabsContent>
 
       <ResetDialog open={resetOpen} onOpenChange={setResetOpen} onResetDone={() => { fetchStudents(); fetchSlots(); }} />
-    </div>
+    </Tabs>
   );
 };
 
