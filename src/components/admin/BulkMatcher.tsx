@@ -376,31 +376,9 @@ const BulkMatcher = () => {
     return groups;
   }, [mismatched]);
 
-  const handleChecklistAction = useCallback((enrollmentId: string, action: string) => {
-    const student = students.find(s => s.enrollment_id === enrollmentId);
-    switch (action) {
-      case "approve_payment":
-        toast({ title: "Action", description: `Open enrollment ${enrollmentId.slice(0, 8)} in Enrollments tab to approve payment.` });
-        break;
-      case "send_email":
-        toast({ title: "Action", description: `Use Campaigns tab to send confirmation to ${student?.name || "student"}.` });
-        break;
-      case "update_preferences":
-        if (student) toast({ title: "Update Preferences", description: `Use day chips & timezone controls in Matcher for ${student.name}.` });
-        break;
-      case "fix_timezone":
-        if (student) {
-          setEditTimezone({ enrollId: enrollmentId, tz: student.timezone || "" });
-          toast({ title: "Fix Timezone", description: `Switch to Matcher tab to edit timezone for ${student.name}.` });
-        }
-        break;
-      case "assign_slot":
-        toast({ title: "Assign Slot", description: `Use the Matcher view to assign a slot for enrollment ${enrollmentId.slice(0, 8)}.` });
-        break;
-      default:
-        toast({ title: "Action", description: `${action} for ${enrollmentId.slice(0, 8)}` });
-    }
-  }, [students]);
+  const handleChecklistAction = useCallback((_enrollmentId: string, _action: string) => {
+    // Actions are now handled inline within the checklist panel
+  }, []);
 
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading…</p>;
 
