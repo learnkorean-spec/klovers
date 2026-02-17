@@ -1,148 +1,150 @@
 
-# Automated Student Matching System
+
+# Refactor Admin Matcher: Secure Data, Audit Trail, and Full Reset
 
 ## Overview
-Rebuild the scheduling and group matching system with priority-based slot selection, automated student assignment, and dynamic admin slot management. Students will pick 3 ranked preferred slots during enrollment, and the system will automatically assign them to the best-fit slot based on fill rates.
+This plan refactors the Bulk Matcher to use backend RPCs for all mutations, adds an admin audit log, expands match statuses, and introduces a secure password-protected platform reset.
 
 ---
 
-## What Changes
+## Phase 1: Database Changes
 
-### 1. Database: New and Modified Tables
+### 1.1 Create `admin_audit_log` table
+- Columns: `id`, `admin_id`, `enrollment_id`, `action` (text), `field` (text), `old_value` (text), `new_value` (text), `created_at`
+- RLS: admin-only access
+- Used by all RPCs below to track every change
 
-**New `matching_slots` table** (replaces reliance on `student_groups` for scheduling):
-- `id`, `course_level` (e.g., "Beginner 1", "Beginner 2"), `day`, `time`, `timezone` (default Egypt GMT+2)
-- `min_students` (default 3), `max_students` (default 7), `current_count` (default 0)
-- `status` (open / confirmed / full), `created_at`
+### 1.2 Create `system_reset_log` table
+- Columns: `id`, `admin_id`, `reset_type`, `details`, `created_at`
+- RLS: admin-only
+- Records each platform reset event
 
-**New `student_slot_preferences` table:**
-- `id`, `user_id`, `enrollment_id`
-- `slot_1_id`, `slot_2_id`, `slot_3_id` (3 ranked slot references)
-- `assigned_slot_id` (nullable -- filled after matching)
-- `match_status` (pending / matched / confirmed)
-- `created_at`
-
-**Seed default slots:**
-- Friday 11:00 AM, Friday 1:00 PM, Monday 6:00 PM, Thursday 6:00 PM (all Africa/Cairo, each course level)
-
-### 2. Database: Matching Logic (Trigger + Function)
-
-**`auto_match_student()` function** -- called after a student saves their 3 preferences:
-1. Check slot_1, slot_2, slot_3 in order
-2. For each, verify same `course_level` as student's `selected_level` and `status != 'full'`
-3. Assign to the slot closest to reaching `min_students` (best-fit = highest `current_count` that's still below `max_students`)
-4. Increment `current_count` on the assigned slot
-5. Set `assigned_slot_id` and `match_status = 'matched'`
-
-**`update_slot_status()` trigger** on `matching_slots` after `current_count` changes:
-- If `current_count >= min_students` and status is `open` -> set `status = 'confirmed'`, update all students in that slot to `match_status = 'confirmed'`, insert `admin_notifications` entry
-- If `current_count >= max_students` -> set `status = 'full'`
-
-**Email trigger:** When a slot becomes `confirmed`, invoke `send-confirmation-email` edge function for all students in that slot with their final schedule.
-
-### 3. Enrollment Flow Update (Step 2)
-
-Replace the current single-slot `SchedulePicker` with a new **`SlotRanker`** component:
-- Fetch all `matching_slots` where `status != 'full'` and `course_level` matches the student's selected level
-- Display each slot as a card: Day, Time, Timezone, seats remaining, status badge
-- Student drags or clicks to rank their top 3 choices (numbered 1, 2, 3)
-- On "Confirm Preferences," save to `student_slot_preferences` and trigger `auto_match_student()`
-- Show confirmation: "You've been assigned to [Day] [Time]" or "Pending -- we'll notify you when your group forms"
-
-### 4. Admin Panel: Slot Management
-
-New **"Slots"** tab in Admin Dashboard:
-- Table of all `matching_slots` with inline editing (day, time, timezone, level, min/max capacity)
-- Add/remove slots dynamically
-- Status badges (open/confirmed/full) with counts
-- Click a slot to see assigned students
-- Override buttons: manually assign/reassign a student, change slot status
-- "Almost full" indicator when `current_count = max_students - 1`
-- Suggested optimal distribution view: show which slots need more students to reach minimum
-
-### 5. Notifications
-
-- **Student notifications:** Email when slot is confirmed (group formed), email when slot is almost full ("1 seat left!")
-- **Admin notifications:** `admin_notifications` entry when a slot reaches `confirmed`, when a slot becomes `full`, and suggested distribution alerts
-
-### 6. RLS Policies
-
-- `matching_slots`: anyone authenticated can SELECT; admins can ALL
-- `student_slot_preferences`: users can SELECT/INSERT/UPDATE own records; admins can ALL
+### 1.3 Add UNIQUE constraint check
+- Already exists: `student_slot_preferences_enrollment_id_key` -- no migration needed
+- No duplicate rows found (12 total = 12 unique)
 
 ---
 
-## Migration Path
+## Phase 2: Backend RPCs (all SECURITY DEFINER, admin-only)
 
-The existing `student_groups`, `batch_members`, `student_schedule_preferences`, and `GroupMatcher` component will remain intact for current students. The new system runs in parallel. Once all students are migrated, the old tables can be deprecated.
+### 2.1 `reassign_student_slot(_enrollment_id uuid, _new_slot_id uuid)`
+- Validates admin role
+- Checks new slot capacity (current_count < max_students)
+- Decrements old slot count (if previously assigned)
+- Increments new slot count
+- Upserts `student_slot_preferences` row
+- Logs old and new slot in `admin_audit_log`
+- Single transaction (implicit in plpgsql)
+
+### 2.2 `unmatch_student_slot(_enrollment_id uuid)`
+- Validates admin role
+- Sets `assigned_slot_id = null`, `match_status = 'pending'`
+- Decrements old slot count
+- Logs action in audit table
+
+### 2.3 `update_student_preferences(_enrollment_id uuid, _preferred_days text[], _timezone text)`
+- Validates admin role
+- Updates `enrollments.preferred_days` and `enrollments.timezone`
+- Logs old vs new values in audit table
+
+### 2.4 `reset_platform_data(_reset_password text)`
+- Validates admin role AND super_admin (checked via `user_roles`)
+- Compares `_reset_password` against a hashed value stored in Supabase secrets (using `vault.decrypted_secrets` or a dedicated config table)
+- If valid, in a single transaction:
+  - Delete all `student_slot_preferences`
+  - Delete all `admin_attendance_log`
+  - Delete all `attendance_requests`
+  - Delete all `enrollments`
+  - Reset all `matching_slots.current_count` to 0, status to 'open'
+  - Delete `profiles` except those with admin role
+  - Delete `admin_audit_log`
+  - Log reset in `system_reset_log`
+- Returns success/failure message
 
 ---
 
-## Technical Details
+## Phase 3: Refactor BulkMatcher Component
 
-### Database Migration SQL
+### 3.1 Expanded Match Statuses
+Replace the 3-status system with 5 states:
 
 ```text
--- matching_slots table
-CREATE TABLE public.matching_slots (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  course_level TEXT NOT NULL DEFAULT '',
-  day TEXT NOT NULL,
-  time TEXT NOT NULL,
-  timezone TEXT NOT NULL DEFAULT 'Africa/Cairo',
-  min_students INTEGER NOT NULL DEFAULT 3,
-  max_students INTEGER NOT NULL DEFAULT 7,
-  current_count INTEGER NOT NULL DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'open'
-    CHECK (status IN ('open','confirmed','full')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- student_slot_preferences table
-CREATE TABLE public.student_slot_preferences (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  enrollment_id UUID,
-  selected_level TEXT NOT NULL DEFAULT '',
-  slot_1_id UUID REFERENCES public.matching_slots(id),
-  slot_2_id UUID REFERENCES public.matching_slots(id),
-  slot_3_id UUID REFERENCES public.matching_slots(id),
-  assigned_slot_id UUID REFERENCES public.matching_slots(id),
-  match_status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (match_status IN ('pending','matched','confirmed')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- RLS
-ALTER TABLE public.matching_slots ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.student_slot_preferences ENABLE ROW LEVEL SECURITY;
-
--- Policies ...
--- auto_match_student() function ...
--- update_slot_status() trigger ...
--- Seed 4 default slots per level ...
+READY       -- assigned_slot_id exists AND slot.day in preferred_days
+MISMATCH    -- assigned_slot_id exists AND slot.day NOT in preferred_days
+INCOMPLETE  -- no preferred_days set (empty array or null)
+UNMATCHED   -- no assigned_slot_id
+CAPACITY    -- assigned to a slot that is now full (current_count >= max_students)
 ```
 
-### Files to Create/Modify
+Each section shows a count badge and reason text per student.
+
+### 3.2 Replace Direct DB Calls with RPCs
+All admin actions call the new RPCs instead of direct table updates:
+- "Reassign" calls `reassign_student_slot`
+- "Unmatch" calls `unmatch_student_slot`
+- "Toggle day" / "Edit timezone" calls `update_student_preferences`
+
+Optimistic UI stays the same -- revert on RPC error.
+
+### 3.3 Data Fetching (Scoped)
+- Fetch enrollments filtered to `approval_status = 'APPROVED'` and `payment_status = 'PAID'`
+- Fetch preferences scoped to those enrollment IDs only (`.in("enrollment_id", ids)`)
+- Fetch slots used by those preferences only
+- No change to the multi-query approach (a Postgres VIEW is optional but not required for correctness since we already scope by enrollment IDs)
+
+### 3.4 UI Enhancements
+- Timezone becomes editable (inline Select with common timezone list)
+- Each student row shows a short "reason" label (e.g., "Day match", "Slot is full", "No preferences set")
+- Mismatch section continues grouping by Level and Type with slot suggestions
+- Search by name/email persists
+
+---
+
+## Phase 4: Full Reset UI
+
+### 4.1 Add "Full Reset" Button
+- Located in Admin Dashboard settings area or at the bottom of the Matcher tab
+- Opens a confirmation dialog with:
+  - Warning text: "This will delete ALL users, enrollments, and assignments. This action is irreversible."
+  - Password input field
+  - "Cancel" and "Reset Everything" (destructive) buttons
+
+### 4.2 Reset Flow
+1. Admin clicks "Full Reset"
+2. Dialog opens with warning
+3. Admin types reset password
+4. Calls `reset_platform_data` RPC
+5. On success: shows toast, refreshes all data
+6. On failure: shows error toast (wrong password or not super_admin)
+
+---
+
+## Phase 5: Day Normalization (Lightweight)
+
+Rather than creating a Postgres enum (which would require migration of existing data and `ALTER TYPE` for future changes), we normalize at the application level:
+- Define canonical day values as `["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]` (already in use)
+- The UI day chips already enforce these exact values
+- Add a validation check in the `update_student_preferences` RPC to reject invalid day strings
+
+This avoids breaking existing data while ensuring consistency going forward.
+
+---
+
+## Files to Create/Modify
 
 | File | Action |
 |------|--------|
-| `supabase/migrations/xxx.sql` | New tables, functions, triggers, seed data |
-| `src/components/SlotRanker.tsx` | **New** -- 3-pick slot selection UI |
-| `src/pages/EnrollNowPage.tsx` | Replace `SchedulePicker` with `SlotRanker` in Step 2 |
-| `src/components/admin/SlotManager.tsx` | **New** -- admin CRUD for slots |
-| `src/pages/AdminDashboard.tsx` | Add "Slots" tab with `SlotManager` |
-| `src/components/SchedulePicker.tsx` | Keep for backward compatibility, no changes |
-| `supabase/functions/send-confirmation-email/index.ts` | Add `slot_confirmed` template |
+| `supabase/migrations/...` | Create `admin_audit_log`, `system_reset_log` tables + 4 RPCs |
+| `src/components/admin/BulkMatcher.tsx` | Refactor to use RPCs, add 5 statuses, editable timezone, reason labels |
+| `src/pages/AdminDashboard.tsx` | Add "Full Reset" button + confirmation dialog |
 
-### Matching Algorithm (in DB function)
+---
 
-```text
-1. Get student's 3 preferred slot IDs + selected_level
-2. Filter to slots matching level AND status != 'full'
-3. Among valid slots, pick the one with highest current_count
-   (closest to forming a group)
-4. If no valid slot found, leave as 'pending'
-5. Otherwise: increment slot.current_count, set assigned_slot_id
-6. Trigger checks: if count >= min -> confirm, if count >= max -> full
-```
+## Security Summary
+
+- All mutations go through SECURITY DEFINER RPCs with `has_role(auth.uid(), 'admin')` checks
+- Reset requires both admin role verification AND a secret password
+- Every change is logged in `admin_audit_log` with before/after values
+- No direct client-side table updates for destructive operations
+- RLS on all new tables restricts access to admins only
+
