@@ -305,6 +305,31 @@ const AdminDashboard = () => {
         return;
       }
 
+      // === AUTO-MATCH TO SLOT based on level + preferred days ===
+      if (enrollment.plan_type === "group") {
+        try {
+          const { data: matchedSlotId, error: matchErr } = await supabase
+            .rpc("match_enrollment_to_slot", { _enrollment_id: enrollment.id } as any);
+          if (matchErr) {
+            console.error("Auto-match error:", matchErr);
+          } else if (matchedSlotId) {
+            // Get slot details for toast
+            const { data: slotData } = await supabase
+              .from("matching_slots" as any)
+              .select("day, time, course_level")
+              .eq("id", matchedSlotId)
+              .maybeSingle();
+            const slotInfo = slotData ? `${(slotData as any).day} ${(slotData as any).time} (${(slotData as any).course_level})` : "a slot";
+            toast({ title: "Auto-matched", description: `Student assigned to ${slotInfo}` });
+          } else {
+            toast({ title: "No slot match", description: "No matching slot found for student's level/preferences. Manual assignment needed.", variant: "destructive" });
+          }
+        } catch (err) {
+          console.error("Auto-match error:", err);
+        }
+      }
+
+      // === Legacy group assignment (for existing students) ===
       try {
         const { data: pref } = await supabase
           .from("student_schedule_preferences" as any)

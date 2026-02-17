@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
-import SlotRanker from "@/components/SlotRanker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
@@ -86,6 +85,10 @@ const EnrollNowPage = () => {
   // Schedule slot selection
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(searchParams.get("groupId") || null);
   const [selectedGroupName, setSelectedGroupName] = useState<string>(searchParams.get("groupName") || "");
+
+  // Korean level selection
+  const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
+  const [selectedLevel, setSelectedLevel] = useState(searchParams.get("level") || "");
 
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -171,6 +174,7 @@ const EnrollNowPage = () => {
     if (timezone) params.set("tz", timezone);
     if (selectedGroupId) params.set("groupId", selectedGroupId);
     if (selectedGroupName) params.set("groupName", selectedGroupName);
+    if (selectedLevel) params.set("level", selectedLevel);
     return `/enroll-now?${params.toString()}`;
   };
 
@@ -185,7 +189,7 @@ const EnrollNowPage = () => {
     setStep(3);
   };
 
-  const canProceedStep2 = !!selectedGroupId || (preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate));
+  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate);
 
   const handleEgyptOrder = async () => {
     if (!duration) return;
@@ -209,7 +213,7 @@ const EnrollNowPage = () => {
           : error.message;
         throw new Error(desc);
       }
-      // Save schedule preferences to the enrollment
+      // Save schedule preferences + level to the enrollment and profile
       const enrollmentId = data as string;
       if (enrollmentId) {
         const schedPrefs: any = {};
@@ -219,6 +223,10 @@ const EnrollNowPage = () => {
         if (timezone) schedPrefs.timezone = timezone;
         if (Object.keys(schedPrefs).length > 0) {
           await supabase.from("enrollments").update(schedPrefs).eq("id", enrollmentId);
+        }
+        // Save level to profile
+        if (selectedLevel) {
+          await supabase.from("profiles").update({ level: selectedLevel }).eq("user_id", session.user.id);
         }
       }
       nav(`/pay/${enrollmentId}`);
@@ -275,6 +283,12 @@ const EnrollNowPage = () => {
       // Submit lead async (don't block checkout)
       submitLead();
 
+      // Save level to profile if logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && selectedLevel) {
+        await supabase.from("profiles").update({ level: selectedLevel }).eq("user_id", session.user.id);
+      }
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           tier,
@@ -282,6 +296,7 @@ const EnrollNowPage = () => {
           duration,
           name: name.trim(),
           email: email.trim().toLowerCase(),
+          level: selectedLevel,
           schedule: {
             timezone,
             preferred_days: preferredDays,
@@ -451,103 +466,96 @@ const EnrollNowPage = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Slot Ranker — ranked 3-pick system */}
-              <SlotRanker
-                selectedLevel=""
-                onComplete={(assignedSlotId, preferenceId) => {
-                  setSelectedGroupId(assignedSlotId || null);
-                  setSelectedGroupName(preferenceId || "");
-                }}
-              />
+              {/* Korean Level */}
+              <div className="space-y-2">
+                <Label>Korean Level</Label>
+                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                  <SelectTrigger><SelectValue placeholder="Select your level" /></SelectTrigger>
+                  <SelectContent>
+                    {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              {/* Fallback free-text preferences if no slots configured */}
-              {!selectedGroupId && (
-                <>
-                  <div className="border-t border-border pt-4">
-                    <p className="text-sm text-muted-foreground mb-3">Or set manual preferences:</p>
-                  </div>
+              {/* Timezone */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Timezone</Label>
+                <Select value={timezone} onValueChange={setTimezone}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(Intl as any).supportedValuesOf("timeZone").map((tz: string) => (
+                      <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  {/* Timezone */}
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Timezone</Label>
-                    <Select value={timezone} onValueChange={setTimezone}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {(Intl as any).supportedValuesOf("timeZone").map((tz: string) => (
-                          <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              {/* Preferred Days */}
+              <div className="space-y-2">
+                <Label>Preferred Weekdays (select up to 2)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {weekdays.map((day) => (
+                    <button
+                      type="button"
+                      key={day}
+                      onClick={() => toggleDay(day)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        preferredDays.includes(day)
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border text-muted-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Preferred Days */}
-                  <div className="space-y-2">
-                    <Label>Preferred Weekdays (select up to 2)</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {weekdays.map((day) => (
-                        <button
-                          type="button"
-                          key={day}
-                          onClick={() => toggleDay(day)}
-                          className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                            preferredDays.includes(day)
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border text-muted-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Time Window */}
+              <div className="space-y-2">
+                <Label>Preferred Time</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {timeWindows.map((tw) => (
+                    <button
+                      type="button"
+                      key={tw}
+                      onClick={() => setPreferredTime(tw)}
+                      className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
+                        preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="text-foreground font-medium">{tw}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Time Window */}
-                  <div className="space-y-2">
-                    <Label>Preferred Time</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {timeWindows.map((tw) => (
-                        <button
-                          type="button"
-                          key={tw}
-                          onClick={() => setPreferredTime(tw)}
-                          className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
-                            preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <span className="text-foreground font-medium">{tw}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Start Date */}
-                  <div className="space-y-2">
-                    <Label>Preferred Start Date</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {startOptions.map((opt) => (
-                        <button
-                          type="button"
-                          key={opt}
-                          onClick={() => setStartOption(opt)}
-                          className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
-                            startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <span className="text-foreground font-medium">{opt}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {startOption === "Specific date" && (
-                      <Input
-                        type="date"
-                        value={specificDate}
-                        onChange={(e) => setSpecificDate(e.target.value)}
-                        min={new Date().toISOString().split("T")[0]}
-                      />
-                    )}
-                  </div>
-                </>
-              )}
+              {/* Start Date */}
+              <div className="space-y-2">
+                <Label>Preferred Start Date</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {startOptions.map((opt) => (
+                    <button
+                      type="button"
+                      key={opt}
+                      onClick={() => setStartOption(opt)}
+                      className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
+                        startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="text-foreground font-medium">{opt}</span>
+                    </button>
+                  ))}
+                </div>
+                {startOption === "Specific date" && (
+                  <Input
+                    type="date"
+                    value={specificDate}
+                    onChange={(e) => setSpecificDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                )}
+              </div>
 
               <p className="text-xs text-muted-foreground text-center">
                 Your schedule will be confirmed within 24 hours after payment.
@@ -558,7 +566,7 @@ const EnrollNowPage = () => {
               </Button>
               {!canProceedStep2 && (
                 <p className="text-xs text-destructive text-center">
-                  Please select a schedule slot or set manual preferences above.
+                  Please select your Korean level, preferred days, time, and start date.
                 </p>
               )}
             </CardContent>
@@ -641,15 +649,10 @@ const EnrollNowPage = () => {
               {/* Schedule Summary */}
               <div className="bg-muted rounded-lg p-4 space-y-1">
                 <p className="text-sm font-medium text-foreground">Schedule Preferences</p>
-                {selectedGroupId ? (
-                  <p className="text-xs text-muted-foreground">Selected slot: {selectedGroupName}</p>
-                ) : (
-                  <>
-                    <p className="text-xs text-muted-foreground">Days: {preferredDays.join(", ")}</p>
-                    <p className="text-xs text-muted-foreground">Time: {preferredTime}</p>
-                    <p className="text-xs text-muted-foreground">Start: {startOption === "Specific date" ? specificDate : startOption}</p>
-                  </>
-                )}
+                <p className="text-xs text-muted-foreground">Level: {selectedLevel}</p>
+                <p className="text-xs text-muted-foreground">Days: {preferredDays.join(", ")}</p>
+                <p className="text-xs text-muted-foreground">Time: {preferredTime}</p>
+                <p className="text-xs text-muted-foreground">Start: {startOption === "Specific date" ? specificDate : startOption}</p>
                 <p className="text-xs text-muted-foreground">Timezone: {timezone}</p>
               </div>
 
