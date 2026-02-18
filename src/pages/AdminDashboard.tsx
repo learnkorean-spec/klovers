@@ -1205,7 +1205,26 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
                             {editingLeadId === lead.id ? (
-                              <Input value={editForm.schedule || ""} onChange={(e) => setEditForm(f => ({ ...f, schedule: e.target.value }))} className="h-8 text-sm" />
+                              <div className="flex flex-wrap gap-1 min-w-[160px]">
+                                {scheduleWeekdays.map((day) => {
+                                  const currentDays = (editForm.schedule || "").split("/").map(s => s.trim()).filter(Boolean);
+                                  const selected = currentDays.includes(day);
+                                  return (
+                                    <button
+                                      key={day}
+                                      type="button"
+                                      onClick={() => {
+                                        const days = (editForm.schedule || "").split("/").map(s => s.trim()).filter(Boolean);
+                                        const next = selected ? days.filter(d => d !== day) : [...days, day];
+                                        setEditForm(f => ({ ...f, schedule: next.join("/") }));
+                                      }}
+                                      className={`px-2 py-0.5 rounded text-xs border transition-all ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                                    >
+                                      {day.slice(0, 3)}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             ) : lead.schedule || "—"}
                           </TableCell>
                           <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
