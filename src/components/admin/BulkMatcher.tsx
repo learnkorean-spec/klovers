@@ -413,21 +413,33 @@ const BulkMatcher = () => {
 
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading…</p>;
 
-  const DayChips = ({ student }: { student: Student }) => (
-    <div className="flex flex-wrap gap-1">
-      {weekdays.map(day => (
-        <button key={day} type="button"
-          onClick={() => handleToggleDay(student, day)}
-          className={`px-2 py-0.5 text-[10px] rounded-full border transition-colors cursor-pointer ${
-            student.preferred_days.includes(day)
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-muted text-muted-foreground border-border hover:border-primary/50"
-          }`}>
-          {day.slice(0, 3)}
-        </button>
-      ))}
-    </div>
-  );
+  const DayChips = ({ student }: { student: Student }) => {
+    const level = editLevels[student.enrollment_id] || student.level;
+    // Filter weekdays to only those that have an actual matching slot for this student's level
+    const availableDays = weekdays.filter(day =>
+      slots.some(s => s.course_level === level && s.day === day)
+    );
+    // Fall back to all admin weekdays if no slots configured yet for this level
+    const daysToShow = availableDays.length > 0 ? availableDays : weekdays;
+    return (
+      <div className="flex flex-wrap gap-1">
+        {daysToShow.map(day => (
+          <button key={day} type="button"
+            onClick={() => handleToggleDay(student, day)}
+            className={`px-2 py-0.5 text-[10px] rounded-full border transition-colors cursor-pointer ${
+              student.preferred_days.includes(day)
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted text-muted-foreground border-border hover:border-primary/50"
+            }`}>
+            {day.slice(0, 3)}
+          </button>
+        ))}
+        {daysToShow.length === 0 && (
+          <span className="text-[10px] text-muted-foreground italic">No slots for this level</span>
+        )}
+      </div>
+    );
+  };
 
   const SlotDropdown = ({ student }: { student: Student }) => {
     const level = editLevels[student.enrollment_id] || student.level;
