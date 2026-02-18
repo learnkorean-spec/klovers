@@ -106,7 +106,7 @@ const AdminDashboard = () => {
   const [editingEnrollLevel, setEditingEnrollLevel] = useState<Record<string, string>>({});
   const [editingEnrollDays, setEditingEnrollDays] = useState<Record<string, string[]>>({});
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-  const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
+  const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 

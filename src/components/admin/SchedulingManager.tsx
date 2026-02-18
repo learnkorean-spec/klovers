@@ -21,7 +21,7 @@ import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight } from "lucide
 import AdminNotifications from "./AdminNotifications";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const LEVELS = ["beginner_1", "beginner_2", "intermediate_1", "intermediate_2", "advanced_1", "advanced_2"];
+const LEVELS = ["beginner_1", "beginner_2", "intermediate_1", "intermediate_2", "advanced_1", "advanced_2", "topik_1", "topik_2"];
 
 function formatTime(t: string) {
   const [h, m] = t.split(":").map(Number);

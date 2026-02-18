@@ -87,7 +87,7 @@ const EnrollNowPage = () => {
   const [selectedGroupName, setSelectedGroupName] = useState<string>(searchParams.get("groupName") || "");
 
   // Korean level selection
-  const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
+  const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
   const [selectedLevel, setSelectedLevel] = useState(searchParams.get("level") || "");
 
   // First-time discount
