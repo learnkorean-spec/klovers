@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Users, Pencil } from "lucide-react";
 import LevelSlotConfig from "./LevelSlotConfig";
+import LevelGroupConfig from "./LevelGroupConfig";
 
 interface Slot {
   id: string;
@@ -167,10 +168,15 @@ const SlotManager = () => {
         <TabsList>
           <TabsTrigger value="slots">Matching Slots</TabsTrigger>
           <TabsTrigger value="level-config">Level → Slot Config</TabsTrigger>
+          <TabsTrigger value="group-config">Level → Group Config</TabsTrigger>
         </TabsList>
 
         <TabsContent value="level-config" className="pt-3">
           <LevelSlotConfig />
+        </TabsContent>
+
+        <TabsContent value="group-config" className="pt-3">
+          <LevelGroupConfig />
         </TabsContent>
 
         <TabsContent value="slots" className="pt-3">
