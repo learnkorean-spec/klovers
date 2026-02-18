@@ -87,6 +87,10 @@ const GroupAttendanceManager = () => {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  // Admin-configured options
+  const [adminWeekdays, setAdminWeekdays] = useState<string[]>([]);
+  const [adminTimes, setAdminTimes] = useState<string[]>([]);
+
   // Group management state
   const [editGroupDialog, setEditGroupDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
@@ -107,6 +111,21 @@ const GroupAttendanceManager = () => {
     const { data } = await supabase.from("student_groups").select("id, name, schedule_day, schedule_time, schedule_timezone, level, capacity, course_type").order("name");
     if (data) setGroups(data);
   };
+
+  // Fetch admin-configured weekdays and times from schedule_options
+  useEffect(() => {
+    supabase
+      .from("schedule_options" as any)
+      .select("label, sort_order, category")
+      .eq("is_active", true)
+      .in("category", ["weekday", "time_window"])
+      .order("sort_order")
+      .then(({ data }) => {
+        const rows = (data as any[]) ?? [];
+        setAdminWeekdays(rows.filter(r => r.category === "weekday").map(r => r.label as string));
+        setAdminTimes(rows.filter(r => r.category === "time_window").map(r => r.label as string));
+      });
+  }, []);
 
   useEffect(() => { fetchGroups(); }, []);
 
@@ -674,11 +693,29 @@ const GroupAttendanceManager = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Day</Label>
-                <Input value={editDay} onChange={e => setEditDay(e.target.value)} placeholder="e.g. Monday" />
+                {adminWeekdays.length > 0 ? (
+                  <Select value={editDay} onValueChange={setEditDay}>
+                    <SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger>
+                    <SelectContent>
+                      {adminWeekdays.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={editDay} onChange={e => setEditDay(e.target.value)} placeholder="e.g. Monday" />
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Time</Label>
-                <Input value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
+                {adminTimes.length > 0 ? (
+                  <Select value={editTime} onValueChange={setEditTime}>
+                    <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
+                    <SelectContent>
+                      {adminTimes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
+                )}
               </div>
             </div>
             <div className="space-y-1">
