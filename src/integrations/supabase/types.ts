@@ -838,6 +838,160 @@ export type Database = {
         }
         Relationships: []
       }
+      pkg_attendance: {
+        Row: {
+          admin_approved: boolean
+          created_at: string
+          session_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_approved?: boolean
+          created_at?: string
+          session_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_approved?: boolean
+          created_at?: string
+          session_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pkg_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pkg_class_charges: {
+        Row: {
+          charge_type: string
+          created_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          charge_type?: string
+          created_at?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          charge_type?: string
+          created_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pkg_class_charges_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pkg_group_members: {
+        Row: {
+          enrollment_id: string | null
+          group_id: string
+          joined_at: string
+          member_status: string
+          user_id: string
+        }
+        Insert: {
+          enrollment_id?: string | null
+          group_id: string
+          joined_at?: string
+          member_status?: string
+          user_id: string
+        }
+        Update: {
+          enrollment_id?: string | null
+          group_id?: string
+          joined_at?: string
+          member_status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pkg_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pkg_group_sessions: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          session_date: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          session_date: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          session_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pkg_group_sessions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pkg_groups: {
+        Row: {
+          capacity: number
+          created_at: string
+          id: string
+          name: string
+          package_id: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          name: string
+          package_id: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          name?: string
+          package_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pkg_groups_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -904,6 +1058,42 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_packages: {
+        Row: {
+          capacity: number
+          created_at: string
+          day_of_week: number
+          duration_min: number
+          id: string
+          is_active: boolean
+          level: string
+          start_time: string
+          timezone: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          day_of_week: number
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          level: string
+          start_time?: string
+          timezone?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          day_of_week?: number
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          level?: string
+          start_time?: string
+          timezone?: string
+        }
+        Relationships: []
+      }
       student_groups: {
         Row: {
           capacity: number | null
@@ -939,6 +1129,38 @@ export type Database = {
           schedule_timezone?: string | null
         }
         Relationships: []
+      }
+      student_package_preferences: {
+        Row: {
+          level: string
+          package_id: string | null
+          requested_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          level?: string
+          package_id?: string | null
+          requested_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          level?: string
+          package_id?: string | null
+          requested_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_package_preferences_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_packages: {
         Row: {
@@ -1267,6 +1489,10 @@ export type Database = {
       approve_group_attendance: {
         Args: { _attendance_id: string }
         Returns: undefined
+      }
+      assign_student_to_pkg_group: {
+        Args: { _enrollment_id: string; _user_id: string }
+        Returns: string
       }
       auto_match_student: { Args: { _preference_id: string }; Returns: string }
       create_egypt_order: {
