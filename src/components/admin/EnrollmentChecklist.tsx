@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchEnrollmentChecklists, type EnrollmentChecklist as ChecklistData, type ChecklistItem, type OverallState } from "@/lib/checklistEngine";
 import { toast } from "@/hooks/use-toast";
 
-const FALLBACK_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+// No hardcoded fallback — weekdays come exclusively from schedule_options (active only)
 const COMMON_TIMEZONES = [
   "Africa/Cairo", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
   "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Dubai", "Asia/Riyadh",
@@ -44,7 +44,7 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
 }) {
   const [days, setDays] = useState<string[]>(currentDays);
   const [saving, setSaving] = useState(false);
-  const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
+  const [weekdays, setWeekdays] = useState<string[]>([]);
 
   useEffect(() => {
     supabase
@@ -54,9 +54,8 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
       .eq("is_active", true)
       .order("sort_order")
       .then(({ data }) => {
-        if (data && (data as any[]).length > 0) {
-          setWeekdays((data as any[]).map((r: any) => r.label));
-        }
+        // Always set from DB — no fallback. If admin removed days, they won't appear here either.
+        setWeekdays((data as any[] ?? []).map((r: any) => r.label));
       });
   }, []);
 
