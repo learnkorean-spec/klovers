@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban, ClipboardCheck } from "lucide-react";
+import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban, ClipboardCheck, Globe } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import EnrollmentChecklistManager from "./EnrollmentChecklist";
 
@@ -380,6 +380,22 @@ const BulkMatcher = () => {
     // Actions are now handled inline within the checklist panel
   }, []);
 
+  // Must be before early return to satisfy hooks rules
+  const slotGroupsData = useMemo(() => {
+    const groups: Record<string, { slot: SlotInfo; students: Student[] }> = {};
+    students.forEach(s => {
+      if (!s.assigned_slot_id) return;
+      const slot = slots.find(sl => sl.id === s.assigned_slot_id);
+      if (!slot) return;
+      if (!groups[s.assigned_slot_id]) groups[s.assigned_slot_id] = { slot, students: [] };
+      groups[s.assigned_slot_id].students.push(s);
+    });
+    return Object.values(groups).sort((a, b) => {
+      const lvl = a.slot.course_level.localeCompare(b.slot.course_level);
+      return lvl !== 0 ? lvl : a.slot.day.localeCompare(b.slot.day);
+    });
+  }, [students, slots]);
+
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading…</p>;
 
   const DayChips = ({ student }: { student: Student }) => (
@@ -615,12 +631,135 @@ const BulkMatcher = () => {
       </div>
     );
   };
+  // slotGroups is computed before early return as slotGroupsData
+  const slotGroups = slotGroupsData;
+
+  // Slot times are stored as Cairo (UTC+2). Convert to student's local tz.
+  const convertSlotToLocal = (day: string, slotTime: string, tz: string): string => {
+    try {
+      const dayMap: Record<string, number> = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 7 };
+      const dayOffset = (dayMap[day] || 1) - 1;
+      const ref = new Date(Date.UTC(2024, 0, 1 + dayOffset));
+      const [h, m] = slotTime.split(":").map(Number);
+      ref.setUTCHours(h - 2, m, 0, 0); // Cairo = UTC+2
+      const localTime = ref.toLocaleTimeString("en-US", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: true });
+      const localDay = ref.toLocaleDateString("en-US", { timeZone: tz, weekday: "short" });
+      return `${localDay} ${localTime}`;
+    } catch { return `${day} ${slotTime}`; }
+  };
+
+  const SlotGroupCard = ({ slot, groupStudents }: { slot: SlotInfo; groupStudents: Student[] }) => {
+    const timezones = [...new Set(groupStudents.map(s => s.timezone).filter(Boolean))];
+    const statusBadge = slot.status === "confirmed"
+      ? <Badge className="text-[10px]">Confirmed ✓</Badge>
+      : slot.status === "full"
+      ? <Badge variant="destructive" className="text-[10px]">Full</Badge>
+      : <Badge variant="outline" className="text-[10px]">Open</Badge>;
+
+    return (
+      <Card className={slot.status === "confirmed" ? "border-primary/40" : slot.status === "full" ? "border-destructive/30" : ""}>
+        <CardContent className="pt-4 space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="secondary" className="font-semibold">{slot.course_level}</Badge>
+            <span className="font-semibold text-foreground">{slot.day} · {slot.time} (Cairo / UTC+2)</span>
+            {statusBadge}
+            <span className="text-xs text-muted-foreground">{slot.current_count}/{slot.max_students} students</span>
+          </div>
+
+          {timezones.length > 0 && (
+            <div className="bg-muted/50 rounded-md p-2 space-y-1">
+              <p className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                <Globe className="h-3 w-3" /> This slot in each student's local timezone:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {timezones.map(tz => {
+                  const localStr = convertSlotToLocal(slot.day, slot.time, tz!);
+                  const count = groupStudents.filter(s => s.timezone === tz).length;
+                  return (
+                    <div key={tz} className="flex items-center gap-1.5 bg-background rounded px-2 py-1 border text-[10px]">
+                      <span className="text-muted-foreground">{tz?.replace(/_/g, " ")}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="font-semibold text-primary">{localStr}</span>
+                      <span className="text-muted-foreground">({count} student{count > 1 ? "s" : ""})</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-[10px]">Student</TableHead>
+                <TableHead className="text-[10px]">Type</TableHead>
+                <TableHead className="text-[10px]">Preferred Days</TableHead>
+                <TableHead className="text-[10px]">Timezone</TableHead>
+                <TableHead className="text-[10px]">Their Local Time</TableHead>
+                <TableHead className="text-[10px]">Day Match</TableHead>
+                <TableHead className="text-[10px]">Move To</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {groupStudents.map(s => {
+                const dayMatch = s.preferred_days.includes(slot.day);
+                const localTime = s.timezone ? convertSlotToLocal(slot.day, slot.time, s.timezone) : "—";
+                return (
+                  <TableRow key={s.enrollment_id}>
+                    <TableCell>
+                      <p className="text-xs font-medium text-foreground">{s.name}</p>
+                      <p className="text-[10px] text-muted-foreground truncate max-w-[130px]">{s.email}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={s.plan_type === "private" ? "secondary" : "outline"} className="text-[10px] capitalize">{s.plan_type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-0.5">
+                        {(s.preferred_days || []).map(d => (
+                          <Badge key={d} variant={d === slot.day ? "default" : "outline"} className="text-[10px] px-1 py-0">{d.slice(0, 3)}</Badge>
+                        ))}
+                        {(!s.preferred_days || s.preferred_days.length === 0) && <span className="text-[10px] text-muted-foreground">None</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[10px] text-muted-foreground">{s.timezone?.replace(/_/g, " ") || "—"}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[10px] font-semibold text-foreground">{localTime}</span>
+                    </TableCell>
+                    <TableCell>
+                      {dayMatch
+                        ? <Badge variant="default" className="text-[10px]">✓ Match</Badge>
+                        : <Badge variant="destructive" className="text-[10px]">✗ Mismatch</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <SlotDropdown student={s} />
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:text-destructive"
+                          disabled={savingId === s.enrollment_id} onClick={() => handleUnmatch(s)}>
+                          <XCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <Tabs defaultValue="matcher" className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <TabsList>
           <TabsTrigger value="matcher" className="gap-1.5">
             <Users className="h-3.5 w-3.5" /> Slot Matcher
+          </TabsTrigger>
+          <TabsTrigger value="groups" className="gap-1.5">
+            <Globe className="h-3.5 w-3.5" /> Slot Groups
           </TabsTrigger>
           <TabsTrigger value="checklist" className="gap-1.5">
             <ClipboardCheck className="h-3.5 w-3.5" /> Enrollment Checklist
@@ -635,7 +774,6 @@ const BulkMatcher = () => {
 
       <TabsContent value="matcher">
         <div className="space-y-4">
-          {/* Matcher Header */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h3 className="font-semibold text-foreground">Bulk Slot Matcher</h3>
@@ -660,7 +798,6 @@ const BulkMatcher = () => {
             </div>
           </div>
 
-          {/* Sections */}
           <Section title="Ready — Day Match" icon={<CheckCircle2 className="h-4 w-4 text-primary" />} students={ready} variant="primary" />
           <Section title="Capacity — Slot Full" icon={<Ban className="h-4 w-4 text-orange-600" />} students={capacityFull} variant="warning" />
           <Section title="Incomplete — No Preferences" icon={<AlertTriangle className="h-4 w-4 text-yellow-600" />} students={incomplete} variant="warning" />
@@ -693,6 +830,30 @@ const BulkMatcher = () => {
         </div>
       </TabsContent>
 
+      <TabsContent value="groups">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="font-semibold text-foreground">Slot Groups</h3>
+              <p className="text-sm text-muted-foreground">Who is in each slot, their local times, and day match. Reassign or remove students directly.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { fetchStudents(); fetchSlots(); }}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
+            </Button>
+          </div>
+          {slotGroups.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Globe className="h-10 w-10 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">No students matched to slots yet</p>
+            </div>
+          ) : (
+            slotGroups.map(({ slot, students: gs }) => (
+              <SlotGroupCard key={slot.id} slot={slot} groupStudents={gs} />
+            ))
+          )}
+        </div>
+      </TabsContent>
+
       <TabsContent value="checklist">
         <EnrollmentChecklistManager onAction={handleChecklistAction} />
       </TabsContent>
@@ -703,3 +864,4 @@ const BulkMatcher = () => {
 };
 
 export default BulkMatcher;
+
