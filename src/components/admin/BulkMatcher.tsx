@@ -4,12 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban, ClipboardCheck, Globe } from "lucide-react";
+import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle, RefreshCw, Search, ShieldAlert, Ban, ClipboardCheck, Globe, Lightbulb, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import EnrollmentChecklistManager from "./EnrollmentChecklist";
 
@@ -656,6 +657,54 @@ const BulkMatcher = () => {
       ? <Badge variant="destructive" className="text-[10px]">Full</Badge>
       : <Badge variant="outline" className="text-[10px]">Open</Badge>;
 
+    // --- Best time suggestion logic ---
+    // Count how many students prefer each day
+    const dayVotes: Record<string, { count: number; students: string[] }> = {};
+    groupStudents.forEach(s => {
+      (s.preferred_days || []).forEach(d => {
+        if (!dayVotes[d]) dayVotes[d] = { count: 0, students: [] };
+        dayVotes[d].count++;
+        dayVotes[d].students.push(s.name);
+      });
+    });
+    const sortedDays = Object.entries(dayVotes)
+      .sort(([, a], [, b]) => b.count - a.count);
+    const bestDay = sortedDays[0];
+    const totalStudents = groupStudents.length;
+    const currentDayVotes = dayVotes[slot.day]?.count || 0;
+
+    // Build suggestion message
+    const buildSuggestion = () => {
+      if (!bestDay) return "";
+      const [day, info] = bestDay;
+      const lines: string[] = [];
+      lines.push(`Hi everyone! 👋`);
+      lines.push(`We're discussing the best class time for your ${slot.course_level} group.`);
+      lines.push(`Current slot: ${slot.day} at ${slot.time} (Cairo / UTC+2)`);
+      lines.push(``);
+      lines.push(`📊 Day preferences from the group:`);
+      sortedDays.forEach(([d, v]) => {
+        const indicator = d === slot.day ? " ← current" : "";
+        lines.push(`  • ${d}: ${v.count}/${totalStudents} student${v.count > 1 ? "s" : ""}${indicator}`);
+      });
+      lines.push(``);
+      if (day === slot.day) {
+        lines.push(`✅ Great news! The current day (${slot.day}) already fits ${info.count}/${totalStudents} students.`);
+      } else {
+        lines.push(`💡 Best option: Moving to ${day} would fit ${info.count}/${totalStudents} students (vs ${currentDayVotes}/${totalStudents} on current ${slot.day}).`);
+        lines.push(`Please reply to confirm if ${day} at ${slot.time} works for you!`);
+      }
+      return lines.join("\n");
+    };
+
+    const [msgText, setMsgText] = useState(() => buildSuggestion());
+    const [showMsg, setShowMsg] = useState(false);
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(msgText);
+      toast({ title: "Copied!", description: "Message copied to clipboard." });
+    };
+
     return (
       <Card className={slot.status === "confirmed" ? "border-primary/40" : slot.status === "full" ? "border-destructive/30" : ""}>
         <CardContent className="pt-4 space-y-3">
@@ -684,6 +733,69 @@ const BulkMatcher = () => {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Best Time Suggestion Box */}
+          {sortedDays.length > 0 && (
+            <div className="border border-primary/20 rounded-lg bg-accent/30 p-3 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold text-foreground">Best Day Fit for This Group</span>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {sortedDays.map(([d, v]) => (
+                    <span key={d} className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                      d === slot.day
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : v.count === sortedDays[0][1].count
+                        ? "bg-primary/10 text-primary border-primary/30"
+                        : "bg-muted text-muted-foreground border-border"
+                    }`}>
+                      {d}: {v.count}/{totalStudents}
+                      {d === slot.day ? " ✓ current" : ""}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {bestDay && bestDay[0] !== slot.day && (
+                <p className="text-[11px] text-muted-foreground">
+                  💡 <strong className="text-foreground">{bestDay[0]}</strong> fits the most students ({bestDay[1].count}/{totalStudents}).
+                  Current day <strong className="text-foreground">{slot.day}</strong> fits {currentDayVotes}/{totalStudents}.
+                </p>
+              )}
+              {bestDay && bestDay[0] === slot.day && (
+                <p className="text-[11px] text-muted-foreground">
+                  ✅ Current day <strong className="text-foreground">{slot.day}</strong> is already the best fit ({bestDay[1].count}/{totalStudents} students prefer it).
+                </p>
+              )}
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    className="text-[10px] text-primary hover:underline font-medium"
+                    onClick={() => setShowMsg(v => !v)}
+                  >
+                    {showMsg ? "▲ Hide message" : "▼ Draft message to students"}
+                  </button>
+                  {showMsg && (
+                    <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1" onClick={handleCopy}>
+                      <Copy className="h-3 w-3" /> Copy
+                    </Button>
+                  )}
+                </div>
+                {showMsg && (
+                  <Textarea
+                    value={msgText}
+                    onChange={e => setMsgText(e.target.value)}
+                    className="text-xs min-h-[160px] font-mono resize-y"
+                    placeholder="Edit the message before sending to students…"
+                  />
+                )}
               </div>
             </div>
           )}
