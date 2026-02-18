@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, DollarSign } from "lucide-react";
-import heroVideo from "@/assets/hero-korea-video.mp4";
+import heroVideo from "@/assets/hero-korea-video-new.mp4";
 import heroPoster from "@/assets/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
