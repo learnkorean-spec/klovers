@@ -150,6 +150,20 @@ const PackagesManager = () => {
     fetchPackages();
   };
 
+  const handleAddGroup = async (p: Package) => {
+    const defaultName = `${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)}`;
+    const { error } = await (supabase as any).from("pkg_groups").insert({
+      package_id: p.id,
+      name: defaultName,
+      capacity: p.capacity,
+    });
+    if (error) {
+      toast({ title: "Error creating group", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Group created", description: `"${defaultName}" added to Groups tab.` });
+  };
+
   const displayed = packages.filter((p) => {
     const lvl = filterLevel === "all" || p.level === filterLevel;
     const act = filterActive === "all" || (filterActive === "active" ? p.is_active : !p.is_active);
@@ -210,6 +224,9 @@ const PackagesManager = () => {
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleAddGroup(p)} title="Create a group for this package">
+                      <Plus className="h-4 w-4 mr-1" /> Add Group
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleToggleActive(p)}>
                       {p.is_active ? "Disable" : "Enable"}
                     </Button>
