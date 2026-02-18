@@ -48,10 +48,7 @@ const egpPrices: Record<ClassType, Record<Duration, number>> = {
 
 const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
 
-// These are now fetched from DB (schedule_options table)
-const FALLBACK_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const FALLBACK_TIME_WINDOWS = ["Morning (9am–12pm)", "Afternoon (12pm–5pm)", "Evening (5pm–9pm)"];
-const FALLBACK_START_OPTIONS = ["ASAP", "Next week", "Specific date"];
+  // Schedule options are fetched dynamically from DB; no hardcoded fallbacks
 
 const EnrollNowPage = () => {
   const [searchParams] = useSearchParams();
@@ -91,11 +88,11 @@ const EnrollNowPage = () => {
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Dynamic schedule options from DB
-  const [weekdays, setWeekdays] = useState<string[]>([]);
-  const [timeWindows, setTimeWindows] = useState<string[]>(FALLBACK_TIME_WINDOWS);
-  const [startOptions, setStartOptions] = useState<string[]>(FALLBACK_START_OPTIONS);
-  // Level-specific slot days from level_slot_config
+  // Dynamic schedule options from DB — no hardcoded fallbacks
+  const [timeWindows, setTimeWindows] = useState<string[]>([]);
+  const [startOptions, setStartOptions] = useState<string[]>([]);
+  const [optionsLoaded, setOptionsLoaded] = useState(false);
+  // Level-specific slot days from schedule_packages
   const [levelSlotDays, setLevelSlotDays] = useState<string[]>([]);
 
   useEffect(() => {
@@ -104,14 +101,14 @@ const EnrollNowPage = () => {
         .from("schedule_options" as any)
         .select("category, label, sort_order")
         .eq("is_active", true)
+        .not("category", "eq", "weekday") // weekdays come from schedule_packages
         .order("sort_order");
       const items = (data as any[]) || [];
-      const wk = items.filter((i: any) => i.category === "weekday").map((i: any) => i.label);
       const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
       const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
-      setWeekdays(wk.length > 0 ? wk : FALLBACK_WEEKDAYS);
       setTimeWindows(tw);
       setStartOptions(so);
+      setOptionsLoaded(true);
     };
     fetchScheduleOptions();
   }, []);
@@ -219,7 +216,8 @@ const EnrollNowPage = () => {
   };
 
   // preferredTime is only required if the admin has configured time window options
-  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && (timeWindows.length === 0 || !!preferredTime) && !!startOption && (startOption !== "Specific date" || !!specificDate);
+  // Only require preferredTime if admin has configured time windows; only require startOption if admin has configured start options
+  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && (timeWindows.length === 0 || !!preferredTime) && (startOptions.length === 0 || (!!startOption && (startOption !== "Specific date" || !!specificDate)));
 
   const handleEgyptOrder = async () => {
     if (!duration) return;
@@ -550,51 +548,55 @@ const EnrollNowPage = () => {
                 )}
               </div>
 
-              {/* Time Window */}
-              <div className="space-y-2">
-                <Label>Preferred Time</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {timeWindows.map((tw) => (
-                    <button
-                      type="button"
-                      key={tw}
-                      onClick={() => setPreferredTime(tw)}
-                      className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
-                        preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-foreground font-medium">{tw}</span>
-                    </button>
-                  ))}
+              {/* Time Window — only shown if admin configured options */}
+              {timeWindows.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Preferred Time</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {timeWindows.map((tw) => (
+                      <button
+                        type="button"
+                        key={tw}
+                        onClick={() => setPreferredTime(tw)}
+                        className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
+                          preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <span className="text-foreground font-medium">{tw}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Start Date */}
-              <div className="space-y-2">
-                <Label>Preferred Start Date</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {startOptions.map((opt) => (
-                    <button
-                      type="button"
-                      key={opt}
-                      onClick={() => setStartOption(opt)}
-                      className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
-                        startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-foreground font-medium">{opt}</span>
-                    </button>
-                  ))}
+              {/* Start Date — only shown if admin configured options */}
+              {startOptions.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Preferred Start Date</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {startOptions.map((opt) => (
+                      <button
+                        type="button"
+                        key={opt}
+                        onClick={() => setStartOption(opt)}
+                        className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
+                          startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <span className="text-foreground font-medium">{opt}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {startOption === "Specific date" && (
+                    <Input
+                      type="date"
+                      value={specificDate}
+                      onChange={(e) => setSpecificDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                  )}
                 </div>
-                {startOption === "Specific date" && (
-                  <Input
-                    type="date"
-                    value={specificDate}
-                    onChange={(e) => setSpecificDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                )}
-              </div>
+              )}
 
               <p className="text-xs text-muted-foreground text-center">
                 Your schedule will be confirmed within 24 hours after payment.
@@ -611,7 +613,9 @@ const EnrollNowPage = () => {
                     ? "Please select at least 1 preferred day."
                     : timeWindows.length > 0 && !preferredTime
                     ? "Please select a preferred time."
-                    : "Please select a preferred start date."}
+                    : startOptions.length > 0 && !startOption
+                    ? "Please select a preferred start date."
+                    : ""}
                 </p>
               )}
             </CardContent>
