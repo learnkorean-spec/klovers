@@ -106,15 +106,14 @@ const EnrollNowPage = () => {
         .select("category, label, sort_order")
         .eq("is_active", true)
         .order("sort_order");
-      if (data && (data as any[]).length > 0) {
-        const items = data as any[];
-        const wk = items.filter((i: any) => i.category === "weekday").map((i: any) => i.label);
-        const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
-        const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
-        if (wk.length) setWeekdays(wk);
-        if (tw.length) setTimeWindows(tw);
-        if (so.length) setStartOptions(so);
-      }
+      // Always update from DB — if admin removed options, they should disappear for users too
+      const items = (data as any[]) || [];
+      const wk = items.filter((i: any) => i.category === "weekday").map((i: any) => i.label);
+      const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
+      const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
+      if (wk.length) setWeekdays(wk);
+      setTimeWindows(tw); // always set — empty means admin removed all
+      if (so.length) setStartOptions(so);
     };
     fetchScheduleOptions();
   }, []);
