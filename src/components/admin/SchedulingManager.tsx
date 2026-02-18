@@ -304,6 +304,7 @@ const GroupsManager = () => {
   const [gCapacity, setGCapacity] = useState(5);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -315,7 +316,8 @@ const GroupsManager = () => {
 
   const fetchGroups = async (pkgId: string) => {
     setLoading(true);
-    const { data: grps } = await (supabase as any).from("pkg_groups").select("*").eq("package_id", pkgId);
+    // Only fetch is_active = true groups
+    const { data: grps } = await (supabase as any).from("pkg_groups").select("*").eq("package_id", pkgId).eq("is_active", true);
     const list: PkgGroup[] = (grps || []).map((g: any) => ({ ...g, active_count: 0, waitlist_count: 0 }));
     const gIds = list.map((g) => g.id);
     if (gIds.length > 0) {
@@ -329,6 +331,26 @@ const GroupsManager = () => {
     }
     setGroups(list);
     setLoading(false);
+  };
+
+  const handleSyncAndClean = async () => {
+    setSyncing(true);
+    try {
+      const { data: cleanResult, error: cleanErr } = await (supabase as any).rpc("cleanup_pkg_groups");
+      if (cleanErr) throw cleanErr;
+      const { data: created, error: syncErr } = await (supabase as any).rpc("ensure_pkg_groups_for_packages");
+      if (syncErr) throw syncErr;
+      const result = cleanResult as { disabled: number; deleted: number; merged: number } | null;
+      toast({
+        title: "Sync complete",
+        description: `Disabled ${result?.disabled ?? 0} legacy groups, merged ${result?.merged ?? 0} duplicates, deleted ${result?.deleted ?? 0} orphans, created ${created ?? 0} missing groups.`,
+      });
+      if (selectedPkg) fetchGroups(selectedPkg);
+    } catch (err: any) {
+      toast({ title: "Sync failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const fetchMembers = async (groupId: string) => {
@@ -381,6 +403,8 @@ const GroupsManager = () => {
     fetchGroups(selectedPkg);
   };
 
+  const selectedPkgData = packages.find((p) => p.id === selectedPkg) || null;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -396,16 +420,33 @@ const GroupsManager = () => {
             ))}
           </SelectContent>
         </Select>
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" onClick={handleSyncAndClean} disabled={syncing}>
+          <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? "animate-spin" : ""}`} />
+          Sync + Clean Groups
+        </Button>
         {selectedPkg && (
           <Button size="sm" onClick={openGroupCreate}><Plus className="h-4 w-4 mr-1" /> New Group</Button>
         )}
       </div>
 
+      {/* Package info header — fills blanks by sourcing from schedule_packages */}
+      {selectedPkgData && (
+        <div className="flex flex-wrap items-center gap-2 px-1 pb-1 border-b">
+          <Badge variant="outline" className="capitalize">{selectedPkgData.level.replace(/_/g, " ")}</Badge>
+          <span className="text-sm text-muted-foreground">
+            {DAY_NAMES[selectedPkgData.day_of_week]} · {formatTime(selectedPkgData.start_time)} · {selectedPkgData.duration_min}min
+          </span>
+          <span className="text-xs text-muted-foreground">{selectedPkgData.timezone}</span>
+          <span className="text-xs text-muted-foreground">Capacity: {selectedPkgData.capacity}/group</span>
+        </div>
+      )}
+
       {!selectedPkg && <p className="text-muted-foreground text-center py-8">Select a package to manage its groups.</p>}
       {loading && <p className="text-muted-foreground text-center py-8">Loading...</p>}
 
       {selectedPkg && !loading && groups.length === 0 && (
-        <p className="text-muted-foreground text-center py-8">No groups yet. Create one above.</p>
+        <p className="text-muted-foreground text-center py-8">No groups yet. Click "Sync + Clean Groups" to auto-create, or add one manually.</p>
       )}
 
       {groups.map((g) => (

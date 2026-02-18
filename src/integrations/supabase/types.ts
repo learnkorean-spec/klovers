@@ -968,6 +968,7 @@ export type Database = {
           capacity: number
           created_at: string
           id: string
+          is_active: boolean
           name: string
           package_id: string
         }
@@ -975,6 +976,7 @@ export type Database = {
           capacity?: number
           created_at?: string
           id?: string
+          is_active?: boolean
           name: string
           package_id: string
         }
@@ -982,6 +984,7 @@ export type Database = {
           capacity?: number
           created_at?: string
           id?: string
+          is_active?: boolean
           name?: string
           package_id?: string
         }
@@ -1498,11 +1501,13 @@ export type Database = {
         Returns: string
       }
       auto_match_student: { Args: { _preference_id: string }; Returns: string }
+      cleanup_pkg_groups: { Args: never; Returns: Json }
       create_egypt_order: {
         Args: { _duration: number; _plan_type: string }
         Returns: string
       }
       deduct_credit: { Args: { _user_id: string }; Returns: number }
+      ensure_pkg_groups_for_packages: { Args: never; Returns: number }
       get_auth_email: { Args: never; Returns: string }
       has_role: {
         Args: {
