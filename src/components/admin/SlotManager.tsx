@@ -13,9 +13,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Users, Pencil } from "lucide-react";
+import LevelSlotConfig from "./LevelSlotConfig";
 
 interface Slot {
   id: string;
@@ -161,6 +163,17 @@ const SlotManager = () => {
 
   return (
     <div className="space-y-4">
+      <Tabs defaultValue="slots">
+        <TabsList>
+          <TabsTrigger value="slots">Matching Slots</TabsTrigger>
+          <TabsTrigger value="level-config">Level → Slot Config</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="level-config" className="pt-3">
+          <LevelSlotConfig />
+        </TabsContent>
+
+        <TabsContent value="slots" className="pt-3">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{slots.length} slots configured</p>
         <Button size="sm" onClick={() => setShowAdd(true)}>
@@ -347,8 +360,11 @@ const SlotManager = () => {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
 export default SlotManager;
+

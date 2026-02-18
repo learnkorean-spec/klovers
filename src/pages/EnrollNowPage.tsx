@@ -95,9 +95,11 @@ const EnrollNowPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   // Dynamic schedule options from DB
-  const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
+  const [weekdays, setWeekdays] = useState<string[]>([]);
   const [timeWindows, setTimeWindows] = useState<string[]>(FALLBACK_TIME_WINDOWS);
   const [startOptions, setStartOptions] = useState<string[]>(FALLBACK_START_OPTIONS);
+  // Level-specific slot days from level_slot_config
+  const [levelSlotDays, setLevelSlotDays] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -106,18 +108,39 @@ const EnrollNowPage = () => {
         .select("category, label, sort_order")
         .eq("is_active", true)
         .order("sort_order");
-      // Always update from DB — if admin removed options, they should disappear for users too
       const items = (data as any[]) || [];
       const wk = items.filter((i: any) => i.category === "weekday").map((i: any) => i.label);
       const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
       const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
-      // Always set from DB — inactive/deleted options must not appear for users
-      setWeekdays(wk);
+      setWeekdays(wk.length > 0 ? wk : FALLBACK_WEEKDAYS);
       setTimeWindows(tw);
       setStartOptions(so);
     };
     fetchScheduleOptions();
   }, []);
+
+  // Fetch level-specific slot days when level changes
+  useEffect(() => {
+    if (!selectedLevel) { setLevelSlotDays([]); return; }
+    const fetchLevelSlots = async () => {
+      const { data } = await supabase
+        .from("level_slot_config" as any)
+        .select("slot_id, sort_order, matching_slots(day, time)")
+        .eq("level", selectedLevel)
+        .order("sort_order");
+      const rows = (data as any[]) || [];
+      if (rows.length > 0) {
+        // Extract day names from the joined matching_slots
+        const days = rows
+          .map((r: any) => r.matching_slots?.day)
+          .filter(Boolean) as string[];
+        setLevelSlotDays(days);
+      } else {
+        setLevelSlotDays([]); // No level config → fall back to all weekdays
+      }
+    };
+    fetchLevelSlots();
+  }, [selectedLevel]);
 
   useEffect(() => {
     const checkFirstTime = async () => {
@@ -494,22 +517,44 @@ const EnrollNowPage = () => {
               {/* Preferred Days */}
               <div className="space-y-2">
                 <Label>Preferred Weekdays (select up to 2)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {weekdays.map((day) => (
-                    <button
-                      type="button"
-                      key={day}
-                      onClick={() => toggleDay(day)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                        preferredDays.includes(day)
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border text-muted-foreground hover:border-primary/50"
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
+                {levelSlotDays.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {levelSlotDays.map((day) => (
+                      <button
+                        type="button"
+                        key={day}
+                        onClick={() => toggleDay(day)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                          preferredDays.includes(day)
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border text-muted-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {weekdays.map((day) => (
+                      <button
+                        type="button"
+                        key={day}
+                        onClick={() => toggleDay(day)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                          preferredDays.includes(day)
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border text-muted-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedLevel && levelSlotDays.length === 0 && weekdays.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">No days configured yet. Contact admin.</p>
+                )}
               </div>
 
               {/* Time Window */}
