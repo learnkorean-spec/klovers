@@ -35,6 +35,7 @@ import BulkMatcher from "@/components/admin/BulkMatcher";
 import BulkEmailManager from "@/components/admin/BulkEmailManager";
 import SlotManager from "@/components/admin/SlotManager";
 import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
+import SchedulingManager from "@/components/admin/SchedulingManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -624,6 +625,7 @@ const AdminDashboard = () => {
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
               <TabsTrigger value="slots" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Slots</TabsTrigger>
+              <TabsTrigger value="scheduling" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Scheduling</TabsTrigger>
               <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
               <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Mail className="h-4 w-4" /> Campaigns
@@ -1341,6 +1343,17 @@ const AdminDashboard = () => {
                   <CardContent><ScheduleOptionsManager /></CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* SCHEDULING TAB */}
+            <TabsContent value="scheduling">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base">Scheduling Operations</CardTitle>
+                  <p className="text-sm text-muted-foreground">Manage packages, groups, waitlists, and notifications.</p>
+                </CardHeader>
+                <CardContent><SchedulingManager /></CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
