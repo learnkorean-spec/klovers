@@ -132,7 +132,7 @@ const AdminDashboard = () => {
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, batchMembersRes, groupsRes, weekdaysRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, batchMembersRes, groupsRes, weekdaysRes, profilesRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
@@ -140,18 +140,47 @@ const AdminDashboard = () => {
       supabase.from("batch_members").select("user_id, batch_id, member_status"),
       supabase.from("student_groups").select("id, name"),
       supabase.from("schedule_options" as any).select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
+      supabase.from("profiles").select("user_id, name, email, level, country"),
     ]);
 
     if (weekdaysRes.data && (weekdaysRes.data as any[]).length > 0) {
       setScheduleWeekdays((weekdaysRes.data as any[]).map((r: any) => r.label));
     }
 
-    // Build profile map from overview for enrollment enrichment
+    // Build profile map: first from direct profiles table, then enrich with overview
     const profileMap: Record<string, { name: string; email: string; level?: string }> = {};
     const overviewByEmail: Record<string, any> = {};
+    const leadsByEmail: Record<string, any> = {};
+
+    // Index leads by email for level fallback
+    if (leadsRes.data) {
+      (leadsRes.data as any[]).forEach((l: any) => {
+        if (l.email) leadsByEmail[l.email.toLowerCase()] = l;
+      });
+    }
+
+    // Index direct profiles (always available for admin)
+    if (profilesRes.data) {
+      (profilesRes.data as any[]).forEach((p: any) => {
+        const leadLevel = leadsByEmail[p.email?.toLowerCase()]?.level;
+        profileMap[p.user_id] = {
+          name: p.name,
+          email: p.email,
+          // Use profile level if set, otherwise fall back to lead level
+          level: (p.level && p.level.trim() !== "") ? p.level : (leadLevel || ""),
+        };
+      });
+    }
+
+    // Enrich/override with admin_student_overview data
     if (overviewRes.data) {
       (overviewRes.data as any[]).forEach((r: any) => {
-        profileMap[r.user_id] = { name: r.name, email: r.email, level: r.level };
+        const existingLevel = profileMap[r.user_id]?.level;
+        profileMap[r.user_id] = {
+          name: r.name || profileMap[r.user_id]?.name,
+          email: r.email || profileMap[r.user_id]?.email,
+          level: (r.level && r.level.trim() !== "") ? r.level : (existingLevel || ""),
+        };
         overviewByEmail[r.email?.toLowerCase()] = r;
       });
     }
@@ -191,7 +220,22 @@ const AdminDashboard = () => {
       setLeads(enrichedLeads);
     }
 
-    if (enrollRes.data) setEnrollments((enrollRes.data as any[]).map((e) => ({ ...e, profiles: profileMap[e.user_id] || null })));
+    if (enrollRes.data) {
+      const enrichedEnrollments = (enrollRes.data as any[]).map((e) => ({
+        ...e,
+        profiles: profileMap[e.user_id] || null,
+      }));
+      setEnrollments(enrichedEnrollments);
+      // Pre-populate editingEnrollLevel from profile level (auto-fill from registration)
+      const autoLevels: Record<string, string> = {};
+      enrichedEnrollments.forEach((e) => {
+        const level = e.profiles?.level;
+        if (level && level.trim() !== "") {
+          autoLevels[e.id] = level;
+        }
+      });
+      setEditingEnrollLevel(prev => ({ ...autoLevels, ...prev })); // don't override manual edits
+    }
     if (attendRes.data) {
       const overviewMap: Record<string, any> = {};
       if (overviewRes.data) {
@@ -219,11 +263,11 @@ const AdminDashboard = () => {
     if (enrollments.length === 0) return;
     const levels = new Set<string>();
     enrollments.forEach(e => {
-      const level = e.profiles?.level;
-      if (level) levels.add(level);
+      const level = editingEnrollLevel[e.id] || e.profiles?.level;
+      if (level && level.trim() !== "") levels.add(level);
     });
     levels.forEach(level => fetchLevelDays(level));
-  }, [enrollments]);
+  }, [enrollments, editingEnrollLevel]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     const { error } = await supabase.from("leads").update({ status: newStatus } as any).eq("id", id);
