@@ -143,11 +143,15 @@ serve(async (req) => {
       const actualAmount = (session.amount_total ?? plan.amount * 100) / 100;
       const unitPrice = plan.classesIncluded > 0 ? actualAmount / plan.classesIncluded : 0;
 
-      // Parse schedule from metadata
-      let scheduleData: { tz?: string; days?: string[]; time?: string; start?: string } = {};
-      try {
-        if (meta?.schedule) scheduleData = JSON.parse(meta.schedule);
-      } catch { /* ignore */ }
+      // Parse schedule from flat metadata fields (new format)
+      const preferredDaysRaw = meta?.preferred_days || "";
+      const preferredDays = preferredDaysRaw
+        ? preferredDaysRaw.split(",").map((d: string) => d.trim()).filter(Boolean)
+        : null;
+      const preferredTime = meta?.preferred_time || null;
+      const preferredStart = meta?.preferred_start || null;
+      const timezone = meta?.timezone || null;
+      const level = meta?.level || null;
 
       // Find or create user
       let userId: string;
@@ -178,7 +182,7 @@ serve(async (req) => {
         await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email });
       }
 
-      // Create enrollment with schedule data
+      // Create enrollment with schedule data from metadata
       await supabaseAdmin.from("enrollments").insert({
         user_id: userId,
         plan_type: plan.classType,
@@ -196,11 +200,19 @@ serve(async (req) => {
         sessions_total: plan.classesIncluded,
         sessions_remaining: plan.classesIncluded,
         stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
-        timezone: scheduleData.tz || null,
-        preferred_days: scheduleData.days || null,
-        preferred_time: scheduleData.time || null,
-        preferred_start: scheduleData.start || null,
+        timezone,
+        preferred_days: preferredDays,
+        preferred_time: preferredTime,
+        preferred_start: preferredStart,
       });
+
+      // Save level to profile if provided
+      if (level) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({ level })
+          .eq("user_id", userId);
+      }
 
       // Update profile
       const { data: profile } = await supabaseAdmin

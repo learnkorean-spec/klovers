@@ -105,7 +105,7 @@ serve(async (req) => {
       );
     }
 
-    const { tier, classType, duration, name, email, schedule } = await req.json();
+    const { tier, classType, duration, name, email, schedule, level } = await req.json();
 
     // Validate inputs
     if (!email || typeof email !== "string") throw new Error("Missing email");
@@ -172,16 +172,6 @@ serve(async (req) => {
       discounts.push({ coupon: coupon.id });
     }
 
-    // Serialize schedule into metadata (Stripe metadata values must be strings, max 500 chars)
-    const scheduleStr = schedule
-      ? JSON.stringify({
-          tz: schedule.timezone?.slice(0, 50),
-          days: schedule.preferred_days?.slice(0, 2),
-          time: schedule.preferred_time?.slice(0, 30),
-          start: schedule.preferred_start?.slice(0, 30),
-        })
-      : "";
-
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
@@ -196,7 +186,11 @@ serve(async (req) => {
         tier: tier,
         class_type: classType,
         duration: String(duration),
-        schedule: scheduleStr.slice(0, 500),
+        level: (level || "").slice(0, 50),
+        preferred_days: (schedule?.preferred_days ?? []).slice(0, 3).join(",").slice(0, 100),
+        preferred_time: (schedule?.preferred_time || "").slice(0, 50),
+        preferred_start: (schedule?.preferred_start || "").slice(0, 50),
+        timezone: (schedule?.timezone || "").slice(0, 60),
         first_time_discount: applyDiscount ? "true" : "false",
       },
     });

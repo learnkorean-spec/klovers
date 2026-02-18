@@ -241,6 +241,14 @@ const AdminDashboard = () => {
         // Preferred days: directly from enrollment record (set during registration)
         if (e.preferred_days && Array.isArray(e.preferred_days) && e.preferred_days.length > 0) {
           autoDays[e.id] = e.preferred_days;
+        } else {
+          // Fallback: parse from matching lead's schedule string (e.g. "Friday" or "Sunday/Friday")
+          const profileEmail = e.profiles?.email?.toLowerCase();
+          const lead = profileEmail ? leadsByEmail[profileEmail] : null;
+          if (lead?.schedule && lead.schedule.trim() !== "") {
+            const leadDays = lead.schedule.split("/").map((d: string) => d.trim()).filter(Boolean);
+            if (leadDays.length > 0) autoDays[e.id] = leadDays;
+          }
         }
       });
 
