@@ -1,125 +1,99 @@
 
-## Problem Analysis
+## Fix: Preferred Days Must Always Come From schedule_packages
 
-The current system has a fundamental design mismatch:
+### Root Cause
 
-1. **`schedule_options` stores day+time together** in the label (e.g. "Monday (6pm–7pm)") — but the database `matching_slots` table stores `day` and `time` as separate columns (e.g. day: "Monday", time: "18:00").
-2. **The `update_student_preferences` RPC** validates that preferred days are one of the 7 pure weekday names (`Monday`…`Sunday`). So saving "Sunday (6pm–7pm)" causes the **"Invalid day"** error seen in the screenshot.
-3. **The checklist engine** compares `preferred_days` (which would contain the full label) against `slot.day` (which is just "Sunday") — they never match, triggering a false "Day mismatch" warning.
-4. **The user's need**: 4 available class slots (each a day+time pair), and each Korean level gets **2 configurable slots** assigned by the admin. Students pick up to 2 of those slots.
+The "Preferred Day" selectors across the enrollment flow and admin tools currently have two data sources:
+- **New (correct)**: `schedule_packages` table — actual packages the admin creates with specific levels and days
+- **Old (broken/stale)**: `schedule_options` weekdays (global list) and `level_slot_config → matching_slots` (now cleared)
+
+The goal is to make **all** day selectors pull exclusively from `schedule_packages`, filtered by the student's level.
+
+### What the Database Looks Like
+
+From `schedule_packages`, levels are stored in snake_case (e.g., `beginner_1`, `intermediate_2`) while the UI shows Title Case (e.g., `Beginner 1`). The mapping is: `"Beginner 1".toLowerCase().replace(/\s+/g, "_")` → `"beginner_1"`.
 
 ---
 
-## Solution Design
+### Three Files to Fix
 
-The fix has two layers:
+#### 1. `src/pages/EnrollNowPage.tsx` — Student Enrollment Flow (Step 2)
 
-### Layer 1 — Fix the `schedule_options` weekday labels (Data Integrity)
-The existing weekday labels in `schedule_options` must store only the **day name** (e.g. "Friday", "Monday") — the time is a separate concern that belongs to the `matching_slots` table. The admin configures which days are available through `schedule_options`, and which times through `matching_slots`.
+**Current behavior:**
+- Fetches days from `schedule_packages` filtered by `normalizedLevel` — this is correct.
+- BUT: if no level is selected or no packages exist for the level, it falls back to showing ALL days from `schedule_options` (generic global list).
 
-**Database fix**: Update the 4 existing weekday entries to clean day names:
-- `"Friday ( 2pm–3pm)"` → `"Friday"`
-- `"Monday (6pm–7pm)"` → `"Monday"`
-- `"Thursday (6pm–7pm)"` → `"Thursday"`
-- `"Sunday (6pm–7pm)"` → `"Sunday"`
+**Fix:**
+- Remove the fallback to `weekdays` from `schedule_options`.
+- If level is not yet selected → show a note: "Please select your Korean level first."
+- If level is selected but no packages exist → show: "No schedule slots available for this level yet. Contact us."
+- Only show day buttons when `levelSlotDays.length > 0`.
+- Keep the `weekdays` state removal (or keep it as unused — it won't be displayed).
+- The "group = up to 2 days, private = 1 day" max logic remains unchanged.
 
-This is a one-time SQL migration.
+#### 2. `src/components/admin/EnrollmentChecklist.tsx` — `PreferredDaysEditor`
 
-### Layer 2 — Level-to-Slots Configuration (New Feature)
+**Current behavior:**
+- Queries `level_slot_config → matching_slots` (old system, now empty/cleared).
+- Falls back to `schedule_options` weekdays.
 
-Add a new admin UI section in the **Slots** tab that lets the admin assign which 2 `matching_slots` are available per Korean level. This creates a `level_slot_config` table:
+**Fix:**
+- Replace the `level_slot_config` query with a `schedule_packages` query:
+  ```typescript
+  const normalizedLevel = studentLevel.toLowerCase().replace(/\s+/g, "_");
+  const { data } = await supabase
+    .from("schedule_packages")
+    .select("day_of_week, start_time")
+    .eq("level", normalizedLevel)
+    .eq("is_active", true);
+  ```
+- Convert `day_of_week` integers to day name strings using `DAY_NAMES` array.
+- Keep the display showing `day · time` per slot, sorted by `day_of_week`.
+- Keep the fallback to `schedule_options` only when `studentLevel` is empty/null.
 
-```text
-level_slot_config
-─────────────────
-id          uuid PK
-level       text  (e.g. "Beginner 1")
-slot_id     uuid → matching_slots.id
-sort_order  int
+#### 3. `src/pages/AdminDashboard.tsx` — Enrollments Tab Inline Editor
+
+**Current behavior:**
+- `scheduleWeekdays` is fetched once at startup from `schedule_options` and used for all enrollments.
+- The "Preferred days" selector in the enrollment card shows all global weekdays regardless of which level is selected for that enrollment.
+
+**Fix:**
+- Introduce a state: `levelPackageDays: Record<string, string[]>` mapping `levelKey → day name[]`.
+- When an admin selects a level in `editingEnrollLevel[e.id]`, fetch days from `schedule_packages` for that level and cache the result.
+- In the enrollment card day picker, use `levelPackageDays[normalizedLevel] ?? scheduleWeekdays` (fallback to global list only when no packages exist for that level).
+- Add a `useEffect` or an `onChange` handler on the level selector to trigger the fetch.
+
+---
+
+### Technical Details
+
+**Day name mapping (used in all three files):**
+```typescript
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// day_of_week = 0 → "Sunday", 1 → "Monday", ..., 5 → "Friday", 6 → "Saturday"
 ```
 
-Then when a student at "Beginner 2" reaches the preferred days step:
-- The system looks up which 2 `matching_slots` are configured for "Beginner 2"
-- Shows only those 2 slots' days as selectable options
-- Student picks 1 or 2 of them
-
-### Layer 3 — Fix Student Day Selection UX
-
-In `EnrollNowPage.tsx` and `EnrollmentChecklist.tsx`, the preferred days shown to a student should be **filtered by their level's configured slots**, not a flat list of all active weekdays from `schedule_options`.
-
----
-
-## Implementation Plan
-
-### Step 1: Database Migration
-- Clean the 4 weekday labels in `schedule_options` (strip time suffix)
-- Create `level_slot_config` table with RLS:
-  - Admins can manage all rows
-  - Anyone can read (for enrollment flow)
-
-### Step 2: `SlotManager` or new `LevelSlotConfig` component in the Slots tab
-A new section in the admin Slots tab where the admin can:
-- Select a Korean level (Beginner 1, 2, Intermediate 1, 2, Advanced 1, 2)
-- Assign up to 2 `matching_slots` to that level (picked from a dropdown of existing slots)
-- See and edit the current 2 slots per level in a clear table
-
-### Step 3: Fix `PreferredDaysEditor` in `EnrollmentChecklist.tsx`
-- Fetch the level's configured slots from `level_slot_config` joined to `matching_slots`
-- Show those slots' days as the selectable buttons (max 2, one per slot)
-- Save only the pure day name (e.g. "Sunday") not "Sunday (6pm-7pm)"
-
-### Step 4: Fix `EnrollNowPage.tsx` preferred days step
-- After fetching the student's level, query `level_slot_config` for that level
-- Show only those 2 slots' days as available choices
-- Falls back to all active `schedule_options` weekdays if no level config exists
-
-### Step 5: Fix `BulkMatcher.tsx`
-- Update the `WEEKDAYS` constant (line 17) to fetch dynamically from `schedule_options` 
-- The matcher's day comparison already uses pure day names from `matching_slots.day` — this will now work correctly
-
----
-
-## Files to Change
-
-| File | Change |
-|---|---|
-| DB migration | Create `level_slot_config`, clean weekday labels |
-| `src/components/admin/SlotManager.tsx` (or new component) | Add level→slot assignment UI |
-| `src/components/admin/EnrollmentChecklist.tsx` | Fetch days from level's configured slots |
-| `src/pages/EnrollNowPage.tsx` | Filter preferred days by level's configured slots |
-| `src/components/admin/BulkMatcher.tsx` | Remove hardcoded WEEKDAYS, use schedule_options |
-
----
-
-## Technical Details
-
-### New table SQL
-```sql
-CREATE TABLE public.level_slot_config (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  level text NOT NULL,
-  slot_id uuid NOT NULL REFERENCES public.matching_slots(id) ON DELETE CASCADE,
-  sort_order integer NOT NULL DEFAULT 0,
-  created_at timestamptz DEFAULT now()
-);
-
-ALTER TABLE public.level_slot_config ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can manage level_slot_config"
-  ON public.level_slot_config FOR ALL
-  USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Anyone can read level_slot_config"
-  ON public.level_slot_config FOR SELECT
-  USING (true);
+**Level normalization (used consistently):**
+```typescript
+const normalizedLevel = level.toLowerCase().replace(/\s+/g, "_");
+// "Beginner 1" → "beginner_1"
+// "Intermediate 2" → "intermediate_2"
 ```
 
-### Data cleanup SQL
-```sql
-UPDATE schedule_options SET label = 'Friday'   WHERE label LIKE 'Friday%'   AND category = 'weekday';
-UPDATE schedule_options SET label = 'Monday'   WHERE label LIKE 'Monday%'   AND category = 'weekday';
-UPDATE schedule_options SET label = 'Thursday' WHERE label LIKE 'Thursday%' AND category = 'weekday';
-UPDATE schedule_options SET label = 'Sunday'   WHERE label LIKE 'Sunday%'   AND category = 'weekday';
+**Query pattern (same across all three):**
+```typescript
+const { data } = await supabase
+  .from("schedule_packages")
+  .select("day_of_week")
+  .eq("level", normalizedLevel)
+  .eq("is_active", true);
+const uniqueDays = [...new Set((data ?? []).map(r => DAY_NAMES[r.day_of_week]))];
+// Sort by day index
 ```
 
-This makes the "Invalid day" error disappear immediately since the RPC validates against pure day names.
+---
+
+### Files Changed
+- `src/pages/EnrollNowPage.tsx` — Remove fallback to `weekdays`, add conditional UI
+- `src/components/admin/EnrollmentChecklist.tsx` — Replace `level_slot_config` query with `schedule_packages`
+- `src/pages/AdminDashboard.tsx` — Add per-level day fetching for enrollment inline editor
