@@ -204,6 +204,7 @@ serve(async (req) => {
         preferred_days: preferredDays,
         preferred_time: preferredTime,
         preferred_start: preferredStart,
+        level: level || null,
       });
 
       // Save level to profile if provided
