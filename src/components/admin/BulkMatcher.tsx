@@ -151,7 +151,9 @@ const BulkMatcher = () => {
   const [editTimezone, setEditTimezone] = useState<{ enrollId: string; tz: string } | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
   const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
+  const [groupDays, setGroupDays] = useState<{ day: string; level: string; course_type: string }[]>([]);
 
+  // Fetch admin-configured weekdays from schedule_options (fallback)
   useEffect(() => {
     supabase
       .from("schedule_options" as any)
@@ -162,6 +164,22 @@ const BulkMatcher = () => {
       .then(({ data }) => {
         const labels = ((data as any[]) ?? []).map((r: any) => r.label as string).filter(Boolean);
         if (labels.length > 0) setWeekdays(labels);
+      });
+  }, []);
+
+  // Fetch available days per level+type from student_groups (teacher's actual schedule)
+  useEffect(() => {
+    supabase
+      .from("student_groups")
+      .select("schedule_day, level, course_type")
+      .not("schedule_day", "is", null)
+      .then(({ data }) => {
+        const rows = (data as any[]) ?? [];
+        setGroupDays(rows.map(r => ({
+          day: r.schedule_day as string,
+          level: (r.level || "") as string,
+          course_type: (r.course_type || "group") as string,
+        })));
       });
   }, []);
 
@@ -415,12 +433,23 @@ const BulkMatcher = () => {
 
   const DayChips = ({ student }: { student: Student }) => {
     const level = editLevels[student.enrollment_id] || student.level;
-    // Filter weekdays to only those that have an actual matching slot for this student's level
-    const availableDays = weekdays.filter(day =>
-      slots.some(s => s.course_level === level && s.day === day)
-    );
-    // Fall back to all admin weekdays if no slots configured yet for this level
-    const daysToShow = availableDays.length > 0 ? availableDays : weekdays;
+    const planType = student.plan_type?.toLowerCase() || "group";
+
+    // Get days from teacher's actual groups filtered by level + plan type
+    const fromGroups = groupDays
+      .filter(g => {
+        const levelMatch = !level || g.level === level || g.level === "";
+        const typeMatch = g.course_type === planType || g.course_type === "group";
+        return levelMatch && typeMatch;
+      })
+      .map(g => g.day);
+
+    // Unique days, preserving weekday order
+    const uniqueGroupDays = weekdays.filter(d => fromGroups.includes(d));
+
+    // Fall back to schedule_options weekdays if no groups configured yet
+    const daysToShow = uniqueGroupDays.length > 0 ? uniqueGroupDays : weekdays;
+
     return (
       <div className="flex flex-wrap gap-1">
         {daysToShow.map(day => (
@@ -435,7 +464,7 @@ const BulkMatcher = () => {
           </button>
         ))}
         {daysToShow.length === 0 && (
-          <span className="text-[10px] text-muted-foreground italic">No slots for this level</span>
+          <span className="text-[10px] text-muted-foreground italic">No groups for this level</span>
         )}
       </div>
     );
