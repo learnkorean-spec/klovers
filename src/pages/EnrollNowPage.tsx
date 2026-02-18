@@ -177,10 +177,9 @@ const EnrollNowPage = () => {
 
   const canProceedStep1 = !!selectedCountry && !!tier && !!duration;
 
+  // Single-select day — clicking a day replaces any previous selection
   const toggleDay = (day: string) => {
-    setPreferredDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : prev.length < 2 ? [...prev, day] : prev
-    );
+    setPreferredDays((prev) => (prev.includes(day) ? [] : [day]));
   };
 
   // Build a URL that preserves all current selections so user can return after signup
@@ -268,9 +267,9 @@ const EnrollNowPage = () => {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           country: selectedCountry,
-          level: classType,
+          level: selectedLevel,          // ✅ use actual Korean level, not classType
           goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")} ${preferredTime}, tz:${timezone}`,
-          plan_type: classType,
+          plan_type: classType,          // ✅ classType goes to plan_type
           duration: `${duration}mo`,
           schedule: `${preferredDays.join("/")} ${preferredTime}`,
           timezone: timezone,
@@ -516,7 +515,7 @@ const EnrollNowPage = () => {
 
               {/* Preferred Days */}
               <div className="space-y-2">
-                <Label>Preferred Weekdays (select up to 2)</Label>
+                <Label>Preferred Day (select 1)</Label>
                 {levelSlotDays.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {levelSlotDays.map((day) => (

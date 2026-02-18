@@ -1,170 +1,185 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { Clock, Users, MapPin, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Clock, Users, CheckCircle2, AlertTriangle } from "lucide-react";
 
-interface SlotGroup {
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+interface SchedulePackage {
   id: string;
-  name: string;
-  schedule_day: string | null;
-  schedule_time: string | null;
-  schedule_timezone: string | null;
-  level: string | null;
-  course_type: string | null;
+  level: string;
+  day_of_week: number;
+  start_time: string;
+  duration_min: number;
+  timezone: string;
   capacity: number;
+  is_active: boolean;
   seats_left: number;
 }
 
 interface SchedulePickerProps {
   courseType: "group" | "private";
   userTimezone: string;
-  onSelect: (groupId: string, groupName: string) => void;
+  onSelect: (packageId: string, label: string) => void;
   selectedGroupId?: string | null;
-  /** When set, only show groups linked to this level via level_group_config */
   selectedLevel?: string;
 }
 
-const DAY_ORDER: Record<string, number> = {
-  Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4,
-  Friday: 5, Saturday: 6, Sunday: 7,
-};
-
-function timeDiffMinutes(time: string, target: string): number {
-  const [h1, m1] = time.split(":").map(Number);
-  const [h2, m2] = target.split(":").map(Number);
-  return Math.abs((h1 * 60 + (m1 || 0)) - (h2 * 60 + (m2 || 0)));
+function formatTime(t: string) {
+  // t is "HH:MM:SS" or "HH:MM"
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, selectedLevel }: SchedulePickerProps) => {
-  const [slots, setSlots] = useState<SlotGroup[]>([]);
+function timeDiffMinutes(timeStr: string, targetHour: number): number {
+  const [h, m] = timeStr.split(":").map(Number);
+  return Math.abs((h * 60 + (m || 0)) - targetHour * 60);
+}
+
+const SchedulePicker = ({
+  courseType,
+  userTimezone,
+  onSelect,
+  selectedGroupId,
+  selectedLevel,
+}: SchedulePickerProps) => {
+  const [packages, setPackages] = useState<SchedulePackage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmed, setConfirmed] = useState<SchedulePackage | null>(null);
   const [showAlternatives, setShowAlternatives] = useState(false);
-  const [clickedFullSlot, setClickedFullSlot] = useState<SlotGroup | null>(null);
-  const [confirmed, setConfirmed] = useState<SlotGroup | null>(null);
+  const [clickedFull, setClickedFull] = useState<SchedulePackage | null>(null);
 
   useEffect(() => {
-    const fetchSlots = async () => {
+    const fetch = async () => {
       setLoading(true);
 
-      let allowedGroupIds: string[] | null = null;
+      // Build query for schedule_packages filtered by level
+      let query = (supabase as any)
+        .from("schedule_packages")
+        .select("*")
+        .eq("is_active", true);
 
-      // If a level is selected, filter by level_group_config
       if (selectedLevel) {
-        const { data: levelCfg } = await supabase
-          .from("level_group_config" as any)
-          .select("group_id")
-          .eq("level", selectedLevel);
-        const cfgRows = (levelCfg as any[]) || [];
-        if (cfgRows.length > 0) {
-          allowedGroupIds = cfgRows.map((r: any) => r.group_id as string);
-        }
+        query = query.eq("level", selectedLevel);
       }
 
-      // Fetch groups matching course_type with scheduling info
-      let query = supabase
-        .from("student_groups")
-        .select("id, name, schedule_day, schedule_time, schedule_timezone, level, course_type, capacity")
-        .eq("course_type", courseType);
+      const { data: pkgs, error } = await query;
 
-      if (allowedGroupIds !== null) {
-        query = query.in("id", allowedGroupIds);
-      }
-
-      const { data: groups, error } = await query;
-
-      if (error || !groups) {
-        console.error("Failed to fetch groups:", error);
-        setSlots([]);
+      if (error || !pkgs) {
+        console.error("Failed to fetch schedule_packages:", error);
+        setPackages([]);
         setLoading(false);
         return;
       }
 
-      // Count members per group from batch_members
-      const groupIds = groups.map((g: any) => g.id);
-      const { data: memberCounts } = await supabase
-        .from("batch_members")
-        .select("batch_id")
-        .in("batch_id", groupIds);
+      // Count active members per package (via pkg_groups → pkg_group_members)
+      const pkgIds = (pkgs as any[]).map((p: any) => p.id);
 
-      const countMap: Record<string, number> = {};
-      if (memberCounts) {
-        for (const m of memberCounts as any[]) {
-          countMap[m.batch_id] = (countMap[m.batch_id] || 0) + 1;
+      // Get groups for these packages
+      const { data: groups } = await (supabase as any)
+        .from("pkg_groups")
+        .select("id, package_id, capacity")
+        .in("package_id", pkgIds);
+
+      const groupList = (groups as any[]) || [];
+      const groupIds = groupList.map((g: any) => g.id);
+
+      // Count active members per group
+      let memberCounts: Record<string, number> = {};
+      if (groupIds.length > 0) {
+        const { data: members } = await (supabase as any)
+          .from("pkg_group_members")
+          .select("group_id")
+          .in("group_id", groupIds)
+          .eq("member_status", "active");
+
+        for (const m of (members as any[]) || []) {
+          memberCounts[m.group_id] = (memberCounts[m.group_id] || 0) + 1;
         }
       }
 
-      const enriched: SlotGroup[] = (groups as any[])
-        .filter((g) => g.schedule_day && g.schedule_time)
-        .map((g) => ({
-          ...g,
-          seats_left: Math.max(0, (g.capacity || 10) - (countMap[g.id] || 0)),
-        }));
+      // Compute seats_left per package: capacity - total active members across all its groups
+      const pkgMemberCount: Record<string, number> = {};
+      for (const g of groupList) {
+        pkgMemberCount[g.package_id] = (pkgMemberCount[g.package_id] || 0) + (memberCounts[g.id] || 0);
+      }
 
-      setSlots(enriched);
+      const enriched: SchedulePackage[] = (pkgs as any[]).map((p: any) => ({
+        ...p,
+        seats_left: Math.max(0, (p.capacity || 5) - (pkgMemberCount[p.id] || 0)),
+      }));
+
+      // Sort by day_of_week then time
+      enriched.sort((a, b) => {
+        if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week;
+        return a.start_time.localeCompare(b.start_time);
+      });
+
+      setPackages(enriched);
       setLoading(false);
 
-      // Restore confirmed state if selectedGroupId is set
+      // Restore confirmed state
       if (selectedGroupId) {
-        const found = enriched.find((s) => s.id === selectedGroupId);
+        const found = enriched.find((p) => p.id === selectedGroupId);
         if (found) setConfirmed(found);
       }
     };
-    fetchSlots();
-  }, [courseType, selectedGroupId, selectedLevel]);
+    fetch();
+  }, [selectedLevel, selectedGroupId]);
 
   const alternatives = useMemo(() => {
-    if (!clickedFullSlot) return [];
-    return slots
-      .filter((s) => s.seats_left > 0 && s.level === clickedFullSlot.level && s.id !== clickedFullSlot.id)
+    if (!clickedFull) return [];
+    return packages
+      .filter((p) => p.seats_left > 0 && p.level === clickedFull.level && p.id !== clickedFull.id)
       .sort((a, b) => {
-        const aTz = a.schedule_timezone === userTimezone ? 0 : 1;
-        const bTz = b.schedule_timezone === userTimezone ? 0 : 1;
+        const aTz = a.timezone === userTimezone ? 0 : 1;
+        const bTz = b.timezone === userTimezone ? 0 : 1;
         if (aTz !== bTz) return aTz - bTz;
-        const aDiff = timeDiffMinutes(a.schedule_time || "18:00", "18:00");
-        const bDiff = timeDiffMinutes(b.schedule_time || "18:00", "18:00");
-        if (aDiff !== bDiff) return aDiff - bDiff;
-        return (DAY_ORDER[a.schedule_day || "Monday"] || 7) - (DAY_ORDER[b.schedule_day || "Monday"] || 7);
+        return timeDiffMinutes(a.start_time, 18) - timeDiffMinutes(b.start_time, 18);
       })
       .slice(0, 6);
-  }, [clickedFullSlot, slots, userTimezone]);
+  }, [clickedFull, packages, userTimezone]);
 
-  const handleSlotClick = (slot: SlotGroup) => {
-    if (slot.seats_left === 0) {
-      setClickedFullSlot(slot);
+  const handleClick = (pkg: SchedulePackage) => {
+    if (pkg.seats_left === 0) {
+      setClickedFull(pkg);
       setShowAlternatives(true);
       return;
     }
-    selectSlot(slot, false);
+    selectPackage(pkg, false);
   };
 
-  const selectSlot = async (slot: SlotGroup, isAlternative: boolean) => {
-    setConfirmed(slot);
+  const selectPackage = async (pkg: SchedulePackage, isAlternative: boolean) => {
+    setConfirmed(pkg);
     setShowAlternatives(false);
-    onSelect(slot.id, slot.name);
+    const label = `${DAY_NAMES[pkg.day_of_week]} · ${formatTime(pkg.start_time)} · ${pkg.duration_min}min · ${pkg.timezone}`;
+    onSelect(pkg.id, label);
 
+    // Persist preference
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      await supabase
-        .from("student_schedule_preferences" as any)
+      await (supabase as any)
+        .from("student_package_preferences")
         .upsert({
           user_id: session.user.id,
-          group_id: slot.id,
-          level: slot.level || "",
-        } as any, { onConflict: "user_id" });
+          level: pkg.level || "",
+          package_id: pkg.id,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
 
       if (isAlternative) {
         const userName = session.user.user_metadata?.name || session.user.email || "A student";
-        await supabase.from("admin_notifications" as any).insert({
-          message: `${userName} chose alternative slot "${slot.name}" (${slot.schedule_day} ${slot.schedule_time} ${slot.schedule_timezone})`,
+        await (supabase as any).from("admin_notifications").insert({
+          message: `${userName} chose alternative schedule package (${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)} ${pkg.timezone})`,
           type: "alternative_slot",
           related_user_id: session.user.id,
-          related_group_id: slot.id,
-        } as any);
+        });
       }
     }
   };
@@ -179,10 +194,10 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, s
     );
   }
 
-  if (slots.length === 0) {
+  if (packages.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <p>No schedule slots available for {courseType} classes right now.</p>
+        <p>No schedule slots available{selectedLevel ? ` for ${selectedLevel}` : ""} right now.</p>
         <p className="text-sm mt-1">Please check back later or contact support.</p>
       </div>
     );
@@ -193,12 +208,19 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, s
       <div className="bg-accent rounded-lg p-4 flex items-start gap-3">
         <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
         <div className="space-y-1">
-          <p className="font-semibold text-foreground">Selected: {confirmed.name}</p>
+          <p className="font-semibold text-foreground">
+            {DAY_NAMES[confirmed.day_of_week]} · {formatTime(confirmed.start_time)}
+          </p>
           <p className="text-sm text-muted-foreground">
-            {confirmed.schedule_day} · {confirmed.schedule_time} · {confirmed.schedule_timezone}
+            {confirmed.duration_min} min · {confirmed.timezone.replace(/_/g, " ")}
           </p>
           <p className="text-xs text-muted-foreground">Pending payment approval</p>
-          <Button variant="ghost" size="sm" className="mt-1 h-7 text-xs" onClick={() => { setConfirmed(null); onSelect("", ""); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-1 h-7 text-xs"
+            onClick={() => { setConfirmed(null); onSelect("", ""); }}
+          >
             Change slot
           </Button>
         </div>
@@ -208,41 +230,46 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, s
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Pick your preferred class slot:</p>
-      
+      <p className="text-sm text-muted-foreground">Pick your preferred class slot (1 day · 90 min · 18:00 Cairo default):</p>
+
       <div className="grid gap-3">
-        {slots.map((slot) => (
+        {packages.map((pkg) => (
           <button
-            key={slot.id}
+            key={pkg.id}
             type="button"
-            onClick={() => handleSlotClick(slot)}
+            onClick={() => handleClick(pkg)}
             className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-              slot.seats_left === 0
+              pkg.seats_left === 0
                 ? "border-border opacity-60 hover:border-destructive/50"
                 : "border-border hover:border-primary hover:bg-accent"
             }`}
           >
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="font-semibold text-foreground">{slot.name}</p>
+                <p className="font-semibold text-foreground">
+                  {DAY_NAMES[pkg.day_of_week]}
+                </p>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {slot.schedule_day} · {slot.schedule_time}
+                    {formatTime(pkg.start_time)} · {pkg.duration_min}min
                   </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {slot.schedule_timezone?.replace(/_/g, " ")}
-                  </span>
+                  <span className="text-xs">{pkg.timezone.replace(/_/g, " ")}</span>
                 </div>
-                {slot.level && <Badge variant="outline" className="text-xs">{slot.level}</Badge>}
+                {pkg.level && (
+                  <Badge variant="outline" className="text-xs">{pkg.level}</Badge>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={slot.seats_left > 3 ? "secondary" : slot.seats_left > 0 ? "default" : "destructive"}>
-                  <Users className="h-3 w-3 mr-1" />
-                  {slot.seats_left > 0 ? `${slot.seats_left} seats` : "Full"}
-                </Badge>
-              </div>
+              <Badge
+                variant={
+                  pkg.seats_left > 3 ? "secondary"
+                  : pkg.seats_left > 0 ? "default"
+                  : "destructive"
+                }
+              >
+                <Users className="h-3 w-3 mr-1" />
+                {pkg.seats_left > 0 ? `${pkg.seats_left} seats` : "Full"}
+              </Badge>
             </div>
           </button>
         ))}
@@ -257,7 +284,9 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, s
               Slot Full
             </DialogTitle>
             <DialogDescription>
-              "{clickedFullSlot?.name}" is currently full. Choose an alternative slot below:
+              {clickedFull && (
+                <>"{DAY_NAMES[clickedFull.day_of_week]} {formatTime(clickedFull.start_time)}" is full. Choose an alternative:</>
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -271,14 +300,16 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, s
                 <button
                   key={alt.id}
                   type="button"
-                  onClick={() => selectSlot(alt, true)}
+                  onClick={() => selectPackage(alt, true)}
                   className="w-full text-left p-3 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground text-sm">{alt.name}</p>
+                      <p className="font-medium text-foreground text-sm">
+                        {DAY_NAMES[alt.day_of_week]} · {formatTime(alt.start_time)}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {alt.schedule_day} · {alt.schedule_time} · {alt.schedule_timezone?.replace(/_/g, " ")}
+                        {alt.duration_min}min · {alt.timezone.replace(/_/g, " ")}
                       </p>
                     </div>
                     <Badge variant="secondary" className="text-xs">

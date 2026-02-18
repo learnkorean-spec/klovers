@@ -352,52 +352,56 @@ const AdminDashboard = () => {
         }
       }
 
-      // === Legacy group assignment (for existing students) ===
+      // === Package-based group assignment (new flow) ===
       try {
-        const { data: pref } = await supabase
-          .from("student_schedule_preferences" as any)
-          .select("group_id")
-          .eq("user_id", enrollment.user_id)
-          .maybeSingle();
+        const { data: assignResult, error: assignErr } = await supabase
+          .rpc("assign_student_to_pkg_group" as any, {
+            _user_id: enrollment.user_id,
+            _enrollment_id: enrollment.id,
+          } as any);
 
-        if (pref && (pref as any).group_id) {
-          const groupId = (pref as any).group_id;
+        if (assignErr) {
+          console.error("Package assignment error:", assignErr);
+        } else if (assignResult) {
+          const result = assignResult as string;
+          if (result.startsWith("assigned:")) {
+            toast({ title: "Assigned to group", description: result.replace("assigned:", "") });
+          } else if (result === "waitlisted") {
+            toast({ title: "Waitlisted", description: "All groups full — student added to waitlist.", variant: "destructive" });
+          } else if (result === "no_preference") {
+            // Fall back to legacy schedule_preferences assignment
+            const { data: pref } = await supabase
+              .from("student_schedule_preferences" as any)
+              .select("group_id")
+              .eq("user_id", enrollment.user_id)
+              .maybeSingle();
 
-          const { data: group } = await supabase
-            .from("student_groups")
-            .select("capacity, name")
-            .eq("id", groupId)
-            .single();
-
-          const { count: memberCount } = await supabase
-            .from("batch_members")
-            .select("id", { count: "exact", head: true })
-            .eq("batch_id", groupId);
-
-          const seatsLeft = (group as any)?.capacity - (memberCount || 0);
-
-          if (seatsLeft > 0) {
-            await supabase.from("batch_members").insert({
-              batch_id: groupId,
-              user_id: enrollment.user_id,
-              enrollment_id: enrollment.id,
-              member_status: "active",
-            } as any);
-            toast({ title: "Assigned to group", description: (group as any)?.name });
-          } else {
-            await supabase.from("batch_members").insert({
-              batch_id: groupId,
-              user_id: enrollment.user_id,
-              enrollment_id: enrollment.id,
-              member_status: "waitlist",
-            } as any);
-            await supabase.from("admin_notifications" as any).insert({
-              message: `Group "${(group as any)?.name}" full at approval time for ${enrollment.profiles?.name || "student"}. Needs reassignment.`,
-              type: "waitlist",
-              related_user_id: enrollment.user_id,
-              related_group_id: groupId,
-            } as any);
-            toast({ title: "Warning", description: "Group full — student added to waitlist.", variant: "destructive" });
+            if (pref && (pref as any).group_id) {
+              const groupId = (pref as any).group_id;
+              const { data: group } = await supabase
+                .from("student_groups")
+                .select("capacity, name")
+                .eq("id", groupId)
+                .single();
+              const { count: memberCount } = await supabase
+                .from("batch_members")
+                .select("id", { count: "exact", head: true })
+                .eq("batch_id", groupId);
+              const seatsLeft = (group as any)?.capacity - (memberCount || 0);
+              if (seatsLeft > 0) {
+                await supabase.from("batch_members").insert({
+                  batch_id: groupId, user_id: enrollment.user_id,
+                  enrollment_id: enrollment.id, member_status: "active",
+                } as any);
+                toast({ title: "Assigned to group (legacy)", description: (group as any)?.name });
+              } else {
+                await supabase.from("batch_members").insert({
+                  batch_id: groupId, user_id: enrollment.user_id,
+                  enrollment_id: enrollment.id, member_status: "waitlist",
+                } as any);
+                toast({ title: "Warning", description: "Group full — student waitlisted.", variant: "destructive" });
+              }
+            }
           }
         }
       } catch (err) {
