@@ -107,6 +107,25 @@ const AdminDashboard = () => {
   const [editingEnrollLevel, setEditingEnrollLevel] = useState<Record<string, string>>({});
   const [editingEnrollDays, setEditingEnrollDays] = useState<Record<string, string[]>>({});
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+  const [levelPackageDays, setLevelPackageDays] = useState<Record<string, string[]>>({});
+  const DAY_NAMES_ADMIN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const fetchLevelDays = async (level: string) => {
+    const normalizedLevel = level.toLowerCase().replace(/\s+/g, "_");
+    if (levelPackageDays[normalizedLevel]) return; // already cached
+    const { data } = await supabase
+      .from("schedule_packages" as any)
+      .select("day_of_week")
+      .eq("level", normalizedLevel)
+      .eq("is_active", true);
+    const rows = (data as any[]) || [];
+    const uniqueDays = [...new Set(rows.map((r: any) => r.day_of_week as number))]
+      .sort((a, b) => a - b)
+      .map((n) => DAY_NAMES_ADMIN[n]);
+    if (uniqueDays.length > 0) {
+      setLevelPackageDays(prev => ({ ...prev, [normalizedLevel]: uniqueDays }));
+    }
+  };
   const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -194,6 +213,17 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => { fetchAll(); }, []);
+
+  // Pre-fetch package days for all enrollment levels after data loads
+  useEffect(() => {
+    if (enrollments.length === 0) return;
+    const levels = new Set<string>();
+    enrollments.forEach(e => {
+      const level = e.profiles?.level;
+      if (level) levels.add(level);
+    });
+    levels.forEach(level => fetchLevelDays(level));
+  }, [enrollments]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     const { error } = await supabase.from("leads").update({ status: newStatus } as any).eq("id", id);
@@ -854,7 +884,10 @@ const AdminDashboard = () => {
                                         <span className="text-sm text-muted-foreground shrink-0">Level:</span>
                                         <Select
                                           value={editingEnrollLevel[e.id] ?? e.profiles?.level ?? ""}
-                                          onValueChange={(v) => setEditingEnrollLevel(prev => ({ ...prev, [e.id]: v }))}
+                                          onValueChange={(v) => {
+                                            setEditingEnrollLevel(prev => ({ ...prev, [e.id]: v }));
+                                            fetchLevelDays(v);
+                                          }}
                                         >
                                           <SelectTrigger className="h-7 w-44">
                                             <SelectValue placeholder="Select level" />
@@ -868,31 +901,40 @@ const AdminDashboard = () => {
                                       </div>
                                       <div>
                                         <span className="text-sm text-muted-foreground">Preferred days:</span>
-                                        <div className="flex flex-wrap gap-1.5 mt-1">
-                                          {scheduleWeekdays.map(day => {
-                                            const currentDays = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
-                                            const isSelected = currentDays.includes(day);
-                                            return (
-                                              <button
-                                                key={day}
-                                                type="button"
-                                                onClick={() => {
-                                                  const curr = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
-                                                  const next = isSelected ? curr.filter(d => d !== day) : [...curr, day];
-                                                  setEditingEnrollDays(prev => ({ ...prev, [e.id]: next }));
-                                                }}
-                                                className={cn(
-                                                  "px-2.5 py-1 rounded-full text-xs border transition-colors",
-                                                  isSelected
-                                                    ? "bg-primary text-primary-foreground border-primary"
-                                                    : "bg-background text-muted-foreground border-border hover:border-primary/50"
-                                                )}
-                                              >
-                                                {day.slice(0, 3)}
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
+                                        {(() => {
+                                          const currentLevel = editingEnrollLevel[e.id] ?? e.profiles?.level ?? "";
+                                          const normalizedLevel = currentLevel.toLowerCase().replace(/\s+/g, "_");
+                                          const daysToShow = levelPackageDays[normalizedLevel] ?? scheduleWeekdays;
+                                          return (
+                                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                              {daysToShow.length === 0 ? (
+                                                <p className="text-xs text-muted-foreground italic">No packages configured for this level.</p>
+                                              ) : daysToShow.map(day => {
+                                                const currentDays = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
+                                                const isSelected = currentDays.includes(day);
+                                                return (
+                                                  <button
+                                                    key={day}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const curr = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
+                                                      const next = isSelected ? curr.filter(d => d !== day) : [...curr, day];
+                                                      setEditingEnrollDays(prev => ({ ...prev, [e.id]: next }));
+                                                    }}
+                                                    className={cn(
+                                                      "px-2.5 py-1 rounded-full text-xs border transition-colors",
+                                                      isSelected
+                                                        ? "bg-primary text-primary-foreground border-primary"
+                                                        : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                                                    )}
+                                                  >
+                                                    {day.slice(0, 3)}
+                                                  </button>
+                                                );
+                                              })}
+                                            </div>
+                                          );
+                                        })()}
                                       </div>
                                     </div>
                                   )}
