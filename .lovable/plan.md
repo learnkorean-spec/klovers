@@ -1,82 +1,161 @@
 
-## Problem Diagnosis
+## Update Group Attendance: Restrict Dates to Package day_of_week
 
-There are two distinct but related issues causing the admin dashboard to not show auto-populated Level and Preferred Days from registration:
+### Current State Analysis
 
-### Root Cause 1 — Stripe Flow Does Not Save Preferences to the Enrollment
+**File**: `src/components/admin/GroupAttendanceManager.tsx`
 
-The Egypt flow (`handleEgyptOrder`) correctly saves `preferred_days`, `preferred_time`, `timezone`, and `level` to the enrollment and profile after creating the enrollment record.
+The component currently:
+- Fetches groups from `student_groups` (legacy table with `schedule_day` as free-text string, e.g. `"Friday"`)
+- Uses a plain `<Input type="date">` with no restrictions — admin can pick any date
+- Has no link to `schedule_packages` or `pkg_groups`
 
-The **Stripe flow** (`handlePay`) does NOT. It only saves the level to the profile (if already logged in), but the enrollment itself is created server-side by the **Stripe webhook** (`supabase/functions/stripe-webhook/index.ts`) after payment — meaning `preferred_days` and `timezone` are never persisted to the enrollment record.
+The `pkg_groups` table has a `package_id` column that links to `schedule_packages`, which has `day_of_week` (integer, 0=Sun to 6=Sat), `start_time`, and `timezone`.
 
-### Root Cause 2 — Admin Dashboard Level Selector Shows Empty for Stripe Enrollments
+The `group_sessions` table is where new sessions are created (this is what the component writes to — distinct from `pkg_group_sessions`).
 
-Because `enrollments.preferred_days` is `null` and `profiles.level` is empty for Stripe-enrolled students, the admin dashboard enrollment card shows no pre-selected level or days, requiring the admin to manually fill these in.
+---
 
-### Fix Plan
+### Implementation Plan
 
-**File 1: `supabase/functions/stripe-webhook/index.ts`**
-After a successful payment, when the webhook creates/updates the enrollment, it must also write `preferred_days`, `preferred_time`, `preferred_start`, and `timezone` from the Stripe metadata (which is already passed in the checkout session body) into the `enrollments` record, and write `level` to the `profiles` table.
+#### 1. New State & Interface
 
-**File 2: `supabase/functions/create-checkout/index.ts`**
-The checkout function needs to store the `level`, `preferred_days`, `preferred_time`, `preferred_start`, and `timezone` in the Stripe checkout session metadata so the webhook can read them on completion.
-
-**File 3: `src/pages/EnrollNowPage.tsx`**
-For the Stripe path, after the checkout session is created and the user pays, the enrollment record won't exist yet. However, a `student_schedule_preferences` or `leads` record already captures the info. The real fix is ensuring the webhook uses the metadata.
-
-Additionally, for already-existing enrollments (past Stripe enrollments with no preferred_days), the admin dashboard should:
-
-**File 4: `src/pages/AdminDashboard.tsx`**
-When an enrollment has no `preferred_days` but the matching lead has a `schedule` field (e.g. `"Friday"`), parse that lead schedule string into day names and auto-populate the `editingEnrollDays` state. The `leads.schedule` field stores days as `"Friday"` or `"Sunday/Friday"` — these can be split by `/` and used directly as pre-selected chips.
-
-### Technical Details
-
-**Lead schedule format**: stored as `"Friday"` or `"Sunday/Friday"` (forward-slash separated)
-
-**Stripe metadata propagation** (in `create-checkout`):
+Add a new `GroupPackageInfo` interface:
 ```typescript
-metadata: {
-  level: selectedLevel,
-  preferred_days: preferredDays.join(","),
-  preferred_time: preferredTime,
-  preferred_start: startOption === "Specific date" ? specificDate : startOption,
-  timezone: timezone,
+interface GroupPackageInfo {
+  package_id: string | null;
+  day_of_week: number | null;  // 0 = Sunday … 6 = Saturday
+  start_time: string | null;   // "18:00:00"
+  timezone: string | null;
 }
 ```
 
-**Stripe webhook** (in `stripe-webhook`): After enrollment insert, run:
+Add state:
 ```typescript
-const meta = session.metadata ?? {};
-await supabaseAdmin.from("enrollments").update({
-  preferred_days: meta.preferred_days ? meta.preferred_days.split(",") : null,
-  preferred_time: meta.preferred_time || null,
-  preferred_start: meta.preferred_start || null,
-  timezone: meta.timezone || null,
-}).eq("stripe_payment_intent_id", session.payment_intent);
-// Also save level to profile
-if (meta.level) {
-  await supabaseAdmin.from("profiles").update({ level: meta.level }).eq("user_id", userId);
+const [groupPackageInfo, setGroupPackageInfo] = useState<GroupPackageInfo | null>(null);
+```
+
+#### 2. Fetch Package Info on Group Select
+
+When `selectedGroup` changes, run a joined query:
+
+```typescript
+// Try pkg_groups first (new system)
+const { data } = await supabase
+  .from("pkg_groups")
+  .select("package_id, schedule_packages(day_of_week, start_time, timezone)")
+  .eq("id", selectedGroup)
+  .maybeSingle();
+```
+
+If `pkg_groups` has no row for this group (legacy `student_groups` group), fall back to parsing the group's `schedule_day` string (e.g. `"Friday"`) into a `day_of_week` integer using `DAY_NAMES.indexOf()`.
+
+Store the result in `groupPackageInfo`.
+
+#### 3. Next-Valid-Date Helper
+
+Add a pure function:
+
+```typescript
+function nextOccurrenceOf(dayOfWeek: number): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = (dayOfWeek - today.getDay() + 7) % 7;
+  const next = new Date(today);
+  next.setDate(today.getDate() + (diff === 0 ? 7 : diff)); // next future occurrence (not today)
+  return next;
 }
 ```
 
-**Admin Dashboard fallback** (for existing enrollments missing data):
+When `groupPackageInfo` is set and has a valid `day_of_week`, call this to auto-set `sessionDate`.
+
+#### 4. Replace Input with Calendar (react-day-picker)
+
+Remove the `<Input type="date">` and replace with the existing `<Calendar>` component:
+
 ```typescript
-// In fetchAll, after building autoDays from enrollment preferred_days:
-enrichedEnrollments.forEach((e) => {
-  if (!autoDays[e.id]) {
-    // Try to get schedule from matching lead
-    const profileEmail = e.profiles?.email?.toLowerCase();
-    const lead = profileEmail ? leadsByEmail[profileEmail] : null;
-    if (lead?.schedule && lead.schedule.trim() !== "") {
-      const leadDays = lead.schedule.split("/").map((d: string) => d.trim()).filter(Boolean);
-      if (leadDays.length > 0) autoDays[e.id] = leadDays;
-    }
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+
+// Disable all days that don't match the package day_of_week
+const disabledDays = groupPackageInfo?.day_of_week != null
+  ? [{ dayOfWeek: [0,1,2,3,4,5,6].filter(d => d !== groupPackageInfo.day_of_week) }]
+  : undefined;
+
+<Calendar
+  mode="single"
+  selected={sessionDate ? new Date(sessionDate + "T00:00:00") : undefined}
+  onSelect={(d) => d && setSessionDate(format(d, "yyyy-MM-dd"))}
+  disabled={disabledDays}
+  className="rounded-md border"
+/>
+```
+
+Also add an info badge above the calendar when a group is selected:
+
+```
+📅 Friday · 18:00 · Africa/Cairo
+(Only Fridays can be selected)
+```
+
+#### 5. Validate in `createSession`
+
+Before inserting, add a guard:
+
+```typescript
+if (groupPackageInfo?.day_of_week != null) {
+  const chosen = new Date(sessionDate + "T00:00:00");
+  if (chosen.getDay() !== groupPackageInfo.day_of_week) {
+    const dayName = DAY_NAMES[groupPackageInfo.day_of_week];
+    toast({
+      title: "Invalid date",
+      description: `This group can only meet on ${dayName} (${formatTime(groupPackageInfo.start_time)} ${groupPackageInfo.timezone ?? ""}).`,
+      variant: "destructive",
+    });
+    return;
   }
-});
+}
 ```
 
-### Files to Change
+#### 6. Time Formatting Helper
 
-1. **`supabase/functions/create-checkout/index.ts`** — Add schedule metadata (level, preferred_days, timezone, etc.) to the Stripe checkout session so the webhook can read it after payment
-2. **`supabase/functions/stripe-webhook/index.ts`** — After creating the enrollment, write `preferred_days`, `timezone`, `preferred_time` from Stripe session metadata, and write `level` to `profiles`
-3. **`src/pages/AdminDashboard.tsx`** — Add fallback to parse `leads.schedule` string (e.g. `"Friday"` or `"Sunday/Friday"`) into the `editingEnrollDays` state when `enrollments.preferred_days` is null, so existing records are also covered
+Add a small helper to format `start_time` from `"18:00:00"` to `"6:00 PM"`:
+
+```typescript
+function formatStartTime(t: string | null): string {
+  if (!t) return "";
+  const [h, m] = t.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+```
+
+---
+
+### File to Change
+
+**`src/components/admin/GroupAttendanceManager.tsx`** — Single file change:
+
+- Add `GroupPackageInfo` interface
+- Add `groupPackageInfo` state
+- Add `nextOccurrenceOf` and `formatStartTime` helpers
+- Add `useEffect` on `selectedGroup` to fetch package info from `pkg_groups` → `schedule_packages`, with fallback to `student_groups.schedule_day` string
+- Auto-set `sessionDate` to next valid date when package info loads
+- Replace `<Input type="date">` with `<Calendar>` using `disabled` prop
+- Add availability info badge (day + time + timezone)
+- Add validation in `createSession` before DB insert
+- Add `Calendar` and `format` imports
+
+No database migrations needed — reads existing `pkg_groups` and `schedule_packages` data via a join.
+
+---
+
+### Edge Cases
+
+| Scenario | Behavior |
+|---|---|
+| Group has no `pkg_groups` row (legacy group) | Falls back to `student_groups.schedule_day` string to derive `day_of_week`; if still empty, calendar is unrestricted |
+| Group's `package_id` is null | Calendar unrestricted, no info badge shown |
+| Admin tries to pick a non-matching day via keyboard | Calendar `disabled` prop prevents selection; validation in `createSession` is a safety net |
+| Today is the same day as the group's day | Auto-selects the NEXT week's occurrence (not today, to avoid accidental same-day session creation) |
