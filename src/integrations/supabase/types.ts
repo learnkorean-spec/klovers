@@ -516,6 +516,7 @@ export type Database = {
           duration: number
           id: string
           last_reminder_at: string | null
+          level: string | null
           matched_at: string | null
           matched_batch_id: string | null
           negative_since: string | null
@@ -551,6 +552,7 @@ export type Database = {
           duration: number
           id?: string
           last_reminder_at?: string | null
+          level?: string | null
           matched_at?: string | null
           matched_batch_id?: string | null
           negative_since?: string | null
@@ -586,6 +588,7 @@ export type Database = {
           duration?: number
           id?: string
           last_reminder_at?: string | null
+          level?: string | null
           matched_at?: string | null
           matched_batch_id?: string | null
           negative_since?: string | null

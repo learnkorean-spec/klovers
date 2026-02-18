@@ -50,6 +50,7 @@ interface Enrollment {
   created_at: string; profiles?: { name: string; email: string; level?: string } | null;
   currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
   preferred_days?: string[] | null; preferred_time?: string | null; timezone?: string | null;
+  level?: string | null;
 }
 
 interface AttendanceReq {
@@ -227,15 +228,19 @@ const AdminDashboard = () => {
       }));
       setEnrollments(enrichedEnrollments);
 
-      // Pre-populate editingEnrollLevel from profile level (auto-fill from registration)
+      // Pre-populate editingEnrollLevel — priority: enrollment.level > profile.level > lead.level
       const autoLevels: Record<string, string> = {};
       // Pre-populate editingEnrollDays from enrollment's preferred_days (stored at registration)
       const autoDays: Record<string, string[]> = {};
 
       enrichedEnrollments.forEach((e) => {
-        // Level: from profile (which includes lead fallback)
-        const level = e.profiles?.level;
-        if (level && level.trim() !== "") {
+        // Level: enrollment.level first (source of truth), then profile, then lead
+        const level = (e.level && e.level.trim() !== "")
+          ? e.level
+          : (e.profiles?.level && e.profiles.level.trim() !== "")
+            ? e.profiles.level
+            : "";
+        if (level) {
           autoLevels[e.id] = level;
         }
         // Preferred days: directly from enrollment record (set during registration)
@@ -282,7 +287,7 @@ const AdminDashboard = () => {
     if (enrollments.length === 0) return;
     const levels = new Set<string>();
     enrollments.forEach(e => {
-      const level = editingEnrollLevel[e.id] || e.profiles?.level;
+      const level = editingEnrollLevel[e.id] || e.level || e.profiles?.level;
       if (level && level.trim() !== "") levels.add(level);
     });
     levels.forEach(level => fetchLevelDays(level));
@@ -945,27 +950,38 @@ const AdminDashboard = () => {
                                     <div className="space-y-2 pt-2 border-t border-border">
                                       <div className="flex items-center gap-2">
                                         <span className="text-sm text-muted-foreground shrink-0">Level:</span>
-                                        <Select
-                                          value={editingEnrollLevel[e.id] ?? e.profiles?.level ?? ""}
-                                          onValueChange={(v) => {
-                                            setEditingEnrollLevel(prev => ({ ...prev, [e.id]: v }));
-                                            fetchLevelDays(v);
-                                          }}
-                                        >
-                                          <SelectTrigger className="h-7 w-44">
-                                            <SelectValue placeholder="Select level" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {SLOT_LEVELS.map(l => (
-                                              <SelectItem key={l} value={l}>{l}</SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
+                                        {(() => {
+                                          const resolvedLevel = editingEnrollLevel[e.id] ?? e.level ?? e.profiles?.level ?? "";
+                                          const hasLevel = !!resolvedLevel;
+                                          return (
+                                            <>
+                                              <Select
+                                                value={resolvedLevel}
+                                                onValueChange={(v) => {
+                                                  setEditingEnrollLevel(prev => ({ ...prev, [e.id]: v }));
+                                                  fetchLevelDays(v);
+                                                }}
+                                              >
+                                                <SelectTrigger className="h-7 w-44">
+                                                  <SelectValue placeholder="Select level" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {SLOT_LEVELS.map(l => (
+                                                    <SelectItem key={l} value={l}>{l}</SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                              {!hasLevel && (
+                                                <Badge variant="destructive" className="text-xs">Missing level</Badge>
+                                              )}
+                                            </>
+                                          );
+                                        })()}
                                       </div>
                                       <div>
                                         <span className="text-sm text-muted-foreground">Preferred days:</span>
                                         {(() => {
-                                          const currentLevel = editingEnrollLevel[e.id] ?? e.profiles?.level ?? "";
+                                          const currentLevel = editingEnrollLevel[e.id] ?? e.level ?? e.profiles?.level ?? "";
                                           const normalizedLevel = currentLevel.toLowerCase().replace(/\s+/g, "_");
                                           // Auto-fetch if not yet loaded
                                           if (currentLevel && levelPackageDays[normalizedLevel] === undefined) {

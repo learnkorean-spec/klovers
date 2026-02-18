@@ -253,16 +253,18 @@ const EnrollNowPage = () => {
       }
       // Save schedule preferences + level to the enrollment and profile
       const enrollmentId = data as string;
-      if (enrollmentId) {
+        if (enrollmentId) {
         const schedPrefs: any = {};
         if (preferredDays.length > 0) schedPrefs.preferred_days = preferredDays;
         if (preferredTime) schedPrefs.preferred_time = preferredTime;
         if (startOption) schedPrefs.preferred_start = startOption === "Specific date" ? specificDate : startOption;
         if (timezone) schedPrefs.timezone = timezone;
+        // Always write level to enrollment (triggers sync to profile via DB trigger)
+        if (selectedLevel) schedPrefs.level = selectedLevel;
         if (Object.keys(schedPrefs).length > 0) {
           await supabase.from("enrollments").update(schedPrefs).eq("id", enrollmentId);
         }
-        // Save level to profile
+        // Also save level to profile directly (belt + suspenders)
         if (selectedLevel) {
           await supabase.from("profiles").update({ level: selectedLevel }).eq("user_id", session.user.id);
         }
