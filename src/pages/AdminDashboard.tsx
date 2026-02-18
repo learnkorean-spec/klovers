@@ -94,6 +94,7 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("confirmed");
+  const [planFilter, setPlanFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
@@ -252,11 +253,12 @@ const AdminDashboard = () => {
     return leads.filter((l) => {
       const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
       const isConfirmed = l.status === "enrolled" || confirmedEmails.has(l.email.toLowerCase());
-      if (statusFilter === "confirmed") return matchesSearch && isConfirmed;
-      if (statusFilter === "all") return matchesSearch;
-      return matchesSearch && l.status === statusFilter;
+      const matchesPlan = planFilter === "all" || l.plan_type === planFilter;
+      if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan;
+      if (statusFilter === "all") return matchesSearch && matchesPlan;
+      return matchesSearch && l.status === statusFilter && matchesPlan;
     });
-  }, [leads, search, statusFilter, confirmedEmails]);
+  }, [leads, search, statusFilter, planFilter, confirmedEmails]);
 
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Date"];
@@ -1116,6 +1118,14 @@ const AdminDashboard = () => {
                         {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    <Select value={planFilter} onValueChange={setPlanFilter}>
+                      <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Plan type" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Plans</SelectItem>
+                        <SelectItem value="group">Group</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
                       <Download className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Export CSV</span>}
@@ -1196,7 +1206,7 @@ const AdminDashboard = () => {
                                   <SelectItem value="private">private</SelectItem>
                                 </SelectContent>
                               </Select>
-                            ) : lead.plan_type ? <Badge variant="outline" className="text-xs">{lead.plan_type}</Badge> : "—"}
+                            ) : lead.plan_type ? <Badge variant={lead.plan_type === "private" ? "default" : "secondary"} className="text-xs capitalize">{lead.plan_type}</Badge> : "—"}
                           </TableCell>
                           <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
                             {editingLeadId === lead.id ? (
