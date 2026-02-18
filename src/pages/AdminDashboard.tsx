@@ -908,12 +908,27 @@ const AdminDashboard = () => {
                                           if (currentLevel && levelPackageDays[normalizedLevel] === undefined) {
                                             fetchLevelDays(currentLevel);
                                           }
-                                          // Only fallback to empty array, never show all 7 days
-                                          const daysToShow = levelPackageDays[normalizedLevel] ?? [];
+                                          // No level selected at all
+                                          if (!currentLevel) {
+                                            return (
+                                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                                <p className="text-xs text-muted-foreground italic">Select a level above to see available days.</p>
+                                              </div>
+                                            );
+                                          }
+                                          // Level selected but still loading
+                                          if (levelPackageDays[normalizedLevel] === undefined) {
+                                            return (
+                                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                                <p className="text-xs text-muted-foreground italic">Loading...</p>
+                                              </div>
+                                            );
+                                          }
+                                          const daysToShow = levelPackageDays[normalizedLevel];
                                           return (
                                             <div className="flex flex-wrap gap-1.5 mt-1">
                                               {daysToShow.length === 0 ? (
-                                                <p className="text-xs text-muted-foreground italic">No packages configured for this level.</p>
+                                                <p className="text-xs text-muted-foreground italic">No class packages configured for this level yet.</p>
                                               ) : daysToShow.map(day => {
                                                 const currentDays = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
                                                 const isSelected = currentDays.includes(day);
