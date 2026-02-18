@@ -111,9 +111,10 @@ const EnrollNowPage = () => {
       const wk = items.filter((i: any) => i.category === "weekday").map((i: any) => i.label);
       const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
       const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
-      if (wk.length) setWeekdays(wk);
-      setTimeWindows(tw); // always set — empty means admin removed all
-      if (so.length) setStartOptions(so);
+      // Always set from DB — inactive/deleted options must not appear for users
+      setWeekdays(wk);
+      setTimeWindows(tw);
+      setStartOptions(so);
     };
     fetchScheduleOptions();
   }, []);
