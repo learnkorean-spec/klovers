@@ -104,21 +104,26 @@ const AdminDashboard = () => {
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [editingEnrollLevel, setEditingEnrollLevel] = useState<Record<string, string>>({});
   const [editingEnrollDays, setEditingEnrollDays] = useState<Record<string, string[]>>({});
+  const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
-  const SLOT_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, batchMembersRes, groupsRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, batchMembersRes, groupsRes, weekdaysRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("admin_student_overview" as any).select("*"),
       supabase.from("batch_members").select("user_id, batch_id, member_status"),
       supabase.from("student_groups").select("id, name"),
+      supabase.from("schedule_options" as any).select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
     ]);
+
+    if (weekdaysRes.data && (weekdaysRes.data as any[]).length > 0) {
+      setScheduleWeekdays((weekdaysRes.data as any[]).map((r: any) => r.label));
+    }
 
     // Build profile map from overview for enrollment enrichment
     const profileMap: Record<string, { name: string; email: string; level?: string }> = {};
@@ -856,7 +861,7 @@ const AdminDashboard = () => {
                                       <div>
                                         <span className="text-sm text-muted-foreground">Preferred days:</span>
                                         <div className="flex flex-wrap gap-1.5 mt-1">
-                                          {SLOT_WEEKDAYS.map(day => {
+                                          {scheduleWeekdays.map(day => {
                                             const currentDays = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
                                             const isSelected = currentDays.includes(day);
                                             return (
