@@ -33,7 +33,7 @@ import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 import GroupMatcher from "@/components/admin/GroupMatcher";
 import BulkMatcher from "@/components/admin/BulkMatcher";
 import BulkEmailManager from "@/components/admin/BulkEmailManager";
-import SlotManager from "@/components/admin/SlotManager";
+
 import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
 import SchedulingManager from "@/components/admin/SchedulingManager";
 
@@ -624,7 +624,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="notifications" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
-              <TabsTrigger value="slots" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Slots</TabsTrigger>
+              
               <TabsTrigger value="scheduling" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Scheduling</TabsTrigger>
               <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
               <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
@@ -1348,31 +1348,25 @@ const AdminDashboard = () => {
               <BulkEmailManager />
             </TabsContent>
 
-            {/* SLOTS TAB */}
-            <TabsContent value="slots">
+
+            {/* SCHEDULING TAB */}
+            <TabsContent value="scheduling">
               <div className="space-y-6">
                 <Card className="rounded-2xl">
-                  <CardHeader className="pb-4"><CardTitle className="text-base">Matching Slots</CardTitle></CardHeader>
-                  <CardContent><SlotManager /></CardContent>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base">Scheduling Operations</CardTitle>
+                    <p className="text-sm text-muted-foreground">Manage packages, groups, waitlists, and notifications.</p>
+                  </CardHeader>
+                  <CardContent><SchedulingManager /></CardContent>
                 </Card>
                 <Card className="rounded-2xl">
-                  <CardHeader className="pb-4"><CardTitle className="text-base">Schedule Preference Options</CardTitle>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base">Schedule Preference Options</CardTitle>
                     <p className="text-sm text-muted-foreground">Edit the weekdays, time windows, and start date options shown to students during enrollment.</p>
                   </CardHeader>
                   <CardContent><ScheduleOptionsManager /></CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            {/* SCHEDULING TAB */}
-            <TabsContent value="scheduling">
-              <Card className="rounded-2xl">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base">Scheduling Operations</CardTitle>
-                  <p className="text-sm text-muted-foreground">Manage packages, groups, waitlists, and notifications.</p>
-                </CardHeader>
-                <CardContent><SchedulingManager /></CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>
