@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, Check, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Bell, Check, Filter, Users, Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -15,10 +17,226 @@ interface Notification {
   related_group_id: string | null;
 }
 
+interface SlotMember {
+  user_id: string;
+  name: string;
+  email: string;
+  level: string;
+}
+
+interface SlotFullPanelProps {
+  notification: Notification;
+  onGroupCreated: (notifId: string, groupName: string) => void;
+}
+
+// Extract slot info from notification message like: Slot "Friday 11:00 (Beginner 1)" is now FULL.
+function parseSlotFullMessage(message: string): { day: string; time: string; level: string } | null {
+  const match = message.match(/Slot "([^"]+)" is now FULL/i);
+  if (!match) return null;
+  const raw = match[1]; // e.g. "Friday 11:00 (Beginner 1)"
+  const levelMatch = raw.match(/\(([^)]+)\)/);
+  const level = levelMatch ? levelMatch[1] : "";
+  const parts = raw.replace(/\([^)]*\)/, "").trim().split(/\s+/);
+  const day = parts[0] || "";
+  const time = parts[1] || "";
+  return { day, time, level };
+}
+
+const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => {
+  const [expanded, setExpanded] = useState(false);
+  const [members, setMembers] = useState<SlotMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createdGroupName, setCreatedGroupName] = useState<string | null>(null);
+
+  const slotInfo = parseSlotFullMessage(notification.message);
+
+  const fetchMembers = async () => {
+    if (!slotInfo) return;
+    setLoadingMembers(true);
+
+    // Find the matching slot
+    const { data: slots } = await supabase
+      .from("matching_slots" as any)
+      .select("id, day, time, course_level")
+      .eq("day", slotInfo.day)
+      .eq("course_level", slotInfo.level)
+      .limit(5);
+
+    if (!slots || slots.length === 0) {
+      setLoadingMembers(false);
+      return;
+    }
+
+    const slotIds = (slots as any[]).map((s: any) => s.id);
+
+    // Get student_slot_preferences matched to these slots
+    const { data: prefs } = await supabase
+      .from("student_slot_preferences" as any)
+      .select("user_id, assigned_slot_id")
+      .in("assigned_slot_id", slotIds);
+
+    if (!prefs || (prefs as any[]).length === 0) {
+      setMembers([]);
+      setLoadingMembers(false);
+      return;
+    }
+
+    const userIds = [...new Set((prefs as any[]).map((p: any) => p.user_id))];
+
+    const { data: profiles } = await supabase
+      .from("profiles" as any)
+      .select("user_id, name, email, level")
+      .in("user_id", userIds);
+
+    const enriched: SlotMember[] = userIds.map((uid) => {
+      const profile = (profiles as any[] || []).find((p: any) => p.user_id === uid);
+      return {
+        user_id: uid,
+        name: profile?.name || "Unknown",
+        email: profile?.email || "",
+        level: profile?.level || slotInfo.level,
+      };
+    });
+
+    setMembers(enriched);
+
+    // Set default group name
+    if (!groupName) {
+      setGroupName(`${slotInfo.level} – ${slotInfo.day} ${slotInfo.time}`);
+    }
+
+    setLoadingMembers(false);
+  };
+
+  const handleExpand = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && members.length === 0) fetchMembers();
+  };
+
+  const handleCreateGroup = async () => {
+    if (!groupName.trim() || !slotInfo) return;
+    setCreating(true);
+
+    try {
+      // Create student_groups entry
+      const { data: group, error: groupError } = await supabase
+        .from("student_groups" as any)
+        .insert({
+          name: groupName.trim(),
+          schedule_day: slotInfo.day,
+          schedule_time: slotInfo.time,
+          course_type: "group",
+          level: slotInfo.level,
+          capacity: Math.max(members.length, 5),
+        } as any)
+        .select("id")
+        .single();
+
+      if (groupError || !group) throw new Error(groupError?.message || "Failed to create group");
+
+      const groupId = (group as any).id;
+
+      // Mark notification as read + store group id reference
+      await supabase
+        .from("admin_notifications" as any)
+        .update({ read: true, related_group_id: groupId } as any)
+        .eq("id", notification.id);
+
+      setCreatedGroupName(groupName.trim());
+      onGroupCreated(notification.id, groupName.trim());
+      toast({ title: "Group created!", description: `"${groupName.trim()}" with ${members.length} members.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  if (!slotInfo) return null;
+
+  return (
+    <div className="mt-3 border-t border-border pt-3 space-y-3">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-between text-sm"
+        onClick={handleExpand}
+      >
+        <span className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          {createdGroupName
+            ? `Group: ${createdGroupName}`
+            : `View members & create group`}
+        </span>
+        {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </Button>
+
+      {expanded && (
+        <div className="space-y-3">
+          {loadingMembers ? (
+            <p className="text-xs text-muted-foreground text-center py-2">Loading members...</p>
+          ) : members.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-2">No matched members found for this slot.</p>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {members.length} member{members.length !== 1 ? "s" : ""}
+              </p>
+              {members.map((m) => (
+                <div key={m.user_id} className="flex items-center justify-between text-xs bg-muted/40 rounded px-3 py-1.5">
+                  <span className="font-medium text-foreground">{m.name}</span>
+                  <span className="text-muted-foreground">{m.email}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!createdGroupName && members.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Group name</p>
+              <div className="flex gap-2">
+                <Input
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="Enter group name..."
+                  className="h-8 text-sm flex-1"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleCreateGroup}
+                  disabled={creating || !groupName.trim()}
+                  className="h-8 shrink-0"
+                >
+                  {creating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <><Plus className="h-3.5 w-3.5 mr-1" /> Create</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {createdGroupName && (
+            <div className="flex items-center gap-2 text-xs bg-primary/10 text-primary rounded px-3 py-2">
+              <Check className="h-3.5 w-3.5 shrink-0" />
+              Group <strong className="mx-1">"{createdGroupName}"</strong> created successfully
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("unread");
+  const [createdGroups, setCreatedGroups] = useState<Record<string, string>>({});
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -62,7 +280,22 @@ const AdminNotifications = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const handleGroupCreated = (notifId: string, groupName: string) => {
+    setCreatedGroups((prev) => ({ ...prev, [notifId]: groupName }));
+    setNotifications((prev) => prev.map((n) => n.id === notifId ? { ...n, read: true } : n));
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const typeColor = (type: string) => {
+    switch (type) {
+      case "slot_full": return "destructive";
+      case "slot_confirmed": return "default";
+      case "waitlist": return "secondary";
+      case "alternative_slot": return "outline";
+      default: return "outline";
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -100,18 +333,34 @@ const AdminNotifications = () => {
       ) : (
         <div className="space-y-2">
           {notifications.map((n) => (
-            <Card key={n.id} className={n.read ? "opacity-60" : ""}>
+            <Card key={n.id} className={n.read && !createdGroups[n.id] ? "opacity-60" : ""}>
               <CardContent className="py-3 px-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1 flex-1">
+                  <div className="space-y-1 flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">{n.type}</Badge>
-                      {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
+                      <Badge variant={typeColor(n.type) as any} className="text-xs">{n.type}</Badge>
+                      {!n.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0" />}
                     </div>
                     <p className="text-sm text-foreground">{n.message}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(n.created_at).toLocaleString()}
                     </p>
+
+                    {/* Slot full: show member list + create group UI */}
+                    {n.type === "slot_full" && (
+                      <SlotFullPanel
+                        notification={n}
+                        onGroupCreated={handleGroupCreated}
+                      />
+                    )}
+
+                    {/* Show created group name badge if exists */}
+                    {createdGroups[n.id] && (
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-primary font-medium">
+                        <Users className="h-3.5 w-3.5" />
+                        Group: {createdGroups[n.id]}
+                      </div>
+                    )}
                   </div>
                   {!n.read && (
                     <Button variant="ghost" size="sm" className="shrink-0" onClick={() => markRead(n.id)}>
