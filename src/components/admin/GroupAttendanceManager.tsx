@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -18,6 +20,13 @@ import { toast } from "@/hooks/use-toast";
 import { Plus, CheckCheck, RefreshCw, UserCheck, UserX, Pencil, Users, Trash2, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface GroupPackageInfo {
+  package_id: string | null;
+  day_of_week: number | null;
+  start_time: string | null;
+  timezone: string | null;
+}
 
 interface Group {
   id: string;
@@ -67,6 +76,23 @@ interface GroupMember {
 const STATUS_OPTIONS = ["present", "absent", "late", "excused"] as const;
 const LEVELS = ["Beginner", "Elementary", "Intermediate", "Advanced"];
 
+function nextOccurrenceOf(dayOfWeek: number): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = (dayOfWeek - today.getDay() + 7) % 7;
+  const next = new Date(today);
+  next.setDate(today.getDate() + (diff === 0 ? 7 : diff));
+  return next;
+}
+
+function formatStartTime(t: string | null): string {
+  if (!t) return "";
+  const [h, m] = t.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
 const statusColor = (status: string) => {
   switch (status) {
     case "present": return "ring-green-500 bg-green-500/20";
@@ -86,6 +112,7 @@ const GroupAttendanceManager = () => {
   const [attendanceRows, setAttendanceRows] = useState<AttendanceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [groupPackageInfo, setGroupPackageInfo] = useState<GroupPackageInfo | null>(null);
 
   // Group management state
   const [editGroupDialog, setEditGroupDialog] = useState(false);
@@ -138,7 +165,53 @@ const GroupAttendanceManager = () => {
   useEffect(() => { fetchGroups(); }, []);
 
   useEffect(() => {
-    if (!selectedGroup) { setSessions([]); return; }
+    if (!selectedGroup) {
+      setSessions([]);
+      setGroupPackageInfo(null);
+      return;
+    }
+
+    // Fetch pkg_groups → schedule_packages for date restriction
+    supabase
+      .from("pkg_groups")
+      .select("package_id, schedule_packages(day_of_week, start_time, timezone)")
+      .eq("id", selectedGroup)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && (data as any).schedule_packages) {
+          const pkg = (data as any).schedule_packages;
+          setGroupPackageInfo({
+            package_id: (data as any).package_id,
+            day_of_week: pkg.day_of_week,
+            start_time: pkg.start_time,
+            timezone: pkg.timezone,
+          });
+          // Auto-jump to next valid date
+          const next = nextOccurrenceOf(pkg.day_of_week);
+          setSessionDate(format(next, "yyyy-MM-dd"));
+        } else {
+          // Fallback: parse legacy student_groups.schedule_day string
+          const group = groups.find(g => g.id === selectedGroup);
+          if (group?.schedule_day) {
+            const idx = DAY_NAMES.indexOf(group.schedule_day);
+            if (idx !== -1) {
+              setGroupPackageInfo({
+                package_id: null,
+                day_of_week: idx,
+                start_time: group.schedule_time ?? null,
+                timezone: group.schedule_timezone ?? null,
+              });
+              const next = nextOccurrenceOf(idx);
+              setSessionDate(format(next, "yyyy-MM-dd"));
+            } else {
+              setGroupPackageInfo(null);
+            }
+          } else {
+            setGroupPackageInfo(null);
+          }
+        }
+      });
+
     supabase
       .from("group_sessions")
       .select("*")
@@ -147,6 +220,7 @@ const GroupAttendanceManager = () => {
       .then(({ data }) => {
         if (data) setSessions(data as Session[]);
       });
+
   }, [selectedGroup]);
 
   useEffect(() => {
@@ -190,6 +264,21 @@ const GroupAttendanceManager = () => {
 
   const createSession = async () => {
     if (!selectedGroup || !sessionDate) return;
+
+    // Validate date matches package day_of_week
+    if (groupPackageInfo?.day_of_week != null) {
+      const chosen = new Date(sessionDate + "T00:00:00");
+      if (chosen.getDay() !== groupPackageInfo.day_of_week) {
+        const dayName = DAY_NAMES[groupPackageInfo.day_of_week];
+        toast({
+          title: "Invalid date",
+          description: `This group can only meet on ${dayName} (${formatStartTime(groupPackageInfo.start_time)} ${groupPackageInfo.timezone ?? ""}).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setCreating(true);
 
     const { data: session, error: sessionErr } = await supabase
@@ -438,50 +527,75 @@ const GroupAttendanceManager = () => {
               <CardTitle className="text-lg">Group Attendance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 space-y-1">
-                  <Label>Group</Label>
-                  <Select value={selectedGroup} onValueChange={(v) => { setSelectedGroup(v); setSelectedSession(""); }}>
-                    <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
-                    <SelectContent>
-                      {groups.map(g => {
-                        const schedule = [g.schedule_day, g.schedule_time].filter(Boolean).join(" · ");
-                        return (
-                          <SelectItem key={g.id} value={g.id}>
-                            <span className="font-medium">{g.name}</span>
-                            {g.level && <Badge variant="secondary" className="ml-2 text-[10px] py-0">{g.level}</Badge>}
-                            {schedule && <span className="text-muted-foreground ml-2 text-xs">({schedule})</span>}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 space-y-1">
+                    <Label>Group</Label>
+                    <Select value={selectedGroup} onValueChange={(v) => { setSelectedGroup(v); setSelectedSession(""); }}>
+                      <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
+                      <SelectContent>
+                        {groups.map(g => {
+                          const schedule = [g.schedule_day, g.schedule_time].filter(Boolean).join(" · ");
+                          return (
+                            <SelectItem key={g.id} value={g.id}>
+                              <span className="font-medium">{g.name}</span>
+                              {g.level && <Badge variant="secondary" className="ml-2 text-[10px] py-0">{g.level}</Badge>}
+                              {schedule && <span className="text-muted-foreground ml-2 text-xs">({schedule})</span>}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedGroup && (() => {
+                    const g = groups.find(gr => gr.id === selectedGroup);
+                    if (!g) return null;
+                    const infoParts = [
+                      g.level && `📚 ${g.level}`,
+                      g.schedule_day && `📅 ${g.schedule_day}`,
+                      g.schedule_time && `🕐 ${g.schedule_time}`,
+                      g.schedule_timezone && `🌍 ${g.schedule_timezone}`,
+                      g.capacity != null && `👥 ${g.capacity} seats`,
+                    ].filter(Boolean);
+                    return infoParts.length > 0 ? (
+                      <div className="flex flex-wrap items-end gap-2 text-xs text-muted-foreground">
+                        {infoParts.map((info, i) => (
+                          <Badge key={i} variant="outline" className="font-normal">{info}</Badge>
+                        ))}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
 
-                {selectedGroup && (() => {
-                  const g = groups.find(gr => gr.id === selectedGroup);
-                  if (!g) return null;
-                  const infoParts = [
-                    g.level && `📚 ${g.level}`,
-                    g.schedule_day && `📅 ${g.schedule_day}`,
-                    g.schedule_time && `🕐 ${g.schedule_time}`,
-                    g.schedule_timezone && `🌍 ${g.schedule_timezone}`,
-                    g.capacity != null && `👥 ${g.capacity} seats`,
-                  ].filter(Boolean);
-                  return infoParts.length > 0 ? (
-                    <div className="flex flex-wrap items-end gap-2 text-xs text-muted-foreground">
-                      {infoParts.map((info, i) => (
-                        <Badge key={i} variant="outline" className="font-normal">{info}</Badge>
-                      ))}
+                <div className="space-y-2">
+                  <Label>Session Date</Label>
+                  {groupPackageInfo?.day_of_week != null && (
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="secondary" className="text-xs font-normal gap-1">
+                        📅 {DAY_NAMES[groupPackageInfo.day_of_week]}
+                        {groupPackageInfo.start_time && ` · ${formatStartTime(groupPackageInfo.start_time)}`}
+                        {groupPackageInfo.timezone && ` · ${groupPackageInfo.timezone}`}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+                        Only {DAY_NAMES[groupPackageInfo.day_of_week]}s can be selected
+                      </Badge>
                     </div>
-                  ) : null;
-                })()}
-
-                <div className="space-y-1">
-                  <Label>Date</Label>
-                  <Input type="date" value={sessionDate} onChange={e => setSessionDate(e.target.value)} />
+                  )}
+                  <Calendar
+                    mode="single"
+                    selected={sessionDate ? new Date(sessionDate + "T00:00:00") : undefined}
+                    onSelect={(d) => d && setSessionDate(format(d, "yyyy-MM-dd"))}
+                    disabled={
+                      groupPackageInfo?.day_of_week != null
+                        ? [{ dayOfWeek: ([0, 1, 2, 3, 4, 5, 6] as const).filter(d => d !== groupPackageInfo.day_of_week) }]
+                        : undefined
+                    }
+                    className="rounded-md border w-fit"
+                  />
                 </div>
-                <div className="flex items-end">
+
+                <div>
                   <Button onClick={createSession} disabled={!selectedGroup || !sessionDate || creating}>
                     <Plus className="h-4 w-4 mr-1" /> Create Session
                   </Button>
