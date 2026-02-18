@@ -39,30 +39,47 @@ const statusIcon = (status: ChecklistItem["status"]) => {
 };
 
 /* ─── Inline Editors ─── */
-function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSaved }: {
-  enrollmentId: string; currentDays: string[]; currentTimezone: string; onSaved: () => void;
+function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, studentLevel, onSaved }: {
+  enrollmentId: string; currentDays: string[]; currentTimezone: string; studentLevel?: string; onSaved: () => void;
 }) {
   const [days, setDays] = useState<string[]>(currentDays);
   const [saving, setSaving] = useState(false);
-  const [weekdays, setWeekdays] = useState<string[]>([]);
+  const [availableDays, setAvailableDays] = useState<{ day: string; time: string }[]>([]);
 
   useEffect(() => {
-    supabase
-      .from("schedule_options" as any)
-      .select("label, sort_order")
-      .eq("category", "weekday")
-      .eq("is_active", true)
-      .order("sort_order")
-      .then(({ data }) => {
-        // Always set from DB — no fallback. If admin removed days, they won't appear here either.
-        setWeekdays((data as any[] ?? []).map((r: any) => r.label));
-      });
-  }, []);
+    const fetchDays = async () => {
+      // Try level-specific slots first
+      if (studentLevel) {
+        const { data } = await supabase
+          .from("level_slot_config" as any)
+          .select("slot_id, sort_order, matching_slots(day, time)")
+          .eq("level", studentLevel)
+          .order("sort_order");
+        const rows = (data as any[]) || [];
+        if (rows.length > 0) {
+          const levelDays = rows
+            .map((r: any) => ({ day: r.matching_slots?.day, time: r.matching_slots?.time }))
+            .filter((r: any) => r.day);
+          setAvailableDays(levelDays);
+          return;
+        }
+      }
+      // Fallback: all active weekdays from schedule_options
+      const { data } = await supabase
+        .from("schedule_options" as any)
+        .select("label, sort_order")
+        .eq("category", "weekday")
+        .eq("is_active", true)
+        .order("sort_order");
+      setAvailableDays(((data as any[]) ?? []).map((r: any) => ({ day: r.label, time: "" })));
+    };
+    fetchDays();
+  }, [studentLevel]);
 
   const MAX_DAYS = 2;
   const toggle = (day: string) => setDays(prev => {
     if (prev.includes(day)) return prev.filter(d => d !== day);
-    if (prev.length >= MAX_DAYS) return prev; // cap at 2
+    if (prev.length >= MAX_DAYS) return prev;
     return [...prev, day];
   });
 
@@ -82,14 +99,17 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
     <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
       <p className="text-xs font-medium text-foreground">Select preferred days: <span className="text-muted-foreground font-normal">(max 2)</span></p>
       <div className="flex flex-wrap gap-1.5">
-        {weekdays.map(day => (
+        {availableDays.map(({ day, time }) => (
           <button key={day} type="button" onClick={() => toggle(day)}
             className={`px-2.5 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
               days.includes(day) ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"
             }`}>
-            {day.slice(0, 3)}
+            {day.slice(0, 3)}{time ? ` · ${time}` : ""}
           </button>
         ))}
+        {availableDays.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">No days configured for this level.</p>
+        )}
       </div>
       <Button size="sm" onClick={save} disabled={saving || days.length === 0} className="h-7 text-xs">
         {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save Days
@@ -304,7 +324,7 @@ function ChecklistPanel({ data, open, onClose, onRefresh, slots }: {
 
     switch (item.action || item.key) {
       case "update_preferences":
-        return <PreferredDaysEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
+        return <PreferredDaysEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} studentLevel={data.level} onSaved={handleSaved} />;
       case "fix_timezone":
         return <TimezoneEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
       case "approve_payment":
@@ -312,11 +332,10 @@ function ChecklistPanel({ data, open, onClose, onRefresh, slots }: {
       case "assign_slot":
         return <SlotAssigner enrollmentId={data.enrollment_id} slots={slots} onSaved={handleSaved} />;
       default:
-        // For items without specific editor, provide generic based on key
         if (item.key === "payment_date") return <PaymentDateEditor enrollmentId={data.enrollment_id} currentDate={currentPaymentDate} onSaved={handleSaved} />;
         if (item.key === "payment_method") return <PaymentMethodEditor enrollmentId={data.enrollment_id} currentMethod={currentPaymentMethod} onSaved={handleSaved} />;
         if (item.key === "timezone") return <TimezoneEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
-        if (item.key === "preferred_days" || item.key === "preference_exists") return <PreferredDaysEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
+        if (item.key === "preferred_days" || item.key === "preference_exists") return <PreferredDaysEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} studentLevel={data.level} onSaved={handleSaved} />;
         if (item.key === "slot_assigned") return <SlotAssigner enrollmentId={data.enrollment_id} slots={slots} onSaved={handleSaved} />;
         return null;
     }

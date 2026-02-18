@@ -735,6 +735,38 @@ export type Database = {
         }
         Relationships: []
       }
+      level_slot_config: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: string
+          slot_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level: string
+          slot_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: string
+          slot_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "level_slot_config_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "matching_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matching_slots: {
         Row: {
           course_level: string
