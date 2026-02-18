@@ -189,7 +189,8 @@ const EnrollNowPage = () => {
     setStep(3);
   };
 
-  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && !!preferredTime && !!startOption && (startOption !== "Specific date" || !!specificDate);
+  // preferredTime is only required if the admin has configured time window options
+  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && (timeWindows.length === 0 || !!preferredTime) && !!startOption && (startOption !== "Specific date" || !!specificDate);
 
   const handleEgyptOrder = async () => {
     if (!duration) return;
@@ -566,7 +567,13 @@ const EnrollNowPage = () => {
               </Button>
               {!canProceedStep2 && (
                 <p className="text-xs text-destructive text-center">
-                  Please select your Korean level, preferred days, time, and start date.
+                  {!selectedLevel
+                    ? "Please select your Korean level."
+                    : preferredDays.length === 0
+                    ? "Please select at least 1 preferred day."
+                    : timeWindows.length > 0 && !preferredTime
+                    ? "Please select a preferred time."
+                    : "Please select a preferred start date."}
                 </p>
               )}
             </CardContent>
