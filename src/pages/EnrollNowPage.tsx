@@ -527,7 +527,11 @@ const EnrollNowPage = () => {
               {/* Preferred Days */}
               <div className="space-y-2">
                 <Label>Preferred Day{classType === "group" ? " (select up to 2)" : " (select 1)"}</Label>
-                {levelSlotDays.length > 0 ? (
+                {!selectedLevel ? (
+                  <p className="text-sm text-muted-foreground italic">Please select your Korean level first.</p>
+                ) : levelSlotDays.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">No schedule slots available for this level yet. Contact us.</p>
+                ) : (
                   <div className="flex flex-wrap gap-2">
                     {levelSlotDays.map((day) => (
                       <button
@@ -544,29 +548,9 @@ const EnrollNowPage = () => {
                       </button>
                     ))}
                   </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {weekdays.map((day) => (
-                      <button
-                        type="button"
-                        key={day}
-                        onClick={() => toggleDay(day)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                          preferredDays.includes(day)
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border text-muted-foreground hover:border-primary/50"
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
                 )}
-                {classType === "group" && preferredDays.length === 1 && (
+                {classType === "group" && preferredDays.length === 1 && levelSlotDays.length > 1 && (
                   <p className="text-xs text-muted-foreground">You can also select a 2nd preferred day (optional).</p>
-                )}
-                {selectedLevel && levelSlotDays.length === 0 && weekdays.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">No days configured yet. Contact admin.</p>
                 )}
               </div>
 

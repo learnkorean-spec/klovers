@@ -47,24 +47,28 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, stude
   const [availableDays, setAvailableDays] = useState<{ day: string; time: string }[]>([]);
 
   useEffect(() => {
+    const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const fetchDays = async () => {
-      // Try level-specific slots first
       if (studentLevel) {
+        const normalizedLevel = studentLevel.toLowerCase().replace(/\s+/g, "_");
         const { data } = await supabase
-          .from("level_slot_config" as any)
-          .select("slot_id, sort_order, matching_slots(day, time)")
-          .eq("level", studentLevel)
-          .order("sort_order");
+          .from("schedule_packages" as any)
+          .select("day_of_week, start_time")
+          .eq("level", normalizedLevel)
+          .eq("is_active", true);
         const rows = (data as any[]) || [];
         if (rows.length > 0) {
+          // Sort by day_of_week, deduplicate by day
+          const seen = new Set<number>();
           const levelDays = rows
-            .map((r: any) => ({ day: r.matching_slots?.day, time: r.matching_slots?.time }))
-            .filter((r: any) => r.day);
+            .sort((a: any, b: any) => a.day_of_week - b.day_of_week)
+            .filter((r: any) => { if (seen.has(r.day_of_week)) return false; seen.add(r.day_of_week); return true; })
+            .map((r: any) => ({ day: DAY_NAMES[r.day_of_week], time: r.start_time ? r.start_time.slice(0, 5) : "" }));
           setAvailableDays(levelDays);
           return;
         }
       }
-      // Fallback: all active weekdays from schedule_options
+      // Fallback: all active weekdays from schedule_options (only when no level provided)
       const { data } = await supabase
         .from("schedule_options" as any)
         .select("label, sort_order")
