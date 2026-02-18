@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchEnrollmentChecklists, type EnrollmentChecklist as ChecklistData, type ChecklistItem, type OverallState } from "@/lib/checklistEngine";
 import { toast } from "@/hooks/use-toast";
 
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const FALLBACK_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const COMMON_TIMEZONES = [
   "Africa/Cairo", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
   "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Dubai", "Asia/Riyadh",
@@ -44,6 +44,21 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
 }) {
   const [days, setDays] = useState<string[]>(currentDays);
   const [saving, setSaving] = useState(false);
+  const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
+
+  useEffect(() => {
+    supabase
+      .from("schedule_options" as any)
+      .select("label, sort_order")
+      .eq("category", "weekday")
+      .eq("is_active", true)
+      .order("sort_order")
+      .then(({ data }) => {
+        if (data && (data as any[]).length > 0) {
+          setWeekdays((data as any[]).map((r: any) => r.label));
+        }
+      });
+  }, []);
 
   const toggle = (day: string) => setDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
 
@@ -63,7 +78,7 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
     <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
       <p className="text-xs font-medium text-foreground">Select preferred days:</p>
       <div className="flex flex-wrap gap-1.5">
-        {WEEKDAYS.map(day => (
+        {weekdays.map(day => (
           <button key={day} type="button" onClick={() => toggle(day)}
             className={`px-2.5 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
               days.includes(day) ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"
