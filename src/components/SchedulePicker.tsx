@@ -25,6 +25,8 @@ interface SchedulePickerProps {
   userTimezone: string;
   onSelect: (groupId: string, groupName: string) => void;
   selectedGroupId?: string | null;
+  /** When set, only show groups linked to this level via level_group_config */
+  selectedLevel?: string;
 }
 
 const DAY_ORDER: Record<string, number> = {
@@ -38,7 +40,7 @@ function timeDiffMinutes(time: string, target: string): number {
   return Math.abs((h1 * 60 + (m1 || 0)) - (h2 * 60 + (m2 || 0)));
 }
 
-const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId }: SchedulePickerProps) => {
+const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId, selectedLevel }: SchedulePickerProps) => {
   const [slots, setSlots] = useState<SlotGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAlternatives, setShowAlternatives] = useState(false);
@@ -49,11 +51,31 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId }:
     const fetchSlots = async () => {
       setLoading(true);
 
+      let allowedGroupIds: string[] | null = null;
+
+      // If a level is selected, filter by level_group_config
+      if (selectedLevel) {
+        const { data: levelCfg } = await supabase
+          .from("level_group_config" as any)
+          .select("group_id")
+          .eq("level", selectedLevel);
+        const cfgRows = (levelCfg as any[]) || [];
+        if (cfgRows.length > 0) {
+          allowedGroupIds = cfgRows.map((r: any) => r.group_id as string);
+        }
+      }
+
       // Fetch groups matching course_type with scheduling info
-      const { data: groups, error } = await supabase
+      let query = supabase
         .from("student_groups")
         .select("id, name, schedule_day, schedule_time, schedule_timezone, level, course_type, capacity")
         .eq("course_type", courseType);
+
+      if (allowedGroupIds !== null) {
+        query = query.in("id", allowedGroupIds);
+      }
+
+      const { data: groups, error } = await query;
 
       if (error || !groups) {
         console.error("Failed to fetch groups:", error);
@@ -62,10 +84,8 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId }:
         return;
       }
 
-      // Count members per group from group_attendance (distinct users)
+      // Count members per group from batch_members
       const groupIds = groups.map((g: any) => g.id);
-      
-      // Get batch_members count per batch (batch_id = group concept)
       const { data: memberCounts } = await supabase
         .from("batch_members")
         .select("batch_id")
@@ -95,22 +115,19 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId }:
       }
     };
     fetchSlots();
-  }, [courseType, selectedGroupId]);
+  }, [courseType, selectedGroupId, selectedLevel]);
 
   const alternatives = useMemo(() => {
     if (!clickedFullSlot) return [];
     return slots
       .filter((s) => s.seats_left > 0 && s.level === clickedFullSlot.level && s.id !== clickedFullSlot.id)
       .sort((a, b) => {
-        // Same timezone first
         const aTz = a.schedule_timezone === userTimezone ? 0 : 1;
         const bTz = b.schedule_timezone === userTimezone ? 0 : 1;
         if (aTz !== bTz) return aTz - bTz;
-        // Closest time to 18:00
         const aDiff = timeDiffMinutes(a.schedule_time || "18:00", "18:00");
         const bDiff = timeDiffMinutes(b.schedule_time || "18:00", "18:00");
         if (aDiff !== bDiff) return aDiff - bDiff;
-        // Earliest day
         return (DAY_ORDER[a.schedule_day || "Monday"] || 7) - (DAY_ORDER[b.schedule_day || "Monday"] || 7);
       })
       .slice(0, 6);
@@ -130,7 +147,6 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId }:
     setShowAlternatives(false);
     onSelect(slot.id, slot.name);
 
-    // Upsert schedule preference
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       await supabase
@@ -141,7 +157,6 @@ const SchedulePicker = ({ courseType, userTimezone, onSelect, selectedGroupId }:
           level: slot.level || "",
         } as any, { onConflict: "user_id" });
 
-      // If alternative, notify admin
       if (isAlternative) {
         const userName = session.user.user_metadata?.name || session.user.email || "A student";
         await supabase.from("admin_notifications" as any).insert({

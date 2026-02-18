@@ -735,6 +735,38 @@ export type Database = {
         }
         Relationships: []
       }
+      level_group_config: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          level: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          level: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          level?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "level_group_config_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       level_slot_config: {
         Row: {
           created_at: string | null
