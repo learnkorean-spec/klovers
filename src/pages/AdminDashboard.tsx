@@ -87,6 +87,10 @@ interface OverviewRow {
 const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
 
+/** Normalize a level label to snake_case (e.g. "Beginner 1" → "beginner_1") */
+const normalizeLevel = (label: string): string =>
+  label.trim().toLowerCase().replace(/\s+/g, "_");
+
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -107,6 +111,7 @@ const AdminDashboard = () => {
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [editingEnrollLevel, setEditingEnrollLevel] = useState<Record<string, string>>({});
   const [editingEnrollDays, setEditingEnrollDays] = useState<Record<string, string[]>>({});
+  const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const [levelPackageDays, setLevelPackageDays] = useState<Record<string, string[]>>({});
   const DAY_NAMES_ADMIN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -158,6 +163,7 @@ const AdminDashboard = () => {
       (leadsRes.data as any[]).forEach((l: any) => {
         if (l.email) leadsByEmail[l.email.toLowerCase()] = l;
       });
+      setLeadsByEmail(leadsByEmail);
     }
 
     // Index direct profiles (always available for admin)
@@ -234,12 +240,14 @@ const AdminDashboard = () => {
       const autoDays: Record<string, string[]> = {};
 
       enrichedEnrollments.forEach((e) => {
-        // Level: enrollment.level first (source of truth), then profile, then lead
-        const level = (e.level && e.level.trim() !== "")
-          ? e.level
-          : (e.profiles?.level && e.profiles.level.trim() !== "")
-            ? e.profiles.level
-            : "";
+        // Level priority: enrollment.level > profile.level > lead.level (all normalized)
+        const profileEmail = e.profiles?.email?.toLowerCase() ?? "";
+        const enrollLevel = e.level?.trim() ? normalizeLevel(e.level) : "";
+        const profileLevel = e.profiles?.level?.trim() ? normalizeLevel(e.profiles.level) : "";
+        const leadLevel = profileEmail && leadsByEmail[profileEmail]?.level?.trim()
+          ? normalizeLevel(leadsByEmail[profileEmail].level)
+          : "";
+        const level = enrollLevel || profileLevel || leadLevel;
         if (level) {
           autoLevels[e.id] = level;
         }
@@ -950,8 +958,16 @@ const AdminDashboard = () => {
                                     <div className="space-y-2 pt-2 border-t border-border">
                                       <div className="flex items-center gap-2">
                                         <span className="text-sm text-muted-foreground shrink-0">Level:</span>
-                                        {(() => {
-                                          const resolvedLevel = editingEnrollLevel[e.id] ?? e.level ?? e.profiles?.level ?? "";
+                                         {(() => {
+                                          const profileEmail = e.profiles?.email?.toLowerCase() ?? "";
+                                          const leadLvl = profileEmail && leadsByEmail[profileEmail]?.level?.trim()
+                                            ? normalizeLevel(leadsByEmail[profileEmail].level)
+                                            : "";
+                                          const resolvedLevel = editingEnrollLevel[e.id]
+                                            ?? (e.level?.trim() ? normalizeLevel(e.level) : null)
+                                            ?? (e.profiles?.level?.trim() ? normalizeLevel(e.profiles.level) : null)
+                                            ?? leadLvl
+                                            ?? "";
                                           const hasLevel = !!resolvedLevel;
                                           return (
                                             <>

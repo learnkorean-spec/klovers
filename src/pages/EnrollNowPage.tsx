@@ -260,13 +260,13 @@ const EnrollNowPage = () => {
         if (startOption) schedPrefs.preferred_start = startOption === "Specific date" ? specificDate : startOption;
         if (timezone) schedPrefs.timezone = timezone;
         // Always write level to enrollment (triggers sync to profile via DB trigger)
-        if (selectedLevel) schedPrefs.level = selectedLevel;
+        if (selectedLevel) schedPrefs.level = normalizeLevel(selectedLevel);
         if (Object.keys(schedPrefs).length > 0) {
           await supabase.from("enrollments").update(schedPrefs).eq("id", enrollmentId);
         }
         // Also save level to profile directly (belt + suspenders)
         if (selectedLevel) {
-          await supabase.from("profiles").update({ level: selectedLevel }).eq("user_id", session.user.id);
+          await supabase.from("profiles").update({ level: normalizeLevel(selectedLevel) }).eq("user_id", session.user.id);
         }
       }
       nav(`/pay/${enrollmentId}`);
@@ -277,6 +277,9 @@ const EnrollNowPage = () => {
     }
   };
 
+  const normalizeLevel = (label: string): string =>
+    label.trim().toLowerCase().replace(/\s+/g, "_");
+
   const submitLead = async () => {
     try {
       const { error } = await supabase.functions.invoke("submit-lead", {
@@ -284,9 +287,9 @@ const EnrollNowPage = () => {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           country: selectedCountry,
-          level: selectedLevel,          // ✅ use actual Korean level, not classType
+          level: selectedLevel ? normalizeLevel(selectedLevel) : "",
           goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")} ${preferredTime}, tz:${timezone}`,
-          plan_type: classType,          // ✅ classType goes to plan_type
+          plan_type: classType,
           duration: `${duration}mo`,
           schedule: `${preferredDays.join("/")} ${preferredTime}`,
           timezone: timezone,
@@ -326,7 +329,7 @@ const EnrollNowPage = () => {
       // Save level to profile if logged in
       const { data: { session } } = await supabase.auth.getSession();
       if (session && selectedLevel) {
-        await supabase.from("profiles").update({ level: selectedLevel }).eq("user_id", session.user.id);
+        await supabase.from("profiles").update({ level: normalizeLevel(selectedLevel) }).eq("user_id", session.user.id);
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -336,7 +339,7 @@ const EnrollNowPage = () => {
           duration,
           name: name.trim(),
           email: email.trim().toLowerCase(),
-          level: selectedLevel,
+          level: selectedLevel ? normalizeLevel(selectedLevel) : "",
           schedule: {
             timezone,
             preferred_days: preferredDays,
