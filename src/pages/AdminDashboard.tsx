@@ -226,15 +226,26 @@ const AdminDashboard = () => {
         profiles: profileMap[e.user_id] || null,
       }));
       setEnrollments(enrichedEnrollments);
+
       // Pre-populate editingEnrollLevel from profile level (auto-fill from registration)
       const autoLevels: Record<string, string> = {};
+      // Pre-populate editingEnrollDays from enrollment's preferred_days (stored at registration)
+      const autoDays: Record<string, string[]> = {};
+
       enrichedEnrollments.forEach((e) => {
+        // Level: from profile (which includes lead fallback)
         const level = e.profiles?.level;
         if (level && level.trim() !== "") {
           autoLevels[e.id] = level;
         }
+        // Preferred days: directly from enrollment record (set during registration)
+        if (e.preferred_days && Array.isArray(e.preferred_days) && e.preferred_days.length > 0) {
+          autoDays[e.id] = e.preferred_days;
+        }
       });
+
       setEditingEnrollLevel(prev => ({ ...autoLevels, ...prev })); // don't override manual edits
+      setEditingEnrollDays(prev => ({ ...autoDays, ...prev })); // don't override manual edits
     }
     if (attendRes.data) {
       const overviewMap: Record<string, any> = {};
@@ -952,11 +963,23 @@ const AdminDashboard = () => {
                                           if (currentLevel && levelPackageDays[normalizedLevel] === undefined) {
                                             fetchLevelDays(currentLevel);
                                           }
-                                          // No level selected at all
+                                          // No level selected — show registration preferred_days as read-only if present
                                           if (!currentLevel) {
+                                            const regDays: string[] = e.preferred_days ?? [];
                                             return (
                                               <div className="flex flex-wrap gap-1.5 mt-1">
-                                                <p className="text-xs text-muted-foreground italic">Select a level above to see available days.</p>
+                                                {regDays.length > 0 ? (
+                                                  <>
+                                                    {regDays.map((day: string) => (
+                                                      <span key={day} className="px-2 py-0.5 rounded text-xs font-medium bg-primary text-primary-foreground">
+                                                        {day}
+                                                      </span>
+                                                    ))}
+                                                    <p className="text-xs text-muted-foreground italic w-full mt-0.5">From registration · Set level above to enable editing</p>
+                                                  </>
+                                                ) : (
+                                                  <p className="text-xs text-muted-foreground italic">Select a level above to see available days.</p>
+                                                )}
                                               </div>
                                             );
                                           }
