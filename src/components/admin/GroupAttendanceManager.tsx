@@ -87,10 +87,6 @@ const GroupAttendanceManager = () => {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  // Admin-configured options
-  const [adminWeekdays, setAdminWeekdays] = useState<string[]>([]);
-  const [adminTimes, setAdminTimes] = useState<string[]>([]);
-
   // Group management state
   const [editGroupDialog, setEditGroupDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
@@ -107,23 +103,35 @@ const GroupAttendanceManager = () => {
   const [availableStudents, setAvailableStudents] = useState<GroupMember[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
 
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const [adminWeekdays, setAdminWeekdays] = useState<string[]>([]);
+  const [adminTimes, setAdminTimes] = useState<string[]>([]);
+
   const fetchGroups = async () => {
     const { data } = await supabase.from("student_groups").select("id, name, schedule_day, schedule_time, schedule_timezone, level, capacity, course_type").order("name");
     if (data) setGroups(data);
   };
 
-  // Fetch admin-configured weekdays and times from schedule_options
+  // Fetch available days from schedule_packages + time windows from schedule_options
   useEffect(() => {
     supabase
-      .from("schedule_options" as any)
-      .select("label, sort_order, category")
+      .from("schedule_packages" as any)
+      .select("day_of_week")
       .eq("is_active", true)
-      .in("category", ["weekday", "time_window"])
+      .then(({ data }) => {
+        const rows = (data as any[]) ?? [];
+        const uniqueDays = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort();
+        setAdminWeekdays(uniqueDays.map(n => DAY_NAMES[n]));
+      });
+    supabase
+      .from("schedule_options" as any)
+      .select("label, sort_order")
+      .eq("is_active", true)
+      .eq("category", "time_window")
       .order("sort_order")
       .then(({ data }) => {
         const rows = (data as any[]) ?? [];
-        setAdminWeekdays(rows.filter(r => r.category === "weekday").map(r => r.label as string));
-        setAdminTimes(rows.filter(r => r.category === "time_window").map(r => r.label as string));
+        setAdminTimes(rows.map(r => r.label as string));
       });
   }, []);
 
