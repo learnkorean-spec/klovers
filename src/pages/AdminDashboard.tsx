@@ -111,8 +111,9 @@ const AdminDashboard = () => {
   const DAY_NAMES_ADMIN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   const fetchLevelDays = async (level: string) => {
+    if (!level) return;
     const normalizedLevel = level.toLowerCase().replace(/\s+/g, "_");
-    if (levelPackageDays[normalizedLevel]) return; // already cached
+    if (levelPackageDays[normalizedLevel] !== undefined) return; // already cached (even if empty)
     const { data } = await supabase
       .from("schedule_packages" as any)
       .select("day_of_week")
@@ -122,9 +123,8 @@ const AdminDashboard = () => {
     const uniqueDays = [...new Set(rows.map((r: any) => r.day_of_week as number))]
       .sort((a, b) => a - b)
       .map((n) => DAY_NAMES_ADMIN[n]);
-    if (uniqueDays.length > 0) {
-      setLevelPackageDays(prev => ({ ...prev, [normalizedLevel]: uniqueDays }));
-    }
+    // Always cache result, even if empty (so we know we already fetched it)
+    setLevelPackageDays(prev => ({ ...prev, [normalizedLevel]: uniqueDays }));
   };
   const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
   const navigate = useNavigate();
@@ -904,7 +904,12 @@ const AdminDashboard = () => {
                                         {(() => {
                                           const currentLevel = editingEnrollLevel[e.id] ?? e.profiles?.level ?? "";
                                           const normalizedLevel = currentLevel.toLowerCase().replace(/\s+/g, "_");
-                                          const daysToShow = levelPackageDays[normalizedLevel] ?? scheduleWeekdays;
+                                          // Auto-fetch if not yet loaded
+                                          if (currentLevel && levelPackageDays[normalizedLevel] === undefined) {
+                                            fetchLevelDays(currentLevel);
+                                          }
+                                          // Only fallback to empty array, never show all 7 days
+                                          const daysToShow = levelPackageDays[normalizedLevel] ?? [];
                                           return (
                                             <div className="flex flex-wrap gap-1.5 mt-1">
                                               {daysToShow.length === 0 ? (
