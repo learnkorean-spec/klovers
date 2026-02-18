@@ -74,10 +74,7 @@ const EnrollNowPage = () => {
 
   // Schedule preferences — restore from URL if returning from signup
   const [timezone, setTimezone] = useState(() => searchParams.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [preferredDays, setPreferredDays] = useState<string[]>(() => {
-    const d = searchParams.get("days");
-    return d ? d.split(",") : [];
-  });
+  const [preferredDays, setPreferredDays] = useState<string[]>([]);
   const [preferredTime, setPreferredTime] = useState(searchParams.get("time") || "");
   const [startOption, setStartOption] = useState(searchParams.get("start") || "");
   const [specificDate, setSpecificDate] = useState(searchParams.get("date") || "");
@@ -122,9 +119,12 @@ const EnrollNowPage = () => {
   // Day names indexed by day_of_week number
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-  // Fetch available days from schedule_packages when level or classType changes
+  // Fetch available days from schedule_packages when level changes
   useEffect(() => {
-    if (!selectedLevel) { setLevelSlotDays([]); return; }
+    // Always clear first so stale days never show
+    setLevelSlotDays([]);
+    setPreferredDays([]);
+    if (!selectedLevel) return;
     const fetchLevelSlots = async () => {
       // Normalize level to match schedule_packages format (e.g. "Beginner 1" → "beginner_1")
       const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
@@ -134,13 +134,9 @@ const EnrollNowPage = () => {
         .eq("level", normalizedLevel)
         .eq("is_active", true);
       const rows = (data as any[]) || [];
-      if (rows.length > 0) {
-        // Deduplicate and convert to day names
-        const uniqueDayNums = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort();
-        setLevelSlotDays(uniqueDayNums.map((n) => DAY_NAMES[n]));
-      } else {
-        setLevelSlotDays([]); // Fall back to all weekdays from schedule_options
-      }
+      // Deduplicate and sort by day index, then convert to day names
+      const uniqueDayNums = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort((a, b) => a - b);
+      setLevelSlotDays(uniqueDayNums.map((n) => DAY_NAMES[n]));
     };
     fetchLevelSlots();
   }, [selectedLevel]);
