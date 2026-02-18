@@ -14,7 +14,7 @@ import { Users, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Zap, XCircle,
 import { toast } from "@/hooks/use-toast";
 import EnrollmentChecklistManager from "./EnrollmentChecklist";
 
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const FALLBACK_WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2"];
 const COMMON_TIMEZONES = [
   "Africa/Cairo", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
@@ -150,6 +150,20 @@ const BulkMatcher = () => {
   const [editLevels, setEditLevels] = useState<Record<string, string>>({});
   const [editTimezone, setEditTimezone] = useState<{ enrollId: string; tz: string } | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
+  const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
+
+  useEffect(() => {
+    supabase
+      .from("schedule_options" as any)
+      .select("label, sort_order")
+      .eq("category", "weekday")
+      .eq("is_active", true)
+      .order("sort_order")
+      .then(({ data }) => {
+        const labels = ((data as any[]) ?? []).map((r: any) => r.label as string).filter(Boolean);
+        if (labels.length > 0) setWeekdays(labels);
+      });
+  }, []);
 
   const fetchSlots = async () => {
     const { data } = await supabase
@@ -401,7 +415,7 @@ const BulkMatcher = () => {
 
   const DayChips = ({ student }: { student: Student }) => (
     <div className="flex flex-wrap gap-1">
-      {WEEKDAYS.map(day => (
+      {weekdays.map(day => (
         <button key={day} type="button"
           onClick={() => handleToggleDay(student, day)}
           className={`px-2 py-0.5 text-[10px] rounded-full border transition-colors cursor-pointer ${
