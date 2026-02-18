@@ -10,7 +10,7 @@ import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, Info } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, Info, CalendarDays } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface EnrollmentRecord {
@@ -109,9 +109,14 @@ const StudentDashboard = () => {
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" /> Logout
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/schedule")}>
+                <CalendarDays className="h-4 w-4 mr-2" /> My Schedule
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" /> Logout
+              </Button>
+            </div>
           </div>
 
           {hasNoData ? (
