@@ -15,7 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Pencil, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, Info, CalendarDays } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ScheduleOption {
@@ -27,34 +27,52 @@ interface ScheduleOption {
   created_at: string;
 }
 
+interface PackageDay {
+  level: string;
+  day_of_week: number;
+  start_time: string;
+}
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Weekdays are no longer manually managed — they come from schedule_packages
 const CATEGORIES = [
-  { value: "weekday", label: "Weekdays" },
   { value: "time_window", label: "Time Windows" },
   { value: "start_option", label: "Start Options" },
 ];
 
 const ScheduleOptionsManager = () => {
   const [options, setOptions] = useState<ScheduleOption[]>([]);
+  const [packageDays, setPackageDays] = useState<PackageDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editingOption, setEditingOption] = useState<ScheduleOption | null>(null);
-  const [newCategory, setNewCategory] = useState("weekday");
+  const [newCategory, setNewCategory] = useState("time_window");
   const [newLabel, setNewLabel] = useState("");
   const [newSortOrder, setNewSortOrder] = useState(0);
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
   const fetchOptions = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("schedule_options" as any)
-      .select("*")
-      .order("category")
-      .order("sort_order");
+    const [optRes, pkgRes] = await Promise.all([
+      supabase
+        .from("schedule_options" as any)
+        .select("*")
+        .not("category", "eq", "weekday") // weekdays are now derived from packages
+        .order("category")
+        .order("sort_order"),
+      supabase
+        .from("schedule_packages" as any)
+        .select("level, day_of_week, start_time")
+        .eq("is_active", true)
+        .order("day_of_week"),
+    ]);
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (optRes.error) {
+      toast({ title: "Error", description: optRes.error.message, variant: "destructive" });
     }
-    setOptions((data as any[]) || []);
+    setOptions((optRes.data as any[]) || []);
+    setPackageDays((pkgRes.data as any[]) || []);
     setLoading(false);
   };
 
@@ -120,6 +138,18 @@ const ScheduleOptionsManager = () => {
 
   if (loading) return <div className="py-8 text-center text-muted-foreground">Loading...</div>;
 
+  // Group package days by level for the info panel
+  const packageDaysByLevel: Record<string, string[]> = {};
+  packageDays.forEach((p) => {
+    const dayName = DAY_NAMES[p.day_of_week];
+    if (!packageDaysByLevel[p.level]) packageDaysByLevel[p.level] = [];
+    if (!packageDaysByLevel[p.level].includes(dayName)) {
+      packageDaysByLevel[p.level].push(dayName);
+    }
+  });
+
+  const totalActiveDays = [...new Set(packageDays.map((p) => p.day_of_week))].length;
+
   const grouped = CATEGORIES.map((cat) => ({
     ...cat,
     items: options.filter((o) => o.category === cat.value),
@@ -127,6 +157,39 @@ const ScheduleOptionsManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Class Days — read-only, auto-derived from Packages */}
+      <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <CalendarDays className="h-4 w-4 text-primary flex-shrink-0" />
+          <span className="text-sm font-semibold text-foreground">Class Days</span>
+          <Badge variant="secondary">{totalActiveDays} unique day{totalActiveDays !== 1 ? "s" : ""} active</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground flex items-start gap-1">
+          <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+          Class days are automatically derived from your active <strong>Packages</strong>. Students only see days that match their level. To add or remove days, manage packages in the Packages Manager tab.
+        </p>
+        {Object.keys(packageDaysByLevel).length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">No active packages yet. Add packages to define class days.</p>
+        ) : (
+          <div className="space-y-2 pt-1">
+            {Object.entries(packageDaysByLevel)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([level, days]) => (
+                <div key={level} className="flex items-center gap-3 text-sm">
+                  <span className="text-muted-foreground w-36 capitalize flex-shrink-0">
+                    {level.replace(/_/g, " ")}
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {days.map((d) => (
+                      <Badge key={d} variant="outline" className="text-xs">{d}</Badge>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{options.length} options configured</p>
         <Button size="sm" onClick={() => setShowAdd(true)}>
@@ -137,7 +200,11 @@ const ScheduleOptionsManager = () => {
       {grouped.map((group) => {
         const isCollapsed = collapsedCategories[group.value] ?? false;
         return (
-          <Collapsible key={group.value} open={!isCollapsed} onOpenChange={(open) => setCollapsedCategories(prev => ({ ...prev, [group.value]: !open }))}>
+          <Collapsible
+            key={group.value}
+            open={!isCollapsed}
+            onOpenChange={(open) => setCollapsedCategories(prev => ({ ...prev, [group.value]: !open }))}
+          >
             <div className="space-y-2">
               <CollapsibleTrigger asChild>
                 <button className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors w-full text-left py-1">
@@ -175,7 +242,9 @@ const ScheduleOptionsManager = () => {
                       </TableRow>
                     ))}
                     {group.items.length === 0 && (
-                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No options</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">No options</TableCell>
+                      </TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -190,7 +259,7 @@ const ScheduleOptionsManager = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Schedule Option</DialogTitle>
-            <DialogDescription>Add a new weekday, time window, or start option.</DialogDescription>
+            <DialogDescription>Add a new time window or start date option.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -204,11 +273,19 @@ const ScheduleOptionsManager = () => {
             </div>
             <div className="space-y-2">
               <Label>Label</Label>
-              <Input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} placeholder="e.g. Monday, Morning (9am-12pm)" />
+              <Input
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="e.g. Morning (9am–12pm), ASAP"
+              />
             </div>
             <div className="space-y-2">
               <Label>Sort Order</Label>
-              <Input type="number" value={newSortOrder} onChange={(e) => setNewSortOrder(Number(e.target.value))} />
+              <Input
+                type="number"
+                value={newSortOrder}
+                onChange={(e) => setNewSortOrder(Number(e.target.value))}
+              />
             </div>
             <Button className="w-full" onClick={handleAdd}>Add Option</Button>
           </div>
@@ -226,14 +303,24 @@ const ScheduleOptionsManager = () => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Label</Label>
-                <Input value={editingOption.label} onChange={(e) => setEditingOption({ ...editingOption, label: e.target.value })} />
+                <Input
+                  value={editingOption.label}
+                  onChange={(e) => setEditingOption({ ...editingOption, label: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Sort Order</Label>
-                <Input type="number" value={editingOption.sort_order} onChange={(e) => setEditingOption({ ...editingOption, sort_order: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editingOption.sort_order}
+                  onChange={(e) => setEditingOption({ ...editingOption, sort_order: Number(e.target.value) })}
+                />
               </div>
               <div className="flex items-center gap-2">
-                <Switch checked={editingOption.is_active} onCheckedChange={(v) => setEditingOption({ ...editingOption, is_active: v })} />
+                <Switch
+                  checked={editingOption.is_active}
+                  onCheckedChange={(v) => setEditingOption({ ...editingOption, is_active: v })}
+                />
                 <Label>Active</Label>
               </div>
               <Button className="w-full" onClick={handleUpdate}>Save Changes</Button>
