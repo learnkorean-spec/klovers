@@ -59,7 +59,12 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
       });
   }, []);
 
-  const toggle = (day: string) => setDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+  const MAX_DAYS = 2;
+  const toggle = (day: string) => setDays(prev => {
+    if (prev.includes(day)) return prev.filter(d => d !== day);
+    if (prev.length >= MAX_DAYS) return prev; // cap at 2
+    return [...prev, day];
+  });
 
   const save = async () => {
     setSaving(true);
@@ -75,7 +80,7 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, onSav
 
   return (
     <div className="mt-2 p-3 bg-muted/50 rounded-md space-y-2">
-      <p className="text-xs font-medium text-foreground">Select preferred days:</p>
+      <p className="text-xs font-medium text-foreground">Select preferred days: <span className="text-muted-foreground font-normal">(max 2)</span></p>
       <div className="flex flex-wrap gap-1.5">
         {weekdays.map(day => (
           <button key={day} type="button" onClick={() => toggle(day)}
