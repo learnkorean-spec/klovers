@@ -119,24 +119,27 @@ const EnrollNowPage = () => {
     fetchScheduleOptions();
   }, []);
 
-  // Fetch level-specific slot days when level changes
+  // Day names indexed by day_of_week number
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  // Fetch available days from schedule_packages when level or classType changes
   useEffect(() => {
     if (!selectedLevel) { setLevelSlotDays([]); return; }
     const fetchLevelSlots = async () => {
+      // Normalize level to match schedule_packages format (e.g. "Beginner 1" → "beginner_1")
+      const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
       const { data } = await supabase
-        .from("level_slot_config" as any)
-        .select("slot_id, sort_order, matching_slots(day, time)")
-        .eq("level", selectedLevel)
-        .order("sort_order");
+        .from("schedule_packages" as any)
+        .select("day_of_week")
+        .eq("level", normalizedLevel)
+        .eq("is_active", true);
       const rows = (data as any[]) || [];
       if (rows.length > 0) {
-        // Extract day names from the joined matching_slots
-        const days = rows
-          .map((r: any) => r.matching_slots?.day)
-          .filter(Boolean) as string[];
-        setLevelSlotDays(days);
+        // Deduplicate and convert to day names
+        const uniqueDayNums = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort();
+        setLevelSlotDays(uniqueDayNums.map((n) => DAY_NAMES[n]));
       } else {
-        setLevelSlotDays([]); // No level config → fall back to all weekdays
+        setLevelSlotDays([]); // Fall back to all weekdays from schedule_options
       }
     };
     fetchLevelSlots();
@@ -177,9 +180,17 @@ const EnrollNowPage = () => {
 
   const canProceedStep1 = !!selectedCountry && !!tier && !!duration;
 
-  // Single-select day — clicking a day replaces any previous selection
+  // Day selection: group = up to 2, private = 1
+  const maxDays = classType === "group" ? 2 : 1;
   const toggleDay = (day: string) => {
-    setPreferredDays((prev) => (prev.includes(day) ? [] : [day]));
+    setPreferredDays((prev) => {
+      if (prev.includes(day)) return prev.filter((d) => d !== day);
+      if (prev.length >= maxDays) {
+        // Replace oldest selection for private, or drop first for group when at max
+        return [...prev.slice(1), day];
+      }
+      return [...prev, day];
+    });
   };
 
   // Build a URL that preserves all current selections so user can return after signup
@@ -515,7 +526,7 @@ const EnrollNowPage = () => {
 
               {/* Preferred Days */}
               <div className="space-y-2">
-                <Label>Preferred Day (select 1)</Label>
+                <Label>Preferred Day{classType === "group" ? " (select up to 2)" : " (select 1)"}</Label>
                 {levelSlotDays.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {levelSlotDays.map((day) => (
@@ -550,6 +561,9 @@ const EnrollNowPage = () => {
                       </button>
                     ))}
                   </div>
+                )}
+                {classType === "group" && preferredDays.length === 1 && (
+                  <p className="text-xs text-muted-foreground">You can also select a 2nd preferred day (optional).</p>
                 )}
                 {selectedLevel && levelSlotDays.length === 0 && weekdays.length === 0 && (
                   <p className="text-xs text-muted-foreground italic">No days configured yet. Contact admin.</p>
