@@ -92,8 +92,8 @@ const EnrollNowPage = () => {
   const [timeWindows, setTimeWindows] = useState<string[]>([]);
   const [startOptions, setStartOptions] = useState<string[]>([]);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
-  // Level-specific slot days from schedule_packages
-  const [levelSlotDays, setLevelSlotDays] = useState<string[]>([]);
+  // Level-specific slot days+times from schedule_packages
+  const [levelSlots, setLevelSlots] = useState<{ day: string; time: string }[]>([]);
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -116,24 +116,34 @@ const EnrollNowPage = () => {
   // Day names indexed by day_of_week number
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-  // Fetch available days from schedule_packages when level changes
+  // Fetch available days+times from schedule_packages when level changes
   useEffect(() => {
-    // Always clear first so stale days never show
-    setLevelSlotDays([]);
+    setLevelSlots([]);
     setPreferredDays([]);
     if (!selectedLevel) return;
     const fetchLevelSlots = async () => {
-      // Normalize level to match schedule_packages format (e.g. "Beginner 1" → "beginner_1")
       const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
       const { data } = await supabase
         .from("schedule_packages" as any)
-        .select("day_of_week")
+        .select("day_of_week, start_time")
         .eq("level", normalizedLevel)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .order("day_of_week");
       const rows = (data as any[]) || [];
-      // Deduplicate and sort by day index, then convert to day names
-      const uniqueDayNums = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort((a, b) => a - b);
-      setLevelSlotDays(uniqueDayNums.map((n) => DAY_NAMES[n]));
+      // Deduplicate by day_of_week, keeping first occurrence
+      const seen = new Set<number>();
+      const slots: { day: string; time: string }[] = [];
+      for (const r of rows) {
+        if (!seen.has(r.day_of_week)) {
+          seen.add(r.day_of_week);
+          const [h, m] = (r.start_time as string).split(":").map(Number);
+          const ampm = h >= 12 ? "PM" : "AM";
+          const hour12 = h % 12 || 12;
+          const timeLabel = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+          slots.push({ day: DAY_NAMES[r.day_of_week as number], time: timeLabel });
+        }
+      }
+      setLevelSlots(slots);
     };
     fetchLevelSlots();
   }, [selectedLevel]);
@@ -523,27 +533,28 @@ const EnrollNowPage = () => {
                 <Label>Preferred Day{classType === "group" ? " (select up to 2)" : " (select 1)"}</Label>
                 {!selectedLevel ? (
                   <p className="text-sm text-muted-foreground italic">Please select your Korean level first.</p>
-                ) : levelSlotDays.length === 0 ? (
+                ) : levelSlots.length === 0 ? (
                   <p className="text-sm text-muted-foreground italic">No schedule slots available for this level yet. Contact us.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {levelSlotDays.map((day) => (
+                    {levelSlots.map(({ day, time }) => (
                       <button
                         type="button"
                         key={day}
                         onClick={() => toggleDay(day)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all flex flex-col items-center gap-0.5 ${
                           preferredDays.includes(day)
                             ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border text-muted-foreground hover:border-primary/50"
+                            : "border-border text-foreground hover:border-primary/50"
                         }`}
                       >
-                        {day}
+                        <span className="font-semibold">{day}</span>
+                        <span className={`text-xs ${preferredDays.includes(day) ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{time}</span>
                       </button>
                     ))}
                   </div>
                 )}
-                {classType === "group" && preferredDays.length === 1 && levelSlotDays.length > 1 && (
+                {classType === "group" && preferredDays.length === 1 && levelSlots.length > 1 && (
                   <p className="text-xs text-muted-foreground">You can also select a 2nd preferred day (optional).</p>
                 )}
               </div>
