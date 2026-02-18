@@ -1,99 +1,82 @@
 
-## Fix: Preferred Days Must Always Come From schedule_packages
+## Problem Diagnosis
 
-### Root Cause
+There are two distinct but related issues causing the admin dashboard to not show auto-populated Level and Preferred Days from registration:
 
-The "Preferred Day" selectors across the enrollment flow and admin tools currently have two data sources:
-- **New (correct)**: `schedule_packages` table — actual packages the admin creates with specific levels and days
-- **Old (broken/stale)**: `schedule_options` weekdays (global list) and `level_slot_config → matching_slots` (now cleared)
+### Root Cause 1 — Stripe Flow Does Not Save Preferences to the Enrollment
 
-The goal is to make **all** day selectors pull exclusively from `schedule_packages`, filtered by the student's level.
+The Egypt flow (`handleEgyptOrder`) correctly saves `preferred_days`, `preferred_time`, `timezone`, and `level` to the enrollment and profile after creating the enrollment record.
 
-### What the Database Looks Like
+The **Stripe flow** (`handlePay`) does NOT. It only saves the level to the profile (if already logged in), but the enrollment itself is created server-side by the **Stripe webhook** (`supabase/functions/stripe-webhook/index.ts`) after payment — meaning `preferred_days` and `timezone` are never persisted to the enrollment record.
 
-From `schedule_packages`, levels are stored in snake_case (e.g., `beginner_1`, `intermediate_2`) while the UI shows Title Case (e.g., `Beginner 1`). The mapping is: `"Beginner 1".toLowerCase().replace(/\s+/g, "_")` → `"beginner_1"`.
+### Root Cause 2 — Admin Dashboard Level Selector Shows Empty for Stripe Enrollments
 
----
+Because `enrollments.preferred_days` is `null` and `profiles.level` is empty for Stripe-enrolled students, the admin dashboard enrollment card shows no pre-selected level or days, requiring the admin to manually fill these in.
 
-### Three Files to Fix
+### Fix Plan
 
-#### 1. `src/pages/EnrollNowPage.tsx` — Student Enrollment Flow (Step 2)
+**File 1: `supabase/functions/stripe-webhook/index.ts`**
+After a successful payment, when the webhook creates/updates the enrollment, it must also write `preferred_days`, `preferred_time`, `preferred_start`, and `timezone` from the Stripe metadata (which is already passed in the checkout session body) into the `enrollments` record, and write `level` to the `profiles` table.
 
-**Current behavior:**
-- Fetches days from `schedule_packages` filtered by `normalizedLevel` — this is correct.
-- BUT: if no level is selected or no packages exist for the level, it falls back to showing ALL days from `schedule_options` (generic global list).
+**File 2: `supabase/functions/create-checkout/index.ts`**
+The checkout function needs to store the `level`, `preferred_days`, `preferred_time`, `preferred_start`, and `timezone` in the Stripe checkout session metadata so the webhook can read them on completion.
 
-**Fix:**
-- Remove the fallback to `weekdays` from `schedule_options`.
-- If level is not yet selected → show a note: "Please select your Korean level first."
-- If level is selected but no packages exist → show: "No schedule slots available for this level yet. Contact us."
-- Only show day buttons when `levelSlotDays.length > 0`.
-- Keep the `weekdays` state removal (or keep it as unused — it won't be displayed).
-- The "group = up to 2 days, private = 1 day" max logic remains unchanged.
+**File 3: `src/pages/EnrollNowPage.tsx`**
+For the Stripe path, after the checkout session is created and the user pays, the enrollment record won't exist yet. However, a `student_schedule_preferences` or `leads` record already captures the info. The real fix is ensuring the webhook uses the metadata.
 
-#### 2. `src/components/admin/EnrollmentChecklist.tsx` — `PreferredDaysEditor`
+Additionally, for already-existing enrollments (past Stripe enrollments with no preferred_days), the admin dashboard should:
 
-**Current behavior:**
-- Queries `level_slot_config → matching_slots` (old system, now empty/cleared).
-- Falls back to `schedule_options` weekdays.
-
-**Fix:**
-- Replace the `level_slot_config` query with a `schedule_packages` query:
-  ```typescript
-  const normalizedLevel = studentLevel.toLowerCase().replace(/\s+/g, "_");
-  const { data } = await supabase
-    .from("schedule_packages")
-    .select("day_of_week, start_time")
-    .eq("level", normalizedLevel)
-    .eq("is_active", true);
-  ```
-- Convert `day_of_week` integers to day name strings using `DAY_NAMES` array.
-- Keep the display showing `day · time` per slot, sorted by `day_of_week`.
-- Keep the fallback to `schedule_options` only when `studentLevel` is empty/null.
-
-#### 3. `src/pages/AdminDashboard.tsx` — Enrollments Tab Inline Editor
-
-**Current behavior:**
-- `scheduleWeekdays` is fetched once at startup from `schedule_options` and used for all enrollments.
-- The "Preferred days" selector in the enrollment card shows all global weekdays regardless of which level is selected for that enrollment.
-
-**Fix:**
-- Introduce a state: `levelPackageDays: Record<string, string[]>` mapping `levelKey → day name[]`.
-- When an admin selects a level in `editingEnrollLevel[e.id]`, fetch days from `schedule_packages` for that level and cache the result.
-- In the enrollment card day picker, use `levelPackageDays[normalizedLevel] ?? scheduleWeekdays` (fallback to global list only when no packages exist for that level).
-- Add a `useEffect` or an `onChange` handler on the level selector to trigger the fetch.
-
----
+**File 4: `src/pages/AdminDashboard.tsx`**
+When an enrollment has no `preferred_days` but the matching lead has a `schedule` field (e.g. `"Friday"`), parse that lead schedule string into day names and auto-populate the `editingEnrollDays` state. The `leads.schedule` field stores days as `"Friday"` or `"Sunday/Friday"` — these can be split by `/` and used directly as pre-selected chips.
 
 ### Technical Details
 
-**Day name mapping (used in all three files):**
+**Lead schedule format**: stored as `"Friday"` or `"Sunday/Friday"` (forward-slash separated)
+
+**Stripe metadata propagation** (in `create-checkout`):
 ```typescript
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-// day_of_week = 0 → "Sunday", 1 → "Monday", ..., 5 → "Friday", 6 → "Saturday"
+metadata: {
+  level: selectedLevel,
+  preferred_days: preferredDays.join(","),
+  preferred_time: preferredTime,
+  preferred_start: startOption === "Specific date" ? specificDate : startOption,
+  timezone: timezone,
+}
 ```
 
-**Level normalization (used consistently):**
+**Stripe webhook** (in `stripe-webhook`): After enrollment insert, run:
 ```typescript
-const normalizedLevel = level.toLowerCase().replace(/\s+/g, "_");
-// "Beginner 1" → "beginner_1"
-// "Intermediate 2" → "intermediate_2"
+const meta = session.metadata ?? {};
+await supabaseAdmin.from("enrollments").update({
+  preferred_days: meta.preferred_days ? meta.preferred_days.split(",") : null,
+  preferred_time: meta.preferred_time || null,
+  preferred_start: meta.preferred_start || null,
+  timezone: meta.timezone || null,
+}).eq("stripe_payment_intent_id", session.payment_intent);
+// Also save level to profile
+if (meta.level) {
+  await supabaseAdmin.from("profiles").update({ level: meta.level }).eq("user_id", userId);
+}
 ```
 
-**Query pattern (same across all three):**
+**Admin Dashboard fallback** (for existing enrollments missing data):
 ```typescript
-const { data } = await supabase
-  .from("schedule_packages")
-  .select("day_of_week")
-  .eq("level", normalizedLevel)
-  .eq("is_active", true);
-const uniqueDays = [...new Set((data ?? []).map(r => DAY_NAMES[r.day_of_week]))];
-// Sort by day index
+// In fetchAll, after building autoDays from enrollment preferred_days:
+enrichedEnrollments.forEach((e) => {
+  if (!autoDays[e.id]) {
+    // Try to get schedule from matching lead
+    const profileEmail = e.profiles?.email?.toLowerCase();
+    const lead = profileEmail ? leadsByEmail[profileEmail] : null;
+    if (lead?.schedule && lead.schedule.trim() !== "") {
+      const leadDays = lead.schedule.split("/").map((d: string) => d.trim()).filter(Boolean);
+      if (leadDays.length > 0) autoDays[e.id] = leadDays;
+    }
+  }
+});
 ```
 
----
+### Files to Change
 
-### Files Changed
-- `src/pages/EnrollNowPage.tsx` — Remove fallback to `weekdays`, add conditional UI
-- `src/components/admin/EnrollmentChecklist.tsx` — Replace `level_slot_config` query with `schedule_packages`
-- `src/pages/AdminDashboard.tsx` — Add per-level day fetching for enrollment inline editor
+1. **`supabase/functions/create-checkout/index.ts`** — Add schedule metadata (level, preferred_days, timezone, etc.) to the Stripe checkout session so the webhook can read it after payment
+2. **`supabase/functions/stripe-webhook/index.ts`** — After creating the enrollment, write `preferred_days`, `timezone`, `preferred_time` from Stripe session metadata, and write `level` to `profiles`
+3. **`src/pages/AdminDashboard.tsx`** — Add fallback to parse `leads.schedule` string (e.g. `"Friday"` or `"Sunday/Friday"`) into the `editingEnrollDays` state when `enrollments.preferred_days` is null, so existing records are also covered
