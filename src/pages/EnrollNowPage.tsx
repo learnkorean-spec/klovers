@@ -92,8 +92,9 @@ const EnrollNowPage = () => {
   const [timeWindows, setTimeWindows] = useState<string[]>([]);
   const [startOptions, setStartOptions] = useState<string[]>([]);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
-  // Level-specific slot days+times from schedule_packages
-  const [levelSlots, setLevelSlots] = useState<{ day: string; time: string }[]>([]);
+  // Level-specific slot days+times from schedule_packages (includes packageId)
+  const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string }[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -125,14 +126,14 @@ const EnrollNowPage = () => {
       const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
       const { data } = await supabase
         .from("schedule_packages" as any)
-        .select("day_of_week, start_time")
+        .select("id, day_of_week, start_time")
         .eq("level", normalizedLevel)
         .eq("is_active", true)
         .order("day_of_week");
       const rows = (data as any[]) || [];
       // Deduplicate by day_of_week, keeping first occurrence
       const seen = new Set<number>();
-      const slots: { day: string; time: string }[] = [];
+      const slots: { day: string; time: string; packageId: string }[] = [];
       for (const r of rows) {
         if (!seen.has(r.day_of_week)) {
           seen.add(r.day_of_week);
@@ -140,7 +141,7 @@ const EnrollNowPage = () => {
           const ampm = h >= 12 ? "PM" : "AM";
           const hour12 = h % 12 || 12;
           const timeLabel = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
-          slots.push({ day: DAY_NAMES[r.day_of_week as number], time: timeLabel });
+          slots.push({ day: DAY_NAMES[r.day_of_week as number], time: timeLabel, packageId: r.id });
         }
       }
       setLevelSlots(slots);
@@ -183,16 +184,18 @@ const EnrollNowPage = () => {
 
   const canProceedStep1 = !!selectedCountry && !!tier && !!duration;
 
-  // Day selection: group = up to 2, private = 1
-  const maxDays = classType === "group" ? 2 : 1;
+  // Day selection: always 1 preferred day
+  const maxDays = 1;
   const toggleDay = (day: string) => {
     setPreferredDays((prev) => {
-      if (prev.includes(day)) return prev.filter((d) => d !== day);
-      if (prev.length >= maxDays) {
-        // Replace oldest selection for private, or drop first for group when at max
-        return [...prev.slice(1), day];
+      if (prev.includes(day)) {
+        setSelectedPackageId(null);
+        return prev.filter((d) => d !== day);
       }
-      return [...prev, day];
+      // Always single-select: replace any existing
+      const slot = levelSlots.find((s) => s.day === day);
+      setSelectedPackageId(slot?.packageId ?? null);
+      return [day];
     });
   };
 
@@ -255,7 +258,11 @@ const EnrollNowPage = () => {
       const enrollmentId = data as string;
         if (enrollmentId) {
         const schedPrefs: any = {};
-        if (preferredDays.length > 0) schedPrefs.preferred_days = preferredDays;
+        if (preferredDays.length > 0) {
+          schedPrefs.preferred_days = preferredDays;
+          schedPrefs.preferred_day = preferredDays[0];
+        }
+        if (selectedPackageId) schedPrefs.package_id = selectedPackageId;
         if (preferredTime) schedPrefs.preferred_time = preferredTime;
         if (startOption) schedPrefs.preferred_start = startOption === "Specific date" ? specificDate : startOption;
         if (timezone) schedPrefs.timezone = timezone;
@@ -340,6 +347,7 @@ const EnrollNowPage = () => {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           level: selectedLevel ? normalizeLevel(selectedLevel) : "",
+          package_id: selectedPackageId || "",
           schedule: {
             timezone,
             preferred_days: preferredDays,
@@ -535,7 +543,7 @@ const EnrollNowPage = () => {
 
               {/* Preferred Days */}
               <div className="space-y-2">
-                <Label>Preferred Day{classType === "group" ? " (select up to 2)" : " (select 1)"}</Label>
+                <Label>Preferred Day (select 1)</Label>
                 {!selectedLevel ? (
                   <p className="text-sm text-muted-foreground italic">Please select your Korean level first.</p>
                 ) : levelSlots.length === 0 ? (
@@ -558,9 +566,6 @@ const EnrollNowPage = () => {
                       </button>
                     ))}
                   </div>
-                )}
-                {classType === "group" && preferredDays.length === 1 && levelSlots.length > 1 && (
-                  <p className="text-xs text-muted-foreground">You can also select a 2nd preferred day (optional).</p>
                 )}
               </div>
 

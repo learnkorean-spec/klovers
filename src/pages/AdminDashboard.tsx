@@ -49,8 +49,8 @@ interface Enrollment {
   admin_review_required: boolean; sessions_remaining: number;
   created_at: string; profiles?: { name: string; email: string; level?: string } | null;
   currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
-  preferred_days?: string[] | null; preferred_time?: string | null; timezone?: string | null;
-  level?: string | null;
+  preferred_days?: string[] | null; preferred_day?: string | null; preferred_time?: string | null; timezone?: string | null;
+  level?: string | null; package_id?: string | null;
 }
 
 interface AttendanceReq {
@@ -902,16 +902,17 @@ const AdminDashboard = () => {
                                           );
                                         })()}
                                       </div>
-                                      {/* Read-only Preferred days */}
+                                      {/* Read-only Preferred day (single) with legacy fallback */}
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-sm text-muted-foreground shrink-0">Days:</span>
-                                        {e.preferred_days && e.preferred_days.length > 0 ? (
-                                          e.preferred_days.map((day: string) => (
-                                            <Badge key={day} variant="secondary" className="text-xs">{day}</Badge>
-                                          ))
-                                        ) : (
-                                          <span className="text-xs text-muted-foreground italic">Not set</span>
-                                        )}
+                                        <span className="text-sm text-muted-foreground shrink-0">Day:</span>
+                                        {(() => {
+                                          const day = e.preferred_day || (e.preferred_days && e.preferred_days.length > 0 ? e.preferred_days[0] : null);
+                                          return day ? (
+                                            <Badge variant="secondary" className="text-xs">{day}</Badge>
+                                          ) : (
+                                            <span className="text-xs text-muted-foreground italic">Not set</span>
+                                          );
+                                        })()}
                                         {e.preferred_time && (
                                           <span className="text-xs text-muted-foreground">· {e.preferred_time}</span>
                                         )}
@@ -920,7 +921,7 @@ const AdminDashboard = () => {
                                         )}
                                       </div>
                                       {/* Missing schedule warning + resubmission button */}
-                                      {(!e.level || !e.preferred_days || e.preferred_days.length === 0) && (e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW") && (
+                                      {(!e.level || (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0))) && (e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW") && (
                                         <div className="flex items-center gap-2 mt-1">
                                           <Badge variant="destructive" className="text-xs flex items-center gap-1">
                                             <AlertCircle className="h-3 w-3" /> Missing schedule from registration
@@ -955,9 +956,9 @@ const AdminDashboard = () => {
                                     </div>
                                   )}
                                   {/* Show existing preferences for approved enrollments */}
-                                  {e.approval_status === "APPROVED" && e.preferred_days && e.preferred_days.length > 0 && (
+                                  {e.approval_status === "APPROVED" && (e.preferred_day || (e.preferred_days && e.preferred_days.length > 0)) && (
                                     <p className="text-xs text-muted-foreground">
-                                      📅 {e.preferred_days.join(", ")} {e.preferred_time ? `· ${e.preferred_time}` : ""}
+                                      📅 {e.preferred_day || e.preferred_days?.join(", ")} {e.preferred_time ? `· ${e.preferred_time}` : ""}
                                     </p>
                                   )}
                                   <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
