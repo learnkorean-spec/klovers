@@ -53,8 +53,12 @@ const LoginPage = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
+    // Save redirect for social login (URL params are lost during OAuth flow)
+    if (redirectTo) {
+      localStorage.setItem("enroll_redirect", redirectTo);
+    }
     const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectTo ? `${window.location.origin}${redirectTo}` : window.location.origin,
     });
     if (error) {
       toast({ title: "Login failed", description: `Could not sign in with ${provider}.`, variant: "destructive" });

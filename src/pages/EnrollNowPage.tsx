@@ -69,20 +69,33 @@ const EnrollNowPage = () => {
   const nav = useNavigate();
   const isEgypt = selectedCountry === "Egypt";
 
+  // Rehydrate from URL params first, then localStorage draft as fallback
+  const getDraft = (): Record<string, string> => {
+    try {
+      const raw = localStorage.getItem("enroll_draft");
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  };
+  const draft = getDraft();
+  const p = (key: string) => searchParams.get(key) || draft[key] || "";
+
   // Schedule preferences — restore from URL if returning from signup
-  const [timezone, setTimezone] = useState(() => searchParams.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [preferredDays, setPreferredDays] = useState<string[]>([]);
-  const [preferredTime, setPreferredTime] = useState(searchParams.get("time") || "");
-  const [startOption, setStartOption] = useState(searchParams.get("start") || "");
-  const [specificDate, setSpecificDate] = useState(searchParams.get("date") || "");
+  const [timezone, setTimezone] = useState(() => p("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [preferredDays, setPreferredDays] = useState<string[]>(() => {
+    const d = p("days");
+    return d ? d.split(",").filter(Boolean) : [];
+  });
+  const [preferredTime, setPreferredTime] = useState(p("time"));
+  const [startOption, setStartOption] = useState(p("start"));
+  const [specificDate, setSpecificDate] = useState(p("date"));
 
   // Schedule slot selection
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(searchParams.get("groupId") || null);
-  const [selectedGroupName, setSelectedGroupName] = useState<string>(searchParams.get("groupName") || "");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(p("groupId") || null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string>(p("groupName"));
 
   // Korean level selection
   const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
-  const [selectedLevel, setSelectedLevel] = useState(searchParams.get("level") || "");
+  const [selectedLevel, setSelectedLevel] = useState(p("level"));
 
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -94,7 +107,14 @@ const EnrollNowPage = () => {
   const [optionsLoaded, setOptionsLoaded] = useState(false);
   // Level-specific slot days+times from schedule_packages (includes packageId)
   const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string }[]>([]);
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(p("packageId") || null);
+
+  // Clear draft from localStorage once we've rehydrated (avoid stale data on next visit)
+  useEffect(() => {
+    if (draft && Object.keys(draft).length > 0) {
+      localStorage.removeItem("enroll_draft");
+    }
+  }, []);
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -117,10 +137,17 @@ const EnrollNowPage = () => {
   // Day names indexed by day_of_week number
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+  // Track whether this is the initial load (to avoid clearing rehydrated preferredDays)
+  const [initialLevelLoad, setInitialLevelLoad] = useState(true);
+
   // Fetch available days+times from schedule_packages when level changes
   useEffect(() => {
     setLevelSlots([]);
-    setPreferredDays([]);
+    // Only clear preferredDays on level change AFTER initial load (don't clear rehydrated state)
+    if (!initialLevelLoad) {
+      setPreferredDays([]);
+      setSelectedPackageId(null);
+    }
     if (!selectedLevel) return;
     const fetchLevelSlots = async () => {
       const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
@@ -145,6 +172,15 @@ const EnrollNowPage = () => {
         }
       }
       setLevelSlots(slots);
+
+      // On initial load, restore selectedPackageId from rehydrated preferredDays
+      if (initialLevelLoad && preferredDays.length > 0) {
+        const matchSlot = slots.find(s => s.day === preferredDays[0]);
+        if (matchSlot) setSelectedPackageId(matchSlot.packageId);
+        setInitialLevelLoad(false);
+      } else {
+        setInitialLevelLoad(false);
+      }
     };
     fetchLevelSlots();
   }, [selectedLevel]);
@@ -214,12 +250,33 @@ const EnrollNowPage = () => {
     if (selectedGroupId) params.set("groupId", selectedGroupId);
     if (selectedGroupName) params.set("groupName", selectedGroupName);
     if (selectedLevel) params.set("level", selectedLevel);
+    if (selectedPackageId) params.set("packageId", selectedPackageId);
     return `/enroll-now?${params.toString()}`;
+  };
+
+  // Save draft to localStorage as backup (in case URL params are lost e.g. social login)
+  const saveDraft = () => {
+    const draftData: Record<string, string> = {};
+    if (classType) draftData.classType = classType;
+    if (selectedCountry) draftData.country = selectedCountry;
+    if (duration) draftData.duration = String(duration);
+    if (preferredDays.length) draftData.days = preferredDays.join(",");
+    if (preferredTime) draftData.time = preferredTime;
+    if (startOption) draftData.start = startOption;
+    if (specificDate) draftData.date = specificDate;
+    if (timezone) draftData.tz = timezone;
+    if (selectedGroupId) draftData.groupId = selectedGroupId;
+    if (selectedGroupName) draftData.groupName = selectedGroupName;
+    if (selectedLevel) draftData.level = selectedLevel;
+    if (selectedPackageId) draftData.packageId = selectedPackageId;
+    draftData.step = "3";
+    localStorage.setItem("enroll_draft", JSON.stringify(draftData));
   };
 
   const handleGoToStep3 = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
+      saveDraft(); // backup to localStorage in case social login loses URL
       const returnUrl = buildReturnUrl(3);
       toast({ title: "Account required", description: "Please create an account or log in to continue.", variant: "destructive" });
       nav(`/signup?redirect=${encodeURIComponent(returnUrl)}`);
@@ -238,6 +295,7 @@ const EnrollNowPage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        saveDraft();
         const returnUrl = buildReturnUrl(3);
         toast({ title: "Please log in", description: "You need to be logged in to place an order.", variant: "destructive" });
         nav(`/login?redirect=${encodeURIComponent(returnUrl)}`);
@@ -313,6 +371,12 @@ const EnrollNowPage = () => {
   };
 
   const handlePay = async () => {
+    // Block payment if schedule fields are missing
+    if (!selectedLevel || preferredDays.length === 0) {
+      toast({ title: "Missing schedule", description: "Please select your level and schedule before continuing.", variant: "destructive" });
+      setStep(2);
+      return;
+    }
     if (!tier || !duration || !name.trim() || !email.trim() || !finalPrice) return;
 
     if (isEgypt) {
