@@ -148,10 +148,12 @@ serve(async (req) => {
       const preferredDays = preferredDaysRaw
         ? preferredDaysRaw.split(",").map((d: string) => d.trim()).filter(Boolean)
         : null;
+      const preferredDay = preferredDays && preferredDays.length > 0 ? preferredDays[0] : null;
       const preferredTime = meta?.preferred_time || null;
       const preferredStart = meta?.preferred_start || null;
       const timezone = meta?.timezone || null;
       const level = meta?.level || null;
+      const packageId = meta?.package_id || null;
 
       // Find or create user
       let userId: string;
@@ -202,9 +204,11 @@ serve(async (req) => {
         stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
         timezone,
         preferred_days: preferredDays,
+        preferred_day: preferredDay,
         preferred_time: preferredTime,
         preferred_start: preferredStart,
         level: level || null,
+        package_id: packageId || null,
       });
 
       // Save level to profile if provided

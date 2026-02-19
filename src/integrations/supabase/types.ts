@@ -520,11 +520,13 @@ export type Database = {
           matched_at: string | null
           matched_batch_id: string | null
           negative_since: string | null
+          package_id: string | null
           payment_date: string | null
           payment_method: string | null
           payment_provider: string | null
           payment_status: string
           plan_type: string
+          preferred_day: string | null
           preferred_days: string[] | null
           preferred_start: string | null
           preferred_time: string | null
@@ -556,11 +558,13 @@ export type Database = {
           matched_at?: string | null
           matched_batch_id?: string | null
           negative_since?: string | null
+          package_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
           payment_provider?: string | null
           payment_status?: string
           plan_type: string
+          preferred_day?: string | null
           preferred_days?: string[] | null
           preferred_start?: string | null
           preferred_time?: string | null
@@ -592,11 +596,13 @@ export type Database = {
           matched_at?: string | null
           matched_batch_id?: string | null
           negative_since?: string | null
+          package_id?: string | null
           payment_date?: string | null
           payment_method?: string | null
           payment_provider?: string | null
           payment_status?: string
           plan_type?: string
+          preferred_day?: string | null
           preferred_days?: string[] | null
           preferred_start?: string | null
           preferred_time?: string | null

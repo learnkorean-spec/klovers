@@ -11,7 +11,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Separator } from "@/components/ui/separator";
 
-const LEVELS = ["Beginner", "Elementary", "Intermediate", "Advanced"];
 const COUNTRIES = ["Egypt", "Malaysia", "Saudi Arabia", "UAE", "Other"];
 
 const SignUpPage = () => {
@@ -19,7 +18,6 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [country, setCountry] = useState("");
-  const [level, setLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -38,7 +36,7 @@ const SignUpPage = () => {
       password,
       options: {
         emailRedirectTo: emailRedirect,
-        data: { name, country, level },
+        data: { name, country },
       },
     });
 
@@ -103,12 +101,6 @@ const SignUpPage = () => {
                 <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={level} onValueChange={setLevel}>
-                <SelectTrigger><SelectValue placeholder="Korean level" /></SelectTrigger>
-                <SelectContent>
-                  {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Button type="submit" className="w-full" disabled={loading}>

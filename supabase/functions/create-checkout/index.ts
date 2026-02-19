@@ -105,7 +105,7 @@ serve(async (req) => {
       );
     }
 
-    const { tier, classType, duration, name, email, schedule, level } = await req.json();
+    const { tier, classType, duration, name, email, schedule, level, package_id } = await req.json();
 
     // Validate inputs
     if (!email || typeof email !== "string") throw new Error("Missing email");
@@ -187,6 +187,7 @@ serve(async (req) => {
         class_type: classType,
         duration: String(duration),
         level: (level || "").slice(0, 50),
+        package_id: (package_id || "").slice(0, 50),
         preferred_days: (schedule?.preferred_days ?? []).slice(0, 3).join(",").slice(0, 100),
         preferred_time: (schedule?.preferred_time || "").slice(0, 50),
         preferred_start: (schedule?.preferred_start || "").slice(0, 50),
