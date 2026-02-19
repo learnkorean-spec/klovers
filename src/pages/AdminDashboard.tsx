@@ -109,30 +109,8 @@ const AdminDashboard = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
-  const [editingEnrollLevel, setEditingEnrollLevel] = useState<Record<string, string>>({});
-  const [editingEnrollDays, setEditingEnrollDays] = useState<Record<string, string[]>>({});
   const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-  const [levelPackageDays, setLevelPackageDays] = useState<Record<string, string[]>>({});
-  const DAY_NAMES_ADMIN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-  const fetchLevelDays = async (level: string) => {
-    if (!level) return;
-    const normalizedLevel = level.toLowerCase().replace(/\s+/g, "_");
-    if (levelPackageDays[normalizedLevel] !== undefined) return; // already cached (even if empty)
-    const { data } = await supabase
-      .from("schedule_packages" as any)
-      .select("day_of_week")
-      .eq("level", normalizedLevel)
-      .eq("is_active", true);
-    const rows = (data as any[]) || [];
-    const uniqueDays = [...new Set(rows.map((r: any) => r.day_of_week as number))]
-      .sort((a, b) => a - b)
-      .map((n) => DAY_NAMES_ADMIN[n]);
-    // Always cache result, even if empty (so we know we already fetched it)
-    setLevelPackageDays(prev => ({ ...prev, [normalizedLevel]: uniqueDays }));
-  };
-  const SLOT_LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -234,39 +212,7 @@ const AdminDashboard = () => {
       }));
       setEnrollments(enrichedEnrollments);
 
-      // Pre-populate editingEnrollLevel — priority: enrollment.level > profile.level > lead.level
-      const autoLevels: Record<string, string> = {};
-      // Pre-populate editingEnrollDays from enrollment's preferred_days (stored at registration)
-      const autoDays: Record<string, string[]> = {};
-
-      enrichedEnrollments.forEach((e) => {
-        // Level priority: enrollment.level > profile.level > lead.level (all normalized)
-        const profileEmail = e.profiles?.email?.toLowerCase() ?? "";
-        const enrollLevel = e.level?.trim() ? normalizeLevel(e.level) : "";
-        const profileLevel = e.profiles?.level?.trim() ? normalizeLevel(e.profiles.level) : "";
-        const leadLevel = profileEmail && leadsByEmail[profileEmail]?.level?.trim()
-          ? normalizeLevel(leadsByEmail[profileEmail].level)
-          : "";
-        const level = enrollLevel || profileLevel || leadLevel;
-        if (level) {
-          autoLevels[e.id] = level;
-        }
-        // Preferred days: directly from enrollment record (set during registration)
-        if (e.preferred_days && Array.isArray(e.preferred_days) && e.preferred_days.length > 0) {
-          autoDays[e.id] = e.preferred_days;
-        } else {
-          // Fallback: parse from matching lead's schedule string (e.g. "Friday" or "Sunday/Friday")
-          const profileEmail = e.profiles?.email?.toLowerCase();
-          const lead = profileEmail ? leadsByEmail[profileEmail] : null;
-          if (lead?.schedule && lead.schedule.trim() !== "") {
-            const leadDays = lead.schedule.split("/").map((d: string) => d.trim()).filter(Boolean);
-            if (leadDays.length > 0) autoDays[e.id] = leadDays;
-          }
-        }
-      });
-
-      setEditingEnrollLevel(prev => ({ ...autoLevels, ...prev })); // don't override manual edits
-      setEditingEnrollDays(prev => ({ ...autoDays, ...prev })); // don't override manual edits
+      // Enrollment level/days are read-only — no admin editing needed
     }
     if (attendRes.data) {
       const overviewMap: Record<string, any> = {};
@@ -290,16 +236,7 @@ const AdminDashboard = () => {
 
   useEffect(() => { fetchAll(); }, []);
 
-  // Pre-fetch package days for all enrollment levels after data loads
-  useEffect(() => {
-    if (enrollments.length === 0) return;
-    const levels = new Set<string>();
-    enrollments.forEach(e => {
-      const level = editingEnrollLevel[e.id] || e.level || e.profiles?.level;
-      if (level && level.trim() !== "") levels.add(level);
-    });
-    levels.forEach(level => fetchLevelDays(level));
-  }, [enrollments, editingEnrollLevel]);
+  // Level-related state removed — enrollment.level is read-only source of truth
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     const { error } = await supabase.from("leads").update({ status: newStatus } as any).eq("id", id);
@@ -412,17 +349,7 @@ const AdminDashboard = () => {
       updates.unit_price = price;
     }
 
-    // Save admin-edited preferred_days to enrollment before approval
-    const editedDays = editingEnrollDays[enrollment.id];
-    if (editedDays && editedDays.length > 0) {
-      updates.preferred_days = editedDays;
-    }
-
-    // Save admin-edited level to profile before approval
-    const editedLevel = editingEnrollLevel[enrollment.id];
-    if (editedLevel && action === "APPROVED") {
-      await supabase.from("profiles").update({ level: editedLevel } as any).eq("user_id", enrollment.user_id);
-    }
+    // Level and days are read-only from enrollment — no admin editing
 
     const { error } = await supabase.from("enrollments").update(updates).eq("id", enrollment.id);
     if (error) { toast({ title: "Error", description: "Failed to update enrollment.", variant: "destructive" }); return; }
@@ -954,115 +881,77 @@ const AdminDashboard = () => {
                                     )}
                                   </div>
                                   {/* Editable Level & Preferred Days for pending enrollments */}
-                                  {(e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW") && e.plan_type === "group" && (
+                                  {e.plan_type === "group" && (
                                     <div className="space-y-2 pt-2 border-t border-border">
+                                      {/* Read-only Level badge */}
                                       <div className="flex items-center gap-2">
                                         <span className="text-sm text-muted-foreground shrink-0">Level:</span>
-                                         {(() => {
+                                        {(() => {
                                           const profileEmail = e.profiles?.email?.toLowerCase() ?? "";
                                           const leadLvl = profileEmail && leadsByEmail[profileEmail]?.level?.trim()
                                             ? normalizeLevel(leadsByEmail[profileEmail].level)
                                             : "";
-                                          const resolvedLevel = editingEnrollLevel[e.id]
-                                            ?? (e.level?.trim() ? normalizeLevel(e.level) : null)
+                                          const resolvedLevel = (e.level?.trim() ? normalizeLevel(e.level) : null)
                                             ?? (e.profiles?.level?.trim() ? normalizeLevel(e.profiles.level) : null)
                                             ?? leadLvl
                                             ?? "";
-                                          const hasLevel = !!resolvedLevel;
-                                          return (
-                                            <>
-                                              <Select
-                                                value={resolvedLevel}
-                                                onValueChange={(v) => {
-                                                  setEditingEnrollLevel(prev => ({ ...prev, [e.id]: v }));
-                                                  fetchLevelDays(v);
-                                                }}
-                                              >
-                                                <SelectTrigger className="h-7 w-44">
-                                                  <SelectValue placeholder="Select level" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                  {SLOT_LEVELS.map(l => (
-                                                    <SelectItem key={l} value={l}>{l}</SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                              {!hasLevel && (
-                                                <Badge variant="destructive" className="text-xs">Missing level</Badge>
-                                              )}
-                                            </>
+                                          return resolvedLevel ? (
+                                            <Badge variant="outline">{resolvedLevel.replace(/_/g, " ")}</Badge>
+                                          ) : (
+                                            <Badge variant="destructive" className="text-xs">Missing level</Badge>
                                           );
                                         })()}
                                       </div>
-                                      <div>
-                                        <span className="text-sm text-muted-foreground">Preferred days:</span>
-                                        {(() => {
-                                          const currentLevel = editingEnrollLevel[e.id] ?? e.level ?? e.profiles?.level ?? "";
-                                          const normalizedLevel = currentLevel.toLowerCase().replace(/\s+/g, "_");
-                                          // Auto-fetch if not yet loaded
-                                          if (currentLevel && levelPackageDays[normalizedLevel] === undefined) {
-                                            fetchLevelDays(currentLevel);
-                                          }
-                                          // No level selected — show registration preferred_days as read-only if present
-                                          if (!currentLevel) {
-                                            const regDays: string[] = e.preferred_days ?? [];
-                                            return (
-                                              <div className="flex flex-wrap gap-1.5 mt-1">
-                                                {regDays.length > 0 ? (
-                                                  <>
-                                                    {regDays.map((day: string) => (
-                                                      <span key={day} className="px-2 py-0.5 rounded text-xs font-medium bg-primary text-primary-foreground">
-                                                        {day}
-                                                      </span>
-                                                    ))}
-                                                    <p className="text-xs text-muted-foreground italic w-full mt-0.5">From registration · Set level above to enable editing</p>
-                                                  </>
-                                                ) : (
-                                                  <p className="text-xs text-muted-foreground italic">Select a level above to see available days.</p>
-                                                )}
-                                              </div>
-                                            );
-                                          }
-                                          // Level selected but still loading
-                                          if (levelPackageDays[normalizedLevel] === undefined) {
-                                            return (
-                                              <div className="flex flex-wrap gap-1.5 mt-1">
-                                                <p className="text-xs text-muted-foreground italic">Loading...</p>
-                                              </div>
-                                            );
-                                          }
-                                          const daysToShow = levelPackageDays[normalizedLevel];
-                                          return (
-                                            <div className="flex flex-wrap gap-1.5 mt-1">
-                                              {daysToShow.length === 0 ? (
-                                                <p className="text-xs text-muted-foreground italic">No class packages configured for this level yet.</p>
-                                              ) : daysToShow.map(day => {
-                                                const currentDays = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
-                                                const isSelected = currentDays.includes(day);
-                                                return (
-                                                  <button
-                                                    key={day}
-                                                    type="button"
-                                                    onClick={() => {
-                                                      const curr = editingEnrollDays[e.id] ?? e.preferred_days ?? [];
-                                                      const next = isSelected ? curr.filter(d => d !== day) : [...curr, day];
-                                                      setEditingEnrollDays(prev => ({ ...prev, [e.id]: next }));
-                                                    }}
-                                                    className={cn(
-                                                      "px-2.5 py-1 rounded-full text-xs border transition-colors",
-                                                      isSelected
-                                                        ? "bg-primary text-primary-foreground border-primary"
-                                                        : "bg-background text-muted-foreground border-border hover:border-primary/50"
-                                                    )}
-                                                  >
-                                                    {day.slice(0, 3)}
-                                                  </button>
-                                                );
-                                              })}
-                                            </div>
-                                          );
-                                        })()}
+                                      {/* Read-only Preferred days */}
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-sm text-muted-foreground shrink-0">Days:</span>
+                                        {e.preferred_days && e.preferred_days.length > 0 ? (
+                                          e.preferred_days.map((day: string) => (
+                                            <Badge key={day} variant="secondary" className="text-xs">{day}</Badge>
+                                          ))
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground italic">Not set</span>
+                                        )}
+                                        {e.preferred_time && (
+                                          <span className="text-xs text-muted-foreground">· {e.preferred_time}</span>
+                                        )}
+                                        {e.timezone && (
+                                          <span className="text-xs text-muted-foreground">· {e.timezone.replace(/_/g, " ")}</span>
+                                        )}
                                       </div>
+                                      {/* Missing schedule warning + resubmission button */}
+                                      {(!e.level || !e.preferred_days || e.preferred_days.length === 0) && (e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW") && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <Badge variant="destructive" className="text-xs flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" /> Missing schedule from registration
+                                          </Badge>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-6 text-xs"
+                                            onClick={async () => {
+                                              const token = crypto.randomUUID().replace(/-/g, "");
+                                              const { error: insertErr } = await (supabase as any)
+                                                .from("schedule_resubmission_requests")
+                                                .insert({
+                                                  enrollment_id: e.id,
+                                                  user_id: e.user_id,
+                                                  email: e.profiles?.email || "",
+                                                  token,
+                                                });
+                                              if (insertErr) {
+                                                toast({ title: "Error", description: insertErr.message, variant: "destructive" });
+                                                return;
+                                              }
+                                              const link = `${window.location.origin}/resubmit-schedule?token=${token}`;
+                                              await navigator.clipboard.writeText(link);
+                                              toast({ title: "Link copied!", description: "Send this link to the student to update their schedule." });
+                                            }}
+                                          >
+                                            Request Resubmission
+                                          </Button>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                   {/* Show existing preferences for approved enrollments */}

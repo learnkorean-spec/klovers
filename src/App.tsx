@@ -25,7 +25,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import MySchedulePage from "./pages/MySchedulePage";
-
+import ResubmitSchedulePage from "./pages/ResubmitSchedulePage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -53,6 +53,7 @@ const App = () => (
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/dashboard/schedule" element={<MySchedulePage />} />
+            <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

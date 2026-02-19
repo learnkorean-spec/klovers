@@ -1,0 +1,316 @@
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, CalendarDays, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
+const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const normalizeLevel = (label: string): string =>
+  label.trim().toLowerCase().replace(/\s+/g, "_");
+
+function formatTime(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+interface ResubRequest {
+  id: string;
+  enrollment_id: string;
+  user_id: string;
+  email: string;
+  status: string;
+  expires_at: string;
+}
+
+interface SchedulePackage {
+  id: string;
+  level: string;
+  day_of_week: number;
+  start_time: string;
+  duration_min: number;
+  timezone: string;
+  capacity: number;
+}
+
+const ResubmitSchedulePage = () => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token") || "";
+
+  const [loading, setLoading] = useState(true);
+  const [request, setRequest] = useState<ResubRequest | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  // Form state
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [packages, setPackages] = useState<SchedulePackage[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Validate token
+  useEffect(() => {
+    if (!token) {
+      setError("No token provided. Please use the link sent to your email.");
+      setLoading(false);
+      return;
+    }
+    const validate = async () => {
+      const { data, error: err } = await (supabase as any)
+        .from("schedule_resubmission_requests")
+        .select("*")
+        .eq("token", token)
+        .maybeSingle();
+      if (err || !data) {
+        setError("Invalid or expired link. Please contact support.");
+        setLoading(false);
+        return;
+      }
+      const req = data as ResubRequest;
+      if (req.status !== "pending") {
+        setError("This schedule submission has already been completed.");
+        setLoading(false);
+        return;
+      }
+      if (new Date(req.expires_at) < new Date()) {
+        setError("This link has expired. Please contact your teacher for a new link.");
+        setLoading(false);
+        return;
+      }
+      setRequest(req);
+      setLoading(false);
+    };
+    validate();
+  }, [token]);
+
+  // Fetch packages when level changes
+  useEffect(() => {
+    if (!selectedLevel) { setPackages([]); return; }
+    const fetch = async () => {
+      const normalized = normalizeLevel(selectedLevel);
+      const { data } = await (supabase as any)
+        .from("schedule_packages")
+        .select("*")
+        .eq("level", normalized)
+        .eq("is_active", true)
+        .order("day_of_week");
+      setPackages((data as SchedulePackage[]) || []);
+      setSelectedPackageId("");
+    };
+    fetch();
+  }, [selectedLevel]);
+
+  const handleSubmit = async () => {
+    if (!request || !selectedLevel || !selectedPackageId) return;
+    setSubmitting(true);
+    try {
+      const pkg = packages.find(p => p.id === selectedPackageId);
+      if (!pkg) throw new Error("Package not found");
+
+      const normalizedLvl = normalizeLevel(selectedLevel);
+      const dayName = DAY_NAMES[pkg.day_of_week];
+
+      // Update enrollment with schedule data
+      const { error: enrollErr } = await supabase
+        .from("enrollments")
+        .update({
+          level: normalizedLvl,
+          preferred_days: [dayName],
+          preferred_time: formatTime(pkg.start_time),
+          timezone: timezone,
+        } as any)
+        .eq("id", request.enrollment_id);
+
+      if (enrollErr) throw new Error(enrollErr.message);
+
+      // Update profile level
+      const { error: profErr } = await supabase
+        .from("profiles")
+        .update({ level: normalizedLvl })
+        .eq("user_id", request.user_id);
+
+      if (profErr) console.error("Profile update error:", profErr);
+
+      // Save package preference
+      await (supabase as any)
+        .from("student_package_preferences")
+        .upsert({
+          user_id: request.user_id,
+          level: normalizedLvl,
+          package_id: selectedPackageId,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+
+      // Mark request as completed
+      await (supabase as any)
+        .from("schedule_resubmission_requests")
+        .update({ status: "completed" })
+        .eq("id", request.id);
+
+      setSubmitted(true);
+      toast({ title: "Schedule submitted!", description: "Your schedule preferences have been saved." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+          <Card>
+            <CardContent className="pt-6 text-center space-y-4">
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+              <p className="text-foreground font-medium">{error}</p>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+          <Card>
+            <CardContent className="pt-6 text-center space-y-4">
+              <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
+              <h2 className="text-xl font-bold text-foreground">Schedule Submitted!</h2>
+              <p className="text-muted-foreground">Your schedule preferences have been saved. Your teacher will confirm your class schedule soon.</p>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <CalendarDays className="h-6 w-6" /> Update Your Schedule
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Hi {request?.email}! Please select your Korean level and preferred class schedule.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Level */}
+            <div className="space-y-2">
+              <Label>Korean Level</Label>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger><SelectValue placeholder="Select your level" /></SelectTrigger>
+                <SelectContent>
+                  {LEVELS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Timezone */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Timezone</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Intl as any).supportedValuesOf("timeZone").map((tz: string) => (
+                    <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Package selection */}
+            {selectedLevel && (
+              <div className="space-y-2">
+                <Label>Preferred Class Slot</Label>
+                {packages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">No slots available for this level. Please contact support.</p>
+                ) : (
+                  <div className="grid gap-2">
+                    {packages.map(pkg => (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        onClick={() => setSelectedPackageId(pkg.id)}
+                        className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                          selectedPackageId === pkg.id
+                            ? "border-primary bg-accent"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-foreground">{DAY_NAMES[pkg.day_of_week]}</p>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {formatTime(pkg.start_time)} · {pkg.duration_min}min
+                              </span>
+                              <span className="text-xs">{pkg.timezone.replace(/_/g, " ")}</span>
+                            </div>
+                          </div>
+                          <Badge variant="outline">{pkg.level.replace(/_/g, " ")}</Badge>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              size="lg"
+              disabled={!selectedLevel || !selectedPackageId || submitting}
+              onClick={handleSubmit}
+            >
+              {submitting ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+              ) : (
+                "Submit Schedule"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default ResubmitSchedulePage;
