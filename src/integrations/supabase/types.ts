@@ -1100,6 +1100,54 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_resubmission_requests: {
+        Row: {
+          created_at: string
+          email: string
+          enrollment_id: string
+          expires_at: string
+          id: string
+          status: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          enrollment_id: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          enrollment_id?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_resubmission_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_student_overview"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "schedule_resubmission_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_groups: {
         Row: {
           capacity: number | null
