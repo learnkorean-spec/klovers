@@ -161,6 +161,14 @@ const SchedulePicker = ({
     const label = `${DAY_NAMES[pkg.day_of_week]} · ${formatTime(pkg.start_time)} · ${pkg.duration_min}min · ${pkg.timezone}`;
     onSelect(pkg.id, label);
 
+    const scheduleFields = {
+      level: pkg.level || "",
+      package_id: pkg.id,
+      preferred_day: DAY_NAMES[pkg.day_of_week],
+      preferred_time: formatTime(pkg.start_time),
+      timezone: pkg.timezone,
+    };
+
     // Persist preference
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
@@ -173,6 +181,22 @@ const SchedulePicker = ({
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
 
+      // Also update the user's latest PENDING enrollment with schedule data
+      const { data: pendingEnrollments } = await (supabase as any)
+        .from("enrollments")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .in("status", ["PENDING", "PENDING_PAYMENT"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (pendingEnrollments && pendingEnrollments.length > 0) {
+        await (supabase as any)
+          .from("enrollments")
+          .update(scheduleFields)
+          .eq("id", pendingEnrollments[0].id);
+      }
+
       if (isAlternative) {
         const userName = session.user.user_metadata?.name || session.user.email || "A student";
         await (supabase as any).from("admin_notifications").insert({
@@ -181,6 +205,14 @@ const SchedulePicker = ({
           related_user_id: session.user.id,
         });
       }
+    } else {
+      // Not logged in — persist to localStorage draft for post-login sync
+      try {
+        const raw = localStorage.getItem("enroll_draft");
+        const draft = raw ? JSON.parse(raw) : {};
+        Object.assign(draft, scheduleFields, { packageId: pkg.id, days: DAY_NAMES[pkg.day_of_week] });
+        localStorage.setItem("enroll_draft", JSON.stringify(draft));
+      } catch { /* ignore */ }
     }
   };
 
