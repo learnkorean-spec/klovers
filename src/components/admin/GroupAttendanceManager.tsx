@@ -766,6 +766,7 @@ const GroupAttendanceManager = () => {
                       <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>Level</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Schedule</TableHead>
                         <TableHead>Capacity</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -777,6 +778,9 @@ const GroupAttendanceManager = () => {
                           <TableCell className="font-medium text-foreground">{g.name}</TableCell>
                           <TableCell>
                             {g.level ? <Badge variant="secondary">{g.level}</Badge> : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={g.course_type === "private" ? "destructive" : "secondary"}>{g.course_type || "group"}</Badge>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {[g.schedule_day, g.schedule_time].filter(Boolean).join(" · ") || "—"}
