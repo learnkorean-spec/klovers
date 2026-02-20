@@ -5,19 +5,15 @@ import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Separator } from "@/components/ui/separator";
 
-const COUNTRIES = ["Egypt", "Malaysia", "Saudi Arabia", "UAE", "Other"];
-
 const SignUpPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -36,7 +32,7 @@ const SignUpPage = () => {
       password,
       options: {
         emailRedirectTo: emailRedirect,
-        data: { name, country },
+        data: { name },
       },
     });
 
@@ -101,12 +97,6 @@ const SignUpPage = () => {
               <Input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
               <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               <Input type="password" placeholder="Password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Sign Up"}
               </Button>

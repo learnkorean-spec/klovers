@@ -110,6 +110,7 @@ const AdminDashboard = () => {
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
+  const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -821,7 +822,37 @@ const AdminDashboard = () => {
             <TabsContent value="enrollments">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-base">Enrollments</CardTitle>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <CardTitle className="text-base">Enrollments</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={showLegacyEnrollments}
+                          onChange={(e) => setShowLegacyEnrollments(e.target.checked)}
+                          className="rounded"
+                        />
+                        Show Legacy
+                      </label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={async () => {
+                          const { data, error } = await supabase.rpc("backfill_missing_enrollments" as any);
+                          if (error) {
+                            toast({ title: "Backfill failed", description: error.message, variant: "destructive" });
+                          } else {
+                            const result = data as any;
+                            toast({ title: "Backfill complete", description: `Fixed: ${result?.fixed ?? 0}, Remaining: ${result?.remaining ?? 0}` });
+                            fetchAll();
+                          }
+                        }}
+                      >
+                        Backfill Missing
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-0">
               {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
@@ -841,12 +872,16 @@ const AdminDashboard = () => {
                   </TabsList>
 
                   {(["pending_payment", "under_review", "pending", "approved", "rejected"] as const).map((tab) => {
+                    const isLegacy = (e: Enrollment) => (!e.level || e.level.trim() === '') && (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0));
                     const filtered = enrollments.filter((e) => {
-                      if (tab === "pending_payment") return e.approval_status === "PENDING_PAYMENT";
-                      if (tab === "under_review") return e.approval_status === "UNDER_REVIEW";
-                      if (tab === "pending") return e.approval_status === "PENDING";
-                      if (tab === "approved") return e.approval_status === "APPROVED";
-                      return e.approval_status === "REJECTED";
+                      const matchesTab = tab === "pending_payment" ? e.approval_status === "PENDING_PAYMENT"
+                        : tab === "under_review" ? e.approval_status === "UNDER_REVIEW"
+                        : tab === "pending" ? e.approval_status === "PENDING"
+                        : tab === "approved" ? e.approval_status === "APPROVED"
+                        : e.approval_status === "REJECTED";
+                      if (!matchesTab) return false;
+                      if (!showLegacyEnrollments && isLegacy(e)) return false;
+                      return true;
                     });
                     return (
                       <TabsContent key={tab} value={tab} className="space-y-4">
@@ -921,10 +956,10 @@ const AdminDashboard = () => {
                                         )}
                                       </div>
                                       {/* Missing schedule warning + resubmission button */}
-                                      {(!e.level || (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0))) && (e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW") && (
-                                        <div className="flex items-center gap-2 mt-1">
+                                      {(!e.level || (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0))) && (
+                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                                           <Badge variant="destructive" className="text-xs flex items-center gap-1">
-                                            <AlertCircle className="h-3 w-3" /> Missing schedule from registration
+                                            <AlertCircle className="h-3 w-3" /> Legacy / Missing registration schedule
                                           </Badge>
                                           <Button
                                             variant="outline"
