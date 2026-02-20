@@ -82,8 +82,8 @@ const EnrollNowPage = () => {
   // Schedule preferences — restore from URL if returning from signup
   const [timezone, setTimezone] = useState(() => p("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [preferredDays, setPreferredDays] = useState<string[]>(() => {
-    const d = p("days");
-    return d ? d.split(",").filter(Boolean) : [];
+    const d = p("days") || p("day");
+    return d ? d.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
   });
   const [preferredTime, setPreferredTime] = useState(p("time"));
   const [startOption, setStartOption] = useState(p("start"));
@@ -110,6 +110,18 @@ const EnrollNowPage = () => {
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(p("packageId") || null);
 
   // Draft cleanup is deferred — only clear after successful payment initiation (see handlePay)
+
+  // FIX #1: Explicit rehydration of days/level from URL params on mount
+  useEffect(() => {
+    const daysParam = searchParams.get("days") || searchParams.get("day");
+    if (daysParam && preferredDays.length === 0) {
+      setPreferredDays(daysParam.split(",").map(s => s.trim()).filter(Boolean));
+    }
+    const lvl = searchParams.get("level");
+    if (lvl && !selectedLevel) {
+      setSelectedLevel(lvl);
+    }
+  }, []); // run once on mount
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -428,6 +440,33 @@ const EnrollNowPage = () => {
         throw new Error(data.error);
       }
       if (data?.url) {
+        // FIX #2: Persist schedule into enrollments for Stripe flow (same as Egypt)
+        const { data: { session: sess } } = await supabase.auth.getSession();
+        if (sess) {
+          const schedUpdate: Record<string, any> = {
+            level: normalizeLevel(selectedLevel),
+            preferred_day: preferredDays[0],
+            timezone,
+            status: "PENDING_PAYMENT",
+          };
+          if (selectedPackageId) schedUpdate.package_id = selectedPackageId;
+          if (preferredTime) schedUpdate.preferred_time = preferredTime;
+          if (preferredDays.length > 0) schedUpdate.preferred_days = preferredDays;
+
+          // Update most recent PENDING enrollment for this user
+          const { data: pendingRows } = await supabase
+            .from("enrollments")
+            .select("id")
+            .eq("user_id", sess.user.id)
+            .in("status", ["PENDING", "PENDING_PAYMENT", "DRAFT"] as any)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (pendingRows && pendingRows.length > 0) {
+            await supabase.from("enrollments").update(schedUpdate as any).eq("id", pendingRows[0].id);
+          }
+        }
+
         // Clear draft now that payment is initiated
         localStorage.removeItem("enroll_draft");
         window.open(data.url, "_blank");
