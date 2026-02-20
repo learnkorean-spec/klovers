@@ -1,73 +1,104 @@
 
 
-## Lock Conversion End-to-End
+## Registration Hard Fix: Prevent Missing Level/Schedule
 
 ### Summary
 
-Remove the Korean level field from SignUp (it belongs only in the Enroll flow), enforce single-day selection, store `package_id` on enrollments, and add a `preferred_day` column to replace the legacy `preferred_days[]` array.
+The current code already has draft save/restore logic and single-day selection, but has critical gaps:
+1. **SchedulePicker doesn't write to enrollments** -- it only saves to `student_package_preferences`
+2. **Login page doesn't create enrollment from draft** after successful login
+3. **Draft cleanup happens too early** -- `localStorage` is cleared on mount before state is fully restored
+4. **EnrollNowPage clears `enroll_draft` immediately** even if rehydration hasn't completed
 
 ---
 
-### A) Remove Level from SignUp (`SignUpPage.tsx`)
+### Changes Required
 
-Current state: SignUp has a "Korean level" Select dropdown (line 108-113) and passes `level` in auth metadata (line 41).
+#### A) SignUpPage.tsx -- Already Clean (No Changes Needed)
 
-Changes:
-- Delete the `level` state variable and the `LEVELS` constant
-- Remove the level `<Select>` block
-- Remove `level` from the `data: { name, country, level }` metadata object (keep `name` and `country`)
-- Remove the `Select` import if no longer used (country still uses it, so keep it)
+The current SignUpPage already has no level field. It only collects name, email, password, country. No action needed.
 
 ---
 
-### B) Enroll Flow: Single Day + Package ID Persistence (`EnrollNowPage.tsx`)
+#### B) EnrollNowPage.tsx -- Fix Draft Lifecycle
 
-Current state:
-- Group students can select up to 2 days (`maxDays = classType === "group" ? 2 : 1`)
-- Egypt orders update enrollment with `preferred_days` array but no `package_id`
-- Stripe checkout sends schedule in metadata but doesn't persist `package_id` on enrollment
+**Problem 1: Draft cleared too early (line 113-117)**
+The `useEffect` that clears `enroll_draft` runs immediately on mount, before async data (levelSlots) loads and before `selectedPackageId` can be restored from the rehydrated `preferredDays`.
 
-Changes:
-1. **Force single day**: Change `maxDays` to always be `1` (remove the group=2 logic)
-2. **Update label**: Change "select up to 2" to just "select 1"
-3. **Egypt order handler**: After creating the order, also write `package_id` and `preferred_day` (single string) to the enrollment
-4. **Stripe checkout handler**: Save `package_id` and `preferred_day` to profile preferences (enrollment is created by webhook, but we can pass `package_id` in Stripe metadata)
-5. **Stripe metadata**: Add `package_id` to the checkout metadata so the webhook can persist it
+**Fix:** Move draft cleanup to AFTER the user successfully reaches step 3 (payment step), not on page load. Only clear draft when it's no longer needed.
 
-To map preferred day to a package_id: when the student selects a day from `levelSlots`, we know the `day_of_week` and can query `schedule_packages` for the matching package. We'll store the selected slot's package info alongside the day selection.
+**Problem 2: `handlePay` validates but doesn't gate on `selectedPackageId`**
+Currently it checks `selectedLevel` and `preferredDays.length` but not `selectedPackageId`. The package_id is what ties the enrollment to a specific schedule slot.
+
+**Fix:** Add `selectedPackageId` to the validation in `handlePay`. Show error if missing.
 
 ---
 
-### C) Database Migration
+#### C) SchedulePicker.tsx -- Write Schedule to Enrollments
 
-Add two new columns to `enrollments`:
+**Current behavior:** When a student confirms a package selection, `selectPackage()` only writes to `student_package_preferences`. It does NOT touch the `enrollments` table.
+
+**Fix:** After saving preferences, also update the most recent PENDING enrollment for this user (if one exists) with `level`, `package_id`, `preferred_day`, `preferred_time`, and `timezone`. If no enrollment exists yet (pre-payment), save to `localStorage` draft instead so the data is available when the enrollment is created.
+
+---
+
+#### D) LoginPage.tsx -- Post-Login Draft Sync
+
+**Current behavior:** After login, the page redirects to `redirectTo` or `/dashboard`. It does NOT check for `enroll_draft` or create/update an enrollment.
+
+**Fix:** After successful login, check if `localStorage.enroll_draft` exists. If it does AND the user has a PENDING enrollment without schedule data, update that enrollment with the draft fields. Then clear the draft and redirect.
+
+---
+
+#### E) Database Migration -- Backfill Old Data
+
+Run a one-time migration to:
+1. Normalize `enrollments.level` and `leads.level` to snake_case
+2. Backfill `enrollments.level` from `leads` by email where missing
+3. Backfill `preferred_day` from `preferred_days[1]` where missing
+4. Map `package_id` from `schedule_packages` where a unique match exists
+
+The columns `preferred_day` and `package_id` already exist on `enrollments` from a previous migration.
+
+---
+
+### Technical Details
+
+#### File: `src/pages/EnrollNowPage.tsx`
+
+| Line Range | Change |
+|---|---|
+| 112-117 | Remove the early `useEffect` that clears `enroll_draft` on mount |
+| 273 | Add draft cleanup call inside `handlePay` after successful payment initiation |
+| 373-378 | Add `selectedPackageId` to the missing-schedule validation check |
+
+#### File: `src/components/SchedulePicker.tsx`
+
+| Line Range | Change |
+|---|---|
+| 158-185 | In `selectPackage()`, after saving `student_package_preferences`, also update the user's latest PENDING enrollment with `level`, `package_id`, `preferred_day`, `preferred_time`, `timezone`. If not logged in, update `enroll_draft` in localStorage. |
+
+#### File: `src/pages/LoginPage.tsx`
+
+| Line Range | Change |
+|---|---|
+| 46-52 | After successful login (non-admin), before redirecting: check `localStorage.enroll_draft`, if present upsert enrollment schedule fields for the user, then clear the draft. |
+
+#### SQL Migration
 
 ```sql
-ALTER TABLE public.enrollments 
-  ADD COLUMN IF NOT EXISTS preferred_day text,
-  ADD COLUMN IF NOT EXISTS package_id uuid;
-```
-
-Backfill existing data:
-
-```sql
--- Backfill preferred_day from preferred_days[0]
-UPDATE public.enrollments
-SET preferred_day = preferred_days[1]
-WHERE preferred_day IS NULL 
-  AND preferred_days IS NOT NULL 
-  AND array_length(preferred_days, 1) > 0;
-
 -- Normalize levels
 UPDATE public.enrollments 
-SET level = lower(replace(trim(level), ' ', '_'))
-WHERE level IS NOT NULL AND level <> '' AND level <> lower(replace(trim(level), ' ', '_'));
+SET level = lower(regexp_replace(trim(level), '\s+', '_', 'g'))
+WHERE level IS NOT NULL AND level <> '' 
+  AND level <> lower(regexp_replace(trim(level), '\s+', '_', 'g'));
 
 UPDATE public.leads
-SET level = lower(replace(trim(level), ' ', '_'))
-WHERE level IS NOT NULL AND level <> '' AND level <> lower(replace(trim(level), ' ', '_'));
+SET level = lower(regexp_replace(trim(level), '\s+', '_', 'g'))
+WHERE level IS NOT NULL AND level <> '' 
+  AND level <> lower(regexp_replace(trim(level), '\s+', '_', 'g'));
 
--- Backfill enrollment.level from leads where missing
+-- Backfill enrollment.level from leads
 UPDATE public.enrollments e
 SET level = l.level
 FROM public.profiles p
@@ -76,14 +107,20 @@ WHERE e.user_id = p.user_id
   AND (e.level IS NULL OR e.level = '')
   AND l.level IS NOT NULL AND l.level <> '';
 
--- Map package_id where possible (level + day match)
+-- Backfill preferred_day from preferred_days array
+UPDATE public.enrollments
+SET preferred_day = preferred_days[1]
+WHERE preferred_day IS NULL 
+  AND preferred_days IS NOT NULL 
+  AND array_length(preferred_days, 1) > 0;
+
+-- Map package_id where unique match exists
 UPDATE public.enrollments e
 SET package_id = sp.id
 FROM public.schedule_packages sp
 WHERE e.package_id IS NULL
   AND e.level IS NOT NULL AND e.level <> ''
-  AND sp.level = e.level
-  AND sp.is_active = true
+  AND sp.level = e.level AND sp.is_active = true
   AND e.preferred_day IS NOT NULL
   AND sp.day_of_week = CASE e.preferred_day
     WHEN 'Sunday' THEN 0 WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2
@@ -93,65 +130,21 @@ WHERE e.package_id IS NULL
 
 ---
 
-### D) EnrollNowPage: Track Selected Package
+### Files Changed
 
-When the student picks a day from `levelSlots`, we need to know which `schedule_package` it maps to. Update the slot-fetching logic to also store `package_id` per slot:
-
-```typescript
-// Change levelSlots type to include package info
-const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string }[]>([]);
-```
-
-When fetching slots, include the `id` from `schedule_packages`:
-
-```typescript
-const { data } = await supabase
-  .from("schedule_packages")
-  .select("id, day_of_week, start_time")
-  .eq("level", normalizedLevel)
-  .eq("is_active", true);
-```
-
-When a day is selected via `toggleDay`, also set a `selectedPackageId` state from the matching slot.
-
-On Egypt order and Stripe checkout, include `package_id` in the data written to enrollments/metadata.
-
----
-
-### E) Admin Dashboard: Minor Cleanup
-
-The admin enrollment UI is already read-only for level and days. Changes:
-- Update references from `preferred_days` to also show `preferred_day` (single) as fallback
-- Display `package_id` info if available (join with schedule_packages data is optional; the day/time/timezone already shown covers this)
-
----
-
-### F) Stripe Webhook Update (`stripe-webhook/index.ts`)
-
-When processing `checkout.session.completed`:
-- Read `package_id` from session metadata
-- Write it to the enrollment record along with `preferred_day` (derived from `preferred_days[0]` in metadata)
-- Write `level` from metadata (already done)
-
----
-
-### Files to Change
-
-| File | Changes |
+| File | Action |
 |---|---|
-| `src/pages/SignUpPage.tsx` | Remove level state, dropdown, and auth metadata field |
-| `src/pages/EnrollNowPage.tsx` | Force single day, track packageId per slot, persist package_id + preferred_day to enrollment |
-| `src/pages/AdminDashboard.tsx` | Show preferred_day fallback alongside preferred_days; minor display cleanup |
-| `supabase/functions/stripe-webhook/index.ts` | Read package_id from metadata, write preferred_day + package_id to enrollment |
-| `supabase/functions/create-checkout/index.ts` | Pass package_id in Stripe session metadata |
-| SQL Migration | Add preferred_day + package_id columns; backfill + normalize |
+| `src/pages/EnrollNowPage.tsx` | Fix draft lifecycle, add packageId validation |
+| `src/components/SchedulePicker.tsx` | Write schedule to enrollments on selection |
+| `src/pages/LoginPage.tsx` | Post-login draft sync to enrollments |
+| SQL Migration | Normalize + backfill old data |
 
 ### Edge Cases
 
 | Scenario | Behavior |
 |---|---|
-| Existing enrollments with preferred_days[] but no preferred_day | Migration backfills from preferred_days[0] |
-| Enrollment with level but no matching package | package_id stays null; admin sees warning badge |
-| Student picks a day that maps to multiple packages | Use first active match (deduplicated by day in the query) |
-| Legacy 2-day enrollments | Keep preferred_days for display; preferred_day = first day only |
+| User selects schedule but doesn't pay | Draft saved in localStorage; enrollment updated if exists |
+| Social login loses URL params | localStorage draft used as fallback |
+| User has no PENDING enrollment yet | Schedule saved only to localStorage + preferences; enrollment created later by payment flow |
+| Old enrollments with missing level | Backfilled from leads table by email match |
 
