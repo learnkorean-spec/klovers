@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useResetGate } from "@/hooks/useResetGate";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ interface EnrollmentRecord {
 }
 
 const StudentDashboard = () => {
+  const { loading: gateLoading, resetBlocked } = useResetGate();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
@@ -36,6 +38,7 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (gateLoading || resetBlocked) return;
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
@@ -82,14 +85,14 @@ const StudentDashboard = () => {
       setLoading(false);
     };
     load();
-  }, [navigate]);
+  }, [navigate, gateLoading, resetBlocked]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
 
-  if (loading) {
+  if (gateLoading || resetBlocked || loading) {
     return (
       <div className="min-h-screen">
         <Header />

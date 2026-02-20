@@ -130,6 +130,24 @@ export type Database = {
           },
         ]
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       attendance_log: {
         Row: {
           id: string
@@ -1014,6 +1032,7 @@ export type Database = {
           id: string
           level: string
           name: string
+          reset_version: string | null
           status: string
           user_id: string
         }
@@ -1026,6 +1045,7 @@ export type Database = {
           id?: string
           level?: string
           name: string
+          reset_version?: string | null
           status?: string
           user_id: string
         }
@@ -1038,6 +1058,7 @@ export type Database = {
           id?: string
           level?: string
           name?: string
+          reset_version?: string | null
           status?: string
           user_id?: string
         }
@@ -1563,6 +1584,7 @@ export type Database = {
       }
       deduct_credit: { Args: { _user_id: string }; Returns: number }
       ensure_pkg_groups_for_packages: { Args: never; Returns: number }
+      factory_reset_data: { Args: never; Returns: string }
       get_auth_email: { Args: never; Returns: string }
       has_role: {
         Args: {
