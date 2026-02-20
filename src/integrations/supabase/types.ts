@@ -1094,6 +1094,7 @@ export type Database = {
       schedule_packages: {
         Row: {
           capacity: number
+          course_type: string
           created_at: string
           day_of_week: number
           duration_min: number
@@ -1105,6 +1106,7 @@ export type Database = {
         }
         Insert: {
           capacity?: number
+          course_type?: string
           created_at?: string
           day_of_week: number
           duration_min?: number
@@ -1116,6 +1118,7 @@ export type Database = {
         }
         Update: {
           capacity?: number
+          course_type?: string
           created_at?: string
           day_of_week?: number
           duration_min?: number

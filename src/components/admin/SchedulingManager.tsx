@@ -41,6 +41,7 @@ interface Package {
   timezone: string;
   capacity: number;
   is_active: boolean;
+  course_type: string;
   member_count?: number;
 }
 
@@ -87,6 +88,7 @@ const PackagesManager = () => {
   const [fTimezone, setFTimezone] = useState("Africa/Cairo");
   const [fCapacity, setFCapacity] = useState(5);
   const [fActive, setFActive] = useState(true);
+  const [fCourseType, setFCourseType] = useState("group");
 
   const fetchPackages = async () => {
     setLoading(true);
@@ -120,21 +122,21 @@ const PackagesManager = () => {
   const openCreate = () => {
     setEditing(null);
     setFLevel("beginner_1"); setFDay(5); setFTime("18:00"); setFDuration(90);
-    setFTimezone("Africa/Cairo"); setFCapacity(5); setFActive(true);
+    setFTimezone("Africa/Cairo"); setFCapacity(5); setFActive(true); setFCourseType("group");
     setShowForm(true);
   };
 
   const openEdit = (p: Package) => {
     setEditing(p);
     setFLevel(p.level); setFDay(p.day_of_week); setFTime(p.start_time.slice(0, 5));
-    setFDuration(p.duration_min); setFTimezone(p.timezone); setFCapacity(p.capacity); setFActive(p.is_active);
+    setFDuration(p.duration_min); setFTimezone(p.timezone); setFCapacity(p.capacity); setFActive(p.is_active); setFCourseType(p.course_type || "group");
     setShowForm(true);
   };
 
   const handleSave = async () => {
     const payload: any = {
       level: fLevel, day_of_week: fDay, start_time: fTime, duration_min: fDuration,
-      timezone: fTimezone, capacity: fCapacity, is_active: fActive,
+      timezone: fTimezone, capacity: fCapacity, is_active: fActive, course_type: fCourseType,
     };
     const { error } = editing
       ? await (supabase as any).from("schedule_packages").update(payload).eq("id", editing.id)
@@ -198,6 +200,7 @@ const PackagesManager = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Level</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Day</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Duration</TableHead>
@@ -211,6 +214,7 @@ const PackagesManager = () => {
               {displayed.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell><Badge variant="outline">{p.level.replace("_", " ")}</Badge></TableCell>
+                  <TableCell><Badge variant={p.course_type === "private" ? "destructive" : "secondary"}>{p.course_type || "group"}</Badge></TableCell>
                   <TableCell>{DAY_NAMES[p.day_of_week]}</TableCell>
                   <TableCell>{formatTime(p.start_time)}</TableCell>
                   <TableCell>{p.duration_min}min</TableCell>
@@ -278,6 +282,16 @@ const PackagesManager = () => {
             <div className="space-y-2">
               <Label>Timezone</Label>
               <Input value={fTimezone} onChange={(e) => setFTimezone(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={fCourseType} onValueChange={setFCourseType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="group">Group</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={fActive} onCheckedChange={setFActive} />
