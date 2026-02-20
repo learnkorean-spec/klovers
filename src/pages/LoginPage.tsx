@@ -45,6 +45,21 @@ const LoginPage = () => {
     if (roleData) {
       navigate("/admin");
     } else {
+      // Stamp reset_version on profile
+      try {
+        const { data: setting } = await supabase
+          .from("app_settings")
+          .select("value")
+          .eq("key", "app_reset_version")
+          .single();
+        if (setting?.value) {
+          await supabase
+            .from("profiles")
+            .update({ reset_version: setting.value } as any)
+            .eq("user_id", data.user.id);
+        }
+      } catch { /* ignore */ }
+
       // Post-login: sync enroll_draft to enrollment if present
       try {
         const draftRaw = localStorage.getItem("enroll_draft");
@@ -58,7 +73,6 @@ const LoginPage = () => {
             if (draft.preferred_time || draft.time) schedUpdate.preferred_time = draft.preferred_time || draft.time;
             if (draft.timezone || draft.tz) schedUpdate.timezone = draft.timezone || draft.tz;
 
-            // Update latest PENDING enrollment missing schedule data
             const { data: pending } = await supabase
               .from("enrollments")
               .select("id, level")
