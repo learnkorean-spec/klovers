@@ -433,6 +433,17 @@ const GroupAttendanceManager = () => {
     fetchGroups();
   };
 
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!confirm("Delete this group? This cannot be undone.")) return;
+    const { error } = await supabase.from("student_groups").delete().eq("id", groupId);
+    if (error) {
+      toast({ title: "Error deleting group", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Group deleted" });
+      fetchGroups();
+    }
+  };
+
   // ── Student assignment ──
   const openManageStudents = async (group: Group) => {
     setManagingGroup(group);
@@ -778,6 +789,9 @@ const GroupAttendanceManager = () => {
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => openManageStudents(g)} title="Manage students">
                                 <UserPlus className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeleteGroup(g.id)} title="Delete group">
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
