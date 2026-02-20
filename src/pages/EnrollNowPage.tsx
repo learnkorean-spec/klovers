@@ -399,15 +399,50 @@ const EnrollNowPage = () => {
       return;
     }
 
+    // A) Enforce auth before Stripe checkout
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      saveDraft();
+      const returnUrl = buildReturnUrl(3);
+      toast({ title: "Account required", description: "Please create an account or log in to continue.", variant: "destructive" });
+      nav(`/signup?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
     setLoading(true);
     try {
       // Submit lead async (don't block checkout)
       submitLead();
 
-      // Save level to profile if logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && selectedLevel) {
-        await supabase.from("profiles").update({ level: normalizeLevel(selectedLevel) }).eq("user_id", session.user.id);
+      const normalizedLevel = normalizeLevel(selectedLevel);
+      const lowerEmail = email.trim().toLowerCase();
+
+      // Save level to profile
+      if (selectedLevel) {
+        await supabase.from("profiles").update({ level: normalizedLevel }).eq("user_id", session.user.id);
+      }
+
+      // B) Upsert enrollment BEFORE calling create-checkout (safety net)
+      const schedFields: Record<string, any> = {
+        level: normalizedLevel,
+        preferred_day: preferredDays[0],
+        timezone,
+        status: "PENDING_PAYMENT",
+      };
+      if (selectedPackageId) schedFields.package_id = selectedPackageId;
+      if (preferredTime) schedFields.preferred_time = preferredTime;
+      if (preferredDays.length > 0) schedFields.preferred_days = preferredDays;
+
+      const { data: existingRows } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .in("status", ["PENDING", "PENDING_PAYMENT", "DRAFT"] as any)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (existingRows && existingRows.length > 0) {
+        await supabase.from("enrollments").update(schedFields as any).eq("id", existingRows[0].id);
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -416,8 +451,8 @@ const EnrollNowPage = () => {
           classType,
           duration,
           name: name.trim(),
-          email: email.trim().toLowerCase(),
-          level: selectedLevel ? normalizeLevel(selectedLevel) : "",
+          email: lowerEmail,
+          level: normalizedLevel,
           package_id: selectedPackageId || "",
           schedule: {
             timezone,
@@ -440,31 +475,17 @@ const EnrollNowPage = () => {
         throw new Error(data.error);
       }
       if (data?.url) {
-        // FIX #2: Persist schedule into enrollments for Stripe flow (same as Egypt)
-        const { data: { session: sess } } = await supabase.auth.getSession();
-        if (sess) {
-          const schedUpdate: Record<string, any> = {
-            level: normalizeLevel(selectedLevel),
-            preferred_day: preferredDays[0],
-            timezone,
-            status: "PENDING_PAYMENT",
-          };
-          if (selectedPackageId) schedUpdate.package_id = selectedPackageId;
-          if (preferredTime) schedUpdate.preferred_time = preferredTime;
-          if (preferredDays.length > 0) schedUpdate.preferred_days = preferredDays;
+        // C) Post-checkout: update enrollment again (belt + suspenders)
+        const { data: postRows } = await supabase
+          .from("enrollments")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .in("status", ["PENDING", "PENDING_PAYMENT", "DRAFT"] as any)
+          .order("created_at", { ascending: false })
+          .limit(1);
 
-          // Update most recent PENDING enrollment for this user
-          const { data: pendingRows } = await supabase
-            .from("enrollments")
-            .select("id")
-            .eq("user_id", sess.user.id)
-            .in("status", ["PENDING", "PENDING_PAYMENT", "DRAFT"] as any)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-          if (pendingRows && pendingRows.length > 0) {
-            await supabase.from("enrollments").update(schedUpdate as any).eq("id", pendingRows[0].id);
-          }
+        if (postRows && postRows.length > 0) {
+          await supabase.from("enrollments").update(schedFields as any).eq("id", postRows[0].id);
         }
 
         // Clear draft now that payment is initiated
