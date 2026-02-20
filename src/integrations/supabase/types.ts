@@ -1555,6 +1555,7 @@ export type Database = {
         Returns: string
       }
       auto_match_student: { Args: { _preference_id: string }; Returns: string }
+      backfill_missing_enrollments: { Args: never; Returns: Json }
       cleanup_pkg_groups: { Args: never; Returns: Json }
       create_egypt_order: {
         Args: { _duration: number; _plan_type: string }
