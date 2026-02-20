@@ -109,12 +109,7 @@ const EnrollNowPage = () => {
   const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string }[]>([]);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(p("packageId") || null);
 
-  // Clear draft from localStorage once we've rehydrated (avoid stale data on next visit)
-  useEffect(() => {
-    if (draft && Object.keys(draft).length > 0) {
-      localStorage.removeItem("enroll_draft");
-    }
-  }, []);
+  // Draft cleanup is deferred — only clear after successful payment initiation (see handlePay)
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -372,8 +367,8 @@ const EnrollNowPage = () => {
 
   const handlePay = async () => {
     // Block payment if schedule fields are missing
-    if (!selectedLevel || preferredDays.length === 0) {
-      toast({ title: "Missing schedule", description: "Please select your level and schedule before continuing.", variant: "destructive" });
+    if (!selectedLevel || preferredDays.length === 0 || !selectedPackageId) {
+      toast({ title: "Missing schedule", description: "Please select your level and schedule slot before continuing.", variant: "destructive" });
       setStep(2);
       return;
     }
@@ -433,6 +428,8 @@ const EnrollNowPage = () => {
         throw new Error(data.error);
       }
       if (data?.url) {
+        // Clear draft now that payment is initiated
+        localStorage.removeItem("enroll_draft");
         window.open(data.url, "_blank");
       }
     } catch (err: any) {

@@ -45,6 +45,39 @@ const LoginPage = () => {
     if (roleData) {
       navigate("/admin");
     } else {
+      // Post-login: sync enroll_draft to enrollment if present
+      try {
+        const draftRaw = localStorage.getItem("enroll_draft");
+        if (draftRaw) {
+          const draft = JSON.parse(draftRaw);
+          if (draft.level || draft.package_id || draft.preferred_day) {
+            const schedUpdate: Record<string, any> = {};
+            if (draft.level) schedUpdate.level = draft.level;
+            if (draft.package_id || draft.packageId) schedUpdate.package_id = draft.package_id || draft.packageId;
+            if (draft.preferred_day || draft.days) schedUpdate.preferred_day = draft.preferred_day || draft.days;
+            if (draft.preferred_time || draft.time) schedUpdate.preferred_time = draft.preferred_time || draft.time;
+            if (draft.timezone || draft.tz) schedUpdate.timezone = draft.timezone || draft.tz;
+
+            // Update latest PENDING enrollment missing schedule data
+            const { data: pending } = await supabase
+              .from("enrollments")
+              .select("id, level")
+              .eq("user_id", data.user.id)
+              .in("status", ["PENDING", "PENDING_PAYMENT"] as any)
+              .order("created_at", { ascending: false })
+              .limit(1);
+
+            if (pending && pending.length > 0 && (!pending[0].level || pending[0].level === "")) {
+              await supabase
+                .from("enrollments")
+                .update(schedUpdate as any)
+                .eq("id", pending[0].id);
+            }
+            localStorage.removeItem("enroll_draft");
+          }
+        }
+      } catch { /* ignore draft sync errors */ }
+
       const savedRedirect = localStorage.getItem("enroll_redirect");
       const finalRedirect = redirectTo || savedRedirect || "/dashboard";
       if (savedRedirect) localStorage.removeItem("enroll_redirect");
