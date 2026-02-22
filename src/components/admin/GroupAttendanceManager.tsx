@@ -28,15 +28,22 @@ interface GroupPackageInfo {
   timezone: string | null;
 }
 
+// Unified group type from pkg_groups + schedule_packages
 interface Group {
   id: string;
   name: string;
-  schedule_day?: string | null;
-  schedule_time?: string | null;
-  schedule_timezone?: string | null;
-  level?: string | null;
-  capacity?: number | null;
-  course_type?: string | null;
+  package_id: string;
+  capacity: number;
+  is_active: boolean;
+  // From parent package
+  level: string;
+  course_type: string;
+  day_of_week: number;
+  start_time: string;
+  timezone: string;
+  // Computed members
+  members: { user_id: string; name: string; email: string; member_status: string; avatar_url?: string }[];
+  active_count: number;
 }
 
 interface Session {
@@ -58,23 +65,15 @@ interface AttendanceRow {
   student_avatar?: string;
 }
 
-interface StudentProfile {
+interface MemberForManage {
   user_id: string;
   name: string;
   email: string;
-  avatar_url?: string;
-  level?: string;
-}
-
-interface GroupMember {
-  student_id: string;
-  full_name: string;
-  email: string;
-  group_name: string | null;
+  member_status: string;
 }
 
 const STATUS_OPTIONS = ["present", "absent", "late", "excused"] as const;
-const LEVELS = ["Beginner", "Elementary", "Intermediate", "Advanced"];
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function nextOccurrenceOf(dayOfWeek: number): Date {
   const today = new Date();
@@ -113,43 +112,29 @@ const GroupAttendanceManager = () => {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [groupPackageInfo, setGroupPackageInfo] = useState<GroupPackageInfo | null>(null);
+  const [groupsLoading, setGroupsLoading] = useState(true);
 
   // Group management state
   const [editGroupDialog, setEditGroupDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [editName, setEditName] = useState("");
-  const [editLevel, setEditLevel] = useState("");
-  const [editDay, setEditDay] = useState("");
-  const [editTime, setEditTime] = useState("");
   const [editCapacity, setEditCapacity] = useState("");
 
   // Student assignment state
   const [manageStudentsDialog, setManageStudentsDialog] = useState(false);
   const [managingGroup, setManagingGroup] = useState<Group | null>(null);
-  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<GroupMember[]>([]);
+  const [groupMembers, setGroupMembers] = useState<MemberForManage[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<MemberForManage[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
 
-  // Enriched groups for Manage Groups tab
-  interface EnrichedGroup {
-    id: string;
-    name: string;
-    package_id: string;
-    capacity: number;
-    level: string;
-    course_type: string;
-    day_of_week: number;
-    start_time: string;
-    timezone: string;
-    members: { user_id: string; name: string; email: string; member_status: string }[];
-  }
-  const [enrichedGroups, setEnrichedGroups] = useState<EnrichedGroup[]>([]);
-  const [enrichedLoading, setEnrichedLoading] = useState(false);
+  // Expanded groups in manage tab
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  const fetchEnrichedGroups = async () => {
-    setEnrichedLoading(true);
-    // Fetch all active pkg_groups with parent package info
+  // ── Unified fetch: pkg_groups + schedule_packages + pkg_group_members ──
+  const fetchGroups = async () => {
+    setGroupsLoading(true);
+
+    // 1. Fetch all active pkg_groups with parent package info
     const { data: pkgGroups } = await supabase
       .from("pkg_groups")
       .select("id, name, package_id, capacity, is_active, schedule_packages(level, day_of_week, start_time, timezone, course_type)")
@@ -157,29 +142,32 @@ const GroupAttendanceManager = () => {
       .order("name");
 
     if (!pkgGroups || pkgGroups.length === 0) {
-      setEnrichedGroups([]);
-      setEnrichedLoading(false);
+      setGroups([]);
+      setGroupsLoading(false);
       return;
     }
 
     const groupIds = pkgGroups.map(g => g.id);
 
-    // Fetch all members for these groups
+    // 2. Fetch all members
     const { data: members } = await supabase
       .from("pkg_group_members")
       .select("group_id, user_id, member_status")
       .in("group_id", groupIds);
 
-    // Fetch profiles for all member user_ids
+    // 3. Fetch profiles for all member user_ids
     const userIds = [...new Set((members || []).map(m => m.user_id))];
     const { data: profiles } = userIds.length > 0
-      ? await supabase.from("profiles").select("user_id, name, email").in("user_id", userIds)
+      ? await supabase.from("profiles").select("user_id, name, email, avatar_url").in("user_id", userIds)
       : { data: [] };
 
-    const profileMap: Record<string, { name: string; email: string }> = {};
-    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
+    const profileMap: Record<string, { name: string; email: string; avatar_url: string }> = {};
+    (profiles || []).forEach((p: any) => {
+      profileMap[p.user_id] = { name: p.name, email: p.email, avatar_url: p.avatar_url || "" };
+    });
 
-    const result: EnrichedGroup[] = pkgGroups.map((g: any) => {
+    // 4. Build unified groups
+    const result: Group[] = pkgGroups.map((g: any) => {
       const pkg = g.schedule_packages || {};
       const grpMembers = (members || [])
         .filter(m => m.group_id === g.id)
@@ -188,6 +176,7 @@ const GroupAttendanceManager = () => {
           name: profileMap[m.user_id]?.name || "Unknown",
           email: profileMap[m.user_id]?.email || "",
           member_status: m.member_status,
+          avatar_url: profileMap[m.user_id]?.avatar_url || "",
         }));
 
       return {
@@ -195,53 +184,24 @@ const GroupAttendanceManager = () => {
         name: g.name,
         package_id: g.package_id,
         capacity: g.capacity,
+        is_active: g.is_active,
         level: pkg.level || "",
         course_type: pkg.course_type || "group",
         day_of_week: pkg.day_of_week ?? -1,
         start_time: pkg.start_time || "",
         timezone: pkg.timezone || "",
         members: grpMembers,
+        active_count: grpMembers.filter(m => m.member_status === "active").length,
       };
-    });
+    }).sort((a, b) => a.level.localeCompare(b.level) || a.day_of_week - b.day_of_week);
 
-    setEnrichedGroups(result);
-    setEnrichedLoading(false);
+    setGroups(result);
+    setGroupsLoading(false);
   };
 
-  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const [adminWeekdays, setAdminWeekdays] = useState<string[]>([]);
-  const [adminTimes, setAdminTimes] = useState<string[]>([]);
+  useEffect(() => { fetchGroups(); }, []);
 
-  const fetchGroups = async () => {
-    const { data } = await supabase.from("student_groups").select("id, name, schedule_day, schedule_time, schedule_timezone, level, capacity, course_type").order("name");
-    if (data) setGroups(data);
-  };
-
-  // Fetch available days from schedule_packages + time windows from schedule_options
-  useEffect(() => {
-    supabase
-      .from("schedule_packages" as any)
-      .select("day_of_week")
-      .eq("is_active", true)
-      .then(({ data }) => {
-        const rows = (data as any[]) ?? [];
-        const uniqueDays = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort();
-        setAdminWeekdays(uniqueDays.map(n => DAY_NAMES[n]));
-      });
-    supabase
-      .from("schedule_options" as any)
-      .select("label, sort_order")
-      .eq("is_active", true)
-      .eq("category", "time_window")
-      .order("sort_order")
-      .then(({ data }) => {
-        const rows = (data as any[]) ?? [];
-        setAdminTimes(rows.map(r => r.label as string));
-      });
-  }, []);
-
-  useEffect(() => { fetchGroups(); fetchEnrichedGroups(); }, []);
-
+  // When group is selected, set package info + load sessions
   useEffect(() => {
     if (!selectedGroup) {
       setSessions([]);
@@ -249,46 +209,19 @@ const GroupAttendanceManager = () => {
       return;
     }
 
-    // Fetch pkg_groups → schedule_packages for date restriction
-    supabase
-      .from("pkg_groups")
-      .select("package_id, schedule_packages(day_of_week, start_time, timezone)")
-      .eq("id", selectedGroup)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data && (data as any).schedule_packages) {
-          const pkg = (data as any).schedule_packages;
-          setGroupPackageInfo({
-            package_id: (data as any).package_id,
-            day_of_week: pkg.day_of_week,
-            start_time: pkg.start_time,
-            timezone: pkg.timezone,
-          });
-          // Auto-jump to next valid date
-          const next = nextOccurrenceOf(pkg.day_of_week);
-          setSessionDate(format(next, "yyyy-MM-dd"));
-        } else {
-          // Fallback: parse legacy student_groups.schedule_day string
-          const group = groups.find(g => g.id === selectedGroup);
-          if (group?.schedule_day) {
-            const idx = DAY_NAMES.indexOf(group.schedule_day);
-            if (idx !== -1) {
-              setGroupPackageInfo({
-                package_id: null,
-                day_of_week: idx,
-                start_time: group.schedule_time ?? null,
-                timezone: group.schedule_timezone ?? null,
-              });
-              const next = nextOccurrenceOf(idx);
-              setSessionDate(format(next, "yyyy-MM-dd"));
-            } else {
-              setGroupPackageInfo(null);
-            }
-          } else {
-            setGroupPackageInfo(null);
-          }
-        }
+    const group = groups.find(g => g.id === selectedGroup);
+    if (group && group.day_of_week >= 0) {
+      setGroupPackageInfo({
+        package_id: group.package_id,
+        day_of_week: group.day_of_week,
+        start_time: group.start_time,
+        timezone: group.timezone,
       });
+      const next = nextOccurrenceOf(group.day_of_week);
+      setSessionDate(format(next, "yyyy-MM-dd"));
+    } else {
+      setGroupPackageInfo(null);
+    }
 
     supabase
       .from("group_sessions")
@@ -298,8 +231,7 @@ const GroupAttendanceManager = () => {
       .then(({ data }) => {
         if (data) setSessions(data as Session[]);
       });
-
-  }, [selectedGroup]);
+  }, [selectedGroup, groups]);
 
   useEffect(() => {
     if (!selectedSession) { setAttendanceRows([]); return; }
@@ -321,13 +253,14 @@ const GroupAttendanceManager = () => {
     }
 
     const userIds = rows.map((r: any) => r.user_id);
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, name, email, avatar_url")
-      .in("user_id", userIds);
+    const { data: profs } = userIds.length > 0
+      ? await supabase.from("profiles").select("user_id, name, email, avatar_url").in("user_id", userIds)
+      : { data: [] };
 
     const profileMap: Record<string, { name: string; email: string; avatar_url: string }> = {};
-    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email, avatar_url: p.avatar_url || "" }; });
+    (profs || []).forEach((p: any) => {
+      profileMap[p.user_id] = { name: p.name, email: p.email, avatar_url: p.avatar_url || "" };
+    });
 
     setAttendanceRows(
       (rows as any[]).map((r) => ({
@@ -340,6 +273,7 @@ const GroupAttendanceManager = () => {
     setLoading(false);
   };
 
+  // Create session using pkg_group_members for student list
   const createSession = async () => {
     if (!selectedGroup || !sessionDate) return;
 
@@ -377,28 +311,14 @@ const GroupAttendanceManager = () => {
       return;
     }
 
+    // Use pkg_group_members to find active students in this group
     const group = groups.find(g => g.id === selectedGroup);
-    if (!group) { setCreating(false); return; }
-
-    const { data: students } = await supabase
-      .from("students")
-      .select("email")
-      .eq("group_name", group.name);
-
-    if (students && students.length > 0) {
-      const emails = students.map((s: any) => s.email.toLowerCase());
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, email");
-
-      const matchedUserIds = (profiles || [])
-        .filter((p: any) => emails.includes(p.email.toLowerCase()))
-        .map((p: any) => p.user_id);
-
-      if (matchedUserIds.length > 0) {
-        const rows = matchedUserIds.map((uid: string) => ({
+    if (group && group.members.length > 0) {
+      const activeMembers = group.members.filter(m => m.member_status === "active");
+      if (activeMembers.length > 0) {
+        const rows = activeMembers.map(m => ({
           session_id: (session as any).id,
-          user_id: uid,
+          user_id: m.user_id,
           status: "absent",
           source: "system",
           admin_approved: false,
@@ -468,42 +388,27 @@ const GroupAttendanceManager = () => {
     await handleStatusChange(row.id, newStatus);
   };
 
-  // ── Group editing ──
+  // ── Group editing (now operates on pkg_groups) ──
   const openEditGroup = (group: Group) => {
     setEditingGroup(group);
     setEditName(group.name);
-    setEditLevel(group.level || "");
-    setEditDay(group.schedule_day || "");
-    setEditTime(group.schedule_time || "");
     setEditCapacity(String(group.capacity ?? ""));
     setEditGroupDialog(true);
   };
 
   const handleSaveGroup = async () => {
     if (!editingGroup || !editName.trim()) return;
-    const oldName = editingGroup.name;
     const { error } = await supabase
-      .from("student_groups")
+      .from("pkg_groups")
       .update({
         name: editName.trim(),
-        level: editLevel || null,
-        schedule_day: editDay || null,
-        schedule_time: editTime || null,
-        capacity: editCapacity ? parseInt(editCapacity) : null,
+        capacity: editCapacity ? parseInt(editCapacity) : 5,
       } as any)
       .eq("id", editingGroup.id);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
-    }
-
-    // Update students table group_name if name changed
-    if (oldName !== editName.trim()) {
-      await supabase
-        .from("students")
-        .update({ group_name: editName.trim() } as any)
-        .eq("group_name", oldName);
     }
 
     toast({ title: "Group updated" });
@@ -513,7 +418,12 @@ const GroupAttendanceManager = () => {
 
   const handleDeleteGroup = async (groupId: string) => {
     if (!confirm("Delete this group? This cannot be undone.")) return;
-    const { error } = await supabase.from("student_groups").delete().eq("id", groupId);
+    // Remove members first, then deactivate group
+    await supabase.from("pkg_group_members").delete().eq("group_id", groupId);
+    const { error } = await supabase
+      .from("pkg_groups")
+      .update({ is_active: false } as any)
+      .eq("id", groupId);
     if (error) {
       toast({ title: "Error deleting group", description: error.message, variant: "destructive" });
     } else {
@@ -522,79 +432,84 @@ const GroupAttendanceManager = () => {
     }
   };
 
-  // ── Student assignment ──
+  // ── Student assignment (now uses pkg_group_members + profiles) ──
   const openManageStudents = async (group: Group) => {
     setManagingGroup(group);
     setStudentSearch("");
 
-    // Fetch current members
-    const { data: members } = await supabase
-      .from("students")
-      .select("id, full_name, email, group_name")
-      .eq("group_name", group.name)
-      .order("full_name");
-
-    setGroupMembers((members || []).map((m: any) => ({
-      student_id: m.id,
-      full_name: m.full_name,
+    // Current members are already loaded in group.members
+    setGroupMembers(group.members.map(m => ({
+      user_id: m.user_id,
+      name: m.name,
       email: m.email,
-      group_name: m.group_name,
+      member_status: m.member_status,
     })));
 
-    // Fetch available students (not in this group)
-    const { data: allStudents } = await supabase
-      .from("students")
-      .select("id, full_name, email, group_name")
-      .or(`group_name.is.null,group_name.eq.,group_name.neq.${group.name}`)
-      .order("full_name");
+    // Fetch all profiles as available students (excluding current members)
+    const memberUserIds = group.members.map(m => m.user_id);
+    const { data: allProfiles } = await supabase
+      .from("profiles")
+      .select("user_id, name, email")
+      .order("name");
 
-    setAvailableStudents((allStudents || []).map((s: any) => ({
-      student_id: s.id,
-      full_name: s.full_name,
-      email: s.email,
-      group_name: s.group_name,
-    })));
+    const available = (allProfiles || [])
+      .filter((p: any) => !memberUserIds.includes(p.user_id))
+      .map((p: any) => ({
+        user_id: p.user_id,
+        name: p.name,
+        email: p.email,
+        member_status: "",
+      }));
 
+    setAvailableStudents(available);
     setManageStudentsDialog(true);
   };
 
-  const handleAddStudentToGroup = async (student: GroupMember) => {
+  const handleAddStudentToGroup = async (student: MemberForManage) => {
     if (!managingGroup) return;
     const { error } = await supabase
-      .from("students")
-      .update({ group_name: managingGroup.name } as any)
-      .eq("id", student.student_id);
+      .from("pkg_group_members")
+      .insert({
+        group_id: managingGroup.id,
+        user_id: student.user_id,
+        member_status: "active",
+      } as any);
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      if (error.message.includes("duplicate")) {
+        toast({ title: "Student already in this group" });
+      } else {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      }
       return;
     }
 
-    setGroupMembers(prev => [...prev, { ...student, group_name: managingGroup.name }]);
-    setAvailableStudents(prev => prev.filter(s => s.student_id !== student.student_id));
-    toast({ title: `${student.full_name} added to ${managingGroup.name}` });
+    setGroupMembers(prev => [...prev, { ...student, member_status: "active" }]);
+    setAvailableStudents(prev => prev.filter(s => s.user_id !== student.user_id));
+    toast({ title: `${student.name} added to ${managingGroup.name}` });
   };
 
-  const handleRemoveStudentFromGroup = async (student: GroupMember) => {
+  const handleRemoveStudentFromGroup = async (student: MemberForManage) => {
     if (!managingGroup) return;
     const { error } = await supabase
-      .from("students")
-      .update({ group_name: "" } as any)
-      .eq("id", student.student_id);
+      .from("pkg_group_members")
+      .delete()
+      .eq("group_id", managingGroup.id)
+      .eq("user_id", student.user_id);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
 
-    setAvailableStudents(prev => [...prev, { ...student, group_name: null }]);
-    setGroupMembers(prev => prev.filter(s => s.student_id !== student.student_id));
-    toast({ title: `${student.full_name} removed from ${managingGroup.name}` });
+    setAvailableStudents(prev => [...prev, { ...student, member_status: "" }]);
+    setGroupMembers(prev => prev.filter(s => s.user_id !== student.user_id));
+    toast({ title: `${student.name} removed from ${managingGroup.name}` });
   };
 
   const filteredAvailable = availableStudents.filter(s =>
     !studentSearch ||
-    s.full_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+    s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
     s.email.toLowerCase().includes(studentSearch.toLowerCase())
   );
 
@@ -624,12 +539,17 @@ const GroupAttendanceManager = () => {
                       <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
                       <SelectContent>
                         {groups.map(g => {
-                          const schedule = [g.schedule_day, g.schedule_time].filter(Boolean).join(" · ");
+                          const dayName = DAY_NAMES[g.day_of_week] || "";
+                          const timeStr = formatStartTime(g.start_time);
+                          const schedule = [dayName, timeStr].filter(Boolean).join(" · ");
                           return (
                             <SelectItem key={g.id} value={g.id}>
                               <span className="font-medium">{g.name}</span>
-                              {g.level && <Badge variant="secondary" className="ml-2 text-[10px] py-0">{g.level}</Badge>}
+                              {g.level && <Badge variant="secondary" className="ml-2 text-[10px] py-0">{g.level.replace(/_/g, " ")}</Badge>}
                               {schedule && <span className="text-muted-foreground ml-2 text-xs">({schedule})</span>}
+                              <Badge variant="outline" className="ml-2 text-[10px] py-0">
+                                {g.active_count}/{g.capacity}
+                              </Badge>
                             </SelectItem>
                           );
                         })}
@@ -640,12 +560,14 @@ const GroupAttendanceManager = () => {
                   {selectedGroup && (() => {
                     const g = groups.find(gr => gr.id === selectedGroup);
                     if (!g) return null;
+                    const dayName = DAY_NAMES[g.day_of_week] || "";
+                    const timeStr = formatStartTime(g.start_time);
                     const infoParts = [
-                      g.level && `📚 ${g.level}`,
-                      g.schedule_day && `📅 ${g.schedule_day}`,
-                      g.schedule_time && `🕐 ${g.schedule_time}`,
-                      g.schedule_timezone && `🌍 ${g.schedule_timezone}`,
-                      g.capacity != null && `👥 ${g.capacity} seats`,
+                      g.level && `📚 ${g.level.replace(/_/g, " ")}`,
+                      dayName && `📅 ${dayName}`,
+                      timeStr && `🕐 ${timeStr}`,
+                      g.timezone && `🌍 ${g.timezone.replace(/_/g, " ")}`,
+                      `👥 ${g.active_count}/${g.capacity} students`,
                     ].filter(Boolean);
                     return infoParts.length > 0 ? (
                       <div className="flex flex-wrap items-end gap-2 text-xs text-muted-foreground">
@@ -833,18 +755,18 @@ const GroupAttendanceManager = () => {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" /> Groups
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={fetchEnrichedGroups} disabled={enrichedLoading}>
-                <RefreshCw className={`h-4 w-4 mr-1 ${enrichedLoading ? "animate-spin" : ""}`} /> Refresh
+              <Button variant="outline" size="sm" onClick={fetchGroups} disabled={groupsLoading}>
+                <RefreshCw className={`h-4 w-4 mr-1 ${groupsLoading ? "animate-spin" : ""}`} /> Refresh
               </Button>
             </CardHeader>
             <CardContent>
-              {enrichedLoading ? (
+              {groupsLoading ? (
                 <p className="text-muted-foreground text-center py-4">Loading groups...</p>
-              ) : enrichedGroups.length === 0 ? (
+              ) : groups.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No groups yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {enrichedGroups.map(g => {
+                  {groups.map(g => {
                     const activeMembers = g.members.filter(m => m.member_status === "active");
                     const waitlistMembers = g.members.filter(m => m.member_status === "waitlist");
                     const isExpanded = expandedGroups.has(g.id);
@@ -888,16 +810,10 @@ const GroupAttendanceManager = () => {
                               {waitlistMembers.length > 0 && ` (+${waitlistMembers.length} waitlist)`}
                             </Badge>
                             <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                              <Button variant="ghost" size="sm" onClick={() => {
-                                const legacyGroup = groups.find(lg => lg.name === g.name);
-                                if (legacyGroup) openEditGroup(legacyGroup);
-                              }} title="Edit group">
+                              <Button variant="ghost" size="sm" onClick={() => openEditGroup(g)} title="Edit group">
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => {
-                                const legacyGroup = groups.find(lg => lg.name === g.name);
-                                if (legacyGroup) openManageStudents(legacyGroup);
-                              }} title="Manage students">
+                              <Button variant="ghost" size="sm" onClick={() => openManageStudents(g)} title="Manage students">
                                 <UserPlus className="h-4 w-4" />
                               </Button>
                               <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeleteGroup(g.id)} title="Delete group">
@@ -917,6 +833,7 @@ const GroupAttendanceManager = () => {
                                 <div key={m.user_id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
                                   <div className="flex items-center gap-2">
                                     <Avatar className="h-7 w-7">
+                                      {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.name} />}
                                       <AvatarFallback className="bg-muted text-foreground text-[10px] font-semibold">
                                         {(m.name || "?").slice(0, 2).toUpperCase()}
                                       </AvatarFallback>
@@ -955,43 +872,14 @@ const GroupAttendanceManager = () => {
               <Label>Group Name</Label>
               <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Group name" />
             </div>
-            <div className="space-y-1">
-              <Label>Level</Label>
-              <Select value={editLevel} onValueChange={setEditLevel}>
-                <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-                <SelectContent>
-                  {LEVELS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Day</Label>
-                {adminWeekdays.length > 0 ? (
-                  <Select value={editDay} onValueChange={setEditDay}>
-                    <SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger>
-                    <SelectContent>
-                      {adminWeekdays.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={editDay} onChange={e => setEditDay(e.target.value)} placeholder="e.g. Monday" />
-                )}
+            {editingGroup && (
+              <div className="flex flex-wrap gap-2">
+                {editingGroup.level && <Badge variant="secondary">{editingGroup.level.replace(/_/g, " ")}</Badge>}
+                {editingGroup.day_of_week >= 0 && <Badge variant="outline">{DAY_NAMES[editingGroup.day_of_week]}</Badge>}
+                {editingGroup.start_time && <Badge variant="outline">{formatStartTime(editingGroup.start_time)}</Badge>}
+                <span className="text-xs text-muted-foreground">(Level/day/time inherited from schedule package)</span>
               </div>
-              <div className="space-y-1">
-                <Label>Time</Label>
-                {adminTimes.length > 0 ? (
-                  <Select value={editTime} onValueChange={setEditTime}>
-                    <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
-                    <SelectContent>
-                      {adminTimes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
-                )}
-              </div>
-            </div>
+            )}
             <div className="space-y-1">
               <Label>Capacity</Label>
               <Input type="number" value={editCapacity} onChange={e => setEditCapacity(e.target.value)} placeholder="Max students" />
@@ -1011,7 +899,7 @@ const GroupAttendanceManager = () => {
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               {managingGroup?.name} — Students
-              {managingGroup?.level && <Badge variant="secondary">{managingGroup.level}</Badge>}
+              {managingGroup?.level && <Badge variant="secondary">{managingGroup.level.replace(/_/g, " ")}</Badge>}
             </DialogTitle>
           </DialogHeader>
 
@@ -1023,14 +911,19 @@ const GroupAttendanceManager = () => {
             ) : (
               <div className="space-y-1 max-h-40 overflow-y-auto">
                 {groupMembers.map(m => (
-                  <div key={m.student_id} className="flex items-center justify-between p-2 rounded-md border border-border hover:bg-accent/30">
+                  <div key={m.user_id} className="flex items-center justify-between p-2 rounded-md border border-border hover:bg-accent/30">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{m.full_name}</p>
+                      <p className="text-sm font-medium text-foreground">{m.name}</p>
                       <p className="text-xs text-muted-foreground">{m.email}</p>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleRemoveStudentFromGroup(m)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={m.member_status === "active" ? "secondary" : "outline"} className="text-[10px]">
+                        {m.member_status}
+                      </Badge>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleRemoveStudentFromGroup(m)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1050,13 +943,10 @@ const GroupAttendanceManager = () => {
                 <p className="text-muted-foreground text-sm py-2">No available students found.</p>
               ) : (
                 filteredAvailable.slice(0, 20).map(s => (
-                  <div key={s.student_id} className="flex items-center justify-between p-2 rounded-md border border-border hover:bg-accent/30">
+                  <div key={s.user_id} className="flex items-center justify-between p-2 rounded-md border border-border hover:bg-accent/30">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{s.full_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {s.email}
-                        {s.group_name && <span className="ml-1 text-muted-foreground/70">({s.group_name})</span>}
-                      </p>
+                      <p className="text-sm font-medium text-foreground">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">{s.email}</p>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => handleAddStudentToGroup(s)}>
                       <Plus className="h-3 w-3 mr-1" /> Add
