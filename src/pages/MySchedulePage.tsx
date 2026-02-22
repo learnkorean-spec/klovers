@@ -247,10 +247,16 @@ const MySchedulePage = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card>
-              <CardContent className="pt-6 text-center space-y-3">
-                <p className="text-muted-foreground">No schedule selected yet.</p>
-                <Button onClick={() => setShowPicker(true)}>Choose a Schedule</Button>
+            <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-700">
+              <CardContent className="pt-6 text-center space-y-4">
+                <AlertTriangle className="h-10 w-10 mx-auto text-amber-500" />
+                <h2 className="text-lg font-semibold text-foreground">Choose Your Class Schedule</h2>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  You need to pick a preferred day and time to complete your registration. This helps us assign you to the right group.
+                </p>
+                <Button size="lg" onClick={() => setShowPicker(true)}>
+                  <CalendarDays className="h-4 w-4 mr-2" /> Pick a Day & Time
+                </Button>
               </CardContent>
             </Card>
           )}
