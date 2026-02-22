@@ -17,7 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight } from "lucide-react";
+import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle } from "lucide-react";
 import AdminNotifications from "./AdminNotifications";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -43,6 +43,9 @@ interface Package {
   is_active: boolean;
   course_type: string;
   member_count?: number;
+  waitlist_count?: number;
+  total_capacity?: number;
+  seats_left?: number;
 }
 
 interface PkgGroup {
@@ -98,18 +101,39 @@ const PackagesManager = () => {
     // Count members per package via groups
     const pkgIds = list.map((p) => p.id);
     if (pkgIds.length > 0) {
-      const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id").in("package_id", pkgIds);
+      const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id, capacity").in("package_id", pkgIds).eq("is_active", true);
       const groupIds = (groups || []).map((g: any) => g.id);
+
+      // Calculate total capacity per package (sum of group capacities)
+      const pkgTotalCapacity: Record<string, number> = {};
+      (groups || []).forEach((g: any) => {
+        pkgTotalCapacity[g.package_id] = (pkgTotalCapacity[g.package_id] || 0) + (g.capacity || 0);
+      });
+
       if (groupIds.length > 0) {
         const { data: members } = await (supabase as any).from("pkg_group_members").select("group_id, member_status").in("group_id", groupIds);
         const pkgCount: Record<string, number> = {};
+        const pkgWaitlist: Record<string, number> = {};
         const groupPkg: Record<string, string> = {};
         (groups || []).forEach((g: any) => { groupPkg[g.id] = g.package_id; });
-        (members || []).filter((m: any) => m.member_status === "active").forEach((m: any) => {
+        (members || []).forEach((m: any) => {
           const pid = groupPkg[m.group_id];
-          if (pid) pkgCount[pid] = (pkgCount[pid] || 0) + 1;
+          if (pid) {
+            if (m.member_status === "active") pkgCount[pid] = (pkgCount[pid] || 0) + 1;
+            if (m.member_status === "waitlist") pkgWaitlist[pid] = (pkgWaitlist[pid] || 0) + 1;
+          }
         });
-        list.forEach((p) => { p.member_count = pkgCount[p.id] || 0; });
+        list.forEach((p) => {
+          p.member_count = pkgCount[p.id] || 0;
+          p.waitlist_count = pkgWaitlist[p.id] || 0;
+          p.total_capacity = pkgTotalCapacity[p.id] || p.capacity;
+          p.seats_left = Math.max(0, (p.total_capacity || p.capacity) - (p.member_count || 0));
+        });
+      } else {
+        list.forEach((p) => {
+          p.total_capacity = pkgTotalCapacity[p.id] || p.capacity;
+          p.seats_left = p.total_capacity;
+        });
       }
     }
 
@@ -205,13 +229,18 @@ const PackagesManager = () => {
                 <TableHead>Time</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Timezone</TableHead>
-                <TableHead>Occupancy</TableHead>
+                <TableHead>Active / Capacity</TableHead>
+                <TableHead>Seats Left</TableHead>
+                <TableHead>Waitlist</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayed.map((p) => (
+              {displayed.map((p) => {
+                const seatsLeft = p.seats_left ?? (p.capacity - (p.member_count ?? 0));
+                const needsGroup = (p.waitlist_count ?? 0) > 0 || seatsLeft <= 0;
+                return (
                 <TableRow key={p.id}>
                   <TableCell><Badge variant="outline">{p.level.replace("_", " ")}</Badge></TableCell>
                   <TableCell><Badge variant={p.course_type === "private" ? "destructive" : "secondary"}>{p.course_type || "group"}</Badge></TableCell>
@@ -220,11 +249,29 @@ const PackagesManager = () => {
                   <TableCell>{p.duration_min}min</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{p.timezone.replace(/_/g, " ")}</TableCell>
                   <TableCell>
-                    <span className="font-mono text-sm">{p.member_count ?? 0}/{p.capacity}</span>
-                    {(p.member_count ?? 0) >= p.capacity && <Badge variant="destructive" className="ml-2 text-xs">Full</Badge>}
+                    <span className="font-mono text-sm">{p.member_count ?? 0}/{p.total_capacity ?? p.capacity}</span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Active" : "Inactive"}</Badge>
+                    <Badge variant={seatsLeft > 2 ? "secondary" : seatsLeft > 0 ? "default" : "destructive"} className="text-xs">
+                      {seatsLeft}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {(p.waitlist_count ?? 0) > 0 ? (
+                      <Badge variant="destructive" className="text-xs">{p.waitlist_count} waiting</Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">0</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Active" : "Inactive"}</Badge>
+                      {needsGroup && (
+                        <Badge variant="outline" className="text-xs border-destructive text-destructive flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" /> Add group
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
@@ -236,7 +283,8 @@ const PackagesManager = () => {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>
