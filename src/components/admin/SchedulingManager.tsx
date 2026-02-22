@@ -196,6 +196,19 @@ const PackagesManager = () => {
     toast({ title: "Group created", description: `"${defaultName}" added to Groups tab.` });
   };
 
+  const handleDeletePackage = async (p: Package) => {
+    if (!confirm(`Delete this slot? (${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)})\n\nThis will also deactivate any groups linked to it.`)) return;
+    // Deactivate linked groups first
+    await (supabase as any).from("pkg_groups").update({ is_active: false }).eq("package_id", p.id);
+    const { error } = await (supabase as any).from("schedule_packages").delete().eq("id", p.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Slot deleted" });
+    fetchPackages();
+  };
+
   const displayed = packages.filter((p) => {
     const lvl = filterLevel === "all" || p.level === filterLevel;
     const act = filterActive === "all" || (filterActive === "active" ? p.is_active : !p.is_active);
@@ -221,7 +234,7 @@ const PackagesManager = () => {
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> New Package</Button>
+        <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> New Slot</Button>
       </div>
 
       {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
@@ -287,6 +300,9 @@ const PackagesManager = () => {
                     <Button variant="ghost" size="sm" onClick={() => handleToggleActive(p)}>
                       {p.is_active ? "Disable" : "Enable"}
                     </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeletePackage(p)} title="Delete slot">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
                 );
@@ -299,8 +315,8 @@ const PackagesManager = () => {
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Package" : "New Package"}</DialogTitle>
-            <DialogDescription>Configure schedule package details.</DialogDescription>
+            <DialogTitle>{editing ? "Edit Slot" : "New Slot"}</DialogTitle>
+            <DialogDescription>Configure teacher available slot details.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -351,7 +367,7 @@ const PackagesManager = () => {
               <Switch checked={fActive} onCheckedChange={setFActive} />
               <Label>Active</Label>
             </div>
-            <Button className="w-full" onClick={handleSave}>{editing ? "Save Changes" : "Create Package"}</Button>
+            <Button className="w-full" onClick={handleSave}>{editing ? "Save Changes" : "Create Slot"}</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1034,7 +1050,7 @@ const SchedulingManager = () => {
   return (
     <Tabs defaultValue="packages">
       <TabsList className="mb-4">
-        <TabsTrigger value="packages">Packages</TabsTrigger>
+        <TabsTrigger value="packages">Teacher Available Slots</TabsTrigger>
         <TabsTrigger value="groups">Groups</TabsTrigger>
         <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
         <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" /> Notifications</TabsTrigger>
