@@ -17,7 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight, UserPlus, Search } from "lucide-react";
 import AdminNotifications from "./AdminNotifications";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -376,6 +376,15 @@ interface EnrichedGroup {
 
 // ─── Groups Manager ───────────────────────────────────────────────────────────
 
+interface SearchResult {
+  id: string;
+  name: string;
+  email: string;
+  user_id: string | null;
+  source: "registered" | "lead";
+  already_in_group?: boolean;
+}
+
 const GroupsManager = () => {
   const [groups, setGroups] = useState<EnrichedGroup[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
@@ -392,6 +401,12 @@ const GroupsManager = () => {
   const [addPkgId, setAddPkgId] = useState("");
   const [addName, setAddName] = useState("");
   const [addCapacity, setAddCapacity] = useState(5);
+
+  // Add student dialog
+  const [addStudentGroupId, setAddStudentGroupId] = useState<string | null>(null);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -554,6 +569,76 @@ const GroupsManager = () => {
     fetchAll();
   };
 
+  // ── Add Student to Group ──────────────────────────────────────────────────
+  const openAddStudent = (groupId: string) => {
+    setAddStudentGroupId(groupId);
+    setStudentSearch("");
+    setSearchResults([]);
+  };
+
+  const handleSearchStudents = async (query: string) => {
+    setStudentSearch(query);
+    if (query.trim().length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+
+    const term = `%${query.trim()}%`;
+    const group = groups.find((g) => g.id === addStudentGroupId);
+    const existingUserIds = new Set(group?.members.map((m) => m.user_id) || []);
+
+    // Search profiles and leads in parallel
+    const [profRes, leadRes] = await Promise.all([
+      (supabase as any).from("profiles").select("user_id, name, email").or(`name.ilike.${term},email.ilike.${term}`).limit(20),
+      (supabase as any).from("leads").select("id, name, email").or(`name.ilike.${term},email.ilike.${term}`).limit(20),
+    ]);
+
+    const results: SearchResult[] = [];
+
+    // Registered users
+    (profRes.data || []).forEach((p: any) => {
+      results.push({
+        id: p.user_id,
+        name: p.name,
+        email: p.email,
+        user_id: p.user_id,
+        source: "registered",
+        already_in_group: existingUserIds.has(p.user_id),
+      });
+    });
+
+    // Leads (no user_id)
+    (leadRes.data || []).forEach((l: any) => {
+      // Skip if a profile with same email already appeared
+      if (results.some((r) => r.email === l.email)) return;
+      results.push({
+        id: l.id,
+        name: l.name,
+        email: l.email,
+        user_id: null,
+        source: "lead",
+      });
+    });
+
+    setSearchResults(results);
+    setSearchLoading(false);
+  };
+
+  const handleAddStudentToGroup = async (result: SearchResult) => {
+    if (!addStudentGroupId || !result.user_id) return;
+    const { error } = await (supabase as any).from("pkg_group_members").insert({
+      group_id: addStudentGroupId,
+      user_id: result.user_id,
+      member_status: "active",
+    });
+    if (error) {
+      toast({ title: "Error adding student", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Student added", description: `${result.name} added to group.` });
+    // Mark as already in group in results
+    setSearchResults((prev) => prev.map((r) => r.id === result.id ? { ...r, already_in_group: true } : r));
+    fetchAll();
+  };
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -633,12 +718,17 @@ const GroupsManager = () => {
                   </div>
                 </div>
 
-                {/* Expand toggle */}
-                <Button variant="ghost" size="sm" onClick={() => toggleExpand(g.id)} className="shrink-0">
-                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  <Users className="h-4 w-4 ml-1" />
-                  <span className="text-xs ml-1">{g.members.length}</span>
-                </Button>
+                {/* Add Student + Expand toggle */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => openAddStudent(g.id)} title="Add student to group" className="h-8 w-8 p-0">
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => toggleExpand(g.id)}>
+                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    <Users className="h-4 w-4 ml-1" />
+                    <span className="text-xs ml-1">{g.members.length}</span>
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 
@@ -701,6 +791,63 @@ const GroupsManager = () => {
               <Input type="number" value={addCapacity} onChange={(e) => setAddCapacity(Number(e.target.value))} min={1} />
             </div>
             <Button className="w-full" onClick={handleAddGroup} disabled={!addPkgId}>Create Group</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Student Dialog */}
+      <Dialog open={!!addStudentGroupId} onOpenChange={(open) => { if (!open) setAddStudentGroupId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Student to Group</DialogTitle>
+            <DialogDescription>Search by name or email across registered users and leads.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name or email..."
+                value={studentSearch}
+                onChange={(e) => handleSearchStudents(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+
+            {searchLoading && <p className="text-sm text-muted-foreground text-center py-2">Searching...</p>}
+
+            {!searchLoading && studentSearch.length >= 2 && searchResults.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-2">No results found.</p>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="max-h-64 overflow-y-auto space-y-1.5">
+                {searchResults.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
+                        <Badge variant={r.source === "registered" ? "default" : "outline"} className="text-xs shrink-0">
+                          {r.source === "registered" ? "Registered" : "Lead"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+                    </div>
+                    <div className="shrink-0 ml-2">
+                      {r.already_in_group ? (
+                        <Badge variant="secondary" className="text-xs">Already in group</Badge>
+                      ) : r.source === "lead" ? (
+                        <Badge variant="outline" className="text-xs text-muted-foreground">Not registered</Badge>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => handleAddStudentToGroup(r)}>
+                          <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
