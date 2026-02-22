@@ -1,41 +1,50 @@
 
 
-# Actionable "Complete Your Registration" Banner
+# Improve Groups Tab: Flat View with Students and Editable Names
 
-## What changes
+## Problem
+The current Groups tab requires selecting a package first before seeing any groups. The user wants a flat, comprehensive view of ALL groups with their students visible, auto-linked from the matcher, with admin-editable names.
 
-The Student Dashboard already detects missing information (preferred days, timezone, Korean level, country, name) and shows a red alert. However, the alert only lists items passively with "Please contact us." Students don't know where to go or what to do.
+## Changes to `src/components/admin/SchedulingManager.tsx` (GroupsManager section)
 
-### Changes to Student Dashboard (`src/pages/StudentDashboard.tsx`)
+### 1. Remove package-selection gate -- show all active groups at once
+- Fetch all active `pkg_groups` joined with their parent `schedule_packages` info (level, day, time, type)
+- Display in a single flat list/table, no need to pick a package first
 
-1. **Replace passive alert with an actionable "Complete Registration" card** that has a progress indicator (e.g., "3 of 5 steps complete") and individual fix buttons for each missing item.
+### 2. Enhanced group cards showing:
+- **Group Name** (editable inline with a pencil icon -- clicking opens an input to rename and save)
+- **Level** badge (from parent `schedule_packages.level`)
+- **Type** badge (group/private from parent `schedule_packages.course_type`)
+- **Day and Time** (from parent package)
+- **Student count** (e.g., "3/5 active, 1 waitlisted")
+- **Student roster** shown expanded by default or with a single click:
+  - Each student: name, email, status badge (active/waitlist)
+  - Remove button per student
 
-2. **Each missing item gets a direct action:**
-   - **Full name** -- inline text input + save button (updates `profiles.name`)
-   - **Korean level** -- inline dropdown (Beginner/Intermediate/Advanced) + save (updates `profiles.level`)
-   - **Country** -- inline text input + save (updates `profiles.country`)
-   - **Preferred class days** -- "Go to My Schedule" button linking to `/dashboard/schedule` where the SchedulePicker already handles this
-   - **Timezone** -- inline dropdown of common timezones + save (updates `enrollments.timezone`)
+### 3. Auto-linking
+- Groups are already auto-created by the `assign_student_to_group_from_slot` RPC and `ensure_pkg_groups_for_packages` RPC -- no change needed there
+- The view simply reads from `pkg_groups` + `pkg_group_members` + `profiles`
 
-3. **Visual urgency:** The card uses a warning/amber style (not destructive red) with a clear title: "Complete these steps to finalize your registration." Each completed item shows a green checkmark; incomplete items show an orange circle.
+### 4. Sync + Clean button remains
+- Keeps the existing RPCs for maintenance
 
-4. **After saving any field inline**, the item updates to "completed" with a checkmark immediately (optimistic UI + actual DB write).
+### 5. Add Group button
+- Still available, creates a group under a selected package (admin picks package from dropdown in the dialog)
 
-5. **Block journey stepper progression:** The `JourneyStepper` stays at stage 1 ("Registration") instead of stage 2 when there are missing blockers (preferred days or level), making it clear the student hasn't completed registration yet.
+## Technical Details
 
-### Changes to My Schedule Page (`src/pages/MySchedulePage.tsx`)
+**Data fetching strategy (single load):**
+1. Fetch all `pkg_groups` where `is_active = true`, with parent package info
+2. Fetch all `pkg_group_members` for those group IDs
+3. Fetch `profiles` for all member user_ids
+4. Combine into a rich view
 
-6. **No schedule selected state improvement:** When a student arrives at `/dashboard/schedule` with no schedule preference, show a more prominent call-to-action explaining they need to pick a day/time to complete registration, rather than just a small "No schedule selected yet" text.
-
-### Technical Details
+**Inline name editing:**
+- Pencil icon next to group name toggles an input field
+- On blur or Enter, calls `supabase.from("pkg_groups").update({ name }).eq("id", groupId)`
 
 **Files to modify:**
-- `src/pages/StudentDashboard.tsx` -- replace passive alert with interactive completion card; add inline editors for name, level, country, timezone; adjust JourneyStepper stage based on completion
-- `src/pages/MySchedulePage.tsx` -- improve empty-state messaging for students arriving to fix their missing schedule
+- `src/components/admin/SchedulingManager.tsx` -- rewrite `GroupsManager` component
 
-**Database writes (using existing RLS -- no migration needed):**
-- `profiles` table: users can already update their own profile (name, level, country)
-- `enrollments` table: users can already update their own enrollments (timezone, preferred_days)
-
-**No new dependencies or database changes required.**
+**No database changes needed.**
 
