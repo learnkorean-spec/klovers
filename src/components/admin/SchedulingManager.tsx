@@ -177,6 +177,12 @@ const PackagesManager = () => {
   };
 
   const handleAddGroup = async (p: Package) => {
+    // Check if an active group already exists for this package
+    const { data: existing } = await (supabase as any).from("pkg_groups").select("id").eq("package_id", p.id).eq("is_active", true).limit(1);
+    if (existing && existing.length > 0) {
+      toast({ title: "Group already exists", description: "This package already has an active group.", variant: "destructive" });
+      return;
+    }
     const defaultName = `${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)}`;
     const { error } = await (supabase as any).from("pkg_groups").insert({
       package_id: p.id,
@@ -553,6 +559,12 @@ const GroupsManager = () => {
 
   const handleAddGroup = async () => {
     if (!addPkgId) return;
+    // Check if an active group already exists for this package
+    const { data: existing } = await (supabase as any).from("pkg_groups").select("id").eq("package_id", addPkgId).eq("is_active", true).limit(1);
+    if (existing && existing.length > 0) {
+      toast({ title: "Group already exists", description: "This package already has an active group. Each package can only have one group.", variant: "destructive" });
+      return;
+    }
     const pkg = packages.find((p) => p.id === addPkgId);
     const name = addName.trim() || (pkg ? `${pkg.level.replace("_", " ")} – ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}` : "New Group");
     const { error } = await (supabase as any).from("pkg_groups").insert({
@@ -592,9 +604,11 @@ const GroupsManager = () => {
     ]);
 
     const results: SearchResult[] = [];
+    const profileEmails = new Set<string>();
 
     // Registered users
     (profRes.data || []).forEach((p: any) => {
+      profileEmails.add(p.email?.toLowerCase());
       results.push({
         id: p.user_id,
         name: p.name,
@@ -605,18 +619,40 @@ const GroupsManager = () => {
       });
     });
 
-    // Leads (no user_id)
-    (leadRes.data || []).forEach((l: any) => {
-      // Skip if a profile with same email already appeared
-      if (results.some((r) => r.email === l.email)) return;
-      results.push({
-        id: l.id,
-        name: l.name,
-        email: l.email,
-        user_id: null,
-        source: "lead",
-      });
-    });
+    // Leads — try to resolve to a registered profile by email match
+    for (const l of (leadRes.data || [])) {
+      const emailLower = l.email?.toLowerCase();
+      // Skip if already shown as a registered user
+      if (profileEmails.has(emailLower)) continue;
+
+      // Check if this lead has a matching profile (registered but not found by name/email search above)
+      const { data: matchedProfiles } = await (supabase as any)
+        .from("profiles")
+        .select("user_id, name, email")
+        .eq("email", l.email)
+        .limit(1);
+
+      if (matchedProfiles && matchedProfiles.length > 0) {
+        const mp = matchedProfiles[0];
+        profileEmails.add(mp.email?.toLowerCase());
+        results.push({
+          id: mp.user_id,
+          name: l.name || mp.name,
+          email: mp.email,
+          user_id: mp.user_id,
+          source: "registered",
+          already_in_group: existingUserIds.has(mp.user_id),
+        });
+      } else {
+        results.push({
+          id: l.id,
+          name: l.name,
+          email: l.email,
+          user_id: null,
+          source: "lead",
+        });
+      }
+    }
 
     setSearchResults(results);
     setSearchLoading(false);
@@ -774,7 +810,7 @@ const GroupsManager = () => {
               <Select value={addPkgId} onValueChange={setAddPkgId}>
                 <SelectTrigger><SelectValue placeholder="Select package..." /></SelectTrigger>
                 <SelectContent>
-                  {packages.filter((p) => p.is_active).map((p) => (
+                  {packages.filter((p) => p.is_active && !groups.some((g) => g.package_id === p.id)).map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.level.replace("_", " ")} · {DAY_NAMES[p.day_of_week]} {formatTime(p.start_time)} ({p.course_type})
                     </SelectItem>
