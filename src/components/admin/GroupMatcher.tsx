@@ -299,14 +299,32 @@ const GroupMatcher = () => {
       // Also create a pkg_groups entry so it appears in the Scheduling > Groups tab
       const dayNum = Object.entries(DAY_NAMES).find(([, v]) => v === cluster.days[0])?.[0];
       if (dayNum !== undefined) {
-        const { data: pkg } = await supabase
+        let pkg = await supabase
           .from("schedule_packages")
           .select("id, capacity")
           .eq("level", cluster.level)
           .eq("day_of_week", Number(dayNum))
           .eq("is_active", true)
           .limit(1)
-          .maybeSingle();
+          .maybeSingle()
+          .then(r => r.data);
+
+        // If no matching schedule_package exists, create one automatically
+        if (!pkg) {
+          const { data: newPkg } = await supabase
+            .from("schedule_packages")
+            .insert({
+              level: cluster.level,
+              day_of_week: Number(dayNum),
+              start_time: cluster.start || "18:00",
+              capacity: Math.max(cluster.members.length, 5),
+              is_active: true,
+              course_type: "group",
+            })
+            .select("id, capacity")
+            .single();
+          pkg = newPkg;
+        }
 
         if (pkg) {
           // Create pkg_group linked to this schedule_package
@@ -329,7 +347,10 @@ const GroupMatcher = () => {
               member_status: "active",
               enrollment_id: m.id,
             }));
-            await supabase.from("pkg_group_members").insert(pkgMembers as any);
+            const { error: memberErr } = await supabase.from("pkg_group_members").insert(pkgMembers as any);
+            if (memberErr) {
+              console.error("Failed to insert pkg_group_members:", memberErr);
+            }
           }
 
           // Check current member count for capacity notification
