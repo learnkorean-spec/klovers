@@ -1097,98 +1097,149 @@ const AdminDashboard = () => {
 
             {/* ATTENDANCE TAB */}
             <TabsContent value="attendance" className="space-y-4">
-              {attendanceReqs.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No attendance requests.</p>
-              ) : (() => {
-                const byUser: Record<string, { name: string; email: string; requests: typeof attendanceReqs }> = {};
-                attendanceReqs.forEach((a) => {
-                  const key = a.user_id;
-                  if (!byUser[key]) {
-                    byUser[key] = {
-                      name: (a as any).profiles?.name || "Unknown",
-                      email: (a as any).profiles?.email || "",
-                      requests: [],
-                    };
-                  }
-                  byUser[key].requests.push(a);
-                });
+              {/* Admin-logged attendance section */}
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Log Attendance</CardTitle>
+                  <p className="text-xs text-muted-foreground">Select a student to add/view attendance</p>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={selectedStudentId || ""}
+                    onValueChange={(v) => setSelectedStudentId(v || null)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a student..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {overviewRows
+                        .filter(u => u.enrollment_id && (u.derived_status === "ACTIVE" || u.derived_status === "LOCKED"))
+                        .sort((a, b) => (a.name || a.email || "").localeCompare(b.name || b.email || ""))
+                        .map(u => (
+                          <SelectItem key={u.user_id} value={u.user_id}>
+                            {u.name || u.email} — {u.sessions_remaining ?? 0} left
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
 
-                return Object.entries(byUser).map(([userId, { name, email, requests }]) => {
-                  const pendingCount = requests.filter(r => r.status === "PENDING").length;
-                  const approvedCount = requests.filter(r => r.status === "APPROVED").length;
-                  const rejectedCount = requests.filter(r => r.status === "REJECTED").length;
-                  const groupName = userGroupMap[userId];
-                  const overviewRecord = overviewRows.find(o => o.user_id === userId);
-                  const remainingSessions = overviewRecord?.sessions_remaining ?? null;
-
-                  return (
-                    <Card key={userId}>
-                      <CardContent className="pt-6 space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div>
-                            <p className="font-semibold text-foreground">{name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {email}
-                              {groupName && <> · <span className="font-medium text-foreground">Group: {groupName}</span></>}
-                              {remainingSessions !== null && <> · Sessions left: <span className="font-medium text-foreground">{remainingSessions}</span></>}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs">
-                            <Badge variant="secondary">{requests.length} total</Badge>
-                            {approvedCount > 0 && <Badge variant="default">{approvedCount} approved</Badge>}
-                            {pendingCount > 0 && <Badge variant="outline" className="border-yellow-500 text-yellow-600">{pendingCount} pending</Badge>}
-                            {rejectedCount > 0 && <Badge variant="destructive">{rejectedCount} rejected</Badge>}
-                          </div>
-                        </div>
-
-                        <div className="border rounded-lg overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="py-2 px-3">Date</TableHead>
-                                <TableHead className="py-2 px-3">Submitted</TableHead>
-                                <TableHead className="py-2 px-3">Status</TableHead>
-                                <TableHead className="py-2 px-3 text-right">Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {requests.map((a) => (
-                                <TableRow key={a.id} className="even:bg-muted/30 hover:bg-muted/50">
-                                  <TableCell className="py-2 px-3 font-medium text-foreground">{a.request_date}</TableCell>
-                                  <TableCell className="py-2 px-3 text-muted-foreground text-xs">
-                                    {new Date(a.created_at).toLocaleDateString()}
-                                  </TableCell>
-                                  <TableCell className="py-2 px-3">
-                                    <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
-                                      {a.status}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="py-2 px-3 text-right">
-                                    {a.status === "PENDING" ? (
-                                      <div className="flex items-center justify-end gap-1">
-                                        <Button size="sm" onClick={() => handleAttendanceAction(a, "APPROVED")}>
-                                          <Check className="h-4 w-4 mr-1" /> Approve
-                                        </Button>
-                                        <Button size="sm" variant="destructive" onClick={() => handleAttendanceAction(a, "REJECTED")}>
-                                          <X className="h-4 w-4 mr-1" /> Reject
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <Button size="sm" variant="outline" onClick={() => handleRevertAttendance(a)}>
-                                        <Undo2 className="h-4 w-4 mr-1" /> Undo
-                                      </Button>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                });
+              {selectedStudentId && (() => {
+                const student = overviewRows.find(u => u.user_id === selectedStudentId);
+                if (!student || !student.enrollment_id) return null;
+                return (
+                  <AdminAttendancePanel
+                    enrollmentId={student.enrollment_id}
+                    userId={student.user_id}
+                    studentName={student.name || student.email}
+                    sessionsRemaining={student.sessions_remaining}
+                    negativeSessions={student.negative_sessions}
+                    amountDue={student.amount_due}
+                    currency={student.currency}
+                    derivedStatus={student.derived_status}
+                    onClose={() => setSelectedStudentId(null)}
+                    onUpdated={fetchAll}
+                  />
+                );
               })()}
+
+              {/* Student-initiated requests */}
+              {attendanceReqs.length > 0 && (
+                <>
+                  <h3 className="text-sm font-semibold text-foreground pt-2">Student Requests</h3>
+                  {(() => {
+                    const byUser: Record<string, { name: string; email: string; requests: typeof attendanceReqs }> = {};
+                    attendanceReqs.forEach((a) => {
+                      const key = a.user_id;
+                      if (!byUser[key]) {
+                        byUser[key] = {
+                          name: (a as any).profiles?.name || "Unknown",
+                          email: (a as any).profiles?.email || "",
+                          requests: [],
+                        };
+                      }
+                      byUser[key].requests.push(a);
+                    });
+
+                    return Object.entries(byUser).map(([userId, { name, email, requests }]) => {
+                      const pendingCount = requests.filter(r => r.status === "PENDING").length;
+                      const approvedCount = requests.filter(r => r.status === "APPROVED").length;
+                      const rejectedCount = requests.filter(r => r.status === "REJECTED").length;
+                      const groupName = userGroupMap[userId];
+                      const overviewRecord = overviewRows.find(o => o.user_id === userId);
+                      const remainingSessions = overviewRecord?.sessions_remaining ?? null;
+
+                      return (
+                        <Card key={userId}>
+                          <CardContent className="pt-6 space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div>
+                                <p className="font-semibold text-foreground">{name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {email}
+                                  {groupName && <> · <span className="font-medium text-foreground">Group: {groupName}</span></>}
+                                  {remainingSessions !== null && <> · Sessions left: <span className="font-medium text-foreground">{remainingSessions}</span></>}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs">
+                                <Badge variant="secondary">{requests.length} total</Badge>
+                                {approvedCount > 0 && <Badge variant="default">{approvedCount} approved</Badge>}
+                                {pendingCount > 0 && <Badge variant="outline" className="border-yellow-500 text-yellow-600">{pendingCount} pending</Badge>}
+                                {rejectedCount > 0 && <Badge variant="destructive">{rejectedCount} rejected</Badge>}
+                              </div>
+                            </div>
+
+                            <div className="border rounded-lg overflow-hidden">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="py-2 px-3">Date</TableHead>
+                                    <TableHead className="py-2 px-3">Submitted</TableHead>
+                                    <TableHead className="py-2 px-3">Status</TableHead>
+                                    <TableHead className="py-2 px-3 text-right">Actions</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {requests.map((a) => (
+                                    <TableRow key={a.id} className="even:bg-muted/30 hover:bg-muted/50">
+                                      <TableCell className="py-2 px-3 font-medium text-foreground">{a.request_date}</TableCell>
+                                      <TableCell className="py-2 px-3 text-muted-foreground text-xs">
+                                        {new Date(a.created_at).toLocaleDateString()}
+                                      </TableCell>
+                                      <TableCell className="py-2 px-3">
+                                        <Badge variant={a.status === "APPROVED" ? "default" : a.status === "REJECTED" ? "destructive" : "secondary"}>
+                                          {a.status}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className="py-2 px-3 text-right">
+                                        {a.status === "PENDING" ? (
+                                          <div className="flex items-center justify-end gap-1">
+                                            <Button size="sm" onClick={() => handleAttendanceAction(a, "APPROVED")}>
+                                              <Check className="h-4 w-4 mr-1" /> Approve
+                                            </Button>
+                                            <Button size="sm" variant="destructive" onClick={() => handleAttendanceAction(a, "REJECTED")}>
+                                              <X className="h-4 w-4 mr-1" /> Reject
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <Button size="sm" variant="outline" onClick={() => handleRevertAttendance(a)}>
+                                            <Undo2 className="h-4 w-4 mr-1" /> Undo
+                                          </Button>
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    });
+                  })()}
+                </>
+              )}
             </TabsContent>
 
             {/* LEADS TAB */}
