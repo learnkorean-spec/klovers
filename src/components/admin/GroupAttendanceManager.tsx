@@ -47,7 +47,7 @@ interface Session {
 }
 
 interface AttendanceRow {
-  id: string;
+  id: string; // composite key: session_id + user_id
   session_id: string;
   user_id: string;
   status: string;
@@ -213,8 +213,30 @@ const GroupAttendanceManager = () => {
   const [adminTimes, setAdminTimes] = useState<string[]>([]);
 
   const fetchGroups = async () => {
-    const { data } = await supabase.from("student_groups").select("id, name, schedule_day, schedule_time, schedule_timezone, level, capacity, course_type").order("name");
-    if (data) setGroups(data);
+    // Fetch active pkg_groups with schedule info from schedule_packages
+    const { data: pkgGroups } = await supabase
+      .from("pkg_groups")
+      .select("id, name, capacity, package_id, schedule_packages(level, day_of_week, start_time, timezone, course_type)")
+      .eq("is_active", true)
+      .order("name");
+
+    if (pkgGroups) {
+      const DAY_NAMES_MAP = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const mapped: Group[] = pkgGroups.map((g: any) => {
+        const pkg = g.schedule_packages || {};
+        return {
+          id: g.id,
+          name: g.name,
+          schedule_day: pkg.day_of_week != null ? DAY_NAMES_MAP[pkg.day_of_week] : null,
+          schedule_time: pkg.start_time ? formatStartTime(pkg.start_time) : null,
+          schedule_timezone: pkg.timezone || null,
+          level: pkg.level || null,
+          capacity: g.capacity,
+          course_type: pkg.course_type || "group",
+        };
+      });
+      setGroups(mapped);
+    }
   };
 
   // Fetch available days from schedule_packages + time windows from schedule_options
@@ -291,7 +313,7 @@ const GroupAttendanceManager = () => {
       });
 
     supabase
-      .from("group_sessions")
+      .from("pkg_group_sessions")
       .select("*")
       .eq("group_id", selectedGroup)
       .order("session_date", { ascending: false })
@@ -309,7 +331,7 @@ const GroupAttendanceManager = () => {
   const loadAttendance = async (sessionId: string) => {
     setLoading(true);
     const { data: rows, error } = await supabase
-      .from("group_attendance")
+      .from("pkg_attendance")
       .select("*")
       .eq("session_id", sessionId)
       .order("created_at");
@@ -332,6 +354,8 @@ const GroupAttendanceManager = () => {
     setAttendanceRows(
       (rows as any[]).map((r) => ({
         ...r,
+        id: `${r.session_id}__${r.user_id}`, // composite key
+        source: "system",
         student_name: profileMap[r.user_id]?.name || "Unknown",
         student_email: profileMap[r.user_id]?.email || "",
         student_avatar: profileMap[r.user_id]?.avatar_url || "",
@@ -360,7 +384,7 @@ const GroupAttendanceManager = () => {
     setCreating(true);
 
     const { data: session, error: sessionErr } = await supabase
-      .from("group_sessions")
+      .from("pkg_group_sessions")
       .insert({ group_id: selectedGroup, session_date: sessionDate } as any)
       .select()
       .single();
@@ -377,39 +401,26 @@ const GroupAttendanceManager = () => {
       return;
     }
 
-    const group = groups.find(g => g.id === selectedGroup);
-    if (!group) { setCreating(false); return; }
+    // Pre-populate attendance from pkg_group_members
+    const { data: members } = await supabase
+      .from("pkg_group_members")
+      .select("user_id")
+      .eq("group_id", selectedGroup)
+      .eq("member_status", "active");
 
-    const { data: students } = await supabase
-      .from("students")
-      .select("email")
-      .eq("group_name", group.name);
-
-    if (students && students.length > 0) {
-      const emails = students.map((s: any) => s.email.toLowerCase());
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, email");
-
-      const matchedUserIds = (profiles || [])
-        .filter((p: any) => emails.includes(p.email.toLowerCase()))
-        .map((p: any) => p.user_id);
-
-      if (matchedUserIds.length > 0) {
-        const rows = matchedUserIds.map((uid: string) => ({
-          session_id: (session as any).id,
-          user_id: uid,
-          status: "absent",
-          source: "system",
-          admin_approved: false,
-        }));
-        await supabase.from("group_attendance").insert(rows as any);
-      }
+    if (members && members.length > 0) {
+      const rows = members.map((m: any) => ({
+        session_id: (session as any).id,
+        user_id: m.user_id,
+        status: "absent",
+        admin_approved: false,
+      }));
+      await supabase.from("pkg_attendance").insert(rows as any);
     }
 
     toast({ title: "Session created" });
     const { data: updatedSessions } = await supabase
-      .from("group_sessions")
+      .from("pkg_group_sessions")
       .select("*")
       .eq("group_id", selectedGroup)
       .order("session_date", { ascending: false });
@@ -419,23 +430,20 @@ const GroupAttendanceManager = () => {
   };
 
   const handleStatusChange = async (attId: string, newStatus: string) => {
+    const row = attendanceRows.find(r => r.id === attId);
+    if (!row) return;
     const isPresent = newStatus === "present";
     const { error } = await supabase
-      .from("group_attendance")
-      .update({ status: newStatus, source: "admin", admin_approved: isPresent } as any)
-      .eq("id", attId);
+      .from("pkg_attendance")
+      .update({ status: newStatus, admin_approved: isPresent } as any)
+      .eq("session_id", row.session_id)
+      .eq("user_id", row.user_id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-    if (isPresent) {
-      const row = attendanceRows.find(r => r.id === attId);
-      if (row && !row.admin_approved) {
-        await supabase.rpc("approve_group_attendance", { _attendance_id: attId } as any);
-      }
-    }
     setAttendanceRows(prev =>
-      prev.map(r => r.id === attId ? { ...r, status: newStatus, source: "admin", admin_approved: isPresent || r.admin_approved } : r)
+      prev.map(r => r.id === attId ? { ...r, status: newStatus, admin_approved: isPresent || r.admin_approved } : r)
     );
   };
 
@@ -447,19 +455,16 @@ const GroupAttendanceManager = () => {
     }
 
     for (const row of toMark) {
-      if (!row.admin_approved) {
-        await supabase.rpc("approve_group_attendance", { _attendance_id: row.id } as any);
-      } else if (row.status !== "present") {
-        await supabase
-          .from("group_attendance")
-          .update({ status: "present", source: "admin", admin_approved: true } as any)
-          .eq("id", row.id);
-      }
+      await supabase
+        .from("pkg_attendance")
+        .update({ status: "present", admin_approved: true } as any)
+        .eq("session_id", row.session_id)
+        .eq("user_id", row.user_id);
     }
 
     toast({ title: "All students marked present ✓" });
     setAttendanceRows(prev =>
-      prev.map(r => ({ ...r, status: "present", source: "admin", admin_approved: true }))
+      prev.map(r => ({ ...r, status: "present", admin_approved: true }))
     );
   };
 
