@@ -565,6 +565,21 @@ const GroupsManager = () => {
     fetchAll();
   };
 
+  // Delete group
+  const handleDeleteGroup = async (g: EnrichedGroup) => {
+    if (!confirm(`Delete group "${g.name}"?\n\nThis will remove all ${g.members.length} member(s) from this group.`)) return;
+    // Delete members first
+    await (supabase as any).from("pkg_group_members").delete().eq("group_id", g.id);
+    // Deactivate (soft-delete) the group
+    const { error } = await (supabase as any).from("pkg_groups").update({ is_active: false }).eq("id", g.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Group deleted" });
+      fetchAll();
+    }
+  };
+
   // Add group
   const openAddGroup = () => {
     setAddPkgId("");
@@ -770,10 +785,16 @@ const GroupsManager = () => {
                   </div>
                 </div>
 
-                {/* Add Student + Expand toggle */}
+                {/* Add Student + Delete + Expand toggle */}
                 <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => startEditName(g)} title="Edit name" className="h-8 w-8 p-0">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => openAddStudent(g.id)} title="Add student to group" className="h-8 w-8 p-0">
                     <UserPlus className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteGroup(g)} title="Delete group">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => toggleExpand(g.id)}>
                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
