@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -50,6 +52,8 @@ const GroupMatcher = () => {
   const [creating, setCreating] = useState<string | null>(null);
   const [createdGroup, setCreatedGroup] = useState<{ name: string; level: string } | null>(null);
   const [suggestedSlots, setSuggestedSlots] = useState<SuggestedSlot[]>([]);
+  const [nameDialogCluster, setNameDialogCluster] = useState<Cluster | null>(null);
+  const [groupNameInput, setGroupNameInput] = useState("");
 
   const fetchUnmatched = async () => {
     setLoading(true);
@@ -218,11 +222,16 @@ const GroupMatcher = () => {
     setSuggestedSlots(suggestions);
   };
 
-  const handleCreateGroup = async (cluster: Cluster) => {
+  const openNameDialog = (cluster: Cluster) => {
+    const defaultName = `${cluster.level.replace(/_/g, " ")} – ${cluster.days.join("/")} ${cluster.start}`;
+    setGroupNameInput(defaultName);
+    setNameDialogCluster(cluster);
+  };
+
+  const handleCreateGroup = async (cluster: Cluster, groupName: string) => {
+    setNameDialogCluster(null);
     setCreating(cluster.key);
     try {
-      const groupName = `${cluster.days.join("/")} – ${cluster.start} (Auto)`;
-
       // Create student_groups entry
       const { data: group, error: groupError } = await supabase
         .from("student_groups")
@@ -287,7 +296,7 @@ const GroupMatcher = () => {
           .eq("id", matchingSlots[0].id);
       }
 
-      // Also mark the schedule_package as full if capacity reached
+      // Also create a pkg_groups entry so it appears in the Scheduling > Groups tab
       const dayNum = Object.entries(DAY_NAMES).find(([, v]) => v === cluster.days[0])?.[0];
       if (dayNum !== undefined) {
         const { data: pkg } = await supabase
@@ -300,7 +309,30 @@ const GroupMatcher = () => {
           .maybeSingle();
 
         if (pkg) {
-          // Check current member count
+          // Create pkg_group linked to this schedule_package
+          const { data: newPkgGroup } = await supabase
+            .from("pkg_groups")
+            .insert({
+              package_id: pkg.id,
+              name: groupName,
+              capacity: pkg.capacity,
+              is_active: true,
+            })
+            .select("id")
+            .single();
+
+          // Add members to pkg_group_members
+          if (newPkgGroup) {
+            const pkgMembers = cluster.members.map((m) => ({
+              group_id: newPkgGroup.id,
+              user_id: m.user_id,
+              member_status: "active",
+              enrollment_id: m.id,
+            }));
+            await supabase.from("pkg_group_members").insert(pkgMembers as any);
+          }
+
+          // Check current member count for capacity notification
           const { data: pkgGroups } = await supabase
             .from("pkg_groups")
             .select("id")
@@ -315,11 +347,9 @@ const GroupMatcher = () => {
               .in("group_id", pgIds)
               .eq("member_status", "active");
 
-            const totalMembers = (count || 0) + cluster.members.length;
-            if (totalMembers >= pkg.capacity) {
-              // Notify admin that this slot is now full
+            if ((count || 0) >= pkg.capacity) {
               await supabase.from("admin_notifications").insert({
-                message: `Schedule package for ${cluster.level} on ${cluster.days[0]} is now at capacity (${totalMembers}/${pkg.capacity}).`,
+                message: `Schedule package for ${cluster.level} on ${cluster.days[0]} is now at capacity (${count}/${pkg.capacity}).`,
                 type: "slot_full",
               });
             }
@@ -493,7 +523,7 @@ const GroupMatcher = () => {
                     {isReady && (
                       <Button
                         className="w-full"
-                        onClick={() => handleCreateGroup(cluster)}
+                        onClick={() => openNameDialog(cluster)}
                         disabled={creating === cluster.key}
                       >
                         {creating === cluster.key ? (
@@ -515,6 +545,33 @@ const GroupMatcher = () => {
           </div>
         </>
       )}
+      {/* Name Dialog */}
+      <Dialog open={!!nameDialogCluster} onOpenChange={(open) => { if (!open) setNameDialogCluster(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Name this group</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={groupNameInput}
+            onChange={(e) => setGroupNameInput(e.target.value)}
+            placeholder="e.g. Beginner 1 – Sunday 6 PM"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && groupNameInput.trim() && nameDialogCluster) {
+                handleCreateGroup(nameDialogCluster, groupNameInput.trim());
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNameDialogCluster(null)}>Cancel</Button>
+            <Button
+              disabled={!groupNameInput.trim()}
+              onClick={() => nameDialogCluster && handleCreateGroup(nameDialogCluster, groupNameInput.trim())}
+            >
+              Create Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
