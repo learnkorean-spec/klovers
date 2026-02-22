@@ -232,149 +232,98 @@ const GroupMatcher = () => {
     setNameDialogCluster(null);
     setCreating(cluster.key);
     try {
-      // Create student_groups entry
-      const { data: group, error: groupError } = await supabase
-        .from("student_groups")
+      const dayNum = Object.entries(DAY_NAMES).find(([, v]) => v === cluster.days[0])?.[0];
+
+      // Find or create schedule_package
+      let pkg = dayNum !== undefined
+        ? await supabase
+            .from("schedule_packages")
+            .select("id, capacity")
+            .eq("level", cluster.level)
+            .eq("day_of_week", Number(dayNum))
+            .eq("is_active", true)
+            .limit(1)
+            .maybeSingle()
+            .then(r => r.data)
+        : null;
+
+      if (!pkg && dayNum !== undefined) {
+        const { data: newPkg } = await supabase
+          .from("schedule_packages")
+          .insert({
+            level: cluster.level,
+            day_of_week: Number(dayNum),
+            start_time: cluster.start || "18:00",
+            capacity: Math.max(cluster.members.length, 5),
+            is_active: true,
+            course_type: "group",
+          })
+          .select("id, capacity")
+          .single();
+        pkg = newPkg;
+      }
+
+      if (!pkg) {
+        throw new Error("Could not find or create a schedule package for this level/day");
+      }
+
+      // Create pkg_group
+      const { data: newPkgGroup, error: groupError } = await supabase
+        .from("pkg_groups")
         .insert({
+          package_id: pkg.id,
           name: groupName,
-          schedule_day: cluster.days[0],
-          course_type: "group",
-          capacity: Math.max(cluster.members.length, 5),
-          level: cluster.level,
-        } as any)
+          capacity: pkg.capacity,
+          is_active: true,
+        })
         .select("id")
         .single();
 
-      if (groupError || !group) {
+      if (groupError || !newPkgGroup) {
         throw new Error(groupError?.message || "Failed to create group");
       }
 
-      const groupId = (group as any).id;
-
-      // Insert batch_members for each student
-      const batchInserts = cluster.members.map((m) => ({
-        batch_id: groupId,
+      // Add members to pkg_group_members
+      const pkgMembers = cluster.members.map((m) => ({
+        group_id: newPkgGroup.id,
         user_id: m.user_id,
-        enrollment_id: m.id,
         member_status: "active",
+        enrollment_id: m.id,
       }));
-
-      const { error: batchError } = await supabase
-        .from("batch_members")
-        .insert(batchInserts as any);
-
-      if (batchError) {
-        throw new Error(batchError.message);
+      const { error: memberErr } = await supabase.from("pkg_group_members").insert(pkgMembers as any);
+      if (memberErr) {
+        throw new Error("Failed to add members: " + memberErr.message);
       }
 
-      // Update enrollments with matched_batch_id
+      // Update enrollments to mark as matched
       const enrollmentIds = cluster.members.map((m) => m.id);
-      const { error: updateError } = await supabase
+      await supabase
         .from("enrollments")
         .update({
-          matched_batch_id: groupId,
           matched_at: new Date().toISOString(),
         } as any)
         .in("id", enrollmentIds);
 
-      if (updateError) {
-        throw new Error(updateError.message);
-      }
-
-      // Block matching_slot for this day/level if it exists
-      const { data: matchingSlots } = await supabase
-        .from("matching_slots")
+      // Check capacity and notify
+      const { data: pkgGroups } = await supabase
+        .from("pkg_groups")
         .select("id")
-        .eq("course_level", cluster.level)
-        .eq("day", cluster.days[0])
-        .neq("status", "full");
+        .eq("package_id", pkg.id)
+        .eq("is_active", true);
 
-      if (matchingSlots && matchingSlots.length > 0) {
-        await supabase
-          .from("matching_slots")
-          .update({ status: "full", current_count: (matchingSlots as any)[0].max_students || 5 } as any)
-          .eq("id", matchingSlots[0].id);
-      }
+      const pgIds = (pkgGroups || []).map(g => g.id);
+      if (pgIds.length > 0) {
+        const { count } = await supabase
+          .from("pkg_group_members")
+          .select("*", { count: "exact", head: true })
+          .in("group_id", pgIds)
+          .eq("member_status", "active");
 
-      // Also create a pkg_groups entry so it appears in the Scheduling > Groups tab
-      const dayNum = Object.entries(DAY_NAMES).find(([, v]) => v === cluster.days[0])?.[0];
-      if (dayNum !== undefined) {
-        let pkg = await supabase
-          .from("schedule_packages")
-          .select("id, capacity")
-          .eq("level", cluster.level)
-          .eq("day_of_week", Number(dayNum))
-          .eq("is_active", true)
-          .limit(1)
-          .maybeSingle()
-          .then(r => r.data);
-
-        // If no matching schedule_package exists, create one automatically
-        if (!pkg) {
-          const { data: newPkg } = await supabase
-            .from("schedule_packages")
-            .insert({
-              level: cluster.level,
-              day_of_week: Number(dayNum),
-              start_time: cluster.start || "18:00",
-              capacity: Math.max(cluster.members.length, 5),
-              is_active: true,
-              course_type: "group",
-            })
-            .select("id, capacity")
-            .single();
-          pkg = newPkg;
-        }
-
-        if (pkg) {
-          // Create pkg_group linked to this schedule_package
-          const { data: newPkgGroup } = await supabase
-            .from("pkg_groups")
-            .insert({
-              package_id: pkg.id,
-              name: groupName,
-              capacity: pkg.capacity,
-              is_active: true,
-            })
-            .select("id")
-            .single();
-
-          // Add members to pkg_group_members
-          if (newPkgGroup) {
-            const pkgMembers = cluster.members.map((m) => ({
-              group_id: newPkgGroup.id,
-              user_id: m.user_id,
-              member_status: "active",
-              enrollment_id: m.id,
-            }));
-            const { error: memberErr } = await supabase.from("pkg_group_members").insert(pkgMembers as any);
-            if (memberErr) {
-              console.error("Failed to insert pkg_group_members:", memberErr);
-            }
-          }
-
-          // Check current member count for capacity notification
-          const { data: pkgGroups } = await supabase
-            .from("pkg_groups")
-            .select("id")
-            .eq("package_id", pkg.id)
-            .eq("is_active", true);
-
-          const pgIds = (pkgGroups || []).map(g => g.id);
-          if (pgIds.length > 0) {
-            const { count } = await supabase
-              .from("pkg_group_members")
-              .select("*", { count: "exact", head: true })
-              .in("group_id", pgIds)
-              .eq("member_status", "active");
-
-            if ((count || 0) >= pkg.capacity) {
-              await supabase.from("admin_notifications").insert({
-                message: `Schedule package for ${cluster.level} on ${cluster.days[0]} is now at capacity (${count}/${pkg.capacity}).`,
-                type: "slot_full",
-              });
-            }
-          }
+        if ((count || 0) >= pkg.capacity) {
+          await supabase.from("admin_notifications").insert({
+            message: `Schedule package for ${cluster.level} on ${cluster.days[0]} is now at capacity (${count}/${pkg.capacity}).`,
+            type: "slot_full",
+          });
         }
       }
 
@@ -395,12 +344,10 @@ const GroupMatcher = () => {
         }
       }
 
-      toast({ title: "Group created!", description: `"${groupName}" with ${cluster.members.length} students. Slot blocked & emails sent!` });
+      toast({ title: "Group created!", description: `"${groupName}" with ${cluster.members.length} students. Emails sent!` });
 
-      // Set created group and fetch suggestions
       setCreatedGroup({ name: groupName, level: cluster.level });
       await fetchSuggestedSlots(cluster.level, cluster.days[0]);
-
       fetchUnmatched();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
