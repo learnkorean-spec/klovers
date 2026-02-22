@@ -11,8 +11,8 @@ import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, Info, CalendarDays } from "lucide-react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import RegistrationChecklist from "@/components/RegistrationChecklist";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays } from "lucide-react";
 
 interface EnrollmentRecord {
   id: string;
@@ -26,6 +26,14 @@ interface EnrollmentRecord {
   created_at: string;
 }
 
+interface ChecklistItem {
+  key: string;
+  label: string;
+  completed: boolean;
+}
+
+const CHECKLIST_KEYS = ["Full name", "Korean level", "Country", "Preferred class days", "Timezone"];
+
 const StudentDashboard = () => {
   const { loading: gateLoading, resetBlocked } = useResetGate();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
@@ -34,7 +42,8 @@ const StudentDashboard = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("");
   const [hasNoData, setHasNoData] = useState(false);
-  const [missingInfo, setMissingInfo] = useState<string[]>([]);
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,7 +63,6 @@ const StudentDashboard = () => {
         setUserName((profile as any).name || "");
       }
 
-      // Fetch ALL approved+paid enrollments
       const { data: enrollmentData } = await supabase
         .from("enrollments")
         .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone")
@@ -65,19 +73,19 @@ const StudentDashboard = () => {
 
       if (enrollmentData && enrollmentData.length > 0) {
         setEnrollments(enrollmentData as EnrollmentRecord[]);
-
-        // Check for missing information across profile + enrollments
-        const missing: string[] = [];
-        const p = profile as any;
-        if (!p?.name || p.name.trim() === "") missing.push("Full name");
-        if (!p?.level || p.level.trim() === "") missing.push("Korean level");
-        if (!p?.country || p.country.trim() === "") missing.push("Country");
-
         const latestEnroll = enrollmentData[0] as any;
-        if (!latestEnroll.preferred_days || latestEnroll.preferred_days.length === 0) missing.push("Preferred class days");
-        if (!latestEnroll.timezone || latestEnroll.timezone.trim() === "") missing.push("Timezone");
+        setLatestEnrollmentId(latestEnroll.id);
 
-        setMissingInfo(missing);
+        // Build checklist
+        const p = profile as any;
+        const items: ChecklistItem[] = [
+          { key: "Full name", label: "Full name", completed: !!(p?.name && p.name.trim() !== "") },
+          { key: "Korean level", label: "Korean level", completed: !!(p?.level && p.level.trim() !== "") },
+          { key: "Country", label: "Country", completed: !!(p?.country && p.country.trim() !== "") },
+          { key: "Preferred class days", label: "Preferred class days", completed: !!(latestEnroll.preferred_days && latestEnroll.preferred_days.length > 0) },
+          { key: "Timezone", label: "Timezone", completed: !!(latestEnroll.timezone && latestEnroll.timezone.trim() !== "") },
+        ];
+        setChecklistItems(items);
       } else {
         setHasNoData(true);
       }
@@ -86,6 +94,14 @@ const StudentDashboard = () => {
     };
     load();
   }, [navigate, gateLoading, resetBlocked]);
+
+  const handleItemCompleted = (key: string, _value: string) => {
+    setChecklistItems((prev) =>
+      prev.map((item) => (item.key === key ? { ...item, completed: true } : item))
+    );
+    // Update local userName if name was filled
+    if (key === "Full name") setUserName(_value);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -104,6 +120,10 @@ const StudentDashboard = () => {
   }
 
   const displayName = userName || "Student";
+  const hasBlockers = checklistItems.some(
+    (i) => !i.completed && (i.key === "Preferred class days" || i.key === "Korean level")
+  );
+  const journeyStage = hasBlockers ? 1 : 2;
 
   return (
     <div className="min-h-screen">
@@ -148,31 +168,23 @@ const StudentDashboard = () => {
                       <p className="text-sm text-muted-foreground">{enrollments.length} active package{enrollments.length !== 1 ? "s" : ""}</p>
                     </div>
                   </div>
-                  <JourneyStepper currentStage={2} />
+                  <JourneyStepper currentStage={journeyStage} />
                 </CardContent>
               </Card>
 
-              {/* Missing Info Alert */}
-              {missingInfo.length > 0 && (
-                <Alert variant="destructive" className="border-destructive/50 bg-destructive/5">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>We need a few details from you</AlertTitle>
-                  <AlertDescription>
-                    <p className="mb-2 text-sm">Please contact us or update the following so we can finalize your schedule:</p>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      {missingInfo.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
+              {/* Registration Checklist */}
+              <RegistrationChecklist
+                userId={userId}
+                enrollmentId={latestEnrollmentId}
+                items={checklistItems}
+                onItemCompleted={handleItemCompleted}
+              />
 
               {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />
 
               {/* All Packages */}
-              {enrollments.map((enrollment, idx) => {
+              {enrollments.map((enrollment) => {
                 const attended = enrollment.sessions_total - enrollment.sessions_remaining;
                 const remaining = enrollment.sessions_remaining;
                 const extra = remaining < 0 ? Math.abs(remaining) : 0;
@@ -193,7 +205,6 @@ const StudentDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {/* Stats */}
                       <div className="grid grid-cols-3 gap-3">
                         <div className="rounded-lg bg-accent/50 p-3 text-center">
                           <span className="text-xs text-muted-foreground">Attended</span>
@@ -215,7 +226,6 @@ const StudentDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Status */}
                       {remaining >= 0 ? (
                         <div className="flex items-center gap-2 text-sm text-primary bg-primary/5 rounded-lg p-2">
                           <CheckCircle2 className="h-4 w-4 shrink-0" />
