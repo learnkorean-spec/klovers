@@ -17,7 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, CheckCheck, RefreshCw, UserCheck, UserX, Pencil, Users, Trash2, UserPlus } from "lucide-react";
+import { Plus, CheckCheck, RefreshCw, UserCheck, UserX, Pencil, Users, Trash2, UserPlus, Clock, ChevronDown, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -130,6 +130,84 @@ const GroupAttendanceManager = () => {
   const [availableStudents, setAvailableStudents] = useState<GroupMember[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
 
+  // Enriched groups for Manage Groups tab
+  interface EnrichedGroup {
+    id: string;
+    name: string;
+    package_id: string;
+    capacity: number;
+    level: string;
+    course_type: string;
+    day_of_week: number;
+    start_time: string;
+    timezone: string;
+    members: { user_id: string; name: string; email: string; member_status: string }[];
+  }
+  const [enrichedGroups, setEnrichedGroups] = useState<EnrichedGroup[]>([]);
+  const [enrichedLoading, setEnrichedLoading] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const fetchEnrichedGroups = async () => {
+    setEnrichedLoading(true);
+    // Fetch all active pkg_groups with parent package info
+    const { data: pkgGroups } = await supabase
+      .from("pkg_groups")
+      .select("id, name, package_id, capacity, is_active, schedule_packages(level, day_of_week, start_time, timezone, course_type)")
+      .eq("is_active", true)
+      .order("name");
+
+    if (!pkgGroups || pkgGroups.length === 0) {
+      setEnrichedGroups([]);
+      setEnrichedLoading(false);
+      return;
+    }
+
+    const groupIds = pkgGroups.map(g => g.id);
+
+    // Fetch all members for these groups
+    const { data: members } = await supabase
+      .from("pkg_group_members")
+      .select("group_id, user_id, member_status")
+      .in("group_id", groupIds);
+
+    // Fetch profiles for all member user_ids
+    const userIds = [...new Set((members || []).map(m => m.user_id))];
+    const { data: profiles } = userIds.length > 0
+      ? await supabase.from("profiles").select("user_id, name, email").in("user_id", userIds)
+      : { data: [] };
+
+    const profileMap: Record<string, { name: string; email: string }> = {};
+    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
+
+    const result: EnrichedGroup[] = pkgGroups.map((g: any) => {
+      const pkg = g.schedule_packages || {};
+      const grpMembers = (members || [])
+        .filter(m => m.group_id === g.id)
+        .map(m => ({
+          user_id: m.user_id,
+          name: profileMap[m.user_id]?.name || "Unknown",
+          email: profileMap[m.user_id]?.email || "",
+          member_status: m.member_status,
+        }));
+
+      return {
+        id: g.id,
+        name: g.name,
+        package_id: g.package_id,
+        capacity: g.capacity,
+        level: pkg.level || "",
+        course_type: pkg.course_type || "group",
+        day_of_week: pkg.day_of_week ?? -1,
+        start_time: pkg.start_time || "",
+        timezone: pkg.timezone || "",
+        members: grpMembers,
+      };
+    });
+
+    setEnrichedGroups(result);
+    setEnrichedLoading(false);
+  };
+
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const [adminWeekdays, setAdminWeekdays] = useState<string[]>([]);
   const [adminTimes, setAdminTimes] = useState<string[]>([]);
@@ -162,7 +240,7 @@ const GroupAttendanceManager = () => {
       });
   }, []);
 
-  useEffect(() => { fetchGroups(); }, []);
+  useEffect(() => { fetchGroups(); fetchEnrichedGroups(); }, []);
 
   useEffect(() => {
     if (!selectedGroup) {
@@ -751,58 +829,114 @@ const GroupAttendanceManager = () => {
         {/* ── MANAGE GROUPS TAB ── */}
         <TabsContent value="groups" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" /> Groups
               </CardTitle>
+              <Button variant="outline" size="sm" onClick={fetchEnrichedGroups} disabled={enrichedLoading}>
+                <RefreshCw className={`h-4 w-4 mr-1 ${enrichedLoading ? "animate-spin" : ""}`} /> Refresh
+              </Button>
             </CardHeader>
             <CardContent>
-              {groups.length === 0 ? (
+              {enrichedLoading ? (
+                <p className="text-muted-foreground text-center py-4">Loading groups...</p>
+              ) : enrichedGroups.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No groups yet.</p>
               ) : (
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Level</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Schedule</TableHead>
-                        <TableHead>Capacity</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {groups.map(g => (
-                        <TableRow key={g.id}>
-                          <TableCell className="font-medium text-foreground">{g.name}</TableCell>
-                          <TableCell>
-                            {g.level ? <Badge variant="secondary">{g.level}</Badge> : <span className="text-muted-foreground">—</span>}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={g.course_type === "private" ? "destructive" : "secondary"}>{g.course_type || "group"}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {[g.schedule_day, g.schedule_time].filter(Boolean).join(" · ") || "—"}
-                          </TableCell>
-                          <TableCell>{g.capacity ?? "—"}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => openEditGroup(g)} title="Edit group">
+                <div className="space-y-3">
+                  {enrichedGroups.map(g => {
+                    const activeMembers = g.members.filter(m => m.member_status === "active");
+                    const waitlistMembers = g.members.filter(m => m.member_status === "waitlist");
+                    const isExpanded = expandedGroups.has(g.id);
+                    const dayName = DAY_NAMES[g.day_of_week] || "—";
+                    const timeStr = formatStartTime(g.start_time);
+
+                    return (
+                      <div key={g.id} className="border rounded-lg overflow-hidden">
+                        {/* Group header */}
+                        <div
+                          className="flex items-center justify-between p-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => setExpandedGroups(prev => {
+                            const next = new Set(prev);
+                            next.has(g.id) ? next.delete(g.id) : next.add(g.id);
+                            return next;
+                          })}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-foreground truncate">{g.name}</p>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                {g.level && (
+                                  <Badge variant="secondary" className="text-[10px]">{g.level.replace(/_/g, " ")}</Badge>
+                                )}
+                                <Badge variant={g.course_type === "private" ? "destructive" : "outline"} className="text-[10px]">
+                                  {g.course_type}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {dayName} {timeStr && `· ${timeStr}`}
+                                  {g.timezone && ` · ${g.timezone.replace(/_/g, " ")}`}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant={activeMembers.length >= g.capacity ? "default" : "outline"} className="text-xs">
+                              <Users className="h-3 w-3 mr-1" />
+                              {activeMembers.length}/{g.capacity}
+                              {waitlistMembers.length > 0 && ` (+${waitlistMembers.length} waitlist)`}
+                            </Badge>
+                            <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                const legacyGroup = groups.find(lg => lg.name === g.name);
+                                if (legacyGroup) openEditGroup(legacyGroup);
+                              }} title="Edit group">
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => openManageStudents(g)} title="Manage students">
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                const legacyGroup = groups.find(lg => lg.name === g.name);
+                                if (legacyGroup) openManageStudents(legacyGroup);
+                              }} title="Manage students">
                                 <UserPlus className="h-4 w-4" />
                               </Button>
                               <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeleteGroup(g.id)} title="Delete group">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          </div>
+                        </div>
+
+                        {/* Expanded: student list */}
+                        {isExpanded && (
+                          <div className="p-3 border-t space-y-1.5">
+                            {g.members.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-2">No students in this group.</p>
+                            ) : (
+                              g.members.map(m => (
+                                <div key={m.user_id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-7 w-7">
+                                      <AvatarFallback className="bg-muted text-foreground text-[10px] font-semibold">
+                                        {(m.name || "?").slice(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="text-sm font-medium text-foreground">{m.name}</p>
+                                      <p className="text-[11px] text-muted-foreground">{m.email}</p>
+                                    </div>
+                                  </div>
+                                  <Badge variant={m.member_status === "active" ? "secondary" : "outline"} className="text-[10px]">
+                                    {m.member_status}
+                                  </Badge>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
