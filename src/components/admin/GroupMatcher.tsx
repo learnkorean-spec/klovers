@@ -267,32 +267,65 @@ const GroupMatcher = () => {
         throw new Error("Could not find or create a schedule package for this level/day");
       }
 
-      // Create pkg_group
-      const { data: newPkgGroup, error: groupError } = await supabase
+      // Check if an active group already exists for this package
+      const { data: existingGroup } = await supabase
         .from("pkg_groups")
-        .insert({
-          package_id: pkg.id,
-          name: groupName,
-          capacity: pkg.capacity,
-          is_active: true,
-        })
-        .select("id")
-        .single();
+        .select("id, name")
+        .eq("package_id", pkg.id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
 
-      if (groupError || !newPkgGroup) {
-        throw new Error(groupError?.message || "Failed to create group");
+      let newPkgGroup: { id: string } | null;
+
+      if (existingGroup) {
+        // Reuse existing group instead of creating a duplicate
+        newPkgGroup = existingGroup;
+        toast({ title: "Using existing group", description: `Adding students to "${existingGroup.name}"` });
+      } else {
+        // Create new pkg_group
+        const { data: created, error: groupError } = await supabase
+          .from("pkg_groups")
+          .insert({
+            package_id: pkg.id,
+            name: groupName,
+            capacity: pkg.capacity,
+            is_active: true,
+          })
+          .select("id")
+          .single();
+
+        if (groupError || !created) {
+          throw new Error(groupError?.message || "Failed to create group");
+        }
+        newPkgGroup = created;
       }
 
-      // Add members to pkg_group_members
-      const pkgMembers = cluster.members.map((m) => ({
-        group_id: newPkgGroup.id,
-        user_id: m.user_id,
-        member_status: "active",
-        enrollment_id: m.id,
-      }));
-      const { error: memberErr } = await supabase.from("pkg_group_members").insert(pkgMembers as any);
-      if (memberErr) {
-        throw new Error("Failed to add members: " + memberErr.message);
+      if (!newPkgGroup) {
+        throw new Error("Failed to create or find group");
+      }
+
+      // Add members to pkg_group_members (skip already existing)
+      const { data: existingMembers } = await supabase
+        .from("pkg_group_members")
+        .select("user_id")
+        .eq("group_id", newPkgGroup.id);
+      const existingUserIds = new Set((existingMembers || []).map((m: any) => m.user_id));
+
+      const newMembers = cluster.members
+        .filter((m) => !existingUserIds.has(m.user_id))
+        .map((m) => ({
+          group_id: newPkgGroup.id,
+          user_id: m.user_id,
+          member_status: "active",
+          enrollment_id: m.id,
+        }));
+
+      if (newMembers.length > 0) {
+        const { error: memberErr } = await supabase.from("pkg_group_members").insert(newMembers as any);
+        if (memberErr) {
+          throw new Error("Failed to add members: " + memberErr.message);
+        }
       }
 
       // Update enrollments to mark as matched
