@@ -201,7 +201,7 @@ const BulkMatcher = () => {
     // 1. Scoped: only approved + paid enrollments
     const { data: enrollments, error } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_days, preferred_time, timezone, level")
+      .select("id, user_id, plan_type, preferred_days, preferred_time, timezone")
       .eq("approval_status", "APPROVED")
       .eq("payment_status", "PAID")
       .order("created_at", { ascending: false });
@@ -250,26 +250,18 @@ const BulkMatcher = () => {
       (slotsData as any[])?.forEach(s => { slotMap[s.id] = { day: s.day, time: s.time, course_level: s.course_level, current_count: s.current_count, max_students: s.max_students }; });
     }
 
-    // Helper to normalize snake_case level to display format
-    const formatLevel = (lvl: string) => {
-      if (!lvl) return "";
-      return lvl.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-    };
-
     const enriched: Student[] = enrollments.map(e => {
       const p = profileMap[e.user_id];
       const slotId = prefMap[e.id] || null;
       const slot = slotId ? slotMap[slotId] : null;
       const grp = userGroupMap[e.user_id];
-      // Use enrollment level as source of truth, fallback to profile level
-      const rawLevel = (e as any).level || p?.level || "";
       return {
         enrollment_id: e.id,
         user_id: e.user_id,
         name: p?.name || "Unknown",
         email: p?.email || "",
         plan_type: e.plan_type,
-        level: formatLevel(rawLevel),
+        level: p?.level || "",
         preferred_days: e.preferred_days || [],
         preferred_time: e.preferred_time,
         timezone: e.timezone,
