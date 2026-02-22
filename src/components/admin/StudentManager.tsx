@@ -197,7 +197,8 @@ const StudentManager = () => {
   const [newGroupName, setNewGroupName] = useState("");
 
   const fetchGroups = async () => {
-    const { data } = await supabase.from("student_groups").select("*").order("name") as { data: StudentGroup[] | null };
+    // Fetch from pkg_groups (active groups from Teacher Available Slots)
+    const { data } = await (supabase as any).from("pkg_groups").select("id, name, created_at").eq("is_active", true).order("name");
     setGroups(data || []);
   };
 
