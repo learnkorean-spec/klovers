@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight } from "lucide-react";
 import AdminNotifications from "./AdminNotifications";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -353,48 +353,125 @@ const PackagesManager = () => {
   );
 };
 
+// ─── Types for enriched groups ────────────────────────────────────────────────
+
+interface EnrichedGroup {
+  id: string;
+  package_id: string;
+  name: string;
+  capacity: number;
+  is_active: boolean;
+  // From parent package
+  level: string;
+  course_type: string;
+  day_of_week: number;
+  start_time: string;
+  duration_min: number;
+  timezone: string;
+  // Computed
+  members: GroupMember[];
+  active_count: number;
+  waitlist_count: number;
+}
+
 // ─── Groups Manager ───────────────────────────────────────────────────────────
 
 const GroupsManager = () => {
+  const [groups, setGroups] = useState<EnrichedGroup[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
-  const [selectedPkg, setSelectedPkg] = useState<string>("");
-  const [groups, setGroups] = useState<PkgGroup[]>([]);
-  const [members, setMembers] = useState<GroupMember[]>([]);
-  const [showGroupForm, setShowGroupForm] = useState(false);
-  const [editingGroup, setEditingGroup] = useState<PkgGroup | null>(null);
-  const [gName, setGName] = useState("");
-  const [gCapacity, setGCapacity] = useState(5);
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await (supabase as any).from("schedule_packages").select("*").eq("is_active", true).order("level").order("day_of_week");
-      setPackages(data || []);
-    };
-    fetch();
+  // Inline editing
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState("");
+
+  // Add group dialog
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addPkgId, setAddPkgId] = useState("");
+  const [addName, setAddName] = useState("");
+  const [addCapacity, setAddCapacity] = useState(5);
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+
+    // 1. Fetch all active groups with package info
+    const [grpRes, pkgRes] = await Promise.all([
+      (supabase as any).from("pkg_groups").select("*").eq("is_active", true),
+      (supabase as any).from("schedule_packages").select("*").order("level").order("day_of_week"),
+    ]);
+
+    const rawGroups: any[] = grpRes.data || [];
+    const pkgs: Package[] = pkgRes.data || [];
+    setPackages(pkgs);
+    const pkgMap: Record<string, Package> = {};
+    pkgs.forEach((p) => { pkgMap[p.id] = p; });
+
+    if (rawGroups.length === 0) {
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Fetch all members for those groups
+    const groupIds = rawGroups.map((g) => g.id);
+    const { data: allMembers } = await (supabase as any)
+      .from("pkg_group_members")
+      .select("group_id, user_id, member_status")
+      .in("group_id", groupIds);
+
+    // 3. Fetch profiles for all member user_ids
+    const userIds = [...new Set((allMembers || []).map((m: any) => m.user_id))];
+    let profMap: Record<string, { name: string; email: string }> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await (supabase as any)
+        .from("profiles")
+        .select("user_id, name, email")
+        .in("user_id", userIds);
+      (profiles || []).forEach((p: any) => { profMap[p.user_id] = p; });
+    }
+
+    // 4. Combine into enriched groups
+    const membersByGroup: Record<string, GroupMember[]> = {};
+    (allMembers || []).forEach((m: any) => {
+      if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
+      membersByGroup[m.group_id].push({
+        ...m,
+        profiles: profMap[m.user_id] || null,
+      });
+    });
+
+    const enriched: EnrichedGroup[] = rawGroups
+      .map((g) => {
+        const pkg = pkgMap[g.package_id];
+        const members = membersByGroup[g.id] || [];
+        return {
+          id: g.id,
+          package_id: g.package_id,
+          name: g.name,
+          capacity: g.capacity,
+          is_active: g.is_active,
+          level: pkg?.level || "unknown",
+          course_type: pkg?.course_type || "group",
+          day_of_week: pkg?.day_of_week ?? 0,
+          start_time: pkg?.start_time || "00:00",
+          duration_min: pkg?.duration_min || 0,
+          timezone: pkg?.timezone || "",
+          members,
+          active_count: members.filter((m) => m.member_status === "active").length,
+          waitlist_count: members.filter((m) => m.member_status === "waitlist").length,
+        };
+      })
+      .sort((a, b) => a.level.localeCompare(b.level) || a.day_of_week - b.day_of_week);
+
+    setGroups(enriched);
+    setLoading(false);
   }, []);
 
-  const fetchGroups = async (pkgId: string) => {
-    setLoading(true);
-    // Only fetch is_active = true groups
-    const { data: grps } = await (supabase as any).from("pkg_groups").select("*").eq("package_id", pkgId).eq("is_active", true);
-    const list: PkgGroup[] = (grps || []).map((g: any) => ({ ...g, active_count: 0, waitlist_count: 0 }));
-    const gIds = list.map((g) => g.id);
-    if (gIds.length > 0) {
-      const { data: mems } = await (supabase as any).from("pkg_group_members").select("group_id, member_status").in("group_id", gIds);
-      (mems || []).forEach((m: any) => {
-        const g = list.find((x) => x.id === m.group_id);
-        if (!g) return;
-        if (m.member_status === "active") g.active_count = (g.active_count || 0) + 1;
-        if (m.member_status === "waitlist") g.waitlist_count = (g.waitlist_count || 0) + 1;
-      });
-    }
-    setGroups(list);
-    setLoading(false);
-  };
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Sync + Clean
   const handleSyncAndClean = async () => {
     setSyncing(true);
     try {
@@ -405,9 +482,9 @@ const GroupsManager = () => {
       const result = cleanResult as { disabled: number; deleted: number; merged: number } | null;
       toast({
         title: "Sync complete",
-        description: `Disabled ${result?.disabled ?? 0} legacy groups, merged ${result?.merged ?? 0} duplicates, deleted ${result?.deleted ?? 0} orphans, created ${created ?? 0} missing groups.`,
+        description: `Disabled ${result?.disabled ?? 0}, merged ${result?.merged ?? 0}, deleted ${result?.deleted ?? 0}, created ${created ?? 0} missing.`,
       });
-      if (selectedPkg) fetchGroups(selectedPkg);
+      fetchAll();
     } catch (err: any) {
       toast({ title: "Sync failed", description: err.message, variant: "destructive" });
     } finally {
@@ -415,163 +492,215 @@ const GroupsManager = () => {
     }
   };
 
-  const fetchMembers = async (groupId: string) => {
-    const { data: mems } = await (supabase as any).from("pkg_group_members").select("group_id, user_id, member_status").eq("group_id", groupId);
-    if (!mems || mems.length === 0) { setMembers([]); return; }
-    const userIds = mems.map((m: any) => m.user_id);
-    const { data: profiles } = await (supabase as any).from("profiles").select("user_id, name, email").in("user_id", userIds);
-    const profMap: Record<string, any> = {};
-    (profiles || []).forEach((p: any) => { profMap[p.user_id] = p; });
-    setMembers(mems.map((m: any) => ({ ...m, profiles: profMap[m.user_id] || null })));
+  // Inline name edit
+  const startEditName = (g: EnrichedGroup) => {
+    setEditingNameId(g.id);
+    setEditNameValue(g.name);
   };
 
-  const handlePkgChange = (pkgId: string) => {
-    setSelectedPkg(pkgId);
-    setExpandedGroup(null);
-    setGroups([]);
-    fetchGroups(pkgId);
+  const saveEditName = async (groupId: string) => {
+    if (!editNameValue.trim()) return;
+    const { error } = await (supabase as any).from("pkg_groups").update({ name: editNameValue.trim() }).eq("id", groupId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, name: editNameValue.trim() } : g));
+      toast({ title: "Group renamed" });
+    }
+    setEditingNameId(null);
   };
 
-  const handleExpandGroup = (groupId: string) => {
-    if (expandedGroup === groupId) { setExpandedGroup(null); return; }
-    setExpandedGroup(groupId);
-    fetchMembers(groupId);
+  const cancelEditName = () => setEditingNameId(null);
+
+  // Toggle expand
+  const toggleExpand = (groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId); else next.add(groupId);
+      return next;
+    });
   };
 
-  const openGroupCreate = () => {
-    setEditingGroup(null); setGName(""); setGCapacity(5); setShowGroupForm(true);
-  };
-
-  const openGroupEdit = (g: PkgGroup) => {
-    setEditingGroup(g); setGName(g.name); setGCapacity(g.capacity); setShowGroupForm(true);
-  };
-
-  const handleSaveGroup = async () => {
-    if (!selectedPkg) return;
-    const payload: any = { name: gName, capacity: gCapacity };
-    const { error } = editingGroup
-      ? await (supabase as any).from("pkg_groups").update(payload).eq("id", editingGroup.id)
-      : await (supabase as any).from("pkg_groups").insert({ ...payload, package_id: selectedPkg });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: editingGroup ? "Group updated" : "Group created" });
-    setShowGroupForm(false);
-    fetchGroups(selectedPkg);
-  };
-
+  // Remove member
   const handleRemoveMember = async (groupId: string, userId: string) => {
     await (supabase as any).from("pkg_group_members").delete().eq("group_id", groupId).eq("user_id", userId);
     toast({ title: "Member removed" });
-    fetchMembers(groupId);
-    fetchGroups(selectedPkg);
+    fetchAll();
   };
 
-  const selectedPkgData = packages.find((p) => p.id === selectedPkg) || null;
+  // Add group
+  const openAddGroup = () => {
+    setAddPkgId("");
+    setAddName("");
+    setAddCapacity(5);
+    setShowAddDialog(true);
+  };
+
+  const handleAddGroup = async () => {
+    if (!addPkgId) return;
+    const pkg = packages.find((p) => p.id === addPkgId);
+    const name = addName.trim() || (pkg ? `${pkg.level.replace("_", " ")} – ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}` : "New Group");
+    const { error } = await (supabase as any).from("pkg_groups").insert({
+      package_id: addPkgId,
+      name,
+      capacity: addCapacity,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Group created", description: `"${name}" added.` });
+    setShowAddDialog(false);
+    fetchAll();
+  };
 
   return (
     <div className="space-y-4">
+      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={selectedPkg} onValueChange={handlePkgChange}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Select a package..." />
-          </SelectTrigger>
-          <SelectContent>
-            {packages.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.level.replace("_", " ")} · {DAY_NAMES[p.day_of_week]} {formatTime(p.start_time)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <p className="text-sm text-muted-foreground">{groups.length} active group(s)</p>
         <div className="flex-1" />
         <Button variant="outline" size="sm" onClick={handleSyncAndClean} disabled={syncing}>
           <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? "animate-spin" : ""}`} />
-          Sync + Clean Groups
+          Sync + Clean
         </Button>
-        {selectedPkg && (
-          <Button size="sm" onClick={openGroupCreate}><Plus className="h-4 w-4 mr-1" /> New Group</Button>
-        )}
+        <Button size="sm" onClick={openAddGroup}>
+          <Plus className="h-4 w-4 mr-1" /> Add Group
+        </Button>
       </div>
 
-      {/* Package info header — fills blanks by sourcing from schedule_packages */}
-      {selectedPkgData && (
-        <div className="flex flex-wrap items-center gap-2 px-1 pb-1 border-b">
-          <Badge variant="outline" className="capitalize">{selectedPkgData.level.replace(/_/g, " ")}</Badge>
-          <span className="text-sm text-muted-foreground">
-            {DAY_NAMES[selectedPkgData.day_of_week]} · {formatTime(selectedPkgData.start_time)} · {selectedPkgData.duration_min}min
-          </span>
-          <span className="text-xs text-muted-foreground">{selectedPkgData.timezone}</span>
-          <span className="text-xs text-muted-foreground">Capacity: {selectedPkgData.capacity}/group</span>
-        </div>
+      {loading && <p className="text-muted-foreground text-center py-8">Loading groups...</p>}
+      {!loading && groups.length === 0 && (
+        <p className="text-muted-foreground text-center py-8">No active groups. Click "Sync + Clean" to auto-create from packages.</p>
       )}
 
-      {!selectedPkg && <p className="text-muted-foreground text-center py-8">Select a package to manage its groups.</p>}
-      {loading && <p className="text-muted-foreground text-center py-8">Loading...</p>}
-
-      {selectedPkg && !loading && groups.length === 0 && (
-        <p className="text-muted-foreground text-center py-8">No groups yet. Click "Sync + Clean Groups" to auto-create, or add one manually.</p>
-      )}
-
-      {groups.map((g) => (
-        <Card key={g.id}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-sm">{g.name}</CardTitle>
-                <span className="text-xs text-muted-foreground font-mono">{g.active_count}/{g.capacity} active</span>
-                {(g.waitlist_count || 0) > 0 && <Badge variant="secondary" className="text-xs">{g.waitlist_count} waitlisted</Badge>}
-                {(g.active_count || 0) >= g.capacity && <Badge variant="destructive" className="text-xs">Full</Badge>}
-              </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openGroupEdit(g)}><Pencil className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={() => handleExpandGroup(g.id)}>
-                  <Users className="h-4 w-4 mr-1" /> {expandedGroup === g.id ? "Hide" : "Members"}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          {expandedGroup === g.id && (
-            <CardContent>
-              {members.filter((m) => m.group_id === g.id).length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-3">No members yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {members.filter((m) => m.group_id === g.id).map((m) => (
-                    <div key={m.user_id} className="flex items-center justify-between p-2 rounded-lg border">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{m.profiles?.name || "Unknown"}</p>
-                        <p className="text-xs text-muted-foreground">{m.profiles?.email || m.user_id}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={m.member_status === "active" ? "default" : "secondary"} className="text-xs">{m.member_status}</Badge>
-                        <Button variant="ghost" size="sm" onClick={() => handleRemoveMember(g.id, m.user_id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+      {/* Group cards */}
+      {groups.map((g) => {
+        const isExpanded = expandedGroups.has(g.id);
+        return (
+          <Card key={g.id}>
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  {/* Editable name */}
+                  <div className="flex items-center gap-2 mb-1">
+                    {editingNameId === g.id ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          value={editNameValue}
+                          onChange={(e) => setEditNameValue(e.target.value)}
+                          className="h-7 text-sm w-48"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveEditName(g.id);
+                            if (e.key === "Escape") cancelEditName();
+                          }}
+                        />
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditName(g.id)}>
+                          <Check className="h-3.5 w-3.5 text-green-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditName}>
+                          <X className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          )}
-        </Card>
-      ))}
+                    ) : (
+                      <>
+                        <CardTitle className="text-sm truncate">{g.name}</CardTitle>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => startEditName(g)}>
+                          <Pencil className="h-3 w-3 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
 
-      <Dialog open={showGroupForm} onOpenChange={setShowGroupForm}>
+                  {/* Badges row */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="outline" className="text-xs capitalize">{g.level.replace(/_/g, " ")}</Badge>
+                    <Badge variant={g.course_type === "private" ? "destructive" : "secondary"} className="text-xs">{g.course_type}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {DAY_NAMES[g.day_of_week]} · {formatTime(g.start_time)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs font-mono">
+                      {g.active_count}/{g.capacity} active
+                    </span>
+                    {g.waitlist_count > 0 && (
+                      <Badge variant="secondary" className="text-xs">{g.waitlist_count} waitlisted</Badge>
+                    )}
+                    {g.active_count >= g.capacity && (
+                      <Badge variant="destructive" className="text-xs">Full</Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expand toggle */}
+                <Button variant="ghost" size="sm" onClick={() => toggleExpand(g.id)} className="shrink-0">
+                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <Users className="h-4 w-4 ml-1" />
+                  <span className="text-xs ml-1">{g.members.length}</span>
+                </Button>
+              </div>
+            </CardHeader>
+
+            {/* Student roster */}
+            {isExpanded && (
+              <CardContent className="pt-0">
+                {g.members.length === 0 ? (
+                  <p className="text-muted-foreground text-sm text-center py-3">No students in this group.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {g.members.map((m) => (
+                      <div key={m.user_id} className="flex items-center justify-between p-2 rounded-lg border">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{m.profiles?.name || "Unknown"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{m.profiles?.email || m.user_id}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={m.member_status === "active" ? "default" : "secondary"} className="text-xs">{m.member_status}</Badge>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleRemoveMember(g.id, m.user_id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
+
+      {/* Add Group Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingGroup ? "Edit Group" : "New Group"}</DialogTitle>
-            <DialogDescription>Create or edit a group within the selected package.</DialogDescription>
+            <DialogTitle>Add Group</DialogTitle>
+            <DialogDescription>Create a new group under a package.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Group Name</Label>
-              <Input value={gName} onChange={(e) => setGName(e.target.value)} placeholder="e.g. Beginner A" />
+              <Label>Package</Label>
+              <Select value={addPkgId} onValueChange={setAddPkgId}>
+                <SelectTrigger><SelectValue placeholder="Select package..." /></SelectTrigger>
+                <SelectContent>
+                  {packages.filter((p) => p.is_active).map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.level.replace("_", " ")} · {DAY_NAMES[p.day_of_week]} {formatTime(p.start_time)} ({p.course_type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Group Name (optional – auto-generated if blank)</Label>
+              <Input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="e.g. Beginner A" />
             </div>
             <div className="space-y-2">
               <Label>Capacity</Label>
-              <Input type="number" value={gCapacity} onChange={(e) => setGCapacity(Number(e.target.value))} min={1} />
+              <Input type="number" value={addCapacity} onChange={(e) => setAddCapacity(Number(e.target.value))} min={1} />
             </div>
-            <Button className="w-full" onClick={handleSaveGroup}>{editingGroup ? "Save Changes" : "Create Group"}</Button>
+            <Button className="w-full" onClick={handleAddGroup} disabled={!addPkgId}>Create Group</Button>
           </div>
         </DialogContent>
       </Dialog>
