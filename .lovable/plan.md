@@ -1,50 +1,32 @@
 
 
-# Improve Groups Tab: Flat View with Students and Editable Names
+# Add Student to Group from Leads and Profiles
 
-## Problem
-The current Groups tab requires selecting a package first before seeing any groups. The user wants a flat, comprehensive view of ALL groups with their students visible, auto-linked from the matcher, with admin-editable names.
+## What will change
 
-## Changes to `src/components/admin/SchedulingManager.tsx` (GroupsManager section)
+A new "Add Student" button (person+ icon) will appear on each group card in the Groups tab. Clicking it opens a dialog where the admin can:
 
-### 1. Remove package-selection gate -- show all active groups at once
-- Fetch all active `pkg_groups` joined with their parent `schedule_packages` info (level, day, time, type)
-- Display in a single flat list/table, no need to pick a package first
+1. **Search** by name or email across both registered users (`profiles`) and leads
+2. **See results** in a list with name, email, and source label (Registered / Lead)
+3. **Click to add** a student to the group as an active `pkg_group_members` entry
 
-### 2. Enhanced group cards showing:
-- **Group Name** (editable inline with a pencil icon -- clicking opens an input to rename and save)
-- **Level** badge (from parent `schedule_packages.level`)
-- **Type** badge (group/private from parent `schedule_packages.course_type`)
-- **Day and Time** (from parent package)
-- **Student count** (e.g., "3/5 active, 1 waitlisted")
-- **Student roster** shown expanded by default or with a single click:
-  - Each student: name, email, status badge (active/waitlist)
-  - Remove button per student
+## How it works
 
-### 3. Auto-linking
-- Groups are already auto-created by the `assign_student_to_group_from_slot` RPC and `ensure_pkg_groups_for_packages` RPC -- no change needed there
-- The view simply reads from `pkg_groups` + `pkg_group_members` + `profiles`
+- **For registered users (profiles):** Inserts directly into `pkg_group_members` using the user's `user_id`
+- **For leads (no user account yet):** Shows the lead info but disables the add button with a note "Not yet registered" -- since `pkg_group_members` requires a `user_id`, only registered users can be added
+- Duplicate check: if the student is already in the group, show a "Already in group" label instead of the add button
+- After adding, the group card refreshes automatically
 
-### 4. Sync + Clean button remains
-- Keeps the existing RPCs for maintenance
+## Technical changes
 
-### 5. Add Group button
-- Still available, creates a group under a selected package (admin picks package from dropdown in the dialog)
+**File: `src/components/admin/SchedulingManager.tsx`**
 
-## Technical Details
+1. Import `UserPlus, Search` from lucide-react
+2. Add state for the "Add Student" dialog: `addStudentGroupId`, `studentSearch`, `searchResults`, `searchLoading`
+3. Add `handleSearchStudents` function that queries both `profiles` and `leads` tables using ilike on name/email
+4. Add `handleAddStudentToGroup` function that inserts into `pkg_group_members`
+5. Add a `UserPlus` icon button next to the expand toggle on each group card
+6. Add an "Add Student" dialog with search input and results list
 
-**Data fetching strategy (single load):**
-1. Fetch all `pkg_groups` where `is_active = true`, with parent package info
-2. Fetch all `pkg_group_members` for those group IDs
-3. Fetch `profiles` for all member user_ids
-4. Combine into a rich view
-
-**Inline name editing:**
-- Pencil icon next to group name toggles an input field
-- On blur or Enter, calls `supabase.from("pkg_groups").update({ name }).eq("id", groupId)`
-
-**Files to modify:**
-- `src/components/admin/SchedulingManager.tsx` -- rewrite `GroupsManager` component
-
-**No database changes needed.**
+**No database changes needed** -- uses existing `pkg_group_members`, `profiles`, and `leads` tables.
 
