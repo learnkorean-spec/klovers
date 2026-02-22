@@ -31,7 +31,7 @@ import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
 import AdminNotifications from "@/components/admin/AdminNotifications";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 import GroupMatcher from "@/components/admin/GroupMatcher";
-import BulkMatcher from "@/components/admin/BulkMatcher";
+
 import BulkEmailManager from "@/components/admin/BulkEmailManager";
 
 import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
@@ -1419,16 +1419,7 @@ const AdminDashboard = () => {
 
             {/* GROUP MATCHER TAB */}
             <TabsContent value="group-matcher">
-              <div className="space-y-6">
-                <Card className="rounded-2xl">
-                  <CardHeader className="pb-4"><CardTitle className="text-base">Bulk Slot Matcher</CardTitle></CardHeader>
-                  <CardContent className="pt-0"><BulkMatcher /></CardContent>
-                </Card>
-                <Card className="rounded-2xl">
-                  <CardHeader className="pb-4"><CardTitle className="text-base">Legacy Group Matcher</CardTitle></CardHeader>
-                  <CardContent className="pt-0"><GroupMatcher /></CardContent>
-                </Card>
-              </div>
+              <GroupMatcher />
             </TabsContent>
 
             {/* NOTIFICATIONS TAB */}
