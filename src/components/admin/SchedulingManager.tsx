@@ -776,6 +776,9 @@ const GroupsManager = () => {
                     <span className="text-xs font-mono">
                       {g.active_count}/{g.capacity} active
                     </span>
+                    {g.active_count > 0 && g.active_count < g.capacity && (
+                      <Badge className="text-xs bg-green-600 text-white hover:bg-green-600">Ongoing</Badge>
+                    )}
                     {g.waitlist_count > 0 && (
                       <Badge variant="secondary" className="text-xs">{g.waitlist_count} waitlisted</Badge>
                     )}
