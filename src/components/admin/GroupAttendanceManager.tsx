@@ -131,6 +131,17 @@ const GroupAttendanceManager = () => {
   const [studentSearch, setStudentSearch] = useState("");
 
   // Enriched groups for Manage Groups tab
+  interface EnrichedMember {
+    user_id: string;
+    name: string;
+    email: string;
+    member_status: string;
+    sessions_total: number;
+    sessions_remaining: number;
+    amount_paid: number;
+    currency: string;
+    attendance_count: number;
+  }
   interface EnrichedGroup {
     id: string;
     name: string;
@@ -141,7 +152,7 @@ const GroupAttendanceManager = () => {
     day_of_week: number;
     start_time: string;
     timezone: string;
-    members: { user_id: string; name: string; email: string; member_status: string }[];
+    members: EnrichedMember[];
   }
   const [enrichedGroups, setEnrichedGroups] = useState<EnrichedGroup[]>([]);
   const [enrichedLoading, setEnrichedLoading] = useState(false);
@@ -172,23 +183,60 @@ const GroupAttendanceManager = () => {
 
     // Fetch profiles for all member user_ids
     const userIds = [...new Set((members || []).map(m => m.user_id))];
-    const { data: profiles } = userIds.length > 0
-      ? await supabase.from("profiles").select("user_id, name, email").in("user_id", userIds)
-      : { data: [] };
+    const [profilesRes, enrollmentsRes, attendanceRes] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from("profiles").select("user_id, name, email").in("user_id", userIds)
+        : Promise.resolve({ data: [] }),
+      userIds.length > 0
+        ? supabase.from("enrollments")
+            .select("user_id, sessions_total, sessions_remaining, amount, currency, approval_status, payment_status, created_at")
+            .in("user_id", userIds)
+            .eq("approval_status", "APPROVED")
+            .eq("payment_status", "PAID")
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      userIds.length > 0
+        ? supabase.from("admin_attendance_log")
+            .select("user_id")
+            .in("user_id", userIds)
+        : Promise.resolve({ data: [] }),
+    ]);
 
     const profileMap: Record<string, { name: string; email: string }> = {};
-    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
+    ((profilesRes as any).data || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
+
+    // Latest enrollment per user (already sorted by created_at desc)
+    const enrollmentMap: Record<string, { sessions_total: number; sessions_remaining: number; amount: number; currency: string }> = {};
+    ((enrollmentsRes as any).data || []).forEach((e: any) => {
+      if (!enrollmentMap[e.user_id]) {
+        enrollmentMap[e.user_id] = { sessions_total: e.sessions_total, sessions_remaining: e.sessions_remaining, amount: e.amount, currency: e.currency };
+      }
+    });
+
+    // Count attendance per user
+    const attendanceCountMap: Record<string, number> = {};
+    ((attendanceRes as any).data || []).forEach((a: any) => {
+      attendanceCountMap[a.user_id] = (attendanceCountMap[a.user_id] || 0) + 1;
+    });
 
     const result: EnrichedGroup[] = pkgGroups.map((g: any) => {
       const pkg = g.schedule_packages || {};
-      const grpMembers = (members || [])
+      const grpMembers: EnrichedMember[] = (members || [])
         .filter(m => m.group_id === g.id)
-        .map(m => ({
-          user_id: m.user_id,
-          name: profileMap[m.user_id]?.name || "Unknown",
-          email: profileMap[m.user_id]?.email || "",
-          member_status: m.member_status,
-        }));
+        .map(m => {
+          const enr = enrollmentMap[m.user_id];
+          return {
+            user_id: m.user_id,
+            name: profileMap[m.user_id]?.name || "Unknown",
+            email: profileMap[m.user_id]?.email || "",
+            member_status: m.member_status,
+            sessions_total: enr?.sessions_total ?? 0,
+            sessions_remaining: enr?.sessions_remaining ?? 0,
+            amount_paid: enr?.amount ?? 0,
+            currency: enr?.currency ?? "USD",
+            attendance_count: attendanceCountMap[m.user_id] || 0,
+          };
+        });
 
       return {
         id: g.id,
@@ -918,24 +966,54 @@ const GroupAttendanceManager = () => {
                             {g.members.length === 0 ? (
                               <p className="text-sm text-muted-foreground text-center py-2">No students in this group.</p>
                             ) : (
-                              g.members.map(m => (
-                                <div key={m.user_id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
-                                  <div className="flex items-center gap-2">
-                                    <Avatar className="h-7 w-7">
-                                      <AvatarFallback className="bg-muted text-foreground text-[10px] font-semibold">
-                                        {(m.name || "?").slice(0, 2).toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <p className="text-sm font-medium text-foreground">{m.name}</p>
-                                      <p className="text-[11px] text-muted-foreground">{m.email}</p>
-                                    </div>
-                                  </div>
-                                  <Badge variant={m.member_status === "active" ? "secondary" : "outline"} className="text-[10px]">
-                                    {m.member_status}
-                                  </Badge>
+                              <>
+                                {/* Header row */}
+                                <div className="grid grid-cols-[1fr_auto] gap-2 px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  <span>Student</span>
+                                  <span className="flex gap-4 justify-end">
+                                    <span className="w-16 text-center">Attended</span>
+                                    <span className="w-16 text-center">Remaining</span>
+                                    <span className="w-16 text-center">Paid</span>
+                                    <span className="w-16 text-center">Status</span>
+                                  </span>
                                 </div>
-                              ))
+                                {g.members.map(m => {
+                                  const currLabel = m.currency === "EGP" ? "LE" : "$";
+                                  return (
+                                    <div key={m.user_id} className="grid grid-cols-[1fr_auto] gap-2 items-center px-3 py-2 rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <Avatar className="h-7 w-7 shrink-0">
+                                          <AvatarFallback className="bg-muted text-foreground text-[10px] font-semibold">
+                                            {(m.name || "?").slice(0, 2).toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
+                                          <p className="text-[11px] text-muted-foreground truncate">{m.email}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-4 items-center justify-end">
+                                        <span className="w-16 text-center">
+                                          <Badge variant="outline" className="text-[10px]">{m.attendance_count}</Badge>
+                                        </span>
+                                        <span className="w-16 text-center">
+                                          <Badge variant={m.sessions_remaining <= 0 ? "destructive" : "secondary"} className="text-[10px]">
+                                            {m.sessions_remaining}
+                                          </Badge>
+                                        </span>
+                                        <span className="w-16 text-center text-xs text-foreground font-medium">
+                                          {currLabel}{m.amount_paid.toLocaleString()}
+                                        </span>
+                                        <span className="w-16 text-center">
+                                          <Badge variant={m.member_status === "active" ? "secondary" : "outline"} className="text-[10px]">
+                                            {m.member_status}
+                                          </Badge>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </>
                             )}
                           </div>
                         )}
