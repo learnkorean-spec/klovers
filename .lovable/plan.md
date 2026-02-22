@@ -1,57 +1,41 @@
 
 
-# Fix Authentication for All Users
+# Actionable "Complete Your Registration" Banner
 
-## Problem
+## What changes
 
-There are two root causes blocking users from signing in:
+The Student Dashboard already detects missing information (preferred days, timezone, Korean level, country, name) and shows a red alert. However, the alert only lists items passively with "Please contact us." Students don't know where to go or what to do.
 
-1. **Missing profiles**: 12+ users exist in the authentication system but have NO profile record. When they log in, the app checks their profile for a `reset_version` field, finds nothing, and immediately signs them out with a "System was reset" message -- even though they already have valid accounts.
+### Changes to Student Dashboard (`src/pages/StudentDashboard.tsx`)
 
-2. **Aggressive reset gate**: The `useResetGate` hook signs users OUT and redirects to the signup page instead of auto-healing their profile. This creates a dead loop: user logs in, gets kicked out, tries to sign up, gets "already registered" error.
+1. **Replace passive alert with an actionable "Complete Registration" card** that has a progress indicator (e.g., "3 of 5 steps complete") and individual fix buttons for each missing item.
 
-## Solution
+2. **Each missing item gets a direct action:**
+   - **Full name** -- inline text input + save button (updates `profiles.name`)
+   - **Korean level** -- inline dropdown (Beginner/Intermediate/Advanced) + save (updates `profiles.level`)
+   - **Country** -- inline text input + save (updates `profiles.country`)
+   - **Preferred class days** -- "Go to My Schedule" button linking to `/dashboard/schedule` where the SchedulePicker already handles this
+   - **Timezone** -- inline dropdown of common timezones + save (updates `enrollments.timezone`)
 
-### Step 1: Fix existing data (Database)
-Create missing profile rows for all 12+ users who have auth accounts but no profile:
+3. **Visual urgency:** The card uses a warning/amber style (not destructive red) with a clear title: "Complete these steps to finalize your registration." Each completed item shows a green checkmark; incomplete items show an orange circle.
 
-```sql
-INSERT INTO profiles (user_id, name, email, reset_version)
-SELECT 
-  u.id,
-  COALESCE(u.raw_user_meta_data->>'name', split_part(u.email, '@', 1)),
-  u.email,
-  '1'
-FROM auth.users u
-LEFT JOIN profiles p ON p.user_id = u.id
-WHERE p.user_id IS NULL;
-```
+4. **After saving any field inline**, the item updates to "completed" with a checkmark immediately (optimistic UI + actual DB write).
 
-### Step 2: Make reset gate self-healing (Code change)
-Change `useResetGate.ts` so that instead of signing users out when their `reset_version` is wrong or missing, it **automatically updates** their profile to the current version. This means:
-- If a profile exists but has wrong version --> update it
-- If no profile exists --> create one
-- User stays logged in, no more dead loops
+5. **Block journey stepper progression:** The `JourneyStepper` stays at stage 1 ("Registration") instead of stage 2 when there are missing blockers (preferred days or level), making it clear the student hasn't completed registration yet.
 
-### Step 3: Fix LoginPage post-login logic (Code change)
-Update `LoginPage.tsx` to also ensure the profile exists before proceeding. After a successful login, if no profile row exists, create one with the correct reset version. This catches edge cases where the trigger didn't fire (e.g., OAuth users created before the trigger was added).
+### Changes to My Schedule Page (`src/pages/MySchedulePage.tsx`)
 
-### Step 4: Fix SignUpPage for "already registered" users
-Update the signup error handling so that when a user gets the "already registered" error, the message clearly tells them to use the **Log In** page instead, with a direct link.
-
----
+6. **No schedule selected state improvement:** When a student arrives at `/dashboard/schedule` with no schedule preference, show a more prominent call-to-action explaining they need to pick a day/time to complete registration, rather than just a small "No schedule selected yet" text.
 
 ### Technical Details
 
 **Files to modify:**
-- `src/hooks/useResetGate.ts` -- auto-heal instead of sign-out
-- `src/pages/LoginPage.tsx` -- ensure profile exists after login
-- `src/pages/SignUpPage.tsx` -- better error message for existing accounts
-- New database migration -- backfill missing profiles
+- `src/pages/StudentDashboard.tsx` -- replace passive alert with interactive completion card; add inline editors for name, level, country, timezone; adjust JourneyStepper stage based on completion
+- `src/pages/MySchedulePage.tsx` -- improve empty-state messaging for students arriving to fix their missing schedule
 
-**What changes for users:**
-- All existing users can log in immediately
-- Google and Apple sign-in will work without getting kicked out
-- No more "System was reset" dead loops
-- New signups continue to work as before
+**Database writes (using existing RLS -- no migration needed):**
+- `profiles` table: users can already update their own profile (name, level, country)
+- `enrollments` table: users can already update their own enrollments (timezone, preferred_days)
+
+**No new dependencies or database changes required.**
 
