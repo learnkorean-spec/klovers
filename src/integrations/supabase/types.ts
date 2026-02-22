@@ -1574,6 +1574,10 @@ export type Database = {
         Args: { _attendance_id: string }
         Returns: undefined
       }
+      assign_student_to_group_from_slot: {
+        Args: { _enrollment_id?: string; _slot_id: string; _user_id: string }
+        Returns: Json
+      }
       assign_student_to_pkg_group: {
         Args: { _enrollment_id: string; _user_id: string }
         Returns: string

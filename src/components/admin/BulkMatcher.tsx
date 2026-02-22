@@ -48,6 +48,8 @@ interface Student {
   slot_level: string | null;
   slot_current_count: number;
   slot_max_students: number;
+  group_name: string | null;
+  group_status: string | null;
 }
 
 type MatchStatus = "ready" | "mismatch" | "incomplete" | "unmatched" | "capacity";
@@ -152,6 +154,7 @@ const BulkMatcher = () => {
   const [resetOpen, setResetOpen] = useState(false);
   const [weekdays, setWeekdays] = useState<string[]>(FALLBACK_WEEKDAYS);
   const [groupDays, setGroupDays] = useState<{ day: string; level: string; course_type: string }[]>([]);
+  const [finalizingGroups, setFinalizingGroups] = useState(false);
 
   // Fetch admin-configured weekdays from schedule_options (fallback)
   useEffect(() => {
@@ -208,10 +211,11 @@ const BulkMatcher = () => {
     const enrollmentIds = enrollments.map(e => e.id);
     const userIds = [...new Set(enrollments.map(e => e.user_id))];
 
-    // 2. Parallel: profiles + preferences scoped by enrollment IDs
-    const [profilesRes, prefsRes] = await Promise.all([
+    // 2. Parallel: profiles + preferences + group memberships
+    const [profilesRes, prefsRes, membersRes] = await Promise.all([
       supabase.from("profiles").select("user_id, name, email, level").in("user_id", userIds),
       supabase.from("student_slot_preferences" as any).select("enrollment_id, assigned_slot_id, match_status").in("enrollment_id", enrollmentIds),
+      (supabase as any).from("pkg_group_members").select("user_id, member_status, group_id").in("user_id", userIds),
     ]);
 
     const profileMap: Record<string, { name: string; email: string; level: string }> = {};
@@ -219,6 +223,21 @@ const BulkMatcher = () => {
 
     const prefMap: Record<string, string> = {};
     (prefsRes.data as any[])?.forEach(p => { if (p.assigned_slot_id) prefMap[p.enrollment_id] = p.assigned_slot_id; });
+
+    // Build group membership map per user
+    const memberGroupIds = [...new Set((membersRes.data as any[] || []).map((m: any) => m.group_id))];
+    let groupNameMap: Record<string, string> = {};
+    if (memberGroupIds.length > 0) {
+      const { data: grps } = await (supabase as any).from("pkg_groups").select("id, name").in("id", memberGroupIds);
+      (grps || []).forEach((g: any) => { groupNameMap[g.id] = g.name; });
+    }
+    const userGroupMap: Record<string, { group_name: string; member_status: string }> = {};
+    (membersRes.data as any[] || []).forEach((m: any) => {
+      // Prefer 'active' over 'waitlist'
+      if (!userGroupMap[m.user_id] || m.member_status === 'active') {
+        userGroupMap[m.user_id] = { group_name: groupNameMap[m.group_id] || 'Unknown', member_status: m.member_status };
+      }
+    });
 
     // 3. Fetch only used slots
     const slotIds = [...new Set(Object.values(prefMap).filter(Boolean))];
@@ -235,6 +254,7 @@ const BulkMatcher = () => {
       const p = profileMap[e.user_id];
       const slotId = prefMap[e.id] || null;
       const slot = slotId ? slotMap[slotId] : null;
+      const grp = userGroupMap[e.user_id];
       return {
         enrollment_id: e.id,
         user_id: e.user_id,
@@ -251,6 +271,8 @@ const BulkMatcher = () => {
         slot_level: slot?.course_level || null,
         slot_current_count: slot?.current_count || 0,
         slot_max_students: slot?.max_students || 0,
+        group_name: grp?.group_name || null,
+        group_status: grp?.member_status || null,
       };
     });
 
@@ -383,6 +405,36 @@ const BulkMatcher = () => {
     setMatching(false);
     fetchStudents();
     fetchSlots();
+  };
+
+  const handleFinalizeGroups = async () => {
+    setFinalizingGroups(true);
+    let assigned = 0, waitlisted = 0, failed = 0, skipped = 0;
+    const matchedStudents = students.filter(s => s.assigned_slot_id && !s.group_name);
+
+    for (const student of matchedStudents) {
+      try {
+        const { data, error } = await (supabase as any).rpc("assign_student_to_group_from_slot", {
+          _slot_id: student.assigned_slot_id,
+          _user_id: student.user_id,
+          _enrollment_id: student.enrollment_id,
+        });
+        if (error) { failed++; continue; }
+        const result = data as { status: string };
+        if (result.status === "assigned") assigned++;
+        else if (result.status === "waitlisted") waitlisted++;
+        else if (result.status === "already_assigned") skipped++;
+        else if (result.status === "no_package_match") failed++;
+        else skipped++;
+      } catch { failed++; }
+    }
+
+    toast({
+      title: "Finalize Groups",
+      description: `${assigned} assigned, ${waitlisted} waitlisted, ${skipped} already assigned, ${failed} failed.`,
+    });
+    setFinalizingGroups(false);
+    fetchStudents();
   };
 
   // --- Filtered & grouped ---
@@ -556,6 +608,20 @@ const BulkMatcher = () => {
             </Badge>
           ) : <span className="text-xs text-muted-foreground">—</span>}
         </TableCell>
+        <TableCell>
+          {student.group_name ? (
+            <div>
+              <Badge variant={student.group_status === "active" ? "default" : "secondary"} className="text-[10px]">
+                {student.group_name}
+              </Badge>
+              {student.group_status === "waitlist" && (
+                <span className="text-[10px] text-muted-foreground ml-1">(waitlist)</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">—</span>
+          )}
+        </TableCell>
         <TableCell><DayChips student={student} /></TableCell>
         <TableCell><TimezoneCell student={student} /></TableCell>
         <TableCell>
@@ -593,11 +659,12 @@ const BulkMatcher = () => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
+               <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Level</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Slot</TableHead>
+                  <TableHead>Group</TableHead>
                   <TableHead>Preferred Days</TableHead>
                   <TableHead>Timezone</TableHead>
                   <TableHead>Status</TableHead>
@@ -673,6 +740,7 @@ const BulkMatcher = () => {
                 <TableHead>Level</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Current Slot</TableHead>
+                <TableHead>Group</TableHead>
                 <TableHead>Preferred Days</TableHead>
                 <TableHead>Timezone</TableHead>
                 <TableHead>Status</TableHead>
@@ -960,6 +1028,14 @@ const BulkMatcher = () => {
               {unmatched.length > 0 && (
                 <Button size="sm" onClick={handleMatchAll} disabled={matching}>
                   {matching ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Matching…</> : <><Zap className="h-3.5 w-3.5 mr-1" /> Match All ({unmatched.length})</>}
+                </Button>
+              )}
+              {students.filter(s => s.assigned_slot_id && !s.group_name).length > 0 && (
+                <Button size="sm" variant="secondary" onClick={handleFinalizeGroups} disabled={finalizingGroups}>
+                  {finalizingGroups
+                    ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Assigning Groups…</>
+                    : <><Users className="h-3.5 w-3.5 mr-1" /> Finalize → Assign Groups ({students.filter(s => s.assigned_slot_id && !s.group_name).length})</>
+                  }
                 </Button>
               )}
             </div>
