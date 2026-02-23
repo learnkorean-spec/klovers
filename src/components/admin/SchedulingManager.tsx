@@ -691,17 +691,31 @@ const GroupsManager = () => {
 
   const handleAddStudentToGroup = async (result: SearchResult) => {
     if (!addStudentGroupId || !result.user_id) return;
-    const { error } = await (supabase as any).from("pkg_group_members").insert({
-      group_id: addStudentGroupId,
-      user_id: result.user_id,
-      member_status: "active",
-    });
+    // Find the package_id for this group
+    const group = groups.find((g) => g.id === addStudentGroupId);
+    if (!group) return;
+
+    // Use unified RPC to assign student to group via package
+    const { data: assignResult, error } = await (supabase as any)
+      .rpc("assign_student_to_group", {
+        _package_id: group.package_id,
+        _user_id: result.user_id,
+      });
+
     if (error) {
       toast({ title: "Error adding student", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Student added", description: `${result.name} added to group.` });
-    // Mark as already in group in results
+
+    const r = assignResult as any;
+    if (r?.status === "assigned" || r?.status === "already_assigned") {
+      toast({ title: "Student added", description: `${result.name} assigned to "${r.group_name}".` });
+    } else if (r?.status === "waitlisted") {
+      toast({ title: "Waitlisted", description: `${result.name} waitlisted — all groups full.`, variant: "destructive" });
+    } else {
+      toast({ title: "Error", description: `Unexpected result: ${r?.status}`, variant: "destructive" });
+    }
+
     setSearchResults((prev) => prev.map((r) => r.id === result.id ? { ...r, already_in_group: true } : r));
     fetchAll();
   };
@@ -1001,15 +1015,30 @@ const WaitlistManager = () => {
 
   const handleAssign = async (userId: string, packageId: string) => {
     setAssigning(userId);
-    // Update preference then call RPC
-    await (supabase as any).from("student_package_preferences").upsert({ user_id: userId, package_id: packageId }, { onConflict: "user_id" });
-
-    // Find enrollment
-    const { data: enr } = await supabase.from("enrollments").select("id").eq("user_id", userId).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (enr) {
-      await (supabase as any).rpc("assign_student_to_pkg_group", { _user_id: userId, _enrollment_id: (enr as any).id });
+    // Remove from old waitlist group
+    const row = rows.find((r) => r.user_id === userId);
+    if (row) {
+      await (supabase as any).from("pkg_group_members").delete().eq("group_id", row.group_id).eq("user_id", userId);
     }
-    toast({ title: "Reassignment attempted", description: "Check group members for result." });
+    // Use unified RPC
+    const { data: enr } = await supabase.from("enrollments").select("id").eq("user_id", userId).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: result, error } = await (supabase as any).rpc("assign_student_to_group", {
+      _package_id: packageId,
+      _user_id: userId,
+      _enrollment_id: enr ? (enr as any).id : null,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      const r = result as any;
+      if (r?.status === "assigned") {
+        toast({ title: "Assigned!", description: `Student moved to "${r.group_name}".` });
+      } else if (r?.status === "waitlisted") {
+        toast({ title: "Still waitlisted", description: "Target package also full.", variant: "destructive" });
+      } else {
+        toast({ title: "Result", description: r?.status || "Unknown" });
+      }
+    }
     setAssigning(null);
     fetchWaitlist();
   };

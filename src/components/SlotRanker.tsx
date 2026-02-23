@@ -122,16 +122,32 @@ const SlotRanker = ({ selectedLevel, onComplete }: SlotRankerProps) => {
 
       const prefId = (pref as any).id;
 
-      // Call auto_match_student
+      // Call auto_match_student (slot-level)
       const { data: assignedSlotId, error: matchError } = await supabase
         .rpc("auto_match_student", { _preference_id: prefId } as any);
 
       if (matchError) {
         console.error("Auto match error:", matchError);
-        // Not a fatal error — student stays pending
       }
 
       const assignedId = assignedSlotId as string | null;
+
+      // Also assign to group via unified RPC if slot has package_id
+      if (assignedId) {
+        const { data: slotInfo } = await supabase
+          .from("matching_slots" as any)
+          .select("package_id")
+          .eq("id", assignedId)
+          .maybeSingle();
+
+        if (slotInfo && (slotInfo as any).package_id) {
+          await supabase.rpc("assign_student_to_group" as any, {
+            _package_id: (slotInfo as any).package_id,
+            _user_id: session.user.id,
+          } as any);
+        }
+      }
+
       if (assignedId) {
         const slot = slots.find((s) => s.id === assignedId);
         setResult({ assigned: true, slotName: slot ? `${slot.day} ${slot.time}` : "a slot", prefId });

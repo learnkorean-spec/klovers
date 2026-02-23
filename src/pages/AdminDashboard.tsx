@@ -365,89 +365,96 @@ const AdminDashboard = () => {
         return;
       }
 
-      // === AUTO-MATCH TO SLOT based on level + preferred days ===
+      // === UNIFIED GROUP ASSIGNMENT ===
       if (enrollment.plan_type === "group") {
         try {
-          const { data: matchedSlotId, error: matchErr } = await supabase
-            .rpc("match_enrollment_to_slot", { _enrollment_id: enrollment.id } as any);
-          if (matchErr) {
-            console.error("Auto-match error:", matchErr);
-          } else if (matchedSlotId) {
-            // Get slot details for toast
-            const { data: slotData } = await supabase
-              .from("matching_slots" as any)
-              .select("day, time, course_level")
-              .eq("id", matchedSlotId)
-              .maybeSingle();
-            const slotInfo = slotData ? `${(slotData as any).day} ${(slotData as any).time} (${(slotData as any).course_level})` : "a slot";
-            toast({ title: "Auto-matched", description: `Student assigned to ${slotInfo}` });
-          } else {
-            toast({ title: "No slot match", description: "No matching slot found for student's level/preferences. Manual assignment needed.", variant: "destructive" });
-          }
-        } catch (err) {
-          console.error("Auto-match error:", err);
-        }
-      }
+          // 1) Resolve package_id: from enrollment, slot preference, or level+day match
+          let packageId = enrollment.package_id || null;
 
-      // === Package-based group assignment (new flow) ===
-      try {
-        const { data: assignResult, error: assignErr } = await supabase
-          .rpc("assign_student_to_pkg_group" as any, {
-            _user_id: enrollment.user_id,
-            _enrollment_id: enrollment.id,
-          } as any);
-
-        if (assignErr) {
-          console.error("Package assignment error:", assignErr);
-        } else if (assignResult) {
-          const result = assignResult as string;
-          if (result.startsWith("assigned:")) {
-            toast({ title: "Assigned to group", description: result.replace("assigned:", "") });
-          } else if (result === "waitlisted") {
-            toast({ title: "Waitlisted", description: "All groups full — student added to waitlist.", variant: "destructive" });
-          } else if (result === "no_preference") {
-            // Fall back to legacy schedule_preferences assignment
-            const { data: pref } = await supabase
-              .from("student_schedule_preferences" as any)
-              .select("group_id")
+          if (!packageId) {
+            // Try matching_slots → package_id
+            const { data: slotPref } = await supabase
+              .from("student_slot_preferences" as any)
+              .select("assigned_slot_id")
               .eq("user_id", enrollment.user_id)
               .maybeSingle();
 
-            if (pref && (pref as any).group_id) {
-              const groupId = (pref as any).group_id;
-              const { data: group } = await supabase
-                .from("student_groups")
-                .select("capacity, name")
-                .eq("id", groupId)
-                .single();
-              const { count: memberCount } = await supabase
-                .from("batch_members")
-                .select("id", { count: "exact", head: true })
-                .eq("batch_id", groupId);
-              const seatsLeft = (group as any)?.capacity - (memberCount || 0);
-              if (seatsLeft > 0) {
-                await supabase.from("batch_members").insert({
-                  batch_id: groupId, user_id: enrollment.user_id,
-                  enrollment_id: enrollment.id, member_status: "active",
-                } as any);
-                toast({ title: "Assigned to group (legacy)", description: (group as any)?.name });
-              } else {
-                await supabase.from("batch_members").insert({
-                  batch_id: groupId, user_id: enrollment.user_id,
-                  enrollment_id: enrollment.id, member_status: "waitlist",
-                } as any);
-                toast({ title: "Warning", description: "Group full — student waitlisted.", variant: "destructive" });
+            if (slotPref && (slotPref as any).assigned_slot_id) {
+              const { data: slot } = await supabase
+                .from("matching_slots" as any)
+                .select("package_id")
+                .eq("id", (slotPref as any).assigned_slot_id)
+                .maybeSingle();
+              if (slot && (slot as any).package_id) {
+                packageId = (slot as any).package_id;
               }
             }
           }
-        }
-      } catch (err) {
-        console.error("Group assignment error:", err);
-      }
 
-      // === GROUP MATCHING CHECK ===
-      if (enrollment.plan_type === "group") {
-        try {
+          if (!packageId) {
+            // Try student_package_preferences
+            const { data: pkgPref } = await supabase
+              .from("student_package_preferences" as any)
+              .select("package_id")
+              .eq("user_id", enrollment.user_id)
+              .maybeSingle();
+            if (pkgPref && (pkgPref as any).package_id) {
+              packageId = (pkgPref as any).package_id;
+            }
+          }
+
+          if (!packageId) {
+            // Last resort: match by enrollment level + preferred_day
+            const level = enrollment.level || enrollment.profiles?.level || "";
+            const day = enrollment.preferred_day || (enrollment.preferred_days && enrollment.preferred_days[0]) || null;
+            if (level && day) {
+              const dayMap: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+              const dayNum = dayMap[day];
+              if (dayNum !== undefined) {
+                const { data: pkg } = await supabase
+                  .from("schedule_packages" as any)
+                  .select("id")
+                  .eq("level", level.toLowerCase().replace(/\s+/g, "_"))
+                  .eq("day_of_week", dayNum)
+                  .eq("is_active", true)
+                  .limit(1)
+                  .maybeSingle();
+                if (pkg) packageId = (pkg as any).id;
+              }
+            }
+          }
+
+          if (packageId) {
+            // Call unified assign_student_to_group RPC
+            const { data: result, error: assignErr } = await supabase
+              .rpc("assign_student_to_group" as any, {
+                _package_id: packageId,
+                _user_id: enrollment.user_id,
+                _enrollment_id: enrollment.id,
+              } as any);
+
+            if (assignErr) {
+              console.error("Group assignment error:", assignErr);
+            } else {
+              const r = result as any;
+              if (r?.status === "assigned") {
+                toast({ title: "Assigned to group", description: r.group_name });
+              } else if (r?.status === "waitlisted") {
+                toast({ title: "Waitlisted", description: `All groups full — student added to waitlist in "${r.group_name}".`, variant: "destructive" });
+              } else if (r?.status === "already_assigned") {
+                toast({ title: "Already in group", description: r.group_name });
+              }
+            }
+
+            // Also update matching_slots count if slot preference exists
+            const { data: matchedSlotId, error: matchErr } = await supabase
+              .rpc("match_enrollment_to_slot", { _enrollment_id: enrollment.id } as any);
+            if (matchErr) console.error("Slot match error:", matchErr);
+          } else {
+            toast({ title: "No schedule match", description: "No matching package found for student's level/preferences. Manual assignment needed.", variant: "destructive" });
+          }
+
+          // Notify if cluster ready
           const { data: unmatchedRaw } = await supabase
             .from("enrollments")
             .select("id, user_id, preferred_days, preferred_start")
@@ -457,7 +464,6 @@ const AdminDashboard = () => {
             .not("preferred_days", "is", null);
 
           if (unmatchedRaw && unmatchedRaw.length >= 3) {
-            // Check for clusters of 3+ sharing at least 1 day + same start
             const unmatched = unmatchedRaw as any[];
             const clusterMap: Record<string, any[]> = {};
             for (const e of unmatched) {
@@ -467,25 +473,7 @@ const AdminDashboard = () => {
               if (!clusterMap[key]) clusterMap[key] = [];
               clusterMap[key].push(e);
             }
-
-            // Merge overlapping clusters (same start, shared day)
-            const keys = Object.keys(clusterMap);
-            for (let i = 0; i < keys.length; i++) {
-              const [daysA, startA] = keys[i].split("|");
-              const daysAArr = daysA.split(",");
-              for (let j = i + 1; j < keys.length; j++) {
-                const [daysB, startB] = keys[j].split("|");
-                if (startA !== startB) continue;
-                const daysBArr = daysB.split(",");
-                if (daysAArr.some((d) => daysBArr.includes(d))) {
-                  clusterMap[keys[i]].push(...clusterMap[keys[j]]);
-                  delete clusterMap[keys[j]];
-                }
-              }
-            }
-
             for (const [key, members] of Object.entries(clusterMap)) {
-              // Deduplicate
               const unique = [...new Map(members.map((m: any) => [m.id, m])).values()];
               if (unique.length >= 3) {
                 const [daysStr, start] = key.split("|");
@@ -497,7 +485,7 @@ const AdminDashboard = () => {
             }
           }
         } catch (err) {
-          console.error("Group matching check error:", err);
+          console.error("Group assignment error:", err);
         }
       }
     }

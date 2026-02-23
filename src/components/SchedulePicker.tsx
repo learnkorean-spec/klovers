@@ -169,9 +169,15 @@ const SchedulePicker = ({
       timezone: pkg.timezone,
     };
 
-    // Persist preference
+    // Persist preference and trigger group assignment
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
+      // Assign to group via unified RPC
+      await (supabase as any).rpc("assign_student_to_group", {
+        _package_id: pkg.id,
+        _user_id: session.user.id,
+      });
+
       await (supabase as any)
         .from("student_package_preferences")
         .upsert({
