@@ -87,10 +87,10 @@ const AdminAttendancePanel = ({
         .select("id, session_date, created_at")
         .eq("enrollment_id", enrollmentId)
         .order("session_date", { ascending: false }),
-      // Group attendance (pkg_attendance + pkg_group_sessions)
+      // Group attendance (pkg_attendance + pkg_group_sessions + pkg_groups)
       supabase
-        .from("pkg_attendance")
-        .select("session_id, created_at, status, pkg_group_sessions!inner(id, session_date, group_id, pkg_groups!inner(name))")
+        .from("pkg_attendance" as any)
+        .select("session_id, created_at, status, pkg_group_sessions(id, session_date, group_id, pkg_groups(name))")
         .eq("user_id", userId)
         .eq("admin_approved", true),
       // Self-reported (approved attendance_requests)
@@ -102,8 +102,8 @@ const AdminAttendancePanel = ({
         .order("request_date", { ascending: false }),
       // Group membership
       supabase
-        .from("pkg_group_members")
-        .select("group_id, pkg_groups!inner(name)")
+        .from("pkg_group_members" as any)
+        .select("group_id, pkg_groups(name)")
         .eq("user_id", userId)
         .eq("member_status", "active")
         .limit(1),
