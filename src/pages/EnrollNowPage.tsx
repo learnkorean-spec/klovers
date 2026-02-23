@@ -106,7 +106,7 @@ const EnrollNowPage = () => {
   const [startOptions, setStartOptions] = useState<string[]>([]);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
   // Level-specific slot days+times from schedule_packages (includes packageId)
-  const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string }[]>([]);
+  const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string; seatsLeft: number }[]>([]);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(p("packageId") || null);
 
   // Draft cleanup is deferred — only clear after successful payment initiation (see handlePay)
@@ -160,14 +160,43 @@ const EnrollNowPage = () => {
       const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
       const { data } = await supabase
         .from("schedule_packages" as any)
-        .select("id, day_of_week, start_time")
+        .select("id, day_of_week, start_time, capacity")
         .eq("level", normalizedLevel)
         .eq("is_active", true)
         .order("day_of_week");
       const rows = (data as any[]) || [];
-      // Deduplicate by day_of_week, keeping first occurrence
+      if (rows.length === 0) { setLevelSlots([]); return; }
+
+      // Compute seats_left per package (same pattern as SchedulePicker)
+      const pkgIds = rows.map((r: any) => r.id);
+      const { data: groups } = await (supabase as any)
+        .from("pkg_groups")
+        .select("id, package_id")
+        .in("package_id", pkgIds)
+        .eq("is_active", true);
+      const groupList = (groups as any[]) || [];
+      const groupIds = groupList.map((g: any) => g.id);
+
+      let memberCounts: Record<string, number> = {};
+      if (groupIds.length > 0) {
+        const { data: members } = await (supabase as any)
+          .from("pkg_group_members")
+          .select("group_id")
+          .in("group_id", groupIds)
+          .eq("member_status", "active");
+        for (const m of (members as any[]) || []) {
+          memberCounts[m.group_id] = (memberCounts[m.group_id] || 0) + 1;
+        }
+      }
+
+      const pkgMemberCount: Record<string, number> = {};
+      for (const g of groupList) {
+        pkgMemberCount[g.package_id] = (pkgMemberCount[g.package_id] || 0) + (memberCounts[g.id] || 0);
+      }
+
+      // Deduplicate by day_of_week, keeping first occurrence, include seatsLeft
       const seen = new Set<number>();
-      const slots: { day: string; time: string; packageId: string }[] = [];
+      const slots: { day: string; time: string; packageId: string; seatsLeft: number }[] = [];
       for (const r of rows) {
         if (!seen.has(r.day_of_week)) {
           seen.add(r.day_of_week);
@@ -175,7 +204,8 @@ const EnrollNowPage = () => {
           const ampm = h >= 12 ? "PM" : "AM";
           const hour12 = h % 12 || 12;
           const timeLabel = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
-          slots.push({ day: DAY_NAMES[r.day_of_week as number], time: timeLabel, packageId: r.id });
+          const seatsLeft = Math.max(0, (r.capacity || 5) - (pkgMemberCount[r.id] || 0));
+          slots.push({ day: DAY_NAMES[r.day_of_week as number], time: timeLabel, packageId: r.id, seatsLeft });
         }
       }
       setLevelSlots(slots);
@@ -665,21 +695,29 @@ const EnrollNowPage = () => {
                   <p className="text-sm text-muted-foreground italic">No schedule slots available for this level yet. Contact us.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {levelSlots.map(({ day, time }) => (
-                      <button
-                        type="button"
-                        key={day}
-                        onClick={() => toggleDay(day)}
-                        className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all flex flex-col items-center gap-0.5 ${
-                          preferredDays.includes(day)
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border text-foreground hover:border-primary/50"
-                        }`}
-                      >
-                        <span className="font-semibold">{day}</span>
-                        <span className={`text-xs ${preferredDays.includes(day) ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{time}</span>
-                      </button>
-                    ))}
+                    {levelSlots.map(({ day, time, seatsLeft }) => {
+                      const isFull = seatsLeft <= 0;
+                      return (
+                        <button
+                          type="button"
+                          key={day}
+                          disabled={isFull}
+                          onClick={() => !isFull && toggleDay(day)}
+                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all flex flex-col items-center gap-0.5 ${
+                            isFull
+                              ? "border-border opacity-50 cursor-not-allowed"
+                              : preferredDays.includes(day)
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          <span className="font-semibold">{day}</span>
+                          <span className={`text-xs ${isFull ? "text-destructive font-semibold" : preferredDays.includes(day) ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                            {isFull ? "Full" : time}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
