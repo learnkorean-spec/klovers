@@ -305,26 +305,16 @@ const GroupMatcher = () => {
         throw new Error("Failed to create or find group");
       }
 
-      // Add members to pkg_group_members (skip already existing)
-      const { data: existingMembers } = await supabase
-        .from("pkg_group_members")
-        .select("user_id")
-        .eq("group_id", newPkgGroup.id);
-      const existingUserIds = new Set((existingMembers || []).map((m: any) => m.user_id));
-
-      const newMembers = cluster.members
-        .filter((m) => !existingUserIds.has(m.user_id))
-        .map((m) => ({
-          group_id: newPkgGroup.id,
-          user_id: m.user_id,
-          member_status: "active",
-          enrollment_id: m.id,
-        }));
-
-      if (newMembers.length > 0) {
-        const { error: memberErr } = await supabase.from("pkg_group_members").insert(newMembers as any);
-        if (memberErr) {
-          throw new Error("Failed to add members: " + memberErr.message);
+      // Add members via unified assign_student_to_group RPC
+      for (const member of cluster.members) {
+        const { data: assignResult, error: assignErr } = await supabase
+          .rpc("assign_student_to_group" as any, {
+            _package_id: pkg.id,
+            _user_id: member.user_id,
+            _enrollment_id: member.id,
+          } as any);
+        if (assignErr) {
+          console.error(`Failed to assign ${member.name}:`, assignErr);
         }
       }
 

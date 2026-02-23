@@ -835,6 +835,7 @@ export type Database = {
           id: string
           max_students: number
           min_students: number
+          package_id: string | null
           status: string
           time: string
           timezone: string
@@ -847,6 +848,7 @@ export type Database = {
           id?: string
           max_students?: number
           min_students?: number
+          package_id?: string | null
           status?: string
           time: string
           timezone?: string
@@ -859,11 +861,20 @@ export type Database = {
           id?: string
           max_students?: number
           min_students?: number
+          package_id?: string | null
           status?: string
           time?: string
           timezone?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matching_slots_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pkg_attendance: {
         Row: {
@@ -1573,6 +1584,10 @@ export type Database = {
       approve_group_attendance: {
         Args: { _attendance_id: string }
         Returns: undefined
+      }
+      assign_student_to_group: {
+        Args: { _enrollment_id?: string; _package_id: string; _user_id: string }
+        Returns: Json
       }
       assign_student_to_group_from_slot: {
         Args: { _enrollment_id?: string; _slot_id: string; _user_id: string }
