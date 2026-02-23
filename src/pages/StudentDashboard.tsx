@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck } from "lucide-react";
 
 interface EnrollmentRecord {
   id: string;
@@ -32,7 +32,10 @@ interface ChecklistItem {
   completed: boolean;
 }
 
-const CHECKLIST_KEYS = ["Full name", "Korean level", "Country", "Preferred class days", "Timezone"];
+interface AttendanceDate {
+  date: string;
+  source: string;
+}
 
 const StudentDashboard = () => {
   const { loading: gateLoading, resetBlocked } = useResetGate();
@@ -44,6 +47,7 @@ const StudentDashboard = () => {
   const [hasNoData, setHasNoData] = useState(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
+  const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +80,6 @@ const StudentDashboard = () => {
         const latestEnroll = enrollmentData[0] as any;
         setLatestEnrollmentId(latestEnroll.id);
 
-        // Build checklist
         const p = profile as any;
         const items: ChecklistItem[] = [
           { key: "Full name", label: "Full name", completed: !!(p?.name && p.name.trim() !== "") },
@@ -86,6 +89,46 @@ const StudentDashboard = () => {
           { key: "Timezone", label: "Timezone", completed: !!(latestEnroll.timezone && latestEnroll.timezone.trim() !== "") },
         ];
         setChecklistItems(items);
+
+        // Fetch all attendance dates from all sources
+        const latestId = latestEnroll.id;
+        const [adminRes, pkgRes, selfRes] = await Promise.all([
+          supabase
+            .from("admin_attendance_log")
+            .select("session_date")
+            .eq("enrollment_id", latestId),
+          supabase
+            .from("pkg_attendance" as any)
+            .select("session_id, pkg_group_sessions(session_date)")
+            .eq("user_id", session.user.id)
+            .eq("admin_approved", true),
+          supabase
+            .from("attendance_requests")
+            .select("request_date")
+            .eq("enrollment_id", latestId)
+            .eq("status", "APPROVED"),
+        ]);
+
+        const dates: AttendanceDate[] = [];
+        if (adminRes.data) {
+          for (const r of adminRes.data as any[]) {
+            dates.push({ date: r.session_date, source: "Admin" });
+          }
+        }
+        if (pkgRes.data) {
+          for (const r of pkgRes.data as any[]) {
+            if (r.pkg_group_sessions?.session_date) {
+              dates.push({ date: r.pkg_group_sessions.session_date, source: "Group" });
+            }
+          }
+        }
+        if (selfRes.data) {
+          for (const r of selfRes.data as any[]) {
+            dates.push({ date: r.request_date, source: "Self" });
+          }
+        }
+        dates.sort((a, b) => a.date.localeCompare(b.date));
+        setAttendanceDates(dates);
       } else {
         setHasNoData(true);
       }
@@ -99,7 +142,6 @@ const StudentDashboard = () => {
     setChecklistItems((prev) =>
       prev.map((item) => (item.key === key ? { ...item, completed: true } : item))
     );
-    // Update local userName if name was filled
     if (key === "Full name") setUserName(_value);
   };
 
@@ -157,12 +199,7 @@ const StudentDashboard = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <AvatarUpload
-                      userId={userId}
-                      currentUrl={avatarUrl}
-                      name={displayName}
-                      onUploaded={(url) => setAvatarUrl(url)}
-                    />
+                    <AvatarUpload userId={userId} currentUrl={avatarUrl} name={displayName} onUploaded={(url) => setAvatarUrl(url)} />
                     <div>
                       <p className="font-semibold text-foreground text-lg">{displayName}</p>
                       <p className="text-sm text-muted-foreground">{enrollments.length} active package{enrollments.length !== 1 ? "s" : ""}</p>
@@ -173,20 +210,16 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Registration Checklist */}
-              <RegistrationChecklist
-                userId={userId}
-                enrollmentId={latestEnrollmentId}
-                items={checklistItems}
-                onItemCompleted={handleItemCompleted}
-              />
+              <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} />
 
               {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />
 
-              {/* All Packages */}
+              {/* All Packages with auto-calculated stats */}
               {enrollments.map((enrollment) => {
-                const attended = enrollment.sessions_total - enrollment.sessions_remaining;
-                const remaining = enrollment.sessions_remaining;
+                const totalUsed = enrollment.id === latestEnrollmentId ? attendanceDates.length : (enrollment.sessions_total - enrollment.sessions_remaining);
+                const packageSize = enrollment.sessions_total;
+                const remaining = packageSize - totalUsed;
                 const extra = remaining < 0 ? Math.abs(remaining) : 0;
                 const due = extra * enrollment.unit_price;
                 const curr = enrollment.currency === "EGP" ? "LE" : "$";
@@ -205,13 +238,17 @@ const StudentDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-4 gap-2">
                         <div className="rounded-lg bg-accent/50 p-3 text-center">
-                          <span className="text-xs text-muted-foreground">Attended</span>
-                          <p className="text-xl font-bold text-foreground">{attended}</p>
+                          <span className="text-[10px] text-muted-foreground">Package</span>
+                          <p className="text-xl font-bold text-foreground">{packageSize}</p>
+                        </div>
+                        <div className="rounded-lg bg-accent/50 p-3 text-center">
+                          <span className="text-[10px] text-muted-foreground">Used</span>
+                          <p className="text-xl font-bold text-foreground">{totalUsed}</p>
                         </div>
                         <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground">
                             {remaining >= 0 ? "Remaining" : "Extra"}
                           </span>
                           <p className={`text-xl font-bold ${remaining >= 0 ? "text-primary" : "text-destructive"}`}>
@@ -219,9 +256,9 @@ const StudentDashboard = () => {
                           </p>
                         </div>
                         <div className={`rounded-lg p-3 text-center ${due > 0 ? "bg-destructive/10" : "bg-accent/50"}`}>
-                          <span className="text-xs text-muted-foreground">Due</span>
+                          <span className="text-[10px] text-muted-foreground">Due</span>
                           <p className={`text-xl font-bold ${due > 0 ? "text-destructive" : "text-foreground"}`}>
-                            {curr}{due}
+                            {curr}{due.toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -234,13 +271,40 @@ const StudentDashboard = () => {
                       ) : (
                         <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
                           <AlertTriangle className="h-4 w-4 shrink-0" />
-                          <span><strong>{extra}</strong> extra — Due: <strong>{curr}{due}</strong></span>
+                          <span><strong>{extra}</strong> extra — Due: <strong>{curr}{due.toLocaleString()}</strong></span>
                         </div>
                       )}
                     </CardContent>
                   </Card>
                 );
               })}
+
+              {/* Read-only Attendance Dates List */}
+              {attendanceDates.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <CalendarCheck className="h-5 w-5" />
+                      Attendance History ({attendanceDates.length} sessions)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1">
+                      {attendanceDates.map((d, i) => (
+                        <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
+                            <CalendarCheck className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium text-foreground">
+                              {new Date(d.date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Group Attendance */}
               <StudentGroupAttendance />

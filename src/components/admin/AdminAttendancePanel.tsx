@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   CalendarCheck, AlertTriangle, Plus, Trash2, X,
-  Pencil, Check, Users, CreditCard, BookOpen,
+  Pencil, Check, Users, CreditCard, BookOpen, Eraser,
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -71,39 +71,35 @@ const AdminAttendancePanel = ({
   const [editingPlan, setEditingPlan] = useState(false);
   const [editPlanType, setEditPlanType] = useState("");
   const [editDuration, setEditDuration] = useState("");
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+  const [editNewDate, setEditNewDate] = useState("");
   const [saving, setSaving] = useState(false);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
 
-    // Parallel fetches
     const [enrollRes, adminRes, pkgRes, selfRes, groupRes] = await Promise.all([
-      // Enrollment details
       supabase
         .from("enrollments")
         .select("plan_type, duration, sessions_total, sessions_remaining, amount, unit_price, currency, payment_status, level")
         .eq("id", enrollmentId)
         .single(),
-      // Admin attendance log
       supabase
         .from("admin_attendance_log" as any)
         .select("id, session_date, created_at")
         .eq("enrollment_id", enrollmentId)
         .order("session_date", { ascending: false }),
-      // Group attendance (pkg_attendance + pkg_group_sessions + pkg_groups)
       supabase
         .from("pkg_attendance" as any)
         .select("session_id, created_at, status, pkg_group_sessions(id, session_date, group_id, pkg_groups(name))")
         .eq("user_id", userId)
         .eq("admin_approved", true),
-      // Self-reported (approved attendance_requests)
       supabase
         .from("attendance_requests")
         .select("id, request_date, created_at")
         .eq("enrollment_id", enrollmentId)
         .eq("status", "APPROVED")
         .order("request_date", { ascending: false }),
-      // Group membership
       supabase
         .from("pkg_group_members" as any)
         .select("group_id, pkg_groups(name)")
@@ -112,66 +108,70 @@ const AdminAttendancePanel = ({
         .limit(1),
     ]);
 
-    // Set enrollment
-    if (enrollRes.data) {
-      setEnrollment(enrollRes.data as EnrollmentDetails);
-    }
+    if (enrollRes.data) setEnrollment(enrollRes.data as EnrollmentDetails);
 
-    // Set group name
     if (groupRes.data && groupRes.data.length > 0) {
       setGroupName((groupRes.data[0] as any).pkg_groups?.name || null);
     }
 
-    // Merge records
     const unified: UnifiedRecord[] = [];
 
-    // Admin logs
     if (adminRes.data) {
       for (const r of adminRes.data as any[]) {
-        unified.push({
-          id: r.id,
-          session_date: r.session_date,
-          source: "Admin",
-          created_at: r.created_at,
-        });
+        unified.push({ id: r.id, session_date: r.session_date, source: "Admin", created_at: r.created_at });
       }
     }
 
-    // Group sessions
     if (pkgRes.data) {
       for (const r of pkgRes.data as any[]) {
         const session = r.pkg_group_sessions;
-        unified.push({
-          id: r.session_id,
-          session_date: session.session_date,
-          source: "Group",
-          group_name: session.pkg_groups?.name || "",
-          created_at: r.created_at,
-        });
+        if (session) {
+          unified.push({
+            id: r.session_id,
+            session_date: session.session_date,
+            source: "Group",
+            group_name: session.pkg_groups?.name || "",
+            created_at: r.created_at,
+          });
+        }
       }
     }
 
-    // Self-reported
     if (selfRes.data) {
       for (const r of selfRes.data as any[]) {
-        unified.push({
-          id: r.id,
-          session_date: r.request_date,
-          source: "Student",
-          created_at: r.created_at,
-        });
+        unified.push({ id: r.id, session_date: r.request_date, source: "Student", created_at: r.created_at });
       }
     }
 
-    // Sort descending by date
-    unified.sort((a, b) => b.session_date.localeCompare(a.session_date));
+    // Sort ascending by date (oldest first)
+    unified.sort((a, b) => a.session_date.localeCompare(b.session_date));
     setRecords(unified);
     setLoading(false);
   }, [enrollmentId, userId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Calendar modifiers by source
+  // Auto-calculated stats
+  const stats = useMemo(() => {
+    if (!enrollment) return null;
+    const totalUsed = records.length;
+    const packageSize = enrollment.sessions_total;
+    const remaining = packageSize - totalUsed;
+    const extra = remaining < 0 ? Math.abs(remaining) : 0;
+    const balance = extra * enrollment.unit_price;
+    return { totalUsed, packageSize, remaining, extra, balance };
+  }, [records, enrollment]);
+
+  // Duplicate detection
+  const duplicates = useMemo(() => {
+    const dateCount: Record<string, number> = {};
+    for (const r of records) {
+      dateCount[r.session_date] = (dateCount[r.session_date] || 0) + 1;
+    }
+    return Object.entries(dateCount).filter(([, c]) => c > 1).map(([d]) => d);
+  }, [records]);
+
+  // Calendar modifiers
   const { groupDates, adminDates, studentDates } = useMemo(() => {
     const g: Date[] = [], a: Date[] = [], s: Date[] = [];
     for (const r of records) {
@@ -185,7 +185,6 @@ const AdminAttendancePanel = ({
 
   const isLocked = derivedStatus === "LOCKED" || sessionsRemaining <= -3;
   const currLabel = currency === "EGP" ? "LE" : "$";
-  const totalAttended = records.length;
 
   const handleAddAttendance = async () => {
     if (!selectedDate) return;
@@ -196,14 +195,9 @@ const AdminAttendancePanel = ({
       p_session_date: dateStr,
     });
     if (error) {
-      const msg = error.message?.includes("duplicate")
-        ? "Attendance already recorded for this date."
-        : error.message?.includes("LOCKED")
-        ? "Student is LOCKED (-3). Renew required."
-        : error.message;
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      toast({ title: "Error", description: error.message?.includes("duplicate") ? "Already recorded." : error.message, variant: "destructive" });
     } else {
-      toast({ title: "Attendance added", description: `Sessions remaining: ${data}` });
+      toast({ title: "Attendance added", description: `Remaining: ${data}` });
       setSelectedDate(undefined);
       fetchAll();
       onUpdated();
@@ -219,24 +213,92 @@ const AdminAttendancePanel = ({
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Attendance removed", description: `Sessions remaining: ${data}` });
+      toast({ title: "Removed", description: `Remaining: ${data}` });
       fetchAll();
       onUpdated();
     }
+  };
+
+  const handleEditDate = async (oldDate: string) => {
+    if (!editNewDate) return;
+    setSaving(true);
+    // Remove old, add new
+    const { error: removeErr } = await supabase.rpc("admin_remove_attendance" as any, {
+      p_enrollment_id: enrollmentId,
+      p_session_date: oldDate,
+    });
+    if (removeErr) {
+      toast({ title: "Error removing old date", description: removeErr.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+    const { error: addErr } = await supabase.rpc("admin_add_attendance" as any, {
+      p_enrollment_id: enrollmentId,
+      p_session_date: editNewDate,
+    });
+    if (addErr) {
+      toast({ title: "Error adding new date", description: addErr.message, variant: "destructive" });
+    } else {
+      toast({ title: "Date updated", description: `Changed ${oldDate} → ${editNewDate}` });
+    }
+    setEditingDate(null);
+    setEditNewDate("");
+    fetchAll();
+    onUpdated();
+    setSaving(false);
+  };
+
+  const handleRemoveDuplicates = async () => {
+    if (duplicates.length === 0) return;
+    setSaving(true);
+    let removed = 0;
+    for (const dupeDate of duplicates) {
+      // Find admin-logged duplicates for this date and remove extras
+      const dupeRecords = records.filter(r => r.session_date === dupeDate && r.source === "Admin");
+      // Keep the first, remove the rest
+      for (let i = 1; i < dupeRecords.length; i++) {
+        const { error } = await supabase.rpc("admin_remove_attendance" as any, {
+          p_enrollment_id: enrollmentId,
+          p_session_date: dupeDate,
+        });
+        if (!error) removed++;
+        // Only remove once per duplicate since the RPC deletes by date
+        break;
+      }
+    }
+    toast({ title: "Duplicates cleaned", description: `Removed ${removed} duplicate(s)` });
+    fetchAll();
+    onUpdated();
+    setSaving(false);
+  };
+
+  const handleSyncRemaining = async () => {
+    if (!stats || !enrollment) return;
+    setSaving(true);
+    const newRemaining = stats.remaining;
+    const { error } = await supabase
+      .from("enrollments")
+      .update({ sessions_remaining: newRemaining } as any)
+      .eq("id", enrollmentId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Synced", description: `Remaining set to ${newRemaining}` });
+      fetchAll();
+      onUpdated();
+    }
+    setSaving(false);
   };
 
   const handleSaveRemaining = async () => {
     const val = parseInt(editRemaining, 10);
     if (isNaN(val)) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ sessions_remaining: val } as any)
-      .eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ sessions_remaining: val } as any).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Updated", description: `Sessions remaining set to ${val}` });
+      toast({ title: "Updated", description: `Remaining set to ${val}` });
       setEditingRemaining(false);
       fetchAll();
       onUpdated();
@@ -248,10 +310,7 @@ const AdminAttendancePanel = ({
     const val = parseFloat(editUnitPrice);
     if (isNaN(val) || val < 0) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ unit_price: val } as any)
-      .eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ unit_price: val } as any).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -276,7 +335,7 @@ const AdminAttendancePanel = ({
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Updated", description: `Plan set to ${editPlanType} ${dur}mo` });
+      toast({ title: "Updated", description: `Plan set to ${editPlanType} ${dur}mo (${newTotal} sessions)` });
       setEditingPlan(false);
       fetchAll();
       onUpdated();
@@ -286,14 +345,11 @@ const AdminAttendancePanel = ({
 
   const handleUnlock = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ sessions_remaining: 0 } as any)
-      .eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ sessions_remaining: 0 } as any).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Unlocked", description: "Sessions remaining reset to 0. Student is now active." });
+      toast({ title: "Unlocked", description: "Student is now active." });
       fetchAll();
       onUpdated();
     }
@@ -305,22 +361,13 @@ const AdminAttendancePanel = ({
 
   const modifiers = { group: groupDates, admin: adminDates, student: studentDates };
   const modifiersStyles = {
-    group: {
-      backgroundColor: "hsl(var(--primary))",
-      color: "hsl(var(--primary-foreground))",
-      borderRadius: "9999px",
-    },
-    admin: {
-      backgroundColor: "hsl(var(--secondary))",
-      color: "hsl(var(--secondary-foreground))",
-      borderRadius: "9999px",
-    },
-    student: {
-      backgroundColor: "hsl(var(--accent))",
-      color: "hsl(var(--accent-foreground))",
-      borderRadius: "9999px",
-    },
+    group: { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: "9999px" },
+    admin: { backgroundColor: "hsl(var(--secondary))", color: "hsl(var(--secondary-foreground))", borderRadius: "9999px" },
+    student: { backgroundColor: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))", borderRadius: "9999px" },
   };
+
+  // Check if DB remaining is out of sync with calculated
+  const outOfSync = stats && enrollment && enrollment.sessions_remaining !== stats.remaining;
 
   return (
     <Card className="border-2 border-primary/20">
@@ -334,30 +381,62 @@ const AdminAttendancePanel = ({
             <X className="h-4 w-4" />
           </Button>
         </div>
-
-        {/* Status badges */}
-        <div className="flex flex-wrap gap-2 mt-2">
-          <Badge variant="secondary">
-            Attended: {totalAttended}/{enrollment?.sessions_total ?? "—"}
-          </Badge>
-          <Badge variant={sessionsRemaining < 0 ? "destructive" : "secondary"}>
-            Remaining: {enrollment?.sessions_remaining ?? sessionsRemaining}
-          </Badge>
-          {negativeSessions > 0 && (
-            <Badge variant="destructive">Negative: {negativeSessions}</Badge>
-          )}
-          {amountDue > 0 && (
-            <Badge variant="destructive">Due: {currLabel}{amountDue.toLocaleString()}</Badge>
-          )}
-          {isLocked && (
-            <Badge variant="destructive" className="flex items-center gap-1 cursor-pointer" onClick={handleUnlock} title="Click to unlock (reset to 0 remaining)">
-              <AlertTriangle className="h-3 w-3" /> LOCKED — click to unlock
-            </Badge>
-          )}
-        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Auto-Calculated Stats */}
+        {stats && enrollment && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="rounded-lg bg-accent/50 p-3 text-center">
+              <span className="text-[10px] text-muted-foreground">Package</span>
+              <p className="text-lg font-bold text-foreground">{stats.packageSize}</p>
+            </div>
+            <div className="rounded-lg bg-accent/50 p-3 text-center">
+              <span className="text-[10px] text-muted-foreground">Used</span>
+              <p className="text-lg font-bold text-foreground">{stats.totalUsed}</p>
+            </div>
+            <div className={`rounded-lg p-3 text-center ${stats.remaining >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+              <span className="text-[10px] text-muted-foreground">{stats.remaining >= 0 ? "Remaining" : "Extra"}</span>
+              <p className={`text-lg font-bold ${stats.remaining >= 0 ? "text-primary" : "text-destructive"}`}>
+                {stats.remaining >= 0 ? stats.remaining : stats.extra}
+              </p>
+            </div>
+            <div className={`rounded-lg p-3 text-center ${stats.balance > 0 ? "bg-destructive/10" : "bg-accent/50"}`}>
+              <span className="text-[10px] text-muted-foreground">Balance Due</span>
+              <p className={`text-lg font-bold ${stats.balance > 0 ? "text-destructive" : "text-foreground"}`}>
+                {currLabel}{stats.balance.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Sync warning */}
+        {outOfSync && (
+          <div className="flex items-center justify-between bg-destructive/10 rounded-lg p-2 text-sm">
+            <span className="text-destructive flex items-center gap-1">
+              <AlertTriangle className="h-4 w-4" />
+              DB shows {enrollment!.sessions_remaining} remaining, but {stats!.totalUsed} used of {stats!.packageSize} = {stats!.remaining} remaining
+            </span>
+            <Button size="sm" variant="destructive" onClick={handleSyncRemaining} disabled={saving}>
+              <Check className="h-3 w-3 mr-1" /> Sync
+            </Button>
+          </div>
+        )}
+
+        {/* Status & actions row */}
+        <div className="flex flex-wrap gap-2">
+          {isLocked && (
+            <Badge variant="destructive" className="cursor-pointer" onClick={handleUnlock} title="Click to unlock">
+              <AlertTriangle className="h-3 w-3 mr-1" /> LOCKED — click to unlock
+            </Badge>
+          )}
+          {duplicates.length > 0 && (
+            <Button size="sm" variant="outline" onClick={handleRemoveDuplicates} disabled={saving}>
+              <Eraser className="h-3 w-3 mr-1" /> Remove {duplicates.length} duplicate(s)
+            </Button>
+          )}
+        </div>
+
         {/* Enrollment Details */}
         {enrollment && (
           <div className="grid grid-cols-2 gap-2 text-sm border border-border rounded-lg p-3">
@@ -366,38 +445,22 @@ const AdminAttendancePanel = ({
               <span className="text-muted-foreground">Plan:</span>
               {editingPlan ? (
                 <div className="flex items-center gap-1">
-                  <select
-                    value={editPlanType}
-                    onChange={(e) => setEditPlanType(e.target.value)}
-                    className="h-6 text-xs border border-border rounded px-1 bg-background"
-                  >
+                  <select value={editPlanType} onChange={(e) => setEditPlanType(e.target.value)} className="h-6 text-xs border border-border rounded px-1 bg-background">
                     <option value="group">group</option>
                     <option value="private">private</option>
                   </select>
-                  <select
-                    value={editDuration}
-                    onChange={(e) => setEditDuration(e.target.value)}
-                    className="h-6 text-xs border border-border rounded px-1 bg-background"
-                  >
+                  <select value={editDuration} onChange={(e) => setEditDuration(e.target.value)} className="h-6 text-xs border border-border rounded px-1 bg-background">
                     <option value="1">1mo</option>
                     <option value="3">3mo</option>
                     <option value="6">6mo</option>
                   </select>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSavePlan} disabled={saving}>
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingPlan(false)}>
-                    <X className="h-3 w-3" />
-                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSavePlan} disabled={saving}><Check className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingPlan(false)}><X className="h-3 w-3" /></Button>
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
                   <span className="font-medium">{enrollment.plan_type} {enrollment.duration}mo</span>
-                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                    setEditPlanType(enrollment.plan_type);
-                    setEditDuration(String(enrollment.duration));
-                    setEditingPlan(true);
-                  }}>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditPlanType(enrollment.plan_type); setEditDuration(String(enrollment.duration)); setEditingPlan(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 </div>
@@ -415,64 +478,35 @@ const AdminAttendancePanel = ({
                 <span className="font-medium">{groupName}</span>
               </div>
             )}
-
-            {/* Editable sessions_remaining */}
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground">Remaining:</span>
               {editingRemaining ? (
                 <div className="flex items-center gap-1">
-                  <Input
-                    type="number"
-                    value={editRemaining}
-                    onChange={(e) => setEditRemaining(e.target.value)}
-                    className="h-6 w-16 text-xs"
-                  />
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRemaining} disabled={saving}>
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingRemaining(false)}>
-                    <X className="h-3 w-3" />
-                  </Button>
+                  <Input type="number" value={editRemaining} onChange={(e) => setEditRemaining(e.target.value)} className="h-6 w-16 text-xs" />
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRemaining} disabled={saving}><Check className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingRemaining(false)}><X className="h-3 w-3" /></Button>
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
                   <span className="font-medium">{enrollment.sessions_remaining}</span>
-                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                    setEditRemaining(String(enrollment.sessions_remaining));
-                    setEditingRemaining(true);
-                  }}>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditRemaining(String(enrollment.sessions_remaining)); setEditingRemaining(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 </div>
               )}
             </div>
-
-            {/* Editable unit_price */}
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground">Unit price:</span>
               {editingUnitPrice ? (
                 <div className="flex items-center gap-1">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={editUnitPrice}
-                    onChange={(e) => setEditUnitPrice(e.target.value)}
-                    className="h-6 w-20 text-xs"
-                  />
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveUnitPrice} disabled={saving}>
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingUnitPrice(false)}>
-                    <X className="h-3 w-3" />
-                  </Button>
+                  <Input type="number" step="0.01" value={editUnitPrice} onChange={(e) => setEditUnitPrice(e.target.value)} className="h-6 w-20 text-xs" />
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveUnitPrice} disabled={saving}><Check className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingUnitPrice(false)}><X className="h-3 w-3" /></Button>
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
                   <span className="font-medium">{currLabel}{enrollment.unit_price}</span>
-                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                    setEditUnitPrice(String(enrollment.unit_price));
-                    setEditingUnitPrice(true);
-                  }}>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditUnitPrice(String(enrollment.unit_price)); setEditingUnitPrice(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 </div>
@@ -492,74 +526,78 @@ const AdminAttendancePanel = ({
             className={cn("p-3 pointer-events-auto w-full")}
           />
           <div className="flex gap-3 mt-2 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-primary" />
-              <span className="text-xs text-muted-foreground">Group</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-secondary" />
-              <span className="text-xs text-muted-foreground">Admin</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-accent" />
-              <span className="text-xs text-muted-foreground">Student</span>
-            </div>
+            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-primary" /><span className="text-xs text-muted-foreground">Group</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-secondary" /><span className="text-xs text-muted-foreground">Admin</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-accent" /><span className="text-xs text-muted-foreground">Student</span></div>
           </div>
         </div>
 
         {/* Add button */}
-        <Button
-          onClick={handleAddAttendance}
-          disabled={adding || !selectedDate || isLocked}
-          className="w-full"
-          size="sm"
-        >
+        <Button onClick={handleAddAttendance} disabled={adding || !selectedDate || isLocked} className="w-full" size="sm">
           <Plus className="h-4 w-4 mr-1" />
           {adding ? "Adding..." : selectedDate ? `Add attendance for ${format(selectedDate, "MMM d, yyyy")}` : "Select a date to add"}
         </Button>
 
-        {/* Record list */}
+        {/* Attendance Dates List — sorted oldest to newest */}
         {loading ? (
           <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
         ) : records.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">No attendance records yet.</p>
         ) : (
-          <div className="space-y-1 max-h-60 overflow-y-auto">
-            {records.map((r) => (
-              <div key={`${r.source}-${r.id}`} className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-accent/30 transition-colors">
+          <div className="space-y-1 max-h-72 overflow-y-auto">
+            <p className="text-xs text-muted-foreground font-medium mb-1">
+              All Sessions ({records.length}) — oldest first
+            </p>
+            {records.map((r, idx) => (
+              <div key={`${r.source}-${r.id}-${idx}`} className="flex items-center justify-between p-2 rounded-lg border border-border hover:bg-accent/30 transition-colors">
                 <div className="flex items-center gap-2">
-                  <CalendarCheck className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
-                    {new Date(r.session_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                  </span>
+                  <span className="text-xs text-muted-foreground w-5 text-right">{idx + 1}.</span>
+                  {editingDate === `${r.source}-${r.id}` ? (
+                    <div className="flex items-center gap-1">
+                      <Input type="date" value={editNewDate} onChange={(e) => setEditNewDate(e.target.value)} className="h-6 text-xs w-36" />
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleEditDate(r.session_date)} disabled={saving}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingDate(null)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-medium text-foreground">
+                      {new Date(r.session_date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                    </span>
+                  )}
                   <Badge variant={sourceBadgeVariant(r.source)} className="text-[10px] px-1.5 py-0">
                     {r.source === "Group" ? "Group" : r.source === "Admin" ? "Admin" : "Self"}
                   </Badge>
-                  {r.group_name && (
-                    <span className="text-xs text-muted-foreground">{r.group_name}</span>
+                  {r.group_name && <span className="text-xs text-muted-foreground">{r.group_name}</span>}
+                  {duplicates.includes(r.session_date) && (
+                    <Badge variant="destructive" className="text-[10px] px-1 py-0">DUP</Badge>
                   )}
                 </div>
-                {/* Only allow deletion of admin-logged records */}
-                {r.source === "Admin" && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remove attendance?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will remove the attendance record for {r.session_date} and restore 1 session.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRemoveAttendance(r.session_date)}>Remove</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                {r.source === "Admin" && editingDate !== `${r.source}-${r.id}` && (
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingDate(`${r.source}-${r.id}`); setEditNewDate(r.session_date); }}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove attendance?</AlertDialogTitle>
+                          <AlertDialogDescription>Remove {r.session_date} and restore 1 session.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleRemoveAttendance(r.session_date)}>Remove</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 )}
               </div>
             ))}
