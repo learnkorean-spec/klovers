@@ -75,9 +75,10 @@ interface WaitlistRow {
 
 // ─── Packages Manager ────────────────────────────────────────────────────────
 
-const PackagesManager = () => {
+const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }) => {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pkgHasGroup, setPkgHasGroup] = useState<Record<string, boolean>>({});
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Package | null>(null);
   const [filterLevel, setFilterLevel] = useState("all");
@@ -103,6 +104,11 @@ const PackagesManager = () => {
     if (pkgIds.length > 0) {
       const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id, capacity").in("package_id", pkgIds).eq("is_active", true);
       const groupIds = (groups || []).map((g: any) => g.id);
+
+      // Track which packages have active groups
+      const hasGroupMap: Record<string, boolean> = {};
+      (groups || []).forEach((g: any) => { hasGroupMap[g.package_id] = true; });
+      setPkgHasGroup(hasGroupMap);
 
       // Calculate total capacity per package (sum of group capacities)
       const pkgTotalCapacity: Record<string, number> = {};
@@ -194,6 +200,7 @@ const PackagesManager = () => {
       return;
     }
     toast({ title: "Group created", description: `"${defaultName}" added to Groups tab.` });
+    fetchPackages();
   };
 
   const handleDeletePackage = async (p: Package) => {
@@ -285,7 +292,7 @@ const PackagesManager = () => {
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Active" : "Inactive"}</Badge>
-                      {needsGroup && (
+                      {needsGroup && !pkgHasGroup[p.id] && (
                         <Badge variant="outline" className="text-xs border-destructive text-destructive flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3" /> Add group
                         </Badge>
@@ -294,9 +301,15 @@ const PackagesManager = () => {
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleAddGroup(p)} title="Create a group for this package">
-                      <Plus className="h-4 w-4 mr-1" /> Add Group
-                    </Button>
+                    {pkgHasGroup[p.id] ? (
+                      <Button variant="ghost" size="sm" onClick={() => onSwitchToGroups?.()} title="View group in Groups tab">
+                        <Users className="h-4 w-4 mr-1" /> View Group
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => handleAddGroup(p)} title="Create a group for this package">
+                        <Plus className="h-4 w-4 mr-1" /> Add Group
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => handleToggleActive(p)}>
                       {p.is_active ? "Disable" : "Enable"}
                     </Button>
@@ -1100,15 +1113,16 @@ const WaitlistManager = () => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const SchedulingManager = () => {
+  const [activeTab, setActiveTab] = useState("packages");
   return (
-    <Tabs defaultValue="packages">
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-4">
         <TabsTrigger value="packages">Teacher Available Slots</TabsTrigger>
         <TabsTrigger value="groups">Groups</TabsTrigger>
         <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
         <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" /> Notifications</TabsTrigger>
       </TabsList>
-      <TabsContent value="packages"><PackagesManager /></TabsContent>
+      <TabsContent value="packages"><PackagesManager onSwitchToGroups={() => setActiveTab("groups")} /></TabsContent>
       <TabsContent value="groups"><GroupsManager /></TabsContent>
       <TabsContent value="waitlist"><WaitlistManager /></TabsContent>
       <TabsContent value="notifications"><AdminNotifications /></TabsContent>
