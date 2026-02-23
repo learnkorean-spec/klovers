@@ -5,29 +5,48 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2 } from "lucide-react";
+import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface UnmatchedEnrollment {
   id: string;
   user_id: string;
   plan_type: string;
-  preferred_days: string[] | null;
+  preferred_day: string | null;
   preferred_start: string | null;
   preferred_time: string | null;
   timezone: string | null;
   duration: number;
   level: string | null;
+  package_id: string | null;
   name?: string;
   email?: string;
 }
 
+interface SchedulePackage {
+  id: string;
+  level: string;
+  day_of_week: number;
+  start_time: string;
+  timezone: string;
+  capacity: number;
+  course_type: string;
+  is_active: boolean;
+}
+
 interface Cluster {
   key: string;
-  days: string[];
-  start: string;
-  level: string;
+  packageId: string;
+  packageLevel: string;
+  packageDay: number;
+  packageTime: string;
+  packageTimezone: string;
   members: UnmatchedEnrollment[];
+}
+
+interface NeedsReviewItem {
+  enrollment: UnmatchedEnrollment;
+  reason: string;
 }
 
 interface SuggestedSlot {
@@ -46,8 +65,17 @@ const DAY_NAMES: Record<number, string> = {
   4: "Thursday", 5: "Friday", 6: "Saturday",
 };
 
+const DAY_NAME_TO_NUM: Record<string, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+  thursday: 4, friday: 5, saturday: 6,
+};
+
+const normalizeLevel = (v: string) => v.trim().toLowerCase().replace(/\s+/g, "_");
+
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
+  const [packages, setPackages] = useState<SchedulePackage[]>([]);
+  const [needsReview, setNeedsReview] = useState<NeedsReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
   const [createdGroup, setCreatedGroup] = useState<{ name: string; level: string } | null>(null);
@@ -58,13 +86,13 @@ const GroupMatcher = () => {
   const fetchUnmatched = async () => {
     setLoading(true);
 
+    // Fetch ALL unmatched group enrollments (no preferred_days filter)
     const { data: rawEnrollments, error } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_days, preferred_start, preferred_time, timezone, duration, level")
+      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
-      .is("matched_at", null)
-      .not("preferred_days", "is", null);
+      .is("matched_at", null);
 
     if (error) {
       console.error("Failed to fetch unmatched enrollments:", error);
@@ -72,26 +100,33 @@ const GroupMatcher = () => {
       return;
     }
 
-    const userIds = [...new Set((rawEnrollments as any[]).map((e: any) => e.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, name, email")
-      .in("user_id", userIds);
+    // Fetch all active schedule_packages for enrichment
+    const { data: pkgs } = await supabase
+      .from("schedule_packages")
+      .select("*")
+      .eq("is_active", true);
 
-    const profileMap: Record<string, { name: string; email: string }> = {};
-    if (profiles) {
-      (profiles as any[]).forEach((p: any) => {
-        profileMap[p.user_id] = { name: p.name, email: p.email };
-      });
+    setPackages((pkgs as SchedulePackage[]) || []);
+
+    const userIds = [...new Set((rawEnrollments as any[]).map((e: any) => e.user_id))];
+    let profileMap: Record<string, { name: string; email: string }> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, name, email")
+        .in("user_id", userIds);
+      if (profiles) {
+        (profiles as any[]).forEach((p: any) => {
+          profileMap[p.user_id] = { name: p.name, email: p.email };
+        });
+      }
     }
 
-    const enriched: UnmatchedEnrollment[] = (rawEnrollments as any[])
-      .filter((e: any) => e.preferred_days && e.preferred_days.length > 0 && e.preferred_start)
-      .map((e: any) => ({
-        ...e,
-        name: profileMap[e.user_id]?.name || "Unknown",
-        email: profileMap[e.user_id]?.email || "",
-      }));
+    const enriched: UnmatchedEnrollment[] = (rawEnrollments as any[]).map((e: any) => ({
+      ...e,
+      name: profileMap[e.user_id]?.name || "Unknown",
+      email: profileMap[e.user_id]?.email || "",
+    }));
 
     setEnrollments(enriched);
     setLoading(false);
@@ -101,83 +136,84 @@ const GroupMatcher = () => {
     fetchUnmatched();
   }, []);
 
+  // Package-driven clustering
   const clusters = useMemo(() => {
-    const clusterMap: Record<string, UnmatchedEnrollment[]> = {};
-
-    for (const enrollment of enrollments) {
-      const days = enrollment.preferred_days || [];
-      const start = enrollment.preferred_start || "";
-      const dayKey = [...days].sort().join(",");
-      const key = `${dayKey}|${start}`;
-
-      if (!clusterMap[key]) clusterMap[key] = [];
-      clusterMap[key].push(enrollment);
+    const pkgMap = new Map<string, SchedulePackage>();
+    for (const p of packages) {
+      pkgMap.set(p.id, p);
     }
 
-    const mergedClusters: Cluster[] = [];
-    const processed = new Set<string>();
+    const clusterMap: Record<string, UnmatchedEnrollment[]> = {};
+    const clusterPkgId: Record<string, string> = {};
+    const reviewItems: NeedsReviewItem[] = [];
 
-    const keys = Object.keys(clusterMap);
-    for (let i = 0; i < keys.length; i++) {
-      if (processed.has(keys[i])) continue;
+    for (const enrollment of enrollments) {
+      let resolvedPkgId: string | null = enrollment.package_id;
 
-      const [daysStr, start] = keys[i].split("|");
-      const days = daysStr.split(",");
-      let members = [...clusterMap[keys[i]]];
-
-      for (let j = i + 1; j < keys.length; j++) {
-        if (processed.has(keys[j])) continue;
-        const [otherDaysStr, otherStart] = keys[j].split("|");
-        if (otherStart !== start) continue;
-        const otherDays = otherDaysStr.split(",");
-        const overlap = days.some((d) => otherDays.includes(d));
-        if (overlap) {
-          members.push(...clusterMap[keys[j]]);
-          processed.add(keys[j]);
-          otherDays.forEach((d) => { if (!days.includes(d)) days.push(d); });
+      // Fallback: try to resolve package from level + preferred_day
+      if (!resolvedPkgId && enrollment.level && enrollment.preferred_day) {
+        const normLevel = normalizeLevel(enrollment.level);
+        const dayNum = DAY_NAME_TO_NUM[enrollment.preferred_day.toLowerCase()];
+        if (dayNum !== undefined) {
+          const match = packages.find(
+            p => p.level === normLevel && p.day_of_week === dayNum
+          );
+          if (match) resolvedPkgId = match.id;
         }
       }
 
-      processed.add(keys[i]);
+      if (!resolvedPkgId) {
+        reviewItems.push({
+          enrollment,
+          reason: !enrollment.level
+            ? "Missing level"
+            : !enrollment.preferred_day
+              ? "Missing preferred day"
+              : "No matching schedule package",
+        });
+        continue;
+      }
 
-      const seen = new Set<string>();
-      members = members.filter((m) => {
-        if (seen.has(m.id)) return false;
-        seen.add(m.id);
-        return true;
-      });
+      const key = `pkg:${resolvedPkgId}`;
+      if (!clusterMap[key]) {
+        clusterMap[key] = [];
+        clusterPkgId[key] = resolvedPkgId;
+      }
+      clusterMap[key].push(enrollment);
+    }
 
-      // Determine cluster level from members
-      const levels = members.map(m => m.level).filter(Boolean);
-      const level = levels.length > 0 ? levels[0]! : "unknown";
+    setNeedsReview(reviewItems);
 
-      mergedClusters.push({
-        key: keys[i],
-        days: days.sort(),
-        start,
-        level,
+    const result: Cluster[] = [];
+    for (const [key, members] of Object.entries(clusterMap)) {
+      const pkgId = clusterPkgId[key];
+      const pkg = pkgMap.get(pkgId);
+
+      result.push({
+        key,
+        packageId: pkgId,
+        packageLevel: pkg?.level || "unknown",
+        packageDay: pkg?.day_of_week ?? -1,
+        packageTime: pkg?.start_time || "—",
+        packageTimezone: pkg?.timezone || "Africa/Cairo",
         members,
       });
     }
 
-    return mergedClusters.sort((a, b) => b.members.length - a.members.length);
-  }, [enrollments]);
+    return result.sort((a, b) => b.members.length - a.members.length);
+  }, [enrollments, packages]);
 
-  const fetchSuggestedSlots = async (level: string, blockedDay: string) => {
-    // Fetch schedule_packages for this level that are NOT the blocked day
-    const { data: packages } = await supabase
-      .from("schedule_packages")
-      .select("*")
-      .eq("level", level)
-      .eq("is_active", true);
+  const fetchSuggestedSlots = async (level: string, blockedDayNum: number) => {
+    const relevant = packages.filter(
+      p => p.level === level && p.day_of_week !== blockedDayNum && p.is_active
+    );
 
-    if (!packages || packages.length === 0) {
+    if (relevant.length === 0) {
       setSuggestedSlots([]);
       return;
     }
 
-    // Get member counts for each package's groups
-    const packageIds = packages.map(p => p.id);
+    const packageIds = relevant.map(p => p.id);
     const { data: groups } = await supabase
       .from("pkg_groups")
       .select("id, package_id")
@@ -193,7 +229,6 @@ const GroupMatcher = () => {
           .eq("member_status", "active")
       : { data: [] };
 
-    // Count members per package
     const groupToPackage: Record<string, string> = {};
     (groups || []).forEach(g => { groupToPackage[g.id] = g.package_id; });
     const packageMemberCount: Record<string, number> = {};
@@ -202,11 +237,7 @@ const GroupMatcher = () => {
       if (pkgId) packageMemberCount[pkgId] = (packageMemberCount[pkgId] || 0) + 1;
     });
 
-    const dayNameToNum = (d: string) => Object.entries(DAY_NAMES).find(([, v]) => v === d)?.[0];
-    const blockedDayNum = dayNameToNum(blockedDay);
-
-    const suggestions: SuggestedSlot[] = packages
-      .filter(p => String(p.day_of_week) !== blockedDayNum)
+    const suggestions: SuggestedSlot[] = relevant
       .map(p => ({
         id: p.id,
         level: p.level,
@@ -223,7 +254,9 @@ const GroupMatcher = () => {
   };
 
   const openNameDialog = (cluster: Cluster) => {
-    const defaultName = `${cluster.level.replace(/_/g, " ")} – ${cluster.days.join("/")} ${cluster.start}`;
+    const dayName = DAY_NAMES[cluster.packageDay] || "Unknown";
+    const levelLabel = cluster.packageLevel.replace(/_/g, " ");
+    const defaultName = `${levelLabel} – ${dayName} ${cluster.packageTime}`;
     setGroupNameInput(defaultName);
     setNameDialogCluster(cluster);
   };
@@ -232,84 +265,13 @@ const GroupMatcher = () => {
     setNameDialogCluster(null);
     setCreating(cluster.key);
     try {
-      const dayNum = Object.entries(DAY_NAMES).find(([, v]) => v === cluster.days[0])?.[0];
+      const pkgId = cluster.packageId;
 
-      // Find or create schedule_package
-      let pkg = dayNum !== undefined
-        ? await supabase
-            .from("schedule_packages")
-            .select("id, capacity")
-            .eq("level", cluster.level)
-            .eq("day_of_week", Number(dayNum))
-            .eq("is_active", true)
-            .limit(1)
-            .maybeSingle()
-            .then(r => r.data)
-        : null;
-
-      if (!pkg && dayNum !== undefined) {
-        const { data: newPkg } = await supabase
-          .from("schedule_packages")
-          .insert({
-            level: cluster.level,
-            day_of_week: Number(dayNum),
-            start_time: cluster.start || "18:00",
-            capacity: Math.max(cluster.members.length, 5),
-            is_active: true,
-            course_type: "group",
-          })
-          .select("id, capacity")
-          .single();
-        pkg = newPkg;
-      }
-
-      if (!pkg) {
-        throw new Error("Could not find or create a schedule package for this level/day");
-      }
-
-      // Check if an active group already exists for this package
-      const { data: existingGroup } = await supabase
-        .from("pkg_groups")
-        .select("id, name")
-        .eq("package_id", pkg.id)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-
-      let newPkgGroup: { id: string } | null;
-
-      if (existingGroup) {
-        // Reuse existing group instead of creating a duplicate
-        newPkgGroup = existingGroup;
-        toast({ title: "Using existing group", description: `Adding students to "${existingGroup.name}"` });
-      } else {
-        // Create new pkg_group
-        const { data: created, error: groupError } = await supabase
-          .from("pkg_groups")
-          .insert({
-            package_id: pkg.id,
-            name: groupName,
-            capacity: pkg.capacity,
-            is_active: true,
-          })
-          .select("id")
-          .single();
-
-        if (groupError || !created) {
-          throw new Error(groupError?.message || "Failed to create group");
-        }
-        newPkgGroup = created;
-      }
-
-      if (!newPkgGroup) {
-        throw new Error("Failed to create or find group");
-      }
-
-      // Add members via unified assign_student_to_group RPC
+      // Assign each member via unified RPC
       for (const member of cluster.members) {
-        const { data: assignResult, error: assignErr } = await supabase
+        const { error: assignErr } = await supabase
           .rpc("assign_student_to_group" as any, {
-            _package_id: pkg.id,
+            _package_id: pkgId,
             _user_id: member.user_id,
             _enrollment_id: member.id,
           } as any);
@@ -318,39 +280,15 @@ const GroupMatcher = () => {
         }
       }
 
-      // Update enrollments to mark as matched
+      // Mark enrollments as matched
       const enrollmentIds = cluster.members.map((m) => m.id);
       await supabase
         .from("enrollments")
-        .update({
-          matched_at: new Date().toISOString(),
-        } as any)
+        .update({ matched_at: new Date().toISOString() } as any)
         .in("id", enrollmentIds);
 
-      // Check capacity and notify
-      const { data: pkgGroups } = await supabase
-        .from("pkg_groups")
-        .select("id")
-        .eq("package_id", pkg.id)
-        .eq("is_active", true);
-
-      const pgIds = (pkgGroups || []).map(g => g.id);
-      if (pgIds.length > 0) {
-        const { count } = await supabase
-          .from("pkg_group_members")
-          .select("*", { count: "exact", head: true })
-          .in("group_id", pgIds)
-          .eq("member_status", "active");
-
-        if ((count || 0) >= pkg.capacity) {
-          await supabase.from("admin_notifications").insert({
-            message: `Schedule package for ${cluster.level} on ${cluster.days[0]} is now at capacity (${count}/${pkg.capacity}).`,
-            type: "slot_full",
-          });
-        }
-      }
-
       // Send group match emails
+      const dayName = DAY_NAMES[cluster.packageDay] || "Unknown";
       for (const member of cluster.members) {
         try {
           await supabase.functions.invoke("send-confirmation-email", {
@@ -359,7 +297,7 @@ const GroupMatcher = () => {
               name: member.name,
               template: "group_match",
               group_name: groupName,
-              group_days: cluster.days.join(", "),
+              group_days: dayName,
             },
           });
         } catch (emailErr) {
@@ -369,8 +307,8 @@ const GroupMatcher = () => {
 
       toast({ title: "Group created!", description: `"${groupName}" with ${cluster.members.length} students. Emails sent!` });
 
-      setCreatedGroup({ name: groupName, level: cluster.level });
-      await fetchSuggestedSlots(cluster.level, cluster.days[0]);
+      setCreatedGroup({ name: groupName, level: cluster.packageLevel });
+      await fetchSuggestedSlots(cluster.packageLevel, cluster.packageDay);
       fetchUnmatched();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -392,7 +330,7 @@ const GroupMatcher = () => {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold text-foreground">Group "{createdGroup.name}" created & slot blocked!</p>
+                <p className="font-semibold text-foreground">Group "{createdGroup.name}" created & assigned!</p>
                 <p className="text-sm text-muted-foreground">Students have been notified by email.</p>
               </div>
             </div>
@@ -439,11 +377,11 @@ const GroupMatcher = () => {
         </Card>
       )}
 
-      {enrollments.length === 0 && !createdGroup ? (
+      {enrollments.length === 0 && needsReview.length === 0 && !createdGroup ? (
         <div className="text-center py-12 text-muted-foreground">
           <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
           <p className="font-medium">No unmatched group enrollments</p>
-          <p className="text-sm mt-1">All approved group students have been matched or have no schedule preferences.</p>
+          <p className="text-sm mt-1">All approved group students have been matched.</p>
         </div>
       ) : (
         <>
@@ -451,7 +389,8 @@ const GroupMatcher = () => {
             <div>
               <h3 className="font-semibold text-foreground">Group Matcher</h3>
               <p className="text-sm text-muted-foreground">
-                {enrollments.length} unmatched student{enrollments.length !== 1 ? "s" : ""} with schedule preferences
+                {clusters.reduce((s, c) => s + c.members.length, 0)} groupable student{clusters.reduce((s, c) => s + c.members.length, 0) !== 1 ? "s" : ""}
+                {needsReview.length > 0 && ` · ${needsReview.length} needs review`}
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={fetchUnmatched}>
@@ -462,6 +401,8 @@ const GroupMatcher = () => {
           <div className="grid gap-4">
             {clusters.map((cluster) => {
               const isReady = cluster.members.length >= 3;
+              const dayName = DAY_NAMES[cluster.packageDay] || "Unknown";
+              const levelLabel = cluster.packageLevel.replace(/_/g, " ");
               return (
                 <Card key={cluster.key} className={isReady ? "border-primary/50 bg-primary/5" : ""}>
                   <CardHeader className="pb-3">
@@ -469,16 +410,14 @@ const GroupMatcher = () => {
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-base flex items-center gap-2">
                           <CalendarDays className="h-4 w-4" />
-                          {cluster.days.join(", ")}
+                          {dayName}
                         </CardTitle>
                         <Badge variant={isReady ? "default" : "secondary"}>
-                          {cluster.start}
+                          {cluster.packageTime}
                         </Badge>
-                        {cluster.level && cluster.level !== "unknown" && (
-                          <Badge variant="outline" className="text-xs">
-                            {cluster.level.replace(/_/g, " ")}
-                          </Badge>
-                        )}
+                        <Badge variant="outline" className="text-xs">
+                          {levelLabel}
+                        </Badge>
                       </div>
                       <Badge variant={isReady ? "default" : "outline"} className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
@@ -495,10 +434,6 @@ const GroupMatcher = () => {
                             <p className="text-xs text-muted-foreground">{m.email}</p>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {m.preferred_time || "—"}
-                            </span>
                             <span className="flex items-center gap-1">
                               <Globe className="h-3 w-3" />
                               {m.timezone?.replace(/_/g, " ") || "—"}
@@ -518,7 +453,7 @@ const GroupMatcher = () => {
                         disabled={creating === cluster.key}
                       >
                         {creating === cluster.key ? (
-                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating & blocking slot...</>
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating group...</>
                         ) : (
                           <><Plus className="h-4 w-4 mr-2" /> Create Group ({cluster.members.length} students)</>
                         )}
@@ -534,8 +469,39 @@ const GroupMatcher = () => {
               );
             })}
           </div>
+
+          {/* Needs Review Section */}
+          {needsReview.length > 0 && (
+            <Card className="border-destructive/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  Needs Review ({needsReview.length})
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  These enrollments cannot be grouped automatically. Assign a package via enrollment editing.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {needsReview.map((item) => (
+                    <div key={item.enrollment.id} className="flex items-center justify-between text-sm bg-muted/50 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="font-medium text-foreground">{item.enrollment.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.enrollment.email}</p>
+                      </div>
+                      <Badge variant="destructive" className="text-xs">
+                        {item.reason}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
+
       {/* Name Dialog */}
       <Dialog open={!!nameDialogCluster} onOpenChange={(open) => { if (!open) setNameDialogCluster(null); }}>
         <DialogContent>
