@@ -1,32 +1,66 @@
 
-# Fix: Hide Full Slots in Enrollment Day Picker
+
+# Enhance Admin Attendance Panel: Unified View with All Sources
 
 ## Problem
-The "Preferred Day" buttons in the enrollment flow (Step 2) show ALL active schedule packages for a level, including ones that are already full (e.g., Sunday 11:00 PM private slot with capacity 1, already occupied by Renad). Students can select a full slot and proceed, which leads to failed group assignment or waitlisting.
+The `AdminAttendancePanel` currently only queries `admin_attendance_log`, which is empty for students like Renad whose sessions are tracked via the group attendance system (`pkg_attendance` + `pkg_group_sessions`). The panel shows "No attendance records yet" despite 11 recorded sessions. Admins need a unified view of ALL attendance data plus editable details.
 
 ## Solution
-Add a capacity check to the `fetchLevelSlots` query in `EnrollNowPage.tsx`. After fetching active packages for the selected level, count active members per package (via `pkg_groups` and `pkg_group_members`) and compute `seats_left`. Only show slots with available seats in the day picker buttons. Full slots are either hidden entirely or shown as disabled with a "Full" label.
+Upgrade `AdminAttendancePanel` to pull records from all three attendance sources and display comprehensive student details with inline editing capabilities.
 
 ## Technical Details
 
-### File: `src/pages/EnrollNowPage.tsx`
+### File: `src/components/admin/AdminAttendancePanel.tsx`
 
-**Change the `fetchLevelSlots` effect (lines 151-193):**
+**1. Fetch from all attendance sources:**
+- `admin_attendance_log` (individual admin-logged sessions) -- existing
+- `pkg_attendance` joined with `pkg_group_sessions` (group attendance) -- NEW
+- `attendance_requests` with status APPROVED (student self-reported) -- NEW
 
-1. After fetching `schedule_packages` rows, also fetch:
-   - Active `pkg_groups` for those package IDs
-   - Active `pkg_group_members` for those groups
+Merge all into a unified list with a `source` label ("Admin Log", "Group Session", "Self-Reported").
 
-2. Compute `seats_left` per package:
-   - Sum active members across all groups for each package
-   - `seats_left = package.capacity - totalActiveMembers`
+**2. Add a details/stats section** at the top showing:
+- Plan type and duration (from enrollment)
+- Total sessions included vs attended
+- Sessions remaining
+- Amount paid and amount due
+- Payment status and currency
+- Group name (from `pkg_groups`/`pkg_group_members`)
 
-3. Filter out (or disable) slots where `seats_left <= 0`
+Fetch this from the `enrollments` table and `pkg_group_members` + `pkg_groups`.
 
-4. Update the `levelSlots` state to include `seatsLeft` so the UI can show a "Full" badge on disabled buttons instead of hiding them entirely (better UX -- student sees the slot exists but is unavailable).
+**3. Unified calendar highlighting:**
+- Show all attended dates from all sources on the calendar (currently only shows `admin_attendance_log` dates)
+- Use different colors/modifiers for different sources (e.g., primary for group sessions, secondary for admin-logged)
 
-**Update the day button rendering (lines 667-683):**
-- Add `disabled` and visual styling for full slots
-- Show "(Full)" text next to the time for slots with no seats
+**4. Editable fields:**
+- Keep the existing add/remove attendance via `admin_add_attendance` / `admin_remove_attendance` RPCs
+- Add inline edit for `sessions_remaining` (direct update to enrollments table) so admin can correct the balance
+- Add inline edit for `unit_price` so admin can adjust pricing
 
-This reuses the exact same capacity calculation pattern already used in `SchedulePicker.tsx` (lines 68-113) and `SchedulingManager.tsx`.
+**5. Record list improvements:**
+- Show source badge on each record (Group Session / Admin Log / Self-Reported)
+- Show group name for group sessions
+- Only allow deletion of `admin_attendance_log` records (group sessions are managed via the Groups hub)
+
+### Data Flow
+
+```text
+AdminAttendancePanel
+  |
+  |-- Fetch enrollment details (plan, amount, currency, etc.)
+  |-- Fetch pkg_attendance + pkg_group_sessions (group sessions)
+  |-- Fetch admin_attendance_log (admin manual logs)
+  |-- Fetch attendance_requests WHERE status='APPROVED' (self-reported)
+  |-- Fetch pkg_group_members + pkg_groups (group assignment)
+  |
+  |-- Merge all into unified records list
+  |-- Render calendar with all dates highlighted
+  |-- Render detail cards (plan info, financials)
+  |-- Render editable fields (sessions_remaining, unit_price)
+  |-- Render unified session history with source badges
+```
+
+### No database changes required
+All the data already exists in the database -- this is purely a frontend change to the `AdminAttendancePanel` component.
+
