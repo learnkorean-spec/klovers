@@ -63,7 +63,7 @@ const GroupMatcher = () => {
       .select("id, user_id, plan_type, preferred_days, preferred_start, preferred_time, timezone, duration, level")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
-      .is("matched_batch_id", null)
+      .is("matched_at", null)
       .not("preferred_days", "is", null);
 
     if (error) {

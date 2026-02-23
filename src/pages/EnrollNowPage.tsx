@@ -336,10 +336,7 @@ const EnrollNowPage = () => {
         if (Object.keys(schedPrefs).length > 0) {
           await supabase.from("enrollments").update(schedPrefs).eq("id", enrollmentId);
         }
-        // Also save level to profile directly (belt + suspenders)
-        if (selectedLevel) {
-          await supabase.from("profiles").update({ level: normalizeLevel(selectedLevel) }).eq("user_id", session.user.id);
-        }
+        // Level sync to profile is handled by DB trigger on enrollments.level
       }
       nav(`/pay/${enrollmentId}`);
     } catch (err: any) {
@@ -417,10 +414,7 @@ const EnrollNowPage = () => {
       const normalizedLevel = normalizeLevel(selectedLevel);
       const lowerEmail = email.trim().toLowerCase();
 
-      // Save level to profile
-      if (selectedLevel) {
-        await supabase.from("profiles").update({ level: normalizedLevel }).eq("user_id", session.user.id);
-      }
+      // Level sync to profile is handled by DB trigger on enrollments.level
 
       // B) Upsert enrollment BEFORE calling create-checkout (safety net)
       const schedFields: Record<string, any> = {
