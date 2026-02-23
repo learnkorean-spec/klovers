@@ -878,14 +878,14 @@ const AdminDashboard = () => {
                                   </p>
                                   <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">Unit price:</span>
-                                    {e.approval_status === "PENDING" && e.admin_review_required ? (
+                                    {editingUnitPrice[e.id] !== undefined ? (
                                       <Input
                                         type="number"
                                         className="h-7 w-24"
                                         min="0.01"
                                         max="10000"
                                         step="0.01"
-                                        value={editingUnitPrice[e.id] ?? String(e.unit_price)}
+                                        value={editingUnitPrice[e.id]}
                                         onChange={(ev) => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: ev.target.value }))}
                                       />
                                     ) : (
@@ -1007,8 +1007,11 @@ const AdminDashboard = () => {
                                       <Eye className="h-4 w-4 mr-1" /> Receipt
                                     </Button>
                                   )}
-                                  {(e.approval_status === "PENDING" && e.admin_review_required || e.approval_status === "UNDER_REVIEW") && (
+                                   {(e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW" || e.approval_status === "PENDING_PAYMENT") && (
                                     <>
+                                      <Button size="sm" variant="outline" onClick={() => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: String(e.unit_price) }))}>
+                                        <Pencil className="h-4 w-4 mr-1" /> Edit
+                                      </Button>
                                       <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
                                         <Check className="h-4 w-4 mr-1" /> Approve
                                       </Button>
@@ -1016,7 +1019,7 @@ const AdminDashboard = () => {
                                         <X className="h-4 w-4 mr-1" /> Reject
                                       </Button>
                                     </>
-                                  )}
+                                   )}
                                   {e.approval_status === "APPROVED" && (
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
