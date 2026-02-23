@@ -1,25 +1,34 @@
 
+# Merge Attendance and Groups into One Unified Tab
 
-## Remove Bulk Slot Matcher, Keep Group Matcher
+## Problem
+Currently there are two separate tabs doing similar work:
+- **Attendance tab**: Individual student attendance logging via `admin_attendance_log` + student-initiated requests
+- **Groups tab**: Group-based session attendance via `group_sessions`/`group_attendance` + group management
 
-### What's Changing
-Remove only the **Bulk Slot Matcher** card from the Matcher tab. The **Group Matcher** (which clusters unmatched students and lets you create groups) stays.
+These operate on different database tables, aren't connected, and create confusion.
 
-### Why Remove It
-The Bulk Slot Matcher was tied to the old `matching_slots` table. Student assignment now happens through the Scheduling > Groups tab using `pkg_groups`, making it redundant.
+## Solution
+Merge everything into a single **"Groups"** tab that contains three sub-tabs:
 
-### Technical Steps
+1. **Attendance** -- The existing GroupAttendanceManager attendance view (select group, create session, mark attendance with avatar grid)
+2. **Log Attendance** -- The individual student attendance panel (student picker + AdminAttendancePanel calendar) merged with student-initiated requests below it
+3. **Manage Groups** -- The existing group management sub-tab (already inside GroupAttendanceManager)
 
-1. **Edit `src/pages/AdminDashboard.tsx`**
-   - Remove the `BulkMatcher` import
-   - Remove the `<BulkMatcher>` component from the Matcher tab content
-   - Keep the `<GroupMatcher>` component in that tab
+## Changes
 
-2. **Delete `src/components/admin/BulkMatcher.tsx`**
-   - This file is no longer used anywhere
+### 1. AdminDashboard.tsx
+- Remove the standalone "Attendance" tab trigger and its `TabsContent`
+- Move the "Log Attendance" card + AdminAttendancePanel + student requests content into the Groups tab
+- The Groups `TabsContent` will render a unified component with three sub-tabs instead of just `GroupAttendanceManager`
 
-### What Stays
-- The **Matcher tab** remains in the dashboard
-- The **Group Matcher** card stays, allowing admins to cluster unmatched enrollments and create groups
-- No database changes needed
+### 2. GroupAttendanceManager.tsx
+- Add a third sub-tab called "Log Attendance" alongside "Attendance" and "Manage Groups"
+- Accept new props: `overviewRows`, `selectedStudentId`, `onStudentSelect`, `attendanceReqs`, student request action handlers, and `onUpdated` callback
+- Embed the student picker + `AdminAttendancePanel` + student requests list inside this new sub-tab
 
+### Technical Details
+- The `GroupAttendanceManager` component will receive the necessary data and callbacks as props from `AdminDashboard`
+- No database changes required -- this is purely a UI reorganization
+- The attendance request approve/reject/revert handlers remain in `AdminDashboard` and are passed down as props
+- The pending attendance badge count moves to the Groups tab trigger
