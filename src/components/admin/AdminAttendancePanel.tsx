@@ -68,6 +68,9 @@ const AdminAttendancePanel = ({
   const [editRemaining, setEditRemaining] = useState("");
   const [editingUnitPrice, setEditingUnitPrice] = useState(false);
   const [editUnitPrice, setEditUnitPrice] = useState("");
+  const [editingPlan, setEditingPlan] = useState(false);
+  const [editPlanType, setEditPlanType] = useState("");
+  const [editDuration, setEditDuration] = useState("");
   const [saving, setSaving] = useState(false);
 
   const fetchAll = useCallback(async () => {
@@ -260,6 +263,43 @@ const AdminAttendancePanel = ({
     setSaving(false);
   };
 
+  const handleSavePlan = async () => {
+    if (!editPlanType || !editDuration) return;
+    const dur = parseInt(editDuration, 10);
+    if (![1, 3, 6].includes(dur)) return;
+    setSaving(true);
+    const newTotal = dur === 1 ? 4 : dur === 3 ? 12 : 24;
+    const { error } = await supabase
+      .from("enrollments")
+      .update({ plan_type: editPlanType, duration: dur, sessions_total: newTotal } as any)
+      .eq("id", enrollmentId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Updated", description: `Plan set to ${editPlanType} ${dur}mo` });
+      setEditingPlan(false);
+      fetchAll();
+      onUpdated();
+    }
+    setSaving(false);
+  };
+
+  const handleUnlock = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("enrollments")
+      .update({ sessions_remaining: 0 } as any)
+      .eq("id", enrollmentId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Unlocked", description: "Sessions remaining reset to 0. Student is now active." });
+      fetchAll();
+      onUpdated();
+    }
+    setSaving(false);
+  };
+
   const sourceBadgeVariant = (s: UnifiedRecord["source"]) =>
     s === "Group" ? "default" : s === "Admin" ? "secondary" : "outline";
 
@@ -310,8 +350,8 @@ const AdminAttendancePanel = ({
             <Badge variant="destructive">Due: {currLabel}{amountDue.toLocaleString()}</Badge>
           )}
           {isLocked && (
-            <Badge variant="destructive" className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" /> LOCKED
+            <Badge variant="destructive" className="flex items-center gap-1 cursor-pointer" onClick={handleUnlock} title="Click to unlock (reset to 0 remaining)">
+              <AlertTriangle className="h-3 w-3" /> LOCKED — click to unlock
             </Badge>
           )}
         </div>
@@ -324,7 +364,44 @@ const AdminAttendancePanel = ({
             <div className="flex items-center gap-1.5">
               <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">Plan:</span>
-              <span className="font-medium">{enrollment.plan_type} {enrollment.duration}mo</span>
+              {editingPlan ? (
+                <div className="flex items-center gap-1">
+                  <select
+                    value={editPlanType}
+                    onChange={(e) => setEditPlanType(e.target.value)}
+                    className="h-6 text-xs border border-border rounded px-1 bg-background"
+                  >
+                    <option value="group">group</option>
+                    <option value="private">private</option>
+                  </select>
+                  <select
+                    value={editDuration}
+                    onChange={(e) => setEditDuration(e.target.value)}
+                    className="h-6 text-xs border border-border rounded px-1 bg-background"
+                  >
+                    <option value="1">1mo</option>
+                    <option value="3">3mo</option>
+                    <option value="6">6mo</option>
+                  </select>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSavePlan} disabled={saving}>
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingPlan(false)}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{enrollment.plan_type} {enrollment.duration}mo</span>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
+                    setEditPlanType(enrollment.plan_type);
+                    setEditDuration(String(enrollment.duration));
+                    setEditingPlan(true);
+                  }}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
