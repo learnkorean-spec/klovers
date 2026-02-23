@@ -117,13 +117,13 @@ const AdminDashboard = () => {
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, batchMembersRes, groupsRes, weekdaysRes, profilesRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("admin_student_overview" as any).select("*"),
-      supabase.from("batch_members").select("user_id, batch_id, member_status"),
-      supabase.from("student_groups").select("id, name"),
+      Promise.resolve({ data: [] }), // legacy batch_members — no longer used
+      Promise.resolve({ data: [] }), // legacy student_groups — no longer used
       supabase.from("schedule_options" as any).select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
       supabase.from("profiles").select("user_id, name, email, level, country"),
     ]);
@@ -171,18 +171,8 @@ const AdminDashboard = () => {
       });
     }
 
-    const groupNameMap: Record<string, string> = {};
-    if (groupsRes.data) {
-      (groupsRes.data as any[]).forEach((g: any) => { groupNameMap[g.id] = g.name; });
-    }
+    // Legacy group mapping removed — groups now managed via pkg_groups
     const _userGroupMap: Record<string, string> = {};
-    if (batchMembersRes.data) {
-      (batchMembersRes.data as any[]).forEach((bm: any) => {
-        if (bm.member_status === "active" && groupNameMap[bm.batch_id]) {
-          _userGroupMap[bm.user_id] = groupNameMap[bm.batch_id];
-        }
-      });
-    }
 
     if (leadsRes.error) {
       const msg = `Leads query failed: ${leadsRes.error.message} (code: ${leadsRes.error.code})`;
@@ -405,7 +395,7 @@ const AdminDashboard = () => {
 
           if (!packageId) {
             // Last resort: match by enrollment level + preferred_day
-            const level = enrollment.level || enrollment.profiles?.level || "";
+            const level = enrollment.level || "";
             const day = enrollment.preferred_day || (enrollment.preferred_days && enrollment.preferred_days[0]) || null;
             if (level && day) {
               const dayMap: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
@@ -460,7 +450,7 @@ const AdminDashboard = () => {
             .select("id, user_id, preferred_days, preferred_start")
             .eq("approval_status", "APPROVED")
             .eq("plan_type", "group")
-            .is("matched_batch_id", null)
+            .is("matched_at", null)
             .not("preferred_days", "is", null);
 
           if (unmatchedRaw && unmatchedRaw.length >= 3) {
@@ -914,7 +904,6 @@ const AdminDashboard = () => {
                                             ? normalizeLevel(leadsByEmail[profileEmail].level)
                                             : "";
                                           const resolvedLevel = (e.level?.trim() ? normalizeLevel(e.level) : null)
-                                            ?? (e.profiles?.level?.trim() ? normalizeLevel(e.profiles.level) : null)
                                             ?? leadLvl
                                             ?? "";
                                           return resolvedLevel ? (
