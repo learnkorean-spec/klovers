@@ -1,34 +1,81 @@
 
-# Merge Attendance and Groups into One Unified Tab
+# P0 Fix: Package-Driven GroupMatcher + Strict Slot Mapping
 
 ## Problem
-Currently there are two separate tabs doing similar work:
-- **Attendance tab**: Individual student attendance logging via `admin_attendance_log` + student-initiated requests
-- **Groups tab**: Group-based session attendance via `group_sessions`/`group_attendance` + group management
-
-These operate on different database tables, aren't connected, and create confusion.
+GroupMatcher clusters students by `preferred_days + preferred_start` WITHOUT considering level, causing mixed-level groups. It also ignores enrollments that have `package_id` but no `preferred_days`.
 
 ## Solution
-Merge everything into a single **"Groups"** tab that contains three sub-tabs:
 
-1. **Attendance** -- The existing GroupAttendanceManager attendance view (select group, create session, mark attendance with avatar grid)
-2. **Log Attendance** -- The individual student attendance panel (student picker + AdminAttendancePanel calendar) merged with student-initiated requests below it
-3. **Manage Groups** -- The existing group management sub-tab (already inside GroupAttendanceManager)
+### 1. DB Migration: Strict matching_slots.package_id backfill + index
 
-## Changes
+The `matching_slots` table already has `package_id` (uuid column exists). Since there are currently zero rows in `matching_slots`, the migration only needs:
+- Add an index on `matching_slots(package_id)` for performance
+- Add a composite index on `schedule_packages(level, day_of_week, start_time, timezone)` for fast lookups
+- Strict backfill UPDATE that matches on `level + day_of_week + start_time + timezone` (for any future rows)
 
-### 1. AdminDashboard.tsx
-- Remove the standalone "Attendance" tab trigger and its `TabsContent`
-- Move the "Log Attendance" card + AdminAttendancePanel + student requests content into the Groups tab
-- The Groups `TabsContent` will render a unified component with three sub-tabs instead of just `GroupAttendanceManager`
+### 2. Rewrite GroupMatcher.tsx to be package-driven
 
-### 2. GroupAttendanceManager.tsx
-- Add a third sub-tab called "Log Attendance" alongside "Attendance" and "Manage Groups"
-- Accept new props: `overviewRows`, `selectedStudentId`, `onStudentSelect`, `attendanceReqs`, student request action handlers, and `onUpdated` callback
-- Embed the student picker + `AdminAttendancePanel` + student requests list inside this new sub-tab
+**Data model changes:**
+- `UnmatchedEnrollment` interface: add `package_id` field
+- New `Cluster` interface: replace `days/start` with `package_id`, `package_level`, `package_day`, `package_time`
+
+**Fetch logic:**
+- Select `package_id` alongside existing fields
+- Remove the filter `not("preferred_days", "is", null)` -- instead fetch ALL unmatched group enrollments
+- For each enrollment, determine its cluster key:
+  - If `package_id` exists: `clusterKey = "pkg:<package_id>"`
+  - If no `package_id` but has valid `level + preferred_day`: try to resolve a schedule_package match and use that
+  - If neither: mark as "Needs Review" (separate list, not grouped)
+
+**Clustering:**
+- Remove the old multi-day merge logic entirely
+- Simple single-pass: group by cluster key
+- Level comes from the package (fetched via schedule_packages), never from "first member"
+- Fetch schedule_packages data upfront to enrich clusters with day/time/level info
+
+**`normalizeLevel` helper:**
+```typescript
+const normalizeLevel = (v: string) => v.trim().toLowerCase().replace(/\s+/g, "_");
+```
+
+**Group creation (`handleCreateGroup`):**
+- Already uses `assign_student_to_group` RPC -- keep this
+- Package lookup now uses `cluster.packageId` directly instead of searching by level+day
+- Remove the fallback "create schedule_package" logic when packageId is known
+
+**UI additions:**
+- "Needs Review" section at the bottom showing enrollments that lack package_id and valid level/day
+- Each shows the reason: "Missing package assignment"
+- Cluster cards show level badge derived from package, not from member
+
+### 3. Remove preferred_days[] dependency from GroupMatcher
+
+- Stop using `preferred_days` array for clustering
+- Use `package_id` (primary) or `preferred_day` singular (fallback for resolving package)
+- The old multi-day overlap-merge logic is deleted entirely
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/new.sql` | Add indexes for matching_slots.package_id and schedule_packages lookup composite; strict backfill query |
+| `src/components/admin/GroupMatcher.tsx` | Full rewrite of clustering logic to be package-driven; add Needs Review section; remove preferred_days[] usage |
 
 ### Technical Details
-- The `GroupAttendanceManager` component will receive the necessary data and callbacks as props from `AdminDashboard`
-- No database changes required -- this is purely a UI reorganization
-- The attendance request approve/reject/revert handlers remain in `AdminDashboard` and are passed down as props
-- The pending attendance badge count moves to the Groups tab trigger
+
+**New clustering algorithm:**
+```text
+1. Fetch all unmatched enrollments (APPROVED, group, matched_at IS NULL)
+2. Fetch all active schedule_packages (for enrichment)
+3. For each enrollment:
+   a. If package_id exists -> key = "pkg:<id>"
+   b. Else if level + preferred_day exist -> find matching schedule_package -> key = "pkg:<id>"
+   c. Else -> add to needsReview list
+4. Group by key -> each cluster guaranteed single-level, single-package
+5. Display with package-derived metadata (level, day, time)
+```
+
+**Needs Review UI:**
+- Shown below the main clusters
+- Each row shows student name, email, and reason
+- Admin can manually assign package_id via enrollment editing (existing flow)
