@@ -1,66 +1,35 @@
 
 
-# Enhance Admin Attendance Panel: Unified View with All Sources
+# Fix Hero Video Loading Performance
 
 ## Problem
-The `AdminAttendancePanel` currently only queries `admin_attendance_log`, which is empty for students like Renad whose sessions are tracked via the group attendance system (`pkg_attendance` + `pkg_group_sessions`). The panel shows "No attendance records yet" despite 11 recorded sessions. Admins need a unified view of ALL attendance data plus editable details.
+The hero video takes too long to load, showing a blank dark area (as seen in the screenshot). The video is bundled as an ES module import through Vite, which prevents streaming and adds to the main bundle. Combined with `preload="none"` and an immediate `video.load()` + `video.play()`, the user sees nothing until the full video downloads.
 
 ## Solution
-Upgrade `AdminAttendancePanel` to pull records from all three attendance sources and display comprehensive student details with inline editing capabilities.
+Optimize video loading with instant poster visibility, deferred video streaming, and a smooth fade-in transition.
 
 ## Technical Details
 
-### File: `src/components/admin/AdminAttendancePanel.tsx`
+### File: `src/components/HeroSection.tsx`
 
-**1. Fetch from all attendance sources:**
-- `admin_attendance_log` (individual admin-logged sessions) -- existing
-- `pkg_attendance` joined with `pkg_group_sessions` (group attendance) -- NEW
-- `attendance_requests` with status APPROVED (student self-reported) -- NEW
+**1. Show poster as CSS background immediately**
+- Render the poster image as a background-image on the container div so it's visible on first paint, before the video element even begins loading.
 
-Merge all into a unified list with a `source` label ("Admin Log", "Group Session", "Self-Reported").
+**2. Defer video loading with Intersection Observer**
+- Don't call `video.load()` immediately. Instead, use an IntersectionObserver (or a small timeout after first paint) to start loading the video only after the hero section is visible and the page has settled.
 
-**2. Add a details/stats section** at the top showing:
-- Plan type and duration (from enrollment)
-- Total sessions included vs attended
-- Sessions remaining
-- Amount paid and amount due
-- Payment status and currency
-- Group name (from `pkg_groups`/`pkg_group_members`)
+**3. Fade in the video**
+- Keep the video element hidden (`opacity-0`) until the `canplaythrough` or `playing` event fires, then transition to `opacity-100`. This eliminates the visual "pop" when the video starts.
 
-Fetch this from the `enrollments` table and `pkg_group_members` + `pkg_groups`.
+**4. Change preload to `metadata`**
+- Switch from `preload="none"` to `preload="metadata"` so the browser can start fetching video dimensions and a few frames earlier, improving perceived load time.
 
-**3. Unified calendar highlighting:**
-- Show all attended dates from all sources on the calendar (currently only shows `admin_attendance_log` dates)
-- Use different colors/modifiers for different sources (e.g., primary for group sessions, secondary for admin-logged)
+**5. Move video to `/public` for streaming**
+- Move the video file from `src/assets/` to `public/videos/` so it's served as a static file with proper HTTP range request support (enables streaming instead of full download). Reference it via a string path `/videos/hero-korea-video-new.mp4` instead of an ES import.
 
-**4. Editable fields:**
-- Keep the existing add/remove attendance via `admin_add_attendance` / `admin_remove_attendance` RPCs
-- Add inline edit for `sessions_remaining` (direct update to enrollments table) so admin can correct the balance
-- Add inline edit for `unit_price` so admin can adjust pricing
+### Changes Summary
+- **Move**: `src/assets/hero-korea-video-new.mp4` → `public/videos/hero-korea-video-new.mp4`
+- **Edit**: `src/components/HeroSection.tsx` — remove video import, add background poster, add fade-in logic, defer loading
 
-**5. Record list improvements:**
-- Show source badge on each record (Group Session / Admin Log / Self-Reported)
-- Show group name for group sessions
-- Only allow deletion of `admin_attendance_log` records (group sessions are managed via the Groups hub)
-
-### Data Flow
-
-```text
-AdminAttendancePanel
-  |
-  |-- Fetch enrollment details (plan, amount, currency, etc.)
-  |-- Fetch pkg_attendance + pkg_group_sessions (group sessions)
-  |-- Fetch admin_attendance_log (admin manual logs)
-  |-- Fetch attendance_requests WHERE status='APPROVED' (self-reported)
-  |-- Fetch pkg_group_members + pkg_groups (group assignment)
-  |
-  |-- Merge all into unified records list
-  |-- Render calendar with all dates highlighted
-  |-- Render detail cards (plan info, financials)
-  |-- Render editable fields (sessions_remaining, unit_price)
-  |-- Render unified session history with source badges
-```
-
-### No database changes required
-All the data already exists in the database -- this is purely a frontend change to the `AdminAttendancePanel` component.
+Note: "Upscaling" the video quality requires a higher-resolution source file. The current optimizations will make the existing video appear sharper by ensuring it loads and renders at full resolution without compression artifacts from bundling.
 
