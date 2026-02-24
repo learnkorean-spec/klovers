@@ -203,6 +203,7 @@ const EnrollNowPage = () => {
         .select("id, day_of_week, start_time, capacity")
         .eq("level", normalizedLevel)
         .eq("is_active", true)
+        .neq("course_type", "private")
         .order("day_of_week");
       const rows = (data as any[]) || [];
       if (rows.length === 0) { setLevelSlots([]); return; }
