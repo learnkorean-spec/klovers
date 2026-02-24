@@ -166,11 +166,37 @@ const MySchedulePage = () => {
   const handleConfirmChange = async () => {
     if (!selectedPackageId || !userId) return;
     setAssigning(true);
+
+    // 1. Update package preference
     await (supabase as any).from("student_package_preferences").upsert(
       { user_id: userId, package_id: selectedPackageId, level: userLevel, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
-    // Insert admin notification
+
+    // 2. Update the latest approved enrollment: set new package_id and clear matched_at so it appears in the Matcher
+    const { data: latestEnr } = await supabase
+      .from("enrollments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("approval_status", "APPROVED")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestEnr) {
+      await supabase
+        .from("enrollments")
+        .update({ package_id: selectedPackageId, matched_at: null } as any)
+        .eq("id", (latestEnr as any).id);
+    }
+
+    // 3. Remove student from current pkg_group so they can be re-assigned
+    await (supabase as any)
+      .from("pkg_group_members")
+      .delete()
+      .eq("user_id", userId);
+
+    // 4. Insert admin notification
     const { data: { session } } = await supabase.auth.getSession();
     const userName = session?.user?.user_metadata?.name || session?.user?.email || "A student";
     await (supabase as any).from("admin_notifications").insert({
@@ -178,6 +204,7 @@ const MySchedulePage = () => {
       type: "STUDENT_CHANGED_SLOT",
       related_user_id: userId,
     });
+
     toast({ title: "Schedule updated", description: "Your new schedule preference has been saved." });
     setShowPicker(false);
     setAssigning(false);
