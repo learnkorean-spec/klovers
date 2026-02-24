@@ -464,15 +464,24 @@ const AdminAttendancePanel = ({
           </div>
         )}
 
-        {/* Sync warning */}
-        {outOfSync && (
-          <div className="flex items-center justify-between bg-destructive/10 rounded-lg p-2 text-sm">
-            <span className="text-destructive flex items-center gap-1">
-              <AlertTriangle className="h-4 w-4" />
-              DB shows {enrollment!.sessions_remaining} remaining, but {stats!.totalUsed} used of {stats!.packageSize} = {stats!.remaining} remaining
-            </span>
-            <Button size="sm" variant="destructive" onClick={handleSyncRemaining} disabled={saving}>
-              <Check className="h-3 w-3 mr-1" /> Sync
+        {/* Sync warning + Recount */}
+        {stats && enrollment && (
+          <div className="flex items-center justify-between gap-2">
+            {outOfSync ? (
+              <div className="flex-1 flex items-center justify-between bg-destructive/10 rounded-lg p-2 text-sm">
+                <span className="text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-4 w-4" />
+                  DB shows {enrollment.sessions_remaining} remaining, but {stats.totalUsed} used of {stats.packageSize} = {stats.remaining} remaining
+                </span>
+                <Button size="sm" variant="destructive" onClick={handleSyncRemaining} disabled={saving}>
+                  <Check className="h-3 w-3 mr-1" /> Sync
+                </Button>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">In sync ✓</span>
+            )}
+            <Button size="sm" variant="outline" onClick={() => fetchAll()} disabled={loading}>
+              Recount
             </Button>
           </div>
         )}
