@@ -21,7 +21,8 @@ import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle
 import AdminNotifications from "./AdminNotifications";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const LEVELS = ["beginner_1", "beginner_2", "intermediate_1", "intermediate_2", "advanced_1", "advanced_2", "topik_1", "topik_2"];
+import { LEVEL_KEYS } from "@/constants/levels";
+const LEVELS = LEVEL_KEYS;
 
 function formatTime(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -85,7 +86,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   const [filterActive, setFilterActive] = useState("all");
 
   // Form state
-  const [fLevel, setFLevel] = useState("beginner_1");
+  const [fLevel, setFLevel] = useState(LEVELS[0]);
   const [fDay, setFDay] = useState(5);
   const [fTime, setFTime] = useState("18:00");
   const [fDuration, setFDuration] = useState(90);
@@ -151,7 +152,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
 
   const openCreate = () => {
     setEditing(null);
-    setFLevel("beginner_1"); setFDay(5); setFTime("18:00"); setFDuration(90);
+    setFLevel(LEVELS[0]); setFDay(5); setFTime("18:00"); setFDuration(90);
     setFTimezone("Africa/Cairo"); setFCapacity(5); setFActive(true); setFCourseType("group");
     setShowForm(true);
   };
