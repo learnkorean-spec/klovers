@@ -71,6 +71,8 @@ const AdminAttendancePanel = ({
   const [editingPlan, setEditingPlan] = useState(false);
   const [editPlanType, setEditPlanType] = useState("");
   const [editDuration, setEditDuration] = useState("");
+  const [editingPaid, setEditingPaid] = useState(false);
+  const [editPaid, setEditPaid] = useState("");
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [editNewDate, setEditNewDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -219,6 +221,42 @@ const AdminAttendancePanel = ({
     }
   };
 
+  const handleRemoveRecord = async (r: UnifiedRecord) => {
+    if (r.source === "Admin") {
+      await handleRemoveAttendance(r.session_date);
+    } else if (r.source === "Group") {
+      // Delete from pkg_attendance by session_id + user_id
+      const { error } = await supabase
+        .from("pkg_attendance" as any)
+        .delete()
+        .eq("session_id", r.id)
+        .eq("user_id", userId);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        // Restore 1 session
+        await supabase.from("enrollments").update({ sessions_remaining: (enrollment?.sessions_remaining ?? 0) + 1 } as any).eq("id", enrollmentId);
+        // Also remove charge record
+        await supabase.from("pkg_class_charges" as any).delete().eq("session_id", r.id).eq("user_id", userId);
+        toast({ title: "Group session removed" });
+        fetchAll();
+        onUpdated();
+      }
+    } else if (r.source === "Student") {
+      const { error } = await supabase
+        .from("attendance_requests")
+        .delete()
+        .eq("id", r.id);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Student request removed" });
+        fetchAll();
+        onUpdated();
+      }
+    }
+  };
+
   const handleEditDate = async (oldDate: string) => {
     if (!editNewDate) return;
     setSaving(true);
@@ -337,6 +375,22 @@ const AdminAttendancePanel = ({
     } else {
       toast({ title: "Updated", description: `Plan set to ${editPlanType} ${dur}mo (${newTotal} sessions)` });
       setEditingPlan(false);
+      fetchAll();
+      onUpdated();
+    }
+    setSaving(false);
+  };
+
+  const handleSavePaid = async () => {
+    const val = parseFloat(editPaid);
+    if (isNaN(val) || val < 0) return;
+    setSaving(true);
+    const { error } = await supabase.from("enrollments").update({ amount: val } as any).eq("id", enrollmentId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Updated", description: `Paid set to ${currLabel}${val}` });
+      setEditingPaid(false);
       fetchAll();
       onUpdated();
     }
@@ -469,7 +523,20 @@ const AdminAttendancePanel = ({
             <div className="flex items-center gap-1.5">
               <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">Paid:</span>
-              <span className="font-medium">{currLabel}{enrollment.amount.toLocaleString()}</span>
+              {editingPaid ? (
+                <div className="flex items-center gap-1">
+                  <Input type="number" step="0.01" value={editPaid} onChange={(e) => setEditPaid(e.target.value)} className="h-6 w-20 text-xs" />
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSavePaid} disabled={saving}><Check className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingPaid(false)}><X className="h-3 w-3" /></Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{currLabel}{enrollment.amount.toLocaleString()}</span>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditPaid(String(enrollment.amount)); setEditingPaid(true); }}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </div>
             {groupName && (
               <div className="flex items-center gap-1.5 col-span-2">
@@ -575,11 +642,13 @@ const AdminAttendancePanel = ({
                     <Badge variant="destructive" className="text-[10px] px-1 py-0">DUP</Badge>
                   )}
                 </div>
-                {r.source === "Admin" && editingDate !== `${r.source}-${r.id}` && (
+                {editingDate !== `${r.source}-${r.id}` && (
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingDate(`${r.source}-${r.id}`); setEditNewDate(r.session_date); }}>
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
+                    {r.source === "Admin" && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingDate(`${r.source}-${r.id}`); setEditNewDate(r.session_date); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    )}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -589,11 +658,11 @@ const AdminAttendancePanel = ({
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Remove attendance?</AlertDialogTitle>
-                          <AlertDialogDescription>Remove {r.session_date} and restore 1 session.</AlertDialogDescription>
+                          <AlertDialogDescription>Remove {r.session_date} ({r.source}) and restore 1 session.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleRemoveAttendance(r.session_date)}>Remove</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handleRemoveRecord(r)}>Remove</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
