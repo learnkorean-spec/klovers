@@ -1210,24 +1210,57 @@ const PrivateTimeConfig = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Private class days config
+  const [privateDays, setPrivateDays] = useState<string[]>([]);
+  const [groupDays, setGroupDays] = useState<number[]>([]);
+  const [savingDays, setSavingDays] = useState(false);
+
+  const ALL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
   useEffect(() => {
     const load = async () => {
-      const { data } = await (supabase as any)
-        .from("app_settings")
-        .select("value")
-        .eq("key", "private_time_options")
-        .maybeSingle();
-      if (data?.value) {
-        try { setTimes(JSON.parse(data.value)); } catch { setTimes(["10:00", "18:00"]); }
+      const [timeRes, daysRes, pkgRes] = await Promise.all([
+        (supabase as any)
+          .from("app_settings")
+          .select("value")
+          .eq("key", "private_time_options")
+          .maybeSingle(),
+        (supabase as any)
+          .from("app_settings")
+          .select("value")
+          .eq("key", "private_class_days")
+          .maybeSingle(),
+        (supabase as any)
+          .from("schedule_packages")
+          .select("day_of_week")
+          .eq("is_active", true)
+          .neq("course_type", "private"),
+      ]);
+
+      // Times
+      if (timeRes.data?.value) {
+        try { setTimes(JSON.parse(timeRes.data.value)); } catch { setTimes(["10:00", "18:00"]); }
       } else {
         setTimes(["10:00", "18:00"]);
       }
+
+      // Group days (blocked for private)
+      const gDays = [...new Set((pkgRes.data as any[] || []).map((r: any) => r.day_of_week as number))];
+      setGroupDays(gDays);
+
+      // Private days
+      if (daysRes.data?.value) {
+        try { setPrivateDays(JSON.parse(daysRes.data.value)); } catch { setPrivateDays([]); }
+      }
+
       setLoading(false);
     };
     load();
   }, []);
 
-  const save = async (updated: string[]) => {
+  const availableDaysForPrivate = ALL_DAYS.filter((_, i) => !groupDays.includes(i));
+
+  const saveTimeOptions = async (updated: string[]) => {
     setSaving(true);
     const { error } = await (supabase as any)
       .from("app_settings")
@@ -1241,10 +1274,38 @@ const PrivateTimeConfig = () => {
     setSaving(false);
   };
 
+  const savePrivateDays = async (updated: string[]) => {
+    setSavingDays(true);
+    const { error } = await (supabase as any)
+      .from("app_settings")
+      .upsert({ key: "private_class_days", value: JSON.stringify(updated), updated_at: new Date().toISOString() }, { onConflict: "key" });
+    if (error) {
+      toast({ title: "Error saving", description: error.message, variant: "destructive" });
+    } else {
+      setPrivateDays(updated);
+      toast({ title: "Private class days updated" });
+    }
+    setSavingDays(false);
+  };
+
+  const togglePrivateDay = (day: string) => {
+    let updated: string[];
+    if (privateDays.includes(day)) {
+      updated = privateDays.filter((d) => d !== day);
+    } else {
+      if (privateDays.length >= 2) {
+        toast({ title: "Maximum 2 private days", description: "Remove one day before adding another.", variant: "destructive" });
+        return;
+      }
+      updated = [...privateDays, day];
+    }
+    savePrivateDays(updated);
+  };
+
   const addTime = () => {
     if (!newTime || times.includes(newTime)) return;
     const updated = [...times, newTime].sort();
-    save(updated);
+    saveTimeOptions(updated);
   };
 
   const removeTime = (t: string) => {
@@ -1253,47 +1314,87 @@ const PrivateTimeConfig = () => {
       toast({ title: "At least one time required", variant: "destructive" });
       return;
     }
-    save(updated);
+    saveTimeOptions(updated);
   };
 
   if (loading) return <p className="text-muted-foreground text-sm">Loading...</p>;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Private Class Time Options</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          These times are shown to students booking private classes (on days without group classes).
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {times.map((t) => (
-            <Badge key={t} variant="secondary" className="text-sm py-1 px-3 gap-1">
-              {formatTime(t)}
-              <button
-                onClick={() => removeTime(t)}
-                className="ml-1 text-muted-foreground hover:text-destructive"
-                disabled={saving}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <Input
-            type="time"
-            value={newTime}
-            onChange={(e) => setNewTime(e.target.value)}
-            className="w-32"
-          />
-          <Button size="sm" onClick={addTime} disabled={saving || !newTime}>
-            <Plus className="h-4 w-4 mr-1" /> Add Time
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {/* Private Class Days */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Private Class Days</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Choose up to <strong>2 days</strong> for private classes. Only days without active group slots are available.
+          </p>
+          {availableDaysForPrivate.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">All weekdays have group classes — no days available for private.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {availableDaysForPrivate.map((day) => {
+                const selected = privateDays.includes(day);
+                return (
+                  <Button
+                    key={day}
+                    size="sm"
+                    variant={selected ? "default" : "outline"}
+                    onClick={() => togglePrivateDay(day)}
+                    disabled={savingDays}
+                  >
+                    {day}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+          {groupDays.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Blocked by group classes: {groupDays.map(d => ALL_DAYS[d]).join(", ")}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Private Class Time Options */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Private Class Time Options</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            These times are shown to students booking private classes on the selected private days above.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {times.map((t) => (
+              <Badge key={t} variant="secondary" className="text-sm py-1 px-3 gap-1">
+                {formatTime(t)}
+                <button
+                  onClick={() => removeTime(t)}
+                  className="ml-1 text-muted-foreground hover:text-destructive"
+                  disabled={saving}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="time"
+              value={newTime}
+              onChange={(e) => setNewTime(e.target.value)}
+              className="w-32"
+            />
+            <Button size="sm" onClick={addTime} disabled={saving || !newTime}>
+              <Plus className="h-4 w-4 mr-1" /> Add Time
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
