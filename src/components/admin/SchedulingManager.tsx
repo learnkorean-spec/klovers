@@ -193,10 +193,11 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
         return;
       }
 
-      // Also check exact time conflict with other private slots
+      // Also check exact time conflict with other private slots at the SAME level
       const { data: existingPrivate } = await (supabase as any)
         .from("schedule_packages")
         .select("id")
+        .eq("level", fLevel)
         .eq("day_of_week", fDay)
         .eq("start_time", fTime)
         .eq("course_type", "private")
