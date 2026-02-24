@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -237,6 +237,35 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("leads").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }); }
     else { setLeads((prev) => prev.filter((l) => l.id !== id)); toast({ title: "Deleted" }); }
+  };
+
+  const handleDeduplicateLeads = async () => {
+    // Group leads by lowercase email, keep the newest (first in array since sorted desc)
+    const emailMap: Record<string, typeof leads> = {};
+    for (const l of leads) {
+      const key = l.email.toLowerCase().trim();
+      if (!emailMap[key]) emailMap[key] = [];
+      emailMap[key].push(l);
+    }
+    const dupeIds: string[] = [];
+    for (const [, group] of Object.entries(emailMap)) {
+      if (group.length <= 1) continue;
+      // Keep the first (newest by created_at desc), delete rest
+      for (let i = 1; i < group.length; i++) {
+        dupeIds.push(group[i].id);
+      }
+    }
+    if (dupeIds.length === 0) {
+      toast({ title: "No duplicates", description: "All leads are unique." });
+      return;
+    }
+    const { error } = await supabase.from("leads").delete().in("id", dupeIds);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setLeads((prev) => prev.filter((l) => !dupeIds.includes(l.id)));
+      toast({ title: "Duplicates removed", description: `Deleted ${dupeIds.length} duplicate lead(s).` });
+    }
   };
 
   const handleEditLead = async () => {
@@ -1102,6 +1131,10 @@ const AdminDashboard = () => {
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleDeduplicateLeads}>
+                      <Eraser className="h-4 w-4" />
+                      {!isMobile && <span className="ml-1">Deduplicate</span>}
+                    </Button>
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
                       <Download className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Export CSV</span>}
