@@ -24,9 +24,9 @@ const JourneyStepper = ({ currentStage }: JourneyStepperProps) => {
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted
-                    ? "bg-primary text-primary-foreground shadow-md"
+                    ? "bg-primary text-primary-foreground shadow-md border-2 border-foreground/20"
                     : isCurrent
-                    ? "border-2 border-primary text-primary bg-primary/10 shadow-sm"
+                    ? "border-2 border-primary text-foreground bg-primary/20 shadow-sm"
                     : "border-2 border-muted text-muted-foreground bg-muted/30"
                 }`}
               >
@@ -34,17 +34,17 @@ const JourneyStepper = ({ currentStage }: JourneyStepperProps) => {
               </div>
               <span
                 className={`text-xs whitespace-nowrap ${
-                  isCurrent ? "font-semibold text-primary" : isCompleted ? "font-medium text-primary" : "text-muted-foreground"
+                  isCurrent ? "font-semibold text-foreground" : isCompleted ? "font-medium text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {stage.label}
               </span>
             </div>
             {i < stages.length - 1 && (
-              <div className="flex-1 mx-2 h-1 rounded-full overflow-hidden bg-muted">
+              <div className="flex-1 mx-2 h-1 rounded-full overflow-hidden bg-muted border border-border">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    isCompleted ? "bg-primary w-full" : "w-0"
+                    isCompleted ? "bg-primary border border-foreground/10 w-full" : "w-0"
                   }`}
                 />
               </div>

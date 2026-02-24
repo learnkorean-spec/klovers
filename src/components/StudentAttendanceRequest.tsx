@@ -265,15 +265,15 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
           <p className="text-xs text-muted-foreground">Tap a date to mark your attendance</p>
           <div className="flex gap-3 flex-wrap mt-1">
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-primary" />
+              <span className="w-3 h-3 rounded-full bg-primary border border-foreground/30" />
               <span className="text-xs text-muted-foreground">Attended</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-secondary" />
+              <span className="w-3 h-3 rounded-full bg-secondary border border-foreground/20" />
               <span className="text-xs text-muted-foreground">Pending</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-destructive" />
+              <span className="w-3 h-3 rounded-full bg-destructive border border-destructive/50" />
               <span className="text-xs text-muted-foreground">Rejected</span>
             </div>
           </div>
