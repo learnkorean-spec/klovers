@@ -17,7 +17,7 @@ import SchedulePicker from "@/components/SchedulePicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPrivateAvailability } from "@/lib/privateAvailability";
-import { LEVEL_NAMES, normalizeLevel } from "@/constants/levels";
+import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -95,8 +95,7 @@ const EnrollNowPage = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(p("groupId") || null);
   const [selectedGroupName, setSelectedGroupName] = useState<string>(p("groupName"));
 
-  // Korean level selection
-  const LEVELS = LEVEL_NAMES;
+  // Korean level selection — selectedLevel stores the DB key (e.g. "foundation", "level_1")
   const [selectedLevel, setSelectedLevel] = useState(p("level"));
 
   // First-time discount
@@ -198,7 +197,7 @@ const EnrollNowPage = () => {
 
     // Group classes: existing logic
     const fetchLevelSlots = async () => {
-      const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
+      const normalizedLevel = normalizeLevel(selectedLevel);
       const { data } = await supabase
         .from("schedule_packages" as any)
         .select("id, day_of_week, start_time, capacity")
@@ -708,7 +707,7 @@ const EnrollNowPage = () => {
                 <Select value={selectedLevel} onValueChange={setSelectedLevel}>
                   <SelectTrigger><SelectValue placeholder="Select your level" /></SelectTrigger>
                   <SelectContent>
-                    {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    {LEVEL_SELECT_OPTIONS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
