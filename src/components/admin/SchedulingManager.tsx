@@ -1201,6 +1201,101 @@ const WaitlistManager = () => {
   );
 };
 
+// ─── Private Time Config ──────────────────────────────────────────────────────
+
+const PrivateTimeConfig = () => {
+  const [times, setTimes] = useState<string[]>([]);
+  const [newTime, setNewTime] = useState("10:00");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await (supabase as any)
+        .from("app_settings")
+        .select("value")
+        .eq("key", "private_time_options")
+        .maybeSingle();
+      if (data?.value) {
+        try { setTimes(JSON.parse(data.value)); } catch { setTimes(["10:00", "18:00"]); }
+      } else {
+        setTimes(["10:00", "18:00"]);
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const save = async (updated: string[]) => {
+    setSaving(true);
+    const { error } = await (supabase as any)
+      .from("app_settings")
+      .upsert({ key: "private_time_options", value: JSON.stringify(updated), updated_at: new Date().toISOString() }, { onConflict: "key" });
+    if (error) {
+      toast({ title: "Error saving", description: error.message, variant: "destructive" });
+    } else {
+      setTimes(updated);
+      toast({ title: "Private times updated" });
+    }
+    setSaving(false);
+  };
+
+  const addTime = () => {
+    if (!newTime || times.includes(newTime)) return;
+    const updated = [...times, newTime].sort();
+    save(updated);
+  };
+
+  const removeTime = (t: string) => {
+    const updated = times.filter((x) => x !== t);
+    if (updated.length === 0) {
+      toast({ title: "At least one time required", variant: "destructive" });
+      return;
+    }
+    save(updated);
+  };
+
+  if (loading) return <p className="text-muted-foreground text-sm">Loading...</p>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Private Class Time Options</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          These times are shown to students booking private classes (on days without group classes).
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {times.map((t) => (
+            <Badge key={t} variant="secondary" className="text-sm py-1 px-3 gap-1">
+              {formatTime(t)}
+              <button
+                onClick={() => removeTime(t)}
+                className="ml-1 text-muted-foreground hover:text-destructive"
+                disabled={saving}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Input
+            type="time"
+            value={newTime}
+            onChange={(e) => setNewTime(e.target.value)}
+            className="w-32"
+          />
+          <Button size="sm" onClick={addTime} disabled={saving || !newTime}>
+            <Plus className="h-4 w-4 mr-1" /> Add Time
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const SchedulingManager = () => {
@@ -1211,11 +1306,13 @@ const SchedulingManager = () => {
         <TabsTrigger value="packages">Teacher Available Slots</TabsTrigger>
         <TabsTrigger value="groups">Groups</TabsTrigger>
         <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
+        <TabsTrigger value="config">Private Config</TabsTrigger>
         <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" /> Notifications</TabsTrigger>
       </TabsList>
       <TabsContent value="packages"><PackagesManager onSwitchToGroups={() => setActiveTab("groups")} /></TabsContent>
       <TabsContent value="groups"><GroupsManager /></TabsContent>
       <TabsContent value="waitlist"><WaitlistManager /></TabsContent>
+      <TabsContent value="config"><PrivateTimeConfig /></TabsContent>
       <TabsContent value="notifications"><AdminNotifications /></TabsContent>
     </Tabs>
   );

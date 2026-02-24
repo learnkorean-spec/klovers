@@ -20,7 +20,8 @@ function formatTime12(t: string): string {
  * Pure function: given group slots (with day_of_week), compute private-allowed options.
  */
 export function computePrivateAvailability(
-  groupSlots: { day_of_week: number }[]
+  groupSlots: { day_of_week: number }[],
+  timeOptions: string[] = PRIVATE_TIME_OPTIONS
 ): { courseDays: string[]; privateAllowedDays: string[]; options: PrivateSlotOption[] } {
   const courseDayIndices = new Set(groupSlots.map((s) => s.day_of_week));
   const courseDays = WEEKDAYS.filter((_, i) => courseDayIndices.has(i));
@@ -29,7 +30,7 @@ export function computePrivateAvailability(
   const options: PrivateSlotOption[] = [];
   for (const day of privateAllowedDays) {
     const dayIndex = WEEKDAYS.indexOf(day);
-    for (const time of PRIVATE_TIME_OPTIONS) {
+    for (const time of timeOptions) {
       options.push({
         weekday: day,
         dayIndex,
@@ -43,26 +44,49 @@ export function computePrivateAvailability(
   if (import.meta.env.DEV) {
     console.log("[privateAvailability] courseDays:", courseDays);
     console.log("[privateAvailability] privateAllowedDays:", privateAllowedDays);
+    console.log("[privateAvailability] timeOptions:", timeOptions);
   }
 
   return { courseDays, privateAllowedDays, options };
 }
 
 /**
+ * Fetch configured private time options from app_settings.
+ * Falls back to PRIVATE_TIME_OPTIONS constant if not found.
+ */
+async function fetchPrivateTimeOptions(): Promise<string[]> {
+  const { data } = await (supabase as any)
+    .from("app_settings")
+    .select("value")
+    .eq("key", "private_time_options")
+    .maybeSingle();
+
+  if (data?.value) {
+    try {
+      const parsed = JSON.parse(data.value);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch { /* fall through */ }
+  }
+  return PRIVATE_TIME_OPTIONS;
+}
+
+/**
  * Fetch active group slots from DB and compute private availability.
  */
 export async function fetchPrivateAvailability() {
-  const { data, error } = await (supabase as any)
-    .from("schedule_packages")
-    .select("day_of_week")
-    .eq("is_active", true)
-    .neq("course_type", "private");
+  const [groupResult, timeOptions] = await Promise.all([
+    (supabase as any)
+      .from("schedule_packages")
+      .select("day_of_week")
+      .eq("is_active", true)
+      .neq("course_type", "private"),
+    fetchPrivateTimeOptions(),
+  ]);
 
-  if (error) {
-    console.error("Failed to fetch group slots for private availability:", error);
-    // Fallback: all days allowed
-    return computePrivateAvailability([]);
+  if (groupResult.error) {
+    console.error("Failed to fetch group slots for private availability:", groupResult.error);
+    return computePrivateAvailability([], timeOptions);
   }
 
-  return computePrivateAvailability((data as { day_of_week: number }[]) || []);
+  return computePrivateAvailability((groupResult.data as { day_of_week: number }[]) || [], timeOptions);
 }
