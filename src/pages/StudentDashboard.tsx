@@ -239,23 +239,23 @@ const StudentDashboard = () => {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-4 gap-2">
-                        <div className="rounded-lg bg-accent/50 border border-primary/20 p-3 text-center">
+                        <div className="rounded-lg bg-muted/50 border border-border p-3 text-center">
                           <span className="text-[10px] text-muted-foreground">Package</span>
                           <p className="text-xl font-bold text-foreground">{packageSize}</p>
                         </div>
-                        <div className="rounded-lg bg-accent/50 border border-primary/20 p-3 text-center">
+                        <div className="rounded-lg bg-muted/50 border border-border p-3 text-center">
                           <span className="text-[10px] text-muted-foreground">Used</span>
                           <p className="text-xl font-bold text-foreground">{totalUsed}</p>
                         </div>
-                        <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? "bg-primary/10 border border-primary/30" : "bg-destructive/10 border border-destructive/30"}`}>
+                        <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? "bg-muted/50 border border-border" : "bg-destructive/10 border border-destructive/30"}`}>
                           <span className="text-[10px] text-muted-foreground">
                             {remaining >= 0 ? "Remaining" : "Extra"}
                           </span>
-                          <p className={`text-xl font-bold ${remaining >= 0 ? "text-primary" : "text-destructive"}`}>
+                          <p className={`text-xl font-bold ${remaining >= 0 ? "text-foreground" : "text-destructive"}`}>
                             {remaining >= 0 ? remaining : extra}
                           </p>
                         </div>
-                        <div className={`rounded-lg p-3 text-center ${due > 0 ? "bg-destructive/10" : "bg-accent/50"}`}>
+                        <div className={`rounded-lg p-3 text-center ${due > 0 ? "bg-destructive/10" : "bg-muted/50"} border border-border`}>
                           <span className="text-[10px] text-muted-foreground">Due</span>
                           <p className={`text-xl font-bold ${due > 0 ? "text-destructive" : "text-foreground"}`}>
                             {curr}{due.toLocaleString()}
@@ -264,8 +264,8 @@ const StudentDashboard = () => {
                       </div>
 
                       {remaining >= 0 ? (
-                        <div className="flex items-center gap-2 text-sm text-foreground bg-primary/10 border border-primary/30 rounded-lg p-2">
-                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        <div className="flex items-center gap-2 text-sm text-foreground bg-muted/50 border border-border rounded-lg p-2">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                           <span><strong>{remaining}</strong> session{remaining !== 1 ? "s" : ""} remaining</span>
                         </div>
                       ) : (
