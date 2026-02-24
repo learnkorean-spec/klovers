@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { Clock, Users, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Clock, Users, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { fetchPrivateAvailability, type PrivateSlotOption } from "@/lib/privateAvailability";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -55,8 +56,24 @@ const SchedulePicker = ({
   const [showAlternatives, setShowAlternatives] = useState(false);
   const [clickedFull, setClickedFull] = useState<SchedulePackage | null>(null);
 
+  // Private availability state
+  const [privateOptions, setPrivateOptions] = useState<PrivateSlotOption[]>([]);
+  const [selectedPrivateOption, setSelectedPrivateOption] = useState<PrivateSlotOption | null>(null);
+
   useEffect(() => {
-    const fetch = async () => {
+    if (courseType === "private") {
+      // Fetch private availability instead of schedule_packages
+      const loadPrivate = async () => {
+        setLoading(true);
+        const { options } = await fetchPrivateAvailability();
+        setPrivateOptions(options);
+        setLoading(false);
+      };
+      loadPrivate();
+      return;
+    }
+
+    const fetchGroup = async () => {
       setLoading(true);
 
       // Build query for schedule_packages filtered by level
@@ -130,8 +147,8 @@ const SchedulePicker = ({
         if (found) setConfirmed(found);
       }
     };
-    fetch();
-  }, [selectedLevel, selectedGroupId]);
+    fetchGroup();
+  }, [selectedLevel, selectedGroupId, courseType]);
 
   const alternatives = useMemo(() => {
     if (!clickedFull) return [];
@@ -261,6 +278,85 @@ const SchedulePicker = ({
           >
             Change slot
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Private course type rendering
+  if (courseType === "private") {
+    if (privateOptions.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>No private class days available right now.</p>
+          <p className="text-sm mt-1">All weekdays currently have group classes scheduled.</p>
+        </div>
+      );
+    }
+
+    if (selectedPrivateOption) {
+      return (
+        <div className="bg-accent rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="font-semibold text-foreground">
+              {selectedPrivateOption.weekday} · {selectedPrivateOption.timeFormatted}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {selectedPrivateOption.timezone.replace(/_/g, " ")}
+            </p>
+            <p className="text-xs text-muted-foreground">Private class — pending confirmation</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-7 text-xs"
+              onClick={() => { setSelectedPrivateOption(null); onSelect("", ""); }}
+            >
+              Change slot
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/50 border border-border">
+          <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-sm text-muted-foreground">
+            Private classes are only available on days without group classes.
+          </p>
+        </div>
+
+        <p className="text-sm text-muted-foreground">Pick your preferred private class slot:</p>
+
+        <div className="grid gap-3">
+          {privateOptions.map((opt) => (
+            <button
+              key={`${opt.dayIndex}-${opt.time}`}
+              type="button"
+              onClick={() => {
+                setSelectedPrivateOption(opt);
+                const label = `${opt.weekday} · ${opt.timeFormatted} · ${opt.timezone}`;
+                onSelect(`private-${opt.dayIndex}-${opt.time}`, label);
+              }}
+              className="w-full text-left p-4 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">{opt.weekday}</p>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {opt.timeFormatted}
+                    </span>
+                    <span className="text-xs">{opt.timezone.replace(/_/g, " ")}</span>
+                  </div>
+                </div>
+                <Badge variant="secondary">Private</Badge>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     );

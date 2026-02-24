@@ -165,9 +165,57 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   };
 
   const handleSave = async () => {
-    // Private classes are never blocked — they can use any day the teacher is available
-    if (fCourseType !== "private") {
-      // Check for duplicate level + day + time (skip if editing the same slot)
+    if (fCourseType === "private") {
+      // PRIVATE: Block if the selected day has ANY active group slot
+      const { data: groupSlots } = await (supabase as any)
+        .from("schedule_packages")
+        .select("day_of_week")
+        .eq("is_active", true)
+        .neq("course_type", "private");
+
+      const courseDayIndices = new Set((groupSlots || []).map((s: any) => s.day_of_week));
+
+      if (courseDayIndices.has(fDay)) {
+        const availableDays = DAY_NAMES
+          .map((name, i) => ({ name, i }))
+          .filter(({ i }) => !courseDayIndices.has(i))
+          .map(({ name }) => name);
+
+        toast({
+          title: "Private classes not available on this day",
+          description: `Private classes are not available on ${DAY_NAMES[fDay]} — group classes run on that day.${
+            availableDays.length > 0
+              ? ` Available days for private: ${availableDays.join(", ")}.`
+              : " All weekdays currently have group classes."
+          }`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Also check exact time conflict with other private slots
+      const { data: existingPrivate } = await (supabase as any)
+        .from("schedule_packages")
+        .select("id")
+        .eq("day_of_week", fDay)
+        .eq("start_time", fTime)
+        .eq("course_type", "private")
+        .eq("is_active", true);
+
+      const isDupe = (existingPrivate || []).some(
+        (s: any) => !editing || s.id !== editing.id
+      );
+
+      if (isDupe) {
+        toast({
+          title: "Slot already exists",
+          description: `A private slot already exists on ${DAY_NAMES[fDay]} at ${fTime}.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // GROUP: Check for duplicate level + day + time (skip if editing the same slot)
       const { data: existing } = await (supabase as any)
         .from("schedule_packages")
         .select("id, day_of_week, course_type")
