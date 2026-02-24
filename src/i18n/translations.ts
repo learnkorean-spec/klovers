@@ -55,9 +55,13 @@ export const translations = {
       title: "Your Learning Roadmap",
       subtitle: "A clear path from zero to speaking confidence",
       stages: [
-        { title: "Beginner", description: "Learn Hangul, basic vocabulary, and simple conversations", level: "Levels 0-2" },
-        { title: "Intermediate", description: "Build grammar, reading comprehension, and real-world dialogue", level: "Levels 3-4" },
-        { title: "Speaking Confidence", description: "Achieve fluency with advanced topics and TOPIK preparation", level: "Levels 5-6" },
+        { title: "Hangul Foundation", description: "Master reading, writing, and pronunciation fundamentals before entering TOPIK Levels.", level: "A0" },
+        { title: "Level 1", description: "Core greetings, basic grammar, and daily expressions.", level: "TOPIK 1 / A1" },
+        { title: "Level 2", description: "Expand sentence building, everyday conversations, and comprehension.", level: "TOPIK 2 / A2" },
+        { title: "Level 3", description: "Handle real-life topics with more complex grammar.", level: "TOPIK 3 / B1" },
+        { title: "Level 4", description: "Fluent conversation structures, longer listening/reading.", level: "TOPIK 4 / B2" },
+        { title: "Level 5", description: "Advanced nuance, formal language, topic discussion.", level: "TOPIK 5 / C1" },
+        { title: "Level 6", description: "Near-native comprehension, idioms, and advanced expression.", level: "TOPIK 6 / C2" },
       ],
     },
     testimonials: {
@@ -92,20 +96,32 @@ export const translations = {
       subtitle: "From complete beginners to advanced learners, we have the perfect course for you",
       items: [
         {
-          level: "Level 0", title: "Hangul Course", description: "Learn the Korean alphabet",
+          level: "Foundation", title: "Hangul Foundation", description: "Master the Korean alphabet",
           features: ["Hangul reading & writing", "Sound and pronunciation practice", "Basic words", "Writing guides, audio & worksheets"],
         },
         {
-          level: "Level 1-2", title: "Beginner Course", description: "Build your basics",
-          features: ["Self-introduction & daily conversations", "Essential grammar and vocabulary", "Beginner learning materials", "Speaking practice"],
+          level: "Level 1", title: "Level 1 — TOPIK 1 / A1", description: "Core greetings & daily expressions",
+          features: ["Self-introduction & greetings", "Basic grammar patterns", "Essential vocabulary", "Speaking practice"],
         },
         {
-          level: "Level 3-4", title: "Intermediate Course", description: "Use Korean with confidence",
-          features: ["Grammar in real conversations", "Reading texts & comprehension", "Practice tests", "TOPIK-style questions"],
+          level: "Level 2", title: "Level 2 — TOPIK 2 / A2", description: "Everyday conversations",
+          features: ["Sentence building", "Daily conversations", "Comprehension exercises", "Beginner reading"],
         },
         {
-          level: "Level 5-6", title: "Advanced Course", description: "Master fluency & cultural depth",
-          features: ["Advanced grammar structures", "Reading articles", "Cultural discussions", "Idiomatic expressions"],
+          level: "Level 3", title: "Level 3 — TOPIK 3 / B1", description: "Real-life topics",
+          features: ["Complex grammar", "Real-world dialogue", "Reading texts", "TOPIK-style questions"],
+        },
+        {
+          level: "Level 4", title: "Level 4 — TOPIK 4 / B2", description: "Fluent conversation",
+          features: ["Conversation structures", "Longer listening/reading", "Practice tests", "Advanced vocabulary"],
+        },
+        {
+          level: "Level 5", title: "Level 5 — TOPIK 5 / C1", description: "Advanced nuance",
+          features: ["Formal language", "Topic discussions", "Advanced grammar", "Cultural nuance"],
+        },
+        {
+          level: "Level 6", title: "Level 6 — TOPIK 6 / C2", description: "Near-native mastery",
+          features: ["Idiomatic expressions", "Advanced reading articles", "Cultural discussions", "Near-native comprehension"],
         },
         {
           level: "Special", title: "Reading & Speaking", description: "Improve fluency and pronunciation",
@@ -313,9 +329,13 @@ export const translations = {
       title: "خارطة طريق التعلم",
       subtitle: "مسار واضح من الصفر إلى الثقة بالتحدث",
       stages: [
-        { title: "مبتدئ", description: "تعلّم الهانغول والمفردات الأساسية والمحادثات البسيطة", level: "المستويات 0-2" },
-        { title: "متوسط", description: "بناء القواعد وفهم القراءة والحوار الواقعي", level: "المستويات 3-4" },
-        { title: "ثقة بالتحدث", description: "تحقيق الطلاقة مع مواضيع متقدمة وتحضير TOPIK", level: "المستويات 5-6" },
+        { title: "تأسيس الهانغل", description: "إتقان القراءة والكتابة والنطق قبل مستويات TOPIK.", level: "A0" },
+        { title: "مستوى 1", description: "تحيات وقواعد أساسية وتعبيرات يومية.", level: "TOPIK 1 / A1" },
+        { title: "مستوى 2", description: "توسيع بناء الجمل ومحادثات الحياة اليومية.", level: "TOPIK 2 / A2" },
+        { title: "مستوى 3", description: "مواضيع واقعية مع قواعد أكثر تعقيدًا.", level: "TOPIK 3 / B1" },
+        { title: "مستوى 4", description: "محادثة منظمة واستماع/قراءة أطول.", level: "TOPIK 4 / B2" },
+        { title: "مستوى 5", description: "فروقات دقيقة ولغة رسمية ونقاشات.", level: "TOPIK 5 / C1" },
+        { title: "مستوى 6", description: "فهم شبه أصلي وتعبيرات متقدمة واصطلاحات.", level: "TOPIK 6 / C2" },
       ],
     },
     testimonials: {
@@ -350,20 +370,32 @@ export const translations = {
       subtitle: "من المبتدئين تمامًا إلى المتعلمين المتقدمين، لدينا الدورة المثالية لك",
       items: [
         {
-          level: "المستوى 0", title: "دورة الهانغول", description: "تعلّم الأبجدية الكورية",
+          level: "تأسيس", title: "تأسيس الهانغل", description: "إتقان الأبجدية الكورية",
           features: ["قراءة وكتابة الهانغول", "تمارين النطق والأصوات", "كلمات أساسية", "أدلة كتابة وصوتيات وأوراق عمل"],
         },
         {
-          level: "المستوى 1-2", title: "دورة المبتدئين", description: "ابنِ أساسياتك",
-          features: ["تقديم النفس والمحادثات اليومية", "القواعد والمفردات الأساسية", "مواد تعليمية للمبتدئين", "تمارين المحادثة"],
+          level: "مستوى 1", title: "مستوى 1 — TOPIK 1 / A1", description: "تحيات وتعبيرات يومية",
+          features: ["تقديم النفس والتحيات", "أنماط قواعد أساسية", "مفردات أساسية", "تمارين المحادثة"],
         },
         {
-          level: "المستوى 3-4", title: "الدورة المتوسطة", description: "استخدم الكورية بثقة",
-          features: ["القواعد في المحادثات الحقيقية", "قراءة النصوص والفهم", "اختبارات تدريبية", "أسئلة بنمط TOPIK"],
+          level: "مستوى 2", title: "مستوى 2 — TOPIK 2 / A2", description: "محادثات الحياة اليومية",
+          features: ["بناء الجمل", "محادثات يومية", "تمارين الفهم", "قراءة المبتدئين"],
         },
         {
-          level: "المستوى 5-6", title: "الدورة المتقدمة", description: "إتقان الطلاقة والعمق الثقافي",
-          features: ["تراكيب نحوية متقدمة", "قراءة المقالات", "نقاشات ثقافية", "تعبيرات اصطلاحية"],
+          level: "مستوى 3", title: "مستوى 3 — TOPIK 3 / B1", description: "مواضيع واقعية",
+          features: ["قواعد معقدة", "حوار واقعي", "قراءة نصوص", "أسئلة بنمط TOPIK"],
+        },
+        {
+          level: "مستوى 4", title: "مستوى 4 — TOPIK 4 / B2", description: "محادثة متقدمة",
+          features: ["هياكل محادثة", "استماع/قراءة أطول", "اختبارات تدريبية", "مفردات متقدمة"],
+        },
+        {
+          level: "مستوى 5", title: "مستوى 5 — TOPIK 5 / C1", description: "فروقات دقيقة",
+          features: ["لغة رسمية", "نقاشات موضوعية", "قواعد متقدمة", "فروقات ثقافية"],
+        },
+        {
+          level: "مستوى 6", title: "مستوى 6 — TOPIK 6 / C2", description: "إتقان شبه أصلي",
+          features: ["تعبيرات اصطلاحية", "قراءة مقالات متقدمة", "نقاشات ثقافية", "فهم شبه أصلي"],
         },
         {
           level: "خاص", title: "القراءة والمحادثة", description: "حسّن طلاقتك ونطقك",

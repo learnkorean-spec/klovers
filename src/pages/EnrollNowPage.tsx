@@ -16,6 +16,7 @@ import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, Calendar
 import SchedulePicker from "@/components/SchedulePicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { LEVEL_NAMES, normalizeLevel } from "@/constants/levels";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -94,7 +95,7 @@ const EnrollNowPage = () => {
   const [selectedGroupName, setSelectedGroupName] = useState<string>(p("groupName"));
 
   // Korean level selection
-  const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
+  const LEVELS = LEVEL_NAMES;
   const [selectedLevel, setSelectedLevel] = useState(p("level"));
 
   // First-time discount
@@ -376,8 +377,7 @@ const EnrollNowPage = () => {
     }
   };
 
-  const normalizeLevel = (label: string): string =>
-    label.trim().toLowerCase().replace(/\s+/g, "_");
+  // normalizeLevel imported from constants
 
   const submitLead = async () => {
     try {

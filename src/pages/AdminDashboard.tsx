@@ -87,9 +87,7 @@ interface OverviewRow {
 const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
 
-/** Normalize a level label to snake_case (e.g. "Beginner 1" → "beginner_1") */
-const normalizeLevel = (label: string): string =>
-  label.trim().toLowerCase().replace(/\s+/g, "_");
+import { normalizeLevel } from "@/constants/levels";
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);

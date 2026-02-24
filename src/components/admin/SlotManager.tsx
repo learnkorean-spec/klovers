@@ -41,8 +41,8 @@ interface SlotStudent {
   profiles?: { name: string; email: string } | null;
 }
 
+import { LEVEL_NAMES } from "@/constants/levels";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
 
 const SlotManager = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -56,7 +56,7 @@ const SlotManager = () => {
   const [newDay, setNewDay] = useState("Friday");
   const [newTime, setNewTime] = useState("18:00");
   const [newTimezone, setNewTimezone] = useState("Africa/Cairo");
-  const [newLevel, setNewLevel] = useState("Beginner 1");
+  const [newLevel, setNewLevel] = useState(LEVEL_NAMES[0]);
   const [newMin, setNewMin] = useState(3);
   const [newMax, setNewMax] = useState(7);
 
@@ -240,7 +240,7 @@ const SlotManager = () => {
               <Select value={newLevel} onValueChange={setNewLevel}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  {LEVEL_NAMES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -292,7 +292,7 @@ const SlotManager = () => {
                 <Select value={editingSlot.course_level} onValueChange={(v) => setEditingSlot({ ...editingSlot, course_level: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    {LEVEL_NAMES.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

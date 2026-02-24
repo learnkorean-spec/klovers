@@ -11,11 +11,9 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const LEVELS = ["Beginner 1", "Beginner 2", "Intermediate 1", "Intermediate 2", "Advanced 1", "Advanced 2", "Topik 1", "Topik 2"];
+import { LEVEL_NAMES, normalizeLevel } from "@/constants/levels";
+const LEVELS = LEVEL_NAMES;
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-const normalizeLevel = (label: string): string =>
-  label.trim().toLowerCase().replace(/\s+/g, "_");
 
 function formatTime(t: string) {
   const [h, m] = t.split(":").map(Number);

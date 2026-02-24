@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LEVEL_SELECT_OPTIONS_WITH_SPECIAL } from "@/constants/levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,17 +98,7 @@ const COURSE_TYPES = [
   { value: "private", label: "Private" },
 ];
 
-const COURSE_LEVELS = [
-  { value: "hangul", label: "Hangul (Level 0)" },
-  { value: "beginner-1", label: "Beginner 1" },
-  { value: "beginner-2", label: "Beginner 2" },
-  { value: "intermediate-3", label: "Intermediate 3" },
-  { value: "intermediate-4", label: "Intermediate 4" },
-  { value: "advanced-5", label: "Advanced 5" },
-  { value: "advanced-6", label: "Advanced 6" },
-  { value: "reading-speaking", label: "Reading & Speaking" },
-  { value: "topik", label: "TOPIK Preparation" },
-];
+const COURSE_LEVELS = LEVEL_SELECT_OPTIONS_WITH_SPECIAL;
 
 const EMPTY_STUDENT_FORM = {
   full_name: "", email: "", phone: "", country: "", status: "lead",
