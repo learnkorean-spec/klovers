@@ -1,77 +1,78 @@
 
 
-# Fix Yellow Color Visibility on Student Dashboard
+# Plan: Replace Level System with TOPIK/CEFR International Classification
 
-## Problem
-The yellow primary color (#FFFF00) lacks contrast against white backgrounds, making several UI elements nearly invisible: legend dots, stepper connectors, calendar highlights, and badge backgrounds. The screenshot shows washed-out yellow elements that are hard to distinguish.
+## Summary
 
-## Solution
-Add borders, shadows, and slightly darker yellow tones to all yellow-on-white elements for better definition while keeping the yellow brand identity.
+Create a single source of truth for levels (`src/constants/levels.ts`) and replace all hardcoded level arrays across ~10 files. Existing DB values (stored as normalized snake_case strings like `beginner_1`) are preserved via a legacy mapping layer.
 
 ## Technical Details
 
-### File: `src/components/StudentAttendanceRequest.tsx`
+### 1. New file: `src/constants/levels.ts`
 
-**Legend dots** — Add a dark border ring so the yellow dot is visible on white:
-```tsx
-<span className="w-3 h-3 rounded-full bg-primary border border-foreground/30" />
+Creates the canonical `LEVELS` array with 7 entries (Foundation + Levels 1-6), each containing: `id`, `key`, `name`, `shortLabel`, `topik`, `cefr`, `order`, `description_en`, `description_ar`.
+
+Exports:
+- `LEVELS` array
+- `getLevelById(id: number)` — lookup by numeric id
+- `getLevelByKey(key: string)` — lookup by key string
+- `formatLevelLabel(level)` — returns "Level X — TOPIK Y / CEFR Z"
+- `isFoundationLevel(id)` — checks if id === 0
+- `normalizeLevel(label: string)` — the single canonical normalizer (removes duplicates from 4 files)
+- `mapLegacyLevel(legacyKey: string)` — maps old keys like `beginner_1`, `beginner_2`, `intermediate_1`, etc. to new level objects; returns `undefined` with console.warn for unknown levels
+- `LEVEL_KEYS` — just the key strings for dropdowns
+- `LEVEL_SELECT_OPTIONS` — `{value, label}[]` for Select components
+
+Legacy mapping table:
 ```
-Apply the same treatment to the "Pending" and "Rejected" legend dots for consistency.
-
-### File: `src/components/JourneyStepper.tsx`
-
-**Completed step circles** — Add a dark border for definition:
-```tsx
-// Completed: add border
-"bg-primary text-primary-foreground shadow-md border-2 border-foreground/20"
-
-// Current: already has border-primary, darken slightly
-"border-2 border-primary text-foreground bg-primary/20 shadow-sm"
-```
-
-**Connector bars** — Make the filled portion slightly more visible:
-```tsx
-// Background track
-"bg-muted border border-border"
-
-// Filled portion — use a darker yellow
-"bg-primary border border-foreground/10"
-```
-
-**Step labels** — Use `text-foreground` for completed/current labels instead of `text-primary` (yellow text on white is unreadable):
-```tsx
-isCurrent ? "font-semibold text-foreground" : isCompleted ? "font-medium text-foreground" : "text-muted-foreground"
+beginner_1, beginner-1 → level_1
+beginner_2, beginner-2 → level_2
+intermediate_1, intermediate-3 → level_3
+intermediate_2, intermediate-4 → level_4
+advanced_1, advanced-5 → level_5
+advanced_2, advanced-6 → level_6
+hangul → foundation
+topik_1, topik_2, topik → (kept as special keys, mapped to closest or null)
 ```
 
-### File: `src/components/ui/calendar.tsx`
+### 2. Files to update
 
-**Today cell** — The accent background is too light. Add a ring for definition:
-```tsx
-day_today: "bg-accent text-accent-foreground ring-1 ring-primary/50 font-bold",
-```
+| File | Change |
+|------|--------|
+| `src/constants/levels.ts` | **NEW** — single source of truth |
+| `src/components/admin/LevelSlotConfig.tsx` | Replace hardcoded `LEVELS` array (line 13-17) with import from constants |
+| `src/components/admin/LevelGroupConfig.tsx` | Replace hardcoded `LEVELS` array (line 12-17) with import from constants |
+| `src/components/admin/SlotManager.tsx` | Replace hardcoded `LEVELS` (line 45) and `newLevel` default (line 59) |
+| `src/components/admin/GroupMatcher.tsx` | Remove local `normalizeLevel`, import from constants; use `mapLegacyLevel` for display labels |
+| `src/components/admin/StudentManager.tsx` | Replace `COURSE_LEVELS` (lines 100-110) with `LEVEL_SELECT_OPTIONS` from constants |
+| `src/pages/EnrollNowPage.tsx` | Replace hardcoded `LEVELS` (line 97) and local `normalizeLevel` (line 379) with imports |
+| `src/pages/ResubmitSchedulePage.tsx` | Replace hardcoded `LEVELS` (line 14) and local `normalizeLevel` (line 17) with imports |
+| `src/pages/AdminDashboard.tsx` | Remove local `normalizeLevel` (line 91), import from constants |
+| `src/components/CoursesSection.tsx` | No code change needed (content comes from translations) |
+| `src/components/LearningRoadmap.tsx` | No code change needed (content comes from translations) |
+| `src/i18n/translations.ts` | Update `courses.items` and `roadmap.stages` in both EN and AR to reflect the 7-level TOPIK/CEFR structure with new descriptions |
 
-### File: `src/pages/StudentDashboard.tsx`
+### 3. Translation updates (`src/i18n/translations.ts`)
 
-**Stats grid cards** — The `bg-accent/50` and `bg-primary/10` backgrounds are nearly invisible. Add borders:
-```tsx
-// Package/Used cells
-"rounded-lg bg-accent/50 border border-primary/20 p-3 text-center"
+**Roadmap stages** — expand from 3 stages to a clear 7-level progression (Foundation through Level 6), each with TOPIK/CEFR tags.
 
-// Remaining cell (positive)
-"rounded-lg bg-primary/10 border border-primary/30 p-3 text-center"
-```
+**Course items** — replace the current 6 cards (Level 0, Level 1-2, Level 3-4, Level 5-6, Special, TOPIK) with 7 individual level cards plus the 2 special tracks (Reading & Speaking, TOPIK Prep) kept as-is.
 
-**Status messages** — Ensure the green/positive message has enough contrast:
-```tsx
-// Positive remaining banner
-"flex items-center gap-2 text-sm text-foreground bg-primary/10 border border-primary/30 rounded-lg p-2"
-```
+Both EN and AR sections updated with the exact copy provided in the task.
 
-### Summary of changes
-- `src/components/JourneyStepper.tsx` — borders on circles, dark labels, thicker connectors
-- `src/components/StudentAttendanceRequest.tsx` — bordered legend dots
-- `src/components/ui/calendar.tsx` — ring on today cell
-- `src/pages/StudentDashboard.tsx` — borders on stats cards and status banners
+### 4. Backwards compatibility
 
-All changes are CSS class additions only. No logic changes. Yellow stays as the primary color throughout.
+- DB values remain unchanged (stored as snake_case strings).
+- `mapLegacyLevel()` provides safe resolution from any old format to the new level object.
+- Unknown levels return `undefined` and log a warning — UI shows "Unknown Level" fallback.
+- The `normalizeLevel()` function stays identical in behavior, just centralized.
+- No DB migration needed — this is a display/code-only change.
+
+### 5. Special tracks handling
+
+"Reading & Speaking" and "TOPIK Preparation" are not part of the TOPIK 1-6 progression. They will be kept in the courses/translations but NOT added to the `LEVELS` constant. Admin scheduling dropdowns will include them as separate options via an exported `SPECIAL_TRACKS` array if needed, or they can remain in translations only.
+
+### 6. Dev validation
+
+A `validateLevels()` function exported from `src/constants/levels.ts` that asserts unique IDs, ascending order, and TOPIK === id for levels 1-6. Called in dev mode only (wrapped in `import.meta.env.DEV` check).
 
