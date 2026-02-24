@@ -16,6 +16,7 @@ import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, Calendar
 import SchedulePicker from "@/components/SchedulePicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchPrivateAvailability } from "@/lib/privateAvailability";
 import { LEVEL_NAMES, normalizeLevel } from "@/constants/levels";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
@@ -148,6 +149,13 @@ const EnrollNowPage = () => {
   // Track whether this is the initial load (to avoid clearing rehydrated preferredDays)
   const [initialLevelLoad, setInitialLevelLoad] = useState(true);
 
+  // Reset slots when classType changes
+  useEffect(() => {
+    setLevelSlots([]);
+    setPreferredDays([]);
+    setSelectedPackageId(null);
+  }, [classType]);
+
   // Fetch available days+times from schedule_packages when level changes
   useEffect(() => {
     setLevelSlots([]);
@@ -157,6 +165,38 @@ const EnrollNowPage = () => {
       setSelectedPackageId(null);
     }
     if (!selectedLevel) return;
+
+    // Private classes: fetch private availability (days without group classes)
+    if (classType === "private") {
+      const loadPrivate = async () => {
+        const { options } = await fetchPrivateAvailability();
+        const slots = options.map((opt) => ({
+          day: opt.weekday,
+          time: opt.timeFormatted,
+          packageId: `private-${opt.dayIndex}-${opt.time}`,
+          seatsLeft: 99, // private slots don't have seat limits in day picker
+        }));
+        // Deduplicate by day (show first time option per day)
+        const seen = new Set<string>();
+        const deduped = slots.filter((s) => {
+          if (seen.has(s.day)) return false;
+          seen.add(s.day);
+          return true;
+        });
+        setLevelSlots(deduped);
+        if (initialLevelLoad && preferredDays.length > 0) {
+          const matchSlot = deduped.find(s => s.day === preferredDays[0]);
+          if (matchSlot) setSelectedPackageId(matchSlot.packageId);
+          setInitialLevelLoad(false);
+        } else {
+          setInitialLevelLoad(false);
+        }
+      };
+      loadPrivate();
+      return;
+    }
+
+    // Group classes: existing logic
     const fetchLevelSlots = async () => {
       const normalizedLevel = selectedLevel.toLowerCase().replace(/\s+/g, "_");
       const { data } = await supabase
@@ -221,7 +261,7 @@ const EnrollNowPage = () => {
       }
     };
     fetchLevelSlots();
-  }, [selectedLevel]);
+  }, [selectedLevel, classType]);
 
   useEffect(() => {
     const checkFirstTime = async () => {
@@ -689,14 +729,23 @@ const EnrollNowPage = () => {
               {/* Preferred Days */}
               <div className="space-y-2">
                 <Label>Preferred Day (select 1)</Label>
+                {classType === "private" && levelSlots.length > 0 && (
+                  <p className="text-sm text-muted-foreground italic">
+                    Private classes are only available on days without group classes.
+                  </p>
+                )}
                 {!selectedLevel ? (
                   <p className="text-sm text-muted-foreground italic">Please select your Korean level first.</p>
                 ) : levelSlots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">No schedule slots available for this level yet. Contact us.</p>
+                  <p className="text-sm text-muted-foreground italic">
+                    {classType === "private"
+                      ? "No private class days available — all weekdays have group classes."
+                      : "No schedule slots available for this level yet. Contact us."}
+                  </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {levelSlots.map(({ day, time, seatsLeft }) => {
-                      const isFull = seatsLeft <= 0;
+                      const isFull = classType !== "private" && seatsLeft <= 0;
                       return (
                         <button
                           type="button"
