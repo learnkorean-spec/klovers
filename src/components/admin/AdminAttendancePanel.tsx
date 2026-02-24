@@ -424,7 +424,7 @@ const AdminAttendancePanel = ({
   const outOfSync = stats && enrollment && enrollment.sessions_remaining !== stats.remaining;
 
   return (
-    <Card className="border-2 border-primary/20">
+    <Card className="border-2 border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -441,21 +441,21 @@ const AdminAttendancePanel = ({
         {/* Auto-Calculated Stats */}
         {stats && enrollment && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div className="rounded-lg bg-accent/50 p-3 text-center">
+            <div className="rounded-lg bg-muted/50 border border-border p-3 text-center">
               <span className="text-[10px] text-muted-foreground">Package</span>
               <p className="text-lg font-bold text-foreground">{stats.packageSize}</p>
             </div>
-            <div className="rounded-lg bg-accent/50 p-3 text-center">
+            <div className="rounded-lg bg-muted/50 border border-border p-3 text-center">
               <span className="text-[10px] text-muted-foreground">Used</span>
               <p className="text-lg font-bold text-foreground">{stats.totalUsed}</p>
             </div>
-            <div className={`rounded-lg p-3 text-center ${stats.remaining >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+            <div className={`rounded-lg border p-3 text-center ${stats.remaining >= 0 ? "bg-muted/50 border-border" : "bg-destructive/10 border-destructive/30"}`}>
               <span className="text-[10px] text-muted-foreground">{stats.remaining >= 0 ? "Remaining" : "Extra"}</span>
-              <p className={`text-lg font-bold ${stats.remaining >= 0 ? "text-primary" : "text-destructive"}`}>
+              <p className={`text-lg font-bold ${stats.remaining >= 0 ? "text-foreground" : "text-destructive"}`}>
                 {stats.remaining >= 0 ? stats.remaining : stats.extra}
               </p>
             </div>
-            <div className={`rounded-lg p-3 text-center ${stats.balance > 0 ? "bg-destructive/10" : "bg-accent/50"}`}>
+            <div className={`rounded-lg border p-3 text-center ${stats.balance > 0 ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
               <span className="text-[10px] text-muted-foreground">Balance Due</span>
               <p className={`text-lg font-bold ${stats.balance > 0 ? "text-destructive" : "text-foreground"}`}>
                 {currLabel}{stats.balance.toLocaleString()}
