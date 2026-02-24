@@ -8,13 +8,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Settings2 } from "lucide-react";
-
-const LEVELS = [
-  "Beginner 1", "Beginner 2",
-  "Intermediate 1", "Intermediate 2",
-  "Advanced 1", "Advanced 2",
-  "Topik 1", "Topik 2",
-];
+import { LEVEL_NAMES } from "@/constants/levels";
 
 interface Group {
   id: string;
@@ -110,7 +104,7 @@ const LevelGroupConfig = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {LEVELS.map(level => {
+        {LEVEL_NAMES.map(level => {
           const levelConfigs = getConfigsForLevel(level);
           const isAdding = addingFor === level;
           const usedGroupIds = new Set(levelConfigs.map(c => c.group_id));

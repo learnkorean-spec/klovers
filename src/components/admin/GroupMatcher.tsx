@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { normalizeLevel } from "@/constants/levels";
 
 interface UnmatchedEnrollment {
   id: string;
@@ -70,7 +71,7 @@ const DAY_NAME_TO_NUM: Record<string, number> = {
   thursday: 4, friday: 5, saturday: 6,
 };
 
-const normalizeLevel = (v: string) => v.trim().toLowerCase().replace(/\s+/g, "_");
+
 
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
