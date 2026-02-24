@@ -17,15 +17,15 @@ function formatTime12(t: string): string {
 }
 
 /**
- * Pure function: given group slots (with day_of_week), compute private-allowed options.
+ * Pure function: given explicit private day names, compute private slot options.
  */
 export function computePrivateAvailability(
-  groupSlots: { day_of_week: number }[],
+  privateDayNames: string[],
   timeOptions: string[] = PRIVATE_TIME_OPTIONS
 ): { courseDays: string[]; privateAllowedDays: string[]; options: PrivateSlotOption[] } {
-  const courseDayIndices = new Set(groupSlots.map((s) => s.day_of_week));
-  const courseDays = WEEKDAYS.filter((_, i) => courseDayIndices.has(i));
-  const privateAllowedDays = WEEKDAYS.filter((_, i) => !courseDayIndices.has(i));
+  const privateAllowedDays = privateDayNames.filter(d => WEEKDAYS.includes(d));
+  // courseDays = all days NOT in private (informational)
+  const courseDays = WEEKDAYS.filter(d => !privateAllowedDays.includes(d));
 
   const options: PrivateSlotOption[] = [];
   for (const day of privateAllowedDays) {
@@ -42,7 +42,6 @@ export function computePrivateAvailability(
   }
 
   if (import.meta.env.DEV) {
-    console.log("[privateAvailability] courseDays:", courseDays);
     console.log("[privateAvailability] privateAllowedDays:", privateAllowedDays);
     console.log("[privateAvailability] timeOptions:", timeOptions);
   }
@@ -71,22 +70,42 @@ async function fetchPrivateTimeOptions(): Promise<string[]> {
 }
 
 /**
- * Fetch active group slots from DB and compute private availability.
+ * Fetch admin-configured private class days from app_settings.
+ * Falls back to auto-computing from non-group days if not configured.
+ */
+async function fetchPrivateDays(): Promise<string[]> {
+  const { data } = await (supabase as any)
+    .from("app_settings")
+    .select("value")
+    .eq("key", "private_class_days")
+    .maybeSingle();
+
+  if (data?.value) {
+    try {
+      const parsed = JSON.parse(data.value);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch { /* fall through */ }
+  }
+
+  // Fallback: auto-compute from non-group days
+  const { data: groupSlots } = await (supabase as any)
+    .from("schedule_packages")
+    .select("day_of_week")
+    .eq("is_active", true)
+    .neq("course_type", "private");
+
+  const courseDayIndices = new Set((groupSlots as any[] || []).map((s: any) => s.day_of_week));
+  return WEEKDAYS.filter((_, i) => !courseDayIndices.has(i));
+}
+
+/**
+ * Fetch private availability using admin-configured days and times.
  */
 export async function fetchPrivateAvailability() {
-  const [groupResult, timeOptions] = await Promise.all([
-    (supabase as any)
-      .from("schedule_packages")
-      .select("day_of_week")
-      .eq("is_active", true)
-      .neq("course_type", "private"),
+  const [privateDays, timeOptions] = await Promise.all([
+    fetchPrivateDays(),
     fetchPrivateTimeOptions(),
   ]);
 
-  if (groupResult.error) {
-    console.error("Failed to fetch group slots for private availability:", groupResult.error);
-    return computePrivateAvailability([], timeOptions);
-  }
-
-  return computePrivateAvailability((groupResult.data as { day_of_week: number }[]) || [], timeOptions);
+  return computePrivateAvailability(privateDays, timeOptions);
 }
