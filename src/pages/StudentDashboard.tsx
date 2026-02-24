@@ -12,7 +12,7 @@ import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen } from "lucide-react";
 
 interface EnrollmentRecord {
   id: string;
@@ -24,6 +24,7 @@ interface EnrollmentRecord {
   amount: number;
   currency: string;
   created_at: string;
+  level: string | null;
 }
 
 interface ChecklistItem {
@@ -48,6 +49,7 @@ const StudentDashboard = () => {
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
+  const [groupName, setGroupName] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,7 +71,7 @@ const StudentDashboard = () => {
 
       const { data: enrollmentData } = await supabase
         .from("enrollments")
-        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone")
+        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level")
         .eq("user_id", session.user.id)
         .eq("approval_status", "APPROVED")
         .eq("payment_status", "PAID")
@@ -129,6 +131,17 @@ const StudentDashboard = () => {
         }
         dates.sort((a, b) => a.date.localeCompare(b.date));
         setAttendanceDates(dates);
+
+        // Fetch group membership
+        const { data: groupData } = await supabase
+          .from("pkg_group_members" as any)
+          .select("group_id, pkg_groups(name)")
+          .eq("user_id", session.user.id)
+          .eq("member_status", "active")
+          .limit(1);
+        if (groupData && groupData.length > 0) {
+          setGroupName((groupData[0] as any).pkg_groups?.name || null);
+        }
       } else {
         setHasNoData(true);
       }
@@ -274,6 +287,31 @@ const StudentDashboard = () => {
                           <span><strong>{extra}</strong> extra — Due: <strong>{curr}{due.toLocaleString()}</strong></span>
                         </div>
                       )}
+
+                      {/* Plan Details */}
+                      <div className="grid grid-cols-2 gap-2 text-sm border border-border rounded-lg p-3">
+                        <div className="flex items-center gap-1.5">
+                          <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-muted-foreground">Plan:</span>
+                          <span className="font-medium capitalize">{enrollment.plan_type} {enrollment.duration}mo</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-muted-foreground">Paid:</span>
+                          <span className="font-medium">{curr}{enrollment.amount.toLocaleString()}</span>
+                        </div>
+                        {enrollment.id === latestEnrollmentId && groupName && (
+                          <div className="flex items-center gap-1.5 col-span-2">
+                            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-muted-foreground">Group:</span>
+                            <span className="font-medium">{groupName}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Unit price:</span>
+                          <span className="font-medium">{curr}{enrollment.unit_price}</span>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 );
