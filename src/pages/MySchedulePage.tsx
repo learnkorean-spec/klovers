@@ -68,6 +68,7 @@ const MySchedulePage = () => {
 
   // Change schedule modal
   const [showPicker, setShowPicker] = useState(false);
+  const [selectedCourseType, setSelectedCourseType] = useState<"group" | "private" | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [selectedPackageLabel, setSelectedPackageLabel] = useState<string>("");
 
@@ -343,24 +344,59 @@ const MySchedulePage = () => {
       <Footer />
 
       {/* Schedule Picker Modal */}
-      <Dialog open={showPicker} onOpenChange={setShowPicker}>
+      <Dialog open={showPicker} onOpenChange={(open) => { setShowPicker(open); if (!open) { setSelectedCourseType(null); setSelectedPackageId(null); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Change Schedule</DialogTitle>
-            <DialogDescription>Select a new class slot. Your preference will be saved and admin notified.</DialogDescription>
+            <DialogTitle>{packageDetails ? "Change Schedule" : "Choose Your Schedule"}</DialogTitle>
+            <DialogDescription>
+              {!selectedCourseType
+                ? "First, choose your class type."
+                : "Select a class slot. Your preference will be saved and admin notified."}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <SchedulePicker
-              courseType="group"
-              userTimezone={userTimezone}
-              selectedLevel={userLevel}
-              onSelect={handlePickerSelect}
-            />
-            {selectedPackageId && (
-              <Button className="w-full" disabled={assigning} onClick={handleConfirmChange}>
-                {assigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Confirm New Schedule
-              </Button>
+            {!selectedCourseType ? (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCourseType("group")}
+                  className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
+                >
+                  <Users className="h-8 w-8 mx-auto text-primary" />
+                  <p className="font-semibold text-foreground">Group Class</p>
+                  <p className="text-xs text-muted-foreground">Learn with other students</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCourseType("private")}
+                  className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
+                >
+                  <Clock className="h-8 w-8 mx-auto text-primary" />
+                  <p className="font-semibold text-foreground">Private Class</p>
+                  <p className="text-xs text-muted-foreground">One-on-one sessions</p>
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedCourseType(null); setSelectedPackageId(null); }}>
+                    <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                  </Button>
+                  <Badge variant="outline">{selectedCourseType === "group" ? "Group" : "Private"}</Badge>
+                </div>
+                <SchedulePicker
+                  courseType={selectedCourseType}
+                  userTimezone={userTimezone}
+                  selectedLevel={userLevel}
+                  onSelect={handlePickerSelect}
+                />
+                {selectedPackageId && (
+                  <Button className="w-full" disabled={assigning} onClick={handleConfirmChange}>
+                    {assigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Confirm New Schedule
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </DialogContent>
