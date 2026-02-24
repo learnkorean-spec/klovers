@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const { t } = useLanguage();
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ const ForgotPasswordPage = () => {
     });
 
     if (error) {
-      toast({ title: "Error", description: "Could not send reset link. Please try again.", variant: "destructive" });
+      toast({ title: t("auth.loginFailed"), description: error.message, variant: "destructive" });
       setLoading(false);
       return;
     }
@@ -37,35 +39,35 @@ const ForgotPasswordPage = () => {
       <main className="pt-24 pb-16 flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Reset Password</CardTitle>
+            <CardTitle className="text-2xl">{t("auth.resetPassword")}</CardTitle>
           </CardHeader>
           <CardContent>
             {sent ? (
               <div className="text-center space-y-4">
                 <p className="text-muted-foreground">
-                  If an account exists with that email, we've sent a password reset link. Please check your inbox.
+                  {t("auth.resetEmailSent")}
                 </p>
                 <Button variant="outline" asChild className="w-full">
-                  <Link to="/login">Back to Log In</Link>
+                  <Link to="/login">{t("auth.backToLogin")}</Link>
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleReset} className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Enter your email address and we'll send you a link to reset your password.
+                  {t("auth.resetEmailPrompt")}
                 </p>
                 <Input
                   type="email"
-                  placeholder="Email"
+                  placeholder={t("auth.email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {loading ? t("auth.sending") : t("auth.sendResetLink")}
                 </Button>
                 <p className="text-sm text-center text-muted-foreground">
-                  <Link to="/login" className="text-primary underline">Back to Log In</Link>
+                  <Link to="/login" className="text-primary underline">{t("auth.backToLogin")}</Link>
                 </p>
               </form>
             )}

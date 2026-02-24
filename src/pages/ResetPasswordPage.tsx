@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
@@ -16,6 +17,7 @@ const ResetPasswordPage = () => {
   const [sessionReady, setSessionReady] = useState(false);
   const [expired, setExpired] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -24,14 +26,12 @@ const ResetPasswordPage = () => {
       }
     });
 
-    // Also check if there's already an active session (user may have landed here with a valid session)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
       }
     });
 
-    // Timeout: if no recovery session after 5s, mark as expired
     const timeout = setTimeout(() => {
       setSessionReady((ready) => {
         if (!ready) setExpired(true);
@@ -49,12 +49,12 @@ const ResetPasswordPage = () => {
     e.preventDefault();
 
     if (password.length < 6) {
-      toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      toast({ title: t("auth.passwordTooShort"), variant: "destructive" });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({ title: "Passwords don't match", description: "Please make sure both passwords are the same.", variant: "destructive" });
+      toast({ title: t("auth.passwordsDontMatch"), variant: "destructive" });
       return;
     }
 
@@ -65,18 +65,17 @@ const ResetPasswordPage = () => {
     if (error) {
       const msg = error.message?.toLowerCase() || "";
       if (msg.includes("same_password") || msg.includes("same password") || msg.includes("different password")) {
-        toast({ title: "Same password", description: "New password must be different from your current password.", variant: "destructive" });
+        toast({ title: t("auth.samePassword"), variant: "destructive" });
       } else {
-        toast({ title: "Error", description: "Could not update password. The link may have expired.", variant: "destructive" });
+        toast({ title: t("auth.linkExpiredDesc"), variant: "destructive" });
       }
       setLoading(false);
       return;
     }
 
-    // Sign out to force a clean login with the new password
     await supabase.auth.signOut();
 
-    toast({ title: "Password updated", description: "You can now log in with your new password." });
+    toast({ title: t("auth.updatePassword"), description: t("auth.passwordUpdated") });
     navigate("/login");
   };
 
@@ -87,12 +86,12 @@ const ResetPasswordPage = () => {
         <main className="pt-24 pb-16 flex items-center justify-center px-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Link Expired</CardTitle>
+              <CardTitle className="text-2xl">{t("auth.linkExpired")}</CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-4">
-              <p className="text-muted-foreground">This password reset link has expired or is invalid.</p>
+              <p className="text-muted-foreground">{t("auth.linkExpiredDesc")}</p>
               <Button asChild className="w-full">
-                <Link to="/forgot-password">Request a new link</Link>
+                <Link to="/forgot-password">{t("auth.requestNewLink")}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -109,7 +108,7 @@ const ResetPasswordPage = () => {
         <main className="pt-24 pb-16 flex items-center justify-center px-4">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Verifying your reset link…</p>
+            <p className="text-muted-foreground">{t("auth.verifyingLink")}</p>
           </div>
         </main>
         <Footer />
@@ -123,13 +122,13 @@ const ResetPasswordPage = () => {
       <main className="pt-24 pb-16 flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Set New Password</CardTitle>
+            <CardTitle className="text-2xl">{t("auth.setNewPassword")}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdate} className="space-y-4">
               <Input
                 type="password"
-                placeholder="New password (min 6 chars)"
+                placeholder={t("auth.newPassword")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -137,14 +136,14 @@ const ResetPasswordPage = () => {
               />
               <Input
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t("auth.confirmPassword")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
               />
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Updating..." : "Update Password"}
+                {loading ? t("auth.updating") : t("auth.updatePassword")}
               </Button>
             </form>
           </CardContent>
