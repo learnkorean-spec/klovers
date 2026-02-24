@@ -8,33 +8,18 @@ import { Link } from "react-router-dom";
 const HeroSection = () => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const sectionRef = useRef<HTMLElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
-    const section = sectionRef.current;
     const video = videoRef.current;
-    if (!section || !video) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          video.src = "/videos/hero-korea-video-new.mp4";
-          video.load();
-          video.play().catch(() => {});
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
+    if (!video) return;
+    video.src = "/videos/hero-korea-video-new.mp4";
+    video.load();
+    video.play().catch(() => {});
   }, []);
 
   return (
     <section
-      ref={sectionRef}
       id="home"
       className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden"
     >
@@ -45,14 +30,14 @@ const HeroSection = () => {
         <video
           ref={videoRef}
           poster={heroPoster}
-          preload="metadata"
+          preload="auto"
           loop
           muted
           playsInline
-          onCanPlayThrough={() => setVideoReady(true)}
-          className={`w-full h-full object-cover transition-opacity duration-1000 ${videoReady ? "opacity-100" : "opacity-0"}`}
+          onCanPlay={() => setVideoReady(true)}
+          className={`w-full h-full object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
         />
-        <div className="absolute inset-0 bg-black/75" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 text-center">
