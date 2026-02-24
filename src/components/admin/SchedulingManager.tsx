@@ -165,6 +165,43 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   };
 
   const handleSave = async () => {
+    // Check for duplicate level + day + time (skip if editing the same slot)
+    const { data: existing } = await (supabase as any)
+      .from("schedule_packages")
+      .select("id, day_of_week")
+      .eq("level", fLevel)
+      .eq("day_of_week", fDay)
+      .eq("start_time", fTime);
+
+    const isDuplicate = (existing || []).some(
+      (s: any) => !editing || s.id !== editing.id
+    );
+
+    if (isDuplicate) {
+      // Find which days already have this level+time
+      const { data: allSlots } = await (supabase as any)
+        .from("schedule_packages")
+        .select("day_of_week")
+        .eq("level", fLevel)
+        .eq("start_time", fTime);
+      const takenDays = new Set((allSlots || []).map((s: any) => s.day_of_week));
+      const availableDays = DAY_NAMES
+        .map((name, i) => ({ name, i }))
+        .filter(({ i }) => !takenDays.has(i))
+        .map(({ name }) => name);
+
+      toast({
+        title: "Slot already exists",
+        description: `A slot for "${fLevel.replace("_", " ")}" at ${fTime} already exists on ${DAY_NAMES[fDay]}.${
+          availableDays.length > 0
+            ? ` Available days: ${availableDays.join(", ")}.`
+            : " All days are taken for this level and time."
+        }`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const payload: any = {
       level: fLevel, day_of_week: fDay, start_time: fTime, duration_min: fDuration,
       timezone: fTimezone, capacity: fCapacity, is_active: fActive, course_type: fCourseType,
