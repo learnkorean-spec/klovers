@@ -99,6 +99,7 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("confirmed");
   const [planFilter, setPlanFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [adminTab, setAdminTab] = useState("students");
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
@@ -641,7 +642,7 @@ const AdminDashboard = () => {
             completedCount={lifecycleCompleted + lifecycleLocked}
           />
 
-          <Tabs defaultValue="students">
+          <Tabs value={adminTab} onValueChange={setAdminTab}>
             <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
               <TabsTrigger value="students" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
                 Users ({overviewRows.length})
@@ -1039,9 +1040,18 @@ const AdminDashboard = () => {
                                       <Button size="sm" variant="outline" onClick={() => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: String(e.unit_price) }))}>
                                         <Pencil className="h-4 w-4 mr-1" /> Edit
                                       </Button>
-                                      <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
-                                        <Check className="h-4 w-4 mr-1" /> Approve
-                                      </Button>
+                                      {e.plan_type === "group" ? (
+                                        <Button size="sm" onClick={async () => {
+                                          await handleEnrollmentAction(e, "APPROVED");
+                                          setAdminTab("group-matcher");
+                                        }}>
+                                          <Check className="h-4 w-4 mr-1" /> Approve & Match
+                                        </Button>
+                                      ) : (
+                                        <Button size="sm" onClick={() => handleEnrollmentAction(e, "APPROVED")}>
+                                          <Check className="h-4 w-4 mr-1" /> Approve
+                                        </Button>
+                                      )}
                                       <Button size="sm" variant="destructive" onClick={() => handleEnrollmentAction(e, "REJECTED")}>
                                         <X className="h-4 w-4 mr-1" /> Reject
                                       </Button>
