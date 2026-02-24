@@ -356,7 +356,7 @@ const EnrollNowPage = () => {
     if (!session) {
       saveDraft(); // backup to localStorage in case social login loses URL
       const returnUrl = buildReturnUrl(3);
-      toast({ title: "Account required", description: "Please create an account or log in to continue.", variant: "destructive" });
+      toast({ title: t("auth.accountRequired"), description: t("auth.accountRequiredDesc"), variant: "destructive" });
       nav(`/signup?redirect=${encodeURIComponent(returnUrl)}`);
       return;
     }
@@ -563,7 +563,7 @@ const EnrollNowPage = () => {
     }
   };
 
-  const stepLabels = ["Choose Plan", "Schedule", "Pay & Enroll"];
+  const stepLabels = [t("enrollNow.choosePlan"), t("enrollNow.schedule"), t("enrollNow.payEnroll")];
 
   return (
     <div className="min-h-screen bg-background">
@@ -588,12 +588,12 @@ const EnrollNowPage = () => {
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Choose Your Plan</CardTitle>
-              <p className="text-muted-foreground">Select your class type, country, and duration.</p>
+              <CardTitle className="text-2xl">{t("enrollNow.chooseYourPlan")}</CardTitle>
+              <p className="text-muted-foreground">{t("enrollNow.chooseYourPlanDesc")}</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label>Class Type</Label>
+                <Label>{t("enrollNow.classType")}</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -603,8 +603,8 @@ const EnrollNowPage = () => {
                     }`}
                   >
                     <Users className="h-6 w-6" />
-                    <span className="font-semibold text-foreground">Group Classes</span>
-                    <span className="text-xs text-muted-foreground">Learn with others</span>
+                    <span className="font-semibold text-foreground">{t("enrollNow.groupClasses")}</span>
+                    <span className="text-xs text-muted-foreground">{t("enrollNow.learnWithOthers")}</span>
                   </button>
                   <button
                     type="button"
@@ -614,19 +614,19 @@ const EnrollNowPage = () => {
                     }`}
                   >
                     <User className="h-6 w-6" />
-                    <span className="font-semibold text-foreground">Private Classes</span>
-                    <span className="text-xs text-muted-foreground">1-on-1 sessions</span>
+                    <span className="font-semibold text-foreground">{t("enrollNow.privateClasses")}</span>
+                    <span className="text-xs text-muted-foreground">{t("enrollNow.oneOnOne")}</span>
                   </button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Your Country</Label>
+                <Label>{t("enrollNow.yourCountry")}</Label>
                 <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                   <SelectTrigger>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder="Select your country" />
+                      <SelectValue placeholder={t("enrollNow.selectCountry")} />
                     </div>
                   </SelectTrigger>
                   <SelectContent>
@@ -640,12 +640,12 @@ const EnrollNowPage = () => {
               {tier && (
                 <>
                   <div className="bg-muted rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Your pricing tier</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t("enrollNow.pricingTier")}</p>
                     <Badge>{tier.charAt(0).toUpperCase() + tier.slice(1)} Tier</Badge>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Duration</Label>
+                    <Label>{t("enrollNow.duration")}</Label>
                     <div className="grid grid-cols-3 gap-3">
                       {([1, 3, 6] as Duration[]).map((d) => (
                         <button
@@ -656,8 +656,8 @@ const EnrollNowPage = () => {
                             duration === d ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                           }`}
                         >
-                          <p className="font-bold text-foreground">{d} {d === 1 ? "Month" : "Months"}</p>
-                          <p className="text-xs text-muted-foreground">{durationClasses[d]} classes</p>
+                          <p className="font-bold text-foreground">{d} {d === 1 ? t("enrollNow.month") : t("enrollNow.months")}</p>
+                          <p className="text-xs text-muted-foreground">{durationClasses[d]} {t("enrollNow.classes")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">{isEgypt ? `${egpPrices[classType][d].toLocaleString()} EGP` : `$${tierPrices[tier][classType][d]}`}</p>
                         </button>
                       ))}
@@ -669,16 +669,16 @@ const EnrollNowPage = () => {
               {isFirstTime && !isEgypt && (
                 <div className="bg-accent rounded-lg p-3 flex items-center gap-2 text-sm">
                   <PartyPopper className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span className="text-accent-foreground font-medium">🎉 Welcome! 10% first-time student discount will be applied.</span>
+                  <span className="text-accent-foreground font-medium">{t("enrollNow.welcomeDiscount")}</span>
                 </div>
               )}
 
               <Button type="button" className="w-full" size="lg" disabled={!canProceedStep1} onClick={() => setStep(2)}>
-                Next <ArrowRight className="ml-2 h-4 w-4" />
+                {t("enrollNow.next")} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {!canProceedStep1 && (
                 <p className="text-xs text-destructive text-center">
-                  {!selectedCountry ? "Please select your country." : !duration ? "Please choose a duration." : ""}
+                  {!selectedCountry ? t("enrollNow.selectCountryError") : !duration ? t("enrollNow.chooseDurationError") : ""}
                 </p>
               )}
             </CardContent>
@@ -695,18 +695,18 @@ const EnrollNowPage = () => {
                 </Button>
                 <div>
                   <CardTitle className="text-2xl flex items-center gap-2">
-                    <CalendarDays className="h-6 w-6" /> Schedule Preferences
+                    <CalendarDays className="h-6 w-6" /> {t("enrollNow.schedulePreferences")}
                   </CardTitle>
-                  <p className="text-muted-foreground text-sm">Help us find the best time for your classes.</p>
+                  <p className="text-muted-foreground text-sm">{t("enrollNow.schedulePreferencesDesc")}</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Korean Level */}
               <div className="space-y-2">
-                <Label>Korean Level</Label>
+                <Label>{t("enrollNow.koreanLevel")}</Label>
                 <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                  <SelectTrigger><SelectValue placeholder="Select your level" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("enrollNow.selectLevel")} /></SelectTrigger>
                   <SelectContent>
                     {LEVEL_SELECT_OPTIONS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                   </SelectContent>
@@ -715,7 +715,7 @@ const EnrollNowPage = () => {
 
               {/* Timezone */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Timezone</Label>
+                <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> {t("enrollNow.timezone")}</Label>
                 <Select value={timezone} onValueChange={setTimezone}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -728,19 +728,19 @@ const EnrollNowPage = () => {
 
               {/* Preferred Days */}
               <div className="space-y-2">
-                <Label>Preferred Day (select 1)</Label>
+                <Label>{t("enrollNow.preferredDay")}</Label>
                 {classType === "private" && levelSlots.length > 0 && (
                   <p className="text-sm text-muted-foreground italic">
-                    Private classes are only available on days without group classes.
+                    {t("enrollNow.privateOnlyNote")}
                   </p>
                 )}
                 {!selectedLevel ? (
-                  <p className="text-sm text-muted-foreground italic">Please select your Korean level first.</p>
+                  <p className="text-sm text-muted-foreground italic">{t("enrollNow.selectLevelFirst")}</p>
                 ) : levelSlots.length === 0 ? (
                   <p className="text-sm text-muted-foreground italic">
                     {classType === "private"
-                      ? "No private class days available — all weekdays have group classes."
-                      : "No schedule slots available for this level yet. Contact us."}
+                      ? t("enrollNow.noPrivateDays")
+                      : t("enrollNow.noGroupSlots")}
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
@@ -762,7 +762,7 @@ const EnrollNowPage = () => {
                         >
                           <span className="font-semibold">{day}</span>
                           <span className={`text-xs ${isFull ? "text-destructive font-semibold" : preferredDays.includes(day) ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                            {isFull ? "Full" : time}
+                            {isFull ? t("enrollNow.full") : time}
                           </span>
                         </button>
                       );
@@ -774,7 +774,7 @@ const EnrollNowPage = () => {
               {/* Time Window — only shown if admin configured options */}
               {timeWindows.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Preferred Time</Label>
+                  <Label>{t("enrollNow.preferredTime")}</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {timeWindows.map((tw) => (
                       <button
@@ -795,7 +795,7 @@ const EnrollNowPage = () => {
               {/* Start Date — only shown if admin configured options */}
               {startOptions.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Preferred Start Date</Label>
+                  <Label>{t("enrollNow.preferredStartDate")}</Label>
                   <div className="grid grid-cols-3 gap-2">
                     {startOptions.map((opt) => (
                       <button
@@ -826,18 +826,18 @@ const EnrollNowPage = () => {
               </p>
 
               <Button type="button" className="w-full" size="lg" disabled={!canProceedStep2} onClick={handleGoToStep3}>
-                Next <ArrowRight className="ml-2 h-4 w-4" />
+                {t("enrollNow.next")} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {!canProceedStep2 && (
                 <p className="text-xs text-destructive text-center">
                   {!selectedLevel
-                    ? "Please select your Korean level."
+                    ? t("enrollNow.selectLevelError")
                     : preferredDays.length === 0
-                    ? "Please select at least 1 preferred day."
+                    ? t("enrollNow.selectDayError")
                     : timeWindows.length > 0 && !preferredTime
-                    ? "Please select a preferred time."
+                    ? t("enrollNow.selectTimeError")
                     : startOptions.length > 0 && !startOption
-                    ? "Please select a preferred start date."
+                    ? t("enrollNow.selectStartError")
                     : ""}
                 </p>
               )}
@@ -854,9 +854,9 @@ const EnrollNowPage = () => {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <CardTitle className="text-2xl">Review & Pay</CardTitle>
+                  <CardTitle className="text-2xl">{t("enrollNow.reviewPay")}</CardTitle>
                   <p className="text-muted-foreground text-sm">
-                    {classType === "group" ? "Group" : "Private"} classes · {selectedCountry}
+                    {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {selectedCountry}
                   </p>
                 </div>
               </div>
@@ -875,7 +875,7 @@ const EnrollNowPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("enrollNow.emailAddress")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -892,7 +892,7 @@ const EnrollNowPage = () => {
                 <div className="bg-muted rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                      {classType === "group" ? "Group" : "Private"} · {duration} {duration === 1 ? "month" : "months"} ({durationClasses[duration]} classes)
+                      {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {duration} {duration === 1 ? t("enrollNow.month") : t("enrollNow.months")} ({durationClasses[duration]} {t("enrollNow.classes")})
                     </span>
                     <span className={`font-bold text-foreground ${isFirstTime && !isEgypt ? "line-through text-muted-foreground" : ""}`}>
                       {isEgypt ? `${originalPrice.toLocaleString()} EGP` : `$${originalPrice}`}
@@ -901,31 +901,31 @@ const EnrollNowPage = () => {
 
                   {isFirstTime && discountAmount > 0 && (
                     <div className="flex justify-between text-sm text-primary">
-                      <span>🎉 First-time 10% discount</span>
+                      <span>{t("enrollNow.firstTimeDiscount")}</span>
                       <span className="font-bold">-${discountAmount.toFixed(2)}</span>
                     </div>
                   )}
 
                   <div className="border-t border-border pt-2 flex justify-between">
-                    <span className="font-semibold text-foreground">Total</span>
+                    <span className="font-semibold text-foreground">{t("enrollNow.total")}</span>
                     <span className="font-bold text-lg text-foreground">{isEgypt ? `${finalPrice.toLocaleString()} EGP` : `$${finalPrice.toFixed(2)}`}</span>
                   </div>
 
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{durationClasses[duration]} classes included</span>
-                    <span>{isEgypt ? `${Math.round(finalPrice / durationClasses[duration]).toLocaleString()} EGP/class` : `$${(finalPrice / durationClasses[duration]).toFixed(2)}/class`}</span>
+                    <span>{durationClasses[duration]} {t("enrollNow.classesIncluded")}</span>
+                    <span>{isEgypt ? `${Math.round(finalPrice / durationClasses[duration]).toLocaleString()} EGP${t("enrollNow.perClass")}` : `$${(finalPrice / durationClasses[duration]).toFixed(2)}${t("enrollNow.perClass")}`}</span>
                   </div>
                 </div>
               )}
 
               {/* Schedule Summary */}
               <div className="bg-muted rounded-lg p-4 space-y-1">
-                <p className="text-sm font-medium text-foreground">Schedule Preferences</p>
-                <p className="text-xs text-muted-foreground">Level: {selectedLevel}</p>
-                <p className="text-xs text-muted-foreground">Days: {preferredDays.join(", ")}</p>
-                <p className="text-xs text-muted-foreground">Time: {preferredTime}</p>
-                <p className="text-xs text-muted-foreground">Start: {startOption === "Specific date" ? specificDate : startOption}</p>
-                <p className="text-xs text-muted-foreground">Timezone: {timezone}</p>
+                <p className="text-sm font-medium text-foreground">{t("enrollNow.schedulePreferencesSummary")}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.level")}: {selectedLevel}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.days")}: {preferredDays.join(", ")}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.time")}: {preferredTime}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.start")}: {startOption === "Specific date" ? specificDate : startOption}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.timezone")}: {timezone}</p>
               </div>
 
               <Button
@@ -935,28 +935,28 @@ const EnrollNowPage = () => {
                 disabled={isEgypt ? (!duration || loading) : (!duration || !name.trim() || !email.trim() || loading)}
                 onClick={handlePay}
               >
-                {loading ? (isEgypt ? "Creating order..." : "Redirecting to payment...") : isEgypt ? (
+                {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
                   <>
                     <ShieldCheck className="mr-2 h-4 w-4" />
-                    Confirm Order ({finalPrice?.toLocaleString() ?? "—"} EGP)
+                    {t("enrollNow.confirmOrder")} ({finalPrice?.toLocaleString() ?? "—"} EGP)
                   </>
                 ) : (
                   <>
                     <CreditCard className="mr-2 h-4 w-4" />
-                    Pay ${finalPrice?.toFixed(2) ?? "—"} Now
+                    {t("enrollNow.payNow")} ${finalPrice?.toFixed(2) ?? "—"} {t("enrollNow.now")}
                   </>
                 )}
               </Button>
               {!isEgypt && (!name.trim() || !email.trim()) && (
                 <p className="text-xs text-destructive text-center">
-                  {!name.trim() ? "Please enter your full name." : "Please enter your email address."}
+                  {!name.trim() ? t("enrollNow.enterNameError") : t("enrollNow.enterEmailError")}
                 </p>
               )}
 
               <p className="text-xs text-center text-muted-foreground">
                 {isEgypt
-                  ? "You'll be redirected to upload your payment receipt."
-                  : "Secure payment via Stripe. Your account will be created automatically after payment."}
+                  ? t("enrollNow.redirectReceipt")
+                  : t("enrollNow.securePayment")}
               </p>
             </CardContent>
           </Card>

@@ -5,8 +5,8 @@ type Language = "en" | "ar";
 interface LanguageContextType {
   language: Language;
   toggleLanguage: () => void;
-  t: (section: string, key: string) => string;
-  tArray: (section: string, key: string) => any[];
+  t: (sectionOrPath: string, key?: string) => string;
+  tArray: (sectionOrPath: string, key?: string) => any[];
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -27,21 +27,29 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const toggleLanguage = () => setLanguage((prev) => (prev === "en" ? "ar" : "en"));
 
-  const t = (section: string, key: string): string => {
-    const keys = key.split(".");
-    let result: any = (translations[language] as any)?.[section];
-    for (const k of keys) {
+  const resolve = (sectionOrPath: string, key?: string): any => {
+    let allKeys: string[];
+    if (key !== undefined) {
+      // Legacy: t("section", "nested.key")
+      allKeys = [sectionOrPath, ...key.split(".")];
+    } else {
+      // New: t("section.nested.key")
+      allKeys = sectionOrPath.split(".");
+    }
+    let result: any = translations[language] as any;
+    for (const k of allKeys) {
       result = result?.[k];
     }
-    return typeof result === "string" ? result : key;
+    return result;
   };
 
-  const tArray = (section: string, key: string): any[] => {
-    const keys = key.split(".");
-    let result: any = (translations[language] as any)?.[section];
-    for (const k of keys) {
-      result = result?.[k];
-    }
+  const t = (sectionOrPath: string, key?: string): string => {
+    const result = resolve(sectionOrPath, key);
+    return typeof result === "string" ? result : (key ?? sectionOrPath);
+  };
+
+  const tArray = (sectionOrPath: string, key?: string): any[] => {
+    const result = resolve(sectionOrPath, key);
     return Array.isArray(result) ? result : [];
   };
 
