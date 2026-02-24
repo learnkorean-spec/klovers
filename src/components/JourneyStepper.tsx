@@ -33,8 +33,8 @@ const JourneyStepper = ({ currentStage }: JourneyStepperProps) => {
                 {isCompleted ? <Check className="h-5 w-5" /> : <Icon className="h-4 w-4" />}
               </div>
               <span
-                className={`text-xs whitespace-nowrap ${
-                  isCurrent ? "font-semibold text-foreground" : isCompleted ? "font-medium text-foreground" : "text-muted-foreground"
+                className={`text-xs whitespace-nowrap px-2 py-0.5 rounded-full ${
+                  isCurrent ? "font-semibold bg-primary text-primary-foreground" : isCompleted ? "font-medium bg-primary/20 text-foreground border border-primary/40" : "text-muted-foreground"
                 }`}
               >
                 {stage.label}
