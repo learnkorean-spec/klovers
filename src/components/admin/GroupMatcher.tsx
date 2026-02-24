@@ -20,6 +20,14 @@ interface UnmatchedEnrollment {
   duration: number;
   level: string | null;
   package_id: string | null;
+  amount: number | null;
+  currency: string | null;
+  classes_included: number | null;
+  payment_method: string | null;
+  payment_provider: string | null;
+  payment_status: string | null;
+  approval_status: string | null;
+  created_at: string | null;
   name?: string;
   email?: string;
 }
@@ -90,7 +98,7 @@ const GroupMatcher = () => {
     // Fetch ALL unmatched group enrollments (no preferred_days filter)
     const { data: rawEnrollments, error } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id")
+      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
       .is("matched_at", null);
@@ -429,19 +437,42 @@ const GroupMatcher = () => {
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
                       {cluster.members.map((m) => (
-                        <div key={m.id} className="flex items-center justify-between text-sm bg-muted/50 rounded-lg px-3 py-2">
-                          <div>
-                            <p className="font-medium text-foreground">{m.name}</p>
-                            <p className="text-xs text-muted-foreground">{m.email}</p>
+                        <div key={m.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-foreground">{m.name}</p>
+                              <p className="text-xs text-muted-foreground">{m.email}</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                              <Badge variant="outline" className="text-xs">{m.plan_type}</Badge>
+                              <Badge variant="outline" className="text-xs">{m.duration}mo</Badge>
+                              {m.approval_status && (
+                                <Badge variant={m.approval_status === "APPROVED" ? "default" : "secondary"} className="text-xs">
+                                  {m.approval_status}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                            {m.amount != null && (
+                              <span>{m.amount.toLocaleString()} {m.currency || "USD"}</span>
+                            )}
+                            {m.classes_included != null && (
+                              <span>{m.classes_included} classes</span>
+                            )}
+                            {m.payment_provider && (
+                              <Badge variant="outline" className="text-xs">{m.payment_provider}</Badge>
+                            )}
+                            {m.payment_method && (
+                              <span>{m.payment_method.replace(/_/g, " ")}</span>
+                            )}
                             <span className="flex items-center gap-1">
                               <Globe className="h-3 w-3" />
                               {m.timezone?.replace(/_/g, " ") || "—"}
                             </span>
-                            <Badge variant="outline" className="text-xs">
-                              {m.duration}mo
-                            </Badge>
+                            {m.level && (
+                              <Badge variant="outline" className="text-xs">{m.level.replace(/_/g, " ")}</Badge>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -486,14 +517,28 @@ const GroupMatcher = () => {
               <CardContent>
                 <div className="space-y-2">
                   {needsReview.map((item) => (
-                    <div key={item.enrollment.id} className="flex items-center justify-between text-sm bg-muted/50 rounded-lg px-3 py-2">
-                      <div>
-                        <p className="font-medium text-foreground">{item.enrollment.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.enrollment.email}</p>
+                    <div key={item.enrollment.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-foreground">{item.enrollment.name}</p>
+                          <p className="text-xs text-muted-foreground">{item.enrollment.email}</p>
+                        </div>
+                        <Badge variant="destructive" className="text-xs">
+                          {item.reason}
+                        </Badge>
                       </div>
-                      <Badge variant="destructive" className="text-xs">
-                        {item.reason}
-                      </Badge>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        <span>{item.enrollment.plan_type} · {item.enrollment.duration}mo</span>
+                        {item.enrollment.amount != null && (
+                          <span>{item.enrollment.amount.toLocaleString()} {item.enrollment.currency || "USD"}</span>
+                        )}
+                        {item.enrollment.level && (
+                          <Badge variant="outline" className="text-xs">{item.enrollment.level.replace(/_/g, " ")}</Badge>
+                        )}
+                        {item.enrollment.preferred_day && (
+                          <span>Day: {item.enrollment.preferred_day}</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
