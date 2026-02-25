@@ -275,10 +275,13 @@ const GroupMatcher = () => {
     setCreating(cluster.key);
     try {
       const pkgId = cluster.packageId;
+      const successIds: string[] = [];
+      const failedNames: string[] = [];
+      let capturedGroupId: string | null = null;
 
       // Assign each member via unified RPC
       for (const member of cluster.members) {
-        const { error: assignErr } = await supabase
+        const { data: rpcData, error: assignErr } = await supabase
           .rpc("assign_student_to_group" as any, {
             _package_id: pkgId,
             _user_id: member.user_id,
@@ -286,19 +289,36 @@ const GroupMatcher = () => {
           } as any);
         if (assignErr) {
           console.error(`Failed to assign ${member.name}:`, assignErr);
+          failedNames.push(member.name || member.id);
+        } else {
+          successIds.push(member.id);
+          // Capture group_id from first successful RPC result
+          if (!capturedGroupId && rpcData && typeof rpcData === "object" && (rpcData as any).group_id) {
+            capturedGroupId = (rpcData as any).group_id;
+          }
         }
       }
 
-      // Mark enrollments as matched
-      const enrollmentIds = cluster.members.map((m) => m.id);
-      await supabase
-        .from("enrollments")
-        .update({ matched_at: new Date().toISOString() } as any)
-        .in("id", enrollmentIds);
+      // Mark only successful enrollments as matched
+      if (successIds.length > 0) {
+        await supabase
+          .from("enrollments")
+          .update({ matched_at: new Date().toISOString() } as any)
+          .in("id", successIds);
+      }
 
-      // Send group match emails
+      // Save custom group name to pkg_groups (FIX 3)
+      if (capturedGroupId && groupName.trim()) {
+        await supabase
+          .from("pkg_groups")
+          .update({ name: groupName.trim() } as any)
+          .eq("id", capturedGroupId);
+      }
+
+      // Send group match emails only for successful members
       const dayName = DAY_NAMES[cluster.packageDay] || "Unknown";
-      for (const member of cluster.members) {
+      const successfulMembers = cluster.members.filter(m => successIds.includes(m.id));
+      for (const member of successfulMembers) {
         try {
           await supabase.functions.invoke("send-confirmation-email", {
             body: {
@@ -314,10 +334,16 @@ const GroupMatcher = () => {
         }
       }
 
-      toast({ title: "Group created!", description: `"${groupName}" with ${cluster.members.length} students. Emails sent!` });
+      if (failedNames.length > 0) {
+        toast({ title: "Partial success", description: `${failedNames.length} student(s) failed to assign: ${failedNames.join(", ")}`, variant: "destructive" });
+      }
 
-      setCreatedGroup({ name: groupName, level: cluster.packageLevel });
-      await fetchSuggestedSlots(cluster.packageLevel, cluster.packageDay);
+      if (successIds.length > 0) {
+        toast({ title: "Group created!", description: `"${groupName}" with ${successIds.length} students. Emails sent!` });
+        setCreatedGroup({ name: groupName, level: cluster.packageLevel });
+        await fetchSuggestedSlots(cluster.packageLevel, cluster.packageDay);
+      }
+
       fetchUnmatched();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
