@@ -156,14 +156,14 @@ function TimezoneEditor({ enrollmentId, currentDays, currentTimezone, onSaved }:
   );
 }
 
-function PaymentApprover({ enrollmentId, onSaved }: { enrollmentId: string; onSaved: () => void; }) {
+function PaymentApprover({ enrollmentId, planType, onSaved }: { enrollmentId: string; planType: string; onSaved: () => void; }) {
   const [saving, setSaving] = useState(false);
 
   const approve = async () => {
     setSaving(true);
     const { error } = await supabase
       .from("enrollments")
-      .update({ payment_status: "PAID", approval_status: "APPROVED", reviewed_at: new Date().toISOString() } as any)
+      .update({ payment_status: "PAID", approval_status: "APPROVED", status: "APPROVED", reviewed_at: new Date().toISOString() } as any)
       .eq("id", enrollmentId);
     setSaving(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
@@ -278,12 +278,13 @@ function PaymentMethodEditor({ enrollmentId, currentMethod, onSaved }: { enrollm
 }
 
 /* ─── Side panel for one student ─── */
-function ChecklistPanel({ data, open, onClose, onRefresh, slots }: {
+function ChecklistPanel({ data, open, onClose, onRefresh, slots, setAdminTab }: {
   data: ChecklistData | null;
   open: boolean;
   onClose: () => void;
   onRefresh: () => void;
   slots: any[];
+  setAdminTab?: (tab: string) => void;
 }) {
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
 
@@ -302,6 +303,14 @@ function ChecklistPanel({ data, open, onClose, onRefresh, slots }: {
   const handleSaved = () => {
     setExpandedAction(null);
     onRefresh();
+  };
+
+  const handlePaymentApproved = () => {
+    setExpandedAction(null);
+    onRefresh();
+    if (data?.plan_type === "group" && setAdminTab) {
+      setAdminTab("group-matcher");
+    }
   };
 
   // Derive enrollment data from checklist for editors
@@ -332,7 +341,7 @@ function ChecklistPanel({ data, open, onClose, onRefresh, slots }: {
       case "fix_timezone":
         return <TimezoneEditor enrollmentId={data.enrollment_id} currentDays={currentDays} currentTimezone={currentTimezone} onSaved={handleSaved} />;
       case "approve_payment":
-        return <PaymentApprover enrollmentId={data.enrollment_id} onSaved={handleSaved} />;
+        return <PaymentApprover enrollmentId={data.enrollment_id} planType={data.plan_type} onSaved={handlePaymentApproved} />;
       case "assign_slot":
         return <SlotAssigner enrollmentId={data.enrollment_id} slots={slots} onSaved={handleSaved} />;
       default:
@@ -462,8 +471,9 @@ export function ChecklistBadge({ data, onClick }: { data: ChecklistData; onClick
 }
 
 /* ─── Main component ─── */
-export default function EnrollmentChecklistManager({ onAction }: {
+export default function EnrollmentChecklistManager({ onAction, setAdminTab }: {
   onAction: (enrollmentId: string, action: string) => void;
+  setAdminTab?: (tab: string) => void;
 }) {
   const [checklists, setChecklists] = useState<ChecklistData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -639,7 +649,7 @@ export default function EnrollmentChecklistManager({ onAction }: {
       </div>
 
       {/* Side panel */}
-      <ChecklistPanel data={selected} open={!!selectedId} onClose={() => setSelectedId(null)} onRefresh={load} slots={slots} />
+      <ChecklistPanel data={selected} open={!!selectedId} onClose={() => setSelectedId(null)} onRefresh={load} slots={slots} setAdminTab={setAdminTab} />
     </div>
   );
 }
