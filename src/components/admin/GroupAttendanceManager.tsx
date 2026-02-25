@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -17,7 +18,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, CheckCheck, RefreshCw, UserCheck, UserX, Pencil, Users, Trash2, UserPlus, Clock, ChevronDown, ChevronRight, Check, X, Undo2 } from "lucide-react";
+import { Plus, CheckCheck, RefreshCw, UserCheck, UserX, Pencil, Users, Trash2, UserPlus, Clock, ChevronDown, ChevronRight, Check, X, Undo2, Mail } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
@@ -196,6 +197,104 @@ const GroupAttendanceManager = ({
   const [enrichedGroups, setEnrichedGroups] = useState<EnrichedGroup[]>([]);
   const [enrichedLoading, setEnrichedLoading] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Notify all groups state
+  const [notifyDialog, setNotifyDialog] = useState(false);
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [notifying, setNotifying] = useState(false);
+
+  const notifyActiveGroups = async () => {
+    setNotifying(true);
+    try {
+      const { data: activeGroups } = await supabase
+        .from("pkg_groups")
+        .select("id, name, package_id")
+        .eq("is_active", true);
+      if (!activeGroups || activeGroups.length === 0) {
+        toast({ title: "No active groups found" });
+        setNotifying(false);
+        return;
+      }
+
+      const groupIds = activeGroups.map(g => g.id);
+      const packageIds = [...new Set(activeGroups.map(g => g.package_id).filter(Boolean))];
+
+      const [membersRes, pkgsRes] = await Promise.all([
+        supabase.from("pkg_group_members").select("group_id, user_id, member_status").in("group_id", groupIds).eq("member_status", "active"),
+        packageIds.length > 0
+          ? supabase.from("schedule_packages").select("id, level, day_of_week, start_time, timezone").in("id", packageIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const members = membersRes.data || [];
+      const userIds = [...new Set(members.map(m => m.user_id))];
+      if (userIds.length === 0) {
+        toast({ title: "No active members in any group" });
+        setNotifying(false);
+        return;
+      }
+
+      const { data: profiles } = await supabase.from("profiles").select("user_id, email, name").in("user_id", userIds);
+      const profileMap: Record<string, { email: string; name: string }> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { email: p.email, name: p.name }; });
+
+      const pkgMap: Record<string, any> = {};
+      ((pkgsRes as any).data || []).forEach((p: any) => { pkgMap[p.id] = p; });
+
+      const membersByGroup: Record<string, string[]> = {};
+      const usersByGroup: Record<string, string[]> = {};
+      members.forEach(m => {
+        if (!membersByGroup[m.group_id]) { membersByGroup[m.group_id] = []; usersByGroup[m.group_id] = []; }
+        const name = profileMap[m.user_id]?.name || "Unknown";
+        membersByGroup[m.group_id].push(name);
+        usersByGroup[m.group_id].push(m.user_id);
+      });
+
+      const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      let sent = 0, failed = 0, total = userIds.length;
+
+      for (const group of activeGroups) {
+        const pkg = pkgMap[group.package_id] || {};
+        const dayName = pkg.day_of_week != null ? DAY[pkg.day_of_week] : "";
+        const groupMemberNames = membersByGroup[group.id] || [];
+        const groupUserIds = usersByGroup[group.id] || [];
+
+        for (const uid of groupUserIds) {
+          const profile = profileMap[uid];
+          if (!profile?.email) { failed++; continue; }
+          try {
+            await supabase.functions.invoke("send-confirmation-email", {
+              body: {
+                template: "group_match",
+                email: profile.email,
+                name: profile.name,
+                group_name: group.name,
+                group_level: pkg.level || undefined,
+                group_days: dayName,
+                group_time: pkg.start_time || undefined,
+                group_timezone: pkg.timezone || undefined,
+                group_members: groupMemberNames,
+                custom_message: broadcastMessage.trim() || undefined,
+              },
+            });
+            sent++;
+          } catch {
+            failed++;
+          }
+          // Rate limit
+          if (sent % 5 === 0) await new Promise(r => setTimeout(r, 1000));
+        }
+      }
+
+      toast({ title: `Notifications sent`, description: `✅ ${sent} sent${failed > 0 ? ` · ❌ ${failed} failed` : ""}` });
+      setNotifyDialog(false);
+      setBroadcastMessage("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setNotifying(false);
+    }
+  };
 
   const fetchEnrichedGroups = async () => {
     setEnrichedLoading(true);
@@ -1073,9 +1172,14 @@ const GroupAttendanceManager = ({
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" /> Groups
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={fetchEnrichedGroups} disabled={enrichedLoading}>
-                <RefreshCw className={`h-4 w-4 mr-1 ${enrichedLoading ? "animate-spin" : ""}`} /> Refresh
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setNotifyDialog(true)}>
+                  <Mail className="h-4 w-4 mr-1" /> Notify Active Groups
+                </Button>
+                <Button variant="outline" size="sm" onClick={fetchEnrichedGroups} disabled={enrichedLoading}>
+                  <RefreshCw className={`h-4 w-4 mr-1 ${enrichedLoading ? "animate-spin" : ""}`} /> Refresh
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {enrichedLoading ? (
@@ -1336,6 +1440,35 @@ const GroupAttendanceManager = ({
               )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notify Active Groups Dialog */}
+      <Dialog open={notifyDialog} onOpenChange={setNotifyDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Notify All Active Groups</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Send a group_match email to every active member in every active group.
+            </p>
+            <div className="space-y-1">
+              <Label>Optional message</Label>
+              <Textarea
+                placeholder="Add a custom message (shown in every email)..."
+                value={broadcastMessage}
+                onChange={(e) => setBroadcastMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotifyDialog(false)} disabled={notifying}>Cancel</Button>
+            <Button onClick={notifyActiveGroups} disabled={notifying}>
+              {notifying ? "Sending…" : "Send Notifications"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
