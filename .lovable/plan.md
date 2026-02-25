@@ -1,94 +1,84 @@
 
 
-# Plan: Private Class Availability — Block Group Days, Auto-Populate Remaining Days
+## Plan: 3 Targeted Fixes for GroupMatcher and Payment Approver
 
-## Summary
+### FIX 1 — PaymentApprover redirects to Matcher for group enrollments
 
-Private class registration currently shares the same day-selection logic as group classes. This plan creates a dedicated private availability system that automatically computes which weekdays are free from group classes, and restricts private bookings to those days only — both in the student UI and admin validation.
+**Problem**: PaymentApprover in `EnrollmentChecklist.tsx` only updates `payment_status` and `approval_status` but doesn't redirect admin to GroupMatcher tab for group enrollments. Also, `EnrollmentChecklistManager` is not even used in AdminDashboard currently.
 
-## Technical Details
+**Note**: `EnrollmentChecklistManager` is exported but never imported/rendered in `AdminDashboard.tsx`. Since the PaymentApprover is only accessible through this component (via `ChecklistPanel`), FIX 1 only matters if/when the checklist component gets integrated. However, we'll still wire it up for future use.
 
-### 1. New file: `src/constants/scheduling.ts`
+**Changes**:
 
-```typescript
-export const TIMEZONE = "Africa/Cairo";
-export const PRIVATE_TIME_OPTIONS = ["10:00", "18:00"];
-export const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+1. **`src/components/admin/EnrollmentChecklist.tsx`**:
+   - Modify `PaymentApprover` props: add `planType: string` and replace `onSaved` with `onApproved: () => void`
+   - In `approve()`: also set `status: "APPROVED"` alongside `payment_status: "PAID"` and `approval_status: "APPROVED"`
+   - Add `setAdminTab` optional prop to `EnrollmentChecklistManager`
+   - Pass `setAdminTab` down through `ChecklistPanel` to `PaymentApprover`'s callback — when plan_type is "group" and `setAdminTab` exists, call `setAdminTab("group-matcher")`
+   - Thread the `plan_type` from `ChecklistData` through to the `PaymentApprover` render call
+
+2. **`src/pages/AdminDashboard.tsx`**: No change needed right now since `EnrollmentChecklistManager` is not rendered. If it gets added later, `setAdminTab` should be passed as a prop.
+
+### FIX 2 — GroupMatcher must not mark matched_at for failed assignments
+
+**Problem**: `handleCreateGroup()` updates `matched_at` for ALL enrollment IDs even if the RPC `assign_student_to_group` fails for some.
+
+**Changes in `src/components/admin/GroupMatcher.tsx`**:
+- Track `successIds` and `failedNames` arrays during the assignment loop
+- Only call `.update({ matched_at: nowISO }).in("id", successIds)` for successful ones
+- Show a warning toast if any failed, listing the count
+- Only send emails for successful members
+
+### FIX 3 — Save custom group name to pkg_groups
+
+**Problem**: `groupNameInput` is used only in emails/toasts; the actual `pkg_groups.name` stays as the RPC-generated default.
+
+**Key insight**: The `assign_student_to_group` RPC returns `jsonb` with `group_id` field. We can capture this from the first successful assignment.
+
+**Changes in `src/components/admin/GroupMatcher.tsx`**:
+- After the assignment loop, capture `group_id` from the first successful RPC result data
+- If `groupNameInput` is non-empty and `group_id` exists, update `pkg_groups` set `name = groupNameInput` where `id = group_id`
+- This runs once per "Create Group" action
+
+### Files Modified
+- `src/components/admin/EnrollmentChecklist.tsx` (FIX 1)
+- `src/components/admin/GroupMatcher.tsx` (FIX 2 + FIX 3)
+
+### Technical Details
+
+**FIX 1 — EnrollmentChecklist.tsx edits**:
+- `PaymentApprover` signature changes from `{ enrollmentId, onSaved }` to `{ enrollmentId, planType, onSaved }`
+- `approve()` update payload adds `status: "APPROVED"`
+- After successful approve, calls `onSaved()` as before
+- In `ChecklistPanel`, when `handleSaved` fires from PaymentApprover, check `data.plan_type === "group"` and call `setAdminTab?.("group-matcher")`
+- `EnrollmentChecklistManager` gains optional `setAdminTab?: (tab: string) => void` prop, threaded to `ChecklistPanel`
+
+**FIX 2 — GroupMatcher.tsx handleCreateGroup() changes**:
+```text
+Before:
+  for each member -> call RPC (ignore errors)
+  update matched_at for ALL enrollmentIds
+
+After:
+  successIds = [], failedNames = []
+  for each member:
+    call RPC
+    if error -> push to failedNames
+    else -> push member.id to successIds, capture group_id from first success
+  if successIds.length > 0:
+    update matched_at for successIds only
+  if failedNames.length > 0:
+    show warning toast
 ```
 
-### 2. New file: `src/lib/privateAvailability.ts`
-
-A utility module that:
-- Accepts active group slots (or fetches them from `schedule_packages` where `course_type != 'private'` and `is_active = true`)
-- Computes `courseDays` = unique `day_of_week` values that have any active group slot (any level, any time)
-- Computes `privateAllowedDays` = `WEEKDAYS` minus `courseDays`
-- Generates private slot options: `[{ weekday, dayIndex, time, timezone }]` for each allowed weekday x `PRIVATE_TIME_OPTIONS`
-- If no group slots exist, all weekdays are allowed
-- Exports a `fetchPrivateAvailability()` async function that queries the DB and returns computed options
-- Exports a `computePrivateAvailability(groupSlots)` pure function for reuse
-- DEV-only: logs `courseDays` and `privateAllowedDays` to console
-
-### 3. Update: `src/pages/EnrollNowPage.tsx`
-
-In the `useEffect` that fetches level slots (lines ~152-224):
-- When `classType === "private"`:
-  - Instead of querying `schedule_packages` filtered by level, call `fetchPrivateAvailability()`
-  - Populate `levelSlots` with the private-allowed options (day + time combinations)
-  - Each option gets a synthetic `packageId` (or null) since private slots may not have pre-existing packages
-  - Add a note below the day selector: *"Private classes are only available on days without group classes."*
-- When `classType === "group"`: existing logic unchanged
-
-Also: when `classType` changes (group ↔ private), reset `levelSlots`, `preferredDays`, and `selectedPackageId`.
-
-### 4. Update: `src/components/SchedulePicker.tsx`
-
-When `courseType === "private"`:
-- Use `fetchPrivateAvailability()` instead of querying `schedule_packages` by level
-- Display available private day+time combos
-- Show info text: *"Private classes are only available on days without group classes."*
-
-### 5. Update: `src/components/admin/SchedulingManager.tsx` — `handleSave`
-
-Replace the current private exemption (`if (fCourseType !== "private")`) with the opposite logic:
-
-```
-if (fCourseType === "private") {
-  // Fetch ALL active group slots (any level, any time)
-  // Compute courseDays from their day_of_week
-  // If fDay is in courseDays → BLOCK with message:
-  //   "Private classes are not available on [DayName] — group classes run on that day.
-  //    Available days for private: [list]."
-  // Also check exact time conflict with other private slots
-} else {
-  // Existing group validation (unchanged)
-}
+**FIX 3 — GroupMatcher.tsx group name save**:
+```text
+After assignment loop:
+  if (capturedGroupId && groupNameInput.trim()):
+    await supabase.from("pkg_groups")
+      .update({ name: groupNameInput.trim() })
+      .eq("id", capturedGroupId)
 ```
 
-### 6. Files changed summary
-
-| File | Change |
-|------|--------|
-| `src/constants/scheduling.ts` | **NEW** — timezone, private time options, weekdays |
-| `src/lib/privateAvailability.ts` | **NEW** — compute/fetch private availability |
-| `src/pages/EnrollNowPage.tsx` | Branch schedule fetch by `classType`; show private-specific day options |
-| `src/components/SchedulePicker.tsx` | Branch by `courseType` for private availability |
-| `src/components/admin/SchedulingManager.tsx` | Reverse private validation: block on group days |
-
-### 7. Validation flow
-
-**Admin creating private slot:**
-1. Fetch all active group `schedule_packages` (any level)
-2. Extract unique `day_of_week` values → `courseDays`
-3. If selected day ∈ `courseDays` → destructive toast with available days list
-4. If selected day ∉ `courseDays` → proceed (also check exact same-day+time dupe among private slots)
-
-**Student selecting private schedule:**
-1. On entering Step 2 with `classType === "private"`, fetch private availability
-2. UI only shows days not used by any group class
-3. Each allowed day shows the configurable time options (10:00 AM, 6:00 PM)
-4. Student picks one → sets `preferredDays` and `selectedPackageId`
-
-### 8. No DB changes needed
-
-All validation is computed from existing `schedule_packages` data. The `course_type` column already distinguishes group vs private.
+The RPC `assign_student_to_group` returns `{ status, group_id, group_name }` — we extract `group_id` from the first successful call's `data`.
 
