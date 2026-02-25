@@ -157,9 +157,14 @@ const GroupMatcher = () => {
     const reviewItems: NeedsReviewItem[] = [];
 
     for (const enrollment of enrollments) {
-      let resolvedPkgId: string | null = enrollment.package_id;
+      let resolvedPkgId: string | null = null;
 
-      // Fallback: try to resolve package from level + preferred_day
+      // First: try package_id if it references an active package
+      if (enrollment.package_id && pkgMap.has(enrollment.package_id)) {
+        resolvedPkgId = enrollment.package_id;
+      }
+
+      // Fallback: resolve package from level + preferred_day
       if (!resolvedPkgId && enrollment.level && enrollment.preferred_day) {
         const normLevel = normalizeLevel(enrollment.level);
         const dayNum = DAY_NAME_TO_NUM[enrollment.preferred_day.toLowerCase()];
