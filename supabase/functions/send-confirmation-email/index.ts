@@ -19,6 +19,10 @@ interface EmailPayload {
   group_name?: string;
   group_days?: string;
   group_members?: string[];
+  group_time?: string;
+  group_timezone?: string;
+  group_level?: string;
+  custom_message?: string;
   slot_day?: string;
   slot_time?: string;
   slot_timezone?: string;
@@ -128,6 +132,21 @@ function buildEnrollmentEmail(p: EmailPayload) {
 
 function buildGroupMatchEmail(p: EmailPayload) {
   const isArabic = p.language === "ar";
+  const levelLabel = p.group_level ? (isArabic ? `📚 المستوى: ${p.group_level}` : `📚 Level: ${p.group_level}`) : "";
+  const timeLabel = p.group_time ? `🕐 ${p.group_time}${p.group_timezone ? ` (${p.group_timezone.replace(/_/g, " ")})` : ""}` : "";
+  const membersHtml = (p.group_members && p.group_members.length > 0)
+    ? `<div style="margin: 12px 0 0;">
+        <p style="margin: 0 0 6px; font-weight: bold; color: #6b7280;">${isArabic ? "زملاؤك:" : "Your classmates:"}</p>
+        <ul style="margin: 0; padding-${isArabic ? "right" : "left"}: 18px; color: #374151;">
+          ${p.group_members.slice(0, 8).map(n => `<li>${n}</li>`).join("")}
+          ${p.group_members.length > 8 ? `<li style="color:#6b7280;">+${p.group_members.length - 8} ${isArabic ? "آخرين" : "more"}</li>` : ""}
+        </ul>
+      </div>` : "";
+  const customHtml = p.custom_message
+    ? `<div style="background: #ede9fe; border-left: 4px solid #6d28d9; padding: 12px 16px; border-radius: 4px; margin: 16px 0; color: #374151;">
+        <p style="margin: 0; white-space: pre-wrap;">${p.custom_message}</p>
+      </div>` : "";
+
   if (isArabic) {
     return {
       subject: "KLovers — تم تكوين مجموعتك! 🎓",
@@ -138,7 +157,11 @@ function buildGroupMatchEmail(p: EmailPayload) {
           <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <p style="margin: 0; font-weight: bold;">📚 المجموعة: ${p.group_name}</p>
             <p style="margin: 8px 0 0;">📅 الأيام: ${p.group_days}</p>
+            ${levelLabel ? `<p style="margin: 8px 0 0;">${levelLabel}</p>` : ""}
+            ${timeLabel ? `<p style="margin: 8px 0 0;">${timeLabel}</p>` : ""}
+            ${membersHtml}
           </div>
+          ${customHtml}
           <p>سنتواصل معك قريباً بخصوص موعد أول حصة.</p>
           <div style="margin: 24px 0;">
             <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">لوحة الطالب</a>
@@ -156,7 +179,11 @@ function buildGroupMatchEmail(p: EmailPayload) {
         <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
           <p style="margin: 0; font-weight: bold;">📚 Group: ${p.group_name}</p>
           <p style="margin: 8px 0 0;">📅 Days: ${p.group_days}</p>
+          ${levelLabel ? `<p style="margin: 8px 0 0;">${levelLabel}</p>` : ""}
+          ${timeLabel ? `<p style="margin: 8px 0 0;">${timeLabel}</p>` : ""}
+          ${membersHtml}
         </div>
+        ${customHtml}
         <p>We'll contact you shortly with details about your first class.</p>
         <div style="margin: 24px 0;">
           <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Go to Dashboard</a>
