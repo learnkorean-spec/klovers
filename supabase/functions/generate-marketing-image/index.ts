@@ -54,7 +54,7 @@ serve(async (req) => {
 
 Image specs:
 - Aspect ratio: ${dims.ratio} (${dims.w}x${dims.h} pixels)
-- Background: Solid bright yellow/gold (#EAB308) as the PRIMARY background color, filling the entire image
+- Background: Solid bright pure yellow (#FFFF00) as the PRIMARY background color, filling the entire image. NOT orange, NOT gold, NOT amber — pure vivid yellow like hsl(60,100%,50%).
 - Style: Clean, modern, premium education brand
 
 MUST include these TEXT elements clearly readable on the yellow background:
@@ -62,15 +62,16 @@ MUST include these TEXT elements clearly readable on the yellow background:
 - Schedule line: "${day_name} • ${start_time}"
 - Duration: "${duration_min} min per session"
 - Urgency line in a dark badge or banner: "${urgencyText}"
-- Bottom text: "klovers.lovable.app"
 - Small text: "Register Now"
 
+DO NOT include any email address, website URL, or domain name on the image.
+
 Design rules:
-- Yellow (#EAB308) background must cover at least 80% of the image
-- All text must be dark (black or very dark brown) for contrast against yellow
+- Bright pure yellow (#FFFF00) background must cover at least 80% of the image
+- All text must be dark (black or very dark brown) for high contrast against yellow
 - Use subtle Korean cultural decorative elements (traditional patterns, brush stroke accents) as light overlays or border decorations
 - Clean modern typography, bold and easy to read
-- Include subtle geometric shapes or soft white/gold gradient accents
+- Include subtle geometric shapes or soft white/light-yellow gradient accents
 - Professional Instagram/Facebook marketing quality
 - Text must be centered and well-spaced
 - No photos, no clipart, no stock images
