@@ -74,8 +74,8 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-  <tr><td style="background:#6d28d9;padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">📚 New Course Available!</h1>
+  <tr><td style="background:#000000;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#FFDD00;font-size:24px;font-weight:700;">📚 New Course Available!</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
@@ -85,7 +85,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <p style="margin:0;color:#374151;font-size:14px;line-height:1.8;">• Level: [Edit level here]<br>• Schedule: [Edit schedule here]<br>• Duration: [Edit duration here]<br>• Spots Available: [Edit spots here]</p>
     </div>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
-      <a href="{{courses_url}}" style="background:#6d28d9;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">View Courses →</a>
+      <a href="{{courses_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">View Courses →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
     <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
@@ -105,17 +105,17 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-  <tr><td style="background:#059669;padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">⏰ Class Reminder</h1>
+  <tr><td style="background:#000000;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#FFDD00;font-size:24px;font-weight:700;">⏰ Class Reminder</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">Just a friendly reminder that your Korean class is coming up soon! Make sure you're ready.</p>
-    <div style="background:#f0fdf4;border-left:4px solid #059669;border-radius:4px;padding:16px;margin:0 0 24px;">
+    <div style="background:#FFFDE7;border-left:4px solid #FFDD00;border-radius:4px;padding:16px;margin:0 0 24px;">
       <p style="margin:0;color:#374151;font-size:14px;line-height:1.8;">📅 <strong>Date:</strong> [Edit date]<br>🕐 <strong>Time:</strong> [Edit time]<br>📚 <strong>Level:</strong> [Edit level]</p>
     </div>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
-      <a href="{{dashboard_url}}" style="background:#059669;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Go to Dashboard →</a>
+      <a href="{{dashboard_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Go to Dashboard →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
     <p style="color:#6B7280;font-size:14px;margin:0;">See you in class! 🇰🇷<br><strong>Reham</strong>, KLovers</p>
@@ -135,19 +135,19 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-  <tr><td style="background:linear-gradient(135deg,#6d28d9,#ec4899);padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">🎁 Special Offer!</h1>
+  <tr><td style="background:linear-gradient(135deg,#000000,#1a1a1a);padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#FFDD00;font-size:24px;font-weight:700;">🎁 Special Offer!</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">We have an exclusive offer just for you! Don't miss this chance to level up your Korean skills at a special price.</p>
-    <div style="background:#fdf4ff;border:2px dashed #6d28d9;border-radius:8px;padding:20px;margin:0 0 24px;text-align:center;">
-      <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#6d28d9;">[Edit discount %] OFF</p>
+    <div style="background:#FFFDE7;border:2px dashed #FFDD00;border-radius:8px;padding:20px;margin:0 0 24px;text-align:center;">
+      <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#000000;">[Edit discount %] OFF</p>
       <p style="margin:0;color:#374151;font-size:14px;">Use code: <strong>[Edit code]</strong></p>
       <p style="margin:8px 0 0;color:#6B7280;font-size:12px;">Valid until [Edit date]</p>
     </div>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
-      <a href="{{courses_url}}" style="background:#6d28d9;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Claim Offer →</a>
+      <a href="{{courses_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Claim Offer →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
     <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
@@ -167,14 +167,14 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-  <tr><td style="background:#1f2937;padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">📢 Important Update</h1>
+  <tr><td style="background:#000000;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#FFDD00;font-size:24px;font-weight:700;">📢 Important Update</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Write your update message here. You can include any important announcements, schedule changes, or news about K-Lovers.]</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
-      <a href="{{dashboard_url}}" style="background:#1f2937;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Visit Dashboard →</a>
+      <a href="{{dashboard_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Visit Dashboard →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
     <p style="color:#6B7280;font-size:14px;margin:0;">Best,<br><strong>Reham</strong>, KLovers</p>
