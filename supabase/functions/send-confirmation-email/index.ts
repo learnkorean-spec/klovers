@@ -30,7 +30,7 @@ interface EmailPayload {
 }
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "KLovers <onboarding@resend.dev>";
+const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
