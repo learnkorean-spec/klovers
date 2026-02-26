@@ -1,84 +1,90 @@
 
 
-## Plan: 3 Targeted Fixes for GroupMatcher and Payment Approver
+# Auto Social Post Scheduler — Implementation Plan
 
-### FIX 1 — PaymentApprover redirects to Matcher for group enrollments
+## Overview
+Add a full social media post scheduler to the admin panel: a new page at `/admin/social-scheduler` where admins create, schedule, edit, and monitor social posts to Facebook and Instagram, powered by a cron-triggered edge function that publishes via Meta Graph API.
 
-**Problem**: PaymentApprover in `EnrollmentChecklist.tsx` only updates `payment_status` and `approval_status` but doesn't redirect admin to GroupMatcher tab for group enrollments. Also, `EnrollmentChecklistManager` is not even used in AdminDashboard currently.
+## Database
 
-**Note**: `EnrollmentChecklistManager` is exported but never imported/rendered in `AdminDashboard.tsx`. Since the PaymentApprover is only accessible through this component (via `ChecklistPanel`), FIX 1 only matters if/when the checklist component gets integrated. However, we'll still wire it up for future use.
+**New table: `scheduled_social_posts`**
+- `id` uuid PK
+- `group_id` uuid nullable (FK to `pkg_groups`)
+- `course_title` text
+- `caption` text
+- `registration_url` text nullable
+- `platforms` text[] (values: `instagram`, `facebook`)
+- `scheduled_at` timestamptz
+- `status` text default `scheduled` (scheduled | posted | failed | canceled)
+- `posted_at` timestamptz nullable
+- `attempts` int default 0
+- `last_error` text nullable
+- `meta_result` jsonb nullable
+- `created_at` timestamptz default now()
+- `created_by` uuid (admin who created it)
 
-**Changes**:
+**RLS**: Admin-only for all operations (reuse `has_role(auth.uid(), 'admin')`).
 
-1. **`src/components/admin/EnrollmentChecklist.tsx`**:
-   - Modify `PaymentApprover` props: add `planType: string` and replace `onSaved` with `onApproved: () => void`
-   - In `approve()`: also set `status: "APPROVED"` alongside `payment_status: "PAID"` and `approval_status: "APPROVED"`
-   - Add `setAdminTab` optional prop to `EnrollmentChecklistManager`
-   - Pass `setAdminTab` down through `ChecklistPanel` to `PaymentApprover`'s callback — when plan_type is "group" and `setAdminTab` exists, call `setAdminTab("group-matcher")`
-   - Thread the `plan_type` from `ChecklistData` through to the `PaymentApprover` render call
+## Secrets Required
+Four secrets to be added via the secrets tool:
+1. `META_PAGE_ID` — Facebook Page ID
+2. `META_PAGE_ACCESS_TOKEN` — Long-lived Page Access Token
+3. `META_IG_USER_ID` — Instagram Business Account ID
+4. `IG_STATIC_IMAGE_URL` — Public URL of a static image for all IG posts
 
-2. **`src/pages/AdminDashboard.tsx`**: No change needed right now since `EnrollmentChecklistManager` is not rendered. If it gets added later, `setAdminTab` should be passed as a prop.
+## Edge Function: `publish-social-posts`
 
-### FIX 2 — GroupMatcher must not mark matched_at for failed assignments
+- Fetches rows where `status = 'scheduled' AND scheduled_at <= now()`.
+- For each post:
+  - **Facebook**: POST to `https://graph.facebook.com/v21.0/{PAGE_ID}/feed` with `message` = caption + registration URL.
+  - **Instagram**: Two-step — create media container with `image_url` + `caption`, then publish container.
+- On success: `status = 'posted'`, `posted_at = now()`, store API response in `meta_result`.
+- On failure: increment `attempts`, set `last_error`. After 3 attempts, set `status = 'failed'`.
+- 1-second delay between posts to respect rate limits.
 
-**Problem**: `handleCreateGroup()` updates `matched_at` for ALL enrollment IDs even if the RPC `assign_student_to_group` fails for some.
+**Config in `supabase/config.toml`**: `verify_jwt = false` (validates admin auth in code).
 
-**Changes in `src/components/admin/GroupMatcher.tsx`**:
-- Track `successIds` and `failedNames` arrays during the assignment loop
-- Only call `.update({ matched_at: nowISO }).in("id", successIds)` for successful ones
-- Show a warning toast if any failed, listing the count
-- Only send emails for successful members
-
-### FIX 3 — Save custom group name to pkg_groups
-
-**Problem**: `groupNameInput` is used only in emails/toasts; the actual `pkg_groups.name` stays as the RPC-generated default.
-
-**Key insight**: The `assign_student_to_group` RPC returns `jsonb` with `group_id` field. We can capture this from the first successful assignment.
-
-**Changes in `src/components/admin/GroupMatcher.tsx`**:
-- After the assignment loop, capture `group_id` from the first successful RPC result data
-- If `groupNameInput` is non-empty and `group_id` exists, update `pkg_groups` set `name = groupNameInput` where `id = group_id`
-- This runs once per "Create Group" action
-
-### Files Modified
-- `src/components/admin/EnrollmentChecklist.tsx` (FIX 1)
-- `src/components/admin/GroupMatcher.tsx` (FIX 2 + FIX 3)
-
-### Technical Details
-
-**FIX 1 — EnrollmentChecklist.tsx edits**:
-- `PaymentApprover` signature changes from `{ enrollmentId, onSaved }` to `{ enrollmentId, planType, onSaved }`
-- `approve()` update payload adds `status: "APPROVED"`
-- After successful approve, calls `onSaved()` as before
-- In `ChecklistPanel`, when `handleSaved` fires from PaymentApprover, check `data.plan_type === "group"` and call `setAdminTab?.("group-matcher")`
-- `EnrollmentChecklistManager` gains optional `setAdminTab?: (tab: string) => void` prop, threaded to `ChecklistPanel`
-
-**FIX 2 — GroupMatcher.tsx handleCreateGroup() changes**:
-```text
-Before:
-  for each member -> call RPC (ignore errors)
-  update matched_at for ALL enrollmentIds
-
-After:
-  successIds = [], failedNames = []
-  for each member:
-    call RPC
-    if error -> push to failedNames
-    else -> push member.id to successIds, capture group_id from first success
-  if successIds.length > 0:
-    update matched_at for successIds only
-  if failedNames.length > 0:
-    show warning toast
+## Cron Job
+A `pg_cron` + `pg_net` job that calls the edge function every 5 minutes:
+```sql
+SELECT cron.schedule('publish-social-posts', '*/5 * * * *', $$
+  SELECT net.http_post(
+    url:='https://rahpkflknkofuuhnbfyc.supabase.co/functions/v1/publish-social-posts',
+    headers:='{"Authorization": "Bearer <anon_key>", "Content-Type": "application/json"}'::jsonb,
+    body:='{}'::jsonb
+  );
+$$);
 ```
 
-**FIX 3 — GroupMatcher.tsx group name save**:
-```text
-After assignment loop:
-  if (capturedGroupId && groupNameInput.trim()):
-    await supabase.from("pkg_groups")
-      .update({ name: groupNameInput.trim() })
-      .eq("id", capturedGroupId)
-```
+## New Page: `/admin/social-scheduler`
 
-The RPC `assign_student_to_group` returns `{ status, group_id, group_name }` — we extract `group_id` from the first successful call's `data`.
+**Component**: `src/pages/SocialSchedulerPage.tsx`
+
+**Section 1 — Create Post card**:
+- Dropdown populated from `pkg_groups` joined with `schedule_packages` (same source as Groups panel).
+- On group selection, auto-populate: group name, level, day, time, duration, capacity, seats left.
+- "Generate Caption" button produces an Arabic template with the group data.
+- Editable textarea for caption.
+- Platform checkboxes: Instagram + Facebook (default both).
+- Datetime picker for `scheduled_at` (default: tomorrow 10:00 AM).
+- "Schedule Post" button inserts into `scheduled_social_posts`.
+- Small tooltip with usage guide.
+
+**Section 2 — Posts table**:
+- Columns: created_at, scheduled_at, platforms, course/group, status, last_error, actions.
+- Actions: View (dialog with caption), Edit (caption + time if scheduled), Cancel, Retry (re-queues with `status = 'scheduled'`, `scheduled_at = now() + 2min`).
+
+## Routing
+- Add route `/admin/social-scheduler` in `App.tsx` wrapped with `ProtectedRoute`.
+- Add a navigation link/button from the Admin Dashboard to this page.
+
+## Implementation Steps
+
+1. Create `scheduled_social_posts` table with RLS via migration tool.
+2. Request all 4 Meta secrets from admin via `add_secret` tool.
+3. Create edge function `supabase/functions/publish-social-posts/index.ts`.
+4. Register function in `supabase/config.toml`.
+5. Set up `pg_cron` job via insert tool.
+6. Build `src/pages/SocialSchedulerPage.tsx` with create + list UI.
+7. Add route in `App.tsx` and navigation link from Admin Dashboard.
 
