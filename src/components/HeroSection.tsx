@@ -9,13 +9,25 @@ const HeroSection = () => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.src = "/videos/hero-korea-video-new.mp4";
-    video.load();
-    video.play().catch(() => {});
+    // Only load video on fast connections (Wi-Fi / 4G+)
+    const conn = (navigator as any).connection;
+    const isFast = !conn || conn.type === "wifi" || conn.effectiveType === "4g";
+    if (!isFast) return;
+
+    // Delay video load so poster shows first
+    const timer = setTimeout(() => {
+      const video = videoRef.current;
+      if (!video) return;
+      setShowVideo(true);
+      video.src = "/videos/hero-korea-video-new.mp4";
+      video.load();
+      video.play().catch(() => {});
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -27,16 +39,18 @@ const HeroSection = () => {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroPoster})` }}
       >
-        <video
-          ref={videoRef}
-          poster={heroPoster}
-          preload="auto"
-          loop
-          muted
-          playsInline
-          onCanPlay={() => setVideoReady(true)}
-          className={`w-full h-full object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
-        />
+        {showVideo && (
+          <video
+            ref={videoRef}
+            poster={heroPoster}
+            preload="none"
+            loop
+            muted
+            playsInline
+            onCanPlay={() => setVideoReady(true)}
+            className={`w-full h-full object-cover transition-opacity duration-1000 ${videoReady ? "opacity-100" : "opacity-0"}`}
+          />
+        )}
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
