@@ -21,11 +21,21 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Send, TestTube, Eye, RefreshCw, Mail } from "lucide-react";
+import { Send, TestTube, Eye, RefreshCw, Mail, FileText } from "lucide-react";
 
-const DEFAULT_SUBJECT = "Welcome to K-Lovers 🇰🇷";
+interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  html: string;
+}
 
-const DEFAULT_HTML = `<!DOCTYPE html>
+const EMAIL_TEMPLATES: EmailTemplate[] = [
+  {
+    id: "welcome",
+    name: "🎉 Welcome",
+    subject: "Welcome to K-Lovers 🇰🇷",
+    html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
@@ -51,7 +61,150 @@ const DEFAULT_HTML = `<!DOCTYPE html>
   </td></tr>
 </table>
 </td></tr></table>
-</body></html>`;
+</body></html>`,
+  },
+  {
+    id: "new_course",
+    name: "📚 New Course Announcement",
+    subject: "New Course Available at K-Lovers! 🎓",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+  <tr><td style="background:#6d28d9;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">📚 New Course Available!</h1>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">We're excited to announce a new Korean course! Whether you're just starting or ready for the next level, we have something for you.</p>
+    <div style="background:#f3f4f6;border-radius:8px;padding:20px;margin:0 0 24px;">
+      <p style="margin:0 0 8px;font-weight:700;color:#111827;">📖 Course Details:</p>
+      <p style="margin:0;color:#374151;font-size:14px;line-height:1.8;">• Level: [Edit level here]<br>• Schedule: [Edit schedule here]<br>• Duration: [Edit duration here]<br>• Spots Available: [Edit spots here]</p>
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
+      <a href="{{courses_url}}" style="background:#6d28d9;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">View Courses →</a>
+    </td></tr></table>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+  {
+    id: "reminder",
+    name: "⏰ Class Reminder",
+    subject: "Your Korean class is coming up! ⏰",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+  <tr><td style="background:#059669;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">⏰ Class Reminder</h1>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">Just a friendly reminder that your Korean class is coming up soon! Make sure you're ready.</p>
+    <div style="background:#f0fdf4;border-left:4px solid #059669;border-radius:4px;padding:16px;margin:0 0 24px;">
+      <p style="margin:0;color:#374151;font-size:14px;line-height:1.8;">📅 <strong>Date:</strong> [Edit date]<br>🕐 <strong>Time:</strong> [Edit time]<br>📚 <strong>Level:</strong> [Edit level]</p>
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
+      <a href="{{dashboard_url}}" style="background:#059669;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Go to Dashboard →</a>
+    </td></tr></table>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;">See you in class! 🇰🇷<br><strong>Reham</strong>, KLovers</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+  {
+    id: "promotion",
+    name: "🎁 Special Offer",
+    subject: "Special Offer Just for You! 🎁",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+  <tr><td style="background:linear-gradient(135deg,#6d28d9,#ec4899);padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">🎁 Special Offer!</h1>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">We have an exclusive offer just for you! Don't miss this chance to level up your Korean skills at a special price.</p>
+    <div style="background:#fdf4ff;border:2px dashed #6d28d9;border-radius:8px;padding:20px;margin:0 0 24px;text-align:center;">
+      <p style="margin:0 0 8px;font-size:28px;font-weight:800;color:#6d28d9;">[Edit discount %] OFF</p>
+      <p style="margin:0;color:#374151;font-size:14px;">Use code: <strong>[Edit code]</strong></p>
+      <p style="margin:8px 0 0;color:#6B7280;font-size:12px;">Valid until [Edit date]</p>
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
+      <a href="{{courses_url}}" style="background:#6d28d9;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Claim Offer →</a>
+    </td></tr></table>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+  {
+    id: "update",
+    name: "📢 General Update",
+    subject: "Important Update from K-Lovers 📢",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+  <tr><td style="background:#1f2937;padding:32px 40px;text-align:center;">
+    <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">📢 Important Update</h1>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Write your update message here. You can include any important announcements, schedule changes, or news about K-Lovers.]</p>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
+      <a href="{{dashboard_url}}" style="background:#1f2937;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Visit Dashboard →</a>
+    </td></tr></table>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;">Best,<br><strong>Reham</strong>, KLovers</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+  {
+    id: "blank",
+    name: "📝 Blank Template",
+    subject: "",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Your message here]</p>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+];
 
 interface Campaign {
   id: string;
@@ -75,8 +228,19 @@ interface SendRecord {
 
 const BulkEmailManager = () => {
   const [name, setName] = useState("Welcome Campaign");
-  const [subject, setSubject] = useState(DEFAULT_SUBJECT);
-  const [htmlBody, setHtmlBody] = useState(DEFAULT_HTML);
+  const [subject, setSubject] = useState(EMAIL_TEMPLATES[0].subject);
+  const [htmlBody, setHtmlBody] = useState(EMAIL_TEMPLATES[0].html);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("welcome");
+
+  const applyTemplate = (templateId: string) => {
+    const tpl = EMAIL_TEMPLATES.find(t => t.id === templateId);
+    if (tpl) {
+      setSelectedTemplate(templateId);
+      setName(tpl.name.replace(/^[^\w]*\s*/, "") + " Campaign");
+      setSubject(tpl.subject);
+      setHtmlBody(tpl.html);
+    }
+  };
   const [audience, setAudience] = useState<"new" | "all">("new");
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -286,6 +450,24 @@ const BulkEmailManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Template Selector */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5"><FileText className="h-4 w-4" /> Choose Template</Label>
+            <div className="flex flex-wrap gap-2">
+              {EMAIL_TEMPLATES.map((tpl) => (
+                <Button
+                  key={tpl.id}
+                  variant={selectedTemplate === tpl.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => applyTemplate(tpl.id)}
+                  className="text-xs"
+                >
+                  {tpl.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Campaign Name</Label>
