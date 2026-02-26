@@ -826,6 +826,56 @@ export type Database = {
           },
         ]
       }
+      marketing_posts: {
+        Row: {
+          ad_primary_text: string
+          caption_text: string
+          created_at: string
+          description: string
+          group_id: string | null
+          headline: string
+          id: string
+          image_url_1x1: string | null
+          image_url_4x5: string | null
+          image_url_story: string | null
+          status: string
+        }
+        Insert: {
+          ad_primary_text?: string
+          caption_text?: string
+          created_at?: string
+          description?: string
+          group_id?: string | null
+          headline?: string
+          id?: string
+          image_url_1x1?: string | null
+          image_url_4x5?: string | null
+          image_url_story?: string | null
+          status?: string
+        }
+        Update: {
+          ad_primary_text?: string
+          caption_text?: string
+          created_at?: string
+          description?: string
+          group_id?: string | null
+          headline?: string
+          id?: string
+          image_url_1x1?: string | null
+          image_url_4x5?: string | null
+          image_url_story?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_posts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matching_slots: {
         Row: {
           course_level: string
