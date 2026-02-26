@@ -241,36 +241,50 @@ const BulkEmailManager = () => {
     setSubject(tpl.subject);
 
     if (templateId === "new_course") {
+      // Fetch groups with their linked schedule package info
+      const { data: groups } = await supabase
+        .from("pkg_groups")
+        .select("id, name, capacity, is_active, package_id")
+        .eq("is_active", true)
+        .order("name");
+
+      // Fetch packages for day/time/level info
       const { data: packages } = await supabase
         .from("schedule_packages")
-        .select("*")
-        .eq("is_active", true)
-        .order("level")
-        .order("day_of_week");
+        .select("id, level, day_of_week, start_time, timezone, course_type, capacity")
+        .eq("is_active", true);
 
-      if (packages && packages.length > 0) {
+      // Fetch member counts per group
+      const { data: members } = await supabase
+        .from("pkg_group_members")
+        .select("group_id, member_status")
+        .eq("member_status", "active");
+
+      if (groups && groups.length > 0 && packages) {
         const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        const levelMap = new Map<string, { days: Set<string>; time: string; capacity: number }>();
-
-        for (const pkg of packages) {
-          const lvl = pkg.level.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
-          if (!levelMap.has(lvl)) {
-            levelMap.set(lvl, { days: new Set(), time: "", capacity: 0 });
+        const pkgMap = new Map(packages.map(p => [p.id, p]));
+        const memberCounts = new Map<string, number>();
+        if (members) {
+          for (const m of members) {
+            memberCounts.set(m.group_id, (memberCounts.get(m.group_id) || 0) + 1);
           }
-          const entry = levelMap.get(lvl)!;
-          entry.days.add(dayNames[pkg.day_of_week] || "Unknown");
-          entry.time = pkg.start_time?.slice(0, 5) || entry.time;
-          entry.capacity += pkg.capacity;
         }
 
-        const detailLines = Array.from(levelMap.entries()).map(([level, info]) => {
-          const days = Array.from(info.days).join(", ");
-          return `• <strong>${level}</strong> — ${days} at ${info.time} (${info.capacity} spots)`;
-        }).join("<br>");
+        const detailLines = groups.map(g => {
+          const pkg = pkgMap.get(g.package_id);
+          const enrolled = memberCounts.get(g.id) || 0;
+          const spotsLeft = g.capacity - enrolled;
+          if (!pkg) return null;
+          const lvl = pkg.level.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+          const day = dayNames[pkg.day_of_week] || "TBD";
+          const time = pkg.start_time?.slice(0, 5) || "TBD";
+          const type = pkg.course_type === "private" ? "🔒 Private" : "👥 Group";
+          return `• <strong>${g.name}</strong> — ${lvl} | ${day} at ${time} | ${type} | ${spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"}`;
+        }).filter(Boolean).join("<br>");
 
         const filledHtml = tpl.html.replace(
           `• Level: [Edit level here]<br>• Schedule: [Edit schedule here]<br>• Duration: [Edit duration here]<br>• Spots Available: [Edit spots here]`,
-          detailLines
+          detailLines || "No active groups available"
         );
         setHtmlBody(filledHtml);
       } else {
