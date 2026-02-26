@@ -369,7 +369,22 @@ const EgyptPaymentPage = () => {
         _receipt_url: path,
         _tx_ref: txRef.trim(),
       } as any);
-      if (rpcError) throw rpcError;
+      if (rpcError) {
+        // If status changed (e.g. admin already approved), refresh enrollment data
+        if (rpcError.message?.includes("PENDING_PAYMENT")) {
+          const { data: refreshed } = await supabase
+            .from("enrollments")
+            .select("id, plan_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+            .eq("id", enrollment.id)
+            .single();
+          if (refreshed) {
+            setEnrollment(refreshed as any);
+            toast({ title: "Status updated", description: refreshed.approval_status === "APPROVED" ? "This enrollment has already been approved!" : "Enrollment status has changed. Please review.", variant: "default" });
+            return;
+          }
+        }
+        throw rpcError;
+      }
 
       setLastFileName(file.name);
       setEnrollment((prev) =>
