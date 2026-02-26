@@ -1189,6 +1189,65 @@ export type Database = {
           },
         ]
       }
+      scheduled_social_posts: {
+        Row: {
+          attempts: number
+          caption: string
+          course_title: string
+          created_at: string
+          created_by: string
+          group_id: string | null
+          id: string
+          last_error: string | null
+          meta_result: Json | null
+          platforms: string[]
+          posted_at: string | null
+          registration_url: string | null
+          scheduled_at: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          caption?: string
+          course_title?: string
+          created_at?: string
+          created_by: string
+          group_id?: string | null
+          id?: string
+          last_error?: string | null
+          meta_result?: Json | null
+          platforms?: string[]
+          posted_at?: string | null
+          registration_url?: string | null
+          scheduled_at: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          caption?: string
+          course_title?: string
+          created_at?: string
+          created_by?: string
+          group_id?: string | null
+          id?: string
+          last_error?: string | null
+          meta_result?: Json | null
+          platforms?: string[]
+          posted_at?: string | null
+          registration_url?: string | null
+          scheduled_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_social_posts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_groups: {
         Row: {
           capacity: number | null
