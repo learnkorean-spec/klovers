@@ -104,6 +104,12 @@ Design rules:
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (aiResp.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add credits in Settings → Workspace → Usage." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       throw new Error(`AI gateway returned ${aiResp.status}`);
     }
 
