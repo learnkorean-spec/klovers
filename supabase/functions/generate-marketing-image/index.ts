@@ -48,23 +48,33 @@ serve(async (req) => {
     };
     const dims = sizeMap[size] || sizeMap["1x1"];
 
-    const prompt = `Create a professional, clean, modern social media marketing image for a Korean language course.
+    const urgencyText = urgency_label === "Last Seats" ? `Only ${seats_left} seats left!` : seats_left <= 3 ? `${seats_left} seats remaining` : "Limited Seats Available";
 
-Image specifications:
-- Aspect ratio: ${dims.ratio}
-- Style: Modern, clean, premium education brand
-- Color scheme: White/light background with gold/yellow (#EAB308) accents and dark text
-- NO text overlays - the image should be a visual background only
+    const prompt = `Create a professional social media marketing image for a Korean language course with these EXACT specifications:
 
-Visual elements to include:
-- Korean cultural elements (subtle): hanbok patterns, traditional motifs, or Korean calligraphy brush strokes as decorative elements
-- Modern education feel: clean geometric shapes, soft gradients
-- Korean flag colors subtly incorporated
-- Professional, inviting atmosphere that conveys structured learning
-- Premium feel suitable for Instagram/Facebook marketing
+Image specs:
+- Aspect ratio: ${dims.ratio} (${dims.w}x${dims.h} pixels)
+- Background: Solid bright yellow/gold (#EAB308) as the PRIMARY background color, filling the entire image
+- Style: Clean, modern, premium education brand
 
-The image should work as a background for a course announcement post about "${level}" Korean course, scheduled on ${day_name}s at ${start_time}.
-Make it feel aspirational, modern, and professional. No clipart, no stock photo feel. High quality, editorial style.`;
+MUST include these TEXT elements clearly readable on the yellow background:
+- Main title in large bold dark text: "${level}"
+- Schedule line: "${day_name} • ${start_time}"
+- Duration: "${duration_min} min per session"
+- Urgency line in a dark badge or banner: "${urgencyText}"
+- Bottom text: "klovers.lovable.app"
+- Small text: "Register Now"
+
+Design rules:
+- Yellow (#EAB308) background must cover at least 80% of the image
+- All text must be dark (black or very dark brown) for contrast against yellow
+- Use subtle Korean cultural decorative elements (traditional patterns, brush stroke accents) as light overlays or border decorations
+- Clean modern typography, bold and easy to read
+- Include subtle geometric shapes or soft white/gold gradient accents
+- Professional Instagram/Facebook marketing quality
+- Text must be centered and well-spaced
+- No photos, no clipart, no stock images
+- The image should look like a branded course announcement poster`;
 
     console.log("Generating marketing image:", { level, size, dims });
 
