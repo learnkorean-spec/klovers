@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw } from "lucide-react";
+import { ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   type GroupData,
@@ -18,10 +17,14 @@ import {
   getLevelLabel,
   getUrgencyLabel,
 } from "@/lib/marketingEngine";
-import { MarketingImageTemplate, MarketingImageFull, IMAGE_SIZES } from "@/components/admin/MarketingImageTemplates";
-import { toPng } from "html-to-image";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+interface GeneratedImages {
+  "1x1"?: string;
+  "4x5"?: string;
+  story?: string;
+}
 
 export default function MarketingGeneratorPage() {
   const navigate = useNavigate();
@@ -29,13 +32,12 @@ export default function MarketingGeneratorPage() {
   const [loading, setLoading] = useState(true);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<Record<string, { captions: string[]; adCopy: ReturnType<typeof generateAdCopy> }>>({});
-  const [generatingImages, setGeneratingImages] = useState<string | null>(null);
-  const [imageDialog, setImageDialog] = useState<{ group: GroupData; size: "1x1" | "4x5" | "story" } | null>(null);
+  const [generatingImages, setGeneratingImages] = useState<Record<string, Set<string>>>({});
+  const [generatedImages, setGeneratedImages] = useState<Record<string, GeneratedImages>>({});
 
   const fetchGroups = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch active pkg_groups with their schedule_packages
       const { data: pkgGroups, error: gErr } = await supabase
         .from("pkg_groups")
         .select("id, name, capacity, package_id, is_active")
@@ -44,7 +46,6 @@ export default function MarketingGeneratorPage() {
       if (gErr) throw gErr;
       if (!pkgGroups?.length) { setGroups([]); setLoading(false); return; }
 
-      // Fetch schedule_packages for these groups
       const packageIds = [...new Set(pkgGroups.map(g => g.package_id))];
       const { data: packages } = await supabase
         .from("schedule_packages")
@@ -54,7 +55,6 @@ export default function MarketingGeneratorPage() {
 
       const pkgMap = new Map((packages || []).map(p => [p.id, p]));
 
-      // Fetch active member counts
       const { data: members } = await supabase
         .from("pkg_group_members")
         .select("group_id, user_id, member_status")
@@ -74,14 +74,12 @@ export default function MarketingGeneratorPage() {
         const seatsLeft = g.capacity - activeMembers;
         if (seatsLeft <= 0) continue;
 
-        const timeStr = pkg.start_time ? formatTime(pkg.start_time) : "TBD";
-
         result.push({
           id: g.id,
           name: g.name,
           level: pkg.level,
           day_name: DAY_NAMES[pkg.day_of_week] || "Unknown",
-          start_time: timeStr,
+          start_time: formatTime(pkg.start_time),
           duration_min: pkg.duration_min,
           capacity: g.capacity,
           active_members: activeMembers,
@@ -91,7 +89,6 @@ export default function MarketingGeneratorPage() {
         });
       }
 
-      // Sort by seats_left ascending (most urgent first)
       result.sort((a, b) => a.seats_left - b.seats_left);
       setGroups(result.slice(0, 10));
     } catch (err: any) {
@@ -124,91 +121,63 @@ export default function MarketingGeneratorPage() {
     toast({ title: "Copied!", description: `${label} copied to clipboard.` });
   }
 
-  async function handleDownloadImage(group: GroupData, size: "1x1" | "4x5" | "story") {
-    setGeneratingImages(group.id);
+  async function handleGenerateImage(group: GroupData, size: "1x1" | "4x5" | "story") {
+    setGeneratingImages(prev => {
+      const s = new Set(prev[group.id] || []);
+      s.add(size);
+      return { ...prev, [group.id]: s };
+    });
+
     try {
-      // We need to render the full-size element off-screen
-      const container = document.createElement("div");
-      container.style.position = "fixed";
-      container.style.left = "-9999px";
-      container.style.top = "0";
-      document.body.appendChild(container);
+      const { data, error } = await supabase.functions.invoke("generate-marketing-image", {
+        body: {
+          level: getLevelLabel(group.level),
+          day_name: group.day_name,
+          start_time: group.start_time,
+          duration_min: group.duration_min,
+          seats_left: group.seats_left,
+          urgency_label: group.urgency_label,
+          size,
+          group_id: group.id,
+        },
+      });
 
-      const { width, height } = IMAGE_SIZES[size];
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      // Create the template HTML directly
-      const el = document.createElement("div");
-      el.style.width = `${width}px`;
-      el.style.height = `${height}px`;
-      el.style.display = "flex";
-      el.style.flexDirection = "column";
-      el.style.alignItems = "center";
-      el.style.justifyContent = "space-between";
-      el.style.padding = "64px";
-      el.style.backgroundColor = "#ffffff";
-      el.style.fontFamily = "Inter, system-ui, sans-serif";
+      setGeneratedImages(prev => ({
+        ...prev,
+        [group.id]: { ...(prev[group.id] || {}), [size]: data.image_url },
+      }));
 
-      const level = getLevelLabel(group.level);
-      const urgencyColor = group.urgency_label === "Last Seats" ? "#ef4444" : "#6941C6";
-
-      el.innerHTML = `
-        <div style="width:100%;text-align:center">
-          <span style="background:${urgencyColor};color:#fff;padding:12px 32px;border-radius:999px;font-size:28px;font-weight:700;display:inline-block">
-            ${group.urgency_label}
-          </span>
-        </div>
-        <div style="text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
-          <h2 style="font-size:72px;font-weight:800;color:#1a1a1a;margin:0;letter-spacing:-1px">${level}</h2>
-          <p style="font-size:36px;color:#666;margin:0">${group.day_name} • ${group.start_time}</p>
-          <p style="font-size:28px;color:#888;margin:0">${group.duration_min} minutes per session</p>
-          <div style="background:rgba(105,65,198,0.1);border-radius:16px;padding:20px 40px;margin-top:16px">
-            <p style="font-size:36px;font-weight:700;color:#6941C6;margin:0">${group.seats_left} seat${group.seats_left !== 1 ? "s" : ""} left</p>
-          </div>
-        </div>
-        <div style="text-align:center">
-          <p style="font-size:28px;font-weight:600;color:#1a1a1a;margin:0 0 8px">Limited Seats Available</p>
-          <p style="font-size:22px;color:#888;margin:0">klovers.lovable.app</p>
-        </div>
-      `;
-
-      container.appendChild(el);
-
-      const dataUrl = await toPng(el, { width, height, pixelRatio: 1 });
-
-      // Upload to storage
-      const blob = await (await fetch(dataUrl)).blob();
-      const fileName = `${group.id}-${size}-${Date.now()}.png`;
-      const { error: uploadErr } = await supabase.storage
-        .from("marketing-images")
-        .upload(fileName, blob, { contentType: "image/png", upsert: true });
-
-      if (uploadErr) throw uploadErr;
-
-      // Also trigger download
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `${getLevelLabel(group.level).replace(/\s+/g, "-")}-${size}.png`;
-      a.click();
-
-      document.body.removeChild(container);
-      toast({ title: "Image downloaded!", description: `${size} image saved and uploaded.` });
+      toast({ title: "Image generated!", description: `${size} image for ${getLevelLabel(group.level)}` });
     } catch (err: any) {
       toast({ title: "Error generating image", description: err.message, variant: "destructive" });
     } finally {
-      setGeneratingImages(null);
+      setGeneratingImages(prev => {
+        const s = new Set(prev[group.id] || []);
+        s.delete(size);
+        return { ...prev, [group.id]: s };
+      });
     }
   }
 
-  async function handleDownloadAll(group: GroupData) {
+  async function handleGenerateAllImages(group: GroupData) {
     for (const size of ["1x1", "4x5", "story"] as const) {
-      await handleDownloadImage(group, size);
+      await handleGenerateImage(group, size);
     }
   }
 
-  const urgencyBadgeVariant = (label: string) => {
-    if (label === "Last Seats") return "destructive";
-    return "default";
-  };
+  function downloadImage(url: string, name: string) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.target = "_blank";
+    a.click();
+  }
+
+  const isGenerating = (groupId: string) => (generatingImages[groupId]?.size || 0) > 0;
+  const isSizeGenerating = (groupId: string, size: string) => generatingImages[groupId]?.has(size) || false;
 
   return (
     <TooltipProvider>
@@ -222,7 +191,7 @@ export default function MarketingGeneratorPage() {
               </Button>
               <div>
                 <h1 className="text-lg font-bold text-foreground">Marketing Generator</h1>
-                <p className="text-xs text-muted-foreground">Auto-generate social posts, ad copy & images</p>
+                <p className="text-xs text-muted-foreground">Auto-generate social posts, ad copy & AI images</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -233,7 +202,7 @@ export default function MarketingGeneratorPage() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs text-sm">
-                  <p>Select a group and click "Generate Content" to create social media captions, Meta ad copy, and downloadable branded images. Copy text or download images to use on your platforms.</p>
+                  <p>Click "Generate Content" for captions & ad copy. Click image size buttons to generate AI-branded images. Download or copy anything you need.</p>
                 </TooltipContent>
               </Tooltip>
               <Button variant="outline" size="sm" onClick={fetchGroups}>
@@ -258,133 +227,166 @@ export default function MarketingGeneratorPage() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {groups.map(group => (
-                <Card key={group.id} className="rounded-2xl">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{getLevelLabel(group.level)}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {group.day_name} • {group.start_time} • {group.duration_min}min
-                        </p>
+              {groups.map(group => {
+                const groupImages = generatedImages[group.id] || {};
+                const hasAnyImage = Object.keys(groupImages).length > 0;
+
+                return (
+                  <Card key={group.id} className="rounded-2xl">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-base">{getLevelLabel(group.level)}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {group.day_name} • {group.start_time} • {group.duration_min}min
+                          </p>
+                        </div>
+                        <Badge variant={group.urgency_label === "Last Seats" ? "destructive" : "default"}>
+                          {group.urgency_label}
+                        </Badge>
                       </div>
-                      <Badge variant={urgencyBadgeVariant(group.urgency_label)}>{group.urgency_label}</Badge>
-                    </div>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                      <span>{group.active_members}/{group.capacity} enrolled</span>
-                      <span className="font-medium text-primary">{group.seats_left} seats left</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" onClick={() => handleGenerate(group)}>
-                        <Sparkles className="h-4 w-4 mr-1" /> Generate Content
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDownloadAll(group)} disabled={generatingImages === group.id}>
-                        <Download className="h-4 w-4 mr-1" /> {generatingImages === group.id ? "Generating..." : "Download Images"}
-                      </Button>
-                    </div>
-
-                    {/* Image size buttons */}
-                    <div className="flex gap-2">
-                      {(["1x1", "4x5", "story"] as const).map(size => (
-                        <Button key={size} size="sm" variant="ghost" className="text-xs"
-                          onClick={() => handleDownloadImage(group, size)}
-                          disabled={generatingImages === group.id}
-                        >
-                          <Image className="h-3 w-3 mr-1" /> {size}
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <span>{group.active_members}/{group.capacity} enrolled</span>
+                        <span className="font-medium text-primary">{group.seats_left} seats left</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={() => handleGenerate(group)}>
+                          <Sparkles className="h-4 w-4 mr-1" /> Generate Content
                         </Button>
-                      ))}
-                    </div>
+                        <Button size="sm" variant="outline" onClick={() => handleGenerateAllImages(group)} disabled={isGenerating(group.id)}>
+                          {isGenerating(group.id) ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Image className="h-4 w-4 mr-1" />}
+                          {isGenerating(group.id) ? "Generating..." : "Generate All Images"}
+                        </Button>
+                      </div>
 
-                    {/* Image previews */}
-                    <div className="flex gap-2 overflow-x-auto py-2">
-                      {(["1x1", "4x5", "story"] as const).map(size => (
-                        <MarketingImageTemplate key={size} group={group} size={size} />
-                      ))}
-                    </div>
+                      {/* Individual image size buttons */}
+                      <div className="flex gap-2">
+                        {(["1x1", "4x5", "story"] as const).map(size => (
+                          <Button key={size} size="sm" variant="ghost" className="text-xs"
+                            onClick={() => handleGenerateImage(group, size)}
+                            disabled={isSizeGenerating(group.id, size)}
+                          >
+                            {isSizeGenerating(group.id, size) ? (
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            ) : (
+                              <Image className="h-3 w-3 mr-1" />
+                            )}
+                            {size}
+                          </Button>
+                        ))}
+                      </div>
 
-                    {/* Generated content */}
-                    {expandedGroup === group.id && generatedContent[group.id] && (
-                      <div className="space-y-4 mt-4 border-t pt-4">
-                        <Tabs defaultValue="captions">
-                          <TabsList className="h-auto bg-transparent p-0 gap-2">
-                            <TabsTrigger value="captions" className="rounded-full px-3 py-1.5 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Captions</TabsTrigger>
-                            <TabsTrigger value="ads" className="rounded-full px-3 py-1.5 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ad Copy</TabsTrigger>
-                          </TabsList>
-
-                          <TabsContent value="captions" className="space-y-3 mt-3">
-                            {generatedContent[group.id].captions.map((cap, i) => (
-                              <div key={i} className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground font-medium">Variation {i + 1}</span>
-                                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => copyToClipboard(cap, `Caption ${i + 1}`)}>
-                                    <Copy className="h-3 w-3 mr-1" /> Copy
+                      {/* Generated images preview */}
+                      {hasAnyImage && (
+                        <div className="flex gap-3 overflow-x-auto py-2">
+                          {(["1x1", "4x5", "story"] as const).map(size => {
+                            const url = groupImages[size];
+                            if (!url) return null;
+                            const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
+                            return (
+                              <div key={size} className="shrink-0 space-y-1">
+                                <div className={`${aspectClass} w-32 rounded-lg overflow-hidden border shadow-sm bg-muted`}>
+                                  <img src={url} alt={`${getLevelLabel(group.level)} ${size}`} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] text-muted-foreground">{size}</span>
+                                  <Button size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]"
+                                    onClick={() => downloadImage(url, `${getLevelLabel(group.level).replace(/\s+/g, "-")}-${size}.png`)}
+                                  >
+                                    <Download className="h-3 w-3" />
                                   </Button>
                                 </div>
-                                <Textarea value={cap} readOnly className="text-sm min-h-[120px] resize-none" />
                               </div>
-                            ))}
-                          </TabsContent>
+                            );
+                          })}
+                        </div>
+                      )}
 
-                          <TabsContent value="ads" className="space-y-4 mt-3">
-                            {(() => {
-                              const ad = generatedContent[group.id].adCopy;
-                              return (
-                                <>
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Primary Text</h4>
-                                    {ad.primaryTexts.map((t, i) => (
-                                      <div key={i} className="flex items-start gap-2">
-                                        <Textarea value={t} readOnly className="text-sm min-h-[60px] resize-none flex-1" />
-                                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(t, `Primary Text ${i + 1}`)}>
-                                          <Copy className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
+                      {/* Generated text content */}
+                      {expandedGroup === group.id && generatedContent[group.id] && (
+                        <div className="space-y-4 mt-4 border-t pt-4">
+                          <Tabs defaultValue="captions">
+                            <TabsList className="h-auto bg-transparent p-0 gap-2">
+                              <TabsTrigger value="captions" className="rounded-full px-3 py-1.5 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Captions</TabsTrigger>
+                              <TabsTrigger value="ads" className="rounded-full px-3 py-1.5 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ad Copy</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="captions" className="space-y-3 mt-3">
+                              {generatedContent[group.id].captions.map((cap, i) => (
+                                <div key={i} className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground font-medium">Variation {i + 1}</span>
+                                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => copyToClipboard(cap, `Caption ${i + 1}`)}>
+                                      <Copy className="h-3 w-3 mr-1" /> Copy
+                                    </Button>
                                   </div>
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Headlines</h4>
-                                    {ad.headlines.map((h, i) => (
-                                      <div key={i} className="flex items-center gap-2">
-                                        <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{h}</code>
-                                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(h, `Headline ${i + 1}`)}>
-                                          <Copy className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Descriptions</h4>
-                                    {ad.descriptions.map((d, i) => (
-                                      <div key={i} className="flex items-center gap-2">
-                                        <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{d}</code>
-                                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(d, `Description ${i + 1}`)}>
-                                          <Copy className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">Suggested CTA:</span>
-                                    <Badge>{ad.cta}</Badge>
-                                  </div>
-                                  <Button size="sm" variant="outline" onClick={() => {
-                                    const allText = `PRIMARY TEXT:\n${ad.primaryTexts.join("\n\n")}\n\nHEADLINES:\n${ad.headlines.join("\n")}\n\nDESCRIPTIONS:\n${ad.descriptions.join("\n")}\n\nCTA: ${ad.cta}`;
-                                    copyToClipboard(allText, "All ad copy");
-                                  }}>
-                                    <Copy className="h-4 w-4 mr-1" /> Copy All Ad Copy
-                                  </Button>
-                                </>
-                              );
-                            })()}
-                          </TabsContent>
-                        </Tabs>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                                  <Textarea value={cap} readOnly className="text-sm min-h-[120px] resize-none" />
+                                </div>
+                              ))}
+                            </TabsContent>
+
+                            <TabsContent value="ads" className="space-y-4 mt-3">
+                              {(() => {
+                                const ad = generatedContent[group.id].adCopy;
+                                return (
+                                  <>
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-medium">Primary Text</h4>
+                                      {ad.primaryTexts.map((t, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                          <Textarea value={t} readOnly className="text-sm min-h-[60px] resize-none flex-1" />
+                                          <Button size="sm" variant="ghost" onClick={() => copyToClipboard(t, `Primary Text ${i + 1}`)}>
+                                            <Copy className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-medium">Headlines</h4>
+                                      {ad.headlines.map((h, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                          <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{h}</code>
+                                          <Button size="sm" variant="ghost" onClick={() => copyToClipboard(h, `Headline ${i + 1}`)}>
+                                            <Copy className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-medium">Descriptions</h4>
+                                      {ad.descriptions.map((d, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                          <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{d}</code>
+                                          <Button size="sm" variant="ghost" onClick={() => copyToClipboard(d, `Description ${i + 1}`)}>
+                                            <Copy className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-muted-foreground">Suggested CTA:</span>
+                                      <Badge>{ad.cta}</Badge>
+                                    </div>
+                                    <Button size="sm" variant="outline" onClick={() => {
+                                      const allText = `PRIMARY TEXT:\n${ad.primaryTexts.join("\n\n")}\n\nHEADLINES:\n${ad.headlines.join("\n")}\n\nDESCRIPTIONS:\n${ad.descriptions.join("\n")}\n\nCTA: ${ad.cta}`;
+                                      copyToClipboard(allText, "All ad copy");
+                                    }}>
+                                      <Copy className="h-4 w-4 mr-1" /> Copy All Ad Copy
+                                    </Button>
+                                  </>
+                                );
+                              })()}
+                            </TabsContent>
+                          </Tabs>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
