@@ -17,6 +17,7 @@ import {
   getLevelLabel,
   getUrgencyLabel,
 } from "@/lib/marketingEngine";
+import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -113,6 +114,19 @@ export default function MarketingGeneratorPage() {
     const adCopy = generateAdCopy(group);
     setGeneratedContent(prev => ({ ...prev, [group.id]: { captions, adCopy } }));
     setExpandedGroup(group.id);
+
+    // Save to marketing_posts
+    supabase.from("marketing_posts").insert({
+      group_id: group.id,
+      headline: adCopy.headlines[0] || getLevelLabel(group.level),
+      caption_text: captions.join("\n\n---\n\n"),
+      ad_primary_text: adCopy.primaryTexts.join("\n\n"),
+      description: adCopy.descriptions.join("\n"),
+      status: "draft",
+    }).then(({ error }) => {
+      if (error) console.error("Failed to save post:", error.message);
+    });
+
     toast({ title: "Content generated!", description: `3 captions + ad copy for ${getLevelLabel(group.level)}` });
   }
 
@@ -149,6 +163,17 @@ export default function MarketingGeneratorPage() {
         ...prev,
         [group.id]: { ...(prev[group.id] || {}), [size]: data.image_url },
       }));
+
+      // Update marketing_posts with image URL
+      const imageField = size === "1x1" ? "image_url_1x1" : size === "4x5" ? "image_url_4x5" : "image_url_story";
+      supabase.from("marketing_posts")
+        .update({ [imageField]: data.image_url })
+        .eq("group_id", group.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .then(({ error }) => {
+          if (error) console.error("Failed to update post image:", error.message);
+        });
 
       toast({ title: "Image generated!", description: `${size} image for ${getLevelLabel(group.level)}` });
     } catch (err: any) {
@@ -389,6 +414,12 @@ export default function MarketingGeneratorPage() {
               })}
             </div>
           )}
+
+          {/* Saved Posts Archive */}
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-4">📁 Saved Posts Archive</h2>
+            <MarketingPostsArchive />
+          </div>
         </div>
       </div>
     </TooltipProvider>
