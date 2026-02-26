@@ -27,6 +27,7 @@ import BlogPostPage from "./pages/BlogPostPage";
 import MySchedulePage from "./pages/MySchedulePage";
 import ResubmitSchedulePage from "./pages/ResubmitSchedulePage";
 import AdminResetPage from "./pages/AdminResetPage";
+import MarketingGeneratorPage from "./pages/MarketingGeneratorPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
+            <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
