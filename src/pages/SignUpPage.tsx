@@ -51,6 +51,15 @@ const SignUpPage = () => {
       return;
     }
 
+    // Send welcome email automatically
+    try {
+      await supabase.functions.invoke("send-confirmation-email", {
+        body: { email: email.trim().toLowerCase(), name, template: "welcome", language: document.documentElement.lang === "ar" ? "ar" : "en" },
+      });
+    } catch (e) {
+      console.error("Welcome email failed:", e);
+    }
+
     if (redirectTo) {
       localStorage.setItem("enroll_redirect", redirectTo);
     }
