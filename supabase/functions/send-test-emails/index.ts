@@ -40,7 +40,7 @@ serve(async (req) => {
 
   // Send emails in background
   const sendAll = async () => {
-    const FROM_EMAIL = "KLovers <onboarding@resend.dev>";
+    const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
     for (let i = 0; i < profiles.length; i++) {
       const p = profiles[i];
       try {
