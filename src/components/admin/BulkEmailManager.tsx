@@ -232,12 +232,51 @@ const BulkEmailManager = () => {
   const [htmlBody, setHtmlBody] = useState(EMAIL_TEMPLATES[0].html);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("welcome");
 
-  const applyTemplate = (templateId: string) => {
+  const applyTemplate = async (templateId: string) => {
     const tpl = EMAIL_TEMPLATES.find(t => t.id === templateId);
-    if (tpl) {
-      setSelectedTemplate(templateId);
-      setName(tpl.name.replace(/^[^\w]*\s*/, "") + " Campaign");
-      setSubject(tpl.subject);
+    if (!tpl) return;
+
+    setSelectedTemplate(templateId);
+    setName(tpl.name.replace(/^[^\w]*\s*/, "") + " Campaign");
+    setSubject(tpl.subject);
+
+    if (templateId === "new_course") {
+      const { data: packages } = await supabase
+        .from("schedule_packages")
+        .select("*")
+        .eq("is_active", true)
+        .order("level")
+        .order("day_of_week");
+
+      if (packages && packages.length > 0) {
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const levelMap = new Map<string, { days: Set<string>; time: string; capacity: number }>();
+
+        for (const pkg of packages) {
+          const lvl = pkg.level.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+          if (!levelMap.has(lvl)) {
+            levelMap.set(lvl, { days: new Set(), time: "", capacity: 0 });
+          }
+          const entry = levelMap.get(lvl)!;
+          entry.days.add(dayNames[pkg.day_of_week] || "Unknown");
+          entry.time = pkg.start_time?.slice(0, 5) || entry.time;
+          entry.capacity += pkg.capacity;
+        }
+
+        const detailLines = Array.from(levelMap.entries()).map(([level, info]) => {
+          const days = Array.from(info.days).join(", ");
+          return `• <strong>${level}</strong> — ${days} at ${info.time} (${info.capacity} spots)`;
+        }).join("<br>");
+
+        const filledHtml = tpl.html.replace(
+          `• Level: [Edit level here]<br>• Schedule: [Edit schedule here]<br>• Duration: [Edit duration here]<br>• Spots Available: [Edit spots here]`,
+          detailLines
+        );
+        setHtmlBody(filledHtml);
+      } else {
+        setHtmlBody(tpl.html);
+      }
+    } else {
       setHtmlBody(tpl.html);
     }
   };
