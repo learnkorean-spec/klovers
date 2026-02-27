@@ -89,9 +89,9 @@ const HeroSection = () => {
       </div>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-accent/50 rounded-full flex items-start justify-center p-2">
-          <div className="w-1 h-2 bg-accent/50 rounded-full" />
-        </div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary/70">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </div>
     </section>
   );
