@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +36,7 @@ import BulkEmailManager from "@/components/admin/BulkEmailManager";
 
 import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
 import SchedulingManager from "@/components/admin/SchedulingManager";
+import AdminSettings from "@/components/admin/AdminSettings";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -551,6 +552,9 @@ const AdminDashboard = () => {
               <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
               <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Mail className="h-4 w-4" /> Campaigns
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>
             </TabsList>
 
@@ -1279,6 +1283,11 @@ const AdminDashboard = () => {
                   <CardContent><ScheduleOptionsManager /></CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* SETTINGS TAB */}
+            <TabsContent value="settings">
+              <AdminSettings />
             </TabsContent>
           </Tabs>
         </div>
