@@ -368,7 +368,7 @@ const StudentDashboard = () => {
                 const curr = enrollment.currency === "EGP" ? "LE" : "$";
 
                 return (
-                  <Card key={enrollment.id}>
+                  <Card key={enrollment.id} className={remaining === 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg flex items-center gap-2">
