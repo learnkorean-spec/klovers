@@ -54,6 +54,13 @@ export type Database = {
             foreignKeyName: "admin_attendance_log_enrollment_id_fkey"
             columns: ["enrollment_id"]
             isOneToOne: false
+            referencedRelation: "admin_student_status_overview"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "admin_attendance_log_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
             referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
@@ -236,6 +243,13 @@ export type Database = {
             foreignKeyName: "attendance_requests_enrollment_id_fkey"
             columns: ["enrollment_id"]
             isOneToOne: false
+            referencedRelation: "admin_student_status_overview"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "attendance_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
             referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
@@ -280,6 +294,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "admin_student_overview"
             referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "batch_members_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "admin_student_status_overview"
+            referencedColumns: ["active_enrollment_id"]
           },
           {
             foreignKeyName: "batch_members_enrollment_id_fkey"
@@ -532,6 +553,7 @@ export type Database = {
           currency: string
           due_at: string | null
           duration: number
+          enrollment_status: string
           id: string
           last_reminder_at: string | null
           level: string | null
@@ -554,6 +576,7 @@ export type Database = {
           reviewed_by: string | null
           sessions_remaining: number
           sessions_total: number
+          slot_id: string | null
           status: string
           stripe_payment_intent_id: string | null
           timezone: string | null
@@ -570,6 +593,7 @@ export type Database = {
           currency?: string
           due_at?: string | null
           duration: number
+          enrollment_status?: string
           id?: string
           last_reminder_at?: string | null
           level?: string | null
@@ -592,6 +616,7 @@ export type Database = {
           reviewed_by?: string | null
           sessions_remaining?: number
           sessions_total?: number
+          slot_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           timezone?: string | null
@@ -608,6 +633,7 @@ export type Database = {
           currency?: string
           due_at?: string | null
           duration?: number
+          enrollment_status?: string
           id?: string
           last_reminder_at?: string | null
           level?: string | null
@@ -630,6 +656,7 @@ export type Database = {
           reviewed_by?: string | null
           sessions_remaining?: number
           sessions_total?: number
+          slot_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           timezone?: string | null
@@ -1237,6 +1264,13 @@ export type Database = {
             foreignKeyName: "schedule_resubmission_requests_enrollment_id_fkey"
             columns: ["enrollment_id"]
             isOneToOne: false
+            referencedRelation: "admin_student_status_overview"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "schedule_resubmission_requests_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
             referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
@@ -1510,6 +1544,13 @@ export type Database = {
             foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
             columns: ["enrollment_id"]
             isOneToOne: true
+            referencedRelation: "admin_student_status_overview"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
             referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
@@ -1666,6 +1707,35 @@ export type Database = {
           sessions_remaining: number | null
           sessions_total: number | null
           source_label: string | null
+          unit_price: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      admin_student_status_overview: {
+        Row: {
+          active_enrollment_id: string | null
+          amount: number | null
+          approval_status: string | null
+          classes_included: number | null
+          computed_status: string | null
+          country: string | null
+          currency: string | null
+          duration: number | null
+          email: string | null
+          enrollment_created_at: string | null
+          enrollment_status: string | null
+          level: string | null
+          matched_at: string | null
+          name: string | null
+          package_id: string | null
+          payment_status: string | null
+          plan_type: string | null
+          profile_created_at: string | null
+          profile_level: string | null
+          sessions_remaining: number | null
+          sessions_total: number | null
+          slot_id: string | null
           unit_price: number | null
           user_id: string | null
         }

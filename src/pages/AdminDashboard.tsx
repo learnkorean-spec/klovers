@@ -375,6 +375,7 @@ const AdminDashboard = () => {
     }
     if (action === "REJECTED") {
       updates.payment_status = "UNPAID";
+      updates.enrollment_status = "cancelled";
     }
 
     const editedPrice = editingUnitPrice[enrollment.id];
