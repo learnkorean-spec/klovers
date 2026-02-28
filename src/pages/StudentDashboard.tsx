@@ -82,10 +82,26 @@ const StudentDashboard = () => {
         const latestEnroll = enrollmentData[0] as any;
         setLatestEnrollmentId(latestEnroll.id);
 
+        // Auto-sync: fill profile gaps from enrollment data
         const p = profile as any;
+        const autoUpdates: Record<string, string> = {};
+        if ((!p?.level || !p.level.trim()) && latestEnroll.level && latestEnroll.level.trim()) {
+          autoUpdates.level = latestEnroll.level.trim();
+        }
+        if ((!p?.name || !p.name.trim()) && session.user.user_metadata?.name) {
+          autoUpdates.name = session.user.user_metadata.name;
+        }
+        if (Object.keys(autoUpdates).length > 0) {
+          await supabase.from("profiles").update(autoUpdates).eq("user_id", session.user.id);
+          if (autoUpdates.name) setUserName(autoUpdates.name);
+        }
+
+        const effectiveLevel = autoUpdates.level || p?.level || "";
+        const effectiveName = autoUpdates.name || p?.name || "";
+
         const items: ChecklistItem[] = [
-          { key: "Full name", label: "Full name", completed: !!(p?.name && p.name.trim() !== "") },
-          { key: "Korean level", label: "Korean level", completed: !!(p?.level && p.level.trim() !== "") },
+          { key: "Full name", label: "Full name", completed: !!(effectiveName && effectiveName.trim() !== "") },
+          { key: "Korean level", label: "Korean level", completed: !!(effectiveLevel && effectiveLevel.trim() !== "") },
           { key: "Country", label: "Country", completed: !!(p?.country && p.country.trim() !== "") },
           { key: "Preferred class days", label: "Preferred class days", completed: !!(latestEnroll.preferred_days && latestEnroll.preferred_days.length > 0) },
           { key: "Timezone", label: "Timezone", completed: !!(latestEnroll.timezone && latestEnroll.timezone.trim() !== "") },
