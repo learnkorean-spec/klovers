@@ -7,6 +7,7 @@ import StudentJourney from "@/components/StudentJourney";
 import LearningRoadmap from "@/components/LearningRoadmap";
 import Testimonials from "@/components/Testimonials";
 import HomeBlogSection from "@/components/HomeBlogSection";
+import PlacementTestCTA from "@/components/PlacementTestCTA";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
@@ -23,6 +24,7 @@ const Index = () => {
         <LearningRoadmap />
         <Testimonials />
         <HomeBlogSection />
+        <PlacementTestCTA />
         <FinalCTA />
       </main>
       <Footer />
