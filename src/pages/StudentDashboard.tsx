@@ -46,6 +46,44 @@ interface PlacementTestResult {
   created_at: string;
 }
 
+const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
+            <CardTitle className="text-lg flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <CalendarCheck className="h-5 w-5" />
+                Attendance History ({dates.length} sessions)
+              </span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>
+            <div className="space-y-1">
+              {dates.map((d, i) => (
+                <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
+                    <CalendarCheck className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
+                      {new Date(d.date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+};
+
 const StudentDashboard = () => {
   const { loading: gateLoading, resetBlocked } = useResetGate();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
@@ -450,38 +488,7 @@ const StudentDashboard = () => {
 
               {/* Read-only Attendance Dates List */}
               {attendanceDates.length > 0 && (
-                <Collapsible>
-                  <Card>
-                    <CollapsibleTrigger asChild>
-                      <CardHeader className="pb-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
-                        <CardTitle className="text-lg flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            <CalendarCheck className="h-5 w-5" />
-                            Attendance History ({attendanceDates.length} sessions)
-                          </span>
-                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
-                        </CardTitle>
-                      </CardHeader>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <CardContent>
-                        <div className="space-y-1">
-                          {attendanceDates.map((d, i) => (
-                            <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
-                                <CalendarCheck className="h-4 w-4 text-primary" />
-                                <span className="text-sm font-medium text-foreground">
-                                  {new Date(d.date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </CollapsibleContent>
-                  </Card>
-                </Collapsible>
+                <AttendanceHistoryCard dates={attendanceDates} />
               )}
 
               {/* Group Attendance */}
