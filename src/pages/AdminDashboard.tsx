@@ -1261,7 +1261,35 @@ const AdminDashboard = () => {
 
             {/* CAMPAIGNS TAB */}
             <TabsContent value="campaigns">
-              <BulkEmailManager />
+              <div className="space-y-6">
+                <BulkEmailManager />
+                <Card className="rounded-2xl">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Mail className="h-4 w-4" /> Profile Completion Reminders
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Send automated emails to students with incomplete profiles, prompting them to fill in missing information on their dashboard.
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          toast({ title: "Sending reminders…", description: "Scanning for incomplete profiles." });
+                          const { data, error } = await supabase.functions.invoke("send-profile-reminders");
+                          if (error) throw error;
+                          toast({ title: "Done!", description: `Sent: ${data?.sent || 0}, Skipped (complete): ${data?.skipped || 0}` });
+                        } catch (err: any) {
+                          toast({ title: "Error", description: err.message, variant: "destructive" });
+                        }
+                      }}
+                    >
+                      <Mail className="h-4 w-4 mr-2" /> Send Profile Reminder Emails
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
 
