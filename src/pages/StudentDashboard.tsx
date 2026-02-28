@@ -12,7 +12,8 @@ import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw } from "lucide-react";
+import { getLevelByKey } from "@/constants/levels";
 
 interface EnrollmentRecord {
   id: string;
@@ -38,6 +39,12 @@ interface AttendanceDate {
   source: string;
 }
 
+interface PlacementTestResult {
+  score: number;
+  level: string;
+  created_at: string;
+}
+
 const StudentDashboard = () => {
   const { loading: gateLoading, resetBlocked } = useResetGate();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
@@ -45,6 +52,8 @@ const StudentDashboard = () => {
   const [userId, setUserId] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("");
+  const [profileLevel, setProfileLevel] = useState("");
+  const [placementTest, setPlacementTest] = useState<PlacementTestResult | null>(null);
   const [hasNoData, setHasNoData] = useState(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
@@ -85,6 +94,19 @@ const StudentDashboard = () => {
       if (profile) {
         setAvatarUrl((profile as any).avatar_url || "");
         setUserName((profile as any).name || "");
+        setProfileLevel((profile as any).level || "");
+      }
+
+      // Fetch latest placement test result
+      const { data: ptData } = await supabase
+        .from("placement_tests")
+        .select("score, level, created_at")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (ptData) {
+        setPlacementTest(ptData as PlacementTestResult);
       }
 
       const { data: enrollmentData } = await supabase
@@ -232,14 +254,52 @@ const StudentDashboard = () => {
           </div>
 
           {hasNoData ? (
-            <Card>
-              <CardContent className="pt-6 text-center space-y-3">
-                <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground" />
-                <h2 className="text-xl font-semibold text-foreground">No Active Plan</h2>
-                <p className="text-muted-foreground">You don't have an active plan yet.</p>
-                <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="pt-6 text-center space-y-3">
+                  <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground" />
+                  <h2 className="text-xl font-semibold text-foreground">No Active Plan</h2>
+                  <p className="text-muted-foreground">You don't have an active plan yet.</p>
+                  <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
+                </CardContent>
+              </Card>
+
+              {/* Placement Test for users without enrollment */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    Korean Level
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {profileLevel ? (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Badge className="text-sm px-3 py-1">
+                          {getLevelByKey(profileLevel)?.shortLabel || profileLevel}
+                        </Badge>
+                        {placementTest && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Placement score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retake Test
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Take the placement test to find your level</p>
+                      <Button size="sm" onClick={() => navigate("/placement-test")}>
+                        <GraduationCap className="h-3.5 w-3.5 mr-1.5" /> Take Test
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           ) : (
             <>
               {/* Welcome + Avatar */}
@@ -253,6 +313,42 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                   <JourneyStepper currentStage={journeyStage} />
+                </CardContent>
+              </Card>
+
+              {/* Placement Test Level */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    Korean Level
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {profileLevel ? (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Badge className="text-sm px-3 py-1">
+                          {getLevelByKey(profileLevel)?.shortLabel || profileLevel}
+                        </Badge>
+                        {placementTest && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Placement score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retake Test
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Take the placement test to find your level</p>
+                      <Button size="sm" onClick={() => navigate("/placement-test")}>
+                        <GraduationCap className="h-3.5 w-3.5 mr-1.5" /> Take Test
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
