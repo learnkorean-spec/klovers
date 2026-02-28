@@ -25,31 +25,32 @@ import { toast } from "@/hooks/use-toast";
 import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History, Loader2 } from "lucide-react";
 import LegacyAttendancePanel from "./LegacyAttendancePanel";
 
-// Overview row from admin_student_overview view
-interface OverviewRow {
+// Overview row from admin_student_status_overview view
+interface StatusOverviewRow {
   user_id: string;
   name: string;
   email: string;
   country: string;
   level: string;
-  joined_at: string;
-  enrollment_id: string | null;
+  profile_level: string;
+  profile_created_at: string;
+  active_enrollment_id: string | null;
+  enrollment_created_at: string | null;
   payment_status: string | null;
   approval_status: string | null;
-  payment_method: string | null;
-  payment_provider: string | null;
-  sessions_total: number;
-  sessions_remaining: number;
-  enrollment_created_at: string | null;
+  enrollment_status: string | null;
+  slot_id: string | null;
+  matched_at: string | null;
   plan_type: string | null;
   duration: number | null;
   amount: number | null;
   currency: string | null;
-  derived_status: string;
-  source_label: string;
+  classes_included: number | null;
+  sessions_remaining: number | null;
+  sessions_total: number | null;
   unit_price: number | null;
-  negative_sessions: number;
-  amount_due: number;
+  package_id: string | null;
+  computed_status: string;
 }
 
 // Legacy student from students table
@@ -143,7 +144,7 @@ const EMPTY_PACKAGE_FORM = {
 
 const StudentManager = () => {
   // Overview
-  const [overviewRows, setOverviewRows] = useState<OverviewRow[]>([]);
+  const [overviewRows, setOverviewRows] = useState<StatusOverviewRow[]>([]);
   const [overviewSearch, setOverviewSearch] = useState("");
   const [overviewFilter, setOverviewFilter] = useState("all");
   const [overviewLoading, setOverviewLoading] = useState(true);
@@ -195,7 +196,7 @@ const StudentManager = () => {
 
   const fetchOverview = async () => {
     setOverviewLoading(true);
-    const { data, error } = await supabase.from("admin_student_overview" as any).select("*");
+    const { data, error } = await supabase.from("admin_student_status_overview" as any).select("*");
     if (error) toast({ title: "Error loading overview", description: error.message, variant: "destructive" });
     setOverviewRows((data as any[]) || []);
     setOverviewLoading(false);
@@ -218,22 +219,18 @@ const StudentManager = () => {
         u.name?.toLowerCase().includes(overviewSearch.toLowerCase()) ||
         u.email?.toLowerCase().includes(overviewSearch.toLowerCase());
       const matchesFilter = overviewFilter === "all" ? true
-        : overviewFilter === "active" ? u.derived_status === "ACTIVE"
-        : overviewFilter === "lead" ? u.derived_status === "LEAD"
-        : overviewFilter === "completed" ? u.derived_status === "COMPLETED"
-        : overviewFilter === "locked" ? u.derived_status === "LOCKED"
-        : overviewFilter === "stripe" ? u.source_label === "Stripe"
-        : overviewFilter === "egypt" ? u.source_label === "Egypt"
-        : true;
+        : u.computed_status === overviewFilter;
       return matchesSearch && matchesFilter;
     });
   }, [overviewRows, overviewSearch, overviewFilter]);
 
   const overviewStats = useMemo(() => ({
     total: overviewRows.length,
-    active: overviewRows.filter(u => u.derived_status === "ACTIVE").length,
-    leads: overviewRows.filter(u => u.derived_status === "LEAD").length,
-    completed: overviewRows.filter(u => ["COMPLETED", "LOCKED"].includes(u.derived_status)).length,
+    attending: overviewRows.filter(u => u.computed_status === "attending").length,
+    paidUnassigned: overviewRows.filter(u => u.computed_status === "paid_approved_unassigned").length,
+    paidPending: overviewRows.filter(u => u.computed_status === "paid_pending").length,
+    notPaid: overviewRows.filter(u => u.computed_status === "not_paid").length,
+    rejected: overviewRows.filter(u => u.computed_status === "rejected").length,
   }), [overviewRows]);
 
   // === LEGACY TAB ===
@@ -517,8 +514,8 @@ const StudentManager = () => {
   };
 
   const exportOverviewCSV = () => {
-    const headers = ["Name", "Email", "Country", "Level", "Remaining Sessions", "Status", "Source", "Joined"];
-    const rows = filteredOverview.map(u => [u.name, u.email, u.country, u.level, u.sessions_remaining, u.derived_status, u.source_label, new Date(u.joined_at).toLocaleDateString()]);
+    const headers = ["Name", "Email", "Country", "Level", "Remaining Sessions", "Status", "Joined"];
+    const rows = filteredOverview.map(u => [u.name, u.email, u.country, u.level, u.sessions_remaining, u.computed_status, u.profile_created_at ? new Date(u.profile_created_at).toLocaleDateString() : ""]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c ?? ""}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -558,27 +555,42 @@ const StudentManager = () => {
 
         {/* OVERVIEW TAB */}
         <TabsContent value="overview">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <Card><CardContent className="pt-4 text-center">
-              <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-2xl font-bold text-foreground">{overviewStats.total}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
-            </CardContent></Card>
-            <Card><CardContent className="pt-4 text-center">
-              <UserCheck className="h-5 w-5 mx-auto mb-1 text-primary" />
-              <p className="text-2xl font-bold text-foreground">{overviewStats.active}</p>
-              <p className="text-xs text-muted-foreground">Active</p>
-            </CardContent></Card>
-            <Card><CardContent className="pt-4 text-center">
-              <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-2xl font-bold text-foreground">{overviewStats.leads}</p>
-              <p className="text-xs text-muted-foreground">Leads</p>
-            </CardContent></Card>
-            <Card><CardContent className="pt-4 text-center">
-              <UserX className="h-5 w-5 mx-auto mb-1 text-destructive" />
-              <p className="text-2xl font-bold text-foreground">{overviewStats.completed}</p>
-              <p className="text-xs text-muted-foreground">Completed/Locked</p>
-            </CardContent></Card>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+            <Card className={overviewFilter === "attending" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("attending")} role="button">
+              <CardContent className="pt-4 text-center cursor-pointer">
+                <UserCheck className="h-5 w-5 mx-auto mb-1 text-primary" />
+                <p className="text-2xl font-bold text-foreground">{overviewStats.attending}</p>
+                <p className="text-xs text-muted-foreground">Attending</p>
+              </CardContent>
+            </Card>
+            <Card className={overviewFilter === "paid_approved_unassigned" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("paid_approved_unassigned")} role="button">
+              <CardContent className="pt-4 text-center cursor-pointer">
+                <CalendarDays className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                <p className="text-2xl font-bold text-foreground">{overviewStats.paidUnassigned}</p>
+                <p className="text-xs text-muted-foreground">Paid (Unassigned)</p>
+              </CardContent>
+            </Card>
+            <Card className={overviewFilter === "paid_pending" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("paid_pending")} role="button">
+              <CardContent className="pt-4 text-center cursor-pointer">
+                <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                <p className="text-2xl font-bold text-foreground">{overviewStats.paidPending}</p>
+                <p className="text-xs text-muted-foreground">Paid (Pending)</p>
+              </CardContent>
+            </Card>
+            <Card className={overviewFilter === "not_paid" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("not_paid")} role="button">
+              <CardContent className="pt-4 text-center cursor-pointer">
+                <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                <p className="text-2xl font-bold text-foreground">{overviewStats.notPaid}</p>
+                <p className="text-xs text-muted-foreground">Not Paid</p>
+              </CardContent>
+            </Card>
+            <Card className={overviewFilter === "rejected" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("rejected")} role="button">
+              <CardContent className="pt-4 text-center cursor-pointer">
+                <UserX className="h-5 w-5 mx-auto mb-1 text-destructive" />
+                <p className="text-2xl font-bold text-foreground">{overviewStats.rejected}</p>
+                <p className="text-xs text-muted-foreground">Rejected</p>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
@@ -587,15 +599,14 @@ const StudentManager = () => {
               <Input placeholder="Search by name or email..." value={overviewSearch} onChange={(e) => setOverviewSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={overviewFilter} onValueChange={setOverviewFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="lead">Leads</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="locked">Locked</SelectItem>
-                <SelectItem value="stripe">Stripe</SelectItem>
-                <SelectItem value="egypt">Egypt</SelectItem>
+                <SelectItem value="all">All ({overviewStats.total})</SelectItem>
+                <SelectItem value="attending">Attending ({overviewStats.attending})</SelectItem>
+                <SelectItem value="paid_approved_unassigned">Paid/Unassigned ({overviewStats.paidUnassigned})</SelectItem>
+                <SelectItem value="paid_pending">Paid/Pending ({overviewStats.paidPending})</SelectItem>
+                <SelectItem value="not_paid">Not Paid ({overviewStats.notPaid})</SelectItem>
+                <SelectItem value="rejected">Rejected ({overviewStats.rejected})</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={exportOverviewCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
@@ -616,29 +627,33 @@ const StudentManager = () => {
                     <TableHead className="hidden md:table-cell">Level</TableHead>
                     <TableHead className="text-center">Remaining</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Source</TableHead>
                     <TableHead className="hidden sm:table-cell">Joined</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOverview.map((u) => (
-                    <TableRow key={u.user_id}>
-                      <TableCell className="font-medium">{u.name || "—"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
-                      <TableCell className="text-center font-mono">{u.sessions_remaining}</TableCell>
-                      <TableCell>
-                        <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">
-                          {u.derived_status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant="outline" className="text-xs">{u.source_label}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{new Date(u.joined_at).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredOverview.map((u) => {
+                    const computedBadge = () => {
+                      switch (u.computed_status) {
+                        case "attending": return <Badge variant="default" className="text-xs">Attending</Badge>;
+                        case "paid_approved_unassigned": return <Badge variant="secondary" className="text-xs">Paid (Unassigned)</Badge>;
+                        case "paid_pending": return <Badge variant="outline" className="text-xs">Paid (Pending)</Badge>;
+                        case "rejected": return <Badge variant="destructive" className="text-xs">Rejected</Badge>;
+                        case "not_paid": return <Badge variant="outline" className="text-xs">Not Paid</Badge>;
+                        default: return <Badge variant="outline" className="text-xs">{u.computed_status}</Badge>;
+                      }
+                    };
+                    return (
+                      <TableRow key={u.user_id}>
+                        <TableCell className="font-medium">{u.name || "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
+                        <TableCell className="text-center font-mono">{u.sessions_remaining ?? "—"}</TableCell>
+                        <TableCell>{computedBadge()}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{u.profile_created_at ? new Date(u.profile_created_at).toLocaleDateString() : "—"}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -706,9 +721,9 @@ const StudentManager = () => {
                     const overview = overviewRows.find(o =>
                       (o.user_id && s.email && o.email?.toLowerCase() === s.email?.toLowerCase())
                     );
-                    const remaining = overview ? overview.sessions_remaining : (s.total_classes - s.used_classes);
-                    const negativeSessions = overview ? (overview.negative_sessions || 0) : Math.max(0, -remaining);
-                    const amountDue = overview ? (overview.amount_due || 0) : (negativeSessions * s.price_per_class);
+                    const remaining = overview ? (overview.sessions_remaining ?? 0) : (s.total_classes - s.used_classes);
+                    const negativeSessions = Math.max(0, -remaining);
+                    const amountDue = negativeSessions * s.price_per_class;
                     const currency = overview?.currency === "EGP" ? "LE" : "$";
                     return (
                       <TableRow key={s.id}>

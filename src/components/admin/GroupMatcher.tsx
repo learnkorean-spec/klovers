@@ -304,11 +304,11 @@ const GroupMatcher = () => {
         }
       }
 
-      // Mark only successful enrollments as matched
+      // Mark only successful enrollments as matched + set slot_id
       if (successIds.length > 0) {
         await supabase
           .from("enrollments")
-          .update({ matched_at: new Date().toISOString() } as any)
+          .update({ matched_at: new Date().toISOString(), slot_id: pkgId } as any)
           .in("id", successIds);
       }
 
