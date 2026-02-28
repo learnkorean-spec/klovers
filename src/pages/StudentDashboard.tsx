@@ -12,7 +12,8 @@ import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
 
 interface EnrollmentRecord {
@@ -449,29 +450,38 @@ const StudentDashboard = () => {
 
               {/* Read-only Attendance Dates List */}
               {attendanceDates.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <CalendarCheck className="h-5 w-5" />
-                      Attendance History ({attendanceDates.length} sessions)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1">
-                      {attendanceDates.map((d, i) => (
-                        <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
-                            <CalendarCheck className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-medium text-foreground">
-                              {new Date(d.date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
-                            </span>
-                          </div>
+                <Collapsible>
+                  <Card>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="pb-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
+                        <CardTitle className="text-lg flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <CalendarCheck className="h-5 w-5" />
+                            Attendance History ({attendanceDates.length} sessions)
+                          </span>
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent>
+                        <div className="space-y-1">
+                          {attendanceDates.map((d, i) => (
+                            <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
+                                <CalendarCheck className="h-4 w-4 text-primary" />
+                                <span className="text-sm font-medium text-foreground">
+                                  {new Date(d.date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               )}
 
               {/* Group Attendance */}
