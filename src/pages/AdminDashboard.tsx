@@ -37,6 +37,7 @@ import BulkEmailManager from "@/components/admin/BulkEmailManager";
 import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
 import SchedulingManager from "@/components/admin/SchedulingManager";
 import AdminSettings from "@/components/admin/AdminSettings";
+import PlacementTestsManager from "@/components/admin/PlacementTestsManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -580,6 +581,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Mail className="h-4 w-4" /> Campaigns
               </TabsTrigger>
+              <TabsTrigger value="placement-tests" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Placement Tests</TabsTrigger>
               <TabsTrigger value="settings" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>
@@ -1350,6 +1352,11 @@ const AdminDashboard = () => {
                   <CardContent><ScheduleOptionsManager /></CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* PLACEMENT TESTS TAB */}
+            <TabsContent value="placement-tests">
+              <PlacementTestsManager />
             </TabsContent>
 
             {/* SETTINGS TAB */}
