@@ -379,6 +379,11 @@ const EnrollNowPage = () => {
         nav(`/login?redirect=${encodeURIComponent(returnUrl)}`);
         return;
       }
+      // Sync country to profile
+      if (selectedCountry && session.user.id) {
+        supabase.from("profiles").update({ country: selectedCountry }).eq("user_id", session.user.id).then(() => {});
+      }
+
       const { data, error } = await supabase.rpc("create_egypt_order", {
         _plan_type: classType,
         _duration: duration,
@@ -476,6 +481,11 @@ const EnrollNowPage = () => {
     try {
       // Submit lead async (don't block checkout)
       submitLead();
+
+      // Sync country to profile
+      if (selectedCountry && session.user.id) {
+        supabase.from("profiles").update({ country: selectedCountry }).eq("user_id", session.user.id).then(() => {});
+      }
 
       const normalizedLevel = normalizeLevel(selectedLevel);
       const lowerEmail = email.trim().toLowerCase();
