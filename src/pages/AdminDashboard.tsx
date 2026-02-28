@@ -40,7 +40,7 @@ import AdminSettings from "@/components/admin/AdminSettings";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
-  plan_type: string; duration: string; schedule: string; timezone: string; source: string;
+  plan_type: string; duration: string; schedule: string; timezone: string; source: string; user_id: string | null;
 }
 
 interface Enrollment {
@@ -300,6 +300,32 @@ const AdminDashboard = () => {
   const cancelEditLead = () => {
     setEditingLeadId(null);
     setEditForm({});
+  };
+
+  const handleLinkLeadsByEmail = async () => {
+    // Find unlinked leads and match them to profiles by email
+    const unlinked = leads.filter(l => !l.user_id);
+    if (unlinked.length === 0) {
+      toast({ title: "All leads already linked" });
+      return;
+    }
+    let linked = 0;
+    // Get all profiles for matching
+    const { data: profiles } = await supabase.from("profiles").select("user_id, email");
+    if (!profiles) return;
+    const profileByEmail: Record<string, string> = {};
+    for (const p of profiles as any[]) {
+      if (p.email) profileByEmail[p.email.toLowerCase().trim()] = p.user_id;
+    }
+    for (const lead of unlinked) {
+      const userId = profileByEmail[lead.email.toLowerCase().trim()];
+      if (userId) {
+        const { error } = await supabase.from("leads").update({ user_id: userId } as any).eq("id", lead.id);
+        if (!error) linked++;
+      }
+    }
+    toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });
+    fetchAll();
   };
 
   const confirmedEmails = useMemo(() => {
@@ -1030,6 +1056,10 @@ const AdminDashboard = () => {
                       <Eraser className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Deduplicate</span>}
                     </Button>
+                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleLinkLeadsByEmail}>
+                      <Sparkles className="h-4 w-4" />
+                      {!isMobile && <span className="ml-1">Link All</span>}
+                    </Button>
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
                       <Download className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Export CSV</span>}
@@ -1072,6 +1102,7 @@ const AdminDashboard = () => {
                         <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Schedule</TableHead>
                         <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Timezone</TableHead>
                         <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
+                        <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Linked</TableHead>
                         <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Date</TableHead>
                         <TableHead className="py-3 px-3 w-10"></TableHead>
                       </TableRow>
@@ -1163,6 +1194,13 @@ const AdminDashboard = () => {
                               } className="text-xs">
                                 {lead.status}
                               </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-3 px-3 hidden sm:table-cell">
+                            {lead.user_id ? (
+                              <Badge variant="default" className="text-xs">Linked</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">Unlinked</Badge>
                             )}
                           </TableCell>
                           <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>

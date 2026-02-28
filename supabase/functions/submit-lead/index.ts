@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, email, country, level, goal, plan_type, duration, schedule, timezone, source } = body;
+    const { name, email, country, level, goal, plan_type, duration, schedule, timezone, source, user_id } = body;
 
     // Server-side validation
     if (!name || typeof name !== "string" || name.trim().length === 0 || name.length > 100) {
@@ -99,25 +99,10 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check for duplicate lead email
-    const { data: existingLead } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("email", normalizedEmail)
-      .limit(1)
-      .maybeSingle();
-
-    if (existingLead) {
-      // Silently succeed – don't reveal that the email exists
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const { error } = await supabase.from("leads").insert({
+    // Upsert by email: update existing or insert new
+    const upsertPayload: Record<string, any> = {
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       country: country?.trim() || "",
       level: level?.trim() || "",
       goal: goal?.trim() || "",
@@ -126,8 +111,52 @@ Deno.serve(async (req) => {
       schedule: schedule?.trim() || "",
       timezone: timezone?.trim() || "",
       source: source?.trim() || "enroll",
-      status: "new",
-    });
+    };
+
+    // Attach user_id if provided
+    if (user_id && typeof user_id === "string" && user_id.length > 0) {
+      upsertPayload.user_id = user_id;
+    }
+
+    // Check for existing lead by email
+    const { data: existingLead } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingLead) {
+      // Update existing lead (merge new data)
+      const updatePayload: Record<string, any> = {};
+      if (upsertPayload.country) updatePayload.country = upsertPayload.country;
+      if (upsertPayload.level) updatePayload.level = upsertPayload.level;
+      if (upsertPayload.goal) updatePayload.goal = upsertPayload.goal;
+      if (upsertPayload.plan_type) updatePayload.plan_type = upsertPayload.plan_type;
+      if (upsertPayload.duration) updatePayload.duration = upsertPayload.duration;
+      if (upsertPayload.schedule) updatePayload.schedule = upsertPayload.schedule;
+      if (upsertPayload.timezone) updatePayload.timezone = upsertPayload.timezone;
+      if (upsertPayload.source) updatePayload.source = upsertPayload.source;
+      if (upsertPayload.user_id) updatePayload.user_id = upsertPayload.user_id;
+
+      const { error } = await supabase
+        .from("leads")
+        .update(updatePayload)
+        .eq("id", existingLead.id);
+
+      if (error) {
+        console.error("Lead update error:", error.message);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Insert new lead
+    upsertPayload.status = "new";
+    const { error } = await supabase.from("leads").insert(upsertPayload);
 
     if (error) {
       console.error("Lead insert error:", error.message);

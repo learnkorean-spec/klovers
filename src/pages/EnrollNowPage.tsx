@@ -438,6 +438,7 @@ const EnrollNowPage = () => {
           schedule: `${preferredDays.join("/")} ${preferredTime}`,
           timezone: timezone,
           source: isEgypt ? "egypt" : "stripe",
+          user_id: userId || undefined,
         },
       });
       if (error) {
