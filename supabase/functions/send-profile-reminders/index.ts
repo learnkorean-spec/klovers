@@ -32,14 +32,23 @@ async function sendEmail(to: string, subject: string, html: string) {
 interface MissingField {
   label_en: string;
   label_ar: string;
+  param: string; // query param key
 }
 
 function buildReminderEmail(name: string, missing: MissingField[], lang: string) {
   const isAr = lang === "ar";
 
-  const missingList = missing
-    .map((f) => `<li style="padding: 4px 0;">${isAr ? f.label_ar : f.label_en}</li>`)
-    .join("");
+  const buttonStyle = `display: inline-block; background: #6d28d9; color: white; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; margin: 4px 0;`;
+
+  const fieldButtons = missing
+    .map((f) => {
+      const label = isAr ? f.label_ar : f.label_en;
+      const url = `${DASHBOARD_URL}?complete=${f.param}`;
+      return `<a href="${url}" style="${buttonStyle}">${isAr ? "أكمل" : "Fix"}: ${label}</a>`;
+    })
+    .join("<br/>");
+
+  const fallbackBtn = `<a href="${DASHBOARD_URL}" style="${buttonStyle}; background: #4b5563;">${isAr ? "افتح لوحة التحكم" : "Open Dashboard"}</a>`;
 
   if (isAr) {
     return {
@@ -47,14 +56,13 @@ function buildReminderEmail(name: string, missing: MissingField[], lang: string)
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
           <h1 style="color: #6d28d9;">مرحباً ${name || ""}! 👋</h1>
-          <p>لاحظنا أن بعض بياناتك غير مكتملة. يُرجى إكمالها حتى نتمكن من ترتيب حصصك.</p>
-          <div style="background: #fef3c7; border-right: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 16px 0;">
-            <p style="margin: 0 0 8px; font-weight: bold; color: #92400e;">⚠️ البيانات المطلوبة:</p>
-            <ul style="margin: 0; padding-right: 18px; color: #78350f;">${missingList}</ul>
+          <p>لاحظنا أن بعض بياناتك غير مكتملة. اضغط على الزر المناسب لإكماله مباشرة:</p>
+          <div style="margin: 20px 0; text-align: center;">
+            ${fieldButtons}
           </div>
-          <p>اضغط الزر أدناه للذهاب مباشرة إلى لوحة التحكم وإكمال بياناتك:</p>
-          <div style="margin: 24px 0; text-align: center;">
-            <a href="${DASHBOARD_URL}" style="background: #6d28d9; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;">أكمل بياناتك الآن</a>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+          <div style="text-align: center;">
+            ${fallbackBtn}
           </div>
           <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
         </div>`,
@@ -66,14 +74,13 @@ function buildReminderEmail(name: string, missing: MissingField[], lang: string)
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #6d28d9;">Hi ${name || "there"}! 👋</h1>
-        <p>We noticed some of your information is still missing. Please complete it so we can arrange your classes.</p>
-        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 16px 0;">
-          <p style="margin: 0 0 8px; font-weight: bold; color: #92400e;">⚠️ Missing information:</p>
-          <ul style="margin: 0; padding-left: 18px; color: #78350f;">${missingList}</ul>
+        <p>We noticed some of your information is still missing. Click each button below to fill it in directly:</p>
+        <div style="margin: 20px 0; text-align: center;">
+          ${fieldButtons}
         </div>
-        <p>Click the button below to go directly to your dashboard and fill in the details:</p>
-        <div style="margin: 24px 0; text-align: center;">
-          <a href="${DASHBOARD_URL}" style="background: #6d28d9; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;">Complete Your Profile Now</a>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <div style="text-align: center;">
+          ${fallbackBtn}
         </div>
         <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
       </div>`,
@@ -90,7 +97,6 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Fetch all approved+paid enrollments with their profiles
     const { data: enrollments, error: eErr } = await supabase
       .from("enrollments")
       .select("id, user_id, preferred_days, timezone")
@@ -114,28 +120,26 @@ serve(async (req) => {
       const profile = profileMap.get(enrollment.user_id) as any;
       if (!profile?.email) { skipped++; continue; }
 
-      // Determine missing fields
       const missing: MissingField[] = [];
 
       if (!profile.name || profile.name.trim() === "") {
-        missing.push({ label_en: "Full Name", label_ar: "الاسم الكامل" });
+        missing.push({ label_en: "Full Name", label_ar: "الاسم الكامل", param: "name" });
       }
       if (!profile.level || profile.level.trim() === "") {
-        missing.push({ label_en: "Korean Level", label_ar: "مستوى اللغة الكورية" });
+        missing.push({ label_en: "Korean Level", label_ar: "مستوى اللغة الكورية", param: "level" });
       }
       if (!profile.country || profile.country.trim() === "") {
-        missing.push({ label_en: "Country", label_ar: "البلد" });
+        missing.push({ label_en: "Country", label_ar: "البلد", param: "country" });
       }
       if (!enrollment.timezone || enrollment.timezone.trim() === "") {
-        missing.push({ label_en: "Timezone", label_ar: "المنطقة الزمنية" });
+        missing.push({ label_en: "Timezone", label_ar: "المنطقة الزمنية", param: "timezone" });
       }
       if (!enrollment.preferred_days || enrollment.preferred_days.length === 0) {
-        missing.push({ label_en: "Preferred Class Days", label_ar: "أيام الحصص المفضلة" });
+        missing.push({ label_en: "Preferred Class Days", label_ar: "أيام الحصص المفضلة", param: "days" });
       }
 
       if (missing.length === 0) { skipped++; continue; }
 
-      // Detect language from country (simple heuristic)
       const lang = ["egypt", "مصر", "saudi", "السعودية", "uae", "الإمارات", "iraq", "العراق", "jordan", "الأردن", "morocco", "المغرب", "algeria", "الجزائر", "tunisia", "تونس", "libya", "ليبيا", "sudan", "السودان", "yemen", "اليمن", "syria", "سوريا", "lebanon", "لبنان", "palestine", "فلسطين", "bahrain", "البحرين", "qatar", "قطر", "oman", "عمان", "kuwait", "الكويت"]
         .some(c => (profile.country || "").toLowerCase().includes(c)) ? "ar" : "en";
 
@@ -144,7 +148,6 @@ serve(async (req) => {
       try {
         await sendEmail(profile.email, subject, html);
         sent++;
-        // Rate limit: 1 second between sends
         await new Promise((r) => setTimeout(r, 1000));
       } catch (emailErr) {
         console.error(`Failed to send to ${profile.email}:`, emailErr);
