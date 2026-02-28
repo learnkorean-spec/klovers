@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck, LogIn } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -451,7 +451,7 @@ const EnrollNowPage = () => {
       setStep(2);
       return;
     }
-    if (!tier || !duration || !name.trim() || !email.trim() || !finalPrice) return;
+    if (!tier || !duration || !finalPrice || !userId) return;
 
     if (isEgypt) {
       // Submit lead async before Egypt order
@@ -460,11 +460,7 @@ const EnrollNowPage = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
-      return;
-    }
+    // Auth is enforced — user must be logged in at this point
 
     // A) Enforce auth before Stripe checkout
     const { data: { session } } = await supabase.auth.getSession();
@@ -862,30 +858,42 @@ const EnrollNowPage = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Name & Email */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    maxLength={100}
-                  />
+              {/* Auth Gate: if not logged in, show sign-in CTA */}
+              {!userId ? (
+                <div className="text-center space-y-4 py-6">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                    <LogIn className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {t("auth.signInToContinue")}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t("auth.bookingRequiresAccount")}
+                  </p>
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      saveDraft();
+                      const returnUrl = buildReturnUrl(3);
+                      nav(`/signup?redirect=${encodeURIComponent(returnUrl)}`);
+                    }}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" />
+                    {t("auth.signInToContinue")}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t("enrollNow.emailAddress")}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    maxLength={255}
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  {/* Authenticated user info */}
+                  <div className="bg-muted rounded-lg p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{name || email}</p>
+                      <p className="text-xs text-muted-foreground">{email}</p>
+                    </div>
+                  </div>
 
               {/* Price Summary */}
               {duration && originalPrice !== null && finalPrice !== null && (
@@ -932,7 +940,7 @@ const EnrollNowPage = () => {
                 type="button"
                 className="w-full"
                 size="lg"
-                disabled={isEgypt ? (!duration || loading) : (!duration || !name.trim() || !email.trim() || loading)}
+                disabled={!duration || loading}
                 onClick={handlePay}
               >
                 {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
@@ -947,17 +955,14 @@ const EnrollNowPage = () => {
                   </>
                 )}
               </Button>
-              {!isEgypt && (!name.trim() || !email.trim()) && (
-                <p className="text-xs text-destructive text-center">
-                  {!name.trim() ? t("enrollNow.enterNameError") : t("enrollNow.enterEmailError")}
-                </p>
-              )}
 
               <p className="text-xs text-center text-muted-foreground">
                 {isEgypt
                   ? t("enrollNow.redirectReceipt")
                   : t("enrollNow.securePayment")}
               </p>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
