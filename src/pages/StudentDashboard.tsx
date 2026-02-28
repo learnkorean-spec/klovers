@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,24 @@ const StudentDashboard = () => {
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
   const [groupName, setGroupName] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const FIELD_MAP: Record<string, string> = {
+    name: "Full name",
+    level: "Korean level",
+    country: "Country",
+    timezone: "Timezone",
+    days: "Preferred class days",
+  };
+
+  const completeParam = searchParams.get("complete");
+  const autoFocusField = completeParam ? FIELD_MAP[completeParam] || undefined : undefined;
+
+  useEffect(() => {
+    if (completeParam) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [completeParam, setSearchParams]);
 
   useEffect(() => {
     if (gateLoading || resetBlocked) return;
@@ -239,7 +257,7 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Registration Checklist */}
-              <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} />
+              <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
 
               {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />

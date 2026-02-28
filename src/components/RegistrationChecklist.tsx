@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ interface RegistrationChecklistProps {
   enrollmentId: string;
   items: ChecklistItem[];
   onItemCompleted: (key: string, value: string) => void;
+  autoFocusField?: string;
 }
 
 const TIMEZONES = [
@@ -43,11 +44,26 @@ const LEVELS = [
   { value: "advanced", label: "Advanced" },
 ];
 
-const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted }: RegistrationChecklistProps) => {
+const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, autoFocusField }: RegistrationChecklistProps) => {
   const navigate = useNavigate();
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValue, setFieldValue] = useState("");
   const [saving, setSaving] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!autoFocusField) return;
+    const incomplete = items.find((i) => i.key === autoFocusField && !i.completed);
+    if (!incomplete) return;
+
+    if (autoFocusField === "Preferred class days") {
+      navigate("/dashboard/schedule");
+      return;
+    }
+
+    setEditingField(autoFocusField);
+    setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+  }, [autoFocusField, items, navigate]);
 
   const completed = items.filter((i) => i.completed).length;
   const total = items.length;
@@ -170,7 +186,7 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted }:
   };
 
   return (
-    <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-700">
+    <Card ref={cardRef} className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-700">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2 text-amber-800 dark:text-amber-300">
           <AlertTriangle className="h-4 w-4" />
