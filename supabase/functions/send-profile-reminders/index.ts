@@ -38,33 +38,34 @@ interface MissingField {
 function buildReminderEmail(name: string, missing: MissingField[], lang: string) {
   const isAr = lang === "ar";
 
-  const buttonStyle = `display: inline-block; background: #6d28d9; color: white; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; margin: 4px 0;`;
+  const missingItems = missing
+    .map((f) => `<li style="margin: 4px 0;">${isAr ? f.label_ar : f.label_en}</li>`)
+    .join("");
 
-  const fieldButtons = missing
-    .map((f) => {
-      const label = isAr ? f.label_ar : f.label_en;
-      const url = `${DASHBOARD_URL}?complete=${f.param}`;
-      return `<a href="${url}" style="${buttonStyle}">${isAr ? "أكمل" : "Fix"}: ${label}</a>`;
-    })
-    .join("<br/>");
+  const missingBox = `
+    <div style="background: #1a1a00; border: 1px solid #FFFF00; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="color: #FFFF00; font-weight: bold; margin: 0 0 8px 0;">⚠️ ${isAr ? "بيانات ناقصة:" : "Missing information:"}</p>
+      <ul style="color: #ffffff; margin: 0; padding-${isAr ? "right" : "left"}: 20px;">${missingItems}</ul>
+    </div>`;
 
-  const fallbackBtn = `<a href="${DASHBOARD_URL}" style="${buttonStyle}; background: #4b5563;">${isAr ? "افتح لوحة التحكم" : "Open Dashboard"}</a>`;
+  const ctaBtnStyle = `display: inline-block; background: #FFFF00; color: #000000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;`;
+
+  const ctaBtn = `<a href="${DASHBOARD_URL}" style="${ctaBtnStyle}">${isAr ? "أكمل بياناتك الآن" : "Complete Your Profile Now"}</a>`;
 
   if (isAr) {
     return {
       subject: "KLovers — أكمل بياناتك لبدء الدروس 📝",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
-          <h1 style="color: #6d28d9;">مرحباً ${name || ""}! 👋</h1>
-          <p>لاحظنا أن بعض بياناتك غير مكتملة. اضغط على الزر المناسب لإكماله مباشرة:</p>
-          <div style="margin: 20px 0; text-align: center;">
-            ${fieldButtons}
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px; background: #ffffff; direction: rtl; text-align: right;">
+          <h1 style="color: #000000; font-size: 28px;">مرحباً ${name || ""}!</h1>
+          <p style="font-size: 18px;">👋</p>
+          <p style="color: #333; font-size: 15px; line-height: 1.6;">لاحظنا أن بعض بياناتك غير مكتملة. يرجى إكمالها حتى نتمكن من ترتيب حصصك.</p>
+          ${missingBox}
+          <p style="color: #333; font-size: 15px; line-height: 1.6;">اضغط على الزر أدناه للذهاب مباشرة إلى لوحة التحكم وإكمال بياناتك:</p>
+          <div style="text-align: center; margin: 24px 0;">
+            ${ctaBtn}
           </div>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-          <div style="text-align: center;">
-            ${fallbackBtn}
-          </div>
-          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+          <p style="color: #999; font-size: 12px; margin-top: 32px;">— فريق KLovers</p>
         </div>`,
     };
   }
@@ -72,17 +73,16 @@ function buildReminderEmail(name: string, missing: MissingField[], lang: string)
   return {
     subject: "KLovers — Complete your profile to start classes 📝",
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #6d28d9;">Hi ${name || "there"}! 👋</h1>
-        <p>We noticed some of your information is still missing. Click each button below to fill it in directly:</p>
-        <div style="margin: 20px 0; text-align: center;">
-          ${fieldButtons}
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px; background: #ffffff;">
+        <h1 style="color: #000000; font-size: 28px;">Hi ${name || "there"}!</h1>
+        <p style="font-size: 18px;">👋</p>
+        <p style="color: #333; font-size: 15px; line-height: 1.6;">We noticed some of your information is still missing. Please complete it so we can arrange your classes.</p>
+        ${missingBox}
+        <p style="color: #333; font-size: 15px; line-height: 1.6;">Click the button below to go directly to your dashboard and fill in the details:</p>
+        <div style="text-align: center; margin: 24px 0;">
+          ${ctaBtn}
         </div>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-        <div style="text-align: center;">
-          ${fallbackBtn}
-        </div>
-        <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
+        <p style="color: #999; font-size: 12px; margin-top: 32px;">— The KLovers Team</p>
       </div>`,
   };
 }
