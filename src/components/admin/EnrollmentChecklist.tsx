@@ -165,9 +165,49 @@ function PaymentApprover({ enrollmentId, planType, onSaved }: { enrollmentId: st
       .from("enrollments")
       .update({ payment_status: "PAID", approval_status: "APPROVED", status: "APPROVED", reviewed_at: new Date().toISOString() } as any)
       .eq("id", enrollmentId);
+    if (error) {
+      setSaving(false);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Auto-assign to slot/group
+    let assigned = false;
+    try {
+      const { data: slotId } = await supabase.rpc("match_enrollment_to_slot", { _enrollment_id: enrollmentId });
+      if (slotId) {
+        // Also assign to pkg group from the matched slot
+        const { data: enrollment } = await supabase
+          .from("enrollments")
+          .select("user_id")
+          .eq("id", enrollmentId)
+          .single();
+        if (enrollment) {
+          await (supabase as any).rpc("assign_student_to_group_from_slot", {
+            _slot_id: slotId,
+            _user_id: enrollment.user_id,
+            _enrollment_id: enrollmentId,
+          });
+        }
+        assigned = true;
+        toast({ title: "Approved & Assigned ✓", description: "Payment approved and student auto-assigned to a slot." });
+      }
+    } catch (e) {
+      console.error("Auto-assign error:", e);
+    }
+
+    if (!assigned) {
+      // Create admin notification reminder
+      await supabase.from("admin_notifications").insert({
+        message: `Paid student (enrollment ${enrollmentId.slice(0, 8)}…) could not be auto-assigned to a slot. Please assign manually.`,
+        type: "unassigned_paid_student",
+        related_user_id: (await supabase.from("enrollments").select("user_id").eq("id", enrollmentId).single()).data?.user_id || null,
+      } as any);
+      toast({ title: "Approved", description: "Payment approved but no matching slot found. A reminder has been created." });
+    }
+
     setSaving(false);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    else { toast({ title: "Approved", description: "Payment marked as approved & paid." }); onSaved(); }
+    onSaved();
   };
 
   return (
