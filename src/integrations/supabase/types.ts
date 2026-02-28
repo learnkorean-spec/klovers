@@ -729,6 +729,7 @@ export type Database = {
           source: string | null
           status: string
           timezone: string | null
+          user_id: string | null
         }
         Insert: {
           country?: string | null
@@ -744,6 +745,7 @@ export type Database = {
           source?: string | null
           status?: string
           timezone?: string | null
+          user_id?: string | null
         }
         Update: {
           country?: string | null
@@ -759,6 +761,7 @@ export type Database = {
           source?: string | null
           status?: string
           timezone?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

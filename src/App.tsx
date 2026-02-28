@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { attachLeadToUser } from "@/lib/attachLeadToUser";
 import Index from "./pages/Index";
 import CoursesPage from "./pages/CoursesPage";
 import PricingPage from "./pages/PricingPage";
@@ -30,12 +33,27 @@ import AdminResetPage from "./pages/AdminResetPage";
 import MarketingGeneratorPage from "./pages/MarketingGeneratorPage";
 const queryClient = new QueryClient();
 
+const AppInner = () => {
+  // Auto-link leads to authenticated users on login
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        attachLeadToUser(session.user);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <AppInner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

@@ -268,6 +268,7 @@ const StudentManager = () => {
   };
 
   // Auto-lookup existing data when email is entered in Add mode
+  // Resolves to user_id from profiles first, then loads everything by user_id
   const handleEmailBlur = async () => {
     if (editingStudentId) return; // skip for edit mode
     const email = studentForm.email.trim().toLowerCase();
@@ -277,14 +278,24 @@ const StudentManager = () => {
     const mergedFields: string[] = [];
 
     try {
-      // Query all three sources in parallel
-      const [profileRes, enrollmentRes, leadRes] = await Promise.all([
-        supabase.from("profiles").select("name, country, level").eq("email", email).maybeSingle(),
-        supabase.from("admin_student_overview" as any).select("*").eq("email", email).maybeSingle(),
+      // First resolve email → user_id from profiles
+      const { data: profileMatch } = await supabase
+        .from("profiles")
+        .select("user_id, name, country, level")
+        .eq("email", email)
+        .maybeSingle();
+
+      const resolvedUserId = (profileMatch as any)?.user_id;
+
+      // Query all sources in parallel, preferring user_id when available
+      const [enrollmentRes, leadRes] = await Promise.all([
+        resolvedUserId
+          ? supabase.from("admin_student_overview" as any).select("*").eq("user_id", resolvedUserId).maybeSingle()
+          : supabase.from("admin_student_overview" as any).select("*").eq("email", email).maybeSingle(),
         supabase.from("leads").select("*").eq("email", email).maybeSingle(),
       ]);
 
-      const profile = profileRes.data as any;
+      const profile = profileMatch as any;
       const enrollment = enrollmentRes.data as any;
       const lead = leadRes.data as any;
 
@@ -691,8 +702,10 @@ const StudentManager = () => {
                       <TableCell colSpan={12} className="text-center text-muted-foreground py-8">No students found.</TableCell>
                     </TableRow>
                   ) : filteredLegacy.map((s) => {
-                    // Cross-reference with admin_student_overview for consistent data
-                    const overview = overviewRows.find(o => o.email?.toLowerCase() === s.email?.toLowerCase());
+                    // Cross-reference with admin_student_overview by user_id first, then email fallback
+                    const overview = overviewRows.find(o =>
+                      (o.user_id && s.email && o.email?.toLowerCase() === s.email?.toLowerCase())
+                    );
                     const remaining = overview ? overview.sessions_remaining : (s.total_classes - s.used_classes);
                     const negativeSessions = overview ? (overview.negative_sessions || 0) : Math.max(0, -remaining);
                     const amountDue = overview ? (overview.amount_due || 0) : (negativeSessions * s.price_per_class);
