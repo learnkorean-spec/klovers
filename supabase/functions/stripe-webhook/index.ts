@@ -185,7 +185,7 @@ serve(async (req) => {
       }
 
       // Create enrollment with schedule data from metadata
-      await supabaseAdmin.from("enrollments").insert({
+      const { data: newEnrollment } = await supabaseAdmin.from("enrollments").insert({
         user_id: userId,
         plan_type: plan.classType,
         duration: plan.duration,
@@ -210,7 +210,7 @@ serve(async (req) => {
         preferred_start: preferredStart,
         level: level || null,
         package_id: packageId || null,
-      });
+      }).select("id").single();
 
       // Save level to profile if provided
       if (level) {
@@ -235,7 +235,38 @@ serve(async (req) => {
         })
         .eq("user_id", userId);
 
-      console.log(`Enrollment created for user ${userId}: ${plan.classesIncluded} classes, $${actualAmount}`);
+      const enrollmentId = newEnrollment?.id;
+      console.log(`Enrollment created for user ${userId}: ${plan.classesIncluded} classes, $${actualAmount}, id: ${enrollmentId}`);
+
+      // Auto-assign to slot/group
+      if (enrollmentId) {
+        try {
+          const { data: slotId } = await supabaseAdmin.rpc("match_enrollment_to_slot", { _enrollment_id: enrollmentId });
+          if (slotId) {
+            await supabaseAdmin.rpc("assign_student_to_group_from_slot", {
+              _slot_id: slotId,
+              _user_id: userId,
+              _enrollment_id: enrollmentId,
+            });
+            console.log(`Auto-assigned user ${userId} to slot ${slotId}`);
+          } else {
+            // No slot available — create admin reminder
+            await supabaseAdmin.from("admin_notifications").insert({
+              message: `Stripe-paid student (${email}) could not be auto-assigned to a slot. Please assign manually.`,
+              type: "unassigned_paid_student",
+              related_user_id: userId,
+            });
+            console.log(`No slot match for user ${userId}, admin notification created`);
+          }
+        } catch (assignErr) {
+          console.error("Auto-assign error:", assignErr);
+          await supabaseAdmin.from("admin_notifications").insert({
+            message: `Auto-assign failed for Stripe-paid student (${email}). Please assign manually.`,
+            type: "unassigned_paid_student",
+            related_user_id: userId,
+          });
+        }
+      }
 
       // Send confirmation email
       try {
