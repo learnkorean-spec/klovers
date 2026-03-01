@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FinalCTA from "@/components/FinalCTA";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,6 +129,7 @@ const BlogPage = () => {
             </div>
           )}
         </div>
+        <FinalCTA />
       </main>
       <Footer />
     </div>

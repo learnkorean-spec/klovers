@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FinalCTA from "@/components/FinalCTA";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -112,6 +113,7 @@ const ContactPage = () => {
             </div>
           </div>
         </section>
+        <FinalCTA />
       </main>
       <Footer />
     </div>

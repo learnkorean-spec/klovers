@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "@/components/Header";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import KoreanMatchGame from "@/components/KoreanMatchGame";
 import HangulQuizGame from "@/components/HangulQuizGame";
@@ -120,6 +121,7 @@ const GamesPage = () => {
           {activeGame === "match" && <KoreanMatchGame />}
           {activeGame === "hangul" && <HangulQuizGame />}
         </div>
+        <FinalCTA />
       </main>
       <Footer />
     </div>

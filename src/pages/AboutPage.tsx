@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FinalCTA from "@/components/FinalCTA";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -59,6 +60,7 @@ const AboutPage = () => {
             </div>
           </div>
         </section>
+        <FinalCTA />
       </main>
       <Footer />
     </div>
