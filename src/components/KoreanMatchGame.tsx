@@ -127,22 +127,14 @@ const KoreanMatchGame = () => {
   };
 
   return (
-    <section className="py-20 px-4 bg-background relative overflow-hidden">
-      {/* Decorative */}
-      <div className="absolute top-10 right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-      <div className="absolute bottom-10 left-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
-
+    <section className="py-12 px-4 relative overflow-hidden">
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-10 space-y-3">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-foreground border border-border px-4 py-2 rounded-full text-sm font-medium">
-            <Gamepad2 className="h-4 w-4" />
-            Quick Challenge
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+        <div className="text-center mb-8 space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">
             Korean <span className="underline decoration-primary decoration-4 underline-offset-4">Vocabulary</span> Match
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground">
             Flip the cards and match Korean words with their English meaning. How fast can you clear the board?
           </p>
         </div>
