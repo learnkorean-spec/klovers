@@ -130,10 +130,16 @@ const FAQPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" asChild>
-                  <Link to="/contact">
+                  <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq?mode=gi_t" target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    {t("faqPage", "ctaContact")}
-                  </Link>
+                    WhatsApp
+                  </a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="https://t.me/+Fu5T7d4wLMsxNDY9" target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Telegram
+                  </a>
                 </Button>
                 <Button asChild>
                   <Link to="/enroll-now">
