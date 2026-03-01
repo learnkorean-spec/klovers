@@ -8,6 +8,7 @@ import LearningRoadmap from "@/components/LearningRoadmap";
 import Testimonials from "@/components/Testimonials";
 import HomeBlogSection from "@/components/HomeBlogSection";
 import PlacementTestCTA from "@/components/PlacementTestCTA";
+import KoreanMatchGame from "@/components/KoreanMatchGame";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
@@ -25,6 +26,7 @@ const Index = () => {
         <Testimonials />
         <HomeBlogSection />
         <PlacementTestCTA />
+        <KoreanMatchGame />
         <FinalCTA />
       </main>
       <Footer />
