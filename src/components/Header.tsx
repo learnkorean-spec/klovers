@@ -40,6 +40,7 @@ const Header = () => {
     { href: "/", label: t("header", "home") },
     { href: "/courses", label: t("header", "courses") },
     { href: "/pricing", label: t("header", "pricing") },
+    { href: "/games", label: "Games" },
     { href: "/about", label: t("header", "about") },
     { href: "/faq", label: t("header", "faq") },
     { href: "/contact", label: t("header", "contact") },
