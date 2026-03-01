@@ -17,8 +17,8 @@ const PlacementTestCTA = () => {
         <div className="grid md:grid-cols-2 gap-10 items-center">
           {/* Left: Content */}
           <div className="space-y-6 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
-              <Sparkles className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-foreground border border-border px-4 py-2 rounded-full text-sm font-medium">
+              <Sparkles className="h-4 w-4 text-primary" />
               Free Assessment
             </div>
 
