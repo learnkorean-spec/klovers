@@ -1,37 +1,29 @@
 
 
-## Plan: Deep-link emails to exact missing field
+## Issue: Google Search Shows Lovable Favicon Instead of Klovers Logo
 
-### Problem
-The reminder email links to `/dashboard` generically. Students must find the checklist themselves.
+The screenshot shows Google search results displaying a generic/Lovable icon instead of the Klovers logo. This happens because:
 
-### Solution
-Add a `?complete=<field_key>` query parameter to the email link per missing field, and auto-open that specific inline editor in the RegistrationChecklist when the page loads.
+1. The current favicon is set as a JPEG (`/klovers-logo.jpg`), but Google strongly prefers **PNG or SVG** favicons with proper sizing (at least 48x48px, ideally multiples of 48).
+2. There's no `favicon.ico` with the actual logo -- the existing `public/favicon.ico` is likely the default Lovable one.
+3. Missing a proper 32x32 and 16x16 favicon declaration.
 
-### Changes
+## Plan
 
-**1. Edge function (`supabase/functions/send-profile-reminders/index.ts`)**
-- Instead of one generic "Complete Your Profile" button, generate a per-field button list in the email.
-- Each button links to `https://klovers.lovable.app/dashboard?complete=name`, `?complete=level`, `?complete=country`, `?complete=timezone`, `?complete=days`.
-- Keep a single fallback CTA at the bottom linking to the generic dashboard.
+### 1. Generate proper favicon files from the Klovers logo
+- Convert `public/klovers-logo.jpg` to a proper `favicon.png` (32x32) and keep the larger version for apple-touch-icon (180x180).
+- Since we can't do image conversion in-browser, we'll reference the existing JPG but also add a proper `type` attribute and ensure the `favicon.ico` in `public/` is replaced.
 
-**2. RegistrationChecklist component (`src/components/RegistrationChecklist.tsx`)**
-- Accept a new optional prop `autoFocusField?: string`.
-- On mount, if `autoFocusField` matches an incomplete item's key, auto-set `editingField` to that key (or navigate to schedule page if it's "days").
-- Scroll the checklist card into view using a ref + `scrollIntoView`.
+### 2. Update `index.html` favicon declarations
+- Replace the current favicon link with a properly structured set:
+  - `<link rel="icon" type="image/jpeg" sizes="any" href="/klovers-logo.jpg">`
+  - Add `<link rel="icon" type="image/png" sizes="32x32" href="/klovers-logo.jpg">` 
+  - Keep the apple-touch-icon reference
+- Remove any reference to the old `favicon.ico` that may be the Lovable default
 
-**3. StudentDashboard (`src/pages/StudentDashboard.tsx`)**
-- Read `?complete=` from URL search params via `useSearchParams`.
-- Map param values to checklist keys: `name`→`Full name`, `level`→`Korean level`, `country`→`Country`, `timezone`→`Timezone`, `days`→`Preferred class days`.
-- Pass the mapped key as `autoFocusField` to `RegistrationChecklist`.
-- Clear the query param after reading to keep URL clean.
+### 3. Replace `public/favicon.ico` with the Klovers logo
+- Copy `public/klovers-logo.jpg` over `public/favicon.ico` so browsers requesting `/favicon.ico` directly get the Klovers logo.
 
-### Field mapping (email param → checklist key)
-```text
-name     → Full name
-level    → Korean level
-country  → Country
-timezone → Timezone
-days     → Preferred class days
-```
+### Important Note
+Google caches favicons aggressively. After deploying these changes, it may take **days to weeks** for Google to update the icon in search results. You can request re-indexing via Google Search Console to speed this up.
 
