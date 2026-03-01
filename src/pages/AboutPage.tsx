@@ -4,6 +4,8 @@ import FinalCTA from "@/components/FinalCTA";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import rehamKorea1 from "@/assets/reham-korea-1.jpg";
+import rehamKorea2 from "@/assets/reham-korea-2.jpg";
 
 const AboutPage = () => {
   const { t, tArray } = useLanguage();
@@ -18,6 +20,15 @@ const AboutPage = () => {
             <h1 className="text-4xl md:text-5xl font-bold text-foreground text-center mb-16">
               {t("aboutPage", "title")}
             </h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
+              <div className="rounded-xl overflow-hidden shadow-md">
+                <img src={rehamKorea1} alt="Reham Elshrkawy visiting traditional Korean architecture" className="w-full h-72 object-cover" />
+              </div>
+              <div className="rounded-xl overflow-hidden shadow-md">
+                <img src={rehamKorea2} alt="Reham Elshrkawy at the Korean seaside" className="w-full h-72 object-cover" />
+              </div>
+            </div>
 
             <div className="max-w-3xl mx-auto space-y-12">
               <Card className="border-border">
