@@ -32,6 +32,7 @@ import ResubmitSchedulePage from "./pages/ResubmitSchedulePage";
 import AdminResetPage from "./pages/AdminResetPage";
 import MarketingGeneratorPage from "./pages/MarketingGeneratorPage";
 import PlacementTestPage from "./pages/PlacementTestPage";
+import GamesPage from "./pages/GamesPage";
 const queryClient = new QueryClient();
 
 const AppInner = () => {
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/dashboard/schedule" element={<MySchedulePage />} />
             <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
             <Route path="/placement-test" element={<PlacementTestPage />} />
+            <Route path="/games" element={<GamesPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
             <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
