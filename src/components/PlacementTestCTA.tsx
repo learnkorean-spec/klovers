@@ -23,7 +23,7 @@ const PlacementTestCTA = () => {
             </div>
 
             <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-              Not sure about your <span className="text-primary">Korean level</span>?
+              Not sure about your <span className="underline decoration-primary decoration-4 underline-offset-4">Korean level</span>?
             </h2>
 
             <p className="text-muted-foreground text-lg">
