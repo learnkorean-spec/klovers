@@ -48,7 +48,7 @@ serve(async (req) => {
         if (i > 0) await new Promise((r) => setTimeout(r, 1000));
 
         const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-          <h1 style="color:#6d28d9;">Welcome to KLovers, ${p.name || "Student"}! 🇰🇷</h1>
+          <h1 style="color:#6d28d9;">Welcome to KLovers, ${p.name || "Student"}! 🎉</h1>
           <p>You're registered with KLovers! Here's what you can do:</p>
           <ul>
             <li>📖 <a href="https://klovers.lovable.app/blog" style="color:#6d28d9;">Read our blog</a></li>
@@ -70,7 +70,7 @@ serve(async (req) => {
           body: JSON.stringify({
             from: FROM_EMAIL,
             to: [p.email],
-            subject: "Welcome to KLovers! 🎉🇰🇷",
+            subject: "Welcome to KLovers! 🎉",
             html,
           }),
         });

@@ -34,7 +34,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: "welcome",
     name: "🎉 Welcome",
-    subject: "Welcome to K-Lovers 🇰🇷",
+    subject: "Welcome to KLovers! 🎉",
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -43,7 +43,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
   <tr><td style="background:#FFFF00;padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#000000;font-size:24px;font-weight:700;">Welcome to K-Lovers! 🇰🇷</h1>
+    <h1 style="margin:0;color:#000000;font-size:24px;font-weight:700;">Welcome to KLovers! 🎉</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
@@ -118,7 +118,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{dashboard_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Go to Dashboard →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">See you in class! 🇰🇷<br><strong>Reham</strong>, KLovers</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">See you in class! ✨<br><strong>Reham</strong>, KLovers</p>
   </td></tr>
 </table>
 </td></tr></table>

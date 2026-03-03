@@ -55,7 +55,7 @@ function buildWelcomeEmail(name: string, lang: string) {
       subject: "مرحباً بك في KLovers! 🎉",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
-          <h1 style="color: #6d28d9;">مرحباً ${name}! 🇰🇷</h1>
+          <h1 style="color: #6d28d9;">مرحباً ${name}! 🎉</h1>
           <p>تم تسجيلك بنجاح في KLovers!</p>
           <p>يمكنك الآن:</p>
           <ul style="padding-right: 20px;">
@@ -75,7 +75,7 @@ function buildWelcomeEmail(name: string, lang: string) {
     subject: "Welcome to KLovers! 🎉",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #6d28d9;">Welcome ${name}! 🇰🇷</h1>
+        <h1 style="color: #6d28d9;">Welcome ${name}! 🎉</h1>
         <p>You've successfully registered with KLovers!</p>
         <p>You can now:</p>
         <ul>
