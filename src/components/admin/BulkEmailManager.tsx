@@ -184,6 +184,37 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 </body></html>`,
   },
   {
+    id: "april-intake",
+    name: "🌸 April Intake",
+    subject: "April Korean Language Intake Now Open",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
+  <tr><td style="background:#000000;padding:28px 40px;text-align:center;">
+    <p style="margin:0 0 14px;font-size:32px;line-height:1;">&#127472;&#127479;</p>
+    <h1 style="margin:0;color:#FFFF00;font-size:24px;font-weight:700;line-height:1.3;">April Korean Language Intake Now Open</h1>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">Our April Korean Language batch is now officially open for enrollment.</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">At KLovers, we follow a structured 6-level curriculum aligned with official TOPIK progression, ensuring steady development from beginner foundations to exam readiness. Our small-group format allows for personal feedback and real speaking practice from the first weeks.</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;"><strong>Special pricing is available for Egyptian students.</strong> Seats are limited and enrollment will close once the group is full.</p>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:10px 0 24px;">
+      <a href="https://kloversegy.com" style="background:#FFFF00;color:#000000;text-decoration:none;padding:14px 34px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Register Now →</a>
+    </td></tr></table>
+    <p style="text-align:center;color:#6B7280;font-size:14px;margin:0 0 28px;">🌐 <a href="https://kloversegy.com" style="color:#000000;text-decoration:none;font-weight:600;">kloversegy.com</a></p>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;text-align:center;">✨ <strong style="color:#111827;">Klovers Team</strong></p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+  {
     id: "blank",
     name: "📝 Blank Template",
     subject: "",
