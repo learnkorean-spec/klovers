@@ -198,11 +198,20 @@ function PaymentApprover({ enrollmentId, planType, onSaved }: { enrollmentId: st
 
     if (!assigned) {
       // Create admin notification reminder
+      const { data: enrollData } = await supabase.from("enrollments").select("user_id, plan_type").eq("id", enrollmentId).single();
       await supabase.from("admin_notifications").insert({
         message: `Paid student (enrollment ${enrollmentId.slice(0, 8)}…) could not be auto-assigned to a slot. Please assign manually.`,
         type: "unassigned_paid_student",
-        related_user_id: (await supabase.from("enrollments").select("user_id").eq("id", enrollmentId).single()).data?.user_id || null,
+        related_user_id: enrollData?.user_id || null,
       } as any);
+
+      // Auto-send private reminder email for missing info
+      if (planType === "private" && enrollData?.user_id) {
+        supabase.functions.invoke("send-private-reminder", {
+          body: { user_ids: [enrollData.user_id] },
+        }).catch(err => console.error("Private reminder email error:", err));
+      }
+
       toast({ title: "Approved", description: "Payment approved but no matching slot found. A reminder has been created." });
     }
 
