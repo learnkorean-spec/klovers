@@ -15,7 +15,7 @@ interface EmailPayload {
   sessions_total?: number;
   amount?: number;
   language?: string;
-  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed";
+  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval";
   group_name?: string;
   group_days?: string;
   group_members?: string[];
@@ -27,6 +27,11 @@ interface EmailPayload {
   slot_time?: string;
   slot_timezone?: string;
   slot_level?: string;
+  preferred_day?: string;
+  preferred_time?: string;
+  timezone?: string;
+  level?: string;
+  currency?: string;
 }
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -235,6 +240,65 @@ function buildSlotConfirmedEmail(p: EmailPayload) {
   };
 }
 
+function buildApprovalEmail(p: EmailPayload) {
+  const isArabic = p.language === "ar";
+  const currencyLabel = p.currency === "EGP" ? "EGP" : "$";
+  const amountStr = p.currency === "EGP" ? `${p.amount?.toLocaleString()} EGP` : `$${p.amount}`;
+  const levelLabel = p.level ? p.level.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
+  const dayLabel = p.preferred_day || "";
+  const timeLabel = p.preferred_time || "";
+  const tzLabel = (p.timezone || "Africa/Cairo").replace(/_/g, " ");
+
+  if (isArabic) {
+    return {
+      subject: "KLovers — تمت الموافقة على تسجيلك! ✅",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
+          <h1 style="color: #6d28d9;">تهانينا يا ${p.name}! ✅</h1>
+          <p>تمت الموافقة على تسجيلك وتفعيل حسابك بنجاح!</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الخطة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.plan_type === "group" ? "حصص جماعية" : "حصص خاصة"}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المدة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.duration} ${p.duration === 1 ? "شهر" : "أشهر"}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الحصص</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.sessions_total} حصة</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المبلغ</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${amountStr}</td></tr>
+            ${levelLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المستوى</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${levelLabel}</td></tr>` : ""}
+            ${dayLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">اليوم المفضل</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${dayLabel}</td></tr>` : ""}
+            ${timeLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الوقت المفضل</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${timeLabel}</td></tr>` : ""}
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المنطقة الزمنية</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${tzLabel}</td></tr>
+          </table>
+          <p>يمكنك الآن تسجيل الدخول إلى لوحة الطالب لمتابعة حصصك.</p>
+          <div style="margin: 24px 0;">
+            <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">لوحة الطالب</a>
+          </div>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+        </div>`,
+    };
+  }
+  return {
+    subject: "KLovers — Your Enrollment is Approved! ✅",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #6d28d9;">Congratulations, ${p.name}! ✅</h1>
+        <p>Your enrollment has been approved and your account is now active!</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Plan</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.plan_type === "group" ? "Group" : "Private"} Classes</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Duration</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.duration} ${p.duration === 1 ? "Month" : "Months"}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Sessions</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.sessions_total} classes</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Amount</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${amountStr}</td></tr>
+          ${levelLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Level</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${levelLabel}</td></tr>` : ""}
+          ${dayLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Preferred Day</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${dayLabel}</td></tr>` : ""}
+          ${timeLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Preferred Time</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${timeLabel}</td></tr>` : ""}
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Timezone</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${tzLabel}</td></tr>
+        </table>
+        <p>You can now log in to your Student Dashboard to track your classes.</p>
+        <div style="margin: 24px 0;">
+          <a href="https://klovers.lovable.app/dashboard" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Go to Dashboard</a>
+        </div>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
+      </div>`,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -267,6 +331,9 @@ serve(async (req) => {
         break;
       case "slot_confirmed":
         ({ subject, html } = buildSlotConfirmedEmail(payload));
+        break;
+      case "approval":
+        ({ subject, html } = buildApprovalEmail(payload));
         break;
       case "enrollment":
       default:
