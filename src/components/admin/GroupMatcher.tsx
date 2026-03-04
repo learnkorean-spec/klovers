@@ -50,6 +50,7 @@ interface Cluster {
   packageDay: number;
   packageTime: string;
   packageTimezone: string;
+  packageCapacity: number;
   members: UnmatchedEnrollment[];
 }
 
@@ -210,6 +211,7 @@ const GroupMatcher = () => {
         packageDay: pkg?.day_of_week ?? -1,
         packageTime: pkg?.start_time || "—",
         packageTimezone: pkg?.timezone || "Africa/Cairo",
+        packageCapacity: pkg?.capacity ?? 5,
         members,
       });
     }
@@ -461,7 +463,7 @@ const GroupMatcher = () => {
                       </div>
                       <Badge variant={isReady ? "default" : "outline"} className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {cluster.members.length} student{cluster.members.length !== 1 ? "s" : ""}
+                        {cluster.members.length}/{cluster.packageCapacity} student{cluster.members.length !== 1 ? "s" : ""}
                       </Badge>
                     </div>
                   </CardHeader>
