@@ -2,16 +2,34 @@
 
 ## Problem
 
-A database validation trigger on the `enrollments` table restricts `approval_status` to a whitelist of values: `PENDING, APPROVED, REJECTED, PENDING_PAYMENT, pending, approved, rejected`. The value `UNDER_REVIEW` is **not in this list**.
+Nikki Both has a **private** plan enrollment (`plan_type = 'private'`), but the Group Matcher only fetches enrollments where `plan_type = 'group'` (line 104 of `GroupMatcher.tsx`). Additionally, her enrollment has **no level** and **no preferred day** set, so even if she appeared, she'd land in "Needs Review."
 
-When a student submits their Egypt payment, the RPC function `submit_egypt_payment` sets `approval_status = 'UNDER_REVIEW'`, which the trigger rejects with the error: `Invalid approval_status: UNDER_REVIEW`.
+Her enrollment data:
+- plan_type: `private`
+- level: `null`
+- preferred_day: `null`
+- package_id: `null`
+- payment_status: `PAID`, approval_status: `APPROVED`, matched_at: `null`
 
-## Fix
+## Plan
 
-Run a single database migration to update the validation trigger function, adding `'UNDER_REVIEW'` (and its lowercase variant) to the allowed `approval_status` values.
+### 1. Add "Unassigned Private Students" section to the Matcher
 
-### Migration SQL
-Update the trigger function `validate_enrollment_fields` to include `'UNDER_REVIEW'` and `'under_review'` in the allowed values check for `approval_status`.
+Extend `GroupMatcher.tsx` to also fetch unmatched **private** enrollments (approved + paid + no `matched_at`). Display them in a dedicated "Unassigned Private Students" card below the group clusters, since private students don't cluster into groups — they need individual slot assignment.
 
-No frontend code changes needed -- the Egypt payment flow and admin dashboard already handle `UNDER_REVIEW` correctly.
+### 2. Show actionable info for each private student
+
+Each row will display the student's name, email, level (or "Not set"), sessions, and amount. Include a link/button to jump to the Scheduling tab's private config or the Enrollment Checklist for manual assignment.
+
+### 3. Surface missing data warnings
+
+For private enrollments missing `level` or schedule preferences, show inline warnings (e.g., "Missing level — ask student to complete placement test") so the admin knows what action to take.
+
+### Technical Details
+
+- **File**: `src/components/admin/GroupMatcher.tsx`
+  - Add a second query in `fetchUnmatched()` for `plan_type = 'private'`, same filters (approved, paid via status check, `matched_at` is null)
+  - Store in separate state `privateUnmatched`
+  - Render a new card section after group clusters showing these students with their enrollment details
+  - Include a manual "Mark Assigned" button that sets `matched_at` and optionally `slot_id` on the enrollment
 
