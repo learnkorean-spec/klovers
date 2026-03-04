@@ -84,10 +84,12 @@ const DAY_NAME_TO_NUM: Record<string, number> = {
 
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
+  const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
   const [packages, setPackages] = useState<SchedulePackage[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
+  const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
   const [createdGroup, setCreatedGroup] = useState<{ name: string; level: string } | null>(null);
   const [suggestedSlots, setSuggestedSlots] = useState<SuggestedSlot[]>([]);
   const [nameDialogCluster, setNameDialogCluster] = useState<Cluster | null>(null);
@@ -96,16 +98,24 @@ const GroupMatcher = () => {
   const fetchUnmatched = async () => {
     setLoading(true);
 
-    // Fetch ALL unmatched group enrollments (no preferred_days filter)
-    const { data: rawEnrollments, error } = await supabase
+    // Fetch unmatched group enrollments
+    const { data: rawGroupEnrollments, error } = await supabase
       .from("enrollments")
       .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
       .is("matched_at", null);
 
-    if (error) {
-      console.error("Failed to fetch unmatched enrollments:", error);
+    // Fetch unmatched private enrollments
+    const { data: rawPrivateEnrollments, error: privateError } = await supabase
+      .from("enrollments")
+      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at")
+      .eq("approval_status", "APPROVED")
+      .eq("plan_type", "private")
+      .is("matched_at", null);
+
+    if (error || privateError) {
+      console.error("Failed to fetch unmatched enrollments:", error || privateError);
       setLoading(false);
       return;
     }
@@ -118,7 +128,8 @@ const GroupMatcher = () => {
 
     setPackages((pkgs as SchedulePackage[]) || []);
 
-    const userIds = [...new Set((rawEnrollments as any[]).map((e: any) => e.user_id))];
+    const allRaw = [...(rawGroupEnrollments as any[] || []), ...(rawPrivateEnrollments as any[] || [])];
+    const userIds = [...new Set(allRaw.map((e: any) => e.user_id))];
     let profileMap: Record<string, { name: string; email: string }> = {};
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
@@ -132,14 +143,38 @@ const GroupMatcher = () => {
       }
     }
 
-    const enriched: UnmatchedEnrollment[] = (rawEnrollments as any[]).map((e: any) => ({
+    const enrichGroup: UnmatchedEnrollment[] = (rawGroupEnrollments as any[]).map((e: any) => ({
       ...e,
       name: profileMap[e.user_id]?.name || "Unknown",
       email: profileMap[e.user_id]?.email || "",
     }));
 
-    setEnrollments(enriched);
+    const enrichPrivate: UnmatchedEnrollment[] = (rawPrivateEnrollments as any[]).map((e: any) => ({
+      ...e,
+      name: profileMap[e.user_id]?.name || "Unknown",
+      email: profileMap[e.user_id]?.email || "",
+    }));
+
+    setEnrollments(enrichGroup);
+    setPrivateUnmatched(enrichPrivate);
     setLoading(false);
+  };
+
+  const handleMarkAssigned = async (enrollment: UnmatchedEnrollment) => {
+    setMarkingAssigned(enrollment.id);
+    try {
+      const { error } = await supabase
+        .from("enrollments")
+        .update({ matched_at: new Date().toISOString() } as any)
+        .eq("id", enrollment.id);
+      if (error) throw error;
+      toast({ title: "Marked as assigned", description: `${enrollment.name} has been marked as assigned.` });
+      fetchUnmatched();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setMarkingAssigned(null);
+    }
   };
 
   useEffect(() => {
@@ -419,11 +454,11 @@ const GroupMatcher = () => {
         </Card>
       )}
 
-      {enrollments.length === 0 && needsReview.length === 0 && !createdGroup ? (
+      {enrollments.length === 0 && needsReview.length === 0 && privateUnmatched.length === 0 && !createdGroup ? (
         <div className="text-center py-12 text-muted-foreground">
           <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
-          <p className="font-medium">No unmatched group enrollments</p>
-          <p className="text-sm mt-1">All approved group students have been matched.</p>
+          <p className="font-medium">No unmatched enrollments</p>
+          <p className="text-sm mt-1">All approved students have been matched.</p>
         </div>
       ) : (
         <>
@@ -432,6 +467,7 @@ const GroupMatcher = () => {
               <h3 className="font-semibold text-foreground">Group Matcher</h3>
               <p className="text-sm text-muted-foreground">
                 {clusters.reduce((s, c) => s + c.members.length, 0)} groupable student{clusters.reduce((s, c) => s + c.members.length, 0) !== 1 ? "s" : ""}
+                {privateUnmatched.length > 0 && ` · ${privateUnmatched.length} private`}
                 {needsReview.length > 0 && ` · ${needsReview.length} needs review`}
               </p>
             </div>
@@ -574,6 +610,80 @@ const GroupMatcher = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Unassigned Private Students */}
+          {privateUnmatched.length > 0 && (
+            <Card className="border-amber-300 dark:border-amber-700">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                  <Users className="h-4 w-4" />
+                  Unassigned Private Students ({privateUnmatched.length})
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  These private plan students are paid & approved but not yet assigned to a slot.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {privateUnmatched.map((m) => {
+                    const missingLevel = !m.level;
+                    const missingSchedule = !m.preferred_day && !m.preferred_time;
+                    return (
+                      <div key={m.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-foreground">{m.name}</p>
+                            <p className="text-xs text-muted-foreground">{m.email}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={markingAssigned === m.id}
+                            onClick={() => handleMarkAssigned(m)}
+                          >
+                            {markingAssigned === m.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              "Mark Assigned"
+                            )}
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                          <Badge variant="outline" className="text-xs">private</Badge>
+                          <span>{m.duration}mo</span>
+                          {m.amount != null && (
+                            <span>{m.amount.toLocaleString()} {m.currency || "USD"}</span>
+                          )}
+                          {m.classes_included != null && (
+                            <span>{m.classes_included} classes</span>
+                          )}
+                          {m.level ? (
+                            <Badge variant="outline" className="text-xs">{m.level.replace(/_/g, " ")}</Badge>
+                          ) : null}
+                        </div>
+                        {(missingLevel || missingSchedule) && (
+                          <div className="flex flex-wrap gap-2">
+                            {missingLevel && (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Missing level — ask student to complete placement test
+                              </Badge>
+                            )}
+                            {missingSchedule && (
+                              <Badge variant="secondary" className="text-xs">
+                                <Clock className="h-3 w-3 mr-1" />
+                                No schedule preference set
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
