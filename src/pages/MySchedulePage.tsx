@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +49,7 @@ interface AlternativePkg {
 
 const MySchedulePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [userLevel, setUserLevel] = useState("");
@@ -154,6 +155,17 @@ const MySchedulePage = () => {
       }
 
       setLoading(false);
+
+      // Auto-open picker if redirected from email
+      const autoOpen = new URLSearchParams(window.location.search).get("autoOpen");
+      if (autoOpen === "private" || autoOpen === "group") {
+        setShowPicker(true);
+        setSelectedCourseType(autoOpen);
+        // Clear param to prevent re-trigger on refresh
+        const url = new URL(window.location.href);
+        url.searchParams.delete("autoOpen");
+        window.history.replaceState({}, "", url.pathname);
+      }
     };
     load();
   }, [navigate]);
