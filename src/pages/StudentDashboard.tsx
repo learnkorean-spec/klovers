@@ -273,7 +273,8 @@ const StudentDashboard = () => {
   const hasBlockers = checklistItems.some(
     (i) => !i.completed && (i.key === "Preferred class days" || i.key === "Korean level")
   );
-  const journeyStage = hasBlockers ? 1 : 2;
+  // Stage 2 = Active (has approved+paid enrollment), stage 1 = Enrolled (waiting)
+  const journeyStage = enrollments.length > 0 ? 2 : 1;
 
   return (
     <div className="min-h-screen">

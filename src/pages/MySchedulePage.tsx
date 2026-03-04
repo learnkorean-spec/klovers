@@ -312,11 +312,11 @@ const MySchedulePage = () => {
               )}
 
               {assignmentStatus === "pending" && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted border">
-                  <Loader2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5 animate-spin" />
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <Loader2 className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-spin" />
                   <div>
-                    <p className="font-medium text-foreground">Pending Approval</p>
-                    <p className="text-sm text-muted-foreground mt-1">Your group assignment will be confirmed once your payment is approved.</p>
+                    <p className="font-medium text-foreground">Awaiting Group Assignment</p>
+                    <p className="text-sm text-muted-foreground mt-1">Your payment is confirmed! We're assigning you to a class group — this usually takes 24–48 hours.</p>
                   </div>
                 </div>
               )}
