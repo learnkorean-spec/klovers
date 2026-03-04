@@ -48,7 +48,7 @@ function buildEmail(name: string, missing: MissingField[], lang: string) {
     </div>`;
 
   const ctaBtnStyle = `display: inline-block; background: #FFFF00; color: #000000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;`;
-  const ctaBtn = `<a href="${DASHBOARD_URL}/schedule" style="${ctaBtnStyle}">${isAr ? "أكمل بياناتك الآن" : "Complete Your Info Now"}</a>`;
+  const ctaBtn = `<a href="${DASHBOARD_URL}/schedule?autoOpen=private" style="${ctaBtnStyle}">${isAr ? "أكمل بياناتك الآن" : "Complete Your Info Now"}</a>`;
 
   if (isAr) {
     return {
