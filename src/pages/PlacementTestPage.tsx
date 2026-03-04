@@ -20,7 +20,6 @@ const PlacementTestPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<PlacementResult | null>(null);
@@ -29,15 +28,12 @@ const PlacementTestPage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login", { replace: true });
-        return;
+      if (session) {
+        setUserId(session.user.id);
       }
-      setUserId(session.user.id);
-      setLoading(false);
     };
     checkAuth();
-  }, [navigate]);
+  }, []);
 
   const currentQuestions = PLACEMENT_QUESTIONS.slice(
     page * QUESTIONS_PER_PAGE,
@@ -54,11 +50,18 @@ const PlacementTestPage = () => {
       return;
     }
 
-    setSubmitting(true);
     const res = computePlacementResult(answers);
 
+    if (!userId) {
+      // Not logged in — show result but prompt to sign up to save
+      setResult(res);
+      return;
+    }
+
+    setSubmitting(true);
+
     const { error } = await supabase.from("placement_tests").insert({
-      user_id: userId!,
+      user_id: userId,
       score: res.score,
       level: res.levelKey,
     });
@@ -70,19 +73,12 @@ const PlacementTestPage = () => {
     }
 
     // Update profile level
-    await supabase.from("profiles").update({ level: res.levelKey }).eq("user_id", userId!);
+    await supabase.from("profiles").update({ level: res.levelKey }).eq("user_id", userId);
 
     setResult(res);
     setSubmitting(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
 
   if (result) {
     return (
@@ -105,12 +101,26 @@ const PlacementTestPage = () => {
                 <Badge className="text-base px-4 py-2">{result.levelLabel}</Badge>
                 <p className="text-sm text-muted-foreground mt-2">Recommended Level</p>
               </div>
-              <Button size="lg" className="w-full" onClick={() => navigate("/enroll")}>
-                Enroll in Recommended Course <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
-                Back to Home
-              </Button>
+              {userId ? (
+                <>
+                  <Button size="lg" className="w-full" onClick={() => navigate("/enroll")}>
+                    Enroll in Recommended Course <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+                    Back to Home
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Create an account to save your result and enroll.</p>
+                  <Button size="lg" className="w-full" onClick={() => navigate("/signup")}>
+                    Sign Up to Save Result <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => navigate("/login")}>
+                    Already have an account? Log in
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </main>
