@@ -15,7 +15,7 @@ interface EmailPayload {
   sessions_total?: number;
   amount?: number;
   language?: string;
-  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval";
+  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review";
   group_name?: string;
   group_days?: string;
   group_members?: string[];
@@ -299,6 +299,61 @@ function buildApprovalEmail(p: EmailPayload) {
   };
 }
 
+function buildPendingReviewEmail(p: EmailPayload) {
+  const isArabic = p.language === "ar";
+  const currencyLabel = p.currency === "EGP" ? "EGP" : "$";
+  const amountStr = p.currency === "EGP" ? `${p.amount?.toLocaleString()} EGP` : `$${p.amount}`;
+  const levelLabel = p.level ? p.level.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
+  const tzLabel = (p.timezone || "Africa/Cairo").replace(/_/g, " ");
+
+  if (isArabic) {
+    return {
+      subject: "KLovers — تم استلام طلبك! ⏳",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl; text-align: right;">
+          <h1 style="color: #6d28d9;">شكراً لطلبك يا ${p.name}! ⏳</h1>
+          <p>لقد استلمنا طلب تسجيلك بنجاح.</p>
+          <p>طلبك قيد المراجعة حالياً بينما نقوم بمطابقتك مع المعلم المناسب ومجموعة الدراسة بناءً على مستواك وجدولك.</p>
+          <h3 style="color: #6d28d9; margin-top: 24px;">تفاصيل الخطة المختارة</h3>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الخطة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.plan_type === "group" ? "حصص جماعية" : "حصص خاصة"}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المدة</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.duration} ${p.duration === 1 ? "شهر" : "أشهر"}</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">الحصص</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.sessions_total} حصة</td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المبلغ</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${amountStr}</td></tr>
+            ${levelLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المستوى</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${levelLabel}</td></tr>` : ""}
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">المنطقة الزمنية</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${tzLabel}</td></tr>
+          </table>
+          <p>بمجرد الانتهاء من الجدولة وتأكيد الحصة، ستتلقى بريداً إلكترونياً بتفاصيل حصتك ورابط الانضمام.</p>
+          <p>يرجى مراقبة بريدك الوارد لرسالة التأكيد.</p>
+          <p>إذا كان لديك أي أسئلة، لا تتردد في التواصل معنا.</p>
+          <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
+        </div>`,
+    };
+  }
+  return {
+    subject: "KLovers — We've Received Your Request! ⏳",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #6d28d9;">Thank you for your request, ${p.name}! ⏳</h1>
+        <p>We have received your enrollment request successfully.</p>
+        <p>Your request is currently under review while we match you with the appropriate teacher and class group based on your level and schedule.</p>
+        <h3 style="color: #6d28d9; margin-top: 24px;">Selected Plan Details</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Plan</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.plan_type === "group" ? "Group" : "Private"} Classes</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Duration</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.duration} ${p.duration === 1 ? "Month" : "Months"}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Sessions</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${p.sessions_total} Classes</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Amount</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${amountStr}</td></tr>
+          ${levelLabel ? `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Level</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${levelLabel}</td></tr>` : ""}
+          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Timezone</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${tzLabel}</td></tr>
+        </table>
+        <p>Once the scheduling is finalized and the class is confirmed, you will receive a confirmation email with your class details and the link to join your lessons.</p>
+        <p>Please keep an eye on your inbox for the confirmation message.</p>
+        <p>If you have any questions, feel free to contact us.</p>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
+      </div>`,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -334,6 +389,9 @@ serve(async (req) => {
         break;
       case "approval":
         ({ subject, html } = buildApprovalEmail(payload));
+        break;
+      case "pending_review":
+        ({ subject, html } = buildPendingReviewEmail(payload));
         break;
       case "enrollment":
       default:
