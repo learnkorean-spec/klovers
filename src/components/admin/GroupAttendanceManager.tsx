@@ -697,6 +697,20 @@ const GroupAttendanceManager = ({
         .eq("group_name", oldName);
     }
 
+    // Sync capacity & name to pkg_groups (matched by name)
+    const newCap = editCapacity ? parseInt(editCapacity) : null;
+    const matchingPkg = enrichedGroups.find(pg => pg.name === oldName);
+    if (matchingPkg) {
+      const pkgUpdate: any = { name: editName.trim() };
+      if (newCap != null) pkgUpdate.capacity = newCap;
+      await supabase.from("pkg_groups").update(pkgUpdate).eq("id", matchingPkg.id);
+
+      // Also sync capacity to schedule_packages
+      if (newCap != null && matchingPkg.package_id) {
+        await supabase.from("schedule_packages").update({ capacity: newCap } as any).eq("id", matchingPkg.package_id);
+      }
+    }
+
     toast({ title: "Group updated" });
     setEditGroupDialog(false);
     fetchGroups();
