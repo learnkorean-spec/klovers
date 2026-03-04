@@ -21,7 +21,7 @@ import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle
 import AdminNotifications from "./AdminNotifications";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-import { LEVEL_KEYS } from "@/constants/levels";
+import { LEVEL_KEYS, mapLegacyLevel } from "@/constants/levels";
 const LEVELS = LEVEL_KEYS;
 
 function formatTime(t: string) {
@@ -159,7 +159,9 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
 
   const openEdit = (p: Package) => {
     setEditing(p);
-    setFLevel(p.level); setFDay(p.day_of_week); setFTime(p.start_time.slice(0, 5));
+    // Normalize legacy level keys (e.g. "beginner_1" → "level_1")
+    const resolvedLevel = LEVELS.includes(p.level) ? p.level : (mapLegacyLevel(p.level)?.key ?? p.level);
+    setFLevel(resolvedLevel); setFDay(p.day_of_week); setFTime(p.start_time.slice(0, 5));
     setFDuration(p.duration_min); setFTimezone(p.timezone); setFCapacity(p.capacity); setFActive(p.is_active); setFCourseType(p.course_type || "group");
     setShowForm(true);
   };
@@ -264,6 +266,10 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
       ? await (supabase as any).from("schedule_packages").update(payload).eq("id", editing.id)
       : await (supabase as any).from("schedule_packages").insert(payload);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    // Sync capacity to linked groups
+    if (editing) {
+      await (supabase as any).from("pkg_groups").update({ capacity: fCapacity }).eq("package_id", editing.id).eq("is_active", true);
+    }
     toast({ title: editing ? "Package updated" : "Package created" });
     setShowForm(false);
     fetchPackages();
