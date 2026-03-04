@@ -403,7 +403,7 @@ const EnrollNowPage = () => {
           schedPrefs.preferred_days = preferredDays;
           schedPrefs.preferred_day = preferredDays[0];
         }
-        if (selectedPackageId) schedPrefs.package_id = selectedPackageId;
+        if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedPrefs.package_id = selectedPackageId;
         if (preferredTime) schedPrefs.preferred_time = preferredTime;
         if (startOption) schedPrefs.preferred_start = startOption === "Specific date" ? specificDate : startOption;
         if (timezone) schedPrefs.timezone = timezone;
@@ -500,7 +500,7 @@ const EnrollNowPage = () => {
         timezone,
         status: "PENDING_PAYMENT",
       };
-      if (selectedPackageId) schedFields.package_id = selectedPackageId;
+      if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedFields.package_id = selectedPackageId;
       if (preferredTime) schedFields.preferred_time = preferredTime;
       if (preferredDays.length > 0) schedFields.preferred_days = preferredDays;
 
@@ -524,7 +524,7 @@ const EnrollNowPage = () => {
           name: name.trim(),
           email: lowerEmail,
           level: normalizedLevel,
-          package_id: selectedPackageId || "",
+          package_id: (selectedPackageId && !selectedPackageId.startsWith("private-")) ? selectedPackageId : "",
           schedule: {
             timezone,
             preferred_days: preferredDays,
