@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { normalizeLevel } from "@/constants/levels";
 
@@ -90,6 +90,8 @@ const GroupMatcher = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
   const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+  const [sendingAllReminders, setSendingAllReminders] = useState(false);
   const [createdGroup, setCreatedGroup] = useState<{ name: string; level: string } | null>(null);
   const [suggestedSlots, setSuggestedSlots] = useState<SuggestedSlot[]>([]);
   const [nameDialogCluster, setNameDialogCluster] = useState<Cluster | null>(null);
@@ -175,6 +177,41 @@ const GroupMatcher = () => {
     } finally {
       setMarkingAssigned(null);
     }
+  };
+
+  const handleSendReminder = async (userIds: string[], label?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-private-reminder", {
+        body: { user_ids: userIds },
+      });
+      if (error) throw error;
+      const result = data as { sent?: number; skipped?: number };
+      toast({
+        title: "Reminders sent",
+        description: `${result.sent || 0} email(s) sent, ${result.skipped || 0} skipped${label ? ` (${label})` : ""}.`,
+      });
+    } catch (err: any) {
+      toast({ title: "Error sending reminders", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleSendSingleReminder = async (enrollment: UnmatchedEnrollment) => {
+    setSendingReminder(enrollment.id);
+    await handleSendReminder([enrollment.user_id], enrollment.name);
+    setSendingReminder(null);
+  };
+
+  const handleSendAllReminders = async () => {
+    setSendingAllReminders(true);
+    const userIds = privateUnmatched
+      .filter(m => !m.level || (!m.preferred_day && (!m.preferred_time)))
+      .map(m => m.user_id);
+    if (userIds.length === 0) {
+      toast({ title: "No reminders needed", description: "All private students have complete info." });
+    } else {
+      await handleSendReminder(userIds, `${userIds.length} students`);
+    }
+    setSendingAllReminders(false);
   };
 
   useEffect(() => {
@@ -619,19 +656,38 @@ const GroupMatcher = () => {
           {privateUnmatched.length > 0 && (
             <Card className="border-amber-300 dark:border-amber-700">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2 text-amber-800 dark:text-amber-300">
-                  <Users className="h-4 w-4" />
-                  Unassigned Private Students ({privateUnmatched.length})
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  These private plan students are paid & approved but not yet assigned to a slot.
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                      <Users className="h-4 w-4" />
+                      Unassigned Private Students ({privateUnmatched.length})
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      These private plan students are paid & approved but not yet assigned to a slot.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={sendingAllReminders}
+                    onClick={handleSendAllReminders}
+                    className="shrink-0"
+                  >
+                    {sendingAllReminders ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    Send All Reminders
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {privateUnmatched.map((m) => {
                     const missingLevel = !m.level;
                     const missingSchedule = !m.preferred_day && !m.preferred_time;
+                    const hasMissing = missingLevel || missingSchedule;
                     return (
                       <div key={m.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-2">
                         <div className="flex items-center justify-between">
@@ -639,18 +695,35 @@ const GroupMatcher = () => {
                             <p className="font-medium text-foreground">{m.name}</p>
                             <p className="text-xs text-muted-foreground">{m.email}</p>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={markingAssigned === m.id}
-                            onClick={() => handleMarkAssigned(m)}
-                          >
-                            {markingAssigned === m.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              "Mark Assigned"
+                          <div className="flex items-center gap-2">
+                            {hasMissing && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={sendingReminder === m.id}
+                                onClick={() => handleSendSingleReminder(m)}
+                                title="Send reminder email"
+                              >
+                                {sendingReminder === m.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Mail className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
                             )}
-                          </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={markingAssigned === m.id}
+                              onClick={() => handleMarkAssigned(m)}
+                            >
+                              {markingAssigned === m.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                "Mark Assigned"
+                              )}
+                            </Button>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                           <Badge variant="outline" className="text-xs">private</Badge>
