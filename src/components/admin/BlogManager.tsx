@@ -446,6 +446,11 @@ const BlogManager = () => {
                     {new Date(post.published_at || post.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right space-x-1">
+                    {post.lang === "en" && (
+                      <Button variant="ghost" size="icon" onClick={() => handleTranslate(post)} disabled={translating === post.id} title="Translate to Arabic">
+                        <Languages className={`h-4 w-4 ${translating === post.id ? "animate-spin" : ""}`} />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => togglePublish(post)} title={post.published ? "Unpublish" : "Publish"}>
                       {post.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
