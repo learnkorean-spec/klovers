@@ -83,9 +83,9 @@ const App = () => (
             <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
             <Route path="/placement-test" element={<PlacementTestPage />} />
             <Route path="/games" element={<AuthProtectedRoute><GamesPage /></AuthProtectedRoute>} />
-            <Route path="/textbook" element={<AuthProtectedRoute><TextbookPage /></AuthProtectedRoute>} />
-            <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
-            <Route path="/textbook/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
+            <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
+            <Route path="/textbook/:bookId" element={<AuthProtectedRoute><TextbookPage /></AuthProtectedRoute>} />
+            <Route path="/textbook/:bookId/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
             <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
