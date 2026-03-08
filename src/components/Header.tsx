@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, UserCircle, ChevronDown } from "lucide-react";
+import { Menu, X, Globe, UserCircle, ChevronDown, LogOut } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -24,12 +24,24 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const isAr = language === "ar";
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
+    const loadProfile = async (userId: string) => {
+      const { data } = await supabase.from("profiles").select("name, avatar_url").eq("user_id", userId).maybeSingle();
+      if (data) setProfile(data);
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user.id);
+      else setProfile(null);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -112,26 +124,28 @@ const Header = () => {
             </Button>
 
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="relative p-1.5 rounded-full transition-all duration-200 bg-foreground border-2 border-foreground hover:opacity-90 group">
-                    <UserCircle className="h-5 w-5 text-background transition-transform duration-200 group-hover:scale-110" />
-                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    {isAr ? "لوحة التحكم" : "My Dashboard"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/courses")}>
-                    {isAr ? "دوراتي" : "My Courses"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    {isAr ? "تسجيل الخروج" : "Logout"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2">
+                <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover border border-border" />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border">
+                      <UserCircle className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
+                    {profile?.name || user.email?.split("@")[0]}
+                  </span>
+                </Link>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={handleLogout} className="p-1.5 rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isAr ? "تسجيل الخروج" : "Logout"}</TooltipContent>
+                </Tooltip>
+              </div>
             ) : (
               <Button size="sm" asChild>
                 <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
