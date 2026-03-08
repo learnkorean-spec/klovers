@@ -348,18 +348,15 @@ const StudentDashboard = () => {
           ) : (
             <>
               {/* Welcome + Avatar */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <AvatarUpload userId={userId} currentUrl={avatarUrl} name={displayName} onUploaded={(url) => setAvatarUrl(url)} />
-                    <div>
-                      <p className="font-semibold text-foreground text-lg">{displayName}</p>
-                      <p className="text-sm text-muted-foreground">{enrollments.length} active package{enrollments.length !== 1 ? "s" : ""}</p>
-                    </div>
-                  </div>
-                  <JourneyStepper currentStage={journeyStage} />
-                </CardContent>
-              </Card>
+              <ProfileCard
+                userId={userId}
+                avatarUrl={avatarUrl}
+                displayName={displayName}
+                enrollmentCount={enrollments.length}
+                journeyStage={journeyStage}
+                onAvatarUploaded={(url) => setAvatarUrl(url)}
+                onNameUpdated={(name) => setUserName(name)}
+              />
 
               {/* Placement Test Level */}
               <Card>
