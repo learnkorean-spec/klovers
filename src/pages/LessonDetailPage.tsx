@@ -195,8 +195,8 @@ const LessonDetailPage = () => {
         {/* Mission Start Banner */}
         <MissionStartBanner
           lessonNum={lesson.sort_order}
-          title={lesson.title_en}
-          description={lesson.description}
+          title={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
+          description={isAr && lesson.description_ar ? lesson.description_ar : lesson.description}
           isBoss={boss}
           isCheckpoint={checkpoint}
         />
