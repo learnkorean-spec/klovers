@@ -3,7 +3,7 @@ import { WORLDS, getWorldForLesson, getWorldProgress, type World } from "@/const
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
 import { LessonProgressDots } from "@/components/GamificationUI";
 import { cn } from "@/lib/utils";
-import { Lock, CheckCircle2, Zap, Crown } from "lucide-react";
+import { Lock, CheckCircle2, Zap, Crown, Gamepad2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 
