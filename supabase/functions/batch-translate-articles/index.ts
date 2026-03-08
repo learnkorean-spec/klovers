@@ -134,10 +134,21 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Filter to only untranslated articles first
+  const { data: existingAr } = await supabase
+    .from("blog_posts")
+    .select("slug")
+    .eq("lang", "ar");
+
+  const existingSlugs = new Set((existingAr || []).map((a: any) => a.slug));
+  const untranslated = (posts || []).filter((p: any) => !existingSlugs.has(`${p.slug}-ar`));
+
+  console.log(`Found ${untranslated.length} untranslated articles out of ${posts?.length || 0}`);
+
   // Respond immediately, process in background
   const promise = (async () => {
     const results: string[] = [];
-    for (const post of posts || []) {
+    for (const post of untranslated) {
       try {
         const result = await translateOne(supabase, post, apiKey);
         results.push(result);
