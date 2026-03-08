@@ -48,12 +48,13 @@ const TextbookPage = () => {
   useEffect(() => {
     const fetchLessons = async () => {
       setLoading(true);
-      const { data } = await supabase
+      const query = supabase
         .from("textbook_lessons")
         .select("*")
         .eq("is_published", true)
-        .eq("book" as any, book)
         .order("sort_order", { ascending: true });
+      // Filter by book column (not in generated types yet)
+      const { data } = await (query as any).eq("book", book);
       setLessons((data as unknown as Lesson[]) || []);
       setLoading(false);
     };
