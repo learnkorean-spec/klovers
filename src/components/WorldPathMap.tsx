@@ -96,7 +96,7 @@ function LessonNode({
       )}
 
       <Link
-        to={`/textbook/${lesson.sort_order}`}
+        to={`/textbook/korean-1/${lesson.sort_order}`}
         className={cn(
           "group relative flex flex-col items-center transition-all hover:scale-105",
         )}

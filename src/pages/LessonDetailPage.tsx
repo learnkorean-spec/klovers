@@ -103,7 +103,7 @@ const LessonDetailPage = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [lessonNum]);
+  }, [lessonNum, bookSlug]);
 
   const handleAnswer = (exerciseId: string, optionIndex: number, correctIndex: number) => {
     if (showResults[exerciseId]) return;
