@@ -396,9 +396,19 @@ const BlogManager = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search posts..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button onClick={openNew} className="gap-2">
-          <Plus className="h-4 w-4" /> New Post
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" disabled={!!translating} onClick={async () => {
+            const enPosts = posts.filter(p => p.lang === "en");
+            for (const post of enPosts) {
+              await handleTranslate(post);
+            }
+          }}>
+            <Languages className="h-4 w-4" /> Translate All
+          </Button>
+          <Button onClick={openNew} className="gap-2">
+            <Plus className="h-4 w-4" /> New Post
+          </Button>
+        </div>
       </div>
 
       {loading ? (
