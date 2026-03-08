@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Trophy, Flame, Map, LayoutGrid } from "lucide-react";
+import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun } from "lucide-react";
 import { useGamification } from "@/hooks/useGamification";
 import { LeagueProgressBar, LessonProgressDots, XpBadge } from "@/components/GamificationUI";
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import WorldPathMap from "@/components/WorldPathMap";
+import DailyRoutinePathMap from "@/components/DailyRoutinePathMap";
 import { WORLDS } from "@/constants/worlds";
+import { DAILY_ROUTINE_WORLDS } from "@/constants/dailyRoutineWorlds";
 import { Button } from "@/components/ui/button";
 
 interface Lesson {
@@ -23,9 +25,19 @@ interface Lesson {
   title_ar?: string;
   description_ar?: string;
   sort_order: number;
+  book?: string;
 }
 
+const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: string; icon: typeof BookOpen }> = {
+  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen },
+  "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun },
+};
+
 const TextbookPage = () => {
+  const { bookId } = useParams<{ bookId: string }>();
+  const book = bookId || "korean-1";
+  const config = BOOK_CONFIG[book] || BOOK_CONFIG["korean-1"];
+
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"path" | "grid">("path");
@@ -35,40 +47,49 @@ const TextbookPage = () => {
 
   useEffect(() => {
     const fetchLessons = async () => {
+      setLoading(true);
       const { data } = await supabase
         .from("textbook_lessons")
         .select("*")
         .eq("is_published", true)
+        .eq("book" as any, book)
         .order("sort_order", { ascending: true });
       setLessons((data as unknown as Lesson[]) || []);
       setLoading(false);
     };
     fetchLessons();
-  }, []);
+  }, [book]);
 
   const completedCount = Object.values(progress.lessonProgress).filter(p => p.chapter_completed).length;
+  const isDailyRoutine = book === "daily-routine";
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-24 pb-16">
+        {/* Back to library */}
+        <section className="container mx-auto px-4 max-w-4xl mb-4">
+          <Link to="/textbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            {isAr ? "العودة للمكتبة" : "Back to Library"}
+          </Link>
+        </section>
+
         {/* Hero */}
         <section className="text-center mb-8 px-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <BookOpen className="h-4 w-4" />
-            {t("textbook.heroBadge")}
+            <config.icon className="h-4 w-4" />
+            {config.emoji} {isAr ? config.titleAr : config.titleEn}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            {t("textbook.heroTitle1")}<br />
-            <span className="text-primary italic">{t("textbook.heroTitle2")}</span>
+            {isAr ? config.titleAr : config.titleEn}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-            {WORLDS.filter(w => w.topikLevel === 1).length} {isAr ? "عوالم توبيك ١" : "TOPIK 1 worlds"} · {WORLDS.filter(w => w.topikLevel === 2).length} {isAr ? "عوالم توبيك ٢" : "TOPIK 2 worlds"} · {lessons.length} {t("textbook.heroSubtitle")}
+            {isDailyRoutine
+              ? `${DAILY_ROUTINE_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درس" : "lessons"}`
+              : `${WORLDS.filter(w => w.topikLevel === 1).length} ${isAr ? "عوالم توبيك ١" : "TOPIK 1 worlds"} · ${WORLDS.filter(w => w.topikLevel === 2).length} ${isAr ? "عوالم توبيك ٢" : "TOPIK 2 worlds"} · ${lessons.length} ${t("textbook.heroSubtitle")}`
+            }
           </p>
-          <div className="flex items-center justify-center gap-3 mt-3">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">🏅 TOPIK 1</span>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-accent text-accent-foreground">👑 TOPIK 2</span>
-          </div>
         </section>
 
         {/* Gamification Stats Bar */}
@@ -139,13 +160,22 @@ const TextbookPage = () => {
               ))}
             </div>
           ) : viewMode === "path" ? (
-            <WorldPathMap
-              lessons={lessons}
-              lessonProgress={progress.lessonProgress}
-              userId={userId}
-            />
+            isDailyRoutine ? (
+              <DailyRoutinePathMap
+                lessons={lessons}
+                lessonProgress={progress.lessonProgress}
+                userId={userId}
+                bookSlug={book}
+              />
+            ) : (
+              <WorldPathMap
+                lessons={lessons}
+                lessonProgress={progress.lessonProgress}
+                userId={userId}
+              />
+            )
           ) : (
-            /* Grid view (original) */
+            /* Grid view */
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {lessons.map((lesson) => {
                 const lp = progress.lessonProgress[lesson.id];
@@ -156,7 +186,7 @@ const TextbookPage = () => {
                 return (
                   <Link
                     key={lesson.id}
-                    to={`/textbook/${lesson.sort_order}`}
+                    to={`/textbook/${book}/${lesson.sort_order}`}
                     className={cn(
                       "group block rounded-xl border p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
                       completed ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-primary/40"
