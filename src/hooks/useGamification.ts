@@ -245,6 +245,79 @@ export function useGamification() {
     }
   }, [userId]);
 
+  const awardGameXp = useCallback(async (gameId: string, score: number, totalRounds: number) => {
+    if (!userId || score <= 0) return 0;
+
+    const xpPerCorrect = XP_VALUES.game_complete;
+    const totalXpEarned = score * xpPerCorrect;
+
+    // Insert XP record (lesson_id = null for games)
+    await supabase.from("student_xp").insert({
+      user_id: userId,
+      lesson_id: null,
+      activity_type: `game_${gameId}`,
+      xp_earned: totalXpEarned,
+    });
+
+    // Update streak (same logic as awardXp)
+    const today = new Date().toISOString().split("T")[0];
+    const { data: existing } = await supabase
+      .from("student_streaks")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!existing) {
+      await supabase.from("student_streaks").insert({
+        user_id: userId,
+        current_streak: 1,
+        longest_streak: 1,
+        last_activity_date: today,
+      });
+    } else if (existing.last_activity_date !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const wasYesterday = existing.last_activity_date === yesterday.toISOString().split("T")[0];
+      const newStreak = wasYesterday ? existing.current_streak + 1 : 1;
+      const longestStreak = Math.max(newStreak, existing.longest_streak);
+      await supabase.from("student_streaks").update({
+        current_streak: newStreak,
+        longest_streak: longestStreak,
+        last_activity_date: today,
+      }).eq("user_id", userId);
+    }
+
+    // Award game badges
+    await supabase.from("student_badges").upsert(
+      { user_id: userId, badge_key: "game_starter" },
+      { onConflict: "user_id,badge_key" }
+    );
+
+    if (score === totalRounds) {
+      await supabase.from("student_badges").upsert(
+        { user_id: userId, badge_key: "perfect_game" },
+        { onConflict: "user_id,badge_key" }
+      );
+    }
+
+    // Check total games played for game_master badge
+    const { count } = await supabase
+      .from("student_xp")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .like("activity_type", "game_%");
+
+    if ((count || 0) >= 10) {
+      await supabase.from("student_badges").upsert(
+        { user_id: userId, badge_key: "game_master" },
+        { onConflict: "user_id,badge_key" }
+      );
+    }
+
+    await fetchProgress();
+    return totalXpEarned;
+  }, [userId, fetchProgress]);
+
   const league = getLeague(progress.totalXp);
 
   return {
@@ -253,6 +326,7 @@ export function useGamification() {
     league,
     loading,
     awardXp,
+    awardGameXp,
     markSectionDone,
     fetchProgress,
   };
