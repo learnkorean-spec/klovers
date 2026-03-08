@@ -2007,6 +2007,7 @@ export type Database = {
       }
       textbook_lessons: {
         Row: {
+          book: string
           created_at: string
           description: string
           description_ar: string
@@ -2020,6 +2021,7 @@ export type Database = {
           title_ko: string
         }
         Insert: {
+          book?: string
           created_at?: string
           description?: string
           description_ar?: string
@@ -2033,6 +2035,7 @@ export type Database = {
           title_ko: string
         }
         Update: {
+          book?: string
           created_at?: string
           description?: string
           description_ar?: string

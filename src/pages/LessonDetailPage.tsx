@@ -38,7 +38,8 @@ interface ExerciseItem { id: string; question: string; options: string[]; correc
 interface ReadingItem { id: string; korean_text: string; english_text: string; }
 
 const LessonDetailPage = () => {
-  const { lessonId } = useParams();
+  const { lessonId, bookId } = useParams();
+  const bookSlug = bookId || "korean-1";
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -74,9 +75,11 @@ const LessonDetailPage = () => {
       setFlippedCards(new Set());
       setCorrectCount(0);
 
+      const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
+      const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
       const [lessonRes, countRes] = await Promise.all([
-        supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true).maybeSingle(),
-        supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true),
+        (baseQuery as any).eq("book", bookSlug).maybeSingle(),
+        (countQuery as any).eq("book", bookSlug),
       ]);
 
       const l = lessonRes.data as unknown as Lesson | null;
@@ -100,7 +103,7 @@ const LessonDetailPage = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [lessonNum]);
+  }, [lessonNum, bookSlug]);
 
   const handleAnswer = (exerciseId: string, optionIndex: number, correctIndex: number) => {
     if (showResults[exerciseId]) return;
@@ -189,7 +192,7 @@ const LessonDetailPage = () => {
         <Header />
         <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to="/textbook" className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -214,7 +217,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -252,7 +255,7 @@ const LessonDetailPage = () => {
           xpEarned={XP_VALUES.chapter}
           onContinue={() => {
             setShowMissionComplete(false);
-            if (lessonNum < totalLessons) navigate(`/textbook/${lessonNum + 1}`);
+            if (lessonNum < totalLessons) navigate(`/textbook/${bookSlug}/${lessonNum + 1}`);
           }}
         />
       )}
@@ -260,7 +263,7 @@ const LessonDetailPage = () => {
       <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
         {/* Back link with world context */}
         <div className="flex items-center gap-2 mb-6">
-          <Link to="/textbook" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+     <Link to={`/textbook/${bookSlug}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ChevronLeft className="h-4 w-4" /> {t("textbook.allMissions")}
           </Link>
           <span className="text-muted-foreground">·</span>
@@ -668,12 +671,12 @@ const LessonDetailPage = () => {
         {/* Prev / Next navigation */}
         <div className="flex justify-between items-center mt-6 pt-6 border-t border-border">
           {lessonNum > 1 ? (
-            <Link to={`/textbook/${lessonNum - 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+           <Link to={`/textbook/${bookSlug}/${lessonNum - 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <ChevronLeft className="h-4 w-4" /> {t("textbook.previousMission")}
             </Link>
           ) : <span />}
           {lessonNum < totalLessons ? (
-            <Link to={`/textbook/${lessonNum + 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <Link to={`/textbook/${bookSlug}/${lessonNum + 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               {t("textbook.nextMission")} <ChevronRight className="h-4 w-4" />
             </Link>
           ) : <span />}

@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { WORLDS, getWorldForLesson, getWorldProgress, type World } from "@/constants/worlds";
-import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
+import { DAILY_ROUTINE_WORLDS, getDailyRoutineWorldProgress, type DailyRoutineWorld } from "@/constants/dailyRoutineWorlds";
 import { LessonProgressDots } from "@/components/GamificationUI";
 import { cn } from "@/lib/utils";
-import { Lock, CheckCircle2, Zap, Crown, Gamepad2 } from "lucide-react";
+import { CheckCircle2, Gamepad2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -13,8 +12,6 @@ interface Lesson {
   title_en: string;
   title_ko: string;
   title_ar?: string;
-  description?: string;
-  description_ar?: string;
   sort_order: number;
 }
 
@@ -27,13 +24,14 @@ interface LessonProgress {
   chapter_completed: boolean;
 }
 
-interface WorldPathMapProps {
+interface Props {
   lessons: Lesson[];
   lessonProgress: Record<number, LessonProgress>;
   userId: string | null;
+  bookSlug: string;
 }
 
-function WorldHeader({ world, progress, isAr }: { world: World; progress: { completed: number; total: number; percent: number }; isAr: boolean }) {
+function WorldHeader({ world, progress, isAr }: { world: DailyRoutineWorld; progress: { completed: number; total: number; percent: number }; isAr: boolean }) {
   const isComplete = progress.percent === 100;
 
   return (
@@ -72,36 +70,29 @@ function LessonNode({
   index,
   worldColor,
   isAr,
+  bookSlug,
 }: {
   lesson: Lesson;
   lp?: LessonProgress;
   index: number;
   worldColor: string;
   isAr: boolean;
+  bookSlug: string;
 }) {
   const completed = lp?.chapter_completed;
-  const boss = isBossChallenge(lesson.sort_order);
-  const checkpoint = isCheckpointLesson(lesson.sort_order);
   const hasProgress = lp && (lp.vocab_done || lp.grammar_done || lp.dialogue_done || lp.exercises_done || lp.reading_done);
 
-  // Zigzag offset pattern for Duolingo-style path
   const offsets = [0, 40, 60, 40, 0, -40, -60, -40];
   const offset = offsets[index % offsets.length];
 
   return (
     <div className="relative flex flex-col items-center" style={{ marginLeft: `${offset}px` }}>
-      {/* Connector line */}
-      {index > 0 && (
-        <div className="w-0.5 h-6 bg-border -mt-1 mb-1" />
-      )}
+      {index > 0 && <div className="w-0.5 h-6 bg-border -mt-1 mb-1" />}
 
       <Link
-        to={`/textbook/korean-1/${lesson.sort_order}`}
-        className={cn(
-          "group relative flex flex-col items-center transition-all hover:scale-105",
-        )}
+        to={`/textbook/${bookSlug}/${lesson.sort_order}`}
+        className="group relative flex flex-col items-center transition-all hover:scale-105"
       >
-        {/* Node circle */}
         <div
           className={cn(
             "relative w-16 h-16 rounded-full flex items-center justify-center text-2xl border-[3px] transition-all shadow-md",
@@ -116,9 +107,6 @@ function LessonNode({
             boxShadow: completed ? `0 4px 12px ${worldColor}33` : undefined,
           }}
         >
-          {boss && !completed && (
-            <Crown className="absolute -top-2 -right-2 h-5 w-5 text-destructive" />
-          )}
           {completed && (
             <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
               <CheckCircle2 className="h-4 w-4 text-primary-foreground" />
@@ -127,13 +115,9 @@ function LessonNode({
           <span className="text-2xl">{lesson.emoji}</span>
         </div>
 
-        {/* Label */}
         <div className="mt-2 text-center max-w-[140px]">
-          <p className={cn(
-            "text-[10px] font-bold uppercase tracking-wider",
-            boss ? "text-destructive" : checkpoint ? "text-primary" : "text-muted-foreground"
-          )}>
-            {boss ? "🐉 Boss" : checkpoint ? "🏁 CP" : `M${lesson.sort_order}`}
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {isAr ? `الدرس ${lesson.sort_order}` : `Lesson ${lesson.sort_order}`}
           </p>
           <p className="text-xs font-semibold text-foreground leading-tight truncate">
             {isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
@@ -145,26 +129,24 @@ function LessonNode({
   );
 }
 
-export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldPathMapProps) {
+export default function DailyRoutinePathMap({ lessons, lessonProgress, userId, bookSlug }: Props) {
   const { language } = useLanguage();
   const isAr = language === "ar";
 
   return (
     <div className="space-y-8">
-      {WORLDS.map((world) => {
+      {DAILY_ROUTINE_WORLDS.map((world) => {
         const worldLessons = lessons.filter(
           (l) => l.sort_order >= world.lessonRange[0] && l.sort_order <= world.lessonRange[1]
         );
 
         if (worldLessons.length === 0) return null;
 
-        const progress = getWorldProgress(world, lessonProgress as any, lessons);
+        const progress = getDailyRoutineWorldProgress(world, lessonProgress as any, lessons);
 
         return (
           <div key={world.key}>
             <WorldHeader world={world} progress={progress} isAr={isAr} />
-
-            {/* Vertical path */}
             <div className="flex flex-col items-center py-4 gap-2">
               {worldLessons.map((lesson, i) => (
                 <LessonNode
@@ -174,6 +156,7 @@ export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldP
                   index={i}
                   worldColor={world.color}
                   isAr={isAr}
+                  bookSlug={bookSlug}
                 />
               ))}
             </div>
@@ -181,7 +164,6 @@ export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldP
         );
       })}
 
-      {/* Games CTA Banner */}
       <Link
         to="/games"
         className="group block rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 p-5 text-center transition-all mt-4"
@@ -195,7 +177,7 @@ export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldP
               {isAr ? "العب ألعاباً لكسب المزيد من XP!" : "Play Games for More XP!"}
             </p>
             <p className="text-sm text-muted-foreground">
-              {isAr ? "تدرب على المفردات والحروف الكورية بطريقة ممتعة" : "Practice vocab & Hangul with fun mini-games"}
+              {isAr ? "تدرب على المفردات الكورية بطريقة ممتعة" : "Practice Korean vocab with fun mini-games"}
             </p>
           </div>
           <span className="text-2xl">🎮</span>
