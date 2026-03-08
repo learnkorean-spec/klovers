@@ -88,6 +88,73 @@ const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
   );
 };
 
+const ProfileCard = ({
+  userId, avatarUrl, displayName, enrollmentCount, journeyStage,
+  onAvatarUploaded, onNameUpdated,
+}: {
+  userId: string; avatarUrl: string; displayName: string; enrollmentCount: number;
+  journeyStage: number; onAvatarUploaded: (url: string) => void; onNameUpdated: (name: string) => void;
+}) => {
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(displayName);
+  const [saving, setSaving] = useState(false);
+
+  const handleSaveName = async () => {
+    if (!nameValue.trim() || nameValue.trim() === displayName) {
+      setEditingName(false);
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({ name: nameValue.trim() }).eq("user_id", userId);
+    setSaving(false);
+    if (error) {
+      toast({ title: "Error", description: "Could not update name.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Name updated!" });
+    onNameUpdated(nameValue.trim());
+    setEditingName(false);
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-4 mb-4">
+          <AvatarUpload userId={userId} currentUrl={avatarUrl} name={displayName} onUploaded={onAvatarUploaded} />
+          <div className="flex-1">
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  className="h-8 w-[180px] text-sm"
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                />
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveName} disabled={saving}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingName(false); setNameValue(displayName); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground text-lg">{displayName}</p>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setNameValue(displayName); setEditingName(true); }}>
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                </Button>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground">{enrollmentCount} active package{enrollmentCount !== 1 ? "s" : ""}</p>
+          </div>
+        </div>
+        <JourneyStepper currentStage={journeyStage} />
+      </CardContent>
+    </Card>
+  );
+};
+
 const StudentDashboard = () => {
   const { loading: gateLoading, resetBlocked } = useResetGate();
   const { progress: gamification, league, loading: gamLoading } = useGamification();
