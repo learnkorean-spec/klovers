@@ -159,10 +159,73 @@ All colors MUST be HSL.
   100% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes fade-in-down {
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mascot-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes flame-flicker {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  25% { transform: translateX(-50%) scale(1.1) rotate(-3deg); opacity: 0.9; }
+  50% { transform: translateX(-50%) scale(0.95) rotate(2deg); opacity: 1; }
+  75% { transform: translateX(-50%) scale(1.08) rotate(-1deg); opacity: 0.85; }
+}
+
+@keyframes count-pop {
+  0% { opacity: 0; transform: scale(0.3); }
+  60% { opacity: 1; transform: scale(1.15); }
+  80% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes check-pop {
+  0% { opacity: 0; transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.15; transform: translate(-50%, 0) scale(1); }
+  50% { opacity: 0.3; transform: translate(-50%, 0) scale(1.15); }
+}
+
 .animate-bounce-up {
   animation: bounce-up 1.5s ease-out forwards;
 }
 
 .animate-scale-in {
   animation: scale-in 0.4s ease-out forwards;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.5s ease-out forwards;
+}
+
+.animate-mascot-bounce {
+  animation: mascot-bounce 2s ease-in-out infinite;
+}
+
+.animate-flame-flicker {
+  animation: flame-flicker 1.5s ease-in-out infinite;
+}
+
+.animate-count-pop {
+  animation: count-pop 0.6s ease-out forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.animate-check-pop {
+  animation: check-pop 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.4), transparent 70%);
 }
