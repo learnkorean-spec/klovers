@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, UserCircle } from "lucide-react";
+import { Menu, X, Globe, UserCircle, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -20,10 +20,12 @@ import {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { t, toggleLanguage } = useLanguage();
+  const { t, language, toggleLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const isAr = language === "ar";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -31,136 +33,162 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
 
-  const navLinks = [
+  const primaryLinks = [
     { href: "/", label: t("header", "home") },
     { href: "/courses", label: t("header", "courses") },
     { href: "/pricing", label: t("header", "pricing") },
-    { href: "/games", label: "Games" },
-    { href: "/textbook", label: "Textbook" },
+    { href: "/textbook", label: isAr ? "الكتاب" : "Textbook" },
+  ];
+
+  const moreLinks = [
+    { href: "/games", label: isAr ? "ألعاب" : "Games" },
+    { href: "/blog", label: isAr ? "المدونة" : "Blog" },
     { href: "/about", label: t("header", "about") },
     { href: "/faq", label: t("header", "faq") },
     { href: "/contact", label: t("header", "contact") },
-    { href: "/blog", label: "Blog" },
   ];
 
+  const allLinks = [...primaryLinks, ...moreLinks];
+
+  const isActive = (href: string) => location.pathname === href;
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/98 backdrop-blur-md shadow-sm" : "bg-background/95 backdrop-blur-sm"} border-b border-border`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={kloversLogo} alt="K-Lovers" className="h-10 w-10 rounded-full object-cover" />
-            <span className="font-bold text-xl text-foreground">K-Lovers</span>
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <img src={kloversLogo} alt="K-Lovers" className="h-9 w-9 rounded-full object-cover" loading="eager" />
+            <span className="font-bold text-lg text-foreground">K-Lovers</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {primaryLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  location.pathname === link.href
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive(link.href)
+                    ? "text-foreground bg-accent"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 }`}
               >
                 {link.label}
               </Link>
             ))}
+
+            {/* More dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
+                {isAr ? "المزيد" : "More"}
+                <ChevronDown className="h-3.5 w-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-40">
+                {moreLinks.map((link) => (
+                  <DropdownMenuItem key={link.href} onClick={() => navigate(link.href)} className={isActive(link.href) ? "bg-accent" : ""}>
+                    {link.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-2">
-              <Globe className="h-4 w-4" />
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
+              <Globe className="h-3.5 w-3.5" />
               {t("header", "langToggle")}
             </Button>
 
-            {/* Account Icon */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="relative p-1.5 rounded-full transition-all duration-200 bg-foreground border-2 border-foreground hover:opacity-90 group">
-                    <UserCircle className="h-6 w-6 text-background transition-transform duration-200 group-hover:scale-110" />
-                    <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-primary border-2 border-background" />
+                    <UserCircle className="h-5 w-5 text-background transition-transform duration-200 group-hover:scale-110" />
+                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    My Dashboard
+                    {isAr ? "لوحة التحكم" : "My Dashboard"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/courses")}>
-                    My Courses
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    Profile
+                    {isAr ? "دوراتي" : "My Courses"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
-                    Logout
+                    {isAr ? "تسجيل الخروج" : "Logout"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`)}
-                    className="p-2 rounded-full transition-all duration-200 hover:bg-accent group"
-                  >
-                    <UserCircle className="h-6 w-6 text-foreground transition-transform duration-200 group-hover:scale-110" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Sign in / Register</TooltipContent>
-              </Tooltip>
+              <Button size="sm" asChild>
+                <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
+                  {isAr ? "تسجيل الدخول" : "Sign In"}
+                </Link>
+              </Button>
             )}
           </div>
 
+          {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2"
+            className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? (
-              <X className="h-6 w-6 text-foreground" />
-            ) : (
-              <Menu className="h-6 w-6 text-foreground" />
-            )}
+            {isMenuOpen ? <X className="h-5 w-5 text-foreground" /> : <Menu className="h-5 w-5 text-foreground" />}
           </button>
         </div>
 
+        {/* Mobile Nav */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-border">
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
+          <nav className="lg:hidden py-4 border-t border-border animate-in slide-in-from-top-2 duration-200">
+            <div className="flex flex-col gap-1">
+              {allLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                    isActive(link.href) ? "text-foreground bg-accent" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
+
+              <div className="border-t border-border my-2" />
+
               <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-2 justify-start">
                 <Globe className="h-4 w-4" />
                 {t("header", "langToggle")}
               </Button>
+
               {user ? (
                 <>
                   <Button variant="outline" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/dashboard">My Dashboard</Link>
+                    <Link to="/dashboard">{isAr ? "لوحة التحكم" : "My Dashboard"}</Link>
                   </Button>
-                  <Button variant="ghost" className="w-full justify-start" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
-                    Logout
+                  <Button variant="ghost" className="w-full justify-start text-destructive" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
+                    {isAr ? "تسجيل الخروج" : "Logout"}
                   </Button>
                 </>
               ) : (
                 <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>Sign In / Register</Link>
+                  <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
+                    {isAr ? "تسجيل الدخول" : "Sign In"}
+                  </Link>
                 </Button>
               )}
             </div>
