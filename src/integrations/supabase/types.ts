@@ -1608,6 +1608,7 @@ export type Database = {
           reading_done: boolean
           user_id: string
           vocab_done: boolean
+          writing_done: boolean
         }
         Insert: {
           chapter_completed?: boolean
@@ -1619,6 +1620,7 @@ export type Database = {
           reading_done?: boolean
           user_id: string
           vocab_done?: boolean
+          writing_done?: boolean
         }
         Update: {
           chapter_completed?: boolean
@@ -1630,6 +1632,7 @@ export type Database = {
           reading_done?: boolean
           user_id?: string
           vocab_done?: boolean
+          writing_done?: boolean
         }
         Relationships: [
           {

@@ -1,4 +1,5 @@
 // Korean Learning Worlds - Duolingo-style progression structure
+// TOPIK 1 (Worlds 1-7, Lessons 1-75) + TOPIK 2 (Worlds 8-13, Lessons 76-120)
 export interface World {
   id: number;
   key: string;
@@ -10,9 +11,11 @@ export interface World {
   descriptionAr: string;
   color: string;
   lessonRange: [number, number]; // [startSortOrder, endSortOrder]
+  topikLevel: 1 | 2;
 }
 
 export const WORLDS: World[] = [
+  // ===== TOPIK 1 (Beginner) =====
   {
     id: 1,
     key: "hangul_village",
@@ -24,6 +27,7 @@ export const WORLDS: World[] = [
     descriptionAr: "أتقن الأبجدية الكورية والأصوات الأساسية",
     color: "hsl(142 76% 36%)",
     lessonRange: [1, 10],
+    topikLevel: 1,
   },
   {
     id: 2,
@@ -36,6 +40,7 @@ export const WORLDS: World[] = [
     descriptionAr: "عبارات أساسية للحياة اليومية",
     color: "hsl(217 91% 60%)",
     lessonRange: [11, 20],
+    topikLevel: 1,
   },
   {
     id: 3,
@@ -48,6 +53,7 @@ export const WORLDS: World[] = [
     descriptionAr: "تحدث عن روتينك اليومي وأنشطتك",
     color: "hsl(262 83% 58%)",
     lessonRange: [21, 30],
+    topikLevel: 1,
   },
   {
     id: 4,
@@ -60,6 +66,7 @@ export const WORLDS: World[] = [
     descriptionAr: "بناء مهارات المحادثة الحقيقية",
     color: "hsl(25 95% 53%)",
     lessonRange: [31, 38],
+    topikLevel: 1,
   },
   {
     id: 5,
@@ -72,6 +79,7 @@ export const WORLDS: World[] = [
     descriptionAr: "أتقن أنماط القواعد الكورية الأساسية",
     color: "hsl(0 72% 51%)",
     lessonRange: [39, 45],
+    topikLevel: 1,
   },
   {
     id: 6,
@@ -84,18 +92,100 @@ export const WORLDS: World[] = [
     descriptionAr: "الكورية للسفر والمواقف الحقيقية",
     color: "hsl(45 93% 47%)",
     lessonRange: [46, 60],
+    topikLevel: 1,
   },
   {
     id: 7,
     key: "topik_arena",
-    name: "TOPIK Arena",
-    nameAr: "حلبة التوبيك",
+    name: "TOPIK 1 Arena",
+    nameAr: "حلبة التوبيك ١",
     emoji: "🏆",
     icon: "🎓",
-    description: "Prepare for the TOPIK 1 exam",
-    descriptionAr: "استعد لامتحان التوبيك 1",
+    description: "Prepare for the TOPIK 1 exam with mock tests",
+    descriptionAr: "استعد لامتحان التوبيك ١ مع اختبارات تجريبية",
     color: "hsl(340 82% 52%)",
     lessonRange: [61, 75],
+    topikLevel: 1,
+  },
+
+  // ===== TOPIK 2 (Intermediate-Advanced) =====
+  {
+    id: 8,
+    key: "intermediate_gateway",
+    name: "Intermediate Gateway",
+    nameAr: "بوابة المتوسط",
+    emoji: "🌉",
+    icon: "📘",
+    description: "Bridge to intermediate Korean — complex sentences & connectors",
+    descriptionAr: "جسر إلى الكورية المتوسطة — جمل معقدة وروابط",
+    color: "hsl(190 82% 45%)",
+    lessonRange: [76, 83],
+    topikLevel: 2,
+  },
+  {
+    id: 9,
+    key: "culture_quarter",
+    name: "Culture Quarter",
+    nameAr: "حي الثقافة",
+    emoji: "🎭",
+    icon: "🏛️",
+    description: "Korean culture, opinions & formal writing",
+    descriptionAr: "الثقافة الكورية والآراء والكتابة الرسمية",
+    color: "hsl(280 72% 55%)",
+    lessonRange: [84, 91],
+    topikLevel: 2,
+  },
+  {
+    id: 10,
+    key: "news_tower",
+    name: "News Tower",
+    nameAr: "برج الأخبار",
+    emoji: "📰",
+    icon: "📺",
+    description: "Read news articles, formal Korean & passive voice",
+    descriptionAr: "قراءة المقالات الإخبارية والكورية الرسمية",
+    color: "hsl(210 85% 50%)",
+    lessonRange: [92, 99],
+    topikLevel: 2,
+  },
+  {
+    id: 11,
+    key: "essay_workshop",
+    name: "Essay Workshop",
+    nameAr: "ورشة الكتابة",
+    emoji: "✍️",
+    icon: "📝",
+    description: "TOPIK 2 writing practice — essays, summaries & opinion pieces",
+    descriptionAr: "تمارين كتابة التوبيك ٢ — مقالات وملخصات وآراء",
+    color: "hsl(35 90% 50%)",
+    lessonRange: [100, 107],
+    topikLevel: 2,
+  },
+  {
+    id: 12,
+    key: "advanced_grammar_peak",
+    name: "Advanced Grammar Peak",
+    nameAr: "قمة القواعد المتقدمة",
+    emoji: "🏔️",
+    icon: "🧠",
+    description: "Master advanced grammar patterns & nuanced expressions",
+    descriptionAr: "أتقن أنماط القواعد المتقدمة والتعبيرات الدقيقة",
+    color: "hsl(350 75% 45%)",
+    lessonRange: [108, 115],
+    topikLevel: 2,
+  },
+  {
+    id: 13,
+    key: "topik2_arena",
+    name: "TOPIK 2 Arena",
+    nameAr: "حلبة التوبيك ٢",
+    emoji: "👑",
+    icon: "🏅",
+    description: "Full TOPIK 2 exam practice — reading, listening & writing",
+    descriptionAr: "تمرين كامل لامتحان التوبيك ٢ — قراءة واستماع وكتابة",
+    color: "hsl(45 93% 47%)",
+    lessonRange: [116, 120],
+    topikLevel: 2,
   },
 ];
 

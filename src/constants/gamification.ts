@@ -15,6 +15,7 @@ export const XP_VALUES = {
   dialogue: 20,
   exercise: 10,
   reading: 10,
+  writing: 15,
   chapter: 50,
   challenge: 30,
   bonus: 25,

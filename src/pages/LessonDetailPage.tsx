@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine } from "lucide-react";
+import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
 import VisualVocabScene from "@/components/VisualVocabScene";
@@ -127,6 +128,7 @@ const LessonDetailPage = () => {
       dialogue_done: XP_VALUES.dialogue,
       exercises_done: XP_VALUES.exercise,
       reading_done: XP_VALUES.reading,
+      writing_done: XP_VALUES.writing,
     };
 
     setXpFloat(xpMap[section]);
@@ -134,7 +136,7 @@ const LessonDetailPage = () => {
 
     // Check if chapter just completed
     const updatedLp = { ...lp, [section]: true };
-    const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done"]
+    const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
       .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
 
     if (allDone) {
@@ -160,9 +162,9 @@ const LessonDetailPage = () => {
 
   // Calculate section completion for progress bar
   const sectionsDone = lp
-    ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done].filter(Boolean).length
+    ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done, (lp as any).writing_done].filter(Boolean).length
     : 0;
-  const sectionProgress = (sectionsDone / 5) * 100;
+  const sectionProgress = (sectionsDone / 6) * 100;
 
   if (loading) {
     return (
@@ -204,6 +206,7 @@ const LessonDetailPage = () => {
     dialogue_done: t("textbook.dialogue"),
     exercises_done: t("textbook.exercises"),
     reading_done: t("textbook.reading"),
+    writing_done: isAr ? "الكتابة" : "Writing",
   };
 
   const SectionDoneButton = ({ section }: { section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" }) => {
@@ -295,7 +298,7 @@ const LessonDetailPage = () => {
             </div>
             {/* Section progress bar */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{sectionsDone}/5</span>
+              <span className="text-xs text-muted-foreground">{sectionsDone}/6</span>
               <Progress value={sectionProgress} className="h-2 flex-1" />
               {sectionProgress === 100 && <span className="text-sm">⭐</span>}
             </div>
@@ -321,7 +324,7 @@ const LessonDetailPage = () => {
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-5 mb-8">
+          <TabsList className="w-full grid grid-cols-6 mb-8">
             <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
               {lp?.vocab_done && <CheckCircle2 className="h-3 w-3" />}
@@ -341,6 +344,10 @@ const LessonDetailPage = () => {
             <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="h-4 w-4 hidden sm:block" /> {t("textbook.reading")}
               {lp?.reading_done && <CheckCircle2 className="h-3 w-3" />}
+            </TabsTrigger>
+            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <PenLine className="h-4 w-4 hidden sm:block" /> {isAr ? "كتابة" : "Writing"}
+              {(lp as any)?.writing_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
           </TabsList>
 
@@ -612,6 +619,30 @@ const LessonDetailPage = () => {
                 <SectionDoneButton section="reading_done" />
               </>
             )}
+          </TabsContent>
+
+          {/* WRITING - Korean Typing Test */}
+          <TabsContent value="writing">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <PenLine className="h-5 w-5 text-primary" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
+              <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.writing} XP</span>
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {isAr
+                ? "اختبر مهاراتك في الكتابة بالكورية! اكتب الكلمات والجمل باستخدام لوحة المفاتيح الكورية."
+                : "Test your Korean typing skills! Type words and sentences using a Korean keyboard."}
+            </p>
+            <KoreanWritingTest
+              vocab={vocab}
+              dialogue={dialogue}
+              lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
+              onComplete={(score, total) => {
+                if (score > 0) {
+                  handleMarkDone("writing_done" as any);
+                }
+              }}
+            />
+            <SectionDoneButton section={"writing_done" as any} />
           </TabsContent>
         </Tabs>
 
