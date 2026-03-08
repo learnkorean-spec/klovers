@@ -380,7 +380,7 @@ const LessonDetailPage = () => {
                         )}
                       >
                         <div className="flex items-center gap-4">
-                          <span className="text-2xl font-bold text-primary min-w-[3rem] text-center">
+                          <span className="text-2xl font-bold text-foreground min-w-[3rem] text-center">
                             {v.korean}
                           </span>
                           <div className="flex-1">
