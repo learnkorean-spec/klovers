@@ -21,6 +21,7 @@ interface Lesson {
   title_ko: string;
   description: string;
   sort_order: number;
+  scene_image_url?: string;
 }
 
 interface VocabItem { id: string; korean: string; romanization: string; meaning: string; }
