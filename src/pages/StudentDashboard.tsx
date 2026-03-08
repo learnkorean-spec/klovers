@@ -14,7 +14,9 @@ import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, StreakDisplay, BadgeGrid } from "@/components/GamificationUI";
 import { useGamification } from "@/hooks/useGamification";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
 
