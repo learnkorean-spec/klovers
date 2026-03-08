@@ -792,6 +792,187 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_dialogues: {
+        Row: {
+          english: string
+          id: string
+          korean: string
+          lesson_id: number
+          romanization: string
+          sort_order: number
+          speaker: string
+        }
+        Insert: {
+          english: string
+          id?: string
+          korean: string
+          lesson_id: number
+          romanization?: string
+          sort_order?: number
+          speaker: string
+        }
+        Update: {
+          english?: string
+          id?: string
+          korean?: string
+          lesson_id?: number
+          romanization?: string
+          sort_order?: number
+          speaker?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_dialogues_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_exercises: {
+        Row: {
+          correct_index: number
+          explanation: string
+          id: string
+          lesson_id: number
+          options: Json
+          question: string
+          sort_order: number
+        }
+        Insert: {
+          correct_index?: number
+          explanation?: string
+          id?: string
+          lesson_id: number
+          options?: Json
+          question: string
+          sort_order?: number
+        }
+        Update: {
+          correct_index?: number
+          explanation?: string
+          id?: string
+          lesson_id?: number
+          options?: Json
+          question?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_exercises_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_grammar: {
+        Row: {
+          examples: Json
+          explanation: string
+          id: string
+          lesson_id: number
+          sort_order: number
+          structure: string
+          title: string
+        }
+        Insert: {
+          examples?: Json
+          explanation?: string
+          id?: string
+          lesson_id: number
+          sort_order?: number
+          structure?: string
+          title: string
+        }
+        Update: {
+          examples?: Json
+          explanation?: string
+          id?: string
+          lesson_id?: number
+          sort_order?: number
+          structure?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_grammar_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_reading: {
+        Row: {
+          english_text: string
+          id: string
+          korean_text: string
+          lesson_id: number
+          sort_order: number
+        }
+        Insert: {
+          english_text?: string
+          id?: string
+          korean_text: string
+          lesson_id: number
+          sort_order?: number
+        }
+        Update: {
+          english_text?: string
+          id?: string
+          korean_text?: string
+          lesson_id?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reading_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_vocabulary: {
+        Row: {
+          id: string
+          korean: string
+          lesson_id: number
+          meaning: string
+          romanization: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          korean: string
+          lesson_id: number
+          meaning: string
+          romanization?: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          korean?: string
+          lesson_id?: number
+          meaning?: string
+          romanization?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_vocabulary_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       level_group_config: {
         Row: {
           created_at: string | null
