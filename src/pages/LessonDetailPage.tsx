@@ -380,7 +380,7 @@ const LessonDetailPage = () => {
                         )}
                       >
                         <div className="flex items-center gap-4">
-                          <span className="text-2xl font-bold text-foregroundund min-w-[3rem] text-center">
+                          <span className="text-2xl font-bold text-foregroundundund min-w-[3rem] text-center">
                             {v.korean}
                           </span>
                           <div className="flex-1">
@@ -417,11 +417,11 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-prim text-primary-foregroundary text-xs font-bold">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-p text-primary-foreground-foregroundary text-xs font-bold">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p className="text-sm font-mono text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
+                        <p className="text-sm fontforegroundext-primary bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
