@@ -29,8 +29,19 @@ const Header = () => {
   const isAr = language === "ar";
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
+    const loadProfile = async (userId: string) => {
+      const { data } = await supabase.from("profiles").select("name, avatar_url").eq("user_id", userId).maybeSingle();
+      if (data) setProfile(data);
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user.id);
+      else setProfile(null);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
