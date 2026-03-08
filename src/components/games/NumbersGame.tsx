@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-const NumbersGame = () => {
+co{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }nst NumbersGame = () => {
   const totalRounds = 10;
   const [questions, setQuestions] = useState(() => shuffleArray(NUMBERS).slice(0, totalRounds));
   const [round, setRound] = useState(0);
