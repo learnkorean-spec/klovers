@@ -449,7 +449,7 @@ const StudentDashboard = () => {
                 const packageSize = enrollment.sessions_total;
                 const remaining = packageSize - totalUsed;
                 const extra = remaining < 0 ? Math.abs(remaining) : 0;
-                const due = extra * enrollment.unit_price;
+                const due = Math.round(extra * enrollment.unit_price);
                 const curr = enrollment.currency === "EGP" ? "LE" : "$";
 
                 return (
