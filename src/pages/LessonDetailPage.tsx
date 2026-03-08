@@ -466,7 +466,7 @@ const LessonDetailPage = () => {
                             ? "rounded-tl-sm bg-card border border-border"
                             : "rounded-tr-sm bg-primary/10 border border-primary/20"
                         )}>
-                          <p classNforegroundxt-xs fforegroundd text-primary uppercase mb-1">{d.speaker}</p>
+                          <p className="text-xs font-bold text-foreground uppercase mb-1">{d.speaker}</p>
                           <p className="text-foreground font-medium text-lg">{d.korean}</p>
                           {d.romanization && <p className="text-xs italic text-muted-foreground mt-0.5">{d.romanization}</p>}
                           <p className="text-sm text-muted-foreground mt-1.5 border-t border-border/50 pt-1.5">{d.english}</p>
