@@ -412,9 +412,12 @@ const BlogManager = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Lang</TableHead>
                 <TableHead>SEO Score</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
