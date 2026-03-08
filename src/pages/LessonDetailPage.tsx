@@ -206,7 +206,7 @@ const LessonDetailPage = () => {
           <span className="text-5xl">{lesson.emoji}</span>
           <div className="flex-1">
             <p className="text-sm font-bold text-primary uppercase tracking-wider">{t("textbook.missionLabel")} {lesson.sort_order}</p>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{lesson.title_en}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}</h1>
             <p className="text-muted-foreground text-lg">{lesson.title_ko}</p>
           </div>
         </div>
