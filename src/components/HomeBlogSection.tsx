@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, User, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPost {
   id: string;
@@ -28,36 +29,49 @@ const typeLabel: Record<string, string> = {
   review: "Review",
 };
 
+const typeLabelAr: Record<string, string> = {
+  howto: "كيفية",
+  listicle: "قائمة",
+  longform: "مقال",
+  news: "أخبار",
+  review: "مراجعة",
+};
+
 const HomeBlogSection = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchPosts = async () => {
       const { data } = await supabase
         .from("blog_posts")
         .select("id, title, slug, description, article_type, hero_image, hero_alt, author, published_at, created_at")
         .eq("published", true)
+        .eq("lang", language)
         .order("published_at", { ascending: false })
         .limit(3);
       setPosts((data as BlogPost[]) || []);
       setLoading(false);
     };
-    fetch();
-  }, []);
+    fetchPosts();
+  }, [language]);
 
   if (!loading && posts.length === 0) return null;
+
+  const isAr = language === "ar";
+  const labels = isAr ? typeLabelAr : typeLabel;
 
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <Badge variant="secondary" className="mb-3">📝 Blog</Badge>
+          <Badge variant="secondary" className="mb-3">{isAr ? "📝 المدونة" : "📝 Blog"}</Badge>
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            Latest from Our Blog
+            {isAr ? "أحدث المقالات" : "Latest from Our Blog"}
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Tips, guides, and insights for your Korean learning journey.
+            {isAr ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية." : "Tips, guides, and insights for your Korean learning journey."}
           </p>
         </div>
 
@@ -91,7 +105,7 @@ const HomeBlogSection = () => {
                   )}
                   <CardHeader className="pb-2">
                     <Badge variant="outline" className="text-xs w-fit">
-                      {typeLabel[post.article_type] || post.article_type}
+                      {labels[post.article_type] || post.article_type}
                     </Badge>
                     <h3 className="text-base font-semibold text-foreground group-hover:text-foreground/80 transition-colors line-clamp-2 mt-1">
                       {post.title}
@@ -112,7 +126,7 @@ const HomeBlogSection = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 text-foreground text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
-                      Read more <ArrowRight className="h-4 w-4" />
+                      {isAr ? "اقرأ المزيد" : "Read more"} <ArrowRight className="h-4 w-4" />
                     </div>
                   </CardContent>
                 </Card>
@@ -123,7 +137,7 @@ const HomeBlogSection = () => {
 
         <div className="text-center mt-8">
           <Button variant="outline" asChild>
-            <Link to="/blog">View All Articles <ArrowRight className="h-4 w-4 ml-1" /></Link>
+            <Link to="/blog">{isAr ? "عرض جميع المقالات" : "View All Articles"} <ArrowRight className="h-4 w-4 ml-1" /></Link>
           </Button>
         </div>
       </div>
