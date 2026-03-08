@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +55,7 @@ function generateOptions(correct: HangulChar, pool: HangulChar[]): string[] {
   return shuffleArray(options);
 }
 
-const HangulQuizGame = () => {
+const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const maxLives = 3;
 
@@ -87,6 +87,14 @@ const HangulQuizGame = () => {
   }, []);
 
   useEffect(() => { initGame(); }, [initGame]);
+
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (gameOver && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, totalRounds);
+    }
+  }, [gameOver, score, totalRounds, onGameComplete]);
 
   const currentChar = queue[round];
 

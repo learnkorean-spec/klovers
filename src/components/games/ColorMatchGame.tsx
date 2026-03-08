@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ function generateQ(colors: typeof COLORS) {
   return { question: q, options: shuffleArray([...opts]) };
 }
 
-const ColorMatchGame = () => {
+const ColorMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const [pool] = useState(() => shuffleArray(COLORS));
   const [round, setRound] = useState(0);
@@ -55,6 +55,14 @@ const ColorMatchGame = () => {
     setRound(0); setScore(0); setFeedback(null); setSelected(null);
     setQData(generateQ(shuffleArray(COLORS)));
   };
+
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (round >= totalRounds && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, totalRounds);
+    }
+  }, [round, totalRounds, score, onGameComplete]);
 
   if (round >= totalRounds) {
     return (

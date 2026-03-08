@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-const SentenceBuilderGame = () => {
+const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(0);
@@ -89,6 +89,14 @@ const SentenceBuilderGame = () => {
   };
 
   const xpEarned = score * 5;
+
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (gameOver && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, rounds);
+    }
+  }, [gameOver, score, rounds, onGameComplete]);
 
   if (gameOver) {
     return (

@@ -19,6 +19,7 @@ export const XP_VALUES = {
   challenge: 30,
   bonus: 25,
   streak_bonus: 5,
+  game_complete: 5,  // per correct answer in games
 } as const;
 
 export const BADGES = [
@@ -36,6 +37,9 @@ export const BADGES = [
   { key: "perfect_exercise", name: "Perfect Score", emoji: "⭐", description: "Get 100% on an exercise" },
   { key: "boss_slayer", name: "Boss Slayer", emoji: "🐉", description: "Complete a Boss Challenge" },
   { key: "seoul_explorer", name: "Seoul Explorer", emoji: "🏙️", description: "Complete a travel mission" },
+  { key: "game_starter", name: "Game Starter", emoji: "🎮", description: "Complete your first game" },
+  { key: "game_master", name: "Game Master", emoji: "🏆", description: "Complete 10 games" },
+  { key: "perfect_game", name: "Perfect Game", emoji: "💯", description: "Get a perfect score in any game" },
 ] as const;
 
 export const STREAK_MILESTONES = [3, 7, 14, 30] as const;

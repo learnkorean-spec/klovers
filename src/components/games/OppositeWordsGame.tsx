@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
 }
 
-const OppositeWordsGame = () => {
+const OppositeWordsGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const [questions] = useState(() => shuffleArray(ANTONYMS).slice(0, totalRounds));
   const [round, setRound] = useState(0);
@@ -39,6 +39,14 @@ const OppositeWordsGame = () => {
 
   const nextRound = () => { if (round + 1 >= totalRounds) { setRound(round + 1); return; } setRound(r => r + 1); setFeedback(null); setSelected(null); };
   const restart = () => { setRound(0); setScore(0); setFeedback(null); setSelected(null); };
+
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (round >= totalRounds && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, totalRounds);
+    }
+  }, [round, totalRounds, score, onGameComplete]);
 
   if (round >= totalRounds) {
     return (
