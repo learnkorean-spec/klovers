@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
+import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { useToast } from "@/hooks/use-toast";
