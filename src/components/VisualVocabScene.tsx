@@ -99,7 +99,7 @@ const VisualVocabScene = ({
               key={i}
               className="flex flex-col items-center rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-center"
             >
-              <span className="text-base font-bold text-primary">{v.korean}</span>
+              <span className="text-base font-bold text-foreground">{v.korean}</span>
               <span className="text-[10px] italic text-muted-foreground">{v.romanization}</span>
               <span className="text-xs text-foreground">{v.meaning}</span>
             </div>
