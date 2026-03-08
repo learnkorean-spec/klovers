@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { RotateCcw, Trophy, Sparkles, ArrowRight } from "lucide-react";
 
 interface Sentence {
@@ -33,6 +34,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
+  const { t } = useLanguage();
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(0);
@@ -67,10 +69,7 @@ const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: numb
   };
 
   const nextRound = () => {
-    if (total >= rounds) {
-      setGameOver(true);
-      return;
-    }
+    if (total >= rounds) { setGameOver(true); return; }
     const nextIdx = (round + 1) % SENTENCES.length;
     setRound(nextIdx);
     setPlaced([]);
@@ -79,13 +78,9 @@ const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: numb
   };
 
   const restart = () => {
-    setRound(0);
-    setScore(0);
-    setTotal(0);
-    setPlaced([]);
+    setRound(0); setScore(0); setTotal(0); setPlaced([]);
     setAvailable(shuffleArray(SENTENCES[0].words));
-    setFeedback(null);
-    setGameOver(false);
+    setFeedback(null); setGameOver(false);
   };
 
   const xpEarned = score * 5;
@@ -103,10 +98,10 @@ const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: numb
       <section className="py-12 px-4">
         <Card className="max-w-lg mx-auto p-8 text-center space-y-4">
           <Trophy className="h-12 w-12 mx-auto text-foreground" />
-          <h2 className="text-2xl font-bold text-foreground">Game Complete!</h2>
-          <p className="text-muted-foreground">You got {score}/{rounds} sentences correct</p>
+          <h2 className="text-2xl font-bold text-foreground">{t("games.sentenceComplete")}</h2>
+          <p className="text-muted-foreground">{t("games.sentenceScore").replace("{score}", String(score)).replace("{total}", String(rounds))}</p>
           <Badge variant="secondary" className="text-lg px-4 py-1">+{xpEarned} XP</Badge>
-          <Button onClick={restart} className="gap-2"><RotateCcw className="h-4 w-4" /> Play Again</Button>
+          <Button onClick={restart} className="gap-2"><RotateCcw className="h-4 w-4" /> {t("games.playAgain")}</Button>
         </Card>
       </section>
     );
@@ -116,16 +111,16 @@ const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: numb
     <section className="py-12 px-4">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <Badge variant="outline">Round {total + 1}/{rounds}</Badge>
+          <Badge variant="outline">{t("games.round")} {total + 1}/{rounds}</Badge>
           <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{score * 5} XP</Badge>
         </div>
 
         <Card className="p-6 space-y-4">
-          <p className="text-sm text-muted-foreground">Arrange the words to translate:</p>
+          <p className="text-sm text-muted-foreground">{t("games.sentencePrompt")}</p>
           <p className="text-lg font-semibold text-foreground">"{currentSentence.english}"</p>
 
           <div className="min-h-[48px] border-2 border-dashed border-border rounded-lg p-3 flex flex-wrap gap-2">
-            {placed.length === 0 && <span className="text-muted-foreground text-sm">Tap words below to build the sentence...</span>}
+            {placed.length === 0 && <span className="text-muted-foreground text-sm">{t("games.sentencePlaceholder")}</span>}
             {placed.map((word, i) => (
               <button key={i} onClick={() => handleRemoveWord(i)} className="px-3 py-1.5 bg-primary/10 text-foreground rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors">{word}</button>
             ))}
@@ -139,13 +134,13 @@ const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: numb
 
           {feedback && (
             <div className={`p-3 rounded-lg text-center ${feedback === "correct" ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-destructive/10 text-destructive"}`}>
-              {feedback === "correct" ? "✅ Correct! +5 XP" : `❌ Correct order: ${currentSentence.correct.join(" ")}`}
+              {feedback === "correct" ? t("games.correctFeedback") : t("games.sentenceCorrectOrder").replace("{order}", currentSentence.correct.join(" "))}
             </div>
           )}
         </Card>
 
-        {feedback && <Button onClick={nextRound} className="w-full gap-2">Next <ArrowRight className="h-4 w-4" /></Button>}
-        <Button variant="ghost" size="sm" onClick={restart} className="w-full gap-1"><RotateCcw className="h-3 w-3" /> Restart</Button>
+        {feedback && <Button onClick={nextRound} className="w-full gap-2">{t("games.next")} <ArrowRight className="h-4 w-4" /></Button>}
+        <Button variant="ghost" size="sm" onClick={restart} className="w-full gap-1"><RotateCcw className="h-3 w-3" /> {t("games.restart")}</Button>
       </div>
     </section>
   );

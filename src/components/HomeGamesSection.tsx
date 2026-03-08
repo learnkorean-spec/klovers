@@ -1,29 +1,31 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Layers, Brain, ArrowRight, Sparkles } from "lucide-react";
-
-const games = [
-  {
-    title: "Vocabulary Match",
-    description: "Flip cards & match Korean words with their English meanings",
-    emoji: "🃏",
-    icon: Layers,
-    color: "bg-primary/10",
-  },
-  {
-    title: "Hangul Speed Quiz",
-    description: "Identify Hangul characters before time runs out",
-    emoji: "⚡",
-    icon: Brain,
-    color: "bg-accent/50",
-  },
-];
 
 const floatingChars = ["한", "글", "놀", "이", "🎯", "🇰🇷"];
 
 const HomeGamesSection = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const games = [
+    {
+      title: t("games.homeCard1Title"),
+      description: t("games.homeCard1Desc"),
+      emoji: "🃏",
+      icon: Layers,
+      color: "bg-primary/10",
+    },
+    {
+      title: t("games.homeCard2Title"),
+      description: t("games.homeCard2Desc"),
+      emoji: "⚡",
+      icon: Brain,
+      color: "bg-accent/50",
+    },
+  ];
 
   return (
     <section className="py-20 px-4 relative overflow-hidden bg-muted/20">
@@ -39,16 +41,15 @@ const HomeGamesSection = () => {
           <div className="space-y-6 text-center md:text-left">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-foreground border border-border px-4 py-2 rounded-full text-sm font-medium">
               <Gamepad2 className="h-4 w-4" />
-              Learn & Play
+              {t("games.learnPlay")}
             </div>
 
             <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-              Practice Korean with{" "}
-              <span className="underline decoration-primary decoration-4 underline-offset-4">Fun Games</span>
+              {t("games.homeTitle")}
             </h2>
 
             <p className="text-muted-foreground text-lg">
-              Challenge yourself with interactive mini-games designed to boost your vocabulary and Hangul skills — no textbook needed!
+              {t("games.homeSubtitle")}
             </p>
 
             {/* Game cards */}
@@ -73,7 +74,7 @@ const HomeGamesSection = () => {
 
             <Button size="lg" onClick={() => navigate("/games")} className="text-base px-8 gap-2">
               <Sparkles className="h-4 w-4" />
-              Play Now — It's Free!
+              {t("games.playNowFree")}
             </Button>
           </div>
 
@@ -84,7 +85,7 @@ const HomeGamesSection = () => {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-36 h-36 rounded-2xl bg-card border-2 border-border shadow-lg flex flex-col items-center justify-center gap-2 rotate-3">
                   <Gamepad2 className="h-12 w-12 text-foreground" />
-                  <span className="text-xs font-bold text-muted-foreground tracking-wide uppercase">Games</span>
+                  <span className="text-xs font-bold text-muted-foreground tracking-wide uppercase">{t("games.gamesLabel")}</span>
                 </div>
               </div>
 
