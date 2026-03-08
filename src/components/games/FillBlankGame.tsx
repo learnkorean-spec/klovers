@@ -23,7 +23,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
 }
 
-cons{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }t FillBlankGame = () => {
+const FillBlankGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const [questions] = useState(() => shuffleArray(SENTENCES).slice(0, totalRounds));
   const [round, setRound] = useState(0);

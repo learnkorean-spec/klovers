@@ -30,7 +30,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-co{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }nst NumbersGame = () => {
+const NumbersGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const [questions, setQuestions] = useState(() => shuffleArray(NUMBERS).slice(0, totalRounds));
   const [round, setRound] = useState(0);
