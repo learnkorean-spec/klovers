@@ -53,7 +53,9 @@ Deno.serve(async (req) => {
 
     await Promise.all(batch.map(async (lesson: any) => {
       try {
-        const prompt = `Generate Korean language lesson content for TOPIK Level 1, Lesson ${lesson.sort_order}: "${lesson.title_en}" (${lesson.title_ko}). Description: ${lesson.description}.
+        const topikLevel = lesson.sort_order <= 45 ? 1 : 2;
+        const levelDesc = topikLevel === 1 ? "TOPIK 1 (beginner/A1-A2)" : "TOPIK 2 (elementary-intermediate/A2-B1)";
+        const prompt = `Generate Korean language lesson content for ${levelDesc}, Lesson ${lesson.sort_order}: "${lesson.title_en}" (${lesson.title_ko}). Description: ${lesson.description}.
 
 Return a JSON object with these exact keys:
 {
@@ -71,7 +73,7 @@ Requirements:
 - exercises: 4-5 multiple choice questions
 - reading: 1 short paragraph (4-6 sentences) with translation
 - All Korean must be accurate and natural
-- Content should be appropriate for TOPIK 1 (beginner) level
+- Content should be appropriate for ${levelDesc} level
 - Return ONLY valid JSON, no markdown`;
 
         const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
