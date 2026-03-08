@@ -619,6 +619,30 @@ const LessonDetailPage = () => {
               </>
             )}
           </TabsContent>
+
+          {/* WRITING - Korean Typing Test */}
+          <TabsContent value="writing">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <PenLine className="h-5 w-5 text-primary" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
+              <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.writing} XP</span>
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {isAr
+                ? "اختبر مهاراتك في الكتابة بالكورية! اكتب الكلمات والجمل باستخدام لوحة المفاتيح الكورية."
+                : "Test your Korean typing skills! Type words and sentences using a Korean keyboard."}
+            </p>
+            <KoreanWritingTest
+              vocab={vocab}
+              dialogue={dialogue}
+              lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
+              onComplete={(score, total) => {
+                if (score > 0) {
+                  handleMarkDone("writing_done" as any);
+                }
+              }}
+            />
+            <SectionDoneButton section={"writing_done" as any} />
+          </TabsContent>
         </Tabs>
 
         {/* Games XP Banner */}
