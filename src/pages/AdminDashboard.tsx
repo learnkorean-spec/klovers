@@ -1363,6 +1363,11 @@ const AdminDashboard = () => {
               <PlacementTestsManager />
             </TabsContent>
 
+            {/* SALES ANALYTICS TAB */}
+            <TabsContent value="sales">
+              <SalesAnalytics />
+            </TabsContent>
+
             {/* SETTINGS TAB */}
             <TabsContent value="settings">
               <AdminSettings />
