@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +55,7 @@ function generateOptions(correct: HangulChar, pool: HangulChar[]): string[] {
   return shuffleArray(options);
 }
 
-const HangulQuizGame = () => {
+const HangulQuiz{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }Game = () => {
   const totalRounds = 10;
   const maxLives = 3;
 
