@@ -423,6 +423,122 @@ export default function MarketingGeneratorPage() {
               })}
             </div>
           )}
+
+          {/* Platform Grid Preview of generated images */}
+          {(() => {
+            const allImages = groups
+              .map(g => ({
+                url: generatedImages[g.id]?.["1x1"],
+                storyUrl: generatedImages[g.id]?.["story"],
+                fbUrl: generatedImages[g.id]?.["4x5"] || generatedImages[g.id]?.["1x1"],
+                label: getLevelLabel(g.level),
+              }))
+              .filter(img => img.url || img.storyUrl || img.fbUrl);
+
+            if (allImages.length === 0) return null;
+
+            const igImages = allImages.filter(i => i.url).slice(0, 9);
+            const storyImages = allImages.filter(i => i.storyUrl || i.url).slice(0, 6);
+            const fbImages = allImages.filter(i => i.fbUrl).slice(0, 4);
+
+            return (
+              <div className="mt-8">
+                <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Grid3X3 className="h-4 w-4" /> Grid Preview — How Your Posts Look Together
+                  <Badge variant="outline" className="text-[10px]">{allImages.length} images</Badge>
+                </h2>
+                <Tabs defaultValue="instagram" className="w-full">
+                  <TabsList className="w-full justify-start">
+                    <TabsTrigger value="instagram" className="text-xs gap-1.5">
+                      <Grid3X3 className="h-3.5 w-3.5" /> Instagram
+                    </TabsTrigger>
+                    <TabsTrigger value="facebook" className="text-xs gap-1.5">
+                      <Monitor className="h-3.5 w-3.5" /> Facebook
+                    </TabsTrigger>
+                    <TabsTrigger value="stories" className="text-xs gap-1.5">
+                      <Smartphone className="h-3.5 w-3.5" /> Stories
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Instagram 3x3 Grid */}
+                  <TabsContent value="instagram">
+                    <Card className="rounded-2xl">
+                      <CardContent className="p-4">
+                        <div className="bg-card border rounded-t-xl p-3 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">K</div>
+                          <div>
+                            <p className="text-xs font-bold text-foreground">klovers_academy</p>
+                            <p className="text-[10px] text-muted-foreground">{igImages.length} posts • 1.2K followers</p>
+                          </div>
+                        </div>
+                        <div
+                          className="grid gap-0.5 rounded-b-xl overflow-hidden border border-t-0 bg-border mx-auto"
+                          style={{ gridTemplateColumns: `repeat(${Math.min(3, igImages.length)}, 1fr)`, maxWidth: Math.min(3, igImages.length) * 160 }}
+                        >
+                          {igImages.map((img, i) => (
+                            <div key={i} className="aspect-square bg-muted overflow-hidden">
+                              <img src={img.url!} alt={img.label} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — How your grid looks on Instagram</p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Facebook Timeline */}
+                  <TabsContent value="facebook">
+                    <Card className="rounded-2xl">
+                      <CardContent className="p-4">
+                        <div className="space-y-3 max-w-md mx-auto">
+                          {fbImages.map((img, i) => (
+                            <div key={i} className="bg-card border rounded-xl overflow-hidden">
+                              <div className="flex items-center gap-2 p-2.5">
+                                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">K</div>
+                                <div>
+                                  <p className="text-[10px] font-semibold text-foreground">KLovers Academy</p>
+                                  <p className="text-[9px] text-muted-foreground">Sponsored · 🌐</p>
+                                </div>
+                              </div>
+                              <p className="text-[10px] text-foreground px-2.5 pb-1">{img.label}</p>
+                              <div className="aspect-[1200/630] bg-muted overflow-hidden">
+                                <img src={img.fbUrl!} alt={img.label} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex items-center justify-between px-2.5 py-1.5 border-t text-[9px] text-muted-foreground">
+                                <span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-center mt-2">1200×630 — Facebook timeline preview</p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Stories Tray */}
+                  <TabsContent value="stories">
+                    <Card className="rounded-2xl">
+                      <CardContent className="p-4">
+                        <div className="flex gap-3 overflow-x-auto pb-2">
+                          {storyImages.map((img, i) => (
+                            <div key={i} className="shrink-0 space-y-1">
+                              <div className="w-20 rounded-xl overflow-hidden border-2 border-primary shadow-md">
+                                <div className="aspect-[9/16] bg-muted overflow-hidden">
+                                  <img src={img.storyUrl || img.url!} alt={img.label} className="w-full h-full object-cover" />
+                                </div>
+                              </div>
+                              <p className="text-[9px] text-muted-foreground text-center truncate w-20">{img.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1920 — Swipeable story sequence</p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            );
+          })()}
             </TabsContent>
 
             <TabsContent value="creator">
