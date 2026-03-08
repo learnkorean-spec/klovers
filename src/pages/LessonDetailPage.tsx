@@ -146,6 +146,13 @@ const LessonDetailPage = () => {
   const checkpoint = isCheckpointLesson(lesson.sort_order);
 
   const SectionDoneButton = ({ section, label }: { section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done"; label: string }) => {
+    if (!userId) {
+      return (
+        <p className="mt-4 text-sm text-muted-foreground">
+          <Link to={`/login?redirect=/textbook/${lessonNum}`} className="text-primary underline">Sign in</Link> to track your progress and earn XP.
+        </p>
+      );
+    }
     const done = lp?.[section];
     return (
       <Button
