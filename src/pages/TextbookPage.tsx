@@ -63,8 +63,12 @@ const TextbookPage = () => {
             <span className="text-primary italic">{t("textbook.heroTitle2")}</span>
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-            {WORLDS.length} {isAr ? "عوالم" : "worlds"} · {lessons.length} {t("textbook.heroSubtitle")}
+            {WORLDS.filter(w => w.topikLevel === 1).length} {isAr ? "عوالم توبيك ١" : "TOPIK 1 worlds"} · {WORLDS.filter(w => w.topikLevel === 2).length} {isAr ? "عوالم توبيك ٢" : "TOPIK 2 worlds"} · {lessons.length} {t("textbook.heroSubtitle")}
           </p>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">🏅 TOPIK 1</span>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-accent text-accent-foreground">👑 TOPIK 2</span>
+          </div>
         </section>
 
         {/* Gamification Stats Bar */}
