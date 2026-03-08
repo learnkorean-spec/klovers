@@ -1688,6 +1688,39 @@ export type Database = {
         }
         Relationships: []
       }
+      textbook_lessons: {
+        Row: {
+          created_at: string
+          description: string
+          emoji: string
+          id: number
+          is_published: boolean
+          sort_order: number
+          title_en: string
+          title_ko: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: number
+          is_published?: boolean
+          sort_order?: number
+          title_en: string
+          title_ko: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: number
+          is_published?: boolean
+          sort_order?: number
+          title_en?: string
+          title_ko?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
