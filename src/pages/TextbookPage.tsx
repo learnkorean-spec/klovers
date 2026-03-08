@@ -146,10 +146,8 @@ const TextbookPage = () => {
               {lessons.map((lesson) => {
                 const lp = progress.lessonProgress[lesson.id];
                 const completed = lp?.chapter_completed;
-                const { isBossChallenge, isCheckpointLesson } = require("@/constants/gamification");
                 const boss = isBossChallenge(lesson.sort_order);
                 const checkpoint = isCheckpointLesson(lesson.sort_order);
-                const { LessonProgressDots } = require("@/components/GamificationUI");
 
                 return (
                   <Link
