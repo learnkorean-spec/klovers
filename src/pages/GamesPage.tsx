@@ -44,6 +44,13 @@ const GameFallback = () => (
 const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
 
+  const selectGame = (id: string) => {
+    setActiveGame(id);
+    setTimeout(() => {
+      document.getElementById("active-game-area")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
   const renderGame = () => {
     switch (activeGame) {
       case "match": return <KoreanMatchGame />;
