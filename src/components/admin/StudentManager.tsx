@@ -763,7 +763,7 @@ const StudentManager = () => {
                           {negativeSessions > 0 ? negativeSessions : "—"}
                         </TableCell>
                         <TableCell className={`text-right font-mono ${amountDue > 0 ? "text-destructive font-semibold" : ""}`}>
-                          {amountDue > 0 ? `${currency}${amountDue.toLocaleString()}` : "—"}
+                          {amountDue > 0 ? `${currency}${Math.round(amountDue).toLocaleString()}` : "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm">
                           {overview ? `${currency}${Number(overview.amount || 0).toLocaleString()}` : `$${s.total_paid}`}
