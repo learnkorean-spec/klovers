@@ -160,7 +160,7 @@ const AdminAttendancePanel = ({
     const packageSize = enrollment.sessions_total;
     const remaining = packageSize - totalUsed;
     const extra = remaining < 0 ? Math.abs(remaining) : 0;
-    const balance = extra * enrollment.unit_price;
+    const balance = Math.round(extra * enrollment.unit_price);
     return { totalUsed, packageSize, remaining, extra, balance };
   }, [records, enrollment]);
 
