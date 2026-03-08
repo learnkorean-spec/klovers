@@ -38,6 +38,7 @@ import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
 import SchedulingManager from "@/components/admin/SchedulingManager";
 import AdminSettings from "@/components/admin/AdminSettings";
 import PlacementTestsManager from "@/components/admin/PlacementTestsManager";
+import SalesAnalytics from "@/components/admin/SalesAnalytics";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
