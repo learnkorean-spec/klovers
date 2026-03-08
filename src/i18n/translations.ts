@@ -340,6 +340,10 @@ export const translations = {
       passwordsDontMatch: "Please make sure both passwords are the same.",
       samePassword: "New password must be different from your current password.",
       passwordUpdated: "You can now log in with your new password.",
+      signUpSubtitle: "Join K-Lovers and start learning Korean today",
+      creatingAccount: "Creating account...",
+      accountCreated: "Account created!",
+      welcomeMessage: "Welcome to K-Lovers! You can now sign in.",
     },
     enrollNow: {
       choosePlan: "Choose Plan",
@@ -786,6 +790,10 @@ export const translations = {
       passwordsDontMatch: "يرجى التأكد من تطابق كلمتي المرور.",
       samePassword: "يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمة المرور الحالية.",
       passwordUpdated: "يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
+      signUpSubtitle: "انضم إلى K-Lovers وابدأ تعلّم الكورية اليوم",
+      creatingAccount: "جارٍ إنشاء الحساب...",
+      accountCreated: "تم إنشاء الحساب!",
+      welcomeMessage: "مرحبًا بك في K-Lovers! يمكنك الآن تسجيل الدخول.",
     },
     enrollNow: {
       choosePlan: "اختر الخطة",
