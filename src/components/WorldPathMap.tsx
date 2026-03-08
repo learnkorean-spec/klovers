@@ -3,7 +3,7 @@ import { WORLDS, getWorldForLesson, getWorldProgress, type World } from "@/const
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
 import { LessonProgressDots } from "@/components/GamificationUI";
 import { cn } from "@/lib/utils";
-import { Lock, CheckCircle2, Zap, Crown } from "lucide-react";
+import { Lock, CheckCircle2, Zap, Crown, Gamepad2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -180,6 +180,27 @@ export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldP
           </div>
         );
       })}
+
+      {/* Games CTA Banner */}
+      <Link
+        to="/games"
+        className="group block rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 p-5 text-center transition-all mt-4"
+      >
+        <div className="flex items-center justify-center gap-3">
+          <div className="rounded-full bg-primary/10 p-2.5 group-hover:bg-primary/20 transition-colors">
+            <Gamepad2 className="h-6 w-6 text-primary" />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-foreground text-lg">
+              {isAr ? "العب ألعاباً لكسب المزيد من XP!" : "Play Games for More XP!"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isAr ? "تدرب على المفردات والحروف الكورية بطريقة ممتعة" : "Practice vocab & Hangul with fun mini-games"}
+            </p>
+          </div>
+          <span className="text-2xl">🎮</span>
+        </div>
+      </Link>
     </div>
   );
 }
