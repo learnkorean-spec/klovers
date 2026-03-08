@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
+import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ interface Lesson {
   title_ko: string;
   description: string;
   sort_order: number;
+  scene_image_url?: string;
 }
 
 interface VocabItem { id: string; korean: string; romanization: string; meaning: string; }
@@ -213,6 +215,16 @@ const LessonDetailPage = () => {
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
           </div>
         )}
+
+        {/* Visual Vocabulary Scene */}
+        <VisualVocabScene
+          lessonId={lesson.id}
+          title={lesson.title_en}
+          titleKo={lesson.title_ko}
+          sceneImageUrl={lesson.scene_image_url}
+          vocab={vocab}
+          isAdmin={false}
+        />
 
         <Tabs defaultValue="vocab" className="w-full">
           <TabsList className="w-full grid grid-cols-5 mb-8">
