@@ -74,11 +74,11 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/enroll" element={<EnrollPage />} />
             <Route path="/enroll-now" element={<EnrollNowPage />} />
-            <Route path="/dashboard" element={<StudentDashboard />} />
-            <Route path="/pay/:enrollmentId" element={<EgyptPaymentPage />} />
+            <Route path="/dashboard" element={<AuthProtectedRoute><StudentDashboard /></AuthProtectedRoute>} />
+            <Route path="/pay/:enrollmentId" element={<AuthProtectedRoute><EgyptPaymentPage /></AuthProtectedRoute>} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
-            <Route path="/dashboard/schedule" element={<MySchedulePage />} />
+            <Route path="/dashboard/schedule" element={<AuthProtectedRoute><MySchedulePage /></AuthProtectedRoute>} />
             <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
             <Route path="/placement-test" element={<PlacementTestPage />} />
             <Route path="/games" element={<GamesPage />} />
