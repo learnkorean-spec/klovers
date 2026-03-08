@@ -2009,6 +2009,7 @@ export type Database = {
           emoji: string
           id: number
           is_published: boolean
+          scene_image_url: string | null
           sort_order: number
           title_en: string
           title_ko: string
@@ -2019,6 +2020,7 @@ export type Database = {
           emoji?: string
           id?: number
           is_published?: boolean
+          scene_image_url?: string | null
           sort_order?: number
           title_en: string
           title_ko: string
@@ -2029,6 +2031,7 @@ export type Database = {
           emoji?: string
           id?: number
           is_published?: boolean
+          scene_image_url?: string | null
           sort_order?: number
           title_en?: string
           title_ko?: string
