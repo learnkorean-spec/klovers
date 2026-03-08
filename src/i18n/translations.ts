@@ -790,6 +790,10 @@ export const translations = {
       passwordsDontMatch: "يرجى التأكد من تطابق كلمتي المرور.",
       samePassword: "يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمة المرور الحالية.",
       passwordUpdated: "يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
+      signUpSubtitle: "انضم إلى K-Lovers وابدأ تعلّم الكورية اليوم",
+      creatingAccount: "جارٍ إنشاء الحساب...",
+      accountCreated: "تم إنشاء الحساب!",
+      welcomeMessage: "مرحبًا بك في K-Lovers! يمكنك الآن تسجيل الدخول.",
     },
     enrollNow: {
       choosePlan: "اختر الخطة",
