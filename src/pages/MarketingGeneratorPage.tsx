@@ -350,7 +350,7 @@ export default function MarketingGeneratorPage() {
                               </>
                             ) : (
                               <>
-                            (Text + 1x1 Only)me="h-4 w-4 mr-2" /> Generate All Content + Images
+                            <Zap className="h-4 w-4 mr-2" /> Generate All (Text + 1x1 Only)
                               </>
                             )}
                           </Button>
