@@ -458,7 +458,7 @@ const AdminAttendancePanel = ({
             <div className={`rounded-lg border p-3 text-center ${stats.balance > 0 ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
               <span className="text-[10px] text-muted-foreground">Balance Due</span>
               <p className={`text-lg font-bold ${stats.balance > 0 ? "text-destructive" : "text-foreground"}`}>
-                {currLabel}{Math.round(stats.balance).toLocaleString()}
+                {currLabel}{Math.round(stats.balance)ats.balance).toLocaleString()}
               </p>
             </div>
           </div>
@@ -540,7 +540,7 @@ const AdminAttendancePanel = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
-                  <span className="font-medium">{currLabel}{enrollment.amount.toLocaleString()}</span>
+                  <span className="font-medium">Math.round(enrollment.amount)lment.amount.toLocaleString()}</span>
                   <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditPaid(String(enrollment.amount)); setEditingPaid(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
