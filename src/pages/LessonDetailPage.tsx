@@ -205,6 +205,7 @@ const LessonDetailPage = () => {
     dialogue_done: t("textbook.dialogue"),
     exercises_done: t("textbook.exercises"),
     reading_done: t("textbook.reading"),
+    writing_done: isAr ? "الكتابة" : "Writing",
   };
 
   const SectionDoneButton = ({ section }: { section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" }) => {
