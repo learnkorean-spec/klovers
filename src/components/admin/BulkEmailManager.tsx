@@ -215,6 +215,52 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 </body></html>`,
   },
   {
+    id: "textbook-launch",
+    name: "📖 Textbook Launch",
+    subject: "🎓 Our Free Korean Textbook Is Live! Start Learning Today",
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
+  <tr><td style="background:#000000;padding:32px 40px;text-align:center;">
+    <p style="margin:0 0 12px;font-size:40px;line-height:1;">📖</p>
+    <h1 style="margin:0;color:#FFFF00;font-size:26px;font-weight:700;line-height:1.3;">Our Free Korean Textbook Is Live!</h1>
+    <p style="margin:10px 0 0;color:#ffffff;font-size:14px;opacity:0.85;">75 interactive lessons · TOPIK 1 & 2 · 100% free</p>
+  </td></tr>
+  <tr><td style="padding:40px;">
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">{{greeting}}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">We're thrilled to announce that <strong>KLovers' interactive Korean Textbook</strong> is now available — and it's completely <strong>free</strong>! 🎉</p>
+
+    <div style="background:#FFFDE7;border-left:4px solid #FFFF00;border-radius:4px;padding:20px;margin:0 0 24px;">
+      <p style="margin:0 0 12px;font-weight:700;color:#111827;font-size:15px;">✨ What's inside:</p>
+      <p style="margin:0;color:#374151;font-size:14px;line-height:2;">
+        📚 <strong>75 structured lessons</strong> — from Hangul basics to intermediate grammar<br>
+        🎯 <strong>5 sections per lesson</strong> — Vocabulary, Grammar, Dialogue, Exercises & Reading<br>
+        🏆 <strong>XP & streaks</strong> — gamified progress to keep you motivated<br>
+        🖼️ <strong>Visual scenes</strong> — AI-generated illustrations for each topic<br>
+        📊 <strong>TOPIK-aligned</strong> — covers Level 1 (45 lessons) and Level 2 (30 lessons)
+      </p>
+    </div>
+
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;">Whether you're a complete beginner or preparing for TOPIK, this textbook will guide you step-by-step. Track your progress, earn XP, and level up your Korean!</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:10px 0 12px;">
+      <a href="https://klovers.lovable.app/textbook" style="background:#FFFF00;color:#000000;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:17px;font-weight:700;display:inline-block;border:2px solid #000000;">Start Learning Now →</a>
+    </td></tr></table>
+    <p style="text-align:center;color:#9CA3AF;font-size:13px;margin:0 0 28px;">No sign-up required to browse lessons</p>
+
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
+    <p style="color:#6B7280;font-size:14px;margin:0;text-align:center;">Happy studying! 💛<br><strong style="color:#111827;">Reham</strong>, Founder of KLovers</p>
+    <p style="text-align:center;margin:12px 0 0;"><a href="https://kloversegy.com" style="color:#000000;text-decoration:none;font-size:13px;font-weight:600;">🌐 kloversegy.com</a></p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  },
+  {
     id: "blank",
     name: "📝 Blank Template",
     subject: "",
