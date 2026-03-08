@@ -683,7 +683,8 @@ const AdminDashboard = () => {
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.negative_sessions > 0 ? <span className="text-destructive">{u.negative_sessions}</span> : "—"}</TableCell>
-                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).                          <TableCell className="py-3 px-3">
+                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}</span> : "—"}</TableCell>
+                            <TableCell className="py-3 px-3">
                               <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.derived_status}</Badge>
                             </TableCell>
                             <TableCell className="py-3 px-3 hidden md:table-cell">
