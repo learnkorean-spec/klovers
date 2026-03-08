@@ -729,7 +729,7 @@ const GroupMatcher = () => {
                           <Badge variant="outline" className="text-xs">private</Badge>
                           <span>{m.duration}mo</span>
                           {m.amount != null && (
-                            <span>{m.amount.toLocaleString()} {m.currency || "USD"}</span>
+                            <span>{Math.round(m.amount).toLocaleString()} {m.currency || "USD"}</span>
                           )}
                           {m.classes_included != null && (
                             <span>{m.classes_included} classes</span>

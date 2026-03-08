@@ -162,7 +162,7 @@ const LegacyAttendancePanel = ({
             <>
               <Badge variant="destructive">{extraSessions} extra sessions</Badge>
               <Badge variant="destructive" className="flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" /> Due: ${amountDue.toLocaleString()}
+                <AlertTriangle className="h-3 w-3" /> Due: ${Math.round(amountDue).toLocaleString()}
               </Badge>
             </>
           )}

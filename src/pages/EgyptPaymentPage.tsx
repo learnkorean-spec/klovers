@@ -59,7 +59,7 @@ const OrderSummary = ({ enrollment }: { enrollment: EnrollmentData }) => (
       </div>
       <div className="flex justify-between text-sm border-t border-border pt-2">
         <span className="font-semibold text-foreground">Total</span>
-        <span className="font-bold text-lg text-foreground">{enrollment.amount.toLocaleString()} EGP</span>
+        <span className="font-bold text-lg text-foreground">{Math.round(enrollment.amount).toLocaleString()} EGP</span>
       </div>
       {enrollment.due_at && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
