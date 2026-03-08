@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,7 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffleArray(arr).slice(0, n);
 }
 
-const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
+const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const [cards, setCards] = useState<CardData[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
