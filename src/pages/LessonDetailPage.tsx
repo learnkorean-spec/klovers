@@ -135,7 +135,7 @@ const LessonDetailPage = () => {
 
     // Check if chapter just completed
     const updatedLp = { ...lp, [section]: true };
-    const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done"]
+    const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
       .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
 
     if (allDone) {
