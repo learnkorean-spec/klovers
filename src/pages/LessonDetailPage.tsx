@@ -263,7 +263,7 @@ const LessonDetailPage = () => {
       <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
         {/* Back link with world context */}
         <div className="flex items-center gap-2 mb-6">
-     {`/textbook/${bookSlug}`}to="/textbook" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+     <Link to={`/textbook/${bookSlug}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ChevronLeft className="h-4 w-4" /> {t("textbook.allMissions")}
           </Link>
           <span className="text-muted-foreground">·</span>
