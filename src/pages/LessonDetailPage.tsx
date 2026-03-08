@@ -255,7 +255,7 @@ const LessonDetailPage = () => {
           xpEarned={XP_VALUES.chapter}
           onContinue={() => {
             setShowMissionComplete(false);
-            if (lessonNum < totalLessons) navigate(`/textbook/${lessonNum + 1}`);
+            if (lessonNum < totalLessons) navigate(`/textbook/${bookSlug}/${lessonNum + 1}`);
           }}
         />
       )}
