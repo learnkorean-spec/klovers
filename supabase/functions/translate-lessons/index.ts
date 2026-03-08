@@ -13,14 +13,17 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get lessons missing Arabic translations
     const { data: lessons, error } = await supabase
       .from("textbook_lessons")
       .select("id, title_en, description, title_ar, description_ar")
-      .or("title_ar.eq.,title_ar.is.null,description_ar.eq.,description_ar.is.null")
-      .limit(10);
+      .or("title_ar.eq.,description_ar.eq.")
+      .limit(15);
 
     if (error) throw error;
     if (!lessons || lessons.length === 0) {
@@ -29,29 +32,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    const prompt = `Translate the following lesson titles and descriptions from English to Arabic. These are Korean language learning lessons. Keep the translations natural and educational in tone.
+    const prompt = `Translate the following Korean language lesson titles and descriptions from English to Arabic. Keep translations natural, educational, and concise.
 
-Return a JSON array with objects containing: id, title_ar, description_ar
+Return ONLY a JSON array with objects: { "id": number, "title_ar": "...", "description_ar": "..." }
 
 Lessons:
 ${JSON.stringify(lessons.map(l => ({ id: l.id, title: l.title_en, description: l.description })), null, 2)}`;
 
-    // Use Lovable AI proxy
-    const aiRes = await fetch("https://rahpkflknkofuuhnbfyc.supabase.co/functions/v1/ai-proxy", {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseKey}`,
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
       }),
     });
 
     if (!aiRes.ok) {
       const errText = await aiRes.text();
-      throw new Error(`AI proxy error: ${errText}`);
+      throw new Error(`AI API error: ${aiRes.status} - ${errText}`);
     }
 
     const aiData = await aiRes.json();
@@ -65,14 +68,16 @@ ${JSON.stringify(lessons.map(l => ({ id: l.id, title: l.title_en, description: l
     
     let updated = 0;
     for (const t of translations) {
-      const { error: updateError } = await supabase
-        .from("textbook_lessons")
-        .update({ title_ar: t.title_ar, description_ar: t.description_ar })
-        .eq("id", t.id);
-      if (!updateError) updated++;
+      if (t.title_ar && t.description_ar) {
+        const { error: updateError } = await supabase
+          .from("textbook_lessons")
+          .update({ title_ar: t.title_ar, description_ar: t.description_ar })
+          .eq("id", t.id);
+        if (!updateError) updated++;
+      }
     }
 
-    return new Response(JSON.stringify({ message: `Translated ${updated} lessons`, count: updated }), {
+    return new Response(JSON.stringify({ message: `Translated ${updated} lessons`, count: updated, total: lessons.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
