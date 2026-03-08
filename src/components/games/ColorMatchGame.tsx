@@ -28,7 +28,7 @@ function generateQ(colors: typeof COLORS) {
   return { question: q, options: shuffleArray([...opts]) };
 }
 
-const{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void } ColorMatchGame = () => {
+const ColorMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const [pool] = useState(() => shuffleArray(COLORS));
   const [round, setRound] = useState(0);

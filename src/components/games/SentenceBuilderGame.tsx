@@ -32,7 +32,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-const Sent{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }enceBuilderGame = () => {
+const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(0);

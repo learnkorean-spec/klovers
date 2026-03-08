@@ -55,7 +55,7 @@ function generateOptions(correct: HangulChar, pool: HangulChar[]): string[] {
   return shuffleArray(options);
 }
 
-const HangulQuiz{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }Game = () => {
+const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const totalRounds = 10;
   const maxLives = 3;
 
