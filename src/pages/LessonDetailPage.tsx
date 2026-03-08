@@ -38,7 +38,8 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const { toast } = useToast();
   const { userId, progress, league, markSectionDone } = useGamification();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [totalLessons, setTotalLessons] = useState(0);
