@@ -38,7 +38,8 @@ interface ExerciseItem { id: string; question: string; options: string[]; correc
 interface ReadingItem { id: string; korean_text: string; english_text: string; }
 
 const LessonDetailPage = () => {
-  const { lessonId } = useParams();
+  const { lessonId, bookId } = useParams();
+  const bookSlug = bookId || "korean-1";
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
