@@ -449,7 +449,7 @@ const StudentDashboard = () => {
                 const packageSize = enrollment.sessions_total;
                 const remaining = packageSize - totalUsed;
                 const extra = remaining < 0 ? Math.abs(remaining) : 0;
-                const due = Math.round(extra * enrollment.unit_price).unit_price);
+                const due = Math.round(extra * enrollment.unit_price).unit_price).unit_price);
                 const curr = enrollment.currency === "EGP" ? "LE" : "$";
 
                 return (
@@ -513,7 +513,7 @@ const StudentDashboard = () => {
                         <div className="flex items-center gap-1.5">
                           <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-muted-foreground">Paid:</span>
-                          <span className="font-medMath.round(enrollment.amount)lment.amount.toLocaleString()}</span>
+                          <span classNaMath.round(enrollment.amount)round(enrollment.amount)lment.amount.toLocaleString()}</span>
                         </div>
                         {enrollment.id === latestEnrollmentId && groupName && (
                           <div className="flex items-center gap-1.5 col-span-2">
@@ -524,7 +524,7 @@ const StudentDashboard = () => {
                         )}
                         <div className="flex items-center gap-1.5">
                           <span className="text-muted-foreground">Unit price:</span>
-                          <span className="font-medium">{curr}{enrollment.unit_price}</span>
+                          <span classNaMath.round(enrollment.unit_price).toLocaleString()r}{enrollment.unit_price}</span>
                         </div>
                       </div>
                     </CardContent>
