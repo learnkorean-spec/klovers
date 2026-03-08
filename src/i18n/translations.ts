@@ -328,6 +328,7 @@ export const translations = {
       emailNotConfirmed: "Your email is not confirmed. Please check your inbox for a verification link.",
       accountExists: "An account with this email already exists. Please log in instead.",
       rateLimited: "Too many attempts. Please wait a moment and try again.",
+      trySocialLogin: "If you signed up with Google or Apple, please use that method to log in.",
       accountRequired: "Account required",
       accountRequiredDesc: "Please create an account or log in to continue.",
       signInToContinue: "Sign in to continue",
