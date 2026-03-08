@@ -1,11 +1,15 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import KoreanMatchGame from "@/components/KoreanMatchGame";
 import HangulQuizGame from "@/components/HangulQuizGame";
 import { Card } from "@/components/ui/card";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useGamification } from "@/hooks/useGamification";
+import { getLeagueProgress } from "@/constants/gamification";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy } from "lucide-react";
+import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
 const NumbersGame = lazy(() => import("@/components/games/NumbersGame"));
@@ -43,6 +47,14 @@ const GameFallback = () => (
 
 const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
+  const { awardGameXp, progress, league } = useGamification();
+
+  const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
+    const xp = await awardGameXp(gameId, score, totalRounds);
+    if (xp && xp > 0) {
+      toast.success(`🎮 +${xp} XP earned!`, { description: `${league.emoji} ${league.name}` });
+    }
+  }, [awardGameXp, league]);
 
   const selectGame = (id: string) => {
     setActiveGame(id);
@@ -52,20 +64,21 @@ const GamesPage = () => {
   };
 
   const renderGame = () => {
+    const onComplete = (score: number, total: number) => handleGameComplete(activeGame, score, total);
     switch (activeGame) {
-      case "match": return <KoreanMatchGame />;
-      case "hangul": return <HangulQuizGame />;
-      case "sentence": return <Suspense fallback={<GameFallback />}><SentenceBuilderGame /></Suspense>;
-      case "numbers": return <Suspense fallback={<GameFallback />}><NumbersGame /></Suspense>;
-      case "colors": return <Suspense fallback={<GameFallback />}><ColorMatchGame /></Suspense>;
-      case "verbs": return <Suspense fallback={<GameFallback />}><VerbConjugationGame /></Suspense>;
-      case "greetings": return <Suspense fallback={<GameFallback />}><GreetingMasterGame /></Suspense>;
-      case "opposites": return <Suspense fallback={<GameFallback />}><OppositeWordsGame /></Suspense>;
-      case "fillblank": return <Suspense fallback={<GameFallback />}><FillBlankGame /></Suspense>;
-      case "scramble": return <Suspense fallback={<GameFallback />}><WordScrambleGame /></Suspense>;
-      case "counters": return <Suspense fallback={<GameFallback />}><CounterWordsGame /></Suspense>;
-      case "kdrama": return <Suspense fallback={<GameFallback />}><KDramaQuizGame /></Suspense>;
-      case "time": return <Suspense fallback={<GameFallback />}><TimeTellerGame /></Suspense>;
+      case "match": return <KoreanMatchGame onGameComplete={onComplete} />;
+      case "hangul": return <HangulQuizGame onGameComplete={onComplete} />;
+      case "sentence": return <Suspense fallback={<GameFallback />}><SentenceBuilderGame onGameComplete={onComplete} /></Suspense>;
+      case "numbers": return <Suspense fallback={<GameFallback />}><NumbersGame onGameComplete={onComplete} /></Suspense>;
+      case "colors": return <Suspense fallback={<GameFallback />}><ColorMatchGame onGameComplete={onComplete} /></Suspense>;
+      case "verbs": return <Suspense fallback={<GameFallback />}><VerbConjugationGame onGameComplete={onComplete} /></Suspense>;
+      case "greetings": return <Suspense fallback={<GameFallback />}><GreetingMasterGame onGameComplete={onComplete} /></Suspense>;
+      case "opposites": return <Suspense fallback={<GameFallback />}><OppositeWordsGame onGameComplete={onComplete} /></Suspense>;
+      case "fillblank": return <Suspense fallback={<GameFallback />}><FillBlankGame onGameComplete={onComplete} /></Suspense>;
+      case "scramble": return <Suspense fallback={<GameFallback />}><WordScrambleGame onGameComplete={onComplete} /></Suspense>;
+      case "counters": return <Suspense fallback={<GameFallback />}><CounterWordsGame onGameComplete={onComplete} /></Suspense>;
+      case "kdrama": return <Suspense fallback={<GameFallback />}><KDramaQuizGame onGameComplete={onComplete} /></Suspense>;
+      case "time": return <Suspense fallback={<GameFallback />}><TimeTellerGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };
