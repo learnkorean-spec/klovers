@@ -43,7 +43,7 @@ const CoursesPage = () => {
             </div>
             <div className="text-center mt-10">
               <Button size="lg" asChild>
-                <a href="/pricing">{t("courses", "cta")}</a>
+                <Link to="/pricing">{t("courses", "cta")}</Link>
               </Button>
             </div>
           </div>

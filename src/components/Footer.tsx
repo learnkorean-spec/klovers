@@ -10,7 +10,8 @@ const TiktokIcon = () => (
 );
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   return (
     <footer className="bg-foreground text-background py-12">
@@ -39,11 +40,13 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><Link to="/courses" className="text-background/70 hover:text-primary text-sm transition-colors">{t("header", "courses")}</Link></li>
               <li><Link to="/pricing" className="text-background/70 hover:text-primary text-sm transition-colors">{t("header", "pricing")}</Link></li>
-              <li><Link to="/games" className="text-background/70 hover:text-primary text-sm transition-colors">Games</Link></li>
+              <li><Link to="/textbook" className="text-background/70 hover:text-primary text-sm transition-colors">{isAr ? "الكتاب" : "Textbook"}</Link></li>
+              <li><Link to="/games" className="text-background/70 hover:text-primary text-sm transition-colors">{isAr ? "ألعاب" : "Games"}</Link></li>
+              <li><Link to="/placement-test" className="text-background/70 hover:text-primary text-sm transition-colors">{isAr ? "اختبار تحديد المستوى" : "Placement Test"}</Link></li>
+              <li><Link to="/blog" className="text-background/70 hover:text-primary text-sm transition-colors">{isAr ? "المدونة" : "Blog"}</Link></li>
               <li><Link to="/about" className="text-background/70 hover:text-primary text-sm transition-colors">{t("header", "about")}</Link></li>
               <li><Link to="/faq" className="text-background/70 hover:text-primary text-sm transition-colors">{t("header", "faq")}</Link></li>
               <li><Link to="/contact" className="text-background/70 hover:text-primary text-sm transition-colors">{t("header", "contact")}</Link></li>
-              <li><Link to="/blog" className="text-background/70 hover:text-primary text-sm transition-colors">Blog</Link></li>
             </ul>
           </div>
 
