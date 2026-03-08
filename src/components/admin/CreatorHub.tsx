@@ -31,7 +31,7 @@ const FORMATS: Record<FormatKey, FormatOption> = {
 };
 
 const THEME_COLORS: Record<ColorTheme, { bg: string; text: string; accent: string; label: string; dot: string }> = {
-  yellow:   { bg: "#FFEB00", text: "#1a1a1a", accent: "#333", label: "Classic Yellow", dot: "#FFEB00" },
+  yellow:   { bg: "#FFFF00", text: "#1a1a1a", accent: "#333", label: "Classic Yellow", dot: "#FFFF00" },
   midnight: { bg: "#1a1a2e", text: "#e0e0e0", accent: "#9b87f5", label: "Midnight", dot: "#9b87f5" },
   coral:    { bg: "#ff6b6b", text: "#fff", accent: "#ffeaa7", label: "Coral Reef", dot: "#ff6b6b" },
   forest:   { bg: "#2d6a4f", text: "#d8f3dc", accent: "#95d5b2", label: "Forest", dot: "#2d6a4f" },
@@ -136,7 +136,7 @@ function renderPost(
   ctx.fillStyle = template === "neon" || template === "dark" ? "#333" : "#1a1a1a";
   ctx.fill();
   ctx.font = `bold ${28 * scale}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#FFEB00";
+  ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
   ctx.fillText("K", w - 60 * scale, h - 52 * scale);
   ctx.textAlign = "start";
