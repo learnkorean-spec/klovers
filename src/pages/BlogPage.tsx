@@ -82,7 +82,7 @@ const BlogPage = () => {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <p className="text-center text-foreground/60 py-12 text-lg">No articles published yet. Check back soon!</p>
+            <p className="text-center text-foreground/60 py-12 text-lg">{language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!"}</p>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {posts.map((post) => (
