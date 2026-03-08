@@ -41,6 +41,7 @@ const Header = () => {
     { href: "/courses", label: t("header", "courses") },
     { href: "/pricing", label: t("header", "pricing") },
     { href: "/games", label: "Games" },
+    { href: "/textbook", label: "Textbook" },
     { href: "/about", label: t("header", "about") },
     { href: "/faq", label: t("header", "faq") },
     { href: "/contact", label: t("header", "contact") },

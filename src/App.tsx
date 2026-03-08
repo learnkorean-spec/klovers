@@ -79,6 +79,8 @@ const App = () => (
             <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
             <Route path="/placement-test" element={<PlacementTestPage />} />
             <Route path="/games" element={<GamesPage />} />
+            <Route path="/textbook" element={<TextbookPage />} />
+            <Route path="/textbook/:lessonId" element={<TextbookPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
             <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
