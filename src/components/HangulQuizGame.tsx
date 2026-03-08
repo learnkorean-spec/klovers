@@ -88,6 +88,14 @@ const HangulQuiz{ onGameComplete }: { onGameComplete?: (score: number, total: nu
 
   useEffect(() => { initGame(); }, [initGame]);
 
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (gameOver && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, totalRounds);
+    }
+  }, [gameOver, score, totalRounds, onGameComplete]);
+
   const currentChar = queue[round];
 
   const handleAnswer = (answer: string) => {

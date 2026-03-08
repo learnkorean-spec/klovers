@@ -85,6 +85,14 @@ co{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void 
     setOptions(generateOptions(q[0].value));
   };
 
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (round >= totalRounds && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, totalRounds);
+    }
+  }, [round, totalRounds, score, onGameComplete]);
+
   if (round >= totalRounds) {
     return (
       <section className="py-12 px-4">

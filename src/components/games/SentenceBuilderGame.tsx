@@ -90,6 +90,14 @@ const Sent{ onGameComplete }: { onGameComplete?: (score: number, total: number) 
 
   const xpEarned = score * 5;
 
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (gameOver && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, rounds);
+    }
+  }, [gameOver, score, rounds, onGameComplete]);
+
   if (gameOver) {
     return (
       <section className="py-12 px-4">

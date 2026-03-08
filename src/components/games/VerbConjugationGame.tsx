@@ -42,6 +42,14 @@ const Verb{ onGameComplete }: { onGameComplete?: (score: number, total: number) 
 
   const restart = () => { setRound(0); setScore(0); setFeedback(null); setSelected(null); };
 
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (round >= totalRounds && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(score, totalRounds);
+    }
+  }, [round, totalRounds, score, onGameComplete]);
+
   if (round >= totalRounds) {
     return (
       <section className="py-12 px-4"><Card className="max-w-lg mx-auto p-8 text-center space-y-4">

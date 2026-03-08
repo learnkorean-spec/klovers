@@ -68,6 +68,14 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
 
   useEffect(() => { initGame(); }, [initGame]);
 
+  const xpAwardedRef = useRef(false);
+  useEffect(() => {
+    if (gameComplete && !xpAwardedRef.current) {
+      xpAwardedRef.current = true;
+      onGameComplete?.(matches, pairCount);
+    }
+  }, [gameComplete, matches, pairCount, onGameComplete]);
+
   useEffect(() => {
     if (!isRunning) return;
     const interval = setInterval(() => setTimer((t) => t + 1), 1000);
