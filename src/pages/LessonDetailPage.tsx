@@ -128,6 +128,7 @@ const LessonDetailPage = () => {
       dialogue_done: XP_VALUES.dialogue,
       exercises_done: XP_VALUES.exercise,
       reading_done: XP_VALUES.reading,
+      writing_done: XP_VALUES.writing,
     };
 
     setXpFloat(xpMap[section]);
