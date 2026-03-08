@@ -1,0 +1,122 @@
+// Korean Learning Worlds - Duolingo-style progression structure
+export interface World {
+  id: number;
+  key: string;
+  name: string;
+  nameAr: string;
+  emoji: string;
+  icon: string;
+  description: string;
+  descriptionAr: string;
+  color: string;
+  lessonRange: [number, number]; // [startSortOrder, endSortOrder]
+}
+
+export const WORLDS: World[] = [
+  {
+    id: 1,
+    key: "hangul_village",
+    name: "Hangul Village",
+    nameAr: "قرية الهانغول",
+    emoji: "🏡",
+    icon: "ㄱ",
+    description: "Master the Korean alphabet and basic sounds",
+    descriptionAr: "أتقن الأبجدية الكورية والأصوات الأساسية",
+    color: "hsl(142 76% 36%)",
+    lessonRange: [1, 10],
+  },
+  {
+    id: 2,
+    key: "survival_streets",
+    name: "Survival Streets",
+    nameAr: "شوارع البقاء",
+    emoji: "🏪",
+    icon: "🛒",
+    description: "Essential phrases for everyday survival",
+    descriptionAr: "عبارات أساسية للحياة اليومية",
+    color: "hsl(217 91% 60%)",
+    lessonRange: [11, 20],
+  },
+  {
+    id: 3,
+    key: "daily_life_district",
+    name: "Daily Life District",
+    nameAr: "حي الحياة اليومية",
+    emoji: "🏙️",
+    icon: "☀️",
+    description: "Talk about your daily routines and activities",
+    descriptionAr: "تحدث عن روتينك اليومي وأنشطتك",
+    color: "hsl(262 83% 58%)",
+    lessonRange: [21, 30],
+  },
+  {
+    id: 4,
+    key: "conversation_city",
+    name: "Conversation City",
+    nameAr: "مدينة المحادثة",
+    emoji: "💬",
+    icon: "🗣️",
+    description: "Build real conversation skills",
+    descriptionAr: "بناء مهارات المحادثة الحقيقية",
+    color: "hsl(25 95% 53%)",
+    lessonRange: [31, 38],
+  },
+  {
+    id: 5,
+    key: "grammar_mountains",
+    name: "Grammar Mountains",
+    nameAr: "جبال القواعد",
+    emoji: "⛰️",
+    icon: "✍️",
+    description: "Conquer essential Korean grammar patterns",
+    descriptionAr: "أتقن أنماط القواعد الكورية الأساسية",
+    color: "hsl(0 72% 51%)",
+    lessonRange: [39, 45],
+  },
+  {
+    id: 6,
+    key: "seoul_downtown",
+    name: "Seoul Downtown",
+    nameAr: "وسط سيول",
+    emoji: "🗼",
+    icon: "✈️",
+    description: "Travel and real-life situation Korean",
+    descriptionAr: "الكورية للسفر والمواقف الحقيقية",
+    color: "hsl(45 93% 47%)",
+    lessonRange: [46, 60],
+  },
+  {
+    id: 7,
+    key: "topik_arena",
+    name: "TOPIK Arena",
+    nameAr: "حلبة التوبيك",
+    emoji: "🏆",
+    icon: "🎓",
+    description: "Prepare for the TOPIK 1 exam",
+    descriptionAr: "استعد لامتحان التوبيك 1",
+    color: "hsl(340 82% 52%)",
+    lessonRange: [61, 75],
+  },
+];
+
+export function getWorldForLesson(sortOrder: number): World {
+  for (const world of WORLDS) {
+    if (sortOrder >= world.lessonRange[0] && sortOrder <= world.lessonRange[1]) {
+      return world;
+    }
+  }
+  return WORLDS[0];
+}
+
+export function getWorldProgress(
+  world: World,
+  lessonProgress: Record<number, { chapter_completed: boolean }>,
+  lessons: { id: number; sort_order: number }[]
+): { completed: number; total: number; percent: number } {
+  const worldLessons = lessons.filter(
+    (l) => l.sort_order >= world.lessonRange[0] && l.sort_order <= world.lessonRange[1]
+  );
+  const completed = worldLessons.filter((l) => lessonProgress[l.id]?.chapter_completed).length;
+  const total = worldLessons.length;
+  return { completed, total, percent: total > 0 ? (completed / total) * 100 : 0 };
+}
