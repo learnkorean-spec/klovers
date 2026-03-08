@@ -17,6 +17,8 @@ interface Lesson {
   title_en: string;
   title_ko: string;
   description: string;
+  title_ar?: string;
+  description_ar?: string;
   sort_order: number;
 }
 
@@ -24,7 +26,8 @@ const TextbookPage = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const { userId, progress, league, loading: gamLoading } = useGamification();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -122,11 +125,11 @@ const TextbookPage = () => {
                       </p>
                     </div>
                     <h3 className="font-bold text-foreground text-lg leading-tight mb-0.5">
-                      {lesson.title_en}
+                      {isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-2">{lesson.title_ko}</p>
                     <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                      {lesson.description}
+                      {isAr && lesson.description_ar ? lesson.description_ar : lesson.description}
                     </p>
                     {lp && <LessonProgressDots progress={lp} />}
                   </Link>

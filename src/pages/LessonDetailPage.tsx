@@ -21,6 +21,8 @@ interface Lesson {
   title_en: string;
   title_ko: string;
   description: string;
+  title_ar?: string;
+  description_ar?: string;
   sort_order: number;
   scene_image_url?: string;
 }
@@ -36,7 +38,8 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const { toast } = useToast();
   const { userId, progress, league, markSectionDone } = useGamification();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [totalLessons, setTotalLessons] = useState(0);
@@ -192,8 +195,8 @@ const LessonDetailPage = () => {
         {/* Mission Start Banner */}
         <MissionStartBanner
           lessonNum={lesson.sort_order}
-          title={lesson.title_en}
-          description={lesson.description}
+          title={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
+          description={isAr && lesson.description_ar ? lesson.description_ar : lesson.description}
           isBoss={boss}
           isCheckpoint={checkpoint}
         />
@@ -203,7 +206,7 @@ const LessonDetailPage = () => {
           <span className="text-5xl">{lesson.emoji}</span>
           <div className="flex-1">
             <p className="text-sm font-bold text-primary uppercase tracking-wider">{t("textbook.missionLabel")} {lesson.sort_order}</p>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{lesson.title_en}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}</h1>
             <p className="text-muted-foreground text-lg">{lesson.title_ko}</p>
           </div>
         </div>
