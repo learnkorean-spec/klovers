@@ -19,6 +19,7 @@ export const XP_VALUES = {
   challenge: 30,
   bonus: 25,
   streak_bonus: 5,
+  game_complete: 5,  // per correct answer in games
 } as const;
 
 export const BADGES = [
