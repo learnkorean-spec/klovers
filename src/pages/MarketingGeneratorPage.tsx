@@ -339,7 +339,7 @@ export default function MarketingGeneratorPage() {
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-foreground">{groups.length} groups with open seats</p>
-                          <p className="text-xs text-muted-foreground">Generate text + images for all at once</p>
+                          <p className="text-xs text-muted-foreground">Generates text + 1x1 images only (saves credits). Use buttons per group for 4x5 / Story.</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Button onClick={handleBulkGenerate} disabled={bulkGenerating}>
