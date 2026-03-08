@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, User, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPost {
   id: string;
@@ -27,6 +28,7 @@ interface BlogPost {
 const BlogPage = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -34,12 +36,13 @@ const BlogPage = () => {
         .from("blog_posts")
         .select("id, title, slug, description, keywords, article_type, hero_image, hero_alt, author, lang, published_at, created_at")
         .eq("published", true)
+        .eq("lang", language)
         .order("published_at", { ascending: false });
       setPosts((data as BlogPost[]) || []);
       setLoading(false);
     };
     fetchPosts();
-  }, []);
+  }, [language]);
 
   const typeLabel: Record<string, string> = {
     howto: "How-To",

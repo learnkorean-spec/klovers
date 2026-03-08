@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, CalendarDays, User, ArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPost {
   id: string;
@@ -36,21 +37,36 @@ const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
 
   useEffect(() => {
     const fetchPost = async () => {
       if (!slug) return;
+      setLoading(true);
+      // Try language-specific slug first (e.g. slug-ar), then fall back to exact slug
+      const arSlug = language === "ar" ? `${slug}-ar` : slug;
       const { data } = await supabase
         .from("blog_posts")
         .select("*")
-        .eq("slug", slug)
+        .eq("slug", language === "ar" ? arSlug : slug)
         .eq("published", true)
         .maybeSingle();
-      setPost(data as BlogPost | null);
+      // If Arabic version not found, fall back to English
+      if (!data && language === "ar") {
+        const { data: fallback } = await supabase
+          .from("blog_posts")
+          .select("*")
+          .eq("slug", slug)
+          .eq("published", true)
+          .maybeSingle();
+        setPost(fallback as BlogPost | null);
+      } else {
+        setPost(data as BlogPost | null);
+      }
       setLoading(false);
     };
     fetchPost();
-  }, [slug]);
+  }, [slug, language]);
 
   const typeLabel: Record<string, string> = {
     howto: "How-To",

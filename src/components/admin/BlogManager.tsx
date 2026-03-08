@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles, TrendingUp } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles, TrendingUp, Languages } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 
@@ -200,6 +200,7 @@ const BlogManager = () => {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingImage2, setGeneratingImage2] = useState(false);
   const [keywordsInput, setKeywordsInput] = useState("");
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const liveScore = calculateSeoScore(editing, keywordsInput);
 
@@ -299,6 +300,27 @@ const BlogManager = () => {
     }
   };
 
+  const handleTranslate = async (post: BlogPost) => {
+    if (post.lang !== "en") {
+      toast({ title: "Only English articles can be translated", variant: "destructive" });
+      return;
+    }
+    setTranslating(post.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-article", {
+        body: { slug: post.slug },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Article translated to Arabic!", description: `Slug: ${data.slug}` });
+      fetchPosts();
+    } catch (e: any) {
+      toast({ title: "Translation failed", description: e.message, variant: "destructive" });
+    } finally {
+      setTranslating(null);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageNum: 1 | 2) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -374,9 +396,19 @@ const BlogManager = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search posts..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button onClick={openNew} className="gap-2">
-          <Plus className="h-4 w-4" /> New Post
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" disabled={!!translating} onClick={async () => {
+            const enPosts = posts.filter(p => p.lang === "en");
+            for (const post of enPosts) {
+              await handleTranslate(post);
+            }
+          }}>
+            <Languages className="h-4 w-4" /> Translate All
+          </Button>
+          <Button onClick={openNew} className="gap-2">
+            <Plus className="h-4 w-4" /> New Post
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -390,6 +422,7 @@ const BlogManager = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Lang</TableHead>
                 <TableHead>SEO Score</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
@@ -402,6 +435,9 @@ const BlogManager = () => {
                   <TableCell className="font-medium max-w-[200px] truncate">{post.title}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{post.article_type}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-xs">{post.lang === "ar" ? "AR" : "EN"}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -420,6 +456,11 @@ const BlogManager = () => {
                     {new Date(post.published_at || post.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right space-x-1">
+                    {post.lang === "en" && (
+                      <Button variant="ghost" size="icon" onClick={() => handleTranslate(post)} disabled={translating === post.id} title="Translate to Arabic">
+                        <Languages className={`h-4 w-4 ${translating === post.id ? "animate-spin" : ""}`} />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => togglePublish(post)} title={post.published ? "Unpublish" : "Publish"}>
                       {post.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
