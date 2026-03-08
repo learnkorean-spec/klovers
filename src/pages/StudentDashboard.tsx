@@ -398,6 +398,48 @@ const StudentDashboard = () => {
               {/* Registration Checklist */}
               <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
 
+              {/* League & XP Progress */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    My League
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <LeagueProgressBar totalXp={gamification.totalXp} />
+                  <StreakDisplay currentStreak={gamification.streak.current_streak} longestStreak={gamification.streak.longest_streak} />
+                  {gamification.badges.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges</p>
+                      <BadgeGrid earnedBadges={gamification.badges} />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Games CTA */}
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Gamepad2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">Learn & Play</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Zap className="h-3 w-3" /> Earn 5 XP per correct answer
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => navigate("/games")}>
+                      Play Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />
 
