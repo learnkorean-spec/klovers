@@ -540,7 +540,8 @@ const AdminAttendancePanel = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
-                  <span className="fMath.round(enrollment.amont-medium">{currLabel}{ont-medium">{currLabel}{Math.round(enrollment.amount)on" variant="ghost" className="h-5 w-5" onClick={() => { setEditPaid(String(enrollment.amount)); setEditingPaid(true); }}>
+                  <span className="font-medium">{currLabel}{Math.round(enrollment.amount).toLocaleString()}</span>
+                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditPaid(String(enrollment.amount)); setEditingPaid(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 </div>
