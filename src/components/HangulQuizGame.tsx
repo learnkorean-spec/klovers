@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { RotateCcw, Trophy, Heart, Zap, Volume2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { RotateCcw, Trophy, Heart, Zap } from "lucide-react";
 
 interface HangulChar {
   char: string;
@@ -12,7 +13,6 @@ interface HangulChar {
 }
 
 const HANGUL_CHARS: HangulChar[] = [
-  // Consonants
   { char: "ㄱ", romanization: "g/k", type: "consonant" },
   { char: "ㄴ", romanization: "n", type: "consonant" },
   { char: "ㄷ", romanization: "d/t", type: "consonant" },
@@ -27,7 +27,6 @@ const HANGUL_CHARS: HangulChar[] = [
   { char: "ㅌ", romanization: "t", type: "consonant" },
   { char: "ㅍ", romanization: "p", type: "consonant" },
   { char: "ㅎ", romanization: "h", type: "consonant" },
-  // Vowels
   { char: "ㅏ", romanization: "a", type: "vowel" },
   { char: "ㅑ", romanization: "ya", type: "vowel" },
   { char: "ㅓ", romanization: "eo", type: "vowel" },
@@ -56,6 +55,7 @@ function generateOptions(correct: HangulChar, pool: HangulChar[]): string[] {
 }
 
 const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
+  const { t } = useLanguage();
   const totalRounds = 10;
   const maxLives = 3;
 
@@ -138,20 +138,18 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
   return (
     <section className="py-16 px-4 relative overflow-hidden">
       <div className="max-w-2xl mx-auto relative z-10">
-        {/* Header */}
         <div className="text-center mb-8 space-y-2">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-            Hangul <span className="underline decoration-primary decoration-4 underline-offset-4">Speed</span> Quiz
+            {t("games.hangulHeader")}
           </h2>
           <p className="text-muted-foreground">
-            Identify the romanization of each Hangul character. Build streaks for bonus points!
+            {t("games.hangulSubtitle")}
           </p>
         </div>
 
-        {/* Stats */}
         <div className="flex justify-center gap-3 md:gap-5 mb-4 flex-wrap">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
-            Score: {score}
+            {t("games.score")}: {score}
           </Badge>
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
             <div className="flex gap-0.5">
@@ -171,7 +169,6 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
 
         {!gameOver && currentChar ? (
           <>
-            {/* Character display */}
             <Card className="max-w-xs mx-auto mb-8 p-8 text-center border-2 border-border bg-card relative">
               <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-xs font-medium text-muted-foreground">
                 {round + 1}/{totalRounds}
@@ -180,21 +177,20 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
                 {currentChar.char}
               </span>
               <Badge variant="outline" className="text-xs">
-                {currentChar.type === "vowel" ? "🔴 Vowel" : "🔵 Consonant"}
+                {currentChar.type === "vowel" ? `🔴 ${t("games.vowel")}` : `🔵 ${t("games.consonant")}`}
               </Badge>
               {showHint && (
                 <p className="text-xs text-muted-foreground mt-2 animate-in fade-in">
-                  Hint: This is a {currentChar.type}. Think about how it sounds!
+                  {t("games.hintText").replace("{type}", currentChar.type === "vowel" ? t("games.vowel") : t("games.consonant"))}
                 </p>
               )}
               {!showHint && selected === null && (
                 <button onClick={() => setShowHint(true)} className="text-xs text-muted-foreground/60 hover:text-muted-foreground mt-2 underline">
-                  Need a hint?
+                  {t("games.needHint")}
                 </button>
               )}
             </Card>
 
-            {/* Options */}
             <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
               {options.map((opt) => {
                 let style = "bg-card border-border hover:border-foreground/30 hover:shadow-sm";
@@ -224,9 +220,9 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
               <div className={`text-center mt-4 text-sm font-medium animate-in fade-in ${isCorrect ? "text-foreground" : "text-destructive"}`}>
                 {isCorrect
                   ? streak >= 3
-                    ? "🔥 Amazing! +2 points (streak bonus!)"
-                    : "✅ Correct!"
-                  : `❌ It was "${currentChar.romanization}"`}
+                    ? t("games.streakBonus")
+                    : t("games.correctSimple")
+                  : t("games.wrongAnswer").replace("{answer}", currentChar.romanization)}
               </div>
             )}
           </>
@@ -242,17 +238,17 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
                 ))}
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-1">
-                {lives > 0 ? "🎉 Quiz Complete!" : "💔 Game Over!"}
+                {lives > 0 ? t("games.quizComplete") : t("games.gameOver")}
               </h3>
               <div className="space-y-1 text-muted-foreground">
-                <p>Score: <span className="font-bold text-foreground">{score}</span> points</p>
-                <p>Best Streak: <span className="font-bold text-foreground">{bestStreak}x</span></p>
-                <p>Round: {round + (lives > 0 ? 1 : 0)}/{totalRounds}</p>
+                <p>{t("games.score")}: <span className="font-bold text-foreground">{score}</span> {t("games.points")}</p>
+                <p>{t("games.bestStreak")}: <span className="font-bold text-foreground">{bestStreak}x</span></p>
+                <p>{t("games.round")}: {round + (lives > 0 ? 1 : 0)}/{totalRounds}</p>
               </div>
             </Card>
             <Button variant="outline" onClick={initGame} className="gap-2">
               <RotateCcw className="h-4 w-4" />
-              Play Again
+              {t("games.playAgain")}
             </Button>
           </div>
         ) : null}

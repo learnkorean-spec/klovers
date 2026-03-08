@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useGamification } from "@/hooks/useGamification";
 import { getLeagueProgress } from "@/constants/gamification";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,22 +24,6 @@ const CounterWordsGame = lazy(() => import("@/components/games/CounterWordsGame"
 const KDramaQuizGame = lazy(() => import("@/components/games/KDramaQuizGame"));
 const TimeTellerGame = lazy(() => import("@/components/games/TimeTellerGame"));
 
-const games = [
-  { id: "match", title: "Vocabulary Match", description: "Flip cards & match Korean words with English meanings", icon: Layers, emoji: "🃏", difficulty: "Beginner" },
-  { id: "hangul", title: "Hangul Speed Quiz", description: "Identify Hangul characters against the clock", icon: Brain, emoji: "⚡", difficulty: "Beginner" },
-  { id: "sentence", title: "Sentence Builder", description: "Arrange words to build correct Korean sentences", icon: PenLine, emoji: "🧩", difficulty: "Beginner" },
-  { id: "numbers", title: "Korean Numbers", description: "Master native & Sino-Korean number systems", icon: Hash, emoji: "🔢", difficulty: "Beginner" },
-  { id: "colors", title: "Color Match", description: "Learn Korean color names with visual cues", icon: Palette, emoji: "🎨", difficulty: "Beginner" },
-  { id: "verbs", title: "Verb Conjugation", description: "Practice present, past & future verb forms", icon: BookOpen, emoji: "📝", difficulty: "Intermediate" },
-  { id: "greetings", title: "Greeting Master", description: "Match Korean greetings to real-life situations", icon: MessageCircle, emoji: "👋", difficulty: "Beginner" },
-  { id: "opposites", title: "Opposite Words", description: "Find the Korean antonym for each word", icon: ArrowLeftRight, emoji: "↔️", difficulty: "Intermediate" },
-  { id: "fillblank", title: "Particle Pro", description: "Fill in the correct Korean particles (은/는/이/가)", icon: PenLine, emoji: "✏️", difficulty: "Intermediate" },
-  { id: "scramble", title: "Word Scramble", description: "Unscramble Korean syllables to form words", icon: Shuffle, emoji: "🔀", difficulty: "Beginner" },
-  { id: "counters", title: "Counter Words", description: "Learn Korean counting words (명, 개, 마리...)", icon: Calculator, emoji: "🔢", difficulty: "Intermediate" },
-  { id: "kdrama", title: "K-Drama Quiz", description: "Guess meanings of popular K-Drama phrases", icon: Tv, emoji: "🎬", difficulty: "Beginner" },
-  { id: "time", title: "Time Teller", description: "Read Korean time expressions correctly", icon: Clock, emoji: "⏰", difficulty: "Beginner" },
-];
-
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -48,11 +33,28 @@ const GameFallback = () => (
 const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
   const { awardGameXp, progress, league } = useGamification();
+  const { t } = useLanguage();
+
+  const games = [
+    { id: "match", title: t("games.matchTitle"), description: t("games.matchDesc"), icon: Layers, emoji: "🃏", difficulty: t("games.beginner") },
+    { id: "hangul", title: t("games.hangulTitle"), description: t("games.hangulDesc"), icon: Brain, emoji: "⚡", difficulty: t("games.beginner") },
+    { id: "sentence", title: t("games.sentenceTitle"), description: t("games.sentenceDesc"), icon: PenLine, emoji: "🧩", difficulty: t("games.beginner") },
+    { id: "numbers", title: t("games.numbersTitle"), description: t("games.numbersDesc"), icon: Hash, emoji: "🔢", difficulty: t("games.beginner") },
+    { id: "colors", title: t("games.colorsTitle"), description: t("games.colorsDesc"), icon: Palette, emoji: "🎨", difficulty: t("games.beginner") },
+    { id: "verbs", title: t("games.verbsTitle"), description: t("games.verbsDesc"), icon: BookOpen, emoji: "📝", difficulty: t("games.intermediate") },
+    { id: "greetings", title: t("games.greetingsTitle"), description: t("games.greetingsDesc"), icon: MessageCircle, emoji: "👋", difficulty: t("games.beginner") },
+    { id: "opposites", title: t("games.oppositesTitle"), description: t("games.oppositesDesc"), icon: ArrowLeftRight, emoji: "↔️", difficulty: t("games.intermediate") },
+    { id: "fillblank", title: t("games.fillblankTitle"), description: t("games.fillblankDesc"), icon: PenLine, emoji: "✏️", difficulty: t("games.intermediate") },
+    { id: "scramble", title: t("games.scrambleTitle"), description: t("games.scrambleDesc"), icon: Shuffle, emoji: "🔀", difficulty: t("games.beginner") },
+    { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate") },
+    { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner") },
+    { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner") },
+  ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
     const xp = await awardGameXp(gameId, score, totalRounds);
     if (xp && xp > 0) {
-      toast.success(`🎮 +${xp} XP earned!`, { description: `${league.emoji} ${league.name}` });
+      toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
     }
   }, [awardGameXp, league]);
 
@@ -98,14 +100,13 @@ const GamesPage = () => {
           <div className="max-w-4xl mx-auto text-center relative z-10 space-y-4">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-foreground border border-border px-4 py-2 rounded-full text-sm font-medium">
               <Gamepad2 className="h-4 w-4" />
-              Learn & Play
+              {t("games.learnPlay")}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-              Korean Learning{" "}
-              <span className="underline decoration-primary decoration-4 underline-offset-4">Games</span>
+              {t("games.title")}
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Practice your Korean skills with {games.length} fun interactive challenges. Earn XP and level up!
+              {t("games.subtitle").replace("{count}", String(games.length))}
             </p>
 
             <div className="flex justify-center gap-4 pt-2">
@@ -138,12 +139,12 @@ const GamesPage = () => {
                           <div className="flex items-center gap-2">
                             <h3 className="font-bold text-foreground text-sm">{game.title}</h3>
                             {isActive && (
-                              <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-medium">Playing</span>
+                              <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-medium">{t("games.playing")}</span>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground line-clamp-2">{game.description}</p>
                           <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full mt-1 ${
-                            game.difficulty === "Intermediate" ? "bg-primary/10 text-foreground" : "bg-muted text-muted-foreground"
+                            game.difficulty === t("games.intermediate") ? "bg-primary/10 text-foreground" : "bg-muted text-muted-foreground"
                           }`}>{game.difficulty}</span>
                         </div>
                       </div>

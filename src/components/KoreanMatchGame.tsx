@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, RotateCcw, Trophy, Timer, Sparkles } from "lucide-react";
 
 interface CardData {
@@ -41,6 +42,7 @@ function pickRandom<T>(arr: T[], n: number): T[] {
 }
 
 const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
+  const { t } = useLanguage();
   const [cards, setCards] = useState<CardData[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -137,30 +139,27 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
   return (
     <section className="py-12 px-4 relative overflow-hidden">
       <div className="max-w-4xl mx-auto relative z-10">
-        {/* Header */}
         <div className="text-center mb-8 space-y-2">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-            Korean <span className="underline decoration-primary decoration-4 underline-offset-4">Vocabulary</span> Match
+            {t("games.matchHeader")}
           </h2>
           <p className="text-muted-foreground">
-            Flip the cards and match Korean words with their English meaning. How fast can you clear the board?
+            {t("games.matchSubtitle")}
           </p>
         </div>
 
-        {/* Stats bar */}
         <div className="flex justify-center gap-4 md:gap-6 mb-6 flex-wrap">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
             <Timer className="h-3.5 w-3.5" /> {formatTime(timer)}
           </Badge>
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
-            Moves: {moves}
+            {t("games.moves")}: {moves}
           </Badge>
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
-            Matched: {matches}/{pairCount}
+            {t("games.matched")}: {matches}/{pairCount}
           </Badge>
         </div>
 
-        {/* Game grid */}
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-w-lg mx-auto mb-8">
           {cards.map((card) => (
             <button
@@ -194,7 +193,6 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
           ))}
         </div>
 
-        {/* Win state */}
         {gameComplete && (
           <div className="text-center space-y-3 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-center gap-1">
@@ -206,24 +204,23 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
               ))}
             </div>
             <p className="text-foreground font-semibold text-lg">
-              🎉 You matched all pairs in {moves} moves ({formatTime(timer)})!
+              {t("games.matchWin").replace("{moves}", String(moves)).replace("{time}", formatTime(timer))}
             </p>
             <p className="text-muted-foreground text-sm">
-              Ready to learn more? Start your Korean journey with us!
+              {t("games.matchCta")}
             </p>
           </div>
         )}
 
-        {/* Controls */}
         <div className="flex justify-center gap-3">
           <Button variant="outline" onClick={initGame} className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            {gameComplete ? "Play Again" : "Reset"}
+            {gameComplete ? t("games.playAgain") : t("games.reset")}
           </Button>
           {gameComplete && (
             <Button onClick={() => document.getElementById("enroll")?.scrollIntoView({ behavior: "smooth" })} className="gap-2">
               <Sparkles className="h-4 w-4" />
-              Start Learning Korean
+              {t("games.startLearning")}
             </Button>
           )}
         </div>

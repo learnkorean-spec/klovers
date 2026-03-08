@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { RotateCcw, Trophy, Sparkles, ArrowRight } from "lucide-react";
 
 const ANTONYMS = [
@@ -24,6 +25,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 const OppositeWordsGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
+  const { t } = useLanguage();
   const totalRounds = 10;
   const [questions] = useState(() => shuffleArray(ANTONYMS).slice(0, totalRounds));
   const [round, setRound] = useState(0);
@@ -42,20 +44,17 @@ const OppositeWordsGame = ({ onGameComplete }: { onGameComplete?: (score: number
 
   const xpAwardedRef = useRef(false);
   useEffect(() => {
-    if (round >= totalRounds && !xpAwardedRef.current) {
-      xpAwardedRef.current = true;
-      onGameComplete?.(score, totalRounds);
-    }
+    if (round >= totalRounds && !xpAwardedRef.current) { xpAwardedRef.current = true; onGameComplete?.(score, totalRounds); }
   }, [round, totalRounds, score, onGameComplete]);
 
   if (round >= totalRounds) {
     return (
       <section className="py-12 px-4"><Card className="max-w-lg mx-auto p-8 text-center space-y-4">
         <Trophy className="h-12 w-12 mx-auto text-foreground" />
-        <h2 className="text-2xl font-bold text-foreground">Opposites Master!</h2>
-        <p className="text-muted-foreground">{score}/{totalRounds} correct</p>
+        <h2 className="text-2xl font-bold text-foreground">{t("games.oppositesComplete")}</h2>
+        <p className="text-muted-foreground">{score}/{totalRounds} {t("games.correct")}</p>
         <Badge variant="secondary" className="text-lg px-4 py-1">+{score * 5} XP</Badge>
-        <Button onClick={restart} className="gap-2"><RotateCcw className="h-4 w-4" /> Play Again</Button>
+        <Button onClick={restart} className="gap-2"><RotateCcw className="h-4 w-4" /> {t("games.playAgain")}</Button>
       </Card></section>
     );
   }
@@ -65,11 +64,11 @@ const OppositeWordsGame = ({ onGameComplete }: { onGameComplete?: (score: number
     <section className="py-12 px-4">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <Badge variant="outline">Round {round + 1}/{totalRounds}</Badge>
+          <Badge variant="outline">{t("games.round")} {round + 1}/{totalRounds}</Badge>
           <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{score * 5} XP</Badge>
         </div>
         <Card className="p-6 text-center space-y-4">
-          <p className="text-sm text-muted-foreground">What is the opposite of:</p>
+          <p className="text-sm text-muted-foreground">{t("games.oppositesPrompt")}</p>
           <p className="text-3xl font-bold text-foreground">{q.word}</p>
           <div className="grid grid-cols-2 gap-3">
             {shuffleArray(q.options).map(opt => (
@@ -82,11 +81,11 @@ const OppositeWordsGame = ({ onGameComplete }: { onGameComplete?: (score: number
             ))}
           </div>
           {feedback && <p className={feedback === "correct" ? "text-green-600 dark:text-green-400 font-medium" : "text-destructive font-medium"}>
-            {feedback === "correct" ? "✅ Correct! +5 XP" : `❌ Answer: ${q.answer}`}
+            {feedback === "correct" ? t("games.correctFeedback") : t("games.wrongPrefix").replace("{answer}", q.answer)}
           </p>}
         </Card>
-        {feedback && <Button onClick={nextRound} className="w-full gap-2">Next <ArrowRight className="h-4 w-4" /></Button>}
-        <Button variant="ghost" size="sm" onClick={restart} className="w-full gap-1"><RotateCcw className="h-3 w-3" /> Restart</Button>
+        {feedback && <Button onClick={nextRound} className="w-full gap-2">{t("games.next")} <ArrowRight className="h-4 w-4" /></Button>}
+        <Button variant="ghost" size="sm" onClick={restart} className="w-full gap-1"><RotateCcw className="h-3 w-3" /> {t("games.restart")}</Button>
       </div>
     </section>
   );
