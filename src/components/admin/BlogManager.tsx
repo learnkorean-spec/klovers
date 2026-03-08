@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles, TrendingUp } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Upload, Sparkles, TrendingUp, Languages } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 
