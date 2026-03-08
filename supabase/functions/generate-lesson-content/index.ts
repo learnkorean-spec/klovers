@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -6,13 +5,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   // Get all lessons
   const { data: lessons } = await supabase
@@ -22,15 +28,14 @@ serve(async (req) => {
     .order("sort_order");
 
   if (!lessons || lessons.length === 0) {
-    return new Response(JSON.stringify({ error: "No lessons found" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "No lessons found" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   // Check which lessons already have vocab content
-  const { data: existingVocab } = await supabase
-    .from("lesson_vocabulary")
-    .select("lesson_id");
+  const { data: existingVocab } = await supabase.from("lesson_vocabulary").select("lesson_id");
   const populatedIds = new Set((existingVocab || []).map((v: any) => v.lesson_id));
-
   const unpopulated = lessons.filter((l: any) => !populatedIds.has(l.id));
 
   if (unpopulated.length === 0) {
@@ -42,10 +47,10 @@ serve(async (req) => {
   let generated = 0;
   const errors: string[] = [];
 
-  // Process lessons in batches of 3
-  for (let i = 0; i < unpopulated.length; i += 3) {
-    const batch = unpopulated.slice(i, i + 3);
-    
+  // Process 2 at a time to avoid timeouts
+  for (let i = 0; i < Math.min(unpopulated.length, 6); i += 2) {
+    const batch = unpopulated.slice(i, i + 2);
+
     await Promise.all(batch.map(async (lesson: any) => {
       try {
         const prompt = `Generate Korean language lesson content for TOPIK Level 1, Lesson ${lesson.sort_order}: "${lesson.title_en}" (${lesson.title_ko}). Description: ${lesson.description}.
@@ -66,98 +71,71 @@ Requirements:
 - exercises: 4-5 multiple choice questions
 - reading: 1 short paragraph (4-6 sentences) with translation
 - All Korean must be accurate and natural
-- Romanization should follow standard romanization
 - Content should be appropriate for TOPIK 1 (beginner) level
-- Return ONLY valid JSON, no markdown or extra text`;
+- Return ONLY valid JSON, no markdown`;
 
-        const aiRes = await fetch("https://lovable.dev/api/ai/generate", {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
             messages: [{ role: "user", content: prompt }],
-            response_format: { type: "json_object" },
+            temperature: 0.3,
           }),
         });
 
         if (!aiRes.ok) {
-          errors.push(`Lesson ${lesson.sort_order}: AI request failed (${aiRes.status})`);
+          const errText = await aiRes.text();
+          errors.push(`Lesson ${lesson.sort_order}: AI error ${aiRes.status} - ${errText.substring(0, 100)}`);
           return;
         }
 
         const aiData = await aiRes.json();
+        const text = aiData.choices?.[0]?.message?.content || "";
         let content: any;
         try {
-          const text = aiData.choices?.[0]?.message?.content || aiData.content || "";
           content = JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
         } catch {
           errors.push(`Lesson ${lesson.sort_order}: Failed to parse AI response`);
           return;
         }
 
-        // Insert vocabulary
+        // Insert all content
         if (content.vocabulary?.length > 0) {
           await supabase.from("lesson_vocabulary").insert(
             content.vocabulary.map((v: any, idx: number) => ({
-              lesson_id: lesson.id,
-              korean: v.korean,
-              romanization: v.romanization || "",
-              meaning: v.meaning,
-              sort_order: idx + 1,
+              lesson_id: lesson.id, korean: v.korean, romanization: v.romanization || "", meaning: v.meaning, sort_order: idx + 1,
             }))
           );
         }
-
-        // Insert grammar
         if (content.grammar?.length > 0) {
           await supabase.from("lesson_grammar").insert(
             content.grammar.map((g: any, idx: number) => ({
-              lesson_id: lesson.id,
-              title: g.title,
-              structure: g.structure || "",
-              explanation: g.explanation || "",
-              examples: g.examples || [],
-              sort_order: idx + 1,
+              lesson_id: lesson.id, title: g.title, structure: g.structure || "", explanation: g.explanation || "", examples: g.examples || [], sort_order: idx + 1,
             }))
           );
         }
-
-        // Insert dialogue
         if (content.dialogue?.length > 0) {
           await supabase.from("lesson_dialogues").insert(
             content.dialogue.map((d: any, idx: number) => ({
-              lesson_id: lesson.id,
-              speaker: d.speaker,
-              korean: d.korean,
-              romanization: d.romanization || "",
-              english: d.english,
-              sort_order: idx + 1,
+              lesson_id: lesson.id, speaker: d.speaker, korean: d.korean, romanization: d.romanization || "", english: d.english, sort_order: idx + 1,
             }))
           );
         }
-
-        // Insert exercises
         if (content.exercises?.length > 0) {
           await supabase.from("lesson_exercises").insert(
             content.exercises.map((e: any, idx: number) => ({
-              lesson_id: lesson.id,
-              question: e.question,
-              options: e.options || [],
-              correct_index: e.correct_index ?? 0,
-              explanation: e.explanation || "",
-              sort_order: idx + 1,
+              lesson_id: lesson.id, question: e.question, options: e.options || [], correct_index: e.correct_index ?? 0, explanation: e.explanation || "", sort_order: idx + 1,
             }))
           );
         }
-
-        // Insert reading
         if (content.reading?.length > 0) {
           await supabase.from("lesson_reading").insert(
             content.reading.map((r: any, idx: number) => ({
-              lesson_id: lesson.id,
-              korean_text: r.korean_text,
-              english_text: r.english_text || "",
-              sort_order: idx + 1,
+              lesson_id: lesson.id, korean_text: r.korean_text, english_text: r.english_text || "", sort_order: idx + 1,
             }))
           );
         }
