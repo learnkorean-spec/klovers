@@ -9,13 +9,13 @@ const HowItWorks = () => {
   const steps = tArray("howItWorks", "steps") as { title: string; description: string }[];
 
   return (
-    <section className="py-20 bg-card">
+    <section className="py-16 md:py-24 bg-card">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-3">
             {t("howItWorks", "title")}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
             {t("howItWorks", "subtitle")}
           </p>
         </div>
@@ -24,16 +24,18 @@ const HowItWorks = () => {
           {steps.map((step, index) => {
             const Icon = stepIcons[index];
             return (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/50 text-center relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
+              <Card key={index} className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center relative overflow-hidden">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
                     {index + 1}
                   </span>
                 </div>
-                <CardContent className="pt-10 pb-6 px-4">
-                  <Icon className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
+                <CardContent className="pt-8 pb-6 px-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base">{step.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                 </CardContent>
               </Card>
             );
