@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +38,7 @@ import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
 import SchedulingManager from "@/components/admin/SchedulingManager";
 import AdminSettings from "@/components/admin/AdminSettings";
 import PlacementTestsManager from "@/components/admin/PlacementTestsManager";
+import SalesAnalytics from "@/components/admin/SalesAnalytics";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -582,6 +583,9 @@ const AdminDashboard = () => {
                 <Mail className="h-4 w-4" /> Campaigns
               </TabsTrigger>
               <TabsTrigger value="placement-tests" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Placement Tests</TabsTrigger>
+              <TabsTrigger value="sales" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                <BarChart3 className="h-4 w-4" /> Sales
+              </TabsTrigger>
               <TabsTrigger value="settings" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>
@@ -1357,6 +1361,11 @@ const AdminDashboard = () => {
             {/* PLACEMENT TESTS TAB */}
             <TabsContent value="placement-tests">
               <PlacementTestsManager />
+            </TabsContent>
+
+            {/* SALES ANALYTICS TAB */}
+            <TabsContent value="sales">
+              <SalesAnalytics />
             </TabsContent>
 
             {/* SETTINGS TAB */}
