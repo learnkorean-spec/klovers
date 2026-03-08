@@ -21,6 +21,8 @@ interface Lesson {
   title_en: string;
   title_ko: string;
   description: string;
+  title_ar?: string;
+  description_ar?: string;
   sort_order: number;
   scene_image_url?: string;
 }
