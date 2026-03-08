@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
 }
 
-const CounterWordsGame = () => {
+const C{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }ounterWordsGame = () => {
   const totalRounds = 10;
   const [questions] = useState(() => shuffleArray(COUNTERS).slice(0, totalRounds));
   const [round, setRound] = useState(0);
