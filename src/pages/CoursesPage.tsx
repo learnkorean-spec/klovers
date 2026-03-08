@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CoursesSection from "@/components/CoursesSection";
@@ -43,7 +44,7 @@ const CoursesPage = () => {
             </div>
             <div className="text-center mt-10">
               <Button size="lg" asChild>
-                <a href="/pricing">{t("courses", "cta")}</a>
+                <Link to="/pricing">{t("courses", "cta")}</Link>
               </Button>
             </div>
           </div>
