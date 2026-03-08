@@ -671,12 +671,12 @@ const LessonDetailPage = () => {
         {/* Prev / Next navigation */}
         <div className="flex justify-between items-center mt-6 pt-6 border-t border-border">
           {lessonNum > 1 ? (
-            <Link to={`/textbook/${lessonNum - 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+           <Link to={`/textbook/${bookSlug}/${lessonNum - 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <ChevronLeft className="h-4 w-4" /> {t("textbook.previousMission")}
             </Link>
           ) : <span />}
           {lessonNum < totalLessons ? (
-            <Link to={`/textbook/${lessonNum + 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <Link to={`/textbook/${bookSlug}/${lessonNum + 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               {t("textbook.nextMission")} <ChevronRight className="h-4 w-4" />
             </Link>
           ) : <span />}
