@@ -58,12 +58,12 @@ const BlogPage = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">📝 Blog</Badge>
+            <Badge variant="secondary" className="mb-4">{language === "ar" ? "📝 المدونة" : "📝 Blog"}</Badge>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              K-Lovers Blog
+              {language === "ar" ? "مدونة K-Lovers" : "K-Lovers Blog"}
             </h1>
             <p className="text-foreground/70 max-w-2xl mx-auto text-lg">
-              Tips, guides, and insights for your Korean learning journey.
+              {language === "ar" ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية." : "Tips, guides, and insights for your Korean learning journey."}
             </p>
           </div>
 
