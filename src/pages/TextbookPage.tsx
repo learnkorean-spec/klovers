@@ -26,7 +26,8 @@ const TextbookPage = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const { userId, progress, league, loading: gamLoading } = useGamification();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   useEffect(() => {
     const fetchLessons = async () => {
