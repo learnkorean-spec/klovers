@@ -216,6 +216,16 @@ const LessonDetailPage = () => {
           </div>
         )}
 
+        {/* Visual Vocabulary Scene */}
+        <VisualVocabScene
+          lessonId={lesson.id}
+          title={lesson.title_en}
+          titleKo={lesson.title_ko}
+          sceneImageUrl={lesson.scene_image_url}
+          vocab={vocab}
+          isAdmin={false}
+        />
+
         <Tabs defaultValue="vocab" className="w-full">
           <TabsList className="w-full grid grid-cols-5 mb-8">
             <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
