@@ -323,7 +323,7 @@ const LessonDetailPage = () => {
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-5 mb-8">
+          <TabsList className="w-full grid grid-cols-6 mb-8">
             <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
               {lp?.vocab_done && <CheckCircle2 className="h-3 w-3" />}
@@ -343,6 +343,10 @@ const LessonDetailPage = () => {
             <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="h-4 w-4 hidden sm:block" /> {t("textbook.reading")}
               {lp?.reading_done && <CheckCircle2 className="h-3 w-3" />}
+            </TabsTrigger>
+            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <PenLine className="h-4 w-4 hidden sm:block" /> {isAr ? "كتابة" : "Writing"}
+              {(lp as any)?.writing_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
           </TabsList>
 
