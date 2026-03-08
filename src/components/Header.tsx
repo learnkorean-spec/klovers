@@ -24,6 +24,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const isAr = language === "ar";
 
