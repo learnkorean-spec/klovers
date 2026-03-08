@@ -239,6 +239,14 @@ export default function MarketingGeneratorPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+          <Tabs defaultValue="generator" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="generator"><Sparkles className="h-4 w-4 mr-1.5" /> Auto Generator</TabsTrigger>
+              <TabsTrigger value="creator"><Palette className="h-4 w-4 mr-1.5" /> Creator Hub</TabsTrigger>
+              <TabsTrigger value="archive">📁 Archive</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="generator">
           {loading ? (
             <div className="grid gap-4 md:grid-cols-2">
               {[1, 2, 3, 4].map(i => (
@@ -415,12 +423,16 @@ export default function MarketingGeneratorPage() {
               })}
             </div>
           )}
+            </TabsContent>
 
-          {/* Saved Posts Archive */}
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-4">📁 Saved Posts Archive</h2>
-            <MarketingPostsArchive />
-          </div>
+            <TabsContent value="creator">
+              <CreatorHub />
+            </TabsContent>
+
+            <TabsContent value="archive">
+              <MarketingPostsArchive />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </TooltipProvider>
