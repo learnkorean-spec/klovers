@@ -200,6 +200,7 @@ const BlogManager = () => {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingImage2, setGeneratingImage2] = useState(false);
   const [keywordsInput, setKeywordsInput] = useState("");
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const liveScore = calculateSeoScore(editing, keywordsInput);
 
