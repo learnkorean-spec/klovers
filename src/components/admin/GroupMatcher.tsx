@@ -561,7 +561,7 @@ const GroupMatcher = () => {
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                             {m.amount != null && (
-                              <span>{m.amount.toLocaleString()} {m.currency || "USD"}</span>
+                              <span>{Math.round(m.amount).toLocaleString()} {m.currency || "USD"}</span>
                             )}
                             {m.classes_included != null && (
                               <span>{m.classes_included} classes</span>
