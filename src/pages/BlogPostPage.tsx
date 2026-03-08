@@ -43,25 +43,27 @@ const BlogPostPage = () => {
     const fetchPost = async () => {
       if (!slug) return;
       setLoading(true);
-      // Try language-specific slug first (e.g. slug-ar), then fall back to exact slug
-      const arSlug = language === "ar" ? `${slug}-ar` : slug;
+      // First try the exact slug from the URL
       const { data } = await supabase
         .from("blog_posts")
         .select("*")
-        .eq("slug", language === "ar" ? arSlug : slug)
+        .eq("slug", slug)
         .eq("published", true)
         .maybeSingle();
-      // If Arabic version not found, fall back to English
-      if (!data && language === "ar") {
-        const { data: fallback } = await supabase
+      
+      if (data) {
+        setPost(data as BlogPost);
+      } else if (language === "ar" && !slug.endsWith("-ar")) {
+        // Try Arabic version
+        const { data: arData } = await supabase
           .from("blog_posts")
           .select("*")
-          .eq("slug", slug)
+          .eq("slug", `${slug}-ar`)
           .eq("published", true)
           .maybeSingle();
-        setPost(fallback as BlogPost | null);
+        setPost(arData as BlogPost | null);
       } else {
-        setPost(data as BlogPost | null);
+        setPost(null);
       }
       setLoading(false);
     };

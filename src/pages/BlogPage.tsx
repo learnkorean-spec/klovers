@@ -58,12 +58,12 @@ const BlogPage = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">📝 Blog</Badge>
+            <Badge variant="secondary" className="mb-4">{language === "ar" ? "📝 المدونة" : "📝 Blog"}</Badge>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              K-Lovers Blog
+              {language === "ar" ? "مدونة K-Lovers" : "K-Lovers Blog"}
             </h1>
             <p className="text-foreground/70 max-w-2xl mx-auto text-lg">
-              Tips, guides, and insights for your Korean learning journey.
+              {language === "ar" ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية." : "Tips, guides, and insights for your Korean learning journey."}
             </p>
           </div>
 
@@ -82,7 +82,7 @@ const BlogPage = () => {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <p className="text-center text-foreground/60 py-12 text-lg">No articles published yet. Check back soon!</p>
+            <p className="text-center text-foreground/60 py-12 text-lg">{language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!"}</p>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {posts.map((post) => (
@@ -123,7 +123,7 @@ const BlogPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 text-foreground text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
-                        Read more <ArrowRight className="h-4 w-4" />
+                        {language === "ar" ? "اقرأ المزيد" : "Read more"} <ArrowRight className="h-4 w-4" />
                       </div>
                     </CardContent>
                   </Card>
