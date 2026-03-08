@@ -583,6 +583,9 @@ const AdminDashboard = () => {
                 <Mail className="h-4 w-4" /> Campaigns
               </TabsTrigger>
               <TabsTrigger value="placement-tests" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Placement Tests</TabsTrigger>
+              <TabsTrigger value="sales" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+                <BarChart3 className="h-4 w-4" /> Sales
+              </TabsTrigger>
               <TabsTrigger value="settings" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                 <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>
