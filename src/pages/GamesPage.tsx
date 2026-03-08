@@ -111,7 +111,7 @@ const GamesPage = () => {
               {games.map((game) => {
                 const isActive = activeGame === game.id;
                 return (
-                  <button key={game.id} onClick={() => setActiveGame(game.id)} className="text-left">
+                  <button key={game.id} onClick={() => selectGame(game.id)} className="text-left">
                     <Card className={`p-4 transition-all duration-200 border-2 cursor-pointer h-full ${
                       isActive
                         ? "border-primary/50 bg-primary/5 shadow-md"
