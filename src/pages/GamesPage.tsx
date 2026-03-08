@@ -143,7 +143,7 @@ const GamesPage = () => {
         </section>
 
         {/* Active game */}
-        <div className="border-t border-border">
+        <div id="active-game-area" className="border-t border-border scroll-mt-20">
           {renderGame()}
         </div>
         <FinalCTA />
