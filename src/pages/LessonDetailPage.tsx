@@ -297,7 +297,7 @@ const LessonDetailPage = () => {
             </div>
             {/* Section progress bar */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{sectionsDone}/5</span>
+              <span className="text-xs text-muted-foreground">{sectionsDone}/6</span>
               <Progress value={sectionProgress} className="h-2 flex-1" />
               {sectionProgress === 100 && <span className="text-sm">⭐</span>}
             </div>
