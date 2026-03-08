@@ -4,12 +4,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Trophy, Flame, Zap } from "lucide-react";
+import { BookOpen, Trophy, Flame, Map, LayoutGrid } from "lucide-react";
 import { useGamification } from "@/hooks/useGamification";
-import { LeagueProgressBar, LessonProgressDots, XpBadge } from "@/components/GamificationUI";
-import { isCheckpointLesson, isBossChallenge } from "@/constants/gamification";
+import { LeagueProgressBar, XpBadge } from "@/components/GamificationUI";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import WorldPathMap from "@/components/WorldPathMap";
+import { WORLDS } from "@/constants/worlds";
+import { Button } from "@/components/ui/button";
 
 interface Lesson {
   id: number;
@@ -25,6 +27,7 @@ interface Lesson {
 const TextbookPage = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<"path" | "grid">("path");
   const { userId, progress, league, loading: gamLoading } = useGamification();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
@@ -42,6 +45,8 @@ const TextbookPage = () => {
     fetchLessons();
   }, []);
 
+  const completedCount = Object.values(progress.lessonProgress).filter(p => p.chapter_completed).length;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -57,7 +62,7 @@ const TextbookPage = () => {
             <span className="text-primary italic">{t("textbook.heroTitle2")}</span>
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-            {lessons.length} {t("textbook.heroSubtitle")}
+            {WORLDS.length} {isAr ? "عوالم" : "worlds"} · {lessons.length} {t("textbook.heroSubtitle")}
           </p>
         </section>
 
@@ -76,35 +81,74 @@ const TextbookPage = () => {
                     {league.emoji} {league.name}
                   </span>
                 </div>
-                <Link to="/textbook/progress" className="text-sm text-primary hover:underline flex items-center gap-1">
-                  <Trophy className="h-4 w-4" /> {t("textbook.viewFullProgress")}
-                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{completedCount}/{lessons.length}</span>
+                  <Link to="/textbook/progress" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    <Trophy className="h-4 w-4" /> {t("textbook.viewFullProgress")}
+                  </Link>
+                </div>
               </div>
               <LeagueProgressBar totalXp={progress.totalXp} />
             </div>
           </section>
         )}
 
-        {/* Lessons Grid */}
+        {/* View Toggle */}
         <section className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-2">
-            {t("textbook.missions")}
-          </h2>
-          <p className="text-muted-foreground mb-8">{t("textbook.missionsSubtitle")}</p>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              {viewMode === "path" ? <Map className="h-6 w-6 text-primary" /> : <LayoutGrid className="h-6 w-6 text-primary" />}
+              {isAr ? "خريطة المهام" : "Mission Map"}
+            </h2>
+            <div className="flex gap-1 rounded-lg border border-border bg-card p-1">
+              <Button
+                variant={viewMode === "path" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("path")}
+                className="gap-1.5"
+              >
+                <Map className="h-4 w-4" /> {isAr ? "مسار" : "Path"}
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className="gap-1.5"
+              >
+                <LayoutGrid className="h-4 w-4" /> {isAr ? "شبكة" : "Grid"}
+              </Button>
+            </div>
+          </div>
 
           {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <Skeleton key={i} className="h-36 rounded-xl" />
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i}>
+                  <Skeleton className="h-24 rounded-2xl mb-4" />
+                  <div className="flex flex-col items-center gap-4">
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <Skeleton key={j} className="h-16 w-16 rounded-full" />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
+          ) : viewMode === "path" ? (
+            <WorldPathMap
+              lessons={lessons}
+              lessonProgress={progress.lessonProgress}
+              userId={userId}
+            />
           ) : (
+            /* Grid view (original) */
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {lessons.map((lesson) => {
                 const lp = progress.lessonProgress[lesson.id];
                 const completed = lp?.chapter_completed;
+                const { isBossChallenge, isCheckpointLesson } = require("@/constants/gamification");
                 const boss = isBossChallenge(lesson.sort_order);
                 const checkpoint = isCheckpointLesson(lesson.sort_order);
+                const { LessonProgressDots } = require("@/components/GamificationUI");
 
                 return (
                   <Link
@@ -119,11 +163,9 @@ const TextbookPage = () => {
                       <span className="text-3xl">{lesson.emoji}</span>
                       {completed && <span className="text-primary text-lg">✓</span>}
                     </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                        {boss ? t("textbook.boss") : checkpoint ? t("textbook.checkpoint") : `${t("textbook.mission")} ${lesson.sort_order}`}
-                      </p>
-                    </div>
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+                      {boss ? t("textbook.boss") : checkpoint ? t("textbook.checkpoint") : `${t("textbook.mission")} ${lesson.sort_order}`}
+                    </p>
                     <h3 className="font-bold text-foreground text-lg leading-tight mb-0.5">
                       {isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
                     </h3>
