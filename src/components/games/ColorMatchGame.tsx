@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ function generateQ(colors: typeof COLORS) {
   return { question: q, options: shuffleArray([...opts]) };
 }
 
-const ColorMatchGame = () => {
+const{ onGameComplete }: { onGameComplete?: (score: number, total: number) => void } ColorMatchGame = () => {
   const totalRounds = 10;
   const [pool] = useState(() => shuffleArray(COLORS));
   const [round, setRound] = useState(0);
