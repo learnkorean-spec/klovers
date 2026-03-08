@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Monitor, Smartphone, DownloadCloud } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 // ─── Types ───
@@ -20,29 +21,24 @@ type TemplateName = "classic" | "character" | "minimal" | "gradient" | "neon" | 
 type ColorTheme = "yellow" | "midnight" | "coral" | "forest" | "lavender" | "sunset" | "ocean" | "mono";
 type FormatKey = "instagram" | "story" | "facebook" | "tiktok";
 
-interface FormatOption {
-  label: string;
-  w: number;
-  h: number;
-}
+interface FormatOption { label: string; w: number; h: number; }
 
 const FORMATS: Record<FormatKey, FormatOption> = {
-  instagram: { label: "Instagram", w: 1080, h: 1080 },
-  story: { label: "Instagram Stories", w: 1080, h: 1920 },
-  facebook: { label: "Facebook", w: 1200, h: 630 },
-  tiktok: { label: "TikTok", w: 1080, h: 1920 },
+  instagram: { label: "Instagram Post", w: 1080, h: 1080 },
+  story: { label: "Stories / Reels", w: 1080, h: 1920 },
+  facebook: { label: "Facebook Post", w: 1200, h: 630 },
+  tiktok: { label: "TikTok Cover", w: 1080, h: 1920 },
 };
 
-// ─── Color Themes (CSS values, not tailwind tokens – used for canvas rendering) ───
 const THEME_COLORS: Record<ColorTheme, { bg: string; text: string; accent: string; label: string; dot: string }> = {
-  yellow:   { bg: "#FFEB00", text: "#1a1a1a", accent: "#333", label: "Classic Yellow", dot: "hsl(60 100% 50%)" },
-  midnight: { bg: "#1a1a2e", text: "#e0e0e0", accent: "#9b87f5", label: "Midnight", dot: "hsl(252 82% 76%)" },
-  coral:    { bg: "#ff6b6b", text: "#fff", accent: "#ffeaa7", label: "Coral Reef", dot: "hsl(0 100% 71%)" },
-  forest:   { bg: "#2d6a4f", text: "#d8f3dc", accent: "#95d5b2", label: "Forest", dot: "hsl(153 39% 36%)" },
-  lavender: { bg: "#e8d5f5", text: "#2d1b4e", accent: "#9b59b6", label: "Lavender", dot: "hsl(276 47% 84%)" },
-  sunset:   { bg: "#ff7f50", text: "#fff", accent: "#ffe0b2", label: "Sunset", dot: "hsl(16 100% 66%)" },
-  ocean:    { bg: "#0077b6", text: "#caf0f8", accent: "#90e0ef", label: "Ocean", dot: "hsl(201 100% 36%)" },
-  mono:     { bg: "#f5f5f5", text: "#222", accent: "#888", label: "Monochrome", dot: "hsl(0 0% 96%)" },
+  yellow:   { bg: "#FFEB00", text: "#1a1a1a", accent: "#333", label: "Classic Yellow", dot: "#FFEB00" },
+  midnight: { bg: "#1a1a2e", text: "#e0e0e0", accent: "#9b87f5", label: "Midnight", dot: "#9b87f5" },
+  coral:    { bg: "#ff6b6b", text: "#fff", accent: "#ffeaa7", label: "Coral Reef", dot: "#ff6b6b" },
+  forest:   { bg: "#2d6a4f", text: "#d8f3dc", accent: "#95d5b2", label: "Forest", dot: "#2d6a4f" },
+  lavender: { bg: "#e8d5f5", text: "#2d1b4e", accent: "#9b59b6", label: "Lavender", dot: "#e8d5f5" },
+  sunset:   { bg: "#ff7f50", text: "#fff", accent: "#ffe0b2", label: "Sunset", dot: "#ff7f50" },
+  ocean:    { bg: "#0077b6", text: "#caf0f8", accent: "#90e0ef", label: "Ocean", dot: "#0077b6" },
+  mono:     { bg: "#f5f5f5", text: "#222", accent: "#888", label: "Monochrome", dot: "#ccc" },
 };
 
 const TEMPLATE_META: { key: TemplateName; label: string; desc: string }[] = [
@@ -75,7 +71,6 @@ function renderPost(
   const w = canvas.width;
   const h = canvas.height;
 
-  // Background
   if (bgImage) {
     ctx.drawImage(bgImage, 0, 0, w, h);
     ctx.fillStyle = `${c.bg}cc`;
@@ -96,7 +91,6 @@ function renderPost(
     ctx.fillRect(0, 0, w, h);
   }
 
-  // Minimal border inset
   if (template === "minimal") {
     ctx.strokeStyle = c.text;
     ctx.lineWidth = 3 * scale;
@@ -104,13 +98,11 @@ function renderPost(
     ctx.strokeRect(m, m, w - m * 2, h - m * 2);
   }
 
-  // Neon glow
   if (template === "neon") {
     ctx.shadowColor = c.accent;
     ctx.shadowBlur = 40 * scale;
   }
 
-  // Quote marks for classic/character
   if (template === "classic" || template === "character") {
     ctx.font = `bold ${80 * scale}px Georgia, serif`;
     ctx.fillStyle = `${c.text}22`;
@@ -121,19 +113,16 @@ function renderPost(
   ctx.shadowBlur = 0;
   ctx.shadowColor = "transparent";
 
-  // Main text
   const mainSize = Math.min(48 * scale, w * 0.08);
   ctx.font = `bold italic ${mainSize}px 'Inter', 'Segoe UI', sans-serif`;
   ctx.fillStyle = template === "neon" ? c.accent : c.text;
   wrapText(ctx, post.mainText, 50 * scale, h * 0.35, w - 100 * scale, mainSize * 1.25);
 
-  // Subtitle
   const subSize = mainSize * 0.5;
   ctx.font = `${subSize}px 'Inter', sans-serif`;
   ctx.fillStyle = template === "neon" ? c.accent : `${c.text}bb`;
   wrapText(ctx, post.subtitle, 50 * scale, h * 0.62, w - 100 * scale, subSize * 1.4);
 
-  // Extra text
   if (post.extraText) {
     const exSize = mainSize * 0.35;
     ctx.font = `${exSize}px 'Inter', sans-serif`;
@@ -141,7 +130,6 @@ function renderPost(
     ctx.fillText(post.extraText, 50 * scale, h * 0.88);
   }
 
-  // K logo
   const logoSize = 48 * scale;
   ctx.beginPath();
   ctx.arc(w - 60 * scale, h - 60 * scale, logoSize / 2, 0, Math.PI * 2);
@@ -153,7 +141,6 @@ function renderPost(
   ctx.fillText("K", w - 60 * scale, h - 52 * scale);
   ctx.textAlign = "start";
 
-  // Editorial line
   if (template === "editorial") {
     ctx.strokeStyle = c.accent;
     ctx.lineWidth = 4 * scale;
@@ -181,60 +168,179 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.fillText(line.trim(), x, cy);
 }
 
-// ─── Instagram Grid Preview ───
-function InstagramGridPreview({ posts, template, theme, format, bgImage }: {
+// ─── Platform Grid Previews ───
+function PlatformGridPreviews({ posts, template, theme, bgImage }: {
   posts: PostData[];
   template: TemplateName;
   theme: ColorTheme;
-  format: FormatKey;
   bgImage: HTMLImageElement | null;
 }) {
-  const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const igRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const fbRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const storyRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const tiktokRefs = useRef<(HTMLCanvasElement | null)[]>([]);
 
   useEffect(() => {
-    // Render up to 9 posts in a 3x3 grid
-    const displayPosts = posts.slice(0, 9);
-    displayPosts.forEach((post, i) => {
-      const canvas = canvasRefs.current[i];
-      if (!canvas) return;
-      const size = 300;
-      canvas.width = size;
-      canvas.height = size;
-      renderPost(canvas, post, template, theme, "instagram", bgImage);
+    const display = posts.slice(0, 9);
+    display.forEach((post, i) => {
+      // Instagram 1:1
+      const ig = igRefs.current[i];
+      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, template, theme, "instagram", bgImage); }
+      // Facebook
+      const fb = fbRefs.current[i];
+      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, template, theme, "facebook", bgImage); }
+      // Story
+      const st = storyRefs.current[i];
+      if (st) { st.width = 180; st.height = 320; renderPost(st, post, template, theme, "story", bgImage); }
+      // TikTok
+      const tt = tiktokRefs.current[i];
+      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, template, theme, "tiktok", bgImage); }
     });
-  }, [posts, template, theme, format, bgImage]);
+  }, [posts, template, theme, bgImage]);
 
-  if (posts.length < 2) return null;
+  const display = posts.slice(0, 9);
+  if (display.length < 1) return null;
 
-  const displayPosts = posts.slice(0, 9);
-  const cols = Math.min(3, displayPosts.length);
+  const cols = Math.min(3, display.length);
 
   return (
-    <Card className="rounded-2xl">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Grid3X3 className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Instagram Grid Preview</span>
-          <Badge variant="outline" className="text-[10px]">{displayPosts.length} posts</Badge>
-        </div>
-        <div
-          className="grid gap-0.5 mx-auto rounded-lg overflow-hidden border bg-border"
-          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, maxWidth: cols * 160 }}
-        >
-          {displayPosts.map((post, i) => (
-            <canvas
-              key={post.id}
-              ref={el => { canvasRefs.current[i] = el; }}
-              className="w-full aspect-square"
-              style={{ imageRendering: "auto" }}
-            />
-          ))}
-        </div>
-        <p className="text-[10px] text-muted-foreground text-center mt-2">
-          How your posts will look side by side on the Instagram grid
-        </p>
-      </CardContent>
-    </Card>
+    <Tabs defaultValue="instagram" className="w-full">
+      <TabsList className="w-full justify-start">
+        <TabsTrigger value="instagram" className="text-xs gap-1.5">
+          <Grid3X3 className="h-3.5 w-3.5" /> Instagram
+        </TabsTrigger>
+        <TabsTrigger value="facebook" className="text-xs gap-1.5">
+          <Monitor className="h-3.5 w-3.5" /> Facebook
+        </TabsTrigger>
+        <TabsTrigger value="stories" className="text-xs gap-1.5">
+          <Smartphone className="h-3.5 w-3.5" /> Stories
+        </TabsTrigger>
+        <TabsTrigger value="tiktok" className="text-xs gap-1.5">
+          <Smartphone className="h-3.5 w-3.5" /> TikTok
+        </TabsTrigger>
+      </TabsList>
+
+      {/* Instagram Grid 3x3 */}
+      <TabsContent value="instagram">
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Grid3X3 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Instagram Profile Grid</span>
+              <Badge variant="outline" className="text-[10px]">{display.length} posts</Badge>
+            </div>
+            {/* Mock IG profile header */}
+            <div className="bg-card border rounded-t-xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">K</div>
+              <div>
+                <p className="text-xs font-bold text-foreground">klovers_academy</p>
+                <p className="text-[10px] text-muted-foreground">{display.length} posts • 1.2K followers</p>
+              </div>
+            </div>
+            <div
+              className="grid gap-0.5 rounded-b-xl overflow-hidden border border-t-0 bg-border"
+              style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, maxWidth: cols * 160 }}
+            >
+              {display.map((post, i) => (
+                <canvas
+                  key={post.id}
+                  ref={el => { igRefs.current[i] = el; }}
+                  className="w-full aspect-square"
+                />
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — How your grid looks on Instagram</p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Facebook Timeline */}
+      <TabsContent value="facebook">
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Monitor className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Facebook Timeline Feed</span>
+            </div>
+            <div className="space-y-3 max-w-md mx-auto">
+              {display.slice(0, 4).map((post, i) => (
+                <div key={post.id} className="bg-card border rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2 p-2.5">
+                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">K</div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-foreground">KLovers Academy</p>
+                      <p className="text-[9px] text-muted-foreground">Sponsored · 🌐</p>
+                    </div>
+                  </div>
+                  {post.subtitle && <p className="text-[10px] text-foreground px-2.5 pb-1">{post.subtitle}</p>}
+                  <canvas
+                    ref={el => { fbRefs.current[i] = el; }}
+                    className="w-full aspect-[1200/630]"
+                  />
+                  <div className="flex items-center justify-between px-2.5 py-1.5 border-t text-[9px] text-muted-foreground">
+                    <span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">1200×630 — Facebook timeline preview</p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Stories */}
+      <TabsContent value="stories">
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Instagram Stories Tray</span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {display.slice(0, 6).map((post, i) => (
+                <div key={post.id} className="shrink-0 space-y-1">
+                  <div className="w-20 rounded-xl overflow-hidden border-2 border-primary shadow-md">
+                    <canvas
+                      ref={el => { storyRefs.current[i] = el; }}
+                      className="w-full aspect-[9/16]"
+                    />
+                  </div>
+                  <p className="text-[9px] text-muted-foreground text-center truncate w-20">
+                    {post.mainText.slice(0, 12) || `Story ${i + 1}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1920 — Swipeable story sequence</p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* TikTok */}
+      <TabsContent value="tiktok">
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">TikTok Profile Grid</span>
+            </div>
+            <div
+              className="grid gap-0.5 rounded-xl overflow-hidden border bg-border mx-auto"
+              style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, maxWidth: cols * 100 }}
+            >
+              {display.map((post, i) => (
+                <canvas
+                  key={post.id}
+                  ref={el => { tiktokRefs.current[i] = el; }}
+                  className="w-full aspect-[9/16]"
+                />
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1920 — TikTok profile grid view</p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -242,6 +348,8 @@ function InstagramGridPreview({ posts, template, theme, format, bgImage }: {
 export default function CreatorHub() {
   const [posts, setPosts] = useState<PostData[]>([
     { id: uid(), mainText: "Korean Level 1 — Friday 6:00 PM", subtitle: "🚀 Korean 1 — Starting Friday 6:00 PM", extraText: "#LearnKorean #Klovers" },
+    { id: uid(), mainText: "Master Hangul in 2 Weeks!", subtitle: "📝 Free Hangul Challenge — Join Now", extraText: "#Hangul #Korean" },
+    { id: uid(), mainText: "Why Learn Korean?", subtitle: "🇰🇷 5 Reasons to Start Today", extraText: "#KoreanLanguage #Motivation" },
   ]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [template, setTemplate] = useState<TemplateName>("classic");
@@ -249,10 +357,8 @@ export default function CreatorHub() {
   const [format, setFormat] = useState<FormatKey>("instagram");
   const [mainFontStyle, setMainFontStyle] = useState<string>("Bold Italic");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
-  const [showGrid, setShowGrid] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const activePost = posts[activeIndex] || posts[0];
 
   const redraw = useCallback(() => {
@@ -293,9 +399,6 @@ export default function CreatorHub() {
   }
 
   function handleDownload() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    // Render at full resolution for download
     const fmt = FORMATS[format];
     const dlCanvas = document.createElement("canvas");
     dlCanvas.width = fmt.w;
@@ -306,6 +409,21 @@ export default function CreatorHub() {
     link.href = dlCanvas.toDataURL("image/png");
     link.click();
     toast({ title: "Downloaded!", description: `${fmt.w}×${fmt.h} image saved.` });
+  }
+
+  function handleDownloadAll() {
+    const fmt = FORMATS[format];
+    posts.forEach((post, i) => {
+      const dlCanvas = document.createElement("canvas");
+      dlCanvas.width = fmt.w;
+      dlCanvas.height = fmt.h;
+      renderPost(dlCanvas, post, template, theme, format, bgImage);
+      const link = document.createElement("a");
+      link.download = `klovers-${format}-${i + 1}-${Date.now()}.png`;
+      link.href = dlCanvas.toDataURL("image/png");
+      setTimeout(() => link.click(), i * 200);
+    });
+    toast({ title: "Downloading all!", description: `${posts.length} images at ${fmt.w}×${fmt.h}` });
   }
 
   function handleBulkUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -329,6 +447,7 @@ export default function CreatorHub() {
 
   return (
     <div className="space-y-6">
+      {/* Editor + Controls */}
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         {/* Left: Preview */}
         <div className="space-y-4">
@@ -356,24 +475,16 @@ export default function CreatorHub() {
             {FORMATS[format].w}×{FORMATS[format].h} — {FORMATS[format].label}
           </p>
 
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 flex-wrap">
             <Button onClick={handleDownload}>
               <Download className="h-4 w-4 mr-2" /> Download
             </Button>
-            <Button variant="outline" onClick={() => setShowGrid(!showGrid)}>
-              <Grid3X3 className="h-4 w-4 mr-2" /> {showGrid ? "Hide Grid" : "Grid Preview"}
-            </Button>
+            {posts.length > 1 && (
+              <Button variant="outline" onClick={handleDownloadAll}>
+                <DownloadCloud className="h-4 w-4 mr-2" /> Download All ({posts.length})
+              </Button>
+            )}
           </div>
-
-          {showGrid && (
-            <InstagramGridPreview
-              posts={posts}
-              template={template}
-              theme={theme}
-              format={format}
-              bgImage={bgImage}
-            />
-          )}
         </div>
 
         {/* Right: Controls */}
@@ -411,7 +522,7 @@ export default function CreatorHub() {
                     theme === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full border" style={{ backgroundColor: val.dot }} />
+                  <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: val.dot }} />
                   <span className="text-[10px] text-foreground">{val.label}</span>
                 </button>
               ))}
@@ -530,6 +641,20 @@ export default function CreatorHub() {
             <p className="text-[10px] text-muted-foreground mt-1">Format: main text, subtitle, extra (one post per line)</p>
           </div>
         </div>
+      </div>
+
+      {/* Platform Grid Previews — always visible */}
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <Grid3X3 className="h-4 w-4" /> Platform Grid Preview
+          <Badge variant="outline" className="text-[10px]">{posts.length} posts</Badge>
+        </h2>
+        <PlatformGridPreviews
+          posts={posts}
+          template={template}
+          theme={theme}
+          bgImage={bgImage}
+        />
       </div>
     </div>
   );
