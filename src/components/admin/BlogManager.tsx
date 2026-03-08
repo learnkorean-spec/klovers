@@ -300,6 +300,27 @@ const BlogManager = () => {
     }
   };
 
+  const handleTranslate = async (post: BlogPost) => {
+    if (post.lang !== "en") {
+      toast({ title: "Only English articles can be translated", variant: "destructive" });
+      return;
+    }
+    setTranslating(post.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-article", {
+        body: { slug: post.slug },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Article translated to Arabic!", description: `Slug: ${data.slug}` });
+      fetchPosts();
+    } catch (e: any) {
+      toast({ title: "Translation failed", description: e.message, variant: "destructive" });
+    } finally {
+      setTranslating(null);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageNum: 1 | 2) => {
     const file = e.target.files?.[0];
     if (!file) return;
