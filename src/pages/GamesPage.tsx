@@ -44,6 +44,13 @@ const GameFallback = () => (
 const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
 
+  const selectGame = (id: string) => {
+    setActiveGame(id);
+    setTimeout(() => {
+      document.getElementById("active-game-area")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
   const renderGame = () => {
     switch (activeGame) {
       case "match": return <KoreanMatchGame />;
@@ -104,7 +111,7 @@ const GamesPage = () => {
               {games.map((game) => {
                 const isActive = activeGame === game.id;
                 return (
-                  <button key={game.id} onClick={() => setActiveGame(game.id)} className="text-left">
+                  <button key={game.id} onClick={() => selectGame(game.id)} className="text-left">
                     <Card className={`p-4 transition-all duration-200 border-2 cursor-pointer h-full ${
                       isActive
                         ? "border-primary/50 bg-primary/5 shadow-md"
@@ -136,7 +143,7 @@ const GamesPage = () => {
         </section>
 
         {/* Active game */}
-        <div className="border-t border-border">
+        <div id="active-game-area" className="border-t border-border scroll-mt-20">
           {renderGame()}
         </div>
         <FinalCTA />
