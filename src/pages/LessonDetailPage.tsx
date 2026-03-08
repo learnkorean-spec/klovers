@@ -192,7 +192,7 @@ const LessonDetailPage = () => {
         <Header />
         <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`}/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
