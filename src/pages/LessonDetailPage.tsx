@@ -13,6 +13,7 @@ import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Lesson {
   id: number;
@@ -35,6 +36,7 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const { toast } = useToast();
   const { userId, progress, league, markSectionDone } = useGamification();
+  const { t } = useLanguage();
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [totalLessons, setTotalLessons] = useState(0);
@@ -89,7 +91,7 @@ const LessonDetailPage = () => {
 
   const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done") => {
     if (!lesson || !userId) {
-      toast({ title: "Sign in required", description: "Please sign in to track your progress and earn XP.", variant: "destructive" });
+      toast({ title: t("textbook.signInRequired"), description: t("textbook.signInRequiredDesc"), variant: "destructive" });
       return;
     }
 
@@ -110,7 +112,7 @@ const LessonDetailPage = () => {
       title: `+${xpMap[section]} XP earned! ⚡`,
       description: getRandomMotivation(),
     });
-  }, [lesson, userId, progress, markSectionDone, toast]);
+  }, [lesson, userId, progress, markSectionDone, toast, t]);
 
   const lp = lesson ? progress.lessonProgress[lesson.id] : undefined;
 
@@ -136,8 +138,8 @@ const LessonDetailPage = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
-          <p className="text-muted-foreground text-lg">Lesson not found.</p>
-          <Link to="/textbook" className="text-primary underline mt-4 inline-block">← Back to all lessons</Link>
+          <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
+          <Link to="/textbook" className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -147,11 +149,20 @@ const LessonDetailPage = () => {
   const boss = isBossChallenge(lesson.sort_order);
   const checkpoint = isCheckpointLesson(lesson.sort_order);
 
-  const SectionDoneButton = ({ section, label }: { section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done"; label: string }) => {
+  const sectionLabels: Record<string, string> = {
+    vocab_done: t("textbook.vocabulary"),
+    grammar_done: t("textbook.grammar"),
+    dialogue_done: t("textbook.dialogue"),
+    exercises_done: t("textbook.exercises"),
+    reading_done: t("textbook.reading"),
+  };
+
+  const SectionDoneButton = ({ section }: { section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" }) => {
+    const label = sectionLabels[section];
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${lessonNum}`} className="text-primary underline">Sign in</Link> to track your progress and earn XP.
+          <Link to={`/login?redirect=/textbook/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -165,7 +176,7 @@ const LessonDetailPage = () => {
         className="mt-4 gap-2"
       >
         {done ? <CheckCircle2 className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
-        {done ? `${label} Complete ✓` : `Complete ${label} & Earn XP`}
+        {done ? `${label} ${t("textbook.sectionComplete")}` : `${t("textbook.complete")} ${label} ${t("textbook.completeAndEarnXp")}`}
       </Button>
     );
   };
@@ -175,7 +186,7 @@ const LessonDetailPage = () => {
       <Header />
       <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
         <Link to="/textbook" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ChevronLeft className="h-4 w-4" /> All Missions
+          <ChevronLeft className="h-4 w-4" /> {t("textbook.allMissions")}
         </Link>
 
         {/* Mission Start Banner */}
@@ -191,7 +202,7 @@ const LessonDetailPage = () => {
         <div className="flex items-start gap-4 mb-4">
           <span className="text-5xl">{lesson.emoji}</span>
           <div className="flex-1">
-            <p className="text-sm font-bold text-primary uppercase tracking-wider">Mission {lesson.sort_order}</p>
+            <p className="text-sm font-bold text-primary uppercase tracking-wider">{t("textbook.missionLabel")} {lesson.sort_order}</p>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">{lesson.title_en}</h1>
             <p className="text-muted-foreground text-lg">{lesson.title_ko}</p>
           </div>
@@ -211,7 +222,7 @@ const LessonDetailPage = () => {
         {lp?.chapter_completed && (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-6 text-center">
             <span className="text-2xl">⭐</span>
-            <p className="font-bold text-foreground">Mission Complete!</p>
+            <p className="font-bold text-foreground">{t("textbook.missionComplete")}</p>
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
           </div>
         )}
@@ -229,23 +240,23 @@ const LessonDetailPage = () => {
         <Tabs defaultValue="vocab" className="w-full">
           <TabsList className="w-full grid grid-cols-5 mb-8">
             <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <BookOpen className="h-4 w-4 hidden sm:block" /> Vocab
+              <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
               {lp?.vocab_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
             <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Languages className="h-4 w-4 hidden sm:block" /> Grammar
+              <Languages className="h-4 w-4 hidden sm:block" /> {t("textbook.grammar")}
               {lp?.grammar_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
             <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MessageSquare className="h-4 w-4 hidden sm:block" /> Dialogue
+              <MessageSquare className="h-4 w-4 hidden sm:block" /> {t("textbook.dialogue")}
               {lp?.dialogue_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
             <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Lightbulb className="h-4 w-4 hidden sm:block" /> Exercises
+              <Lightbulb className="h-4 w-4 hidden sm:block" /> {t("textbook.exercises")}
               {lp?.exercises_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
             <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <FileText className="h-4 w-4 hidden sm:block" /> Reading
+              <FileText className="h-4 w-4 hidden sm:block" /> {t("textbook.reading")}
               {lp?.reading_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
           </TabsList>
@@ -253,11 +264,11 @@ const LessonDetailPage = () => {
           {/* VOCAB */}
           <TabsContent value="vocab">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> Vocabulary
+              <BookOpen className="h-5 w-5 text-primary" /> {t("textbook.vocabulary")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.vocab} XP</span>
             </h2>
             {vocab.length === 0 ? (
-              <p className="text-muted-foreground">No vocabulary content yet for this lesson.</p>
+              <p className="text-muted-foreground">{t("textbook.noVocab")}</p>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -271,7 +282,7 @@ const LessonDetailPage = () => {
                     </div>
                   ))}
                 </div>
-                <SectionDoneButton section="vocab_done" label="Vocabulary" />
+                <SectionDoneButton section="vocab_done" />
               </>
             )}
           </TabsContent>
@@ -279,11 +290,11 @@ const LessonDetailPage = () => {
           {/* GRAMMAR */}
           <TabsContent value="grammar">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Languages className="h-5 w-5 text-primary" /> Grammar
+              <Languages className="h-5 w-5 text-primary" /> {t("textbook.grammar")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.grammar} XP</span>
             </h2>
             {grammar.length === 0 ? (
-              <p className="text-muted-foreground">No grammar content yet for this lesson.</p>
+              <p className="text-muted-foreground">{t("textbook.noGrammar")}</p>
             ) : (
               <>
                 <div className="space-y-6">
@@ -305,7 +316,7 @@ const LessonDetailPage = () => {
                     </div>
                   ))}
                 </div>
-                <SectionDoneButton section="grammar_done" label="Grammar" />
+                <SectionDoneButton section="grammar_done" />
               </>
             )}
           </TabsContent>
@@ -313,11 +324,11 @@ const LessonDetailPage = () => {
           {/* DIALOGUE */}
           <TabsContent value="dialogue">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Dialogue
+              <MessageSquare className="h-5 w-5 text-primary" /> {t("textbook.dialogue")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.dialogue} XP</span>
             </h2>
             {dialogue.length === 0 ? (
-              <p className="text-muted-foreground">No dialogue content yet for this lesson.</p>
+              <p className="text-muted-foreground">{t("textbook.noDialogue")}</p>
             ) : (
               <>
                 <div className="space-y-3">
@@ -330,7 +341,7 @@ const LessonDetailPage = () => {
                     </div>
                   ))}
                 </div>
-                <SectionDoneButton section="dialogue_done" label="Dialogue" />
+                <SectionDoneButton section="dialogue_done" />
               </>
             )}
           </TabsContent>
@@ -338,11 +349,11 @@ const LessonDetailPage = () => {
           {/* EXERCISES */}
           <TabsContent value="exercises">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-primary" /> Exercises
+              <Lightbulb className="h-5 w-5 text-primary" /> {t("textbook.exercises")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.exercise} XP</span>
             </h2>
             {exercises.length === 0 ? (
-              <p className="text-muted-foreground">No exercises yet for this lesson.</p>
+              <p className="text-muted-foreground">{t("textbook.noExercises")}</p>
             ) : (
               <>
                 <div className="space-y-6">
@@ -378,7 +389,7 @@ const LessonDetailPage = () => {
                     </div>
                   ))}
                 </div>
-                <SectionDoneButton section="exercises_done" label="Exercises" />
+                <SectionDoneButton section="exercises_done" />
               </>
             )}
           </TabsContent>
@@ -386,11 +397,11 @@ const LessonDetailPage = () => {
           {/* READING */}
           <TabsContent value="reading">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" /> Reading
+              <FileText className="h-5 w-5 text-primary" /> {t("textbook.reading")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.reading} XP</span>
             </h2>
             {reading.length === 0 ? (
-              <p className="text-muted-foreground">No reading content yet for this lesson.</p>
+              <p className="text-muted-foreground">{t("textbook.noReading")}</p>
             ) : (
               <>
                 <div className="space-y-6">
@@ -402,7 +413,7 @@ const LessonDetailPage = () => {
                     </div>
                   ))}
                 </div>
-                <SectionDoneButton section="reading_done" label="Reading" />
+                <SectionDoneButton section="reading_done" />
               </>
             )}
           </TabsContent>
@@ -412,12 +423,12 @@ const LessonDetailPage = () => {
         <div className="flex justify-between items-center mt-12 pt-6 border-t border-border">
           {lessonNum > 1 ? (
             <Link to={`/textbook/${lessonNum - 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-              <ChevronLeft className="h-4 w-4" /> Previous Mission
+              <ChevronLeft className="h-4 w-4" /> {t("textbook.previousMission")}
             </Link>
           ) : <span />}
           {lessonNum < totalLessons ? (
             <Link to={`/textbook/${lessonNum + 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-              Next Mission <ChevronRight className="h-4 w-4" />
+              {t("textbook.nextMission")} <ChevronRight className="h-4 w-4" />
             </Link>
           ) : <span />}
         </div>
