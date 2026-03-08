@@ -2006,33 +2006,39 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          description_ar: string
           emoji: string
           id: number
           is_published: boolean
           scene_image_url: string | null
           sort_order: number
+          title_ar: string
           title_en: string
           title_ko: string
         }
         Insert: {
           created_at?: string
           description?: string
+          description_ar?: string
           emoji?: string
           id?: number
           is_published?: boolean
           scene_image_url?: string | null
           sort_order?: number
+          title_ar?: string
           title_en: string
           title_ko: string
         }
         Update: {
           created_at?: string
           description?: string
+          description_ar?: string
           emoji?: string
           id?: number
           is_published?: boolean
           scene_image_url?: string | null
           sort_order?: number
+          title_ar?: string
           title_en?: string
           title_ko?: string
         }

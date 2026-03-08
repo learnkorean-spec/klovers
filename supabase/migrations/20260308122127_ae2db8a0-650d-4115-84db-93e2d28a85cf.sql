@@ -1,0 +1,4 @@
+
+ALTER TABLE public.textbook_lessons
+  ADD COLUMN IF NOT EXISTS title_ar TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS description_ar TEXT NOT NULL DEFAULT '';
