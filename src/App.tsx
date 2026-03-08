@@ -34,6 +34,7 @@ import MarketingGeneratorPage from "./pages/MarketingGeneratorPage";
 import PlacementTestPage from "./pages/PlacementTestPage";
 import GamesPage from "./pages/GamesPage";
 import TextbookPage from "./pages/TextbookPage";
+import LessonDetailPage from "./pages/LessonDetailPage";
 const queryClient = new QueryClient();
 
 const AppInner = () => {
