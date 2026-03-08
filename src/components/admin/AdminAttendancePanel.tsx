@@ -458,8 +458,7 @@ const AdminAttendancePanel = ({
             <div className={`rounded-lg border p-3 text-center ${stats.balance > 0 ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
               <span className="text-[10px] text-muted-foreground">Balance Due</span>
               <p className={`text-lg font-bold ${stats.balance > 0 ? "text-destructive" : "text-foreground"}`}>
-                {currLabel}{Math.round(stats.balance)         </p>
-            </div>
+                {currLabel}{Math.round(stats.balance)  </div>
           </div>
         )}
 
@@ -539,8 +538,7 @@ const AdminAttendancePanel = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
-                  <span className="fMath.round(enrollment.amont-medium">{currLabel}{Math.round(enrollment.amount)>
-                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditPaid(String(enrollment.amount)); setEditingPaid(true); }}>
+                  <span className="fMath.round(enrollment.amont-medium">{currLabel}{ont-medium">{currLabel}{Math.round(enrollment.amount)on" variant="ghost" className="h-5 w-5" onClick={() => { setEditPaid(String(enrollment.amount)); setEditingPaid(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 </div>
@@ -580,8 +578,7 @@ const AdminAttendancePanel = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-1">
-                  <span className="fMath.round(enrollment.unit_price)l}{enrollment.unit_price}</span>
-                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditUnitPrice(String(enrollment.unit_price)); setEditingUnitPrice(true); }}>
+                  <span className="fMath.round(enrollment.unit_price)l}{ont-medium">{currLabel}{Math.round(enrollment.unit_price)ize="icon" variant="ghost" className="h-5 w-5" onClick={() => { setEditUnitPrice(String(enrollment.unit_price)); setEditingUnitPrice(true); }}>
                     <Pencil className="h-3 w-3" />
                   </Button>
                 </div>
