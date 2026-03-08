@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, UserCircle, ChevronDown } from "lucide-react";
+import { Menu, X, Globe, UserCircle, ChevronDown, LogOut } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
