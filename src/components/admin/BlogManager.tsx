@@ -418,8 +418,6 @@ const BlogManager = () => {
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((post) => (
