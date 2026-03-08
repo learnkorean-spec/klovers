@@ -114,8 +114,8 @@ function renderPost(
   if (template === "classic" || template === "character") {
     ctx.font = `bold ${80 * scale}px Georgia, serif`;
     ctx.fillStyle = `${c.text}22`;
-    ctx.fillText(""", 40 * scale, 120 * scale);
-    ctx.fillText(""", w - 80 * scale, h - 40 * scale);
+    ctx.fillText("\u201C", 40 * scale, 120 * scale);
+    ctx.fillText("\u201D", w - 80 * scale, h - 40 * scale);
   }
 
   ctx.shadowBlur = 0;
