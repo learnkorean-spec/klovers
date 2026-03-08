@@ -340,6 +340,10 @@ export const translations = {
       passwordsDontMatch: "Please make sure both passwords are the same.",
       samePassword: "New password must be different from your current password.",
       passwordUpdated: "You can now log in with your new password.",
+      signUpSubtitle: "Join K-Lovers and start learning Korean today",
+      creatingAccount: "Creating account...",
+      accountCreated: "Account created!",
+      welcomeMessage: "Welcome to K-Lovers! You can now sign in.",
     },
     enrollNow: {
       choosePlan: "Choose Plan",
