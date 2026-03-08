@@ -683,7 +683,7 @@ const AdminDashboard = () => {
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.negative_sessions > 0 ? <span className="text-destructive">{u.negative_sessions}</span> : "—"}</TableCell>
-                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}</span> : "—"}</TableCell>
+                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due). : "—"}</TableCell>
                             <TableCell className="py-3 px-3">
                               <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.derived_status}</Badge>
                             </TableCell>
@@ -813,7 +813,7 @@ const AdminDashboard = () => {
                                 <div className="space-y-1">
                                   <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
                                   <p className="text-sm text-muted-foreground">
-                                    {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {e.Math.round(e.amount).toLocaleString()} EGP` : `$${Math.round(e.amount)g()} EGP` : `$${Math.round(e.amount)`$${e.amount}`} · Ref: {e.tx_ref || '—'}
+                                    {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {e.Math.round(e.amount).toLcurrency === 'EGP' ? `${Math.round(e.amount).toLocaleString()} EGP` : `$${Math.round(e.amount) '—'}
                                     {e.payment_method && <> · <span className="font-medium">{e.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : e.payment_method === 'instapay' ? 'InstaPay' : e.payment_method === 'bank_transfer' ? 'Bank Transfer' : e.payment_method}</span></>}
                                     {e.payment_date && <> · Paid: {e.payment_date}</>}
                                     {e.due_at && e.approval_status === 'PENDING_PAYMENT' && <> · Due: {new Date(e.due_at).toLocaleString()}</>}
