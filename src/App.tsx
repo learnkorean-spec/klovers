@@ -35,6 +35,7 @@ import PlacementTestPage from "./pages/PlacementTestPage";
 import GamesPage from "./pages/GamesPage";
 import TextbookPage from "./pages/TextbookPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
+import TextbookProgressPage from "./pages/TextbookProgressPage";
 const queryClient = new QueryClient();
 
 const AppInner = () => {
