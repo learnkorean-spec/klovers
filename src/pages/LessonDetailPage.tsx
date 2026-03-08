@@ -161,9 +161,9 @@ const LessonDetailPage = () => {
 
   // Calculate section completion for progress bar
   const sectionsDone = lp
-    ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done].filter(Boolean).length
+    ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done, (lp as any).writing_done].filter(Boolean).length
     : 0;
-  const sectionProgress = (sectionsDone / 5) * 100;
+  const sectionProgress = (sectionsDone / 6) * 100;
 
   if (loading) {
     return (
