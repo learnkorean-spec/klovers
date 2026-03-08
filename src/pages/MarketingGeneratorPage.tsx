@@ -7,9 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2, Palette, Grid3X3, Monitor, Smartphone } from "lucide-react";
+import {
+  ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
+  Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   type GroupData,
   generateCaptions,
@@ -32,10 +36,12 @@ export default function MarketingGeneratorPage() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<Record<string, { captions: string[]; adCopy: ReturnType<typeof generateAdCopy> }>>({});
   const [generatingImages, setGeneratingImages] = useState<Record<string, Set<string>>>({});
   const [generatedImages, setGeneratedImages] = useState<Record<string, GeneratedImages>>({});
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, label: "" });
 
   const fetchGroups = useCallback(async () => {
     setLoading(true);
@@ -114,9 +120,7 @@ export default function MarketingGeneratorPage() {
     const captions = generateCaptions(group);
     const adCopy = generateAdCopy(group);
     setGeneratedContent(prev => ({ ...prev, [group.id]: { captions, adCopy } }));
-    setExpandedGroup(group.id);
 
-    // Save to marketing_posts
     supabase.from("marketing_posts").insert({
       group_id: group.id,
       headline: adCopy.headlines[0] || getLevelLabel(group.level),
@@ -128,7 +132,7 @@ export default function MarketingGeneratorPage() {
       if (error) console.error("Failed to save post:", error.message);
     });
 
-    toast({ title: "Content generated!", description: `3 captions + ad copy for ${getLevelLabel(group.level)}` });
+    return { captions, adCopy };
   }
 
   function copyToClipboard(text: string, label: string) {
@@ -165,7 +169,6 @@ export default function MarketingGeneratorPage() {
         [group.id]: { ...(prev[group.id] || {}), [size]: data.image_url },
       }));
 
-      // Update marketing_posts with image URL
       const imageField = size === "1x1" ? "image_url_1x1" : size === "4x5" ? "image_url_4x5" : "image_url_story";
       supabase.from("marketing_posts")
         .update({ [imageField]: data.image_url })
@@ -176,9 +179,10 @@ export default function MarketingGeneratorPage() {
           if (error) console.error("Failed to update post image:", error.message);
         });
 
-      toast({ title: "Image generated!", description: `${size} image for ${getLevelLabel(group.level)}` });
+      return data.image_url;
     } catch (err: any) {
-      toast({ title: "Error generating image", description: err.message, variant: "destructive" });
+      toast({ title: "Image error", description: err.message, variant: "destructive" });
+      return null;
     } finally {
       setGeneratingImages(prev => {
         const s = new Set(prev[group.id] || []);
@@ -188,9 +192,29 @@ export default function MarketingGeneratorPage() {
     }
   }
 
-  async function handleGenerateAllImages(group: GroupData) {
-    for (const size of ["1x1", "4x5", "story"] as const) {
-      await handleGenerateImage(group, size);
+  async function handleBulkGenerate() {
+    if (groups.length === 0) return;
+    setBulkGenerating(true);
+    const total = groups.length * 2; // content + 1x1 image per group
+    let current = 0;
+
+    try {
+      for (const group of groups) {
+        // Step 1: Generate text content
+        setBulkProgress({ current: ++current, total, label: `Text: ${getLevelLabel(group.level)}` });
+        handleGenerate(group);
+
+        // Step 2: Generate 1x1 image
+        setBulkProgress({ current: ++current, total, label: `Image: ${getLevelLabel(group.level)}` });
+        await handleGenerateImage(group, "1x1");
+      }
+
+      toast({ title: "Bulk generation complete!", description: `${groups.length} groups processed with text + images.` });
+    } catch (err: any) {
+      toast({ title: "Bulk generation error", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkGenerating(false);
+      setBulkProgress({ current: 0, total: 0, label: "" });
     }
   }
 
@@ -202,8 +226,56 @@ export default function MarketingGeneratorPage() {
     a.click();
   }
 
+  function downloadAllImages() {
+    let count = 0;
+    groups.forEach(g => {
+      const imgs = generatedImages[g.id];
+      if (!imgs) return;
+      const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
+      (["1x1", "4x5", "story"] as const).forEach(size => {
+        if (imgs[size]) {
+          setTimeout(() => downloadImage(imgs[size]!, `${slug}-${size}.png`), count * 300);
+          count++;
+        }
+      });
+    });
+    if (count) toast({ title: "Downloading!", description: `${count} images` });
+  }
+
+  function copyAllCaptions() {
+    const allText = groups
+      .filter(g => generatedContent[g.id])
+      .map(g => {
+        const c = generatedContent[g.id];
+        return `── ${getLevelLabel(g.level)} ──\n${c.captions[0]}`;
+      })
+      .join("\n\n═══════════\n\n");
+    if (allText) copyToClipboard(allText, "All captions");
+  }
+
   const isGenerating = (groupId: string) => (generatingImages[groupId]?.size || 0) > 0;
   const isSizeGenerating = (groupId: string, size: string) => generatingImages[groupId]?.has(size) || false;
+
+  const toggleCard = (id: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const hasContent = (id: string) => !!generatedContent[id];
+  const hasImages = (id: string) => Object.keys(generatedImages[id] || {}).length > 0;
+
+  // Collect all generated 1x1 images for grid preview
+  const gridImages = groups
+    .map(g => ({
+      url: generatedImages[g.id]?.["1x1"],
+      storyUrl: generatedImages[g.id]?.["story"],
+      fbUrl: generatedImages[g.id]?.["4x5"] || generatedImages[g.id]?.["1x1"],
+      label: getLevelLabel(g.level),
+    }))
+    .filter(img => img.url || img.storyUrl || img.fbUrl);
 
   return (
     <TooltipProvider>
@@ -228,7 +300,7 @@ export default function MarketingGeneratorPage() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs text-sm">
-                  <p>Click "Generate Content" for captions & ad copy. Click image size buttons to generate AI-branded images. Download or copy anything you need.</p>
+                  <p>Use "Generate All" for one-click bulk content + images. Expand cards for details. Grid preview shows how posts look side by side.</p>
                 </TooltipContent>
               </Tooltip>
               <Button variant="outline" size="sm" onClick={fetchGroups}>
@@ -246,299 +318,308 @@ export default function MarketingGeneratorPage() {
               <TabsTrigger value="archive">📁 Archive</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="generator">
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {[1, 2, 3, 4].map(i => (
-                <Skeleton key={i} className="h-48 rounded-2xl" />
-              ))}
-            </div>
-          ) : groups.length === 0 ? (
-            <Card className="rounded-2xl">
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No groups with available seats found.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {groups.map(group => {
-                const groupImages = generatedImages[group.id] || {};
-                const hasAnyImage = Object.keys(groupImages).length > 0;
-
-                return (
-                  <Card key={group.id} className="rounded-2xl">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
+            <TabsContent value="generator" className="space-y-6">
+              {loading ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[1, 2, 3, 4].map(i => (
+                    <Skeleton key={i} className="h-48 rounded-2xl" />
+                  ))}
+                </div>
+              ) : groups.length === 0 ? (
+                <Card className="rounded-2xl">
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    No groups with available seats found.
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {/* Bulk Actions Bar */}
+                  <Card className="rounded-2xl border-primary/20 bg-primary/5">
+                    <CardContent className="py-4 px-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <CardTitle className="text-base">{getLevelLabel(group.level)}</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {group.day_name} • {group.start_time} • {group.duration_min}min
-                          </p>
+                          <p className="text-sm font-semibold text-foreground">{groups.length} groups with open seats</p>
+                          <p className="text-xs text-muted-foreground">Generate text + images for all at once</p>
                         </div>
-                        <Badge variant={group.urgency_label === "Last Seats" ? "destructive" : "default"}>
-                          {group.urgency_label}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span>{group.active_members}/{group.capacity} enrolled</span>
-                        <span className="font-medium text-primary">{group.seats_left} seats left</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {/* Action buttons */}
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" onClick={() => handleGenerate(group)}>
-                          <Sparkles className="h-4 w-4 mr-1" /> Generate Content
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleGenerateAllImages(group)} disabled={isGenerating(group.id)}>
-                          {isGenerating(group.id) ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Image className="h-4 w-4 mr-1" />}
-                          {isGenerating(group.id) ? "Generating..." : "Generate All Images"}
-                        </Button>
-                      </div>
-
-                      {/* Individual image size buttons */}
-                      <div className="flex gap-2">
-                        {(["1x1", "4x5", "story"] as const).map(size => (
-                          <Button key={size} size="sm" variant="ghost" className="text-xs"
-                            onClick={() => handleGenerateImage(group, size)}
-                            disabled={isSizeGenerating(group.id, size)}
-                          >
-                            {isSizeGenerating(group.id, size) ? (
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        <div className="flex flex-wrap gap-2">
+                          <Button onClick={handleBulkGenerate} disabled={bulkGenerating}>
+                            {bulkGenerating ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                {bulkProgress.label} ({bulkProgress.current}/{bulkProgress.total})
+                              </>
                             ) : (
-                              <Image className="h-3 w-3 mr-1" />
+                              <>
+                                <Zap className="h-4 w-4 mr-2" /> Generate All Content + Images
+                              </>
                             )}
-                            {size}
                           </Button>
-                        ))}
-                      </div>
-
-                      {/* Generated images preview */}
-                      {hasAnyImage && (
-                        <div className="flex gap-3 overflow-x-auto py-2">
-                          {(["1x1", "4x5", "story"] as const).map(size => {
-                            const url = groupImages[size];
-                            if (!url) return null;
-                            const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
-                            return (
-                              <div key={size} className="shrink-0 space-y-1">
-                                <div className={`${aspectClass} w-32 rounded-lg overflow-hidden border shadow-sm bg-muted`}>
-                                  <img src={url} alt={`${getLevelLabel(group.level)} ${size}`} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[10px] text-muted-foreground">{size}</span>
-                                  <Button size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]"
-                                    onClick={() => downloadImage(url, `${getLevelLabel(group.level).replace(/\s+/g, "-")}-${size}.png`)}
-                                  >
-                                    <Download className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          {gridImages.length > 0 && (
+                            <>
+                              <Button variant="outline" size="sm" onClick={copyAllCaptions}>
+                                <Copy className="h-4 w-4 mr-1" /> Copy All Captions
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={downloadAllImages}>
+                                <DownloadCloud className="h-4 w-4 mr-1" /> Download All Images
+                              </Button>
+                            </>
+                          )}
                         </div>
-                      )}
-
-                      {/* Generated text content */}
-                      {expandedGroup === group.id && generatedContent[group.id] && (
-                        <div className="space-y-4 mt-4 border-t pt-4">
-                          <Tabs defaultValue="captions">
-                            <TabsList className="h-auto bg-transparent p-0 gap-2">
-                              <TabsTrigger value="captions" className="rounded-full px-3 py-1.5 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Captions</TabsTrigger>
-                              <TabsTrigger value="ads" className="rounded-full px-3 py-1.5 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ad Copy</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="captions" className="space-y-3 mt-3">
-                              {generatedContent[group.id].captions.map((cap, i) => (
-                                <div key={i} className="space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-muted-foreground font-medium">Variation {i + 1}</span>
-                                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => copyToClipboard(cap, `Caption ${i + 1}`)}>
-                                      <Copy className="h-3 w-3 mr-1" /> Copy
-                                    </Button>
-                                  </div>
-                                  <Textarea value={cap} readOnly className="text-sm min-h-[120px] resize-none" />
-                                </div>
-                              ))}
-                            </TabsContent>
-
-                            <TabsContent value="ads" className="space-y-4 mt-3">
-                              {(() => {
-                                const ad = generatedContent[group.id].adCopy;
-                                return (
-                                  <>
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-medium">Primary Text</h4>
-                                      {ad.primaryTexts.map((t, i) => (
-                                        <div key={i} className="flex items-start gap-2">
-                                          <Textarea value={t} readOnly className="text-sm min-h-[60px] resize-none flex-1" />
-                                          <Button size="sm" variant="ghost" onClick={() => copyToClipboard(t, `Primary Text ${i + 1}`)}>
-                                            <Copy className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-medium">Headlines</h4>
-                                      {ad.headlines.map((h, i) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                          <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{h}</code>
-                                          <Button size="sm" variant="ghost" onClick={() => copyToClipboard(h, `Headline ${i + 1}`)}>
-                                            <Copy className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-medium">Descriptions</h4>
-                                      {ad.descriptions.map((d, i) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                          <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{d}</code>
-                                          <Button size="sm" variant="ghost" onClick={() => copyToClipboard(d, `Description ${i + 1}`)}>
-                                            <Copy className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm text-muted-foreground">Suggested CTA:</span>
-                                      <Badge>{ad.cta}</Badge>
-                                    </div>
-                                    <Button size="sm" variant="outline" onClick={() => {
-                                      const allText = `PRIMARY TEXT:\n${ad.primaryTexts.join("\n\n")}\n\nHEADLINES:\n${ad.headlines.join("\n")}\n\nDESCRIPTIONS:\n${ad.descriptions.join("\n")}\n\nCTA: ${ad.cta}`;
-                                      copyToClipboard(allText, "All ad copy");
-                                    }}>
-                                      <Copy className="h-4 w-4 mr-1" /> Copy All Ad Copy
-                                    </Button>
-                                  </>
-                                );
-                              })()}
-                            </TabsContent>
-                          </Tabs>
+                      </div>
+                      {bulkGenerating && (
+                        <div className="mt-3">
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary rounded-full transition-all duration-300"
+                              style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
+                            />
+                          </div>
                         </div>
                       )}
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
-          )}
 
-          {/* Platform Grid Preview of generated images */}
-          {(() => {
-            const allImages = groups
-              .map(g => ({
-                url: generatedImages[g.id]?.["1x1"],
-                storyUrl: generatedImages[g.id]?.["story"],
-                fbUrl: generatedImages[g.id]?.["4x5"] || generatedImages[g.id]?.["1x1"],
-                label: getLevelLabel(g.level),
-              }))
-              .filter(img => img.url || img.storyUrl || img.fbUrl);
+                  {/* Group Cards */}
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {groups.map(group => {
+                      const groupImages = generatedImages[group.id] || {};
+                      const content = generatedContent[group.id];
+                      const isExpanded = expandedCards.has(group.id);
+                      const done = hasContent(group.id) && hasImages(group.id);
 
-            if (allImages.length === 0) return null;
-
-            const igImages = allImages.filter(i => i.url).slice(0, 9);
-            const storyImages = allImages.filter(i => i.storyUrl || i.url).slice(0, 6);
-            const fbImages = allImages.filter(i => i.fbUrl).slice(0, 4);
-
-            return (
-              <div className="mt-8">
-                <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Grid3X3 className="h-4 w-4" /> Grid Preview — How Your Posts Look Together
-                  <Badge variant="outline" className="text-[10px]">{allImages.length} images</Badge>
-                </h2>
-                <Tabs defaultValue="instagram" className="w-full">
-                  <TabsList className="w-full justify-start">
-                    <TabsTrigger value="instagram" className="text-xs gap-1.5">
-                      <Grid3X3 className="h-3.5 w-3.5" /> Instagram
-                    </TabsTrigger>
-                    <TabsTrigger value="facebook" className="text-xs gap-1.5">
-                      <Monitor className="h-3.5 w-3.5" /> Facebook
-                    </TabsTrigger>
-                    <TabsTrigger value="stories" className="text-xs gap-1.5">
-                      <Smartphone className="h-3.5 w-3.5" /> Stories
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* Instagram 3x3 Grid */}
-                  <TabsContent value="instagram">
-                    <Card className="rounded-2xl">
-                      <CardContent className="p-4">
-                        <div className="bg-card border rounded-t-xl p-3 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">K</div>
-                          <div>
-                            <p className="text-xs font-bold text-foreground">klovers_academy</p>
-                            <p className="text-[10px] text-muted-foreground">{igImages.length} posts • 1.2K followers</p>
-                          </div>
-                        </div>
-                        <div
-                          className="grid gap-0.5 rounded-b-xl overflow-hidden border border-t-0 bg-border mx-auto"
-                          style={{ gridTemplateColumns: `repeat(${Math.min(3, igImages.length)}, 1fr)`, maxWidth: Math.min(3, igImages.length) * 160 }}
-                        >
-                          {igImages.map((img, i) => (
-                            <div key={i} className="aspect-square bg-muted overflow-hidden">
-                              <img src={img.url!} alt={img.label} className="w-full h-full object-cover" />
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — How your grid looks on Instagram</p>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* Facebook Timeline */}
-                  <TabsContent value="facebook">
-                    <Card className="rounded-2xl">
-                      <CardContent className="p-4">
-                        <div className="space-y-3 max-w-md mx-auto">
-                          {fbImages.map((img, i) => (
-                            <div key={i} className="bg-card border rounded-xl overflow-hidden">
-                              <div className="flex items-center gap-2 p-2.5">
-                                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">K</div>
+                      return (
+                        <Card key={group.id} className={`rounded-2xl transition-all ${done ? "border-primary/30" : ""}`}>
+                          <CardHeader className="pb-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                {done && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
                                 <div>
-                                  <p className="text-[10px] font-semibold text-foreground">KLovers Academy</p>
-                                  <p className="text-[9px] text-muted-foreground">Sponsored · 🌐</p>
+                                  <CardTitle className="text-sm">{getLevelLabel(group.level)}</CardTitle>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {group.day_name} • {group.start_time} • {group.duration_min}min
+                                  </p>
                                 </div>
                               </div>
-                              <p className="text-[10px] text-foreground px-2.5 pb-1">{img.label}</p>
-                              <div className="aspect-[1200/630] bg-muted overflow-hidden">
-                                <img src={img.fbUrl!} alt={img.label} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="flex items-center justify-between px-2.5 py-1.5 border-t text-[9px] text-muted-foreground">
-                                <span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span>
-                              </div>
+                              <Badge variant={group.urgency_label === "Last Seats" ? "destructive" : "secondary"} className="text-[10px]">
+                                {group.seats_left} left
+                              </Badge>
                             </div>
-                          ))}
-                        </div>
-                        <p className="text-[10px] text-muted-foreground text-center mt-2">1200×630 — Facebook timeline preview</p>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
+                          </CardHeader>
+                          <CardContent className="space-y-2 pt-0">
+                            {/* Quick action row */}
+                            <div className="flex flex-wrap gap-1.5">
+                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleGenerate(group)}>
+                                <Sparkles className="h-3 w-3 mr-1" /> Text
+                              </Button>
+                              {(["1x1", "4x5", "story"] as const).map(size => (
+                                <Button key={size} size="sm" variant="ghost" className="h-7 text-xs"
+                                  onClick={() => handleGenerateImage(group, size)}
+                                  disabled={isSizeGenerating(group.id, size)}
+                                >
+                                  {isSizeGenerating(group.id, size) ? (
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Image className="h-3 w-3 mr-1" />
+                                  )}
+                                  {size}
+                                </Button>
+                              ))}
+                            </div>
 
-                  {/* Stories Tray */}
-                  <TabsContent value="stories">
-                    <Card className="rounded-2xl">
-                      <CardContent className="p-4">
-                        <div className="flex gap-3 overflow-x-auto pb-2">
-                          {storyImages.map((img, i) => (
-                            <div key={i} className="shrink-0 space-y-1">
-                              <div className="w-20 rounded-xl overflow-hidden border-2 border-primary shadow-md">
-                                <div className="aspect-[9/16] bg-muted overflow-hidden">
-                                  <img src={img.storyUrl || img.url!} alt={img.label} className="w-full h-full object-cover" />
+                            {/* Image thumbnails row */}
+                            {Object.keys(groupImages).length > 0 && (
+                              <div className="flex gap-2 py-1">
+                                {(["1x1", "4x5", "story"] as const).map(size => {
+                                  const url = groupImages[size];
+                                  if (!url) return null;
+                                  const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
+                                  return (
+                                    <div key={size} className="shrink-0">
+                                      <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`}
+                                        onClick={() => downloadImage(url, `${getLevelLabel(group.level).replace(/\s+/g, "-")}-${size}.png`)}
+                                      >
+                                        <img src={url} alt={`${size}`} className="w-full h-full object-cover" />
+                                      </div>
+                                      <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Expandable content */}
+                            {content && (
+                              <Collapsible open={isExpanded} onOpenChange={() => toggleCard(group.id)}>
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs justify-between">
+                                    <span>View captions & ad copy</span>
+                                    {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                  </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-3 pt-2">
+                                  <Tabs defaultValue="captions">
+                                    <TabsList className="h-auto bg-transparent p-0 gap-1.5">
+                                      <TabsTrigger value="captions" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Captions</TabsTrigger>
+                                      <TabsTrigger value="ads" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ad Copy</TabsTrigger>
+                                    </TabsList>
+
+                                    <TabsContent value="captions" className="space-y-2 mt-2">
+                                      {content.captions.map((cap, i) => (
+                                        <div key={i} className="space-y-1">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] text-muted-foreground">Variation {i + 1}</span>
+                                            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => copyToClipboard(cap, `Caption ${i + 1}`)}>
+                                              <Copy className="h-3 w-3 mr-1" /> Copy
+                                            </Button>
+                                          </div>
+                                          <Textarea value={cap} readOnly className="text-xs min-h-[80px] resize-none" />
+                                        </div>
+                                      ))}
+                                    </TabsContent>
+
+                                    <TabsContent value="ads" className="space-y-2 mt-2">
+                                      <div className="space-y-1.5">
+                                        <h4 className="text-xs font-medium text-foreground">Primary Text</h4>
+                                        {content.adCopy.primaryTexts.map((t, i) => (
+                                          <div key={i} className="flex items-start gap-1.5">
+                                            <Textarea value={t} readOnly className="text-xs min-h-[50px] resize-none flex-1" />
+                                            <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => copyToClipboard(t, `Primary ${i + 1}`)}>
+                                              <Copy className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <h4 className="text-xs font-medium text-foreground">Headlines</h4>
+                                        {content.adCopy.headlines.map((h, i) => (
+                                          <div key={i} className="flex items-center gap-1.5">
+                                            <code className="flex-1 bg-muted px-2 py-1.5 rounded text-xs text-foreground">{h}</code>
+                                            <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => copyToClipboard(h, `Headline ${i + 1}`)}>
+                                              <Copy className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                                        const allText = `PRIMARY TEXT:\n${content.adCopy.primaryTexts.join("\n\n")}\n\nHEADLINES:\n${content.adCopy.headlines.join("\n")}\n\nDESCRIPTIONS:\n${content.adCopy.descriptions.join("\n")}\n\nCTA: ${content.adCopy.cta}`;
+                                        copyToClipboard(allText, "All ad copy");
+                                      }}>
+                                        <Copy className="h-3 w-3 mr-1" /> Copy All
+                                      </Button>
+                                    </TabsContent>
+                                  </Tabs>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Platform Grid Preview */}
+                  {gridImages.length > 0 && (
+                    <div>
+                      <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Grid3X3 className="h-4 w-4" /> Grid Preview — How Your Posts Look Together
+                        <Badge variant="outline" className="text-[10px]">{gridImages.length} images</Badge>
+                      </h2>
+                      <Tabs defaultValue="instagram" className="w-full">
+                        <TabsList className="w-full justify-start">
+                          <TabsTrigger value="instagram" className="text-xs gap-1.5">
+                            <Grid3X3 className="h-3.5 w-3.5" /> Instagram
+                          </TabsTrigger>
+                          <TabsTrigger value="facebook" className="text-xs gap-1.5">
+                            <Monitor className="h-3.5 w-3.5" /> Facebook
+                          </TabsTrigger>
+                          <TabsTrigger value="stories" className="text-xs gap-1.5">
+                            <Smartphone className="h-3.5 w-3.5" /> Stories
+                          </TabsTrigger>
+                        </TabsList>
+
+                        {/* Instagram 3x3 Grid */}
+                        <TabsContent value="instagram">
+                          <Card className="rounded-2xl">
+                            <CardContent className="p-4">
+                              <div className="bg-card border rounded-t-xl p-3 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">K</div>
+                                <div>
+                                  <p className="text-xs font-bold text-foreground">klovers_academy</p>
+                                  <p className="text-[10px] text-muted-foreground">{gridImages.filter(i => i.url).length} posts • 1.2K followers</p>
                                 </div>
                               </div>
-                              <p className="text-[9px] text-muted-foreground text-center truncate w-20">{img.label}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1920 — Swipeable story sequence</p>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            );
-          })()}
+                              <div
+                                className="grid gap-0.5 rounded-b-xl overflow-hidden border border-t-0 bg-border mx-auto"
+                                style={{
+                                  gridTemplateColumns: `repeat(${Math.min(3, gridImages.filter(i => i.url).length)}, 1fr)`,
+                                  maxWidth: Math.min(3, gridImages.filter(i => i.url).length) * 160,
+                                }}
+                              >
+                                {gridImages.filter(i => i.url).slice(0, 9).map((img, i) => (
+                                  <div key={i} className="aspect-square bg-muted overflow-hidden">
+                                    <img src={img.url!} alt={img.label} className="w-full h-full object-cover" />
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — How your grid looks on Instagram</p>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+
+                        {/* Facebook Timeline */}
+                        <TabsContent value="facebook">
+                          <Card className="rounded-2xl">
+                            <CardContent className="p-4">
+                              <div className="space-y-3 max-w-md mx-auto">
+                                {gridImages.filter(i => i.fbUrl).slice(0, 4).map((img, i) => (
+                                  <div key={i} className="bg-card border rounded-xl overflow-hidden">
+                                    <div className="flex items-center gap-2 p-2.5">
+                                      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">K</div>
+                                      <div>
+                                        <p className="text-[10px] font-semibold text-foreground">KLovers Academy</p>
+                                        <p className="text-[9px] text-muted-foreground">Sponsored · 🌐</p>
+                                      </div>
+                                    </div>
+                                    <p className="text-[10px] text-foreground px-2.5 pb-1">{img.label}</p>
+                                    <div className="aspect-[1200/630] bg-muted overflow-hidden">
+                                      <img src={img.fbUrl!} alt={img.label} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex items-center justify-between px-2.5 py-1.5 border-t text-[9px] text-muted-foreground">
+                                      <span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground text-center mt-2">Facebook timeline preview</p>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+
+                        {/* Stories Tray */}
+                        <TabsContent value="stories">
+                          <Card className="rounded-2xl">
+                            <CardContent className="p-4">
+                              <div className="flex gap-3 overflow-x-auto pb-2">
+                                {gridImages.filter(i => i.storyUrl || i.url).slice(0, 6).map((img, i) => (
+                                  <div key={i} className="shrink-0 space-y-1">
+                                    <div className="w-20 rounded-xl overflow-hidden border-2 border-primary shadow-md">
+                                      <div className="aspect-[9/16] bg-muted overflow-hidden">
+                                        <img src={img.storyUrl || img.url!} alt={img.label} className="w-full h-full object-cover" />
+                                      </div>
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground text-center truncate w-20">{img.label}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground text-center mt-2">Swipeable story sequence</p>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                  )}
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="creator">
