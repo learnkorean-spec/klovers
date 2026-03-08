@@ -615,8 +615,27 @@ const LessonDetailPage = () => {
           </TabsContent>
         </Tabs>
 
+        {/* Games XP Banner */}
+        <Link
+          to="/games"
+          className="group flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 p-4 mt-10 transition-all"
+        >
+          <span className="text-3xl">🎮</span>
+          <div className="flex-1">
+            <p className="font-bold text-foreground">
+              {isAr ? "اكسب المزيد من النقاط!" : "Earn More XP!"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isAr ? "العب ألعاب المفردات والهانغول لتعزيز تعلمك" : "Play vocab & Hangul games to boost your learning"}
+            </p>
+          </div>
+          <span className="text-primary font-semibold text-sm group-hover:underline">
+            {isAr ? "العب الآن" : "Play Now →"}
+          </span>
+        </Link>
+
         {/* Prev / Next navigation */}
-        <div className="flex justify-between items-center mt-12 pt-6 border-t border-border">
+        <div className="flex justify-between items-center mt-6 pt-6 border-t border-border">
           {lessonNum > 1 ? (
             <Link to={`/textbook/${lessonNum - 1}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <ChevronLeft className="h-4 w-4" /> {t("textbook.previousMission")}

@@ -180,6 +180,27 @@ export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldP
           </div>
         );
       })}
+
+      {/* Games CTA Banner */}
+      <Link
+        to="/games"
+        className="group block rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 p-5 text-center transition-all mt-4"
+      >
+        <div className="flex items-center justify-center gap-3">
+          <div className="rounded-full bg-primary/10 p-2.5 group-hover:bg-primary/20 transition-colors">
+            <Gamepad2 className="h-6 w-6 text-primary" />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-foreground text-lg">
+              {isAr ? "العب ألعاباً لكسب المزيد من XP!" : "Play Games for More XP!"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isAr ? "تدرب على المفردات والحروف الكورية بطريقة ممتعة" : "Practice vocab & Hangul with fun mini-games"}
+            </p>
+          </div>
+          <span className="text-2xl">🎮</span>
+        </div>
+      </Link>
     </div>
   );
 }
