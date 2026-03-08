@@ -1540,6 +1540,27 @@ export type Database = {
           },
         ]
       }
+      student_badges: {
+        Row: {
+          badge_key: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_key: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_key?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_groups: {
         Row: {
           capacity: number | null
@@ -1575,6 +1596,50 @@ export type Database = {
           schedule_timezone?: string | null
         }
         Relationships: []
+      }
+      student_lesson_progress: {
+        Row: {
+          chapter_completed: boolean
+          completed_at: string | null
+          dialogue_done: boolean
+          exercises_done: boolean
+          grammar_done: boolean
+          lesson_id: number
+          reading_done: boolean
+          user_id: string
+          vocab_done: boolean
+        }
+        Insert: {
+          chapter_completed?: boolean
+          completed_at?: string | null
+          dialogue_done?: boolean
+          exercises_done?: boolean
+          grammar_done?: boolean
+          lesson_id: number
+          reading_done?: boolean
+          user_id: string
+          vocab_done?: boolean
+        }
+        Update: {
+          chapter_completed?: boolean
+          completed_at?: string | null
+          dialogue_done?: boolean
+          exercises_done?: boolean
+          grammar_done?: boolean
+          lesson_id?: number
+          reading_done?: boolean
+          user_id?: string
+          vocab_done?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_package_preferences: {
         Row: {
@@ -1782,6 +1847,74 @@ export type Database = {
           },
         ]
       }
+      student_streaks: {
+        Row: {
+          current_streak: number
+          last_activity_date: string | null
+          longest_streak: number
+          streak_14_earned: boolean
+          streak_3_earned: boolean
+          streak_30_earned: boolean
+          streak_7_earned: boolean
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_activity_date?: string | null
+          longest_streak?: number
+          streak_14_earned?: boolean
+          streak_3_earned?: boolean
+          streak_30_earned?: boolean
+          streak_7_earned?: boolean
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_activity_date?: string | null
+          longest_streak?: number
+          streak_14_earned?: boolean
+          streak_3_earned?: boolean
+          streak_30_earned?: boolean
+          streak_7_earned?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_xp: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          lesson_id: number | null
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          lesson_id?: number | null
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          lesson_id?: number | null
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_xp_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "textbook_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           country: string | null
@@ -1975,6 +2108,15 @@ export type Database = {
           sessions_total: number | null
           slot_id: string | null
           unit_price: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      xp_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          name: string | null
+          total_xp: number | null
           user_id: string | null
         }
         Relationships: []

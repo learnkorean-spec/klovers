@@ -1,0 +1,259 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { XP_VALUES, getLeague, BADGES } from "@/constants/gamification";
+
+interface UserProgress {
+  totalXp: number;
+  lessonProgress: Record<number, {
+    vocab_done: boolean;
+    grammar_done: boolean;
+    dialogue_done: boolean;
+    exercises_done: boolean;
+    reading_done: boolean;
+    chapter_completed: boolean;
+  }>;
+  badges: string[];
+  streak: {
+    current_streak: number;
+    longest_streak: number;
+    last_activity_date: string | null;
+  };
+}
+
+export function useGamification() {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [progress, setProgress] = useState<UserProgress>({
+    totalXp: 0,
+    lessonProgress: {},
+    badges: [],
+    streak: { current_streak: 0, longest_streak: 0, last_activity_date: null },
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id || null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserId(session?.user?.id || null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProgress = useCallback(async () => {
+    if (!userId) { setLoading(false); return; }
+
+    const [xpRes, progressRes, badgesRes, streakRes] = await Promise.all([
+      supabase.from("student_xp").select("xp_earned").eq("user_id", userId),
+      supabase.from("student_lesson_progress").select("*").eq("user_id", userId),
+      supabase.from("student_badges").select("badge_key").eq("user_id", userId),
+      supabase.from("student_streaks").select("*").eq("user_id", userId).maybeSingle(),
+    ]);
+
+    const totalXp = (xpRes.data || []).reduce((sum: number, r: any) => sum + (r.xp_earned || 0), 0);
+
+    const lessonProgress: Record<number, any> = {};
+    (progressRes.data || []).forEach((r: any) => {
+      lessonProgress[r.lesson_id] = {
+        vocab_done: r.vocab_done,
+        grammar_done: r.grammar_done,
+        dialogue_done: r.dialogue_done,
+        exercises_done: r.exercises_done,
+        reading_done: r.reading_done,
+        chapter_completed: r.chapter_completed,
+      };
+    });
+
+    setProgress({
+      totalXp,
+      lessonProgress,
+      badges: (badgesRes.data || []).map((b: any) => b.badge_key),
+      streak: streakRes.data || { current_streak: 0, longest_streak: 0, last_activity_date: null },
+    });
+    setLoading(false);
+  }, [userId]);
+
+  useEffect(() => { fetchProgress(); }, [fetchProgress]);
+
+  const awardXp = useCallback(async (lessonId: number, activityType: keyof typeof XP_VALUES) => {
+    if (!userId) return 0;
+
+    const xp = XP_VALUES[activityType];
+
+    await supabase.from("student_xp").insert({
+      user_id: userId,
+      lesson_id: lessonId,
+      activity_type: activityType,
+      xp_earned: xp,
+    });
+
+    // Update streak
+    const today = new Date().toISOString().split("T")[0];
+    const { data: existing } = await supabase
+      .from("student_streaks")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!existing) {
+      await supabase.from("student_streaks").insert({
+        user_id: userId,
+        current_streak: 1,
+        longest_streak: 1,
+        last_activity_date: today,
+      });
+    } else if (existing.last_activity_date !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const wasYesterday = existing.last_activity_date === yesterday.toISOString().split("T")[0];
+
+      const newStreak = wasYesterday ? existing.current_streak + 1 : 1;
+      const longestStreak = Math.max(newStreak, existing.longest_streak);
+
+      const updates: any = {
+        current_streak: newStreak,
+        longest_streak: longestStreak,
+        last_activity_date: today,
+      };
+
+      if (newStreak >= 3) updates.streak_3_earned = true;
+      if (newStreak >= 7) updates.streak_7_earned = true;
+      if (newStreak >= 14) updates.streak_14_earned = true;
+      if (newStreak >= 30) updates.streak_30_earned = true;
+
+      // Award streak badges
+      const streakBadges = [
+        { threshold: 3, key: "streak_3" },
+        { threshold: 7, key: "streak_7" },
+        { threshold: 14, key: "streak_14" },
+        { threshold: 30, key: "streak_30" },
+      ];
+
+      for (const sb of streakBadges) {
+        if (newStreak >= sb.threshold) {
+          await supabase.from("student_badges").upsert(
+            { user_id: userId, badge_key: sb.key },
+            { onConflict: "user_id,badge_key" }
+          );
+        }
+      }
+
+      await supabase.from("student_streaks").update(updates).eq("user_id", userId);
+    }
+
+    await fetchProgress();
+    return xp;
+  }, [userId, fetchProgress]);
+
+  const markSectionDone = useCallback(async (
+    lessonId: number,
+    section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done"
+  ) => {
+    if (!userId) return;
+
+    // Upsert progress
+    const { data: existing } = await supabase
+      .from("student_lesson_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("lesson_id", lessonId)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing[section]) return; // Already done
+      const updates: any = { [section]: true };
+
+      // Check if all sections are now done
+      const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done"]
+        .every(s => s === section ? true : existing[s as keyof typeof existing]);
+
+      if (allDone) {
+        updates.chapter_completed = true;
+        updates.completed_at = new Date().toISOString();
+      }
+
+      await supabase.from("student_lesson_progress").update(updates)
+        .eq("user_id", userId).eq("lesson_id", lessonId);
+
+      // Award chapter completion XP + badge
+      if (allDone) {
+        await awardXp(lessonId, "chapter");
+        await supabase.from("student_badges").upsert(
+          { user_id: userId, badge_key: "first_chapter" },
+          { onConflict: "user_id,badge_key" }
+        );
+      }
+    } else {
+      await supabase.from("student_lesson_progress").insert({
+        user_id: userId,
+        lesson_id: lessonId,
+        [section]: true,
+      });
+    }
+
+    // Award section XP
+    const activityMap: Record<string, keyof typeof XP_VALUES> = {
+      vocab_done: "vocab",
+      grammar_done: "grammar",
+      dialogue_done: "dialogue",
+      exercises_done: "exercise",
+      reading_done: "reading",
+    };
+    await awardXp(lessonId, activityMap[section]);
+
+    // Check for special badges
+    await checkBadges();
+    await fetchProgress();
+  }, [userId, awardXp, fetchProgress]);
+
+  const checkBadges = useCallback(async () => {
+    if (!userId) return;
+
+    // Count completed sections
+    const { data: allProgress } = await supabase
+      .from("student_lesson_progress")
+      .select("*")
+      .eq("user_id", userId);
+
+    if (!allProgress) return;
+
+    const vocabCount = allProgress.filter((p: any) => p.vocab_done).length;
+    const grammarCount = allProgress.filter((p: any) => p.grammar_done).length;
+    const dialogueCount = allProgress.filter((p: any) => p.dialogue_done).length;
+    const chapterCount = allProgress.filter((p: any) => p.chapter_completed).length;
+
+    // Hangul Master: lesson 1 completed
+    const lesson1 = allProgress.find((p: any) => p.lesson_id === 1);
+    if (lesson1?.chapter_completed) {
+      await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "hangul_master" }, { onConflict: "user_id,badge_key" });
+    }
+
+    if (vocabCount >= 10) {
+      await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "first_100_words" }, { onConflict: "user_id,badge_key" });
+    }
+    if (grammarCount >= 5) {
+      await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "grammar_starter" }, { onConflict: "user_id,badge_key" });
+    }
+    if (dialogueCount >= 5) {
+      await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "conversation_beginner" }, { onConflict: "user_id,badge_key" });
+    }
+    if (chapterCount >= 5) {
+      await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "five_chapters" }, { onConflict: "user_id,badge_key" });
+    }
+    if (chapterCount >= 45) {
+      await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "topik_ready" }, { onConflict: "user_id,badge_key" });
+    }
+  }, [userId]);
+
+  const league = getLeague(progress.totalXp);
+
+  return {
+    userId,
+    progress,
+    league,
+    loading,
+    awardXp,
+    markSectionDone,
+    fetchProgress,
+  };
+}

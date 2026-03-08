@@ -35,6 +35,7 @@ import PlacementTestPage from "./pages/PlacementTestPage";
 import GamesPage from "./pages/GamesPage";
 import TextbookPage from "./pages/TextbookPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
+import TextbookProgressPage from "./pages/TextbookProgressPage";
 const queryClient = new QueryClient();
 
 const AppInner = () => {
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/placement-test" element={<PlacementTestPage />} />
             <Route path="/games" element={<GamesPage />} />
             <Route path="/textbook" element={<TextbookPage />} />
+            <Route path="/textbook/progress" element={<TextbookProgressPage />} />
             <Route path="/textbook/:lessonId" element={<LessonDetailPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
