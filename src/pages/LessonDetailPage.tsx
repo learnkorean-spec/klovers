@@ -1,19 +1,22 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
 import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
+import { getWorldForLesson } from "@/constants/worlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MissionCompleteOverlay, XpFloatAnimation } from "@/components/XpAnimation";
+import { Progress } from "@/components/ui/progress";
 
 interface Lesson {
   id: number;
@@ -36,6 +39,7 @@ interface ReadingItem { id: string; korean_text: string; english_text: string; }
 const LessonDetailPage = () => {
   const { lessonId } = useParams();
   const lessonNum = parseInt(lessonId || "1", 10);
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { userId, progress, league, markSectionDone } = useGamification();
   const { t, language } = useLanguage();
@@ -53,11 +57,21 @@ const LessonDetailPage = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState<Record<string, boolean>>({});
 
+  // Interactive states
+  const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
+  const [showTranslations, setShowTranslations] = useState(true);
+  const [showMissionComplete, setShowMissionComplete] = useState(false);
+  const [xpFloat, setXpFloat] = useState<number | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("vocab");
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
       setSelectedAnswers({});
       setShowResults({});
+      setFlippedCards(new Set());
+      setCorrectCount(0);
 
       const [lessonRes, countRes] = await Promise.all([
         supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true).maybeSingle(),
@@ -87,9 +101,13 @@ const LessonDetailPage = () => {
     fetchAll();
   }, [lessonNum]);
 
-  const handleAnswer = (exerciseId: string, optionIndex: number) => {
+  const handleAnswer = (exerciseId: string, optionIndex: number, correctIndex: number) => {
+    if (showResults[exerciseId]) return;
     setSelectedAnswers((prev) => ({ ...prev, [exerciseId]: optionIndex }));
     setShowResults((prev) => ({ ...prev, [exerciseId]: true }));
+    if (optionIndex === correctIndex) {
+      setCorrectCount((c) => c + 1);
+    }
   };
 
   const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done") => {
@@ -111,13 +129,40 @@ const LessonDetailPage = () => {
       reading_done: XP_VALUES.reading,
     };
 
+    setXpFloat(xpMap[section]);
+    setTimeout(() => setXpFloat(null), 1600);
+
+    // Check if chapter just completed
+    const updatedLp = { ...lp, [section]: true };
+    const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done"]
+      .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
+
+    if (allDone) {
+      setTimeout(() => setShowMissionComplete(true), 800);
+    }
+
     toast({
       title: `+${xpMap[section]} XP earned! ⚡`,
       description: getRandomMotivation(),
     });
   }, [lesson, userId, progress, markSectionDone, toast, t]);
 
+  const toggleFlip = (id: string) => {
+    setFlippedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const lp = lesson ? progress.lessonProgress[lesson.id] : undefined;
+
+  // Calculate section completion for progress bar
+  const sectionsDone = lp
+    ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done].filter(Boolean).length
+    : 0;
+  const sectionProgress = (sectionsDone / 5) * 100;
 
   if (loading) {
     return (
@@ -151,6 +196,7 @@ const LessonDetailPage = () => {
 
   const boss = isBossChallenge(lesson.sort_order);
   const checkpoint = isCheckpointLesson(lesson.sort_order);
+  const world = getWorldForLesson(lesson.sort_order);
 
   const sectionLabels: Record<string, string> = {
     vocab_done: t("textbook.vocabulary"),
@@ -175,22 +221,48 @@ const LessonDetailPage = () => {
         onClick={() => handleMarkDone(section)}
         disabled={!!done}
         variant={done ? "secondary" : "default"}
-        size="sm"
-        className="mt-4 gap-2"
+        size="lg"
+        className={cn("mt-6 gap-2 w-full sm:w-auto", done && "opacity-70")}
       >
-        {done ? <CheckCircle2 className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+        {done ? <CheckCircle2 className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
         {done ? `${label} ${t("textbook.sectionComplete")}` : `${t("textbook.complete")} ${label} ${t("textbook.completeAndEarnXp")}`}
       </Button>
     );
   };
 
+  // Quiz score display
+  const quizTotal = exercises.length;
+  const allAnswered = quizTotal > 0 && Object.keys(showResults).length === quizTotal;
+  const quizScore = allAnswered ? Math.round((correctCount / quizTotal) * 100) : 0;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
+      {/* XP Float Animation */}
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} />}
+
+      {/* Mission Complete Overlay */}
+      {showMissionComplete && (
+        <MissionCompleteOverlay
+          lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
+          xpEarned={XP_VALUES.chapter}
+          onContinue={() => {
+            setShowMissionComplete(false);
+            if (lessonNum < totalLessons) navigate(`/textbook/${lessonNum + 1}`);
+          }}
+        />
+      )}
+
       <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
-        <Link to="/textbook" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ChevronLeft className="h-4 w-4" /> {t("textbook.allMissions")}
-        </Link>
+        {/* Back link with world context */}
+        <div className="flex items-center gap-2 mb-6">
+          <Link to="/textbook" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ChevronLeft className="h-4 w-4" /> {t("textbook.allMissions")}
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-sm text-muted-foreground">{world.emoji} {isAr ? world.nameAr : world.name}</span>
+        </div>
 
         {/* Mission Start Banner */}
         <MissionStartBanner
@@ -213,12 +285,20 @@ const LessonDetailPage = () => {
 
         {/* Progress & XP */}
         {userId && (
-          <div className="flex items-center justify-between gap-3 mb-6 rounded-lg border border-border bg-card p-3">
-            <div className="flex items-center gap-3">
-              <XpBadge xp={progress.totalXp} />
-              <span className="text-xs text-muted-foreground">{league.emoji} {league.name}</span>
+          <div className="mb-6 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <XpBadge xp={progress.totalXp} />
+                <span className="text-xs text-muted-foreground">{league.emoji} {league.name}</span>
+              </div>
+              {lp && <LessonProgressDots progress={lp} />}
             </div>
-            {lp && <LessonProgressDots progress={lp} />}
+            {/* Section progress bar */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{sectionsDone}/5</span>
+              <Progress value={sectionProgress} className="h-2 flex-1" />
+              {sectionProgress === 100 && <span className="text-sm">⭐</span>}
+            </div>
           </div>
         )}
 
@@ -240,7 +320,7 @@ const LessonDetailPage = () => {
           isAdmin={false}
         />
 
-        <Tabs defaultValue="vocab" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-5 mb-8">
             <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
@@ -264,26 +344,59 @@ const LessonDetailPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* VOCAB */}
+          {/* VOCAB - Enhanced with flip cards */}
           <TabsContent value="vocab">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> {t("textbook.vocabulary")}
-              <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.vocab} XP</span>
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" /> {t("textbook.vocabulary")}
+                <span className="text-xs text-muted-foreground">+{XP_VALUES.vocab} XP</span>
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTranslations(!showTranslations)}
+                className="gap-1.5 text-xs"
+              >
+                {showTranslations ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {showTranslations ? (isAr ? "إخفاء" : "Hide") : (isAr ? "إظهار" : "Show")}
+              </Button>
+            </div>
             {vocab.length === 0 ? (
               <p className="text-muted-foreground">{t("textbook.noVocab")}</p>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {vocab.map((v) => (
-                    <div key={v.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
-                      <span className="text-2xl font-bold text-primary min-w-[3rem] text-center">{v.korean}</span>
-                      <div>
-                        <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                        <p className="text-sm font-medium text-foreground">{v.meaning}</p>
-                      </div>
-                    </div>
-                  ))}
+                  {vocab.map((v) => {
+                    const isFlipped = flippedCards.has(v.id);
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => toggleFlip(v.id)}
+                        className={cn(
+                          "text-left rounded-xl border p-4 transition-all hover:shadow-md cursor-pointer",
+                          isFlipped
+                            ? "border-primary/40 bg-primary/5"
+                            : "border-border bg-card hover:border-primary/30"
+                        )}
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="text-2xl font-bold text-primary min-w-[3rem] text-center">
+                            {v.korean}
+                          </span>
+                          <div className="flex-1">
+                            <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
+                            {(showTranslations || isFlipped) ? (
+                              <p className="text-sm font-medium text-foreground">{v.meaning}</p>
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">
+                                {isAr ? "اضغط للكشف" : "Tap to reveal"}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
                 <SectionDoneButton section="vocab_done" />
               </>
@@ -301,13 +414,18 @@ const LessonDetailPage = () => {
             ) : (
               <>
                 <div className="space-y-6">
-                  {grammar.map((g) => (
+                  {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
-                      <h3 className="text-lg font-bold text-foreground mb-1">{g.title}</h3>
-                      {g.structure && <p className="text-sm font-mono text-primary bg-primary/10 inline-block px-2 py-1 rounded mb-2">{g.structure}</p>}
-                      <p className="text-sm text-muted-foreground mb-3">{g.explanation}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold">{gi + 1}</span>
+                        <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
+                      </div>
+                      {g.structure && (
+                        <p className="text-sm font-mono text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
+                      )}
+                      <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
-                        <div className="space-y-2">
+                        <div className="space-y-2 bg-muted/30 rounded-lg p-3">
                           {g.examples.map((ex, i) => (
                             <div key={i} className="border-l-2 border-primary/30 pl-3">
                               <p className="text-sm font-medium text-foreground">{ex.korean}</p>
@@ -324,7 +442,7 @@ const LessonDetailPage = () => {
             )}
           </TabsContent>
 
-          {/* DIALOGUE */}
+          {/* DIALOGUE - Enhanced chat-style */}
           <TabsContent value="dialogue">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> {t("textbook.dialogue")}
@@ -335,33 +453,71 @@ const LessonDetailPage = () => {
             ) : (
               <>
                 <div className="space-y-3">
-                  {dialogue.map((d) => (
-                    <div key={d.id} className="rounded-xl border border-border bg-card p-4">
-                      <p className="text-xs font-bold text-primary uppercase mb-1">{d.speaker}</p>
-                      <p className="text-foreground font-medium">{d.korean}</p>
-                      {d.romanization && <p className="text-xs italic text-muted-foreground">{d.romanization}</p>}
-                      <p className="text-sm text-muted-foreground mt-1">{d.english}</p>
-                    </div>
-                  ))}
+                  {dialogue.map((d, di) => {
+                    const isEven = di % 2 === 0;
+                    return (
+                      <div
+                        key={d.id}
+                        className={cn("flex", isEven ? "justify-start" : "justify-end")}
+                      >
+                        <div className={cn(
+                          "max-w-[80%] rounded-2xl p-4",
+                          isEven
+                            ? "rounded-tl-sm bg-card border border-border"
+                            : "rounded-tr-sm bg-primary/10 border border-primary/20"
+                        )}>
+                          <p className="text-xs font-bold text-primary uppercase mb-1">{d.speaker}</p>
+                          <p className="text-foreground font-medium text-lg">{d.korean}</p>
+                          {d.romanization && <p className="text-xs italic text-muted-foreground mt-0.5">{d.romanization}</p>}
+                          <p className="text-sm text-muted-foreground mt-1.5 border-t border-border/50 pt-1.5">{d.english}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
                 <SectionDoneButton section="dialogue_done" />
               </>
             )}
           </TabsContent>
 
-          {/* EXERCISES */}
+          {/* EXERCISES - Enhanced with score */}
           <TabsContent value="exercises">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-primary" /> {t("textbook.exercises")}
-              <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.exercise} XP</span>
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" /> {t("textbook.exercises")}
+                <span className="text-xs text-muted-foreground">+{XP_VALUES.exercise} XP</span>
+              </h2>
+              {allAnswered && (
+                <div className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold",
+                  quizScore >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : quizScore >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                )}>
+                  {quizScore}% {quizScore >= 80 ? "🎉" : quizScore >= 50 ? "👍" : "📚"}
+                </div>
+              )}
+            </div>
             {exercises.length === 0 ? (
               <p className="text-muted-foreground">{t("textbook.noExercises")}</p>
             ) : (
               <>
+                {/* Progress indicator */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xs text-muted-foreground">{Object.keys(showResults).length}/{quizTotal}</span>
+                  <Progress value={(Object.keys(showResults).length / quizTotal) * 100} className="h-1.5 flex-1" />
+                </div>
+
                 <div className="space-y-6">
                   {exercises.map((ex, idx) => (
-                    <div key={ex.id} className="rounded-xl border border-border bg-card p-5">
+                    <div key={ex.id} className={cn(
+                      "rounded-xl border bg-card p-5 transition-all",
+                      showResults[ex.id]
+                        ? selectedAnswers[ex.id] === ex.correct_index
+                          ? "border-green-500/40"
+                          : "border-destructive/40"
+                        : "border-border"
+                    )}>
                       <p className="font-medium text-foreground mb-3">{idx + 1}. {ex.question}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {ex.options.map((opt, oi) => {
@@ -371,27 +527,64 @@ const LessonDetailPage = () => {
                           return (
                             <button
                               key={oi}
-                              onClick={() => !revealed && handleAnswer(ex.id, oi)}
+                              onClick={() => handleAnswer(ex.id, oi, ex.correct_index)}
                               disabled={revealed}
                               className={cn(
                                 "text-left px-4 py-3 rounded-lg border text-sm transition-all",
-                                revealed && isCorrect && "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400",
+                                revealed && isCorrect && "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 font-medium",
                                 revealed && selected && !isCorrect && "border-destructive bg-destructive/10 text-destructive",
                                 !revealed && "border-border hover:border-primary/40 hover:bg-accent text-foreground",
-                                revealed && !selected && !isCorrect && "opacity-50"
+                                revealed && !selected && !isCorrect && "opacity-40"
                               )}
                             >
-                              {opt}
+                              <span className="inline-flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full border inline-flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                  {String.fromCharCode(65 + oi)}
+                                </span>
+                                {opt}
+                              </span>
                             </button>
                           );
                         })}
                       </div>
                       {showResults[ex.id] && ex.explanation && (
-                        <p className="text-xs text-muted-foreground mt-3 bg-muted/50 p-2 rounded">{ex.explanation}</p>
+                        <div className={cn(
+                          "mt-3 p-3 rounded-lg text-sm",
+                          selectedAnswers[ex.id] === ex.correct_index
+                            ? "bg-green-500/5 text-green-700 dark:text-green-400"
+                            : "bg-destructive/5 text-destructive"
+                        )}>
+                          {selectedAnswers[ex.id] === ex.correct_index ? "✅ " : "❌ "}
+                          {ex.explanation}
+                        </div>
                       )}
                     </div>
                   ))}
                 </div>
+
+                {/* Score summary */}
+                {allAnswered && (
+                  <div className="mt-6 rounded-xl border border-border bg-card p-5 text-center">
+                    <p className="text-3xl font-bold text-foreground mb-1">{correctCount}/{quizTotal}</p>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {quizScore >= 80 ? (isAr ? "ممتاز! أداء رائع!" : "Excellent! Great job!") 
+                        : quizScore >= 50 ? (isAr ? "جيد! حاول مراجعة الأخطاء" : "Good! Review your mistakes") 
+                        : (isAr ? "حاول مرة أخرى بعد المراجعة" : "Review and try again")}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAnswers({});
+                        setShowResults({});
+                        setCorrectCount(0);
+                      }}
+                    >
+                      {isAr ? "أعد المحاولة" : "Retry Quiz"} 🔄
+                    </Button>
+                  </div>
+                )}
+
                 <SectionDoneButton section="exercises_done" />
               </>
             )}
