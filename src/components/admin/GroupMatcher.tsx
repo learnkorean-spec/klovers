@@ -636,7 +636,7 @@ const GroupMatcher = () => {
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         <span>{item.enrollment.plan_type} · {item.enrollment.duration}mo</span>
                         {item.enrollment.amount != null && (
-                          <span>{item.enrollment.amount.toLocaleString()} {item.enrollment.currency || "USD"}</span>
+                          <span>{Math.round(item.enrollment.amount).toLocaleString()} {item.enrollment.currency || "USD"}</span>
                         )}
                         {item.enrollment.level && (
                           <Badge variant="outline" className="text-xs">{item.enrollment.level.replace(/_/g, " ")}</Badge>
