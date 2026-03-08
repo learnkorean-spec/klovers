@@ -18,6 +18,7 @@ import {
   getUrgencyLabel,
 } from "@/lib/marketingEngine";
 import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
+import CreatorHub from "@/components/admin/CreatorHub";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
