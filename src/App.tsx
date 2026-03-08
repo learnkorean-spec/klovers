@@ -34,6 +34,7 @@ import AdminResetPage from "./pages/AdminResetPage";
 import MarketingGeneratorPage from "./pages/MarketingGeneratorPage";
 import PlacementTestPage from "./pages/PlacementTestPage";
 import GamesPage from "./pages/GamesPage";
+import TextbookHubPage from "./pages/TextbookHubPage";
 import TextbookPage from "./pages/TextbookPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
 import TextbookProgressPage from "./pages/TextbookProgressPage";
