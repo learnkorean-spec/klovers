@@ -82,6 +82,7 @@ const App = () => (
             <Route path="/placement-test" element={<PlacementTestPage />} />
             <Route path="/games" element={<GamesPage />} />
             <Route path="/textbook" element={<TextbookPage />} />
+            <Route path="/textbook/progress" element={<TextbookProgressPage />} />
             <Route path="/textbook/:lessonId" element={<LessonDetailPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
