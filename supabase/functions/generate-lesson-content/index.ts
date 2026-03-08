@@ -47,8 +47,9 @@ Deno.serve(async (req) => {
   let generated = 0;
   const errors: string[] = [];
 
-  // Process 2 at a time to avoid timeouts
-  for (let i = 0; i < Math.min(unpopulated.length, 2); i++) {
+  // Process 5 at a time
+  const batchSize = 5;
+  for (let i = 0; i < Math.min(unpopulated.length, batchSize); i++) {
     const batch = unpopulated.slice(i, i + 1);
 
     await Promise.all(batch.map(async (lesson: any) => {
