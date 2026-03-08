@@ -429,6 +429,9 @@ const BlogManager = () => {
                     <Badge variant="outline">{post.article_type}</Badge>
                   </TableCell>
                   <TableCell>
+                    <Badge variant="secondary" className="text-xs">{post.lang === "ar" ? "AR" : "EN"}</Badge>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <Progress value={post.seo_score || 0} className="w-16 h-2" />
                       <span className={`text-xs font-semibold ${getSeoColor(post.seo_score || 0)}`}>
