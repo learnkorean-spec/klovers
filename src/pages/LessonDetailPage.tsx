@@ -421,7 +421,7 @@ const LessonDetailPage = () => {
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p cforegrounde="tforegroundfontforegroundext-primary bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
+                        <p className="text-sm font-mono text-foreground bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
