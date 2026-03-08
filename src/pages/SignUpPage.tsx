@@ -73,13 +73,14 @@ const SignUpPage = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    if (redirectTo) {
-      localStorage.setItem("enroll_redirect", redirectTo);
-    }
+    const intendedRedirect = redirectTo || "/dashboard";
+    localStorage.setItem("enroll_redirect", intendedRedirect);
+    
     const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: redirectTo ? `${window.location.origin}${redirectTo}` : window.location.origin,
+      redirect_uri: `${window.location.origin}/login`,
     });
     if (error) {
+      localStorage.removeItem("enroll_redirect");
       toast({ title: t("auth.signUpFailed") || "Sign up failed", description: `Could not sign up with ${provider}.`, variant: "destructive" });
     }
   };

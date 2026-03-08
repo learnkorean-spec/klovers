@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -20,6 +20,30 @@ const LoginPage = () => {
   const redirectTo = searchParams.get("redirect");
   const { t } = useLanguage();
 
+  // If user is already authenticated (e.g. returning from OAuth), redirect immediately
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const savedRedirect = localStorage.getItem("enroll_redirect");
+        const finalRedirect = redirectTo || savedRedirect || "/dashboard";
+        if (savedRedirect) localStorage.removeItem("enroll_redirect");
+        navigate(finalRedirect, { replace: true });
+      }
+    };
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        const savedRedirect = localStorage.getItem("enroll_redirect");
+        const finalRedirect = redirectTo || savedRedirect || "/dashboard";
+        if (savedRedirect) localStorage.removeItem("enroll_redirect");
+        navigate(finalRedirect, { replace: true });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate, redirectTo]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -30,6 +54,8 @@ const LoginPage = () => {
       let description = t("auth.invalidCredentials");
       if (error.message?.includes("Email not confirmed")) {
         description = t("auth.emailNotConfirmed");
+      } else if (error.message?.includes("Invalid login credentials")) {
+        description = t("auth.invalidCredentials") + " " + (t("auth.trySocialLogin") || "If you signed up with Google or Apple, please use that method to log in.");
       }
       toast({ title: t("auth.loginFailed"), description, variant: "destructive" });
       setLoading(false);
@@ -102,13 +128,15 @@ const LoginPage = () => {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    if (redirectTo) {
-      localStorage.setItem("enroll_redirect", redirectTo);
-    }
+    // Always save intended redirect so we can use it after OAuth callback
+    const intendedRedirect = redirectTo || "/dashboard";
+    localStorage.setItem("enroll_redirect", intendedRedirect);
+    
     const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: redirectTo ? `${window.location.origin}${redirectTo}` : window.location.origin,
+      redirect_uri: `${window.location.origin}/login`,
     });
     if (error) {
+      localStorage.removeItem("enroll_redirect");
       toast({ title: t("auth.loginFailed"), description: `Could not sign in with ${provider}.`, variant: "destructive" });
     }
   };
