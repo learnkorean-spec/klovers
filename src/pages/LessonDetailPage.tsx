@@ -75,9 +75,11 @@ const LessonDetailPage = () => {
       setFlippedCards(new Set());
       setCorrectCount(0);
 
+      const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
+      const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
       const [lessonRes, countRes] = await Promise.all([
-        supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true).maybeSingle(),
-        supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true),
+        (baseQuery as any).eq("book", bookSlug).maybeSingle(),
+        (countQuery as any).eq("book", bookSlug),
       ]);
 
       const l = lessonRes.data as unknown as Lesson | null;
