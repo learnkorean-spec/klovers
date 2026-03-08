@@ -136,7 +136,7 @@ function renderPost(
   ctx.fillStyle = template === "neon" || template === "dark" ? "#333" : "#1a1a1a";
   ctx.fill();
   ctx.font = `bold ${28 * scale}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#FFEB00";
+  ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
   ctx.fillText("K", w - 60 * scale, h - 52 * scale);
   ctx.textAlign = "start";
