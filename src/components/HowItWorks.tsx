@@ -32,7 +32,7 @@ const HowItWorks = () => {
                 </div>
                 <CardContent className="pt-8 pb-6 px-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
-                    <Icon className="h-6 w-6 text-primary" />
+                    <Icon className="h-6 w-6 text-foreground" />
                   </div>
                   <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base">{step.title}</h3>
                   <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{step.description}</p>
