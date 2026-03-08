@@ -458,7 +458,7 @@ const AdminAttendancePanel = ({
             <div className={`rounded-lg border p-3 text-center ${stats.balance > 0 ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
               <span className="text-[10px] text-muted-foreground">Balance Due</span>
               <p className={`text-lg font-bold ${stats.balance > 0 ? "text-destructive" : "text-foreground"}`}>
-                {currLabel}{Math.round(stats.balance)ats.balance)ats.balance).toLocaleString()}
+                {currLabel}{Math.round(stats.balance).toLocaleString()}
               </p>
             </div>
           </div>
