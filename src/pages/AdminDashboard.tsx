@@ -831,7 +831,9 @@ const AdminDashboard = () => {
                                         onChange={(ev) => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: ev.target.value }))}
                                       />
                                     ) : (
-                                      <span className="texMath.round(e.unit_price)dium text-foreground">${t-sm font-medium text-foreground">${Math.round(e.unit_price)                                  </div>
+                                      <span className="text-sm font-medium text-foreground">${Math.round(e.unit_price)}</span>
+                                    )}
+                                  </div>
                                   {/* Editable Level & Preferred Days for pending enrollments */}
                                   {e.plan_type === "group" && (
                                     <div className="space-y-2 pt-2 border-t border-border">
