@@ -561,7 +561,7 @@ const GroupMatcher = () => {
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                             {m.amount != null && (
-                              <span>{m.amount.toLocaleString()} {m.currency || "USD"}</span>
+                              <span>{Math.round(m.amount).toLocaleString()} {m.currency || "USD"}</span>
                             )}
                             {m.classes_included != null && (
                               <span>{m.classes_included} classes</span>
@@ -636,7 +636,7 @@ const GroupMatcher = () => {
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         <span>{item.enrollment.plan_type} · {item.enrollment.duration}mo</span>
                         {item.enrollment.amount != null && (
-                          <span>{item.enrollment.amount.toLocaleString()} {item.enrollment.currency || "USD"}</span>
+                          <span>{Math.round(item.enrollment.amount).toLocaleString()} {item.enrollment.currency || "USD"}</span>
                         )}
                         {item.enrollment.level && (
                           <Badge variant="outline" className="text-xs">{item.enrollment.level.replace(/_/g, " ")}</Badge>
@@ -729,7 +729,7 @@ const GroupMatcher = () => {
                           <Badge variant="outline" className="text-xs">private</Badge>
                           <span>{m.duration}mo</span>
                           {m.amount != null && (
-                            <span>{m.amount.toLocaleString()} {m.currency || "USD"}</span>
+                            <span>{Math.round(m.amount).toLocaleString()} {m.currency || "USD"}</span>
                           )}
                           {m.classes_included != null && (
                             <span>{m.classes_included} classes</span>
