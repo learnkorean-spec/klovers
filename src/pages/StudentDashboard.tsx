@@ -87,6 +87,7 @@ const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
 };
 
 const StudentDashboard = () => {
+  const { loading: gateLoading, resetBlocked } = useResetGate();
   const { progress: gamification, league, loading: gamLoading } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
