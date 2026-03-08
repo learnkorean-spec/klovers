@@ -277,7 +277,7 @@ const LessonDetailPage = () => {
         <div className="flex items-start gap-4 mb-4">
           <span className="text-5xl">{lesson.emoji}</span>
           <div className="flex-1">
-            <p className="text-sm font-bold text-primary uppercase tracking-wider">{t("textbook.missionLabel")} {lesson.sort_order}</p>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t("textbook.missionLabel")} {lesson.sort_order}</p>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">{isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}</h1>
             <p className="text-muted-foreground text-lg">{lesson.title_ko}</p>
           </div>
@@ -380,7 +380,7 @@ const LessonDetailPage = () => {
                         )}
                       >
                         <div className="flex items-center gap-4">
-                          <span className="text-2xl font-bold text-primary min-w-[3rem] text-center">
+                          <span className="text-2xl font-bold text-foregroundundundundund min-w-[3rem] text-center">
                             {v.korean}
                           </span>
                           <div className="flex-1">
@@ -417,11 +417,11 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-ful text-primary-foreground-foreground-foreground-foregroundary text-xs font-bold">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p className="text-sm font-mono text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
+                        <p className="text-sm font-mono text-foreground bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
@@ -466,7 +466,7 @@ const LessonDetailPage = () => {
                             ? "rounded-tl-sm bg-card border border-border"
                             : "rounded-tr-sm bg-primary/10 border border-primary/20"
                         )}>
-                          <p className="text-xs font-bold text-primary uppercase mb-1">{d.speaker}</p>
+                          <p className="text-xs font-bold text-foreground uppercase mb-1">{d.speaker}</p>
                           <p className="text-foreground font-medium text-lg">{d.korean}</p>
                           {d.romanization && <p className="text-xs italic text-muted-foreground mt-0.5">{d.romanization}</p>}
                           <p className="text-sm text-muted-foreground mt-1.5 border-t border-border/50 pt-1.5">{d.english}</p>
