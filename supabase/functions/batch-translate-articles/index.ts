@@ -170,8 +170,9 @@ Deno.serve(async (req) => {
   }
 
   return new Response(JSON.stringify({ 
-    message: `Translation started for ${posts?.length || 0} articles. Processing in background.`,
+    message: `Translation started for ${untranslated.length} untranslated articles (${existingSlugs.size} already exist).`,
     total: posts?.length || 0,
+    untranslated: untranslated.length,
   }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
