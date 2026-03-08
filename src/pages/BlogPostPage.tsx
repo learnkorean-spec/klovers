@@ -43,7 +43,6 @@ const BlogPostPage = () => {
     const fetchPost = async () => {
       if (!slug) return;
       setLoading(true);
-      // First try the exact slug from the URL
       const { data } = await supabase
         .from("blog_posts")
         .select("*")
@@ -54,7 +53,6 @@ const BlogPostPage = () => {
       if (data) {
         setPost(data as BlogPost);
       } else if (language === "ar" && !slug.endsWith("-ar")) {
-        // Try Arabic version
         const { data: arData } = await supabase
           .from("blog_posts")
           .select("*")
@@ -69,6 +67,69 @@ const BlogPostPage = () => {
     };
     fetchPost();
   }, [slug, language]);
+
+  // Dynamic SEO meta tags
+  useEffect(() => {
+    if (!post) return;
+    document.title = `${post.title} | Klovers Blog`;
+    const setMeta = (name: string, content: string, attr = "name") => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.content = content;
+    };
+    setMeta("description", post.description);
+    setMeta("keywords", (post.keywords || []).join(", "));
+    setMeta("og:title", post.title, "property");
+    setMeta("og:description", post.description, "property");
+    setMeta("og:type", "article", "property");
+    setMeta("og:url", `https://klovers.lovable.app/blog/${post.slug}`, "property");
+    if (post.hero_image) setMeta("og:image", post.hero_image, "property");
+    setMeta("twitter:title", post.title);
+    setMeta("twitter:description", post.description);
+    if (post.hero_image) setMeta("twitter:image", post.hero_image);
+    setMeta("article:published_time", post.published_at || post.created_at, "property");
+    setMeta("article:author", post.author, "property");
+
+    // Canonical
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = `https://klovers.lovable.app/blog/${post.slug}`;
+
+    // JSON-LD
+    let jsonLd = document.getElementById("blog-jsonld");
+    if (!jsonLd) {
+      jsonLd = document.createElement("script");
+      jsonLd.id = "blog-jsonld";
+      jsonLd.setAttribute("type", "application/ld+json");
+      document.head.appendChild(jsonLd);
+    }
+    jsonLd.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.description,
+      image: post.hero_image || "",
+      author: { "@type": "Person", name: post.author },
+      publisher: { "@type": "Organization", name: "Klovers", logo: { "@type": "ImageObject", url: "https://klovers.lovable.app/klovers-logo.jpg" } },
+      datePublished: post.published_at || post.created_at,
+      url: `https://klovers.lovable.app/blog/${post.slug}`,
+      mainEntityOfPage: { "@type": "WebPage", "@id": `https://klovers.lovable.app/blog/${post.slug}` },
+    });
+
+    return () => {
+      document.title = "Klovers";
+      jsonLd?.remove();
+      canonical?.remove();
+    };
+  }, [post]);
 
   const typeLabel: Record<string, string> = {
     howto: "How-To",
