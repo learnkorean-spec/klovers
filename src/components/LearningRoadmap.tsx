@@ -94,7 +94,7 @@ const LearningRoadmap = () => {
                     >
                       <div className={`flex items-start gap-2 ${isLeft ? "md:flex-row-reverse" : ""}`}>
                         <div className="flex-1 min-w-0">
-                          <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                          <span className="text-xs font-semibold text-primary text-outlined uppercase tracking-wide">
                             {stage.level}
                           </span>
                           <h3 className="text-lg font-bold text-foreground mt-1">{stage.title}</h3>

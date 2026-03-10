@@ -17,7 +17,7 @@ export function XpEarnedToast({ xp }: { xp: number }) {
   return (
     <div className="flex items-center gap-2">
       <Zap className="h-5 w-5 text-primary" />
-      <span className="font-bold text-primary">+{xp} XP</span>
+      <span className="font-bold text-primary text-outlined">+{xp} XP</span>
     </div>
   );
 }

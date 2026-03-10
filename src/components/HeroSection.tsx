@@ -60,7 +60,7 @@ const HeroSection = () => {
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1] tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)]">
             {t("hero", "title1")}{" "}
-            <span className="text-primary drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]">
+            <span className="text-primary text-outlined-lg drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]">
               {t("hero", "title2")}
             </span>
           </h1>

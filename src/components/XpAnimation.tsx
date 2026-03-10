@@ -86,10 +86,10 @@ export function StreakCelebration({
 
         {/* Big streak number */}
         <div className="animate-count-pop">
-          <p className="text-7xl font-black text-primary leading-none tracking-tight">
+          <p className="text-7xl font-black text-primary text-outlined-lg leading-none tracking-tight">
             {currentStreak}
           </p>
-          <p className="text-2xl font-bold text-primary mt-1">day streak</p>
+          <p className="text-2xl font-bold text-primary text-outlined-lg mt-1">day streak</p>
         </div>
 
         {/* Weekly tracker */}

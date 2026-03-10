@@ -146,6 +146,33 @@ All colors MUST be HSL.
   }
 }
 
+/* Black outline for neon-yellow text — improves legibility on any background */
+@layer utilities {
+  .text-outlined {
+    text-shadow:
+      -1px -1px 0 rgba(0,0,0,0.75),
+       0   -1px 0 rgba(0,0,0,0.75),
+       1px -1px 0 rgba(0,0,0,0.75),
+       1px  0   0 rgba(0,0,0,0.75),
+       1px  1px 0 rgba(0,0,0,0.75),
+       0    1px 0 rgba(0,0,0,0.75),
+      -1px  1px 0 rgba(0,0,0,0.75),
+      -1px  0   0 rgba(0,0,0,0.75);
+  }
+  /* Thicker stroke for large display text */
+  .text-outlined-lg {
+    text-shadow:
+      -2px -2px 0 rgba(0,0,0,0.8),
+       0   -2px 0 rgba(0,0,0,0.8),
+       2px -2px 0 rgba(0,0,0,0.8),
+       2px  0   0 rgba(0,0,0,0.8),
+       2px  2px 0 rgba(0,0,0,0.8),
+       0    2px 0 rgba(0,0,0,0.8),
+      -2px  2px 0 rgba(0,0,0,0.8),
+      -2px  0   0 rgba(0,0,0,0.8);
+  }
+}
+
 /* Gamification animations */
 @keyframes bounce-up {
   0% { opacity: 0; transform: translateY(20px) scale(0.8); }
