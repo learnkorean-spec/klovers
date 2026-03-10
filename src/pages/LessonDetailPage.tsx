@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw } from "lucide-react";
 import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
@@ -61,7 +61,8 @@ const LessonDetailPage = () => {
 
   // Interactive states
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
-  const [showTranslations, setShowTranslations] = useState(true);
+  const [studiedCards, setStudiedCards] = useState<Set<string>>(new Set());
+  const [showTranslations, setShowTranslations] = useState(false);
   const [showMissionComplete, setShowMissionComplete] = useState(false);
   const [xpFloat, setXpFloat] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -73,6 +74,7 @@ const LessonDetailPage = () => {
       setSelectedAnswers({});
       setShowResults({});
       setFlippedCards(new Set());
+      setStudiedCards(new Set());
       setCorrectCount(0);
 
       const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
@@ -159,6 +161,7 @@ const LessonDetailPage = () => {
       else next.add(id);
       return next;
     });
+    setStudiedCards((prev) => new Set(prev).add(id));
   };
 
   const lp = lesson ? progress.lessonProgress[lesson.id] : undefined;
@@ -354,61 +357,127 @@ const LessonDetailPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* VOCAB - Enhanced with flip cards */}
+          {/* VOCAB — 3D flip cards */}
           <TabsContent value="vocab">
-            <div className="flex items-center justify-between mb-4">
+            {/* Header row */}
+            <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-primary" /> {t("textbook.vocabulary")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.vocab} XP</span>
               </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowTranslations(!showTranslations)}
-                className="gap-1.5 text-xs"
-              >
-                {showTranslations ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                {showTranslations ? (isAr ? "إخفاء" : "Hide") : (isAr ? "إظهار" : "Show")}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost" size="sm"
+                  onClick={() => { setFlippedCards(new Set()); setStudiedCards(new Set()); }}
+                  className="gap-1.5 text-xs"
+                  title="Reset all cards"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost" size="sm"
+                  onClick={() => setShowTranslations(!showTranslations)}
+                  className="gap-1.5 text-xs"
+                >
+                  {showTranslations ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showTranslations ? (isAr ? "إخفاء الكل" : "Hide all") : (isAr ? "إظهار الكل" : "Show all")}
+                </Button>
+              </div>
             </div>
+
+            {/* Studied progress bar */}
+            {vocab.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>{isAr ? "المفردات المدروسة" : "Cards studied"}</span>
+                  <span className="font-semibold">{studiedCards.size} / {vocab.length}</span>
+                </div>
+                <Progress value={(studiedCards.size / vocab.length) * 100} className="h-1.5" />
+              </div>
+            )}
+
             {vocab.length === 0 ? (
               <p className="text-muted-foreground">{t("textbook.noVocab")}</p>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {vocab.map((v) => {
-                    const isFlipped = flippedCards.has(v.id);
+                    const isFlipped = flippedCards.has(v.id) || showTranslations;
+                    const isStudied = studiedCards.has(v.id);
                     return (
-                      <button
+                      <div
                         key={v.id}
                         onClick={() => toggleFlip(v.id)}
-                        className={cn(
-                          "text-left rounded-xl border p-4 transition-all hover:shadow-md cursor-pointer",
-                          isFlipped
-                            ? "border-primary/40 bg-primary/5"
-                            : "border-border bg-card hover:border-primary/30"
-                        )}
+                        style={{ perspective: '1000px', cursor: 'pointer' }}
+                        className="select-none"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && toggleFlip(v.id)}
+                        aria-label={`${v.korean} — ${isFlipped ? v.meaning : 'tap to reveal'}`}
                       >
-                        <div className="flex items-center gap-4">
-                          <span className="text-2xl font-bold text-foreground] text-center">
-                            {v.korean}
-                          </span>
-                          <div className="flex-1">
-                            <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                            {(showTranslations || isFlipped) ? (
-                              <p className="text-sm font-medium text-foreground">{v.meaning}</p>
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">
-                                {isAr ? "اضغط للكشف" : "Tap to reveal"}
-                              </p>
+                        <div
+                          style={{
+                            transformStyle: 'preserve-3d',
+                            transition: 'transform 0.45s ease',
+                            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                            position: 'relative',
+                            height: '130px',
+                          }}
+                        >
+                          {/* Front — Korean */}
+                          <div
+                            style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                            className={cn(
+                              "absolute inset-0 rounded-xl border flex flex-col items-center justify-center gap-1 p-4",
+                              isStudied ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-primary/20 hover:shadow-md"
                             )}
+                          >
+                            {isStudied && <span className="absolute top-2 right-2 text-primary text-xs">✓</span>}
+                            <p className="text-2xl font-bold text-foreground text-center">{v.korean}</p>
+                            <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{isAr ? "اضغط للكشف" : "Tap to reveal"}</p>
+                          </div>
+                          {/* Back — Meaning */}
+                          <div
+                            style={{
+                              backfaceVisibility: 'hidden',
+                              WebkitBackfaceVisibility: 'hidden',
+                              transform: 'rotateY(180deg)',
+                            }}
+                            className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-1 p-4"
+                          >
+                            <p className="text-lg font-bold text-foreground text-center">{v.meaning}</p>
+                            <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
+                            <p className="text-xs text-primary font-medium mt-1">{v.korean}</p>
                           </div>
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
-                <SectionDoneButton section="vocab_done" />
+
+                {/* Practice with Games */}
+                <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
+                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
+                    <Gamepad2 className="h-4 w-4 text-primary" />
+                    {isAr ? "تدرب مع الألعاب" : "Practice with Games"}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
+                      <Link to="/games">🃏 {isAr ? "مطابقة" : "Memory Match"}</Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
+                      <Link to="/games">🔤 {isAr ? "ترتيب الكلمات" : "Word Scramble"}</Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
+                      <Link to="/games">⚡ {isAr ? "كل الألعاب" : "All Games"}</Link>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <SectionDoneButton section="vocab_done" />
+                </div>
               </>
             )}
           </TabsContent>
