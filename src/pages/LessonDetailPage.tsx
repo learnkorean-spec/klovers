@@ -31,7 +31,7 @@ interface Lesson {
   scene_image_url?: string;
 }
 
-interface VocabItem { id: string; korean: string; romanization: string; meaning: string; }
+interface VocabItem { id: string; korean: string; romanization: string; meaning: string; image_url?: string; }
 interface GrammarItem { id: string; title: string; structure: string; explanation: string; examples: { korean: string; english: string }[]; }
 interface DialogueLine { id: string; speaker: string; korean: string; romanization: string; english: string; }
 interface ExerciseItem { id: string; question: string; options: string[]; correct_index: number; explanation: string; }
@@ -421,21 +421,30 @@ const LessonDetailPage = () => {
                             transition: 'transform 0.45s ease',
                             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                             position: 'relative',
-                            height: '130px',
+                            height: '200px',
                           }}
                         >
-                          {/* Front — Korean */}
+                          {/* Front — Picture Dictionary */}
                           <div
                             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                             className={cn(
-                              "absolute inset-0 rounded-xl border flex flex-col items-center justify-center gap-1 p-4",
+                              "absolute inset-0 rounded-xl border flex flex-col items-center justify-center gap-2 p-4 overflow-hidden",
                               isStudied ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-primary/20 hover:shadow-md"
                             )}
                           >
-                            {isStudied && <span className="absolute top-2 right-2 text-primary text-xs">✓</span>}
-                            <p className="text-2xl font-bold text-foreground text-center">{v.korean}</p>
-                            <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{isAr ? "اضغط للكشف" : "Tap to reveal"}</p>
+                            {isStudied && <span className="absolute top-2 right-2 text-primary text-xs z-10">✓</span>}
+                            {/* Image */}
+                            {v.image_url && (
+                              <img
+                                src={v.image_url}
+                                alt={v.korean}
+                                className="w-24 h-24 object-cover rounded-lg"
+                                loading="lazy"
+                              />
+                            )}
+                            <p className="text-xl font-bold text-foreground text-center">{v.korean}</p>
+                            <p className="text-xs italic text-muted-foreground">{v.romanization}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "اضغط للكشف" : "Tap to reveal"}</p>
                           </div>
                           {/* Back — Meaning */}
                           <div
@@ -444,11 +453,11 @@ const LessonDetailPage = () => {
                               WebkitBackfaceVisibility: 'hidden',
                               transform: 'rotateY(180deg)',
                             }}
-                            className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-1 p-4"
+                            className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-2 p-4"
                           >
                             <p className="text-lg font-bold text-foreground text-center">{v.meaning}</p>
                             <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                            <p className="text-xs text-primary font-medium mt-1">{v.korean}</p>
+                            <p className="text-sm text-primary font-medium mt-1 text-center">{v.korean}</p>
                           </div>
                         </div>
                       </div>
