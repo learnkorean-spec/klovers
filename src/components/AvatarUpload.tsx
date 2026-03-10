@@ -53,7 +53,7 @@ const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProp
     // Save to profile
     const { error: updateErr } = await supabase
       .from("profiles")
-      .update({ avatar_url: publicUrl } as any)
+      .update({ avatar_url: publicUrl })
       .eq("user_id", userId);
 
     if (updateErr) {

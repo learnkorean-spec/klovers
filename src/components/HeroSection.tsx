@@ -12,7 +12,7 @@ const HeroSection = () => {
   const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
-    const conn = (navigator as any).connection;
+    const conn = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string } }).connection;
     const isFast = !conn || conn.type === "wifi" || conn.effectiveType === "4g";
     if (!isFast) return;
 

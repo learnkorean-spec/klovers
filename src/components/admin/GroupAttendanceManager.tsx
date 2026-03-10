@@ -251,7 +251,7 @@ const GroupAttendanceManager = ({
       });
 
       const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      let sent = 0, failed = 0, total = userIds.length;
+      let sent = 0, failed = 0; const total = userIds.length;
 
       for (const group of activeGroups) {
         const pkg = pkgMap[group.package_id] || {};
@@ -1216,7 +1216,7 @@ const GroupAttendanceManager = ({
                           className="flex items-center justify-between p-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() => setExpandedGroups(prev => {
                             const next = new Set(prev);
-                            next.has(g.id) ? next.delete(g.id) : next.add(g.id);
+                            if (next.has(g.id)) { next.delete(g.id); } else { next.add(g.id); }
                             return next;
                           })}
                         >

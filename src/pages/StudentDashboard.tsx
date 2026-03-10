@@ -233,7 +233,7 @@ const StudentDashboard = () => {
 
       if (enrollmentData && enrollmentData.length > 0) {
         setEnrollments(enrollmentData as EnrollmentRecord[]);
-        const latestEnroll = enrollmentData[0] as any;
+        const latestEnroll = enrollmentData[0];
         setLatestEnrollmentId(latestEnroll.id);
 
         // Auto-sync: fill profile gaps from enrollment data
@@ -283,19 +283,20 @@ const StudentDashboard = () => {
 
         const dates: AttendanceDate[] = [];
         if (adminRes.data) {
-          for (const r of adminRes.data as any[]) {
+          for (const r of adminRes.data) {
             dates.push({ date: r.session_date, source: "Admin" });
           }
         }
         if (pkgRes.data) {
-          for (const r of pkgRes.data as any[]) {
-            if (r.pkg_group_sessions?.session_date) {
-              dates.push({ date: r.pkg_group_sessions.session_date, source: "Group" });
+          for (const r of pkgRes.data) {
+            const sessions = r.pkg_group_sessions as { session_date: string } | null;
+            if (sessions?.session_date) {
+              dates.push({ date: sessions.session_date, source: "Group" });
             }
           }
         }
         if (selfRes.data) {
-          for (const r of selfRes.data as any[]) {
+          for (const r of selfRes.data) {
             dates.push({ date: r.request_date, source: "Self" });
           }
         }
@@ -310,7 +311,8 @@ const StudentDashboard = () => {
           .eq("member_status", "active")
           .limit(1);
         if (groupData && groupData.length > 0) {
-          setGroupName((groupData[0] as any).pkg_groups?.name || null);
+          const grp = groupData[0].pkg_groups as { name: string } | null;
+          setGroupName(grp?.name || null);
         }
       } else {
         setHasNoData(true);

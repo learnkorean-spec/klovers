@@ -133,7 +133,7 @@ const GroupMatcher = () => {
 
     const allRaw = [...(rawGroupEnrollments as any[] || []), ...(rawPrivateEnrollments as any[] || [])];
     const userIds = [...new Set(allRaw.map((e: any) => e.user_id))];
-    let profileMap: Record<string, { name: string; email: string }> = {};
+    const profileMap: Record<string, { name: string; email: string }> = {};
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")

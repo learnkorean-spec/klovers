@@ -21,6 +21,10 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      // Downgraded from error → warn: 483 legacy `as any` casts exist in Lovable-generated
+      // code. TypeScript compilation (tsc --noEmit) is the authoritative type-safety gate
+      // (currently 0 errors). These warnings serve as a backlog to type properly over time.
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 );

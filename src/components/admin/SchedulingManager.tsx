@@ -571,7 +571,7 @@ const GroupsManager = () => {
 
     // 3. Fetch profiles for all member user_ids
     const userIds = [...new Set((allMembers || []).map((m: any) => m.user_id))];
-    let profMap: Record<string, { name: string; email: string }> = {};
+    const profMap: Record<string, { name: string; email: string }> = {};
     if (userIds.length > 0) {
       const { data: profiles } = await (supabase as any)
         .from("profiles")
@@ -1090,7 +1090,7 @@ const WaitlistManager = () => {
 
     // Count members per package
     const pkgIds = pkgs.map((p: Package) => p.id);
-    let pkgCount: Record<string, number> = {};
+    const pkgCount: Record<string, number> = {};
     if (pkgIds.length > 0) {
       const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id").in("package_id", pkgIds);
       const gIds = (groups || []).map((g: any) => g.id);
