@@ -26,6 +26,13 @@ BEGIN
   SELECT id INTO radio_id    FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 19;
   SELECT id INTO web_id      FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 20;
 
+  -- Delete existing data to avoid duplicates
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id IN (cooking_id, eating_id, dishes_id, cleaning_id, laundry_id, garden_id, phone_id, tv_id, radio_id, web_id);
+  DELETE FROM public.lesson_grammar WHERE lesson_id IN (cooking_id, eating_id, dishes_id, cleaning_id, laundry_id, garden_id, phone_id, tv_id, radio_id, web_id);
+  DELETE FROM public.lesson_dialogues WHERE lesson_id IN (cooking_id, eating_id, dishes_id, cleaning_id, laundry_id, garden_id, phone_id, tv_id, radio_id, web_id);
+  DELETE FROM public.lesson_exercises WHERE lesson_id IN (cooking_id, eating_id, dishes_id, cleaning_id, laundry_id, garden_id, phone_id, tv_id, radio_id, web_id);
+  DELETE FROM public.lesson_reading WHERE lesson_id IN (cooking_id, eating_id, dishes_id, cleaning_id, laundry_id, garden_id, phone_id, tv_id, radio_id, web_id);
+
   -- ============================================================
   -- LESSON 11: COOKING (요리하기)
   -- ============================================================
@@ -86,11 +93,11 @@ BEGIN
   (eating_id, '식탁',       'siktak',         'dining table',        10),
   (eating_id, '의자',       'uija',           'chair',               11),
   (eating_id, '맛있다',     'masitda',        'to be delicious',     12),
-  (eating_id, '배가 고프다','baega gopeuда',  'to be hungry',        13),
+  (eating_id, '배가 고프다','baega gopeuda',  'to be hungry',        13),
   (eating_id, '배부르다',   'baebureuda',     'to be full',          14),
   (eating_id, '아침식사',   'achimsiksа',     'breakfast',           15),
-  (eating_id, '점심식사',   'jeomsimsiksа',   'lunch',               16),
-  (eating_id, '저녁식사',   'jeonyeoksiksа',  'dinner',              17),
+  (eating_id, '점심식사',   'jeomsimsiksa',   'lunch',               16),
+  (eating_id, '저녁식사',   'jeonyeoksiksa',  'dinner',              17),
   (eating_id, '간식',       'gansik',         'snack',               18),
   (eating_id, '반찬',       'banchan',        'side dish',           19),
   (eating_id, '국',         'guk',            'soup',                20);
@@ -206,13 +213,13 @@ BEGIN
   -- LESSON 15: LAUNDRY (빨래하기)
   -- ============================================================
   INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
-  (laundry_id, '빨래하다',     'ppallaeha da',      'to do laundry',         1),
+  (laundry_id, '빨래하다',     'ppallahada',        'to do laundry',         1),
   (laundry_id, '세탁기',       'setakgi',           'washing machine',       2),
   (laundry_id, '건조기',       'geonjogi',          'dryer',                 3),
   (laundry_id, '세제',         'seje',              'laundry detergent',     4),
   (laundry_id, '섬유유연제',   'seomyuyuyeonje',    'fabric softener',       5),
   (laundry_id, '빨래줄',       'ppallaejul',        'clothesline',           6),
-  (laundry_id, '빨래집게',     'ppallaejiipge',     'clothes pin/peg',       7),
+  (laundry_id, '빨래집게',     'ppallaejipge',      'clothes pin/peg',       7),
   (laundry_id, '다림질하다',   'darimjilhada',      'to iron clothes',       8),
   (laundry_id, '다리미',       'darimi',            'iron (appliance)',      9),
   (laundry_id, '빨래판',       'ppallaepan',        'washboard',             10),
@@ -297,7 +304,7 @@ BEGIN
   (phone_id, '전화하다',    'jeonhwahada',      'to make a phone call',    1),
   (phone_id, '전화기',      'jeonhwagi',        'telephone/phone',         2),
   (phone_id, '스마트폰',    'seumateupon',      'smartphone',              3),
-  (phone_id, '전화번호',    'jeonhwabeонho',    'phone number',            4),
+  (phone_id, '전화번호',    'jeonhwabeonho',    'phone number',            4),
   (phone_id, '통화하다',    'tonghwahada',      'to talk on the phone',    5),
   (phone_id, '전화를 받다', 'jeonhwaleul batda','to answer the phone',     6),
   (phone_id, '전화를 끊다', 'jeonhwaleul kkeutda','to hang up',            7),
@@ -338,7 +345,7 @@ BEGIN
   -- LESSON 18: TELEVISION (텔레비전 보기)
   -- ============================================================
   INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
-  (tv_id, '텔레비전',    'telllebijeон',      'television/TV',           1),
+  (tv_id, '텔레비전',    'tellebijon',        'television/TV',           1),
   (tv_id, '리모컨',      'rimokeon',          'remote control',          2),
   (tv_id, '채널',        'chaennel',          'channel',                 3),
   (tv_id, '볼륨',        'bollyum',           'volume',                  4),
@@ -426,21 +433,21 @@ BEGIN
   -- LESSON 20: WEB SURFING (인터넷 하기)
   -- ============================================================
   INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
-  (web_id, '인터넷',      'inteоnet',           'internet',               1),
+  (web_id, '인터넷',      'inteonet',           'internet',               1),
   (web_id, '검색하다',    'geomseokada',        'to search',              2),
   (web_id, '웹사이트',    'wepsaiteu',          'website',                3),
   (web_id, '홈페이지',    'hompeiji',           'homepage',               4),
   (web_id, '클릭하다',    'keullikhada',        'to click',               5),
   (web_id, '다운로드',    'daunlodeu',          'download',               6),
-  (web_id, '업로드',      'eomRodeu',           'upload',                 7),
+  (web_id, '업로드',      'eomrodeu',           'upload',                 7),
   (web_id, '소셜미디어',  'sosyeol midio',      'social media',           8),
   (web_id, '유튜브',      'yutyubeu',           'YouTube',                9),
   (web_id, '인스타그램',  'inseutagram',        'Instagram',              10),
   (web_id, '이메일',      'imeil',              'email',                  11),
-  (web_id, '비밀번호',    'bimilbeоnho',        'password',               12),
+  (web_id, '비밀번호',    'bimilbeonho',        'password',               12),
   (web_id, '아이디',      'aidi',               'username/ID',            13),
-  (web_id, '로그인',      'rogeuIn',            'log in',                 14),
-  (web_id, '로그아웃',    'rogeuAut',           'log out',                15),
+  (web_id, '로그인',      'rogeuin',            'log in',                 14),
+  (web_id, '로그아웃',    'rogeaaut',           'log out',                15),
   (web_id, '와이파이',    'waipai',             'Wi-Fi',                  16),
   (web_id, '앱',          'aep',                'app/application',        17),
   (web_id, '북마크',      'bukmaku',            'bookmark',               18),
