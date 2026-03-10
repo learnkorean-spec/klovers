@@ -20,24 +20,29 @@ const HowItWorks = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+        {/* dir="ltr" keeps step order 1→4 left-to-right even in RTL locales */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto" dir="ltr">
           {steps.map((step, index) => {
             const Icon = stepIcons[index];
             return (
-              <Card key={index} className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center relative overflow-hidden">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+              // Wrapper carries the relative context so the badge is NOT clipped by the Card
+              <div key={index} className="relative pt-3">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
                     {index + 1}
                   </span>
                 </div>
-                <CardContent className="pt-8 pb-6 px-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
-                    <Icon className="h-6 w-6 text-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base">{step.title}</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-                </CardContent>
-              </Card>
+                <Card className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center h-full">
+                  <CardContent className="pt-8 pb-6 px-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                      <Icon className="h-6 w-6 text-foreground" />
+                    </div>
+                    {/* dir="auto" lets each card's text flow in the document's language direction */}
+                    <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base" dir="auto">{step.title}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed" dir="auto">{step.description}</p>
+                  </CardContent>
+                </Card>
+              </div>
             );
           })}
         </div>

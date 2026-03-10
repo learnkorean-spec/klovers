@@ -123,10 +123,10 @@ const AdminDashboard = () => {
       supabase.from("leads").select("*").order("created_at", { ascending: false }),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("admin_student_overview" as any).select("*"),
+      supabase.from("admin_student_overview").select("*"),
       Promise.resolve({ data: [] }), // legacy batch_members — no longer used
       Promise.resolve({ data: [] }), // legacy student_groups — no longer used
-      supabase.from("schedule_options" as any).select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
+      supabase.from("schedule_options").select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
       supabase.from("profiles").select("user_id, name, email, level, country"),
     ]);
 
@@ -545,6 +545,21 @@ const AdminDashboard = () => {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+          {leadsError && (
+            <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <span className="mt-0.5 shrink-0">⚠️</span>
+              <div className="flex-1">
+                <p className="font-medium">Data load error</p>
+                <p className="text-xs mt-0.5 opacity-80">{leadsError}</p>
+              </div>
+              <button
+                onClick={() => { setLeadsError(null); fetchAll(); }}
+                className="shrink-0 text-xs underline underline-offset-2 hover:no-underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
           <LifecycleFunnel
             leadsCount={lifecycleLeads}
             registeredCount={overviewRows.length}

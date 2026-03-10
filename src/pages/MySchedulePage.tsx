@@ -123,7 +123,7 @@ const MySchedulePage = () => {
             if (level) {
               const { data: allPkgs } = await (supabase as any).from("schedule_packages").select("*").eq("is_active", true).eq("level", level);
               const pkgIds2 = (allPkgs || []).map((p: any) => p.id);
-              let pkgCount: Record<string, number> = {};
+              const pkgCount: Record<string, number> = {};
               if (pkgIds2.length > 0) {
                 const { data: gs } = await (supabase as any).from("pkg_groups").select("id, package_id").in("package_id", pkgIds2);
                 const gIds2 = (gs || []).map((g: any) => g.id);

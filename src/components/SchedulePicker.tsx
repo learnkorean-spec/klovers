@@ -108,7 +108,7 @@ const SchedulePicker = ({
       const groupIds = groupList.map((g: any) => g.id);
 
       // Count active members per group
-      let memberCounts: Record<string, number> = {};
+      const memberCounts: Record<string, number> = {};
       if (groupIds.length > 0) {
         const { data: members } = await (supabase as any)
           .from("pkg_group_members")

@@ -4,6 +4,12 @@ import { createLovableAuth } from "@lovable.dev/cloud-auth-js";
 import { supabase } from "../supabase/client";
 const lovableAuth = createLovableAuth();
 
+// Lovable's cloud OAuth proxy (/~oauth/initiate) only exists in their hosted
+// environment. When running locally we fall back to native Supabase OAuth.
+const isLocal =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
 type SignInOptions = {
   redirect_uri?: string;
   extraParams?: Record<string, string>;
@@ -12,6 +18,18 @@ type SignInOptions = {
 export const lovable = {
   auth: {
     signInWithOAuth: async (provider: "google" | "apple", opts?: SignInOptions) => {
+      if (isLocal) {
+        // Native Supabase OAuth — no cloud proxy required
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: opts?.redirect_uri ?? `${window.location.origin}/login`,
+            queryParams: opts?.extraParams,
+          },
+        });
+        return { error: error ?? null };
+      }
+
       const result = await lovableAuth.signInWithOAuth(provider, {
         redirect_uri: opts?.redirect_uri,
         extraParams: {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,11 +128,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [userId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const eligible = await fetchActiveEnrollment(userId);
 
     if (!eligible) {
@@ -161,7 +157,11 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     if (reqsRes.data) setRequests(reqsRes.data as AttendanceRequest[]);
     if (adminRes.data) setAdminDates(adminRes.data as AdminAttendanceEntry[]);
     setLoading(false);
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleDateSelect = async (date: Date | undefined) => {
     if (!date || !enrollment || submitting) return;

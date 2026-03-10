@@ -707,14 +707,15 @@ const BulkEmailManager = () => {
           <DialogHeader>
             <DialogTitle>Email Preview</DialogTitle>
           </DialogHeader>
-          <div
-            className="border rounded-lg overflow-auto"
-            dangerouslySetInnerHTML={{
-              __html: htmlBody
-                .replace(/\{\{greeting\}\}/g, "Hi there,")
-                .replace(/\{\{dashboard_url\}\}/g, "#")
-                .replace(/\{\{courses_url\}\}/g, "#"),
-            }}
+          <iframe
+            className="border rounded-lg w-full"
+            style={{ height: "500px" }}
+            sandbox="allow-same-origin"
+            srcDoc={htmlBody
+              .replace(/\{\{greeting\}\}/g, "Hi there,")
+              .replace(/\{\{dashboard_url\}\}/g, "#")
+              .replace(/\{\{courses_url\}\}/g, "#")}
+            title="Email Preview"
           />
         </DialogContent>
       </Dialog>

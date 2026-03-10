@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,27 +24,17 @@ const Header = () => {
   const { t, language, toggleLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [profile, setProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const isAr = language === "ar";
 
+  // Load profile whenever the logged-in user changes
   useEffect(() => {
-    const loadProfile = async (userId: string) => {
-      const { data } = await supabase.from("profiles").select("name, avatar_url").eq("user_id", userId).maybeSingle();
-      if (data) setProfile(data);
-    };
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) loadProfile(session.user.id);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) loadProfile(session.user.id);
-      else setProfile(null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (!user) { setProfile(null); return; }
+    supabase.from("profiles").select("name, avatar_url").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setProfile(data); });
+  }, [user]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -127,7 +118,7 @@ const Header = () => {
               <div className="flex items-center gap-2">
                 <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                   {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover border border-border" />
+                    <img src={profile.avatar_url} alt={profile.name} className="h-8 w-8 rounded-full object-cover border border-border" />
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border">
                       <UserCircle className="h-5 w-5 text-muted-foreground" />

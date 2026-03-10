@@ -14,14 +14,14 @@ export async function attachLeadToUser(user: { id: string; email?: string }) {
       .from("leads")
       .select("id")
       .ilike("email", email)
-      .is("user_id" as any, null)
+      .is("user_id", null)
       .limit(1)
       .maybeSingle();
 
     if (lead?.id) {
       await supabase
         .from("leads")
-        .update({ user_id: user.id } as any)
+        .update({ user_id: user.id })
         .eq("id", lead.id);
     }
   } catch (err) {

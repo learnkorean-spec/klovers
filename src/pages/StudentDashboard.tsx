@@ -160,6 +160,7 @@ const StudentDashboard = () => {
   const { progress: gamification, league, loading: gamLoading } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("");
@@ -193,6 +194,8 @@ const StudentDashboard = () => {
   useEffect(() => {
     if (gateLoading || resetBlocked) return;
     const load = async () => {
+      try {
+      setFetchError(null);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
@@ -203,9 +206,9 @@ const StudentDashboard = () => {
         .eq("user_id", session.user.id)
         .maybeSingle();
       if (profile) {
-        setAvatarUrl((profile as any).avatar_url || "");
-        setUserName((profile as any).name || "");
-        setProfileLevel((profile as any).level || "");
+        setAvatarUrl(profile.avatar_url || "");
+        setUserName(profile.name || "");
+        setProfileLevel(profile.level || "");
       }
 
       // Fetch latest placement test result
@@ -234,7 +237,7 @@ const StudentDashboard = () => {
         setLatestEnrollmentId(latestEnroll.id);
 
         // Auto-sync: fill profile gaps from enrollment data
-        const p = profile as any;
+        const p = profile;
         const autoUpdates: Record<string, string> = {};
         if ((!p?.level || !p.level.trim()) && latestEnroll.level && latestEnroll.level.trim()) {
           autoUpdates.level = latestEnroll.level.trim();
@@ -267,7 +270,7 @@ const StudentDashboard = () => {
             .select("session_date")
             .eq("enrollment_id", latestId),
           supabase
-            .from("pkg_attendance" as any)
+            .from("pkg_attendance")
             .select("session_id, pkg_group_sessions(session_date)")
             .eq("user_id", session.user.id)
             .eq("admin_approved", true),
@@ -301,7 +304,7 @@ const StudentDashboard = () => {
 
         // Fetch group membership
         const { data: groupData } = await supabase
-          .from("pkg_group_members" as any)
+          .from("pkg_group_members")
           .select("group_id, pkg_groups(name)")
           .eq("user_id", session.user.id)
           .eq("member_status", "active")
@@ -314,6 +317,10 @@ const StudentDashboard = () => {
       }
 
       setLoading(false);
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : "Failed to load your dashboard. Please refresh.");
+        setLoading(false);
+      }
     };
     load();
   }, [navigate, gateLoading, resetBlocked]);
@@ -336,6 +343,26 @@ const StudentDashboard = () => {
         <Header />
         <main className="pt-24 flex items-center justify-center">
           <p className="text-muted-foreground">Loading...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <main className="pt-24 flex items-center justify-center px-4">
+          <div className="text-center space-y-3 max-w-sm">
+            <p className="text-destructive font-medium">Failed to load dashboard</p>
+            <p className="text-muted-foreground text-sm">{fetchError}</p>
+            <button
+              onClick={() => { setFetchError(null); setLoading(true); }}
+              className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity"
+            >
+              Try again
+            </button>
+          </div>
         </main>
       </div>
     );

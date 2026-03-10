@@ -32,8 +32,8 @@ export async function fetchEnrollmentChecklists(): Promise<EnrollmentChecklist[]
   const [enrollRes, profilesRes, prefsRes, slotsRes, emailsRes, batchRes] = await Promise.all([
     supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
     supabase.from("profiles").select("*"),
-    supabase.from("student_slot_preferences").select("*") as any,
-    supabase.from("matching_slots").select("*") as any,
+    supabase.from("student_slot_preferences").select("*"),
+    supabase.from("matching_slots").select("*"),
     supabase.from("email_sends").select("user_id, status, sent_at"),
     supabase.from("batch_members").select("enrollment_id, user_id, batch_id, member_status"),
   ]);

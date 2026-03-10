@@ -118,6 +118,7 @@ const GroupMatcher = () => {
 
     if (error || privateError) {
       console.error("Failed to fetch unmatched enrollments:", error || privateError);
+      toast({ title: "Failed to load enrollments", description: (error || privateError)?.message, variant: "destructive" });
       setLoading(false);
       return;
     }
@@ -361,11 +362,11 @@ const GroupMatcher = () => {
       // Assign each member via unified RPC
       for (const member of cluster.members) {
         const { data: rpcData, error: assignErr } = await supabase
-          .rpc("assign_student_to_group" as any, {
+          .rpc("assign_student_to_group", {
             _package_id: pkgId,
             _user_id: member.user_id,
             _enrollment_id: member.id,
-          } as any);
+          });
         if (assignErr) {
           console.error(`Failed to assign ${member.name}:`, assignErr);
           failedNames.push(member.name || member.id);
@@ -382,7 +383,7 @@ const GroupMatcher = () => {
       if (successIds.length > 0) {
         await supabase
           .from("enrollments")
-          .update({ matched_at: new Date().toISOString(), slot_id: pkgId } as any)
+          .update({ matched_at: new Date().toISOString(), slot_id: pkgId })
           .in("id", successIds);
       }
 
@@ -390,7 +391,7 @@ const GroupMatcher = () => {
       if (capturedGroupId && groupName.trim()) {
         await supabase
           .from("pkg_groups")
-          .update({ name: groupName.trim() } as any)
+          .update({ name: groupName.trim() })
           .eq("id", capturedGroupId);
       }
 

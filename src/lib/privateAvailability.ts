@@ -54,7 +54,7 @@ export function computePrivateAvailability(
  * Falls back to PRIVATE_TIME_OPTIONS constant if not found.
  */
 async function fetchPrivateTimeOptions(): Promise<string[]> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("app_settings")
     .select("value")
     .eq("key", "private_time_options")
@@ -74,7 +74,7 @@ async function fetchPrivateTimeOptions(): Promise<string[]> {
  * Falls back to auto-computing from non-group days if not configured.
  */
 async function fetchPrivateDays(): Promise<string[]> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("app_settings")
     .select("value")
     .eq("key", "private_class_days")
@@ -88,7 +88,7 @@ async function fetchPrivateDays(): Promise<string[]> {
   }
 
   // Fallback: auto-compute from non-group days
-  const { data: groupSlots } = await (supabase as any)
+  const { data: groupSlots } = await supabase
     .from("schedule_packages")
     .select("day_of_week")
     .eq("is_active", true)

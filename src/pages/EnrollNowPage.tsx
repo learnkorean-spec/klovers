@@ -26,6 +26,8 @@ import { useNavigate } from "react-router-dom";
 
 type Step = 1 | 2 | 3;
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 const tierCountries: Record<TierKey, string[]> = {
   local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
   regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
@@ -122,16 +124,20 @@ const EnrollNowPage = () => {
     if (lvl && !selectedLevel) {
       setSelectedLevel(lvl);
     }
-  }, []); // run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentional: run once on mount to rehydrate from URL
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
-      const { data } = await supabase
-        .from("schedule_options" as any)
+      const { data, error } = await supabase
+        .from("schedule_options")
         .select("category, label, sort_order")
         .eq("is_active", true)
         .not("category", "eq", "weekday") // weekdays come from schedule_packages
         .order("sort_order");
+      if (error) {
+        toast({ title: "Failed to load schedule options", description: error.message, variant: "destructive" });
+      }
       const items = (data as any[]) || [];
       const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
       const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
@@ -143,8 +149,6 @@ const EnrollNowPage = () => {
   }, []);
 
   // Day names indexed by day_of_week number
-  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
   // Track whether this is the initial load (to avoid clearing rehydrated preferredDays)
   const [initialLevelLoad, setInitialLevelLoad] = useState(true);
 
@@ -199,7 +203,7 @@ const EnrollNowPage = () => {
     const fetchLevelSlots = async () => {
       const normalizedLevel = normalizeLevel(selectedLevel);
       const { data } = await supabase
-        .from("schedule_packages" as any)
+        .from("schedule_packages")
         .select("id, day_of_week, start_time, capacity")
         .eq("level", normalizedLevel)
         .eq("is_active", true)
@@ -210,7 +214,7 @@ const EnrollNowPage = () => {
 
       // Compute seats_left per package (same pattern as SchedulePicker)
       const pkgIds = rows.map((r: any) => r.id);
-      const { data: groups } = await (supabase as any)
+      const { data: groups } = await supabase
         .from("pkg_groups")
         .select("id, package_id")
         .in("package_id", pkgIds)
@@ -218,9 +222,9 @@ const EnrollNowPage = () => {
       const groupList = (groups as any[]) || [];
       const groupIds = groupList.map((g: any) => g.id);
 
-      let memberCounts: Record<string, number> = {};
+      const memberCounts: Record<string, number> = {};
       if (groupIds.length > 0) {
-        const { data: members } = await (supabase as any)
+        const { data: members } = await supabase
           .from("pkg_group_members")
           .select("group_id")
           .in("group_id", groupIds)
@@ -261,7 +265,8 @@ const EnrollNowPage = () => {
       }
     };
     fetchLevelSlots();
-  }, [selectedLevel, classType]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLevel, classType]); // intentional: initialLevelLoad/preferredDays are read+written inside; adding them causes infinite loop
 
   useEffect(() => {
     const checkFirstTime = async () => {
@@ -389,7 +394,6 @@ const EnrollNowPage = () => {
         _duration: duration,
       } as any);
       if (error) {
-        console.log("Egypt order RPC error:", error);
         const desc = error.message?.includes("not found") || error.code === "PGRST202"
           ? "Backend function 'create_egypt_order' is missing or not accessible. Please contact support."
           : error.message;
@@ -535,14 +539,12 @@ const EnrollNowPage = () => {
       });
 
       if (error) {
-        console.log("create-checkout invoke error:", error);
         const desc = error.message?.includes("FunctionNotFound") || error.message?.includes("404")
           ? "Backend function 'create-checkout' is not deployed. Please contact support."
           : error.message;
         throw new Error(desc);
       }
       if (data?.error) {
-        console.log("create-checkout returned error:", data.error);
         throw new Error(data.error);
       }
       if (data?.url) {

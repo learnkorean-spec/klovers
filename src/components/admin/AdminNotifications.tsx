@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +58,7 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
 
     // Find the matching slot
     const { data: slots } = await supabase
-      .from("matching_slots" as any)
+      .from("matching_slots")
       .select("id, day, time, course_level")
       .eq("day", slotInfo.day)
       .eq("course_level", slotInfo.level)
@@ -73,7 +73,7 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
 
     // Get student_slot_preferences matched to these slots
     const { data: prefs } = await supabase
-      .from("student_slot_preferences" as any)
+      .from("student_slot_preferences")
       .select("user_id, assigned_slot_id")
       .in("assigned_slot_id", slotIds);
 
@@ -238,7 +238,7 @@ const AdminNotifications = () => {
   const [filter, setFilter] = useState<"all" | "unread">("unread");
   const [createdGroups, setCreatedGroups] = useState<Record<string, string>>({});
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     let query = supabase
       .from("admin_notifications" as any)
@@ -256,11 +256,11 @@ const AdminNotifications = () => {
     }
     setNotifications((data as any as Notification[]) || []);
     setLoading(false);
-  };
+  }, [filter]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [filter]);
+  }, [fetchNotifications]);
 
   const markRead = async (id: string) => {
     await supabase
