@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ function getTierForCountry(country: string): TierKey | null {
 }
 
 const EnrollPage = () => {
+  useSEO({ title: "Enroll Now", description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.", canonical: "https://kloversegy.com/enroll" });
   const [planType, setPlanType] = useState<ClassType | "">("");
   const [duration, setDuration] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("");

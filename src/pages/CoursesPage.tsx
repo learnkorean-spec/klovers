@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CoursesSection from "@/components/CoursesSection";
@@ -8,6 +9,7 @@ import { BookOpen, Clock, RotateCcw } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const CoursesPage = () => {
+  useSEO({ title: "Korean Courses", description: "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.", canonical: "https://kloversegy.com/courses" });
   const { t, tArray } = useLanguage();
   const weeklyItems = tArray("courses", "weeklyStructure.items") as { title: string; description: string }[];
   const weeklyIcons = [BookOpen, Clock, RotateCcw];

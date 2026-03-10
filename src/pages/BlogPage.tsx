@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -26,6 +27,7 @@ interface BlogPost {
 }
 
 const BlogPage = () => {
+  useSEO({ title: "Korean Language Blog", description: "Explore Klovers blog for Korean language tips, culture insights, grammar guides, and study resources.", canonical: "https://kloversegy.com/blog" });
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const { language } = useLanguage();

@@ -1,4 +1,5 @@
 import { useState, useCallback, lazy, Suspense } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
@@ -31,6 +32,7 @@ const GameFallback = () => (
 );
 
 const GamesPage = () => {
+  useSEO({ title: "Korean Learning Games", description: "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: "https://kloversegy.com/games" });
   const [activeGame, setActiveGame] = useState<string>("match");
   const { awardGameXp, progress, league } = useGamification();
   const { t } = useLanguage();

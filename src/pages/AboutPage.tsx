@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FinalCTA from "@/components/FinalCTA";
@@ -8,6 +9,7 @@ import rehamKorea1 from "@/assets/reham-korea-1.jpg";
 import rehamKorea2 from "@/assets/reham-korea-2.jpg";
 
 const AboutPage = () => {
+  useSEO({ title: "About Us", description: "Meet the Klovers team. Our certified teachers bring years of experience teaching Korean to students worldwide.", canonical: "https://kloversegy.com/about" });
   const { t, tArray } = useLanguage();
   const experienceItems = tArray("aboutPage", "experience.items") as string[];
 

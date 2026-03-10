@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import WhyLearnKorean from "@/components/WhyLearnKorean";
@@ -21,6 +22,7 @@ const SectionFallback = () => (
 );
 
 const Index = () => {
+  useSEO({ title: "Learn Korean Online", description: "Join Klovers Korean Language Academy. Interactive online Korean lessons, certified teachers, placement tests, and gamified learning for all levels.", canonical: "https://kloversegy.com/" });
   return (
     <div className="min-h-screen">
       <Header />

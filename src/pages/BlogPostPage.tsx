@@ -86,7 +86,7 @@ const BlogPostPage = () => {
     setMeta("og:title", post.title, "property");
     setMeta("og:description", post.description, "property");
     setMeta("og:type", "article", "property");
-    setMeta("og:url", `https://klovers.lovable.app/blog/${post.slug}`, "property");
+    setMeta("og:url", `https://kloversegy.com/blog/${post.slug}`, "property");
     if (post.hero_image) setMeta("og:image", post.hero_image, "property");
     setMeta("twitter:title", post.title);
     setMeta("twitter:description", post.description);
@@ -101,7 +101,7 @@ const BlogPostPage = () => {
       canonical.rel = "canonical";
       document.head.appendChild(canonical);
     }
-    canonical.href = `https://klovers.lovable.app/blog/${post.slug}`;
+    canonical.href = `https://kloversegy.com/blog/${post.slug}`;
 
     // JSON-LD
     let jsonLd = document.getElementById("blog-jsonld");
@@ -118,10 +118,10 @@ const BlogPostPage = () => {
       description: post.description,
       image: post.hero_image || "",
       author: { "@type": "Person", name: post.author },
-      publisher: { "@type": "Organization", name: "Klovers", logo: { "@type": "ImageObject", url: "https://klovers.lovable.app/klovers-logo.jpg" } },
+      publisher: { "@type": "Organization", name: "Klovers", logo: { "@type": "ImageObject", url: "https://kloversegy.com/klovers-logo.jpg" } },
       datePublished: post.published_at || post.created_at,
-      url: `https://klovers.lovable.app/blog/${post.slug}`,
-      mainEntityOfPage: { "@type": "WebPage", "@id": `https://klovers.lovable.app/blog/${post.slug}` },
+      url: `https://kloversegy.com/blog/${post.slug}`,
+      mainEntityOfPage: { "@type": "WebPage", "@id": `https://kloversegy.com/blog/${post.slug}` },
     });
 
     return () => {

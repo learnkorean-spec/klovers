@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -22,6 +23,7 @@ const FAQSchemaScript = ({ schema }: { schema: object }) => {
 };
 
 const FAQPage = () => {
+  useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
   const { t, tArray } = useLanguage();
   const faqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
   const [activeCategory, setActiveCategory] = useState<string | null>(null);

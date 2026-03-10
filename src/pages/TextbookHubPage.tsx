@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { BookOpen, Sun, Sparkles } from "lucide-react";
@@ -35,6 +36,7 @@ const BOOKS = [
 ];
 
 const TextbookHubPage = () => {
+  useSEO({ title: "Korean Textbooks", description: "Learn Korean with Klovers interactive digital textbooks. Vocabulary flashcards, grammar, dialogues, exercises and reading passages.", canonical: "https://kloversegy.com/textbook" });
   const { t, language } = useLanguage();
   const isAr = language === "ar";
 
