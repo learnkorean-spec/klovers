@@ -62,10 +62,12 @@ Deno.serve(async (req) => {
   let generated = 0;
   const errors: string[] = [];
 
-  // Process limited batch
+  // Process limited batch — stop on first rate limit
   const toProcess = unpopulated.slice(0, Math.min(limitCount, unpopulated.length));
+  let rateLimited = false;
 
   for (const lesson of toProcess) {
+    if (rateLimited) break;
     try {
       const isDailyRoutine = (lesson as any).book === "daily-routine";
       const topikLevel = isDailyRoutine ? 1 : (lesson.sort_order <= 45 ? 1 : 2);
