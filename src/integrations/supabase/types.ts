@@ -2177,6 +2177,17 @@ export type Database = {
       auto_match_student: { Args: { _preference_id: string }; Returns: string }
       backfill_missing_enrollments: { Args: never; Returns: Json }
       cleanup_pkg_groups: { Args: never; Returns: Json }
+      complete_schedule_resubmission: {
+        Args: {
+          _level: string
+          _package_id: string
+          _preferred_day: string
+          _preferred_time: string
+          _timezone: string
+          _token: string
+        }
+        Returns: undefined
+      }
       create_egypt_order: {
         Args: { _duration: number; _plan_type: string }
         Returns: string
@@ -2263,6 +2274,17 @@ export type Database = {
           _timezone: string
         }
         Returns: undefined
+      }
+      validate_resubmission_token: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          enrollment_id: string
+          expires_at: string
+          id: string
+          status: string
+          user_id: string
+        }[]
       }
     }
     Enums: {
