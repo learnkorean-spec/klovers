@@ -9,8 +9,104 @@ import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
-  Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud,
+  Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud, Brush,
 } from "lucide-react";
+
+// ─── Brand canvas renderer (exact #FFFF00) ───
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
+  const words = text.split(" ");
+  let line = "";
+  let cy = y;
+  for (const word of words) {
+    const test = line + word + " ";
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line.trim(), x, cy);
+      line = word + " ";
+      cy += lineH;
+    } else {
+      line = test;
+    }
+  }
+  ctx.fillText(line.trim(), x, cy);
+}
+
+function renderBrandPost(
+  canvas: HTMLCanvasElement,
+  mainText: string,
+  subtitle: string,
+  extra: string,
+  w: number,
+  h: number,
+) {
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  const scale = w / 1080;
+
+  // Pure brand yellow background
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle decorative corner accents
+  ctx.strokeStyle = "#1a1a1a22";
+  ctx.lineWidth = 3 * scale;
+  const m = 30 * scale;
+  ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+
+  // Large faint quote mark watermark
+  ctx.font = `bold ${100 * scale}px Georgia, serif`;
+  ctx.fillStyle = "#1a1a1a11";
+  ctx.fillText("\u201C", 40 * scale, 140 * scale);
+
+  // Main heading
+  const mainSize = Math.min(52 * scale, w * 0.085);
+  ctx.font = `bold italic ${mainSize}px 'Inter', 'Segoe UI', sans-serif`;
+  ctx.fillStyle = "#1a1a1a";
+  wrapText(ctx, mainText, 60 * scale, h * 0.34, w - 120 * scale, mainSize * 1.3);
+
+  // Subtitle
+  const subSize = mainSize * 0.48;
+  ctx.font = `${subSize}px 'Inter', sans-serif`;
+  ctx.fillStyle = "#1a1a1acc";
+  wrapText(ctx, subtitle, 60 * scale, h * 0.60, w - 120 * scale, subSize * 1.5);
+
+  // Extra / hashtags
+  if (extra) {
+    const exSize = mainSize * 0.33;
+    ctx.font = `${exSize}px 'Inter', sans-serif`;
+    ctx.fillStyle = "#1a1a1a88";
+    ctx.fillText(extra, 60 * scale, h * 0.875);
+  }
+
+  // Bottom brand badge
+  ctx.fillStyle = "#1a1a1a";
+  ctx.beginPath();
+  const bx = w - 64 * scale, by = h - 64 * scale, br = 26 * scale;
+  ctx.arc(bx, by, br, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = `bold ${30 * scale}px 'Inter', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "center";
+  ctx.fillText("K", bx, by + 10 * scale);
+  ctx.textAlign = "start";
+}
+
+const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
+  "1x1": [1080, 1080],
+  "4x5": [1080, 1350],
+  "story": [1080, 1920],
+};
+
+function renderGroupToDataUrl(group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number }, size: "1x1" | "4x5" | "story"): string {
+  const [w, h] = CANVAS_SIZES[size];
+  const canvas = document.createElement("canvas");
+  const levelLabel = getLevelLabel(group.level);
+  const mainText = `${levelLabel}`;
+  const subtitle = `${group.day_name} • ${group.start_time}\n${group.duration_min} min per session${group.seats_left <= 3 ? `\nOnly ${group.seats_left} seats left!` : ""}`;
+  const extra = "#LearnKorean #KoreanCourse #Klovers";
+  renderBrandPost(canvas, mainText, subtitle, extra, w, h);
+  return canvas.toDataURL("image/png");
+}
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -138,6 +234,26 @@ export default function MarketingGeneratorPage() {
   function copyToClipboard(text: string, label: string) {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied!", description: `${label} copied to clipboard.` });
+  }
+
+  function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
+    const dataUrl = renderGroupToDataUrl(group, size);
+    setGeneratedImages(prev => ({
+      ...prev,
+      [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
+    }));
+  }
+
+  function handleBulkCanvasRender() {
+    groups.forEach(group => {
+      handleGenerate(group);
+      const dataUrl = renderGroupToDataUrl(group, "1x1");
+      setGeneratedImages(prev => ({
+        ...prev,
+        [group.id]: { ...(prev[group.id] || {}), "1x1": dataUrl },
+      }));
+    });
+    toast({ title: "Done!", description: `${groups.length} brand-yellow images rendered instantly.` });
   }
 
   async function handleGenerateImage(group: GroupData, size: "1x1" | "4x5" | "story") {
@@ -339,28 +455,29 @@ export default function MarketingGeneratorPage() {
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-primary">{groups.length} groups with open seats</p>
-                          <p className="text-xs text-background/60">Generates text + 1x1 images only (saves credits). Use buttons per group for 4x5 / Story.</p>
+                          <p className="text-xs text-background/60">Use "Brand Render" for instant exact-yellow images. "AI Generate" uses credits.</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <Button onClick={handleBulkGenerate} disabled={bulkGenerating}>
+                          <Button onClick={handleBulkCanvasRender} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                            <Brush className="h-4 w-4 mr-2" /> Brand Render All ⚡
+                          </Button>
+                          <Button variant="outline" onClick={handleBulkGenerate} disabled={bulkGenerating} className="border-background/20 text-background hover:bg-background/10">
                             {bulkGenerating ? (
                               <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 {bulkProgress.label} ({bulkProgress.current}/{bulkProgress.total})
                               </>
                             ) : (
-                              <>
-                            <Zap className="h-4 w-4 mr-2" /> Generate All (Text + 1x1 Only)
-                              </>
+                              <><Zap className="h-4 w-4 mr-2" /> AI Generate All</>
                             )}
                           </Button>
                           {gridImages.length > 0 && (
                             <>
-                              <Button variant="outline" size="sm" onClick={copyAllCaptions}>
+                              <Button variant="outline" size="sm" onClick={copyAllCaptions} className="border-background/20 text-background hover:bg-background/10">
                                 <Copy className="h-4 w-4 mr-1" /> Copy All Captions
                               </Button>
-                              <Button variant="outline" size="sm" onClick={downloadAllImages}>
-                                <DownloadCloud className="h-4 w-4 mr-1" /> Download All Images
+                              <Button variant="outline" size="sm" onClick={downloadAllImages} className="border-background/20 text-background hover:bg-background/10">
+                                <DownloadCloud className="h-4 w-4 mr-1" /> Download All
                               </Button>
                             </>
                           )}
@@ -413,17 +530,28 @@ export default function MarketingGeneratorPage() {
                               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleGenerate(group)}>
                                 <Sparkles className="h-3 w-3 mr-1" /> Text
                               </Button>
+                              {/* Brand canvas render buttons (exact yellow, instant) */}
                               {(["1x1", "4x5", "story"] as const).map(size => (
-                                <Button key={size} size="sm" variant="ghost" className="h-7 text-xs"
+                                <Button key={`canvas-${size}`} size="sm"
+                                  className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                                  onClick={() => { handleGenerate(group); handleCanvasRender(group, size); }}
+                                >
+                                  <Brush className="h-3 w-3 mr-1" />{size}
+                                </Button>
+                              ))}
+                              {/* AI image buttons */}
+                              {(["1x1", "4x5", "story"] as const).map(size => (
+                                <Button key={`ai-${size}`} size="sm" variant="ghost" className="h-7 text-xs opacity-60"
                                   onClick={() => handleGenerateImage(group, size)}
                                   disabled={isSizeGenerating(group.id, size)}
+                                  title="AI generate (uses credits)"
                                 >
                                   {isSizeGenerating(group.id, size) ? (
                                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                                   ) : (
                                     <Image className="h-3 w-3 mr-1" />
                                   )}
-                                  {size}
+                                  AI {size}
                                 </Button>
                               ))}
                             </div>
