@@ -30,6 +30,20 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.fillText(line.trim(), x, cy);
 }
 
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 function renderBrandPost(
   canvas: HTMLCanvasElement,
   mainText: string,
@@ -37,56 +51,135 @@ function renderBrandPost(
   extra: string,
   w: number,
   h: number,
+  isUrgent = false,
 ) {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
-  const scale = w / 1080;
+  const s = w / 1080; // scale factor
 
-  // Pure brand yellow background
+  // ── Background: pure brand yellow ──
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // Bold black left accent bar
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillRect(0, 0, 18 * scale, h);
+  // ── Diagonal black triangle (bottom-right corner) ──
+  ctx.fillStyle = "#111111";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.45, h);
+  ctx.lineTo(w, h * 0.42);
+  ctx.lineTo(w, h);
+  ctx.closePath();
+  ctx.fill();
 
-  // Thick bottom strip for brand feel
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillRect(0, h - 110 * scale, w, 110 * scale);
+  // ── Giant Korean watermark 한 (faint, behind everything) ──
+  ctx.save();
+  ctx.font = `900 ${Math.round(520 * s)}px 'Arial', sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.055)";
+  ctx.textAlign = "center";
+  ctx.fillText("한", w * 0.52, h * 0.72);
+  ctx.restore();
 
-  // ── Main heading — very large, bold, black ──
-  const mainSize = Math.round(110 * scale);
-  ctx.font = `900 ${mainSize}px 'Arial Black', 'Impact', 'Segoe UI', sans-serif`;
+  // ── Top-left accent bar ──
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0, 0, 16 * s, h * 0.62);
+
+  // ── "KOREAN COURSE" eyebrow label ──
+  const eyeSize = Math.round(28 * s);
+  ctx.font = `bold ${eyeSize}px 'Arial', sans-serif`;
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "left";
+  ctx.letterSpacing = `${4 * s}px`;
+  ctx.fillText("KOREAN COURSE", 48 * s, 72 * s);
+  ctx.letterSpacing = "0px";
+
+  // thin rule under eyebrow
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(48 * s, 82 * s, 220 * s, 3 * s);
+
+  // ── Main title — huge black ──
+  const mainSize = Math.round(114 * s);
+  ctx.font = `900 ${mainSize}px 'Arial Black', 'Impact', sans-serif`;
   ctx.fillStyle = "#000000";
   ctx.textAlign = "left";
-  wrapText(ctx, mainText, 52 * scale, h * 0.28, w - 80 * scale, mainSize * 1.15);
+  wrapText(ctx, mainText, 48 * s, h * 0.31, w * 0.58, mainSize * 1.12);
 
-  // ── Schedule line — large, bold ──
-  const schedSize = Math.round(54 * scale);
-  ctx.font = `bold ${schedSize}px 'Arial', 'Segoe UI', sans-serif`;
-  ctx.fillStyle = "#111111";
-  // split subtitle lines (day•time / duration / urgency)
+  // ── Schedule info lines ──
   const lines = subtitle.split("\n");
+  const schedSize = Math.round(46 * s);
+  ctx.font = `bold ${schedSize}px 'Arial', sans-serif`;
+  ctx.fillStyle = "#111111";
   let lineY = h * 0.56;
   for (const line of lines) {
-    ctx.fillText(line, 52 * scale, lineY);
-    lineY += schedSize * 1.35;
+    // urgency line gets yellow highlight pill
+    if (line.startsWith("🔴") || line.startsWith("⚡")) {
+      ctx.save();
+      ctx.fillStyle = "#111111";
+      const pillW = ctx.measureText(line).width + 32 * s;
+      const pillH = schedSize * 1.4;
+      drawRoundedRect(ctx, 48 * s, lineY - schedSize * 0.85, pillW, pillH, pillH / 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFFF00";
+      ctx.fillText(line, 64 * s, lineY);
+      ctx.restore();
+    } else {
+      ctx.fillText(line, 48 * s, lineY);
+    }
+    lineY += schedSize * 1.45;
   }
 
-  // ── Bottom strip: hashtags + brand name ──
-  const tagSize = Math.round(32 * scale);
+  // ── "Register Now →" CTA pill (on black diagonal) ──
+  const ctaSize = Math.round(36 * s);
+  ctx.font = `bold ${ctaSize}px 'Arial Black', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
+  const ctaText = "Register Now →";
+  const ctaW = ctx.measureText(ctaText).width + 48 * s;
+  const ctaH = ctaSize * 1.8;
+  const ctaX = w * 0.55;
+  const ctaY = h * 0.78;
+  drawRoundedRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
+  ctx.fill();
+  ctx.fillStyle = "#111111";
+  ctx.fillText(ctaText, ctaX + 24 * s, ctaY + ctaH * 0.65);
+
+  // ── Limited seats burst (top-right) when urgent ──
+  if (isUrgent) {
+    ctx.save();
+    ctx.translate(w * 0.88, h * 0.13);
+    // draw 8-point star
+    ctx.fillStyle = "#111111";
+    ctx.beginPath();
+    const spikes = 8, outerR = 68 * s, innerR = 44 * s;
+    for (let i = 0; i < spikes * 2; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const angle = (i * Math.PI) / spikes - Math.PI / 2;
+      i === 0 ? ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r)
+               : ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#FFFF00";
+    ctx.textAlign = "center";
+    ctx.font = `bold ${Math.round(22 * s)}px 'Arial', sans-serif`;
+    ctx.fillText("LIMITED", 0, -10 * s);
+    ctx.fillText("SEATS", 0, 16 * s);
+    ctx.restore();
+  }
+
+  // ── Bottom brand strip ──
+  const stripH = 90 * s;
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0, h - stripH, w, stripH);
+
+  const tagSize = Math.round(28 * s);
   ctx.font = `bold ${tagSize}px 'Arial', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "left";
-  ctx.fillText(extra, 52 * scale, h - 64 * scale);
+  ctx.fillText(extra, 48 * s, h - stripH / 2 + tagSize * 0.35);
 
-  // Brand name right side of bottom strip
-  const brandSize = Math.round(38 * scale);
-  ctx.font = `900 ${brandSize}px 'Arial Black', 'Impact', sans-serif`;
+  ctx.font = `900 ${Math.round(34 * s)}px 'Arial Black', 'Impact', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "right";
-  ctx.fillText("KLOVERS", w - 40 * scale, h - 60 * scale);
+  ctx.fillText("KLOVERS", w - 36 * s, h - stripH / 2 + tagSize * 0.5);
   ctx.textAlign = "left";
 }
 
@@ -101,10 +194,11 @@ function renderGroupToDataUrl(group: { level: string; day_name: string; start_ti
   const canvas = document.createElement("canvas");
   const levelLabel = getLevelLabel(group.level);
   const mainText = levelLabel;
+  const isUrgent = group.seats_left <= 5;
   const urgencyLine = group.seats_left <= 3 ? `\n🔴 Only ${group.seats_left} seats left!` : group.seats_left <= 6 ? `\n⚡ ${group.seats_left} seats available` : "";
   const subtitle = `${group.day_name} • ${group.start_time}\n${group.duration_min} min / session${urgencyLine}`;
   const extra = "#LearnKorean  #Klovers  #KoreanCourse";
-  renderBrandPost(canvas, mainText, subtitle, extra, w, h);
+  renderBrandPost(canvas, mainText, subtitle, extra, w, h, isUrgent);
   return canvas.toDataURL("image/png");
 }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
