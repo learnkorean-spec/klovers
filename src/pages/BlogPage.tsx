@@ -6,7 +6,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FinalCTA from "@/components/FinalCTA";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, User, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,8 +25,29 @@ interface BlogPost {
   created_at: string;
 }
 
+const TYPE_LABEL: Record<string, string> = {
+  howto: "How-To",
+  listicle: "Listicle",
+  longform: "Article",
+  news: "News",
+  review: "Review",
+};
+
+const TYPE_COLOR: Record<string, string> = {
+  howto: "bg-blue-100 text-blue-700 border-blue-200",
+  listicle: "bg-green-100 text-green-700 border-green-200",
+  longform: "bg-purple-100 text-purple-700 border-purple-200",
+  news: "bg-red-100 text-red-700 border-red-200",
+  review: "bg-orange-100 text-orange-700 border-orange-200",
+};
+
 const BlogPage = () => {
-  useSEO({ title: "Korean Language Blog", description: "Explore Klovers blog for Korean language tips, culture insights, grammar guides, and study resources.", canonical: "https://kloversegy.com/blog" });
+  useSEO({
+    title: "Korean Language Blog",
+    description: "Explore Klovers blog for Korean language tips, culture insights, grammar guides, and study resources.",
+    canonical: "https://kloversegy.com/blog",
+  });
+
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
@@ -46,95 +66,141 @@ const BlogPage = () => {
     fetchPosts();
   }, [language]);
 
-  const typeLabel: Record<string, string> = {
-    howto: "How-To",
-    listicle: "Listicle",
-    longform: "Article",
-    news: "News",
-    review: "Review",
-  };
+  // BreadcrumbList JSON-LD for the listing page
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.id = "blog-list-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://kloversegy.com/" },
+        { "@type": "ListItem", position: 2, name: "Blog", item: "https://kloversegy.com/blog" },
+      ],
+    });
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-6xl">
+
+          {/* Page header */}
           <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">{language === "ar" ? "📝 المدونة" : "📝 Blog"}</Badge>
+            <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
+              {language === "ar" ? "📝 المدونة" : "📝 Blog"}
+            </Badge>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               {language === "ar" ? "مدونة K-Lovers" : "K-Lovers Blog"}
             </h1>
-            <p className="text-foreground/70 max-w-2xl mx-auto text-lg">
-              {language === "ar" ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية." : "Tips, guides, and insights for your Korean learning journey."}
+            <p className="text-foreground/60 max-w-xl mx-auto text-lg leading-relaxed">
+              {language === "ar"
+                ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية."
+                : "Tips, guides, and insights for your Korean learning journey."}
             </p>
           </div>
 
+          {/* Card grid */}
           {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <Skeleton className="h-48 w-full rounded-t-lg" />
-                  <CardContent className="p-6 space-y-3">
-                    <Skeleton className="h-4 w-20" />
+                <div key={i} className="rounded-2xl border border-border overflow-hidden">
+                  <Skeleton className="aspect-video w-full" />
+                  <div className="p-5 space-y-3">
+                    <Skeleton className="h-4 w-20 rounded-full" />
                     <Skeleton className="h-6 w-full" />
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-2/3" />
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <p className="text-center text-foreground/60 py-12 text-lg">{language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!"}</p>
+            <p className="text-center text-foreground/50 py-16 text-lg">
+              {language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!"}
+            </p>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {posts.map((post) => (
-                <Link key={post.id} to={`/blog/${post.slug}`} className="group">
-                  <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg">
-                    {post.hero_image && (
-                      <div className="aspect-video overflow-hidden">
-                        <img
-                          src={post.hero_image}
-                          alt={post.hero_alt || post.title}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="text-xs">
-                          {typeLabel[post.article_type] || post.article_type}
-                        </Badge>
-                      </div>
-                      <h2 className="text-lg font-semibold text-foreground group-hover:text-foreground/80 transition-colors line-clamp-2">
-                        {post.title}
-                      </h2>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-foreground/70 line-clamp-3 mb-4 leading-relaxed">
-                        {post.description}
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-foreground/60">
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {post.author}
+            <ol className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" role="list">
+              {posts.map((post, idx) => (
+                <li key={post.id} role="listitem">
+                  <Link to={`/blog/${post.slug}`} className="group block h-full">
+                    <article className="h-full rounded-2xl border border-border bg-card overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 flex flex-col">
+
+                      {/* Thumbnail */}
+                      {post.hero_image ? (
+                        <div className="aspect-video overflow-hidden bg-muted">
+                          <img
+                            src={post.hero_image}
+                            alt={post.hero_alt || post.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading={idx < 3 ? "eager" : "lazy"}
+                          />
                         </div>
-                        <div className="flex items-center gap-1">
-                          <CalendarDays className="h-3 w-3" />
-                          {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                      ) : (
+                        <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-4xl">
+                          📖
+                        </div>
+                      )}
+
+                      <div className="p-5 flex flex-col flex-1">
+                        {/* Type badge + "Featured" label */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[post.article_type] || "bg-muted text-muted-foreground border-border"}`}>
+                            {TYPE_LABEL[post.article_type] || post.article_type}
+                          </span>
+                          {idx === 0 && (
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">
+                              ⭐ Featured
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title */}
+                        <h2 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
+                          {post.title}
+                        </h2>
+
+                        {/* Description */}
+                        <p className="text-sm text-foreground/60 line-clamp-3 leading-relaxed flex-1 mb-4">
+                          {post.description}
+                        </p>
+
+                        {/* Footer: author / date */}
+                        <div className="flex items-center justify-between text-xs text-foreground/50 border-t border-border pt-3 mt-auto">
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {post.author}
+                          </span>
+                          <time
+                            dateTime={post.published_at || post.created_at}
+                            className="flex items-center gap-1"
+                          >
+                            <CalendarDays className="h-3 w-3" />
+                            {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                          </time>
+                        </div>
+
+                        {/* Read more */}
+                        <div className="flex items-center gap-1 text-primary text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
+                          {language === "ar" ? "اقرأ المزيد" : "Read article"}
+                          <ArrowRight className="h-4 w-4" />
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-foreground text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
-                        {language === "ar" ? "اقرأ المزيد" : "Read more"} <ArrowRight className="h-4 w-4" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                    </article>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ol>
           )}
         </div>
-        <FinalCTA />
+
+        <div className="mt-20">
+          <FinalCTA />
+        </div>
       </main>
       <Footer />
     </div>
