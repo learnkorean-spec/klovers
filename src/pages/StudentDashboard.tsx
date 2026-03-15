@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
@@ -20,7 +21,7 @@ import { LearningGoalsCard } from "@/components/LearningGoalsCard";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { DailyBonusCard } from "@/components/DailyBonusCard";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X } from "lucide-react";
+import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Star, Brain } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -347,10 +348,21 @@ const StudentDashboard = () => {
 
   if (gateLoading || resetBlocked || loading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-muted/20">
         <Header />
-        <main className="pt-24 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+        <main className="pt-24 pb-16 px-4">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <Skeleton className="h-8 w-48" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+            </div>
+            <Skeleton className="h-16 rounded-xl" />
+            <div className="grid md:grid-cols-2 gap-4">
+              <Skeleton className="h-48 rounded-xl" />
+              <Skeleton className="h-48 rounded-xl" />
+            </div>
+            <Skeleton className="h-64 rounded-xl" />
+          </div>
         </main>
       </div>
     );
@@ -380,19 +392,45 @@ const StudentDashboard = () => {
   const hasBlockers = checklistItems.some(
     (i) => !i.completed && (i.key === "Preferred class days" || i.key === "Korean level")
   );
-  // Stage 2 = Active (has approved+paid enrollment), stage 1 = Enrolled (waiting)
   const journeyStage = enrollments.length > 0 ? 2 : 1;
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
+  const todayStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+  const quickStats = [
+    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100" },
+    { label: "Day Streak", value: gamification.streak.current_streak, icon: FlameIcon, color: "text-orange-600 bg-orange-100" },
+    { label: "Badges", value: gamification.badges.length, icon: Star, color: "text-purple-600 bg-purple-100" },
+    { label: "League", value: league?.emoji ? `${league.emoji} ${league.name.split(" ")[0]}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100" },
+  ];
+
+  const quickActions = [
+    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50" },
+    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50" },
+    { label: "Games", desc: "13 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50" },
+    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50" },
+  ];
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-muted/20">
       <Header />
       <main className="pt-24 pb-16 px-4">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/schedule")}>
-                <CalendarDays className="h-4 w-4 mr-2" /> My Schedule
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Header row */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">{todayStr}</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/schedule")} className="hidden sm:flex">
+                <CalendarDays className="h-4 w-4 mr-2" /> Schedule
               </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" /> Logout
@@ -400,45 +438,81 @@ const StudentDashboard = () => {
             </div>
           </div>
 
+          {/* ── Quick Stats (always visible) ── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {quickStats.map(({ label, value, icon: Icon, color }) => (
+              <Card key={label} className="border-border">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">{label}</p>
+                      <p className="font-bold text-foreground text-sm leading-tight truncate">{value}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
+          <DailyBonusCard />
+
+          {/* ── Quick Actions (always visible) ── */}
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {quickActions.map(({ label, desc, emoji, path, color }) => (
+                <button
+                  key={label}
+                  onClick={() => navigate(path)}
+                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-all ${color}`}
+                >
+                  <div className="text-2xl mb-2">{emoji}</div>
+                  <p className="font-semibold text-foreground text-sm">{label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {hasNoData ? (
+            /* ── No-enrollment state: show learning features + enroll CTA ── */
             <div className="space-y-6">
-              <Card>
+              <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="pt-6 text-center space-y-3">
-                  <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground" />
-                  <h2 className="text-xl font-semibold text-foreground">No Active Plan</h2>
-                  <p className="text-muted-foreground">You don't have an active plan yet.</p>
+                  <AlertCircle className="h-10 w-10 mx-auto text-primary" />
+                  <h2 className="text-xl font-semibold text-foreground">No Active Plan Yet</h2>
+                  <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enroll to get live classes, personalized coaching, and track your attendance.</p>
                   <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
                 </CardContent>
               </Card>
 
-              {/* Placement Test for users without enrollment */}
+              {/* Still show level test for unenrolled */}
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Korean Level
+                    <GraduationCap className="h-5 w-5" /> Korean Level
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {profileLevel ? (
                     <div className="flex items-center justify-between">
                       <div>
-                        <Badge className="text-sm px-3 py-1">
-                          {getLevelByKey(profileLevel)?.shortLabel || profileLevel}
-                        </Badge>
+                        <Badge className="text-sm px-3 py-1">{getLevelByKey(profileLevel)?.shortLabel || profileLevel}</Badge>
                         {placementTest && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Placement score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}
-                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">Score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}</p>
                         )}
                       </div>
                       <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
-                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retake Test
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retake
                       </Button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Take the placement test to find your level</p>
+                      <p className="text-sm text-muted-foreground">Find your Korean level</p>
                       <Button size="sm" onClick={() => navigate("/placement-test")}>
                         <GraduationCap className="h-3.5 w-3.5 mr-1.5" /> Take Test
                       </Button>
@@ -446,252 +520,208 @@ const StudentDashboard = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Still show gamification for unenrolled learners */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5" /> My League</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <LeagueProgressBar totalXp={gamification.totalXp} />
+                    <StreakDisplay currentStreak={gamification.streak.current_streak} longestStreak={gamification.streak.longest_streak} />
+                  </CardContent>
+                </Card>
+                <AchievementMilestoneCard />
+              </div>
+              <StreakCalendar />
+              <LeaderboardCard />
             </div>
           ) : (
             <>
-              {/* Welcome + Avatar */}
-              <ProfileCard
-                userId={userId}
-                avatarUrl={avatarUrl}
-                displayName={displayName}
-                enrollmentCount={enrollments.length}
-                journeyStage={journeyStage}
-                onAvatarUploaded={(url) => setAvatarUrl(url)}
-                onNameUpdated={(name) => setUserName(name)}
-              />
+              {/* ── Two-column layout: Profile + League ── */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Profile Card */}
+                <ProfileCard
+                  userId={userId}
+                  avatarUrl={avatarUrl}
+                  displayName={displayName}
+                  enrollmentCount={enrollments.length}
+                  journeyStage={journeyStage}
+                  onAvatarUploaded={(url) => setAvatarUrl(url)}
+                  onNameUpdated={(name) => setUserName(name)}
+                />
 
-              {/* Placement Test Level */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Korean Level
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {profileLevel ? (
-                    <div className="flex items-center justify-between">
+                {/* League & XP */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Trophy className="h-5 w-5" /> My League
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <LeagueProgressBar totalXp={gamification.totalXp} />
+                    <StreakDisplay currentStreak={gamification.streak.current_streak} longestStreak={gamification.streak.longest_streak} />
+                    {gamification.badges.length > 0 && (
                       <div>
-                        <Badge className="text-sm px-3 py-1">
-                          {getLevelByKey(profileLevel)?.shortLabel || profileLevel}
-                        </Badge>
-                        {placementTest && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Placement score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}
-                          </p>
-                        )}
+                        <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges</p>
+                        <BadgeGrid earnedBadges={gamification.badges} />
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
-                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retake Test
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Take the placement test to find your level</p>
-                      <Button size="sm" onClick={() => navigate("/placement-test")}>
-                        <GraduationCap className="h-3.5 w-3.5 mr-1.5" /> Take Test
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
 
-              {/* Registration Checklist */}
+              {/* ── Korean Level + Registration Checklist (two-col) ── */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" /> Korean Level
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {profileLevel ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Badge className="text-sm px-3 py-1">{getLevelByKey(profileLevel)?.shortLabel || profileLevel}</Badge>
+                          {placementTest && (
+                            <p className="text-xs text-muted-foreground mt-1">Score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
+                          <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retake
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">Take the placement test to find your level</p>
+                        <Button size="sm" onClick={() => navigate("/placement-test")}>
+                          <GraduationCap className="h-3.5 w-3.5 mr-1.5" /> Take Test
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Package summary card (most recent) */}
+                {enrollments[0] && (() => {
+                  const enrollment = enrollments[0];
+                  const totalUsed = attendanceDates.length;
+                  const remaining = enrollment.sessions_total - totalUsed;
+                  const extra = remaining < 0 ? Math.abs(remaining) : 0;
+                  const due = Math.round(extra * enrollment.unit_price);
+                  const curr = enrollment.currency === "EGP" ? "LE" : "$";
+                  return (
+                    <Card className={remaining <= 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Package className="h-4 w-4" />
+                            <span className="capitalize">{enrollment.plan_type}</span> — {enrollment.duration}mo
+                          </CardTitle>
+                          <Badge variant={remaining >= 0 ? "default" : "destructive"}>
+                            {remaining >= 0 ? `${remaining} left` : `${extra} extra`}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            { label: "Package", val: enrollment.sessions_total, red: false },
+                            { label: "Used", val: totalUsed, red: false },
+                            { label: remaining >= 0 ? "Remaining" : "Extra", val: remaining >= 0 ? remaining : extra, red: remaining < 0 },
+                            { label: "Due", val: `${curr}${due.toLocaleString()}`, red: due > 0 },
+                          ].map(({ label, val, red }) => (
+                            <div key={label} className={`rounded-lg p-3 text-center border ${red ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
+                              <span className="text-[10px] text-muted-foreground block">{label}</span>
+                              <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {due > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
+                            <AlertTriangle className="h-4 w-4 shrink-0" />
+                            <span><strong>{extra}</strong> extra sessions — Due: <strong>{curr}{due.toLocaleString()}</strong></span>
+                          </div>
+                        )}
+                        {groupName && (
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Users className="h-3.5 w-3.5" />
+                            <span>Group: <strong className="text-foreground">{groupName}</strong></span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+              </div>
+
+              {/* ── Registration Checklist ── */}
               <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
 
-              {/* Daily Login Bonus */}
-              <div className="col-span-full">
-                <DailyBonusCard />
-              </div>
-
-              {/* League & XP Progress */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="h-5 w-5" />
-                    My League
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <LeagueProgressBar totalXp={gamification.totalXp} />
-                  <StreakDisplay currentStreak={gamification.streak.current_streak} longestStreak={gamification.streak.longest_streak} />
-                  {gamification.badges.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges</p>
-                      <BadgeGrid earnedBadges={gamification.badges} />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Achievement Milestones */}
-              <div className="col-span-full">
+              {/* ── Achievements + Goals (two-col) ── */}
+              <div className="grid md:grid-cols-2 gap-4">
                 <AchievementMilestoneCard />
-              </div>
-
-              {/* Learning Goals */}
-              <div className="col-span-full">
                 <LearningGoalsCard />
               </div>
 
-              {/* Daily Quiz CTA */}
-              <Card className="border-yellow-500/30 bg-yellow-500/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                        <Zap className="h-5 w-5 text-yellow-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">Daily Quiz Challenge</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Zap className="h-3 w-3" /> Earn +30 XP bonus
-                        </p>
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={() => navigate("/daily-quiz")}>
-                      Start Quiz
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* ── Streak Calendar (full width) ── */}
+              <StreakCalendar />
 
-              {/* Games CTA */}
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Gamepad2 className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">Learn & Play</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Zap className="h-3 w-3" /> Earn 5 XP per correct answer
-                        </p>
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={() => navigate("/games")}>
-                      Play Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* ── Leaderboard (full width) ── */}
+              <LeaderboardCard />
 
-              {/* Streak Calendar */}
-              <div className="col-span-full">
-                <StreakCalendar />
-              </div>
-
-              {/* Leaderboard */}
-              <div className="col-span-full">
-                <LeaderboardCard />
-              </div>
-
-              {/* Analytics Section */}
-              <div className="col-span-full">
+              {/* ── Analytics (full width) ── */}
+              <div>
                 <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
                 <AnalyticsSection />
               </div>
 
-              {/* Attendance Request */}
+              {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />
 
-              {/* All Packages with auto-calculated stats */}
-              {enrollments.map((enrollment) => {
-                const totalUsed = enrollment.id === latestEnrollmentId ? attendanceDates.length : (enrollment.sessions_total - enrollment.sessions_remaining);
-                const packageSize = enrollment.sessions_total;
-                const remaining = packageSize - totalUsed;
+              {/* Additional packages (if > 1) */}
+              {enrollments.slice(1).map((enrollment) => {
+                const totalUsed = enrollment.sessions_total - enrollment.sessions_remaining;
+                const remaining = enrollment.sessions_total - totalUsed;
                 const extra = remaining < 0 ? Math.abs(remaining) : 0;
                 const due = Math.round(extra * enrollment.unit_price);
                 const curr = enrollment.currency === "EGP" ? "LE" : "$";
-
                 return (
-                  <Card key={enrollment.id} className={remaining === 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
+                  <Card key={enrollment.id}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
+                        <CardTitle className="text-base flex items-center gap-2">
                           <Package className="h-4 w-4" />
                           <span className="capitalize">{enrollment.plan_type}</span> — {enrollment.duration}mo
+                          <Badge variant="outline" className="ml-1 text-xs">Older</Badge>
                         </CardTitle>
-                        <Badge variant={remaining >= 0 ? "default" : "destructive"}>
+                        <Badge variant={remaining >= 0 ? "secondary" : "destructive"}>
                           {remaining >= 0 ? `${remaining} left` : `${extra} extra`}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent>
                       <div className="grid grid-cols-4 gap-2">
-                        <div className="rounded-lg bg-muted/50 border border-border p-3 text-center">
-                          <span className="text-[10px] text-muted-foreground">Package</span>
-                          <p className="text-xl font-bold text-foreground">{packageSize}</p>
-                        </div>
-                        <div className="rounded-lg bg-muted/50 border border-border p-3 text-center">
-                          <span className="text-[10px] text-muted-foreground">Used</span>
-                          <p className="text-xl font-bold text-foreground">{totalUsed}</p>
-                        </div>
-                        <div className={`rounded-lg p-3 text-center ${remaining >= 0 ? "bg-muted/50 border border-border" : "bg-destructive/10 border border-destructive/30"}`}>
-                          <span className="text-[10px] text-muted-foreground">
-                            {remaining >= 0 ? "Remaining" : "Extra"}
-                          </span>
-                          <p className={`text-xl font-bold ${remaining >= 0 ? "text-foreground" : "text-destructive"}`}>
-                            {remaining >= 0 ? remaining : extra}
-                          </p>
-                        </div>
-                        <div className={`rounded-lg p-3 text-center ${due > 0 ? "bg-destructive/10" : "bg-muted/50"} border border-border`}>
-                          <span className="text-[10px] text-muted-foreground">Due</span>
-                          <p className={`text-xl font-bold ${due > 0 ? "text-destructive" : "text-foreground"}`}>
-                            {curr}{due.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      {remaining >= 0 ? (
-                        <div className="flex items-center gap-2 text-sm text-foreground bg-muted/50 border border-border rounded-lg p-2">
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                          <span><strong>{remaining}</strong> session{remaining !== 1 ? "s" : ""} remaining</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
-                          <AlertTriangle className="h-4 w-4 shrink-0" />
-                          <span><strong>{extra}</strong> extra — Due: <strong>{curr}{due.toLocaleString()}</strong></span>
-                        </div>
-                      )}
-
-                      {/* Plan Details */}
-                      <div className="grid grid-cols-2 gap-2 text-sm border border-border rounded-lg p-3">
-                        <div className="flex items-center gap-1.5">
-                          <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-muted-foreground">Plan:</span>
-                          <span className="font-medium capitalize">{enrollment.plan_type} {enrollment.duration}mo</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-muted-foreground">Paid:</span>
-                          <span className="font-medium">{curr}{Math.round(enrollment.amount).toLocaleString()}</span>
-                        </div>
-                        {enrollment.id === latestEnrollmentId && groupName && (
-                          <div className="flex items-center gap-1.5 col-span-2">
-                            <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-muted-foreground">Group:</span>
-                            <span className="font-medium">{groupName}</span>
+                        {[
+                          { label: "Package", val: enrollment.sessions_total },
+                          { label: "Used", val: totalUsed },
+                          { label: remaining >= 0 ? "Remaining" : "Extra", val: remaining >= 0 ? remaining : extra },
+                          { label: "Due", val: `${curr}${due.toLocaleString()}` },
+                        ].map(({ label, val }) => (
+                          <div key={label} className="rounded-lg bg-muted/50 border border-border p-2 text-center">
+                            <span className="text-[10px] text-muted-foreground block">{label}</span>
+                            <p className="text-base font-bold text-foreground">{val}</p>
                           </div>
-                        )}
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-muted-foreground">Unit price:</span>
-                          <span className="font-medium">{curr}{Math.round(enrollment.unit_price).toLocaleString()}</span>
-                        </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
                 );
               })}
 
-              {/* Read-only Attendance Dates List */}
-              {attendanceDates.length > 0 && (
-                <AttendanceHistoryCard dates={attendanceDates} />
-              )}
-
-              {/* Group Attendance */}
+              {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
               <StudentGroupAttendance />
             </>
           )}
