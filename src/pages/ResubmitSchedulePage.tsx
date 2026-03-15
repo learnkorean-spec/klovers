@@ -57,7 +57,7 @@ const ResubmitSchedulePage = () => {
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [submitting, setSubmitting] = useState(false);
 
-  // Validate token
+  // Validate token via secure RPC
   useEffect(() => {
     if (!token) {
       setError("No token provided. Please use the link sent to your email.");
@@ -65,17 +65,16 @@ const ResubmitSchedulePage = () => {
       return;
     }
     const validate = async () => {
-      const { data, error: err } = await (supabase as any)
-        .from("schedule_resubmission_requests")
-        .select("*")
-        .eq("token", token)
-        .maybeSingle();
-      if (err || !data) {
+      const { data, error: err } = await supabase.rpc(
+        "validate_resubmission_token" as any,
+        { _token: token }
+      );
+      if (err || !data || (data as any[]).length === 0) {
         setError("Invalid or expired link. Please contact support.");
         setLoading(false);
         return;
       }
-      const req = data as ResubRequest;
+      const req = (data as any[])[0] as ResubRequest;
       if (req.status !== "pending") {
         setError("This schedule submission has already been completed.");
         setLoading(false);
@@ -119,42 +118,20 @@ const ResubmitSchedulePage = () => {
       const normalizedLvl = normalizeLevel(selectedLevel);
       const dayName = DAY_NAMES[pkg.day_of_week];
 
-      // Update enrollment with schedule data
-      const { error: enrollErr } = await supabase
-        .from("enrollments")
-        .update({
-          level: normalizedLvl,
-          preferred_days: [dayName],
-          preferred_time: formatTime(pkg.start_time),
-          timezone: timezone,
-        } as any)
-        .eq("id", request.enrollment_id);
+      // Use secure RPC to complete the resubmission atomically
+      const { error: rpcErr } = await supabase.rpc(
+        "complete_schedule_resubmission" as any,
+        {
+          _token: token,
+          _level: normalizedLvl,
+          _package_id: selectedPackageId,
+          _preferred_day: dayName,
+          _preferred_time: formatTime(pkg.start_time),
+          _timezone: timezone,
+        }
+      );
 
-      if (enrollErr) throw new Error(enrollErr.message);
-
-      // Update profile level
-      const { error: profErr } = await supabase
-        .from("profiles")
-        .update({ level: normalizedLvl })
-        .eq("user_id", request.user_id);
-
-      if (profErr) console.error("Profile update error:", profErr);
-
-      // Save package preference
-      await (supabase as any)
-        .from("student_package_preferences")
-        .upsert({
-          user_id: request.user_id,
-          level: normalizedLvl,
-          package_id: selectedPackageId,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
-
-      // Mark request as completed
-      await (supabase as any)
-        .from("schedule_resubmission_requests")
-        .update({ status: "completed" })
-        .eq("id", request.id);
+      if (rpcErr) throw new Error(rpcErr.message);
 
       setSubmitted(true);
       toast({ title: "Schedule submitted!", description: "Your schedule preferences have been saved." });

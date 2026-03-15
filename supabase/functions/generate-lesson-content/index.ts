@@ -20,12 +20,27 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Get all lessons
-  const { data: lessons } = await supabase
+  // Parse optional filters from body
+  let bookFilter: string | null = null;
+  let limitCount = 1;
+  try {
+    const body = await req.json();
+    bookFilter = body.book || null;
+    limitCount = body.limit || 1;
+  } catch { /* no body */ }
+
+  // Get all lessons, optionally filtered by book
+  let query = supabase
     .from("textbook_lessons")
-    .select("id, sort_order, title_en, title_ko, description")
+    .select("id, sort_order, title_en, title_ko, description, book")
     .eq("is_published", true)
     .order("sort_order");
+
+  if (bookFilter) {
+    query = query.eq("book", bookFilter);
+  }
+
+  const { data: lessons } = await query;
 
   if (!lessons || lessons.length === 0) {
     return new Response(JSON.stringify({ error: "No lessons found" }), {
@@ -47,16 +62,22 @@ Deno.serve(async (req) => {
   let generated = 0;
   const errors: string[] = [];
 
-  // Process 5 at a time
-  const batchSize = 5;
-  for (let i = 0; i < Math.min(unpopulated.length, batchSize); i++) {
-    const batch = unpopulated.slice(i, i + 1);
+  // Process limited batch — stop on first rate limit
+  const toProcess = unpopulated.slice(0, Math.min(limitCount, unpopulated.length));
+  let rateLimited = false;
 
-    await Promise.all(batch.map(async (lesson: any) => {
-      try {
-        const topikLevel = lesson.sort_order <= 45 ? 1 : 2;
-        const levelDesc = topikLevel === 1 ? "TOPIK 1 (beginner/A1-A2)" : "TOPIK 2 (elementary-intermediate/A2-B1)";
-        const prompt = `Generate Korean language lesson content for ${levelDesc}, Lesson ${lesson.sort_order}: "${lesson.title_en}" (${lesson.title_ko}). Description: ${lesson.description}.
+  for (const lesson of toProcess) {
+    if (rateLimited) break;
+    try {
+      const isDailyRoutine = (lesson as any).book === "daily-routine";
+      const topikLevel = isDailyRoutine ? 1 : (lesson.sort_order <= 45 ? 1 : 2);
+      const levelDesc = topikLevel === 1 ? "TOPIK 1 (beginner/A1-A2)" : "TOPIK 2 (elementary-intermediate/A2-B1)";
+
+      const contextHint = isDailyRoutine
+        ? `This is a "Daily Routine Korean" lesson focused on everyday actions and practical vocabulary for the topic "${lesson.title_en}". Focus heavily on action verbs, common phrases, and practical expressions used in daily life for this specific activity.`
+        : "";
+
+      const prompt = `Generate Korean language lesson content for ${levelDesc}, Lesson ${lesson.sort_order}: "${lesson.title_en}" (${lesson.title_ko}). Description: ${lesson.description}. ${contextHint}
 
 Return a JSON object with these exact keys:
 {
@@ -77,77 +98,76 @@ Requirements:
 - Content should be appropriate for ${levelDesc} level
 - Return ONLY valid JSON, no markdown`;
 
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.3,
-          }),
-        });
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-5-nano",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3,
+        }),
+      });
 
-        if (!aiRes.ok) {
-          const errText = await aiRes.text();
-          errors.push(`Lesson ${lesson.sort_order}: AI error ${aiRes.status} - ${errText.substring(0, 100)}`);
-          return;
-        }
-
-        const aiData = await aiRes.json();
-        const text = aiData.choices?.[0]?.message?.content || "";
-        let content: any;
-        try {
-          content = JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
-        } catch {
-          errors.push(`Lesson ${lesson.sort_order}: Failed to parse AI response`);
-          return;
-        }
-
-        // Insert all content
-        if (content.vocabulary?.length > 0) {
-          await supabase.from("lesson_vocabulary").insert(
-            content.vocabulary.map((v: any, idx: number) => ({
-              lesson_id: lesson.id, korean: v.korean, romanization: v.romanization || "", meaning: v.meaning, sort_order: idx + 1,
-            }))
-          );
-        }
-        if (content.grammar?.length > 0) {
-          await supabase.from("lesson_grammar").insert(
-            content.grammar.map((g: any, idx: number) => ({
-              lesson_id: lesson.id, title: g.title, structure: g.structure || "", explanation: g.explanation || "", examples: g.examples || [], sort_order: idx + 1,
-            }))
-          );
-        }
-        if (content.dialogue?.length > 0) {
-          await supabase.from("lesson_dialogues").insert(
-            content.dialogue.map((d: any, idx: number) => ({
-              lesson_id: lesson.id, speaker: d.speaker, korean: d.korean, romanization: d.romanization || "", english: d.english, sort_order: idx + 1,
-            }))
-          );
-        }
-        if (content.exercises?.length > 0) {
-          await supabase.from("lesson_exercises").insert(
-            content.exercises.map((e: any, idx: number) => ({
-              lesson_id: lesson.id, question: e.question, options: e.options || [], correct_index: e.correct_index ?? 0, explanation: e.explanation || "", sort_order: idx + 1,
-            }))
-          );
-        }
-        if (content.reading?.length > 0) {
-          await supabase.from("lesson_reading").insert(
-            content.reading.map((r: any, idx: number) => ({
-              lesson_id: lesson.id, korean_text: r.korean_text, english_text: r.english_text || "", sort_order: idx + 1,
-            }))
-          );
-        }
-
-        generated++;
-      } catch (err) {
-        errors.push(`Lesson ${lesson.sort_order}: ${err.message}`);
+      if (!aiRes.ok) {
+        const errText = await aiRes.text();
+        errors.push(`Lesson ${lesson.sort_order}: AI error ${aiRes.status} - ${errText.substring(0, 100)}`);
+        continue;
       }
-    }));
+
+      const aiData = await aiRes.json();
+      const text = aiData.choices?.[0]?.message?.content || "";
+      let content: any;
+      try {
+        content = JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+      } catch {
+        errors.push(`Lesson ${lesson.sort_order}: Failed to parse AI response`);
+        continue;
+      }
+
+      // Insert all content
+      if (content.vocabulary?.length > 0) {
+        await supabase.from("lesson_vocabulary").insert(
+          content.vocabulary.map((v: any, idx: number) => ({
+            lesson_id: lesson.id, korean: v.korean, romanization: v.romanization || "", meaning: v.meaning, sort_order: idx + 1,
+          }))
+        );
+      }
+      if (content.grammar?.length > 0) {
+        await supabase.from("lesson_grammar").insert(
+          content.grammar.map((g: any, idx: number) => ({
+            lesson_id: lesson.id, title: g.title, structure: g.structure || "", explanation: g.explanation || "", examples: g.examples || [], sort_order: idx + 1,
+          }))
+        );
+      }
+      if (content.dialogue?.length > 0) {
+        await supabase.from("lesson_dialogues").insert(
+          content.dialogue.map((d: any, idx: number) => ({
+            lesson_id: lesson.id, speaker: d.speaker, korean: d.korean, romanization: d.romanization || "", english: d.english, sort_order: idx + 1,
+          }))
+        );
+      }
+      if (content.exercises?.length > 0) {
+        await supabase.from("lesson_exercises").insert(
+          content.exercises.map((e: any, idx: number) => ({
+            lesson_id: lesson.id, question: e.question, options: e.options || [], correct_index: e.correct_index ?? 0, explanation: e.explanation || "", sort_order: idx + 1,
+          }))
+        );
+      }
+      if (content.reading?.length > 0) {
+        await supabase.from("lesson_reading").insert(
+          content.reading.map((r: any, idx: number) => ({
+            lesson_id: lesson.id, korean_text: r.korean_text, english_text: r.english_text || "", sort_order: idx + 1,
+          }))
+        );
+      }
+
+      generated++;
+    } catch (err) {
+      errors.push(`Lesson ${lesson.sort_order}: ${err.message}`);
+    }
   }
 
   return new Response(
