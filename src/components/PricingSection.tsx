@@ -191,7 +191,7 @@ const PricingSection = () => {
                     {tierT("tagline") || tierKey}
                   </Badge>
                   {isDiscountedCountry && (
-                    <Badge className="bg-destructive text-destructive-foreground animate-pulse">
+                    <Badge className="bg-emerald-500 text-white animate-pulse">
                       <Sparkles className="h-3 w-3 mr-1" /> Discount!
                     </Badge>
                   )}

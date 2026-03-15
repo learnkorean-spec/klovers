@@ -90,7 +90,7 @@ const GamesPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="pt-20">
+      <main id="main-content" className="pt-20">
         {/* Hero */}
         <section className="relative overflow-hidden py-16 px-4 bg-muted/30">
           <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full translate-x-1/3 -translate-y-1/3" />
@@ -111,7 +111,7 @@ const GamesPage = () => {
               {t("games.subtitle").replace("{count}", String(games.length))}
             </p>
 
-            <div className="flex justify-center gap-4 pt-2">
+            <div className="flex justify-center gap-4 pt-2" aria-hidden="true">
               {["가", "나", "다", "라", "마"].map((ch, i) => (
                 <span key={ch} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-card border border-border shadow-sm text-xl font-bold text-foreground animate-bounce select-none"
                   style={{ animationDelay: `${i * 200}ms`, animationDuration: "2.5s" }}>{ch}</span>
@@ -143,7 +143,7 @@ const GamesPage = () => {
         {/* Game selector */}
         <section className="py-10 px-4">
           <div className="max-w-5xl mx-auto">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
               {games.map((game) => {
                 const isActive = activeGame === game.id;
                 return (

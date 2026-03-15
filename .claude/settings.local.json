@@ -52,7 +52,12 @@
       "Bash(npm install xlsx --save)",
       "Bash(node korean_vocab.mjs)",
       "Bash(wc -l supabase/migrations/20260311*.sql)",
-      "Bash(grep -A 15 \"CREATE TABLE.*lesson_exercises\" supabase/migrations/*.sql)"
+      "Bash(grep -A 15 \"CREATE TABLE.*lesson_exercises\" supabase/migrations/*.sql)",
+      "Read(//c/Users/marku/Clude klovers/NR==232{print \"\"\"\"    </**)",
+      "Bash(mv src/components/Header.tsx.tmp src/components/Header.tsx)",
+      "Bash(for f:*)",
+      "Bash(sed -i 's|<main className=\"\"|<main id=\"\"main-content\"\" className=\"\"|' \"$f\")",
+      "Bash(echo \"patched $f\")"
     ]
   }
 }

@@ -345,7 +345,7 @@ const StudentDashboard = () => {
     return (
       <div className="min-h-screen bg-muted/20">
         <Header />
-        <main className="pt-24 pb-16 px-4">
+        <main id="main-content" className="pt-24 pb-16 px-4">
           <div className="max-w-5xl mx-auto space-y-6">
             <Skeleton className="h-8 w-48" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -367,7 +367,7 @@ const StudentDashboard = () => {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="pt-24 flex items-center justify-center px-4">
+        <main id="main-content" className="pt-24 flex items-center justify-center px-4">
           <div className="text-center space-y-3 max-w-sm">
             <p className="text-destructive font-medium">Failed to load dashboard</p>
             <p className="text-muted-foreground text-sm">{fetchError}</p>
@@ -417,7 +417,7 @@ const StudentDashboard = () => {
   return (
     <div className="min-h-screen bg-muted/20">
       <Header />
-      <main className="pt-24 pb-16 px-4">
+      <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
           <div>

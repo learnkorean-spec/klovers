@@ -15,6 +15,7 @@ import DailyRoutinePathMap from "@/components/DailyRoutinePathMap";
 import { WORLDS } from "@/constants/worlds";
 import { DAILY_ROUTINE_WORLDS } from "@/constants/dailyRoutineWorlds";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/useSEO";
 
 interface Lesson {
   id: number;
@@ -40,23 +41,37 @@ const TextbookPage = () => {
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [viewMode, setViewMode] = useState<"path" | "grid">("path");
   const { userId, progress, league, loading: gamLoading } = useGamification();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
 
+  useSEO({
+    title: isAr ? config.titleAr : config.titleEn,
+    description: `Learn Korean with the ${config.titleEn} on Klovers. Interactive lessons, gamified progress, and vocabulary review.`,
+    canonical: `https://kloversegy.com/textbook/${book}`,
+  });
+
   useEffect(() => {
     const fetchLessons = async () => {
       setLoading(true);
-      const query = supabase
-        .from("textbook_lessons")
-        .select("*")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: true });
-      // Filter by book column (not in generated types yet)
-      const { data } = await (query as any).eq("book", book);
-      setLessons((data as unknown as Lesson[]) || []);
-      setLoading(false);
+      setFetchError(false);
+      try {
+        const query = supabase
+          .from("textbook_lessons")
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
+        // Filter by book column (not in generated types yet)
+        const { data, error } = await (query as any).eq("book", book);
+        if (error) throw error;
+        setLessons((data as unknown as Lesson[]) || []);
+      } catch {
+        setFetchError(true);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchLessons();
   }, [book]);
@@ -67,7 +82,7 @@ const TextbookPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-24 pb-16">
+      <main id="main-content" className="pt-24 pb-16">
         {/* Back to library */}
         <section className="container mx-auto px-4 max-w-4xl mb-4">
           <Link to="/textbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -159,6 +174,15 @@ const TextbookPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : fetchError ? (
+            <div className="text-center py-16 rounded-2xl border border-destructive/20 bg-destructive/5">
+              <p className="text-2xl mb-3">😕</p>
+              <p className="font-semibold text-foreground mb-1">{isAr ? "تعذّر تحميل الدروس" : "Failed to load lessons"}</p>
+              <p className="text-sm text-muted-foreground mb-4">{isAr ? "يرجى التحقق من اتصالك والمحاولة مرة أخرى." : "Please check your connection and try again."}</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                {isAr ? "إعادة المحاولة" : "Retry"}
+              </Button>
             </div>
           ) : viewMode === "path" ? (
             isDailyRoutine ? (

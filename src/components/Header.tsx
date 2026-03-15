@@ -62,10 +62,12 @@ const Header = () => {
   const isActive = (href: string) => location.pathname === href;
 
   return (
+    <>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:shadow-lg">Skip to main content</a>
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/98 backdrop-blur-md shadow-sm" : "bg-background/95 backdrop-blur-sm"} border-b border-border`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
+          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="K-Lovers homepage">
             <img src={kloversLogo} alt="K-Lovers" className="h-9 w-9 rounded-full object-cover" loading="eager" />
             <span className="font-bold text-lg text-foreground">K-Lovers</span>
           </Link>
@@ -165,7 +167,7 @@ const Header = () => {
           <button
             className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
           >
             {isMenuOpen ? <X className="h-5 w-5 text-foreground" /> : <Menu className="h-5 w-5 text-foreground" />}
           </button>
@@ -227,6 +229,7 @@ const Header = () => {
         )}
       </div>
     </header>
+    </>
   );
 };
 
