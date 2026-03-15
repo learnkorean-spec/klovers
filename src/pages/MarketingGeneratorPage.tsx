@@ -282,6 +282,10 @@ export default function MarketingGeneratorPage() {
       cur.setDate(cur.getDate() + 1);
     }
 
+    // Get current user UUID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast({ title: "Not logged in", variant: "destructive" }); setDistributing(false); return; }
+
     // Delete old campaign posts for this campaign name first
     await supabase.from("scheduled_social_posts").delete().eq("course_title", campaignName);
 
@@ -296,7 +300,7 @@ export default function MarketingGeneratorPage() {
         group_id: g.id,
         platforms: ["instagram", "facebook"],
         status: "pending",
-        created_by: "admin",
+        created_by: user.id,
         registration_url: "https://kloversegy.com/enroll",
       };
     });
