@@ -51,7 +51,8 @@
       "Bash(node -e \"require\\(''xlsx''\\); console.log\\(''ok''\\)\")",
       "Bash(npm install xlsx --save)",
       "Bash(node korean_vocab.mjs)",
-      "Bash(wc -l supabase/migrations/20260311*.sql)"
+      "Bash(wc -l supabase/migrations/20260311*.sql)",
+      "Bash(grep -A 15 \"CREATE TABLE.*lesson_exercises\" supabase/migrations/*.sql)"
     ]
   }
 }

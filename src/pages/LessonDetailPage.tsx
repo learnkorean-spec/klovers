@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbul
 import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
+import { useSpeech } from "@/hooks/useSpeech";
 import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
@@ -44,6 +45,7 @@ const LessonDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userId, progress, league, markSectionDone } = useGamification();
+  const { speakKorean, isSpeaking } = useSpeech();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
 
@@ -444,6 +446,20 @@ const LessonDetailPage = () => {
                             )}
                             <p className="text-xl font-bold text-foreground text-center">{v.korean}</p>
                             <p className="text-xs italic text-muted-foreground">{v.romanization}</p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                speakKorean(v.korean);
+                              }}
+                              disabled={isSpeaking}
+                              className="gap-1 text-xs mt-1"
+                              title="Hear pronunciation"
+                            >
+                              <Volume2 className="h-3.5 w-3.5" />
+                              {isAr ? "استمع" : "Hear"}
+                            </Button>
                             <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "اضغط للكشف" : "Tap to reveal"}</p>
                           </div>
                           {/* Back — Meaning */}
@@ -554,7 +570,19 @@ const LessonDetailPage = () => {
                             ? "rounded-tl-sm bg-card border border-border"
                             : "rounded-tr-sm bg-primary/10 border border-primary/20"
                         )}>
-                          <p className="text-xs font-bold text-foreground uppercase mb-1">{d.speaker}</p>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <p className="text-xs font-bold text-foreground uppercase">{d.speaker}</p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => speakKorean(d.korean)}
+                              disabled={isSpeaking}
+                              className="gap-1 text-xs h-6 w-6 p-0 flex-shrink-0"
+                              title="Hear pronunciation"
+                            >
+                              <Volume2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                           <p className="text-foreground font-medium text-lg">{d.korean}</p>
                           {d.romanization && <p className="text-xs italic text-muted-foreground mt-0.5">{d.romanization}</p>}
                           <p className="text-sm text-muted-foreground mt-1.5 border-t border-border/50 pt-1.5">{d.english}</p>
