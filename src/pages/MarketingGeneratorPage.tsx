@@ -274,53 +274,60 @@ export default function MarketingGeneratorPage() {
   const autoDistributeCampaign = async () => {
     if (!campaignName || !campaignStart || !campaignEnd) return;
     setDistributing(true);
-    // Get draft posts (without scheduled_date)
-    const { data: drafts } = await supabase
-      .from("marketing_posts")
-      .select("id, headline")
-      .is("scheduled_date", null)
-      .neq("status", "archived")
-      .order("created_at", { ascending: false });
 
-    if (!drafts?.length) {
-      toast({ title: "No draft posts", description: "Create posts in Creator Hub first." });
+    // Build date slots
+    const dates: string[] = [];
+    const cur = new Date(campaignStart);
+    const end = new Date(campaignEnd);
+    while (cur <= end) { dates.push(cur.toISOString().split("T")[0]); cur.setDate(cur.getDate() + 1); }
+    const slots: { date: string; order: number }[] = [];
+    for (const date of dates) for (let o = 0; o < postsPerDay; o++) slots.push({ date, order: o + 1 });
+
+    // 1. Use existing unscheduled posts first
+    const { data: existingDrafts } = await supabase
+      .from("marketing_posts").select("id, headline")
+      .is("scheduled_date", null).neq("status", "archived")
+      .order("created_at", { ascending: false });
+    let postIds: string[] = (existingDrafts || []).map(p => p.id);
+
+    // 2. Not enough saved posts → auto-generate from loaded groups
+    if (postIds.length < slots.length && groups.length > 0) {
+      const needed = slots.length - postIds.length;
+      const toInsert = Array.from({ length: needed }, (_, i) => {
+        const g = groups[i % groups.length];
+        const adCopy = generateAdCopy(g);
+        const captions = generateCaptions(g);
+        return {
+          group_id: g.id,
+          headline: adCopy.headlines[0] || getLevelLabel(g.level),
+          caption_text: captions.join("\n\n---\n\n"),
+          ad_primary_text: adCopy.primaryTexts.join("\n\n"),
+          description: adCopy.descriptions.join("\n"),
+          status: "draft",
+        };
+      });
+      const { data: inserted } = await supabase.from("marketing_posts").insert(toInsert).select("id");
+      postIds = [...postIds, ...(inserted || []).map(p => p.id)];
+    }
+
+    if (!postIds.length) {
+      toast({ title: "No groups found", description: "Make sure active groups exist in the Auto Generator tab." });
       setDistributing(false);
       return;
     }
 
-    // Generate date range
-    const dates: string[] = [];
-    const cur = new Date(campaignStart);
-    const end = new Date(campaignEnd);
-    while (cur <= end) {
-      dates.push(cur.toISOString().split("T")[0]);
-      cur.setDate(cur.getDate() + 1);
-    }
-
-    // Assign posts round-robin across dates, postsPerDay per day
-    const slots: { date: string; order: number }[] = [];
-    for (const date of dates) {
-      for (let o = 0; o < postsPerDay; o++) slots.push({ date, order: o + 1 });
-    }
-
-    const updates = drafts.slice(0, slots.length).map((post, i) => ({
-      id: post.id,
-      scheduled_date: slots[i].date,
-      post_order: slots[i].order,
-      campaign_name: campaignName,
-      status: "scheduled",
-    }));
-
-    for (const u of updates) {
+    // 3. Schedule posts into slots
+    for (let i = 0; i < Math.min(postIds.length, slots.length); i++) {
       await supabase.from("marketing_posts").update({
-        scheduled_date: u.scheduled_date,
-        post_order: u.post_order,
-        campaign_name: u.campaign_name,
-        status: u.status,
-      }).eq("id", u.id);
+        scheduled_date: slots[i].date,
+        post_order: slots[i].order,
+        campaign_name: campaignName,
+        status: "scheduled",
+      }).eq("id", postIds[i]);
     }
 
-    toast({ title: `✅ Scheduled ${updates.length} posts`, description: `${campaignName} — ${dates.length} days` });
+    const scheduled = Math.min(postIds.length, slots.length);
+    toast({ title: `✅ Scheduled ${scheduled} posts`, description: `${campaignName} — ${dates.length} days, ${postsPerDay}/day` });
     await fetchScheduledPosts();
     setDistributing(false);
   };
