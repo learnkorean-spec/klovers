@@ -13,7 +13,7 @@ import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
-import { LeagueProgressBar, StreakDisplay, BadgeGrid } from "@/components/GamificationUI";
+import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
 import { useGamification } from "@/hooks/useGamification";
 import { AnalyticsSection } from "@/components/AnalyticsSection";
 import { AchievementMilestoneCard } from "@/components/AchievementMilestoneCard";
@@ -21,7 +21,7 @@ import { LearningGoalsCard } from "@/components/LearningGoalsCard";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { DailyBonusCard } from "@/components/DailyBonusCard";
-import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Star, Brain } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -341,11 +341,6 @@ const StudentDashboard = () => {
     if (key === "Full name") setUserName(_value);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
-
   if (gateLoading || resetBlocked || loading) {
     return (
       <div className="min-h-screen bg-muted/20">
@@ -403,10 +398,12 @@ const StudentDashboard = () => {
 
   const todayStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
+  const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
+
   const quickStats = [
     { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100" },
-    { label: "Day Streak", value: gamification.streak.current_streak, icon: FlameIcon, color: "text-orange-600 bg-orange-100" },
-    { label: "Badges", value: gamification.badges.length, icon: Star, color: "text-purple-600 bg-purple-100" },
+    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100" },
+    { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100" },
     { label: "League", value: league?.emoji ? `${league.emoji} ${league.name.split(" ")[0]}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100" },
   ];
 
@@ -423,19 +420,9 @@ const StudentDashboard = () => {
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{todayStr}</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/schedule")} className="hidden sm:flex">
-                <CalendarDays className="h-4 w-4 mr-2" /> Schedule
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" /> Logout
-              </Button>
-            </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{todayStr}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
           </div>
 
           {/* ── Quick Stats (always visible) ── */}
@@ -529,7 +516,14 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    <StreakDisplay currentStreak={gamification.streak.current_streak} longestStreak={gamification.streak.longest_streak} />
+                    {gamification.badges.length > 0 ? (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
+                        <BadgeGrid earnedBadges={gamification.badges} />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Complete lessons and games to earn badges.</p>
+                    )}
                   </CardContent>
                 </Card>
                 <AchievementMilestoneCard />
@@ -561,12 +555,13 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    <StreakDisplay currentStreak={gamification.streak.current_streak} longestStreak={gamification.streak.longest_streak} />
-                    {gamification.badges.length > 0 && (
+                    {gamification.badges.length > 0 ? (
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges</p>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />
                       </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Complete lessons and games to earn badges.</p>
                     )}
                   </CardContent>
                 </Card>
@@ -666,17 +661,17 @@ const StudentDashboard = () => {
                 <LearningGoalsCard />
               </div>
 
-              {/* ── Streak Calendar (full width) ── */}
-              <StreakCalendar />
-
-              {/* ── Leaderboard (full width) ── */}
-              <LeaderboardCard />
-
               {/* ── Analytics (full width) ── */}
               <div>
                 <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
                 <AnalyticsSection />
               </div>
+
+              {/* ── Streak Calendar (full width) ── */}
+              <StreakCalendar />
+
+              {/* ── Leaderboard (full width) ── */}
+              <LeaderboardCard />
 
               {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />
