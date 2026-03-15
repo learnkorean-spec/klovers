@@ -15,6 +15,7 @@ import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, StreakDisplay, BadgeGrid } from "@/components/GamificationUI";
 import { useGamification } from "@/hooks/useGamification";
 import { AnalyticsSection } from "@/components/AnalyticsSection";
+import { AchievementMilestoneCard } from "@/components/AchievementMilestoneCard";
 import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -513,6 +514,11 @@ const StudentDashboard = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Achievement Milestones */}
+              <div className="col-span-full">
+                <AchievementMilestoneCard />
+              </div>
 
               {/* Daily Quiz CTA */}
               <Card className="border-yellow-500/30 bg-yellow-500/5">
