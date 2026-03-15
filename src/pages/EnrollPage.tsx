@@ -114,7 +114,7 @@ const EnrollPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="pt-24 pb-16 flex items-center justify-center px-4">
+      <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
         <Card className="w-full max-w-lg">
           <CardHeader>
             <CardTitle className="text-2xl text-center">Enroll Now (Manual Payment)</CardTitle>

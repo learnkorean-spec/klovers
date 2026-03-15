@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3 } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -113,6 +113,7 @@ const AdminDashboard = () => {
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
   const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -527,6 +528,14 @@ const AdminDashboard = () => {
     { value: "egypt", label: `Egypt Manual (${egyptCount})` },
   ];
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchAll();
+    setRefreshing(false);
+  };
+
+  const TAB_CLS = "shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-2";
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-muted/30">
@@ -538,6 +547,10 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">Manage students, enrollments & content</p>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+                {refreshing ? "Refreshing…" : "Refresh"}
+              </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/admin/marketing")}><Sparkles className="h-4 w-4 mr-2" /> Marketing</Button>
               <Button variant="outline" size="sm" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
             </div>
@@ -570,38 +583,37 @@ const AdminDashboard = () => {
 
           <Tabs value={adminTab} onValueChange={setAdminTab}>
             <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
-              <TabsTrigger value="students" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
-                Users ({overviewRows.length})
+              <TabsTrigger value="students" className={TAB_CLS}>
+                <Users className="h-4 w-4" /> Users ({overviewRows.length})
               </TabsTrigger>
-              <TabsTrigger value="enrollments" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
-                Enrollments
+              <TabsTrigger value="enrollments" className={TAB_CLS}>
+                <FileCheck className="h-4 w-4" /> Enrollments
                 {actionableEnrollments > 0 && (
                   <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{actionableEnrollments}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="leads" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Our Students</TabsTrigger>
-              <TabsTrigger value="manage" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Manage</TabsTrigger>
-              <TabsTrigger value="group-attendance" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+              <TabsTrigger value="leads" className={TAB_CLS}>CRM Leads</TabsTrigger>
+              <TabsTrigger value="manage" className={TAB_CLS}>Manage</TabsTrigger>
+              <TabsTrigger value="group-attendance" className={TAB_CLS}>
                 Groups
                 {pendingAttendance > 0 && (
                   <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{pendingAttendance}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="group-matcher" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Matcher</TabsTrigger>
-              <TabsTrigger value="notifications" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+              <TabsTrigger value="group-matcher" className={TAB_CLS}>Matcher</TabsTrigger>
+              <TabsTrigger value="notifications" className={TAB_CLS}>
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
-              
-              <TabsTrigger value="scheduling" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Scheduling</TabsTrigger>
-              <TabsTrigger value="blog" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Blog</TabsTrigger>
-              <TabsTrigger value="campaigns" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+              <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
+              <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
+              <TabsTrigger value="campaigns" className={TAB_CLS}>
                 <Mail className="h-4 w-4" /> Campaigns
               </TabsTrigger>
-              <TabsTrigger value="placement-tests" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">Placement Tests</TabsTrigger>
-              <TabsTrigger value="sales" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+              <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
+              <TabsTrigger value="sales" className={TAB_CLS}>
                 <BarChart3 className="h-4 w-4" /> Sales
               </TabsTrigger>
-              <TabsTrigger value="settings" className="shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
+              <TabsTrigger value="settings" className={TAB_CLS}>
                 <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>
             </TabsList>
@@ -665,7 +677,11 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
               {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading...</p>
+                <div className="space-y-2 py-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                  ))}
+                </div>
               ) : filteredUsers.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">No students found.</p>
               ) : (
@@ -793,7 +809,13 @@ const AdminDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-              {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
+              {loading ? (
+                <div className="space-y-2 py-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : (
                 <Tabs defaultValue="under_review">
                   <TabsList className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3 h-auto bg-transparent p-0 w-full">
                     {[
@@ -803,7 +825,7 @@ const AdminDashboard = () => {
                       { value: "approved", label: "Approved", count: enrollments.filter(e => e.approval_status === "APPROVED").length },
                       { value: "rejected", label: "Rejected", count: enrollments.filter(e => e.approval_status === "REJECTED").length },
                     ].map(t => (
-                      <TabsTrigger key={t.value} value={t.value} className="shrink-0 rounded-full px-4 py-2 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background">
+                      <TabsTrigger key={t.value} value={t.value} className="shrink-0 rounded-full px-4 py-2 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                         {t.label} ({t.count})
                       </TabsTrigger>
                     ))}

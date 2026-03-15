@@ -577,7 +577,7 @@ const EnrollNowPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-2xl">
+      <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-2xl">
         {/* Progress */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {stepLabels.map((label, i) => (

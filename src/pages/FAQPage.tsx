@@ -68,7 +68,7 @@ const FAQPage = () => {
       {typeof document !== "undefined" && <FAQSchemaScript schema={faqSchema} />}
 
       <Header />
-      <main className="pt-16">
+      <main id="main-content" className="pt-16">
         <section className="py-20 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">

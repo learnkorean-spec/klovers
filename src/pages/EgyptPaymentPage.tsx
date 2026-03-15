@@ -438,7 +438,7 @@ const EgyptPaymentPage = () => {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="pt-24 flex items-center justify-center">
+        <main id="main-content" className="pt-24 flex items-center justify-center">
           <p className="text-muted-foreground">Loading…</p>
         </main>
       </div>
@@ -450,7 +450,7 @@ const EgyptPaymentPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+      <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
         <OrderSummary enrollment={enrollment} />
 
         {enrollment.approval_status === "PENDING_PAYMENT" && (

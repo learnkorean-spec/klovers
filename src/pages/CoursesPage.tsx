@@ -17,7 +17,7 @@ const CoursesPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="pt-16">
+      <main id="main-content" className="pt-16">
         <CoursesSection />
 
         <section className="py-16 bg-card">

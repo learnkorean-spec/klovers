@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import SchedulePicker from "@/components/SchedulePicker";
 import { ArrowLeft, CalendarDays, Clock, Users, AlertTriangle, CheckCircle2, Loader2, RefreshCw, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/useSEO";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -248,7 +249,7 @@ const MySchedulePage = () => {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="pt-24 flex items-center justify-center">
+        <main id="main-content" className="pt-24 flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </main>
       </div>
@@ -258,7 +259,7 @@ const MySchedulePage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="pt-24 pb-16 px-4">
+      <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>

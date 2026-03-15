@@ -13,6 +13,7 @@ import { WORLDS, getWorldProgress } from "@/constants/worlds";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSEO } from "@/hooks/useSEO";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -52,7 +53,7 @@ const TextbookProgressPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
+        <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <Trophy className="h-16 w-16 text-primary mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {isAr ? "تقدمك في التعلم" : "Your Learning Progress"}
@@ -73,7 +74,7 @@ const TextbookProgressPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
+        <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
           <Skeleton className="h-48 w-full rounded-xl mb-6" />
           <Skeleton className="h-32 w-full rounded-xl mb-6" />
           <Skeleton className="h-64 w-full rounded-xl" />
@@ -87,7 +88,7 @@ const TextbookProgressPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-24 pb-16 container mx-auto px-4 max-w-4xl">
+      <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-4xl">
         <Link to="/textbook" className="text-sm text-muted-foreground hover:text-foreground mb-4 inline-block">
           ← {isAr ? "العودة للكتاب" : "Back to Textbook"}
         </Link>

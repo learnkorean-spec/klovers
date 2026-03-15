@@ -213,7 +213,7 @@ const DailyQuizPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading your daily quiz...</p>
@@ -230,7 +230,7 @@ const DailyQuizPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
@@ -263,7 +263,7 @@ const DailyQuizPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
@@ -290,7 +290,7 @@ const DailyQuizPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
@@ -327,7 +327,7 @@ const DailyQuizPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
               <div
@@ -397,7 +397,7 @@ const DailyQuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 px-4 py-8">
+      <main id="main-content" className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Progress */}
           <div className="mb-6">

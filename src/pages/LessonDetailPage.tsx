@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +51,12 @@ const LessonDetailPage = () => {
   const isAr = language === "ar";
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const lessonTitle = lesson ? (isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en) : `Lesson ${lessonNum}`;
+  useSEO({
+    title: `${lessonTitle} | Korean Textbook`,
+    description: lesson?.description || `Learn Korean in lesson ${lessonNum} on Klovers. Vocabulary, grammar, dialogues and exercises.`,
+    canonical: `https://kloversegy.com/textbook/${bookSlug}/${lessonNum}`,
+  });
   const [totalLessons, setTotalLessons] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -178,7 +185,7 @@ const LessonDetailPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
+        <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
           <Skeleton className="h-8 w-48 mb-4" />
           <Skeleton className="h-12 w-96 mb-2" />
           <Skeleton className="h-6 w-32 mb-8" />
@@ -195,7 +202,7 @@ const LessonDetailPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
+        <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
           <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
@@ -265,7 +272,7 @@ const LessonDetailPage = () => {
         />
       )}
 
-      <main className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
+      <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl">
         {/* Back link with world context */}
         <div className="flex items-center gap-2 mb-6">
      <Link to={`/textbook/${bookSlug}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

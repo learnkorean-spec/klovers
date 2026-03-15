@@ -146,7 +146,7 @@ const ResubmitSchedulePage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+        <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -160,7 +160,7 @@ const ResubmitSchedulePage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+        <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
           <Card>
             <CardContent className="pt-6 text-center space-y-4">
               <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
@@ -177,7 +177,7 @@ const ResubmitSchedulePage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+        <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
           <Card>
             <CardContent className="pt-6 text-center space-y-4">
               <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
@@ -194,7 +194,7 @@ const ResubmitSchedulePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
+      <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">

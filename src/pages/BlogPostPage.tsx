@@ -212,7 +212,7 @@ const BlogPostPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16">
+        <main id="main-content" className="pt-24 pb-16">
           <div className="container mx-auto px-4 max-w-3xl space-y-4">
             <Skeleton className="h-5 w-48" />
             <Skeleton className="h-10 w-2/3" />
@@ -236,7 +236,7 @@ const BlogPostPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-24 pb-16 text-center px-4">
+        <main id="main-content" className="pt-24 pb-16 text-center px-4">
           <h1 className="text-2xl font-bold text-foreground mb-4">Article not found</h1>
           <Button asChild variant="outline">
             <Link to="/blog">
@@ -252,7 +252,7 @@ const BlogPostPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-24 pb-20">
+      <main id="main-content" className="pt-24 pb-20">
         <article
           className="container mx-auto px-4 max-w-[720px]"
           dir={isRtl ? "rtl" : "ltr"}

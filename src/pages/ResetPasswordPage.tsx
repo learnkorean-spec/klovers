@@ -83,7 +83,7 @@ const ResetPasswordPage = () => {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="pt-24 pb-16 flex items-center justify-center px-4">
+        <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">{t("auth.linkExpired")}</CardTitle>
@@ -105,7 +105,7 @@ const ResetPasswordPage = () => {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="pt-24 pb-16 flex items-center justify-center px-4">
+        <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground">{t("auth.verifyingLink")}</p>
@@ -119,7 +119,7 @@ const ResetPasswordPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="pt-24 pb-16 flex items-center justify-center px-4">
+      <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.setNewPassword")}</CardTitle>

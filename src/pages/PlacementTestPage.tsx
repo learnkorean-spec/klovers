@@ -86,7 +86,7 @@ const PlacementTestPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -134,7 +134,7 @@ const PlacementTestPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
+      <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Placement Test</h1>
           <p className="text-muted-foreground">Answer all 40 questions to find your recommended Korean level.</p>

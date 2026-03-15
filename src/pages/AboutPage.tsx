@@ -16,7 +16,7 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="pt-16">
+      <main id="main-content" className="pt-16">
         <section className="py-20 bg-background">
           <div className="container mx-auto px-4">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground text-center mb-16">

@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
+import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -163,6 +164,7 @@ const ProfileCard = ({
 };
 
 const StudentDashboard = () => {
+  useSEO({ title: "My Dashboard", description: "Track your Korean learning progress, schedule, and achievements on Klovers.", canonical: "https://kloversegy.com/dashboard" });
   const { loading: gateLoading, resetBlocked } = useResetGate();
   const { progress: gamification, league, loading: gamLoading } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
