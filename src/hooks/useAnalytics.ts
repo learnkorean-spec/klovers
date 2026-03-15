@@ -125,19 +125,21 @@ export function useAnalytics(): AnalyticsData {
         .select("interval_days")
         .eq("user_id", user.id);
 
-      if (reviewData) {
+      if (reviewData && reviewData.length > 0) {
         let learning = 0;
         let reviewing = 0;
         let mastered = 0;
 
         reviewData.forEach((record: any) => {
           const interval = record.interval_days || 1;
-          if (interval <= 3) learning++;
-          else if (interval <= 21) reviewing++;
+          if (interval <= 1) learning++;
+          else if (interval <= 7) reviewing++;
           else mastered++;
         });
 
         setVocabMastery({ learning, reviewing, mastered });
+      } else {
+        setVocabMastery({ learning: 0, reviewing: 0, mastered: 0 });
       }
 
       // Get current streak
@@ -145,7 +147,7 @@ export function useAnalytics(): AnalyticsData {
         .from("student_streaks")
         .select("current_streak")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (streakData) {
         setCurrentStreak(streakData.current_streak || 0);
