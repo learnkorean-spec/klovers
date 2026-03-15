@@ -68,18 +68,18 @@ const DailyQuizPage = () => {
 
     setLoading(true);
 
-    // Check if quiz already done today
+    // Check if quiz already done today (use maybeSingle to avoid error on no rows)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const { data: existingQuiz } = await supabase
       .from("student_xp")
-      .select("*")
+      .select("id")
       .eq("user_id", user.id)
       .eq("activity_type", "daily_quiz")
       .gte("created_at", today.toISOString())
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (existingQuiz) {
       setQuizAlreadyDone(true);
@@ -87,43 +87,51 @@ const DailyQuizPage = () => {
       return;
     }
 
-    // Get completed lessons for this user
+    // Try to get exercises from completed lessons first
     const { data: completedLessons } = await supabase
       .from("student_lesson_progress")
       .select("lesson_id")
       .eq("user_id", user.id)
       .eq("vocab_done", true);
 
-    if (!completedLessons || completedLessons.length === 0) {
-      toast({
-        title: "No lessons completed",
-        description: "Complete some lessons first to unlock the daily quiz!",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
+    let exerciseQuery = supabase.from("lesson_exercises").select("*");
+
+    // If user has completed lessons, prefer those; otherwise use all available
+    if (completedLessons && completedLessons.length > 0) {
+      const lessonIds = completedLessons.map((l) => l.lesson_id);
+      exerciseQuery = exerciseQuery.in("lesson_id", lessonIds);
     }
 
-    const lessonIds = completedLessons.map((l) => l.lesson_id);
+    const { data: allExercises } = await exerciseQuery;
 
-    // Get 10 random exercises from completed lessons
-    const { data: allExercises } = await supabase
-      .from("lesson_exercises")
-      .select("*")
-      .in("lesson_id", lessonIds);
-
-    if (!allExercises || allExercises.length === 0) {
-      toast({
-        title: "No exercises found",
-        description: "No exercises available for your completed lessons.",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
+    // Fallback: if still no exercises, fetch from all lessons
+    let finalExercises = allExercises;
+    if (!finalExercises || finalExercises.length === 0) {
+      const { data: fallbackExercises } = await supabase
+        .from("lesson_exercises")
+        .select("*")
+        .limit(50);
+      finalExercises = fallbackExercises;
     }
 
-    // Shuffle and take first 10
-    const shuffled = allExercises.sort(() => Math.random() - 0.5).slice(0, 10);
+    if (!finalExercises || finalExercises.length === 0) {
+      setLoading(false);
+      return; // Show empty state in render
+    }
+
+    // Shuffle and take first 10, normalise options from Json → string[]
+    const shuffled = finalExercises
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 10)
+      .map((ex: any) => ({
+        ...ex,
+        options: Array.isArray(ex.options)
+          ? ex.options.map(String)
+          : typeof ex.options === "object" && ex.options !== null
+          ? Object.values(ex.options).map(String)
+          : [],
+      }));
+
     setExercises(shuffled as ExerciseItem[]);
     setLoading(false);
   };
@@ -243,6 +251,34 @@ const DailyQuizPage = () => {
                   <a href="/review">Start Review Session</a>
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // No exercises available at all
+  if (!loading && exercises.length === 0 && !quizAlreadyDone) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4 py-16">
+          <Card className="w-full max-w-md text-center">
+            <CardHeader>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+                <Zap className="h-8 w-8 text-yellow-600" />
+              </div>
+              <CardTitle className="text-2xl">Start Learning First!</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                The Daily Quiz unlocks once your lessons have exercises. Complete your first lesson to get started!
+              </p>
+              <Button asChild className="w-full">
+                <a href="/dashboard">Go to Dashboard</a>
+              </Button>
             </CardContent>
           </Card>
         </main>

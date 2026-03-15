@@ -17,6 +17,9 @@ import { useGamification } from "@/hooks/useGamification";
 import { AnalyticsSection } from "@/components/AnalyticsSection";
 import { AchievementMilestoneCard } from "@/components/AchievementMilestoneCard";
 import { LearningGoalsCard } from "@/components/LearningGoalsCard";
+import { LeaderboardCard } from "@/components/LeaderboardCard";
+import { StreakCalendar } from "@/components/StreakCalendar";
+import { DailyBonusCard } from "@/components/DailyBonusCard";
 import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -496,6 +499,11 @@ const StudentDashboard = () => {
               {/* Registration Checklist */}
               <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
 
+              {/* Daily Login Bonus */}
+              <div className="col-span-full">
+                <DailyBonusCard />
+              </div>
+
               {/* League & XP Progress */}
               <Card>
                 <CardHeader className="pb-3">
@@ -569,6 +577,16 @@ const StudentDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Streak Calendar */}
+              <div className="col-span-full">
+                <StreakCalendar />
+              </div>
+
+              {/* Leaderboard */}
+              <div className="col-span-full">
+                <LeaderboardCard />
+              </div>
 
               {/* Analytics Section */}
               <div className="col-span-full">
