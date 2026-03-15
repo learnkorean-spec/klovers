@@ -42,10 +42,13 @@ export function LearningGoalsCard() {
   const handleCreateGoal = async () => {
     if (!newGoal.name.trim() || !newGoal.value) return;
 
+    const value = parseInt(newGoal.value, 10);
+    if (isNaN(value) || value <= 0) return;
+
     const success = await createGoal(
       newGoal.type,
       newGoal.name,
-      parseInt(newGoal.value),
+      value,
       newGoal.period
     );
 
