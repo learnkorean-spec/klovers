@@ -41,7 +41,7 @@ const DailyQuizPage = () => {
   });
 
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { awardXp } = useGamification();
   const { toast } = useToast();
 
@@ -56,12 +56,13 @@ const DailyQuizPage = () => {
   const [quizAlreadyDone, setQuizAlreadyDone] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to resolve before acting
     if (!user) {
-      navigate("/");
+      navigate("/login?redirect=/daily-quiz");
       return;
     }
     fetchDailyQuiz();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchDailyQuiz = async () => {
     if (!user) return;
