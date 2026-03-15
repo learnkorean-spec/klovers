@@ -21,6 +21,7 @@ export const XP_VALUES = {
   bonus: 25,
   streak_bonus: 5,
   game_complete: 5,  // per correct answer in games
+  review: 5,         // spaced repetition review
 } as const;
 
 export const BADGES = [

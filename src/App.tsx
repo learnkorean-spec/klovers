@@ -39,6 +39,7 @@ import TextbookHubPage from "./pages/TextbookHubPage";
 import TextbookPage from "./pages/TextbookPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
 import TextbookProgressPage from "./pages/TextbookProgressPage";
+import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,6 +100,7 @@ const App = () => (
               <Route path="/games" element={<AuthProtectedRoute><GamesPage /></AuthProtectedRoute>} />
               <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
               <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
+              <Route path="/review" element={<AuthProtectedRoute><VocabularyReviewPage /></AuthProtectedRoute>} />
               <Route path="/textbook/:bookId" element={<AuthProtectedRoute><TextbookPage /></AuthProtectedRoute>} />
               <Route path="/textbook/:bookId/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
