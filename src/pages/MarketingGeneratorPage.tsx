@@ -612,8 +612,8 @@ export default function MarketingGeneratorPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-lg font-bold text-foreground">Marketing Generator</h1>
-                <p className="text-xs text-muted-foreground">Auto-generate social posts, ad copy & AI images</p>
+                <h1 className="text-lg font-bold text-foreground">Marketing</h1>
+                <p className="text-xs text-muted-foreground">Campaign calendar, post generator & creative studio</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -624,7 +624,7 @@ export default function MarketingGeneratorPage() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs text-sm">
-                  <p>Use "Generate All" for one-click bulk content + images. Expand cards for details. Grid preview shows how posts look side by side.</p>
+                  <p>Start with Campaign Calendar to plan your schedule, then use Auto Generator to bulk-create posts, or Creator Hub for custom designs.</p>
                 </TooltipContent>
               </Tooltip>
               <Button variant="outline" size="sm" onClick={fetchGroups}>
@@ -635,11 +635,11 @@ export default function MarketingGeneratorPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
-          <Tabs defaultValue="generator" className="w-full">
+          <Tabs defaultValue="calendar" className="w-full">
             <TabsList className="mb-6">
+              <TabsTrigger value="calendar"><CalendarDays className="h-4 w-4 mr-1.5" /> Campaign Calendar</TabsTrigger>
               <TabsTrigger value="generator"><Sparkles className="h-4 w-4 mr-1.5" /> Auto Generator</TabsTrigger>
               <TabsTrigger value="creator"><Palette className="h-4 w-4 mr-1.5" /> Creator Hub</TabsTrigger>
-              <TabsTrigger value="calendar"><CalendarDays className="h-4 w-4 mr-1.5" /> Campaign Calendar</TabsTrigger>
               <TabsTrigger value="archive">📁 Archive</TabsTrigger>
             </TabsList>
 
