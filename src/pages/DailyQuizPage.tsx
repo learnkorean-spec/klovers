@@ -57,12 +57,9 @@ const DailyQuizPage = () => {
 
   useEffect(() => {
     if (authLoading) return; // Wait for auth to resolve before acting
-    if (!user) {
-      navigate("/login?redirect=/daily-quiz");
-      return;
-    }
+    if (!user) return;       // AuthProtectedRoute already handles redirect to login
     fetchDailyQuiz();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading]);
 
   const fetchDailyQuiz = async () => {
     if (!user) return;
@@ -211,9 +208,8 @@ const DailyQuizPage = () => {
     setSubmitting(false);
   };
 
-  if (!user) return null;
-
-  if (loading) {
+  // Show spinner while auth OR quiz data is loading
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -227,6 +223,8 @@ const DailyQuizPage = () => {
       </div>
     );
   }
+
+  if (!user) return null;
 
   if (quizAlreadyDone) {
     return (
@@ -390,7 +388,11 @@ const DailyQuizPage = () => {
     );
   }
 
-  if (!currentExercise) return null;
+  if (!currentExercise) {
+    // Safety fallback — exercises exist but index is out of range
+    setCurrentIndex(0);
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
