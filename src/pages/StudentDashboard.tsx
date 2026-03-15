@@ -14,6 +14,7 @@ import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, StreakDisplay, BadgeGrid } from "@/components/GamificationUI";
 import { useGamification } from "@/hooks/useGamification";
+import { AnalyticsSection } from "@/components/AnalyticsSection";
 import { LogOut, AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarDays, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -556,6 +557,12 @@ const StudentDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Analytics Section */}
+              <div className="col-span-full">
+                <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
+                <AnalyticsSection />
+              </div>
 
               {/* Attendance Request */}
               <StudentAttendanceRequest userId={userId} />
