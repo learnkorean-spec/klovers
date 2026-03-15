@@ -55,6 +55,21 @@ const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
+// ─── Canvas Helpers ───
+function rRect(ctx: CanvasRenderingContext2D, x: number, y: number, rw: number, rh: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + rw - r, y);
+  ctx.quadraticCurveTo(x + rw, y, x + rw, y + r);
+  ctx.lineTo(x + rw, y + rh - r);
+  ctx.quadraticCurveTo(x + rw, y + rh, x + rw - r, y + rh);
+  ctx.lineTo(x + r, y + rh);
+  ctx.quadraticCurveTo(x, y + rh, x, y + rh - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 // ─── Canvas Renderer ───
 function renderPost(
   canvas: HTMLCanvasElement,
@@ -70,85 +85,265 @@ function renderPost(
   const c = THEME_COLORS[theme];
   const w = canvas.width;
   const h = canvas.height;
+  const isPortrait = h > w;
+  const isDark = template === "neon" || template === "dark";
 
+  ctx.clearRect(0, 0, w, h);
+
+  // ─── PHOTO SPLIT LAYOUT ───────────────────────────────────
   if (bgImage) {
-    ctx.drawImage(bgImage, 0, 0, w, h);
-    ctx.fillStyle = `${c.bg}cc`;
-    ctx.fillRect(0, 0, w, h);
-  } else {
-    if (template === "gradient") {
-      const grad = ctx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, c.bg);
-      grad.addColorStop(1, c.accent);
-      ctx.fillStyle = grad;
-    } else if (template === "neon") {
-      ctx.fillStyle = "#0a0a0a";
-    } else if (template === "dark") {
+    if (isPortrait) {
+      // Portrait: photo top 44%, yellow text zone bottom 56%
+      const splitY = h * 0.44;
+      const slant = w * 0.07;
+
+      // Clip & draw photo in top zone
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(w, 0);
+      ctx.lineTo(w, splitY + slant); ctx.lineTo(0, splitY);
+      ctx.closePath(); ctx.clip();
+      const pR = bgImage.width / bgImage.height;
+      let pw = w, ph = w / pR;
+      if (ph < splitY + slant) { ph = splitY + slant; pw = ph * pR; }
+      const px = (w - pw) / 2;
+      ctx.drawImage(bgImage, px, 0, pw, ph);
+      const fadeGrad = ctx.createLinearGradient(0, splitY * 0.5, 0, splitY + slant);
+      fadeGrad.addColorStop(0, "rgba(0,0,0,0)");
+      fadeGrad.addColorStop(1, "rgba(0,0,0,0.45)");
+      ctx.fillStyle = fadeGrad; ctx.fill();
+      ctx.restore();
+
+      // Yellow bottom zone
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, splitY); ctx.lineTo(w, splitY + slant);
+      ctx.lineTo(w, h); ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fillStyle = c.bg; ctx.fill();
+      ctx.restore();
+
+      // Black diagonal accent strip
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, splitY - 5 * scale); ctx.lineTo(w, splitY + slant - 5 * scale);
+      ctx.lineTo(w, splitY + slant); ctx.lineTo(0, splitY);
+      ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
+      ctx.restore();
+
+      // Text zone
+      const tLeft = 40 * scale;
+      const tTop = splitY + slant + 22 * scale;
+      const tW = w - 80 * scale;
+
       ctx.fillStyle = "#1a1a1a";
+      ctx.font = `600 ${11 * scale}px 'Inter', sans-serif`;
+      ctx.fillText("KOREAN COURSE", tLeft, tTop + 14 * scale);
+      ctx.fillRect(tLeft, tTop + 20 * scale, 44 * scale, 2.5 * scale);
+
+      const mSize = Math.min(66 * scale, tW * 0.17);
+      ctx.font = `800 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+      ctx.fillStyle = "#1a1a1a";
+      wrapText(ctx, post.mainText, tLeft, tTop + 46 * scale, tW, mSize * 1.15);
+
+      if (post.subtitle) {
+        const sSize = mSize * 0.44;
+        ctx.font = `${sSize}px 'Inter', sans-serif`;
+        ctx.fillStyle = "#444";
+        wrapText(ctx, post.subtitle, tLeft, tTop + mSize * 2.3 + 46 * scale, tW, sSize * 1.4);
+      }
+
+      // CTA button
+      const ctaY = h - 62 * scale;
+      ctx.fillStyle = "#1a1a1a";
+      rRect(ctx, tLeft, ctaY, 154 * scale, 36 * scale, 18 * scale);
+      ctx.fill();
+      ctx.font = `bold ${12 * scale}px 'Inter', sans-serif`;
+      ctx.fillStyle = "#FFFF00"; ctx.textAlign = "center";
+      ctx.fillText("Register Now →", tLeft + 77 * scale, ctaY + 23 * scale);
+      ctx.textAlign = "start";
+
+      // Hashtags
+      if (post.extraText) {
+        ctx.fillStyle = "#1a1a1a88";
+        ctx.font = `${10 * scale}px 'Inter', sans-serif`;
+        ctx.fillText(post.extraText, tLeft, h - 20 * scale);
+      }
+
     } else {
-      ctx.fillStyle = c.bg;
+      // Landscape/Square: photo left 47%, yellow right 53%
+      const splitX = w * 0.47;
+      const slant = h * 0.05;
+
+      // Clip & draw photo on left
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(splitX + slant, 0);
+      ctx.lineTo(splitX, h); ctx.lineTo(0, h);
+      ctx.closePath(); ctx.clip();
+      const pR = bgImage.width / bgImage.height;
+      let ph = h, pw = h * pR;
+      if (pw < splitX + slant) { pw = splitX + slant; ph = pw / pR; }
+      ctx.drawImage(bgImage, 0, (h - ph) / 2, pw, ph);
+      ctx.restore();
+
+      // Black diagonal separator
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(splitX - 4 * scale, 0); ctx.lineTo(splitX + slant - 4 * scale, h);
+      ctx.lineTo(splitX + slant, h); ctx.lineTo(splitX, 0);
+      ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
+      ctx.restore();
+
+      // Yellow right zone
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(splitX, 0); ctx.lineTo(w, 0);
+      ctx.lineTo(w, h); ctx.lineTo(splitX + slant, h);
+      ctx.closePath(); ctx.fillStyle = c.bg; ctx.fill();
+      ctx.restore();
+
+      // Text zone
+      const tLeft = splitX + slant + 22 * scale;
+      const tW = w - tLeft - 22 * scale;
+      const tTop = h * 0.14;
+
+      ctx.fillStyle = "#1a1a1a";
+      ctx.font = `600 ${10 * scale}px 'Inter', sans-serif`;
+      ctx.fillText("KOREAN COURSE", tLeft, tTop);
+      ctx.fillRect(tLeft, tTop + 6 * scale, 40 * scale, 2 * scale);
+
+      const mSize = Math.min(50 * scale, tW * 0.18);
+      ctx.font = `800 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+      ctx.fillStyle = "#1a1a1a";
+      wrapText(ctx, post.mainText, tLeft, tTop + 28 * scale, tW, mSize * 1.2);
+
+      if (post.subtitle) {
+        const sSize = mSize * 0.44;
+        ctx.font = `${sSize}px 'Inter', sans-serif`;
+        ctx.fillStyle = "#444";
+        wrapText(ctx, post.subtitle, tLeft, h * 0.6, tW, sSize * 1.4);
+      }
+
+      // K logo + KLOVERS
+      const logoY = h - 34 * scale;
+      ctx.fillStyle = "#1a1a1a";
+      ctx.beginPath();
+      ctx.arc(tLeft + 14 * scale, logoY, 13 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = `bold ${13 * scale}px 'Inter', sans-serif`;
+      ctx.fillStyle = "#FFFF00"; ctx.textAlign = "center";
+      ctx.fillText("K", tLeft + 14 * scale, logoY + 4 * scale);
+      ctx.textAlign = "start";
+      ctx.fillStyle = "#1a1a1a";
+      ctx.font = `bold ${10 * scale}px 'Inter', sans-serif`;
+      ctx.fillText("KLOVERS", tLeft + 34 * scale, logoY + 4 * scale);
     }
-    ctx.fillRect(0, 0, w, h);
+    return;
   }
+
+  // ─── NO-PHOTO LAYOUTS ─────────────────────────────────────
+  const isBrand = !isDark && template !== "minimal";
+
+  // Background fill
+  if (template === "gradient") {
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, c.bg); grad.addColorStop(1, c.accent);
+    ctx.fillStyle = grad;
+  } else if (template === "neon") {
+    ctx.fillStyle = "#0a0a0a";
+  } else if (template === "dark") {
+    ctx.fillStyle = "#1a1a1a";
+  } else {
+    ctx.fillStyle = c.bg;
+  }
+  ctx.fillRect(0, 0, w, h);
+
+  // Diagonal triangle accent (bottom-right)
+  if (isBrand) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(w * 0.52, h); ctx.lineTo(w, h * 0.42); ctx.lineTo(w, h);
+    ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
+    ctx.restore();
+  }
+
+  // Korean 한 watermark
+  if (isBrand) {
+    ctx.save();
+    ctx.font = `bold ${h * 0.58}px serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.065)";
+    ctx.textAlign = "right";
+    ctx.fillText("한", w - 18 * scale, h * 0.82);
+    ctx.textAlign = "start";
+    ctx.restore();
+  }
+
+  // Left vertical accent bar
+  ctx.fillStyle = isDark ? c.accent : "#1a1a1a";
+  ctx.fillRect(38 * scale, 38 * scale, 5 * scale, h * 0.2);
 
   if (template === "minimal") {
-    ctx.strokeStyle = c.text;
-    ctx.lineWidth = 3 * scale;
-    const m = 30 * scale;
-    ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+    ctx.strokeStyle = c.text; ctx.lineWidth = 3 * scale;
+    const m = 30 * scale; ctx.strokeRect(m, m, w - m * 2, h - m * 2);
   }
 
-  if (template === "neon") {
-    ctx.shadowColor = c.accent;
-    ctx.shadowBlur = 40 * scale;
+  // Neon glow on
+  if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 24 * scale; }
+
+  // Text layout
+  const pad = 54 * scale;
+  const tLeft = pad;
+  const tW = w - pad * 2;
+  const eyeY = h * 0.2;
+  const eyeColor = isDark ? (template === "neon" ? c.accent : "#aaa") : "#1a1a1a";
+
+  // Eyebrow
+  ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
+  ctx.fillStyle = eyeColor;
+  ctx.font = `600 ${11 * scale}px 'Inter', sans-serif`;
+  ctx.fillText("KOREAN COURSE", tLeft, eyeY);
+  ctx.fillStyle = eyeColor;
+  ctx.fillRect(tLeft, eyeY + 7 * scale, 48 * scale, 2.5 * scale);
+
+  if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 18 * scale; }
+
+  // Main text — BIG & BOLD
+  const mSize = Math.min(isPortrait ? 80 * scale : 66 * scale, tW * (isPortrait ? 0.145 : 0.12));
+  ctx.font = `800 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+  ctx.fillStyle = isDark ? "#fff" : "#1a1a1a";
+  wrapText(ctx, post.mainText, tLeft, eyeY + 36 * scale, tW, mSize * 1.15);
+
+  ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
+
+  // Subtitle
+  if (post.subtitle) {
+    const sSize = mSize * 0.42;
+    ctx.font = `${sSize}px 'Inter', sans-serif`;
+    ctx.fillStyle = isDark ? "#bbb" : "#444";
+    wrapText(ctx, post.subtitle, tLeft, eyeY + mSize * 2.4 + 36 * scale, tW, sSize * 1.4);
   }
 
-  if (template === "classic" || template === "character") {
-    ctx.font = `bold ${80 * scale}px Georgia, serif`;
-    ctx.fillStyle = `${c.text}22`;
-    ctx.fillText("\u201C", 40 * scale, 120 * scale);
-    ctx.fillText("\u201D", w - 80 * scale, h - 40 * scale);
-  }
-
-  ctx.shadowBlur = 0;
-  ctx.shadowColor = "transparent";
-
-  const mainSize = Math.min(48 * scale, w * 0.08);
-  ctx.font = `bold italic ${mainSize}px 'Inter', 'Segoe UI', sans-serif`;
-  ctx.fillStyle = template === "neon" ? c.accent : c.text;
-  wrapText(ctx, post.mainText, 50 * scale, h * 0.35, w - 100 * scale, mainSize * 1.25);
-
-  const subSize = mainSize * 0.5;
-  ctx.font = `${subSize}px 'Inter', sans-serif`;
-  ctx.fillStyle = template === "neon" ? c.accent : `${c.text}bb`;
-  wrapText(ctx, post.subtitle, 50 * scale, h * 0.62, w - 100 * scale, subSize * 1.4);
-
-  if (post.extraText) {
-    const exSize = mainSize * 0.35;
-    ctx.font = `${exSize}px 'Inter', sans-serif`;
-    ctx.fillStyle = `${c.text}88`;
-    ctx.fillText(post.extraText, 50 * scale, h * 0.88);
-  }
-
-  const logoSize = 48 * scale;
-  ctx.beginPath();
-  ctx.arc(w - 60 * scale, h - 60 * scale, logoSize / 2, 0, Math.PI * 2);
-  ctx.fillStyle = template === "neon" || template === "dark" ? "#333" : "#1a1a1a";
+  // CTA pill button
+  const ctaY = h * (isPortrait ? 0.76 : 0.72);
+  const ctaBg = isDark ? c.accent : "#1a1a1a";
+  ctx.fillStyle = ctaBg;
+  rRect(ctx, tLeft, ctaY, 162 * scale, 38 * scale, 19 * scale);
   ctx.fill();
-  ctx.font = `bold ${28 * scale}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#FFFF00";
+  ctx.font = `bold ${13 * scale}px 'Inter', sans-serif`;
+  ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText("K", w - 60 * scale, h - 52 * scale);
+  ctx.fillText("Register Now →", tLeft + 81 * scale, ctaY + 25 * scale);
   ctx.textAlign = "start";
 
-  if (template === "editorial") {
-    ctx.strokeStyle = c.accent;
-    ctx.lineWidth = 4 * scale;
-    ctx.beginPath();
-    ctx.moveTo(50 * scale, h * 0.28);
-    ctx.lineTo(w * 0.4, h * 0.28);
-    ctx.stroke();
-  }
+  // Bottom black strip with hashtags
+  ctx.fillStyle = isDark ? "#111" : "#1a1a1a";
+  ctx.fillRect(0, h - 44 * scale, w, 44 * scale);
+  ctx.font = `bold ${11 * scale}px 'Inter', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "center";
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 17 * scale);
+  ctx.textAlign = "start";
 }
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
@@ -529,18 +724,42 @@ export default function CreatorHub() {
             </div>
           </div>
 
-          {/* Background Image */}
+          {/* Photo / Background Image */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Background Image</h3>
-            <label className="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-muted-foreground/40 transition-colors">
-              <Upload className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{bgImage ? "Change image" : "Upload background image"}</span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
-            </label>
-            {bgImage && (
-              <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => setBgImage(null)}>
-                Remove background
-              </Button>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Photo</h3>
+            {bgImage ? (
+              <div className="space-y-2">
+                <div className="relative rounded-xl overflow-hidden border border-border aspect-square w-full max-w-[200px] mx-auto shadow-md">
+                  <img
+                    src={bgImage.src}
+                    alt="Uploaded photo"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-center py-1">
+                    <span className="text-[10px] text-yellow-300 font-medium">Split layout active</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <label className="flex-1 flex items-center justify-center gap-1 border border-border rounded-md py-1.5 cursor-pointer hover:border-muted-foreground/40 transition-colors text-xs text-muted-foreground">
+                    <Upload className="h-3.5 w-3.5" /> Change
+                    <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
+                  </label>
+                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setBgImage(null)}>
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="text-center">
+                  <p className="text-xs font-medium text-foreground">Upload your photo</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Creates a split photo + text layout</p>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
+              </label>
             )}
           </div>
 
