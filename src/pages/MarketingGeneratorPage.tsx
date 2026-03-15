@@ -47,48 +47,47 @@ function renderBrandPost(
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // Subtle decorative corner accents
-  ctx.strokeStyle = "#1a1a1a22";
-  ctx.lineWidth = 3 * scale;
-  const m = 30 * scale;
-  ctx.strokeRect(m, m, w - m * 2, h - m * 2);
-
-  // Large faint quote mark watermark
-  ctx.font = `bold ${100 * scale}px Georgia, serif`;
-  ctx.fillStyle = "#1a1a1a11";
-  ctx.fillText("\u201C", 40 * scale, 140 * scale);
-
-  // Main heading
-  const mainSize = Math.min(52 * scale, w * 0.085);
-  ctx.font = `bold italic ${mainSize}px 'Inter', 'Segoe UI', sans-serif`;
+  // Bold black left accent bar
   ctx.fillStyle = "#1a1a1a";
-  wrapText(ctx, mainText, 60 * scale, h * 0.34, w - 120 * scale, mainSize * 1.3);
+  ctx.fillRect(0, 0, 18 * scale, h);
 
-  // Subtitle
-  const subSize = mainSize * 0.48;
-  ctx.font = `${subSize}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#1a1a1acc";
-  wrapText(ctx, subtitle, 60 * scale, h * 0.60, w - 120 * scale, subSize * 1.5);
+  // Thick bottom strip for brand feel
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillRect(0, h - 110 * scale, w, 110 * scale);
 
-  // Extra / hashtags
-  if (extra) {
-    const exSize = mainSize * 0.33;
-    ctx.font = `${exSize}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#1a1a1a88";
-    ctx.fillText(extra, 60 * scale, h * 0.875);
+  // ── Main heading — very large, bold, black ──
+  const mainSize = Math.round(110 * scale);
+  ctx.font = `900 ${mainSize}px 'Arial Black', 'Impact', 'Segoe UI', sans-serif`;
+  ctx.fillStyle = "#000000";
+  ctx.textAlign = "left";
+  wrapText(ctx, mainText, 52 * scale, h * 0.28, w - 80 * scale, mainSize * 1.15);
+
+  // ── Schedule line — large, bold ──
+  const schedSize = Math.round(54 * scale);
+  ctx.font = `bold ${schedSize}px 'Arial', 'Segoe UI', sans-serif`;
+  ctx.fillStyle = "#111111";
+  // split subtitle lines (day•time / duration / urgency)
+  const lines = subtitle.split("\n");
+  let lineY = h * 0.56;
+  for (const line of lines) {
+    ctx.fillText(line, 52 * scale, lineY);
+    lineY += schedSize * 1.35;
   }
 
-  // Bottom brand badge
-  ctx.fillStyle = "#1a1a1a";
-  ctx.beginPath();
-  const bx = w - 64 * scale, by = h - 64 * scale, br = 26 * scale;
-  ctx.arc(bx, by, br, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.font = `bold ${30 * scale}px 'Inter', sans-serif`;
+  // ── Bottom strip: hashtags + brand name ──
+  const tagSize = Math.round(32 * scale);
+  ctx.font = `bold ${tagSize}px 'Arial', sans-serif`;
   ctx.fillStyle = "#FFFF00";
-  ctx.textAlign = "center";
-  ctx.fillText("K", bx, by + 10 * scale);
-  ctx.textAlign = "start";
+  ctx.textAlign = "left";
+  ctx.fillText(extra, 52 * scale, h - 64 * scale);
+
+  // Brand name right side of bottom strip
+  const brandSize = Math.round(38 * scale);
+  ctx.font = `900 ${brandSize}px 'Arial Black', 'Impact', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "right";
+  ctx.fillText("KLOVERS", w - 40 * scale, h - 60 * scale);
+  ctx.textAlign = "left";
 }
 
 const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
@@ -101,9 +100,10 @@ function renderGroupToDataUrl(group: { level: string; day_name: string; start_ti
   const [w, h] = CANVAS_SIZES[size];
   const canvas = document.createElement("canvas");
   const levelLabel = getLevelLabel(group.level);
-  const mainText = `${levelLabel}`;
-  const subtitle = `${group.day_name} • ${group.start_time}\n${group.duration_min} min per session${group.seats_left <= 3 ? `\nOnly ${group.seats_left} seats left!` : ""}`;
-  const extra = "#LearnKorean #KoreanCourse #Klovers";
+  const mainText = levelLabel;
+  const urgencyLine = group.seats_left <= 3 ? `\n🔴 Only ${group.seats_left} seats left!` : group.seats_left <= 6 ? `\n⚡ ${group.seats_left} seats available` : "";
+  const subtitle = `${group.day_name} • ${group.start_time}\n${group.duration_min} min / session${urgencyLine}`;
+  const extra = "#LearnKorean  #Klovers  #KoreanCourse";
   renderBrandPost(canvas, mainText, subtitle, extra, w, h);
   return canvas.toDataURL("image/png");
 }
