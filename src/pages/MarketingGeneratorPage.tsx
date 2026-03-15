@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
   Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud, Brush,
+  CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2,
 } from "lucide-react";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
@@ -233,6 +234,129 @@ export default function MarketingGeneratorPage() {
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, label: "" });
 
+  // ── Calendar state ──
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date(); d.setDate(1); return d;
+  });
+  const [scheduledPosts, setScheduledPosts] = useState<Array<{
+    id: string; headline: string; caption_text: string; scheduled_date: string;
+    campaign_name: string | null; status: string; post_order: number;
+  }>>([]);
+  const [calLoading, setCalLoading] = useState(false);
+  const [campaignName, setCampaignName] = useState("April 1 Course Launch");
+  const [campaignStart, setCampaignStart] = useState("2026-03-17");
+  const [campaignEnd, setCampaignEnd] = useState("2026-04-01");
+  const [postsPerDay, setPostsPerDay] = useState(2);
+  const [distributing, setDistributing] = useState(false);
+
+  const fetchScheduledPosts = useCallback(async () => {
+    setCalLoading(true);
+    const { data } = await supabase
+      .from("marketing_posts")
+      .select("id, headline, caption_text, scheduled_date, campaign_name, status, post_order")
+      .not("scheduled_date", "is", null)
+      .order("scheduled_date", { ascending: true })
+      .order("post_order", { ascending: true });
+    setScheduledPosts((data || []) as typeof scheduledPosts);
+    setCalLoading(false);
+  }, []);
+
+  const schedulePost = async (postId: string, date: string) => {
+    await supabase.from("marketing_posts").update({ scheduled_date: date, status: "scheduled" }).eq("id", postId);
+    await fetchScheduledPosts();
+  };
+
+  const unschedulePost = async (postId: string) => {
+    await supabase.from("marketing_posts").update({ scheduled_date: null, status: "draft" }).eq("id", postId);
+    await fetchScheduledPosts();
+  };
+
+  const autoDistributeCampaign = async () => {
+    if (!campaignName || !campaignStart || !campaignEnd) return;
+    setDistributing(true);
+    // Get draft posts (without scheduled_date)
+    const { data: drafts } = await supabase
+      .from("marketing_posts")
+      .select("id, headline")
+      .is("scheduled_date", null)
+      .neq("status", "archived")
+      .order("created_at", { ascending: false });
+
+    if (!drafts?.length) {
+      toast({ title: "No draft posts", description: "Create posts in Creator Hub first." });
+      setDistributing(false);
+      return;
+    }
+
+    // Generate date range
+    const dates: string[] = [];
+    const cur = new Date(campaignStart);
+    const end = new Date(campaignEnd);
+    while (cur <= end) {
+      dates.push(cur.toISOString().split("T")[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // Assign posts round-robin across dates, postsPerDay per day
+    const slots: { date: string; order: number }[] = [];
+    for (const date of dates) {
+      for (let o = 0; o < postsPerDay; o++) slots.push({ date, order: o + 1 });
+    }
+
+    const updates = drafts.slice(0, slots.length).map((post, i) => ({
+      id: post.id,
+      scheduled_date: slots[i].date,
+      post_order: slots[i].order,
+      campaign_name: campaignName,
+      status: "scheduled",
+    }));
+
+    for (const u of updates) {
+      await supabase.from("marketing_posts").update({
+        scheduled_date: u.scheduled_date,
+        post_order: u.post_order,
+        campaign_name: u.campaign_name,
+        status: u.status,
+      }).eq("id", u.id);
+    }
+
+    toast({ title: `✅ Scheduled ${updates.length} posts`, description: `${campaignName} — ${dates.length} days` });
+    await fetchScheduledPosts();
+    setDistributing(false);
+  };
+
+  const exportICS = () => {
+    if (!scheduledPosts.length) return;
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Klovers//Marketing Calendar//EN",
+      "CALSCALE:GREGORIAN",
+      "X-WR-CALNAME:Klovers Marketing",
+      "X-WR-TIMEZONE:Africa/Cairo",
+    ];
+    for (const p of scheduledPosts) {
+      const d = p.scheduled_date.replace(/-/g, "");
+      const uid = `klovers-post-${p.id}@kloversegy.com`;
+      lines.push(
+        "BEGIN:VEVENT",
+        `UID:${uid}`,
+        `DTSTART;VALUE=DATE:${d}`,
+        `DTEND;VALUE=DATE:${d}`,
+        `SUMMARY:📱 ${p.headline || p.caption_text.slice(0, 60)}`,
+        `DESCRIPTION:${(p.caption_text || "").replace(/\n/g, "\\n").slice(0, 200)}`,
+        `CATEGORIES:${p.campaign_name || "Marketing"}`,
+        "STATUS:CONFIRMED",
+        "END:VEVENT",
+      );
+    }
+    lines.push("END:VCALENDAR");
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "klovers-marketing.ics"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const fetchGroups = useCallback(async () => {
     setLoading(true);
     try {
@@ -296,7 +420,7 @@ export default function MarketingGeneratorPage() {
     }
   }, []);
 
-  useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  useEffect(() => { fetchGroups(); fetchScheduledPosts(); }, [fetchGroups, fetchScheduledPosts]);
 
   function formatTime(timeStr: string): string {
     const [h, m] = timeStr.split(":");
@@ -525,6 +649,7 @@ export default function MarketingGeneratorPage() {
             <TabsList className="mb-6">
               <TabsTrigger value="generator"><Sparkles className="h-4 w-4 mr-1.5" /> Auto Generator</TabsTrigger>
               <TabsTrigger value="creator"><Palette className="h-4 w-4 mr-1.5" /> Creator Hub</TabsTrigger>
+              <TabsTrigger value="calendar"><CalendarDays className="h-4 w-4 mr-1.5" /> Campaign Calendar</TabsTrigger>
               <TabsTrigger value="archive">📁 Archive</TabsTrigger>
             </TabsList>
 
@@ -848,6 +973,212 @@ export default function MarketingGeneratorPage() {
 
             <TabsContent value="creator">
               <CreatorHub />
+            </TabsContent>
+
+            {/* ── Campaign Calendar ── */}
+            <TabsContent value="calendar" className="space-y-6">
+              {/* Campaign auto-distributor */}
+              <Card className="rounded-2xl border-primary/30">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Wand2 className="h-4 w-4 text-primary" /> Auto-Schedule Campaign
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Campaign Name</label>
+                      <input
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        value={campaignName}
+                        onChange={e => setCampaignName(e.target.value)}
+                        placeholder="April 1 Course Launch"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Start Date</label>
+                      <input
+                        type="date"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        value={campaignStart}
+                        onChange={e => setCampaignStart(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">End Date</label>
+                      <input
+                        type="date"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        value={campaignEnd}
+                        onChange={e => setCampaignEnd(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Posts per Day</label>
+                      <input
+                        type="number"
+                        min={1} max={5}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        value={postsPerDay}
+                        onChange={e => setPostsPerDay(Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={autoDistributeCampaign} disabled={distributing} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      {distributing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                      {distributing ? "Scheduling…" : "Auto-Distribute Posts"}
+                    </Button>
+                    <Button variant="outline" onClick={exportICS} disabled={!scheduledPosts.length}>
+                      <FileDown className="h-4 w-4 mr-2" /> Export to Google Calendar (.ics)
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={fetchScheduledPosts} disabled={calLoading}>
+                      <RefreshCw className={`h-4 w-4 ${calLoading ? "animate-spin" : ""}`} />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-Distribute takes your <strong>draft posts</strong> (from Creator Hub) and spreads them evenly across the date range.
+                    Export .ics then open it in Google Calendar — all posts appear as all-day events.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Monthly calendar grid */}
+              {(() => {
+                const year = calendarMonth.getFullYear();
+                const month = calendarMonth.getMonth();
+                const monthName = calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const today = new Date().toISOString().split("T")[0];
+
+                // Map scheduled posts by date
+                const byDate = new Map<string, typeof scheduledPosts>();
+                for (const p of scheduledPosts) {
+                  const key = p.scheduled_date;
+                  if (!byDate.has(key)) byDate.set(key, []);
+                  byDate.get(key)!.push(p);
+                }
+
+                const cells: (number | null)[] = [
+                  ...Array(firstDay).fill(null),
+                  ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+                ];
+                // pad to full weeks
+                while (cells.length % 7 !== 0) cells.push(null);
+
+                return (
+                  <Card className="rounded-2xl">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{monthName}</CardTitle>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() - 1); return d; })}>
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() + 1); return d; })}>
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {calLoading ? (
+                        <div className="grid grid-cols-7 gap-1">
+                          {Array(35).fill(0).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+                        </div>
+                      ) : (
+                        <>
+                          {/* Day headers */}
+                          <div className="grid grid-cols-7 gap-1 mb-1">
+                            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+                              <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
+                            ))}
+                          </div>
+                          {/* Calendar cells */}
+                          <div className="grid grid-cols-7 gap-1">
+                            {cells.map((day, idx) => {
+                              if (!day) return <div key={`empty-${idx}`} className="h-20 rounded-lg bg-muted/20" />;
+                              const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                              const posts = byDate.get(dateStr) || [];
+                              const isToday = dateStr === today;
+                              const isCampaignDay = dateStr >= campaignStart && dateStr <= campaignEnd;
+                              return (
+                                <div
+                                  key={dateStr}
+                                  className={`h-20 rounded-lg p-1 border transition-colors ${
+                                    isToday ? "border-primary bg-primary/5"
+                                    : isCampaignDay ? "border-primary/20 bg-primary/5"
+                                    : "border-border bg-card"
+                                  }`}
+                                >
+                                  <div className={`text-[11px] font-bold mb-0.5 ${isToday ? "text-primary" : "text-foreground"}`}>{day}</div>
+                                  <div className="space-y-0.5 overflow-hidden">
+                                    {posts.slice(0, 2).map(p => (
+                                      <div key={p.id} className="flex items-center gap-1 group">
+                                        <span className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate">
+                                          {p.headline || p.caption_text.slice(0, 25)}
+                                        </span>
+                                        <button
+                                          onClick={() => unschedulePost(p.id)}
+                                          className="hidden group-hover:flex h-3 w-3 items-center justify-center text-destructive"
+                                        >
+                                          <Trash2 className="h-2.5 w-2.5" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                    {posts.length > 2 && (
+                                      <div className="text-[9px] text-muted-foreground pl-1">+{posts.length - 2} more</div>
+                                    )}
+                                    {posts.length === 0 && isCampaignDay && (
+                                      <div className="text-[9px] text-primary/50 pl-1">— open slot</div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                      {/* Legend */}
+                      <div className="flex flex-wrap gap-3 mt-4 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary inline-block" /> Today</span>
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary/20 inline-block" /> Campaign days</span>
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/20 inline-block" /> Scheduled post</span>
+                        <span className="ml-auto font-medium text-foreground">{scheduledPosts.length} posts scheduled total</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+
+              {/* Scheduled posts list */}
+              {scheduledPosts.length > 0 && (
+                <Card className="rounded-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Scheduled Posts ({scheduledPosts.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {scheduledPosts.map(p => (
+                        <div key={p.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
+                          <div className="w-20 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_date}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{p.headline || p.caption_text.slice(0, 60)}</p>
+                            {p.campaign_name && <p className="text-[10px] text-muted-foreground">{p.campaign_name}</p>}
+                          </div>
+                          <Badge variant="outline" className="text-[10px] shrink-0">
+                            {p.status}
+                          </Badge>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => unschedulePost(p.id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="archive">
