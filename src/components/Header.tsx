@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, UserCircle, ChevronDown, LogOut } from "lucide-react";
+import { Menu, X, Globe, UserCircle, ChevronDown, LogOut, LayoutDashboard, CalendarDays, Zap, Brain } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -13,11 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -115,28 +110,48 @@ const Header = () => {
             </Button>
 
             {user ? (
-              <div className="flex items-center gap-2">
-                <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.name} className="h-8 w-8 rounded-full object-cover border border-border" />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border">
-                      <UserCircle className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
-                    {profile?.name || user.email?.split("@")[0]}
-                  </span>
-                </Link>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button onClick={handleLogout} className="p-1.5 rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
-                      <LogOut className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>{isAr ? "تسجيل الخروج" : "Logout"}</TooltipContent>
-                </Tooltip>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt={profile.name} className="h-8 w-8 rounded-full object-cover border border-border" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border">
+                        <UserCircle className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-foreground max-w-[100px] truncate">
+                      {profile?.name || user.email?.split("@")[0]}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{user.email}</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    {isAr ? "لوحة التحكم" : "My Dashboard"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/dashboard/schedule")}>
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    {isAr ? "جدولي" : "My Schedule"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/daily-quiz")}>
+                    <Zap className="h-4 w-4 mr-2" />
+                    {isAr ? "اختبار يومي" : "Daily Quiz"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/review")}>
+                    <Brain className="h-4 w-4 mr-2" />
+                    {isAr ? "مراجعة المفردات" : "Vocab Review"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {isAr ? "تسجيل الخروج" : "Logout"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button size="sm" asChild>
                 <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
@@ -183,10 +198,21 @@ const Header = () => {
               {user ? (
                 <>
                   <Button variant="outline" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/dashboard">{isAr ? "لوحة التحكم" : "My Dashboard"}</Link>
+                    <Link to="/dashboard"><LayoutDashboard className="h-4 w-4 mr-2" />{isAr ? "لوحة التحكم" : "My Dashboard"}</Link>
                   </Button>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                      <Link to="/dashboard/schedule"><CalendarDays className="h-4 w-4 mr-1" />{isAr ? "جدول" : "Schedule"}</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                      <Link to="/daily-quiz"><Zap className="h-4 w-4 mr-1" />{isAr ? "اختبار" : "Quiz"}</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                      <Link to="/review"><Brain className="h-4 w-4 mr-1" />{isAr ? "مراجعة" : "Review"}</Link>
+                    </Button>
+                  </div>
                   <Button variant="ghost" className="w-full justify-start text-destructive" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
-                    {isAr ? "تسجيل الخروج" : "Logout"}
+                    <LogOut className="h-4 w-4 mr-2" />{isAr ? "تسجيل الخروج" : "Logout"}
                   </Button>
                 </>
               ) : (

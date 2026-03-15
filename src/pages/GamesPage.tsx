@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useGamification } from "@/hooks/useGamification";
 import { getLeagueProgress } from "@/constants/gamification";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -117,6 +117,26 @@ const GamesPage = () => {
                   style={{ animationDelay: `${i * 200}ms`, animationDuration: "2.5s" }}>{ch}</span>
               ))}
             </div>
+
+            {/* Live user stats strip */}
+            {progress.totalXp > 0 && (
+              <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
+                <div className="inline-flex items-center gap-1.5 bg-card border border-border rounded-full px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+                  <span>{league.emoji}</span>
+                  <span>{league.name}</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1 text-xs font-medium text-yellow-700">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>{progress.totalXp.toLocaleString()} XP</span>
+                </div>
+                {progress.streak.current_streak > 0 && (
+                  <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-xs font-medium text-orange-700">
+                    <Flame className="h-3.5 w-3.5" />
+                    <span>{progress.streak.current_streak} day streak</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
