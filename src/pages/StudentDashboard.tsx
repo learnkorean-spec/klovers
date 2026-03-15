@@ -513,6 +513,28 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
+              {/* Daily Quiz CTA */}
+              <Card className="border-yellow-500/30 bg-yellow-500/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <Zap className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">Daily Quiz Challenge</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Zap className="h-3 w-3" /> Earn +30 XP bonus
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => navigate("/daily-quiz")}>
+                      Start Quiz
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Games CTA */}
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="pt-6">
