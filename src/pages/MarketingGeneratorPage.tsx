@@ -334,12 +334,12 @@ export default function MarketingGeneratorPage() {
               ) : (
                 <>
                   {/* Bulk Actions Bar */}
-                  <Card className="rounded-2xl border-primary/20 bg-primary/5">
+                  <Card className="rounded-2xl border-primary/30 bg-foreground">
                     <CardContent className="py-4 px-5">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-foreground">{groups.length} groups with open seats</p>
-                          <p className="text-xs text-muted-foreground">Generates text + 1x1 images only (saves credits). Use buttons per group for 4x5 / Story.s credits). Use buttons per group for 4x5 / Story.</p>
+                          <p className="text-sm font-semibold text-primary">{groups.length} groups with open seats</p>
+                          <p className="text-xs text-background/60">Generates text + 1x1 images only (saves credits). Use buttons per group for 4x5 / Story.</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Button onClick={handleBulkGenerate} disabled={bulkGenerating}>
@@ -400,7 +400,9 @@ export default function MarketingGeneratorPage() {
                                   </p>
                                 </div>
                               </div>
-                              <Badge variant={group.urgency_label === "Last Seats" ? "destructive" : "secondary"} className="text-[10px]">
+                              <Badge
+                                className={`text-[10px] border ${group.urgency_label === "Last Seats" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/20 text-foreground border-border"}`}
+                              >
                                 {group.seats_left} left
                               </Badge>
                             </div>

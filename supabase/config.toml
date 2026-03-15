@@ -1,5 +1,8 @@
 project_id = "rahpkflknkofuuhnbfyc"
 
+[functions.send-monthly-marketing-report]
+verify_jwt = false
+
 [functions.create-checkout]
 verify_jwt = false
 
