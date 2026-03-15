@@ -234,13 +234,12 @@ export default function MarketingGeneratorPage() {
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, label: "" });
 
-  // ── Calendar state ──
+  // ── Calendar state (uses scheduled_social_posts — no migration needed) ──
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date(); d.setDate(1); return d;
   });
   const [scheduledPosts, setScheduledPosts] = useState<Array<{
-    id: string; headline: string; caption_text: string; scheduled_date: string;
-    campaign_name: string | null; status: string; post_order: number;
+    id: string; course_title: string; caption: string; scheduled_at: string; status: string;
   }>>([]);
   const [calLoading, setCalLoading] = useState(false);
   const [campaignName, setCampaignName] = useState("April 1 Course Launch");
@@ -252,82 +251,62 @@ export default function MarketingGeneratorPage() {
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
     const { data } = await supabase
-      .from("marketing_posts")
-      .select("id, headline, caption_text, scheduled_date, campaign_name, status, post_order")
-      .not("scheduled_date", "is", null)
-      .order("scheduled_date", { ascending: true })
-      .order("post_order", { ascending: true });
-    setScheduledPosts((data || []) as typeof scheduledPosts);
+      .from("scheduled_social_posts")
+      .select("id, course_title, caption, scheduled_at, status")
+      .order("scheduled_at", { ascending: true });
+    setScheduledPosts(data || []);
     setCalLoading(false);
   }, []);
 
-  const schedulePost = async (postId: string, date: string) => {
-    await supabase.from("marketing_posts").update({ scheduled_date: date, status: "scheduled" }).eq("id", postId);
-    await fetchScheduledPosts();
-  };
-
   const unschedulePost = async (postId: string) => {
-    await supabase.from("marketing_posts").update({ scheduled_date: null, status: "draft" }).eq("id", postId);
+    await supabase.from("scheduled_social_posts").delete().eq("id", postId);
     await fetchScheduledPosts();
+    toast({ title: "Post removed from calendar" });
   };
 
   const autoDistributeCampaign = async () => {
-    if (!campaignName || !campaignStart || !campaignEnd) return;
-    setDistributing(true);
-
-    // Build date slots
-    const dates: string[] = [];
-    const cur = new Date(campaignStart);
-    const end = new Date(campaignEnd);
-    while (cur <= end) { dates.push(cur.toISOString().split("T")[0]); cur.setDate(cur.getDate() + 1); }
-    const slots: { date: string; order: number }[] = [];
-    for (const date of dates) for (let o = 0; o < postsPerDay; o++) slots.push({ date, order: o + 1 });
-
-    // 1. Use existing unscheduled posts first
-    const { data: existingDrafts } = await supabase
-      .from("marketing_posts").select("id, headline")
-      .is("scheduled_date", null).neq("status", "archived")
-      .order("created_at", { ascending: false });
-    let postIds: string[] = (existingDrafts || []).map(p => p.id);
-
-    // 2. Not enough saved posts → auto-generate from loaded groups
-    if (postIds.length < slots.length && groups.length > 0) {
-      const needed = slots.length - postIds.length;
-      const toInsert = Array.from({ length: needed }, (_, i) => {
-        const g = groups[i % groups.length];
-        const adCopy = generateAdCopy(g);
-        const captions = generateCaptions(g);
-        return {
-          group_id: g.id,
-          headline: adCopy.headlines[0] || getLevelLabel(g.level),
-          caption_text: captions.join("\n\n---\n\n"),
-          ad_primary_text: adCopy.primaryTexts.join("\n\n"),
-          description: adCopy.descriptions.join("\n"),
-          status: "draft",
-        };
-      });
-      const { data: inserted } = await supabase.from("marketing_posts").insert(toInsert).select("id");
-      postIds = [...postIds, ...(inserted || []).map(p => p.id)];
-    }
-
-    if (!postIds.length) {
-      toast({ title: "No groups found", description: "Make sure active groups exist in the Auto Generator tab." });
-      setDistributing(false);
+    if (!campaignName || !campaignStart || !campaignEnd || !groups.length) {
+      toast({ title: "Missing info", description: "Make sure groups are loaded and all fields are filled." });
       return;
     }
+    setDistributing(true);
 
-    // 3. Schedule posts into slots
-    for (let i = 0; i < Math.min(postIds.length, slots.length); i++) {
-      await supabase.from("marketing_posts").update({
-        scheduled_date: slots[i].date,
-        post_order: slots[i].order,
-        campaign_name: campaignName,
-        status: "scheduled",
-      }).eq("id", postIds[i]);
+    // Build date+time slots (post 1 at 10:00, post 2 at 18:00 Cairo time)
+    const times = ["08:00:00", "16:00:00", "12:00:00", "20:00:00", "06:00:00"];
+    const slots: string[] = [];
+    const cur = new Date(campaignStart);
+    const end = new Date(campaignEnd);
+    while (cur <= end) {
+      const dateStr = cur.toISOString().split("T")[0];
+      for (let o = 0; o < postsPerDay; o++) slots.push(`${dateStr}T${times[o] || "10:00:00"}+02:00`);
+      cur.setDate(cur.getDate() + 1);
     }
 
-    const scheduled = Math.min(postIds.length, slots.length);
-    toast({ title: `✅ Scheduled ${scheduled} posts`, description: `${campaignName} — ${dates.length} days, ${postsPerDay}/day` });
+    // Delete old campaign posts for this campaign name first
+    await supabase.from("scheduled_social_posts").delete().eq("course_title", campaignName);
+
+    // Generate and insert posts into slots
+    const toInsert = slots.map((scheduled_at, i) => {
+      const g = groups[i % groups.length];
+      const captions = generateCaptions(g);
+      return {
+        scheduled_at,
+        course_title: campaignName,
+        caption: captions[i % captions.length] || captions[0],
+        group_id: g.id,
+        platforms: ["instagram", "facebook"],
+        status: "pending",
+        created_by: "admin",
+        registration_url: "https://kloversegy.com/enroll",
+      };
+    });
+
+    const { error } = await supabase.from("scheduled_social_posts").insert(toInsert);
+    if (error) {
+      toast({ title: "Error scheduling", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `✅ Scheduled ${toInsert.length} posts`, description: `${campaignName} — ${slots.length / postsPerDay} days, ${postsPerDay}/day` });
+    }
     await fetchScheduledPosts();
     setDistributing(false);
   };
@@ -343,16 +322,16 @@ export default function MarketingGeneratorPage() {
       "X-WR-TIMEZONE:Africa/Cairo",
     ];
     for (const p of scheduledPosts) {
-      const d = p.scheduled_date.replace(/-/g, "");
+      const d = p.scheduled_at.split("T")[0].replace(/-/g, "");
       const uid = `klovers-post-${p.id}@kloversegy.com`;
       lines.push(
         "BEGIN:VEVENT",
         `UID:${uid}`,
         `DTSTART;VALUE=DATE:${d}`,
         `DTEND;VALUE=DATE:${d}`,
-        `SUMMARY:📱 ${p.headline || p.caption_text.slice(0, 60)}`,
-        `DESCRIPTION:${(p.caption_text || "").replace(/\n/g, "\\n").slice(0, 200)}`,
-        `CATEGORIES:${p.campaign_name || "Marketing"}`,
+        `SUMMARY:📱 ${p.course_title || p.caption.slice(0, 60)}`,
+        `DESCRIPTION:${(p.caption || "").replace(/\n/g, "\\n").slice(0, 200)}`,
+        `CATEGORIES:${p.course_title || "Marketing"}`,
         "STATUS:CONFIRMED",
         "END:VEVENT",
       );
@@ -1059,10 +1038,10 @@ export default function MarketingGeneratorPage() {
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const today = new Date().toISOString().split("T")[0];
 
-                // Map scheduled posts by date
+                // Map scheduled posts by date (scheduled_at is ISO timestamp)
                 const byDate = new Map<string, typeof scheduledPosts>();
                 for (const p of scheduledPosts) {
-                  const key = p.scheduled_date;
+                  const key = p.scheduled_at.split("T")[0];
                   if (!byDate.has(key)) byDate.set(key, []);
                   byDate.get(key)!.push(p);
                 }
@@ -1124,7 +1103,7 @@ export default function MarketingGeneratorPage() {
                                     {posts.slice(0, 2).map(p => (
                                       <div key={p.id} className="flex items-center gap-1 group">
                                         <span className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate">
-                                          {p.headline || p.caption_text.slice(0, 25)}
+                                          {p.course_title || p.caption.slice(0, 25)}
                                         </span>
                                         <button
                                           onClick={() => unschedulePost(p.id)}
@@ -1169,10 +1148,10 @@ export default function MarketingGeneratorPage() {
                     <div className="space-y-2">
                       {scheduledPosts.map(p => (
                         <div key={p.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                          <div className="w-20 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_date}</div>
+                          <div className="w-24 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{p.headline || p.caption_text.slice(0, 60)}</p>
-                            {p.campaign_name && <p className="text-[10px] text-muted-foreground">{p.campaign_name}</p>}
+                            <p className="text-sm font-medium truncate">{p.course_title || p.caption.slice(0, 60)}</p>
+                            <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo</p>
                           </div>
                           <Badge variant="outline" className="text-[10px] shrink-0">
                             {p.status}
