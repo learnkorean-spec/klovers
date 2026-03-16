@@ -1,15 +1,15 @@
 import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, DollarSign, Users, Star, Globe, Zap, BookOpen, Trophy, MessageCircle } from "lucide-react";
+import { ArrowRight, DollarSign, Users, Star, Globe, Zap, BookOpen, Trophy } from "lucide-react";
 import heroPoster from "@/assets/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 
 const floatingPills = [
-  { icon: Zap,           label: "Live Classes",      delay: "0s",    pos: "top-[18%] left-[6%]" },
-  { icon: MessageCircle, label: "Native Teachers",   delay: "0.4s",  pos: "top-[28%] right-[5%]" },
-  { icon: BookOpen,      label: "TOPIK Prep",        delay: "0.8s",  pos: "bottom-[32%] left-[4%]" },
-  { icon: Trophy,        label: "Certification",     delay: "1.2s",  pos: "bottom-[28%] right-[4%]" },
+  { icon: Zap,           label: "Live Classes",   delay: "0s",   pos: "top-[22%] left-[6%]" },
+  { icon: BookOpen,      label: "TOPIK Prep",     delay: "0.5s", pos: "top-[22%] right-[5%]" },
+  { icon: Trophy,        label: "Certification",  delay: "1s",   pos: "bottom-[30%] left-[4%]" },
+  { icon: Star,          label: "4.9 ★ Rated",   delay: "1.5s", pos: "bottom-[30%] right-[4%]" },
 ];
 
 const HeroSection = () => {

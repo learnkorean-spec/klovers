@@ -9,10 +9,10 @@ interface SEOProps {
 }
 
 const BASE_URL = "https://kloversegy.com";
-const SITE_NAME = "Klovers | Korean Language Academy";
+const SITE_NAME = "Klovers | Korean Lovers Academy";
 const DEFAULT_IMAGE = `${BASE_URL}/klovers-logo.jpg`;
 const DEFAULT_DESC =
-  "Learn Korean online with Klovers — Korea's premier language academy. Interactive lessons, games, placement tests, and certified instructors.";
+  "Learn Korean online with Klovers — Korean Lovers Academy. Interactive lessons, games, placement tests, and certified instructors.";
 
 export const useSEO = ({
   title,

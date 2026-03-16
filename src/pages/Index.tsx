@@ -22,7 +22,7 @@ const SectionFallback = () => (
 );
 
 const Index = () => {
-  useSEO({ title: "Learn Korean Online", description: "Join Klovers Korean Language Academy. Interactive online Korean lessons, certified teachers, placement tests, and gamified learning for all levels.", canonical: "https://kloversegy.com/" });
+  useSEO({ title: "Learn Korean Online", description: "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.", canonical: "https://kloversegy.com/" });
   return (
     <div className="min-h-screen">
       <Header />
