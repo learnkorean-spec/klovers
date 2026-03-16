@@ -12,6 +12,18 @@ import {
   Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud, Brush,
   CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  type GroupData,
+  generateCaptions,
+  generateAdCopy,
+  getLevelLabel,
+  getUrgencyLabel,
+} from "@/lib/marketingEngine";
+import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
+import CreatorHub from "@/components/admin/CreatorHub";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
@@ -202,19 +214,6 @@ function renderGroupToDataUrl(group: { level: string; day_name: string; start_ti
   renderBrandPost(canvas, mainText, subtitle, extra, w, h, isUrgent);
   return canvas.toDataURL("image/png");
 }
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  type GroupData,
-  generateCaptions,
-  generateAdCopy,
-  getLevelLabel,
-  getUrgencyLabel,
-} from "@/lib/marketingEngine";
-import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
-import CreatorHub from "@/components/admin/CreatorHub";
-
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 interface GeneratedImages {
@@ -239,7 +238,7 @@ export default function MarketingGeneratorPage() {
     const d = new Date(); d.setDate(1); return d;
   });
   const [scheduledPosts, setScheduledPosts] = useState<Array<{
-    id: string; course_title: string; caption: string; scheduled_at: string; status: string;
+    id: string; course_title: string | null; caption: string | null; scheduled_at: string; status: string | null;
   }>>([]);
   const [calLoading, setCalLoading] = useState(false);
   const [campaignName, setCampaignName] = useState("April 1 Course Launch");
@@ -250,10 +249,16 @@ export default function MarketingGeneratorPage() {
 
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
+    // Fetch posts from 60 days ago up to 90 days ahead for calendar display
+    const from = new Date(); from.setDate(from.getDate() - 60);
+    const to = new Date(); to.setDate(to.getDate() + 90);
     const { data } = await supabase
       .from("scheduled_social_posts")
       .select("id, course_title, caption, scheduled_at, status")
-      .order("scheduled_at", { ascending: true });
+      .gte("scheduled_at", from.toISOString())
+      .lte("scheduled_at", to.toISOString())
+      .order("scheduled_at", { ascending: true })
+      .limit(500);
     setScheduledPosts(data || []);
     setCalLoading(false);
   }, []);
@@ -333,7 +338,7 @@ export default function MarketingGeneratorPage() {
         `UID:${uid}`,
         `DTSTART;VALUE=DATE:${d}`,
         `DTEND;VALUE=DATE:${d}`,
-        `SUMMARY:📱 ${p.course_title || p.caption.slice(0, 60)}`,
+        `SUMMARY:📱 ${p.course_title || (p.caption || "").slice(0, 60)}`,
         `DESCRIPTION:${(p.caption || "").replace(/\n/g, "\\n").slice(0, 200)}`,
         `CATEGORIES:${p.course_title || "Marketing"}`,
         "STATUS:CONFIRMED",
@@ -1027,8 +1032,8 @@ export default function MarketingGeneratorPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Auto-Distribute takes your <strong>draft posts</strong> (from Creator Hub) and spreads them evenly across the date range.
-                    Export .ics then open it in Google Calendar — all posts appear as all-day events.
+                    Auto-Distribute generates posts for all active groups and spreads them across the selected date range at 08:00 and 16:00 Cairo time.
+                    Click <strong>Export to Google Calendar</strong> to download an .ics file — import it in Google Calendar to see all scheduled posts as events.
                   </p>
                 </CardContent>
               </Card>
@@ -1107,7 +1112,7 @@ export default function MarketingGeneratorPage() {
                                     {posts.slice(0, 2).map(p => (
                                       <div key={p.id} className="flex items-center gap-1 group">
                                         <span className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate">
-                                          {p.course_title || p.caption.slice(0, 25)}
+                                          {p.course_title || (p.caption || "").slice(0, 25)}
                                         </span>
                                         <button
                                           onClick={() => unschedulePost(p.id)}
@@ -1154,7 +1159,7 @@ export default function MarketingGeneratorPage() {
                         <div key={p.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
                           <div className="w-24 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{p.course_title || p.caption.slice(0, 60)}</p>
+                            <p className="text-sm font-medium truncate">{p.course_title || (p.caption || "").slice(0, 60)}</p>
                             <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo</p>
                           </div>
                           <Badge variant="outline" className="text-[10px] shrink-0">
