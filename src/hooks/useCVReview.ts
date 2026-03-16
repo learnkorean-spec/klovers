@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { cvSupabase as supabase } from "@/integrations/supabase/cvClient";
 import { toast } from "sonner";
 import * as pdfjsLib from "pdfjs-dist";
 import mammoth from "mammoth";
