@@ -18,6 +18,9 @@ interface BlogPost {
   author: string;
   published_at: string | null;
   created_at: string;
+  view_count: number;
+  featured: boolean;
+  seo_priority: number;
 }
 
 const TYPE_LABEL: Record<string, string> = { howto: "How-To", listicle: "Listicle", longform: "Article", news: "News", review: "Review" };
@@ -43,9 +46,12 @@ const HomeBlogSection = () => {
   useEffect(() => {
     supabase
       .from("blog_posts")
-      .select("id, title, slug, description, article_type, hero_image, hero_alt, author, published_at, created_at")
+      .select("id, title, slug, description, article_type, hero_image, hero_alt, author, published_at, created_at, view_count, featured, seo_priority")
       .eq("published", true)
       .eq("lang", language)
+      .order("featured", { ascending: false })
+      .order("seo_priority", { ascending: false })
+      .order("view_count", { ascending: false })
       .order("published_at", { ascending: false })
       .limit(3)
       .then(({ data }) => {
@@ -115,10 +121,20 @@ const HomeBlogSection = () => {
                       {labels[post.article_type] || post.article_type}
                     </span>
 
-                    {/* Featured label for first post */}
-                    {idx === 0 && (
+                    {/* Featured / Trending / Popular badges */}
+                    {post.featured && (
+                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                        ⭐ {isAr ? "مميز" : "Featured"}
+                      </span>
+                    )}
+                    {!post.featured && post.view_count >= 100 && (
+                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                        🔥 {isAr ? "رائج" : "Trending"}
+                      </span>
+                    )}
+                    {!post.featured && post.view_count < 100 && post.seo_priority >= 8 && (
                       <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                        ✨ {isAr ? "مميز" : "Featured"}
+                        ✨ {isAr ? "موصى به" : "Top Pick"}
                       </span>
                     )}
 

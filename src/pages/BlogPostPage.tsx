@@ -68,6 +68,8 @@ const BlogPostPage = () => {
 
       if (data) {
         setPost(data as BlogPost);
+        // Track view — fire-and-forget, non-blocking
+        supabase.rpc("increment_blog_view", { post_slug: slug }).then(() => {});
       } else if (language === "ar" && !slug.endsWith("-ar")) {
         const { data: arData } = await supabase
           .from("blog_posts")
