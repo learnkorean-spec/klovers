@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,8 +75,9 @@ const SignUpPage = () => {
     const intendedRedirect = redirectTo || "/dashboard";
     localStorage.setItem("enroll_redirect", intendedRedirect);
     
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: `${window.location.origin}/login`,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/login` },
     });
     if (error) {
       localStorage.removeItem("enroll_redirect");
