@@ -133,41 +133,41 @@ function renderPost(
 
       // Text zone
       const tLeft = 40 * scale;
-      const tTop = splitY + slant + 22 * scale;
+      const tTop = splitY + slant + 26 * scale;
       const tW = w - 80 * scale;
 
       ctx.fillStyle = "#1a1a1a";
-      ctx.font = `600 ${11 * scale}px 'Inter', sans-serif`;
-      ctx.fillText("KOREAN COURSE", tLeft, tTop + 14 * scale);
-      ctx.fillRect(tLeft, tTop + 20 * scale, 44 * scale, 2.5 * scale);
+      ctx.font = `700 ${14 * scale}px 'Inter', sans-serif`;
+      ctx.fillText("KOREAN COURSE", tLeft, tTop + 16 * scale);
+      ctx.fillRect(tLeft, tTop + 24 * scale, 52 * scale, 3 * scale);
 
-      const mSize = Math.min(66 * scale, tW * 0.17);
-      ctx.font = `800 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+      const mSize = Math.min(82 * scale, tW * 0.2);
+      ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
       ctx.fillStyle = "#1a1a1a";
-      wrapText(ctx, post.mainText, tLeft, tTop + 46 * scale, tW, mSize * 1.15);
+      wrapText(ctx, post.mainText, tLeft, tTop + 56 * scale, tW, mSize * 1.12);
 
       if (post.subtitle) {
-        const sSize = mSize * 0.44;
-        ctx.font = `${sSize}px 'Inter', sans-serif`;
-        ctx.fillStyle = "#444";
-        wrapText(ctx, post.subtitle, tLeft, tTop + mSize * 2.3 + 46 * scale, tW, sSize * 1.4);
+        const sSize = mSize * 0.46;
+        ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
+        ctx.fillStyle = "#333";
+        wrapText(ctx, post.subtitle, tLeft, tTop + mSize * 2.4 + 56 * scale, tW, sSize * 1.45);
       }
 
       // CTA button
-      const ctaY = h - 62 * scale;
+      const ctaY = h - 72 * scale;
       ctx.fillStyle = "#1a1a1a";
-      rRect(ctx, tLeft, ctaY, 154 * scale, 36 * scale, 18 * scale);
+      rRect(ctx, tLeft, ctaY, 174 * scale, 42 * scale, 21 * scale);
       ctx.fill();
-      ctx.font = `bold ${12 * scale}px 'Inter', sans-serif`;
+      ctx.font = `bold ${14 * scale}px 'Inter', sans-serif`;
       ctx.fillStyle = "#FFFF00"; ctx.textAlign = "center";
-      ctx.fillText("Register Now →", tLeft + 77 * scale, ctaY + 23 * scale);
+      ctx.fillText("Register Now →", tLeft + 87 * scale, ctaY + 28 * scale);
       ctx.textAlign = "start";
 
       // Hashtags
       if (post.extraText) {
         ctx.fillStyle = "#1a1a1a88";
-        ctx.font = `${10 * scale}px 'Inter', sans-serif`;
-        ctx.fillText(post.extraText, tLeft, h - 20 * scale);
+        ctx.font = `${12 * scale}px 'Inter', sans-serif`;
+        ctx.fillText(post.extraText, tLeft, h - 22 * scale);
       }
 
     } else {
@@ -204,40 +204,40 @@ function renderPost(
       ctx.restore();
 
       // Text zone
-      const tLeft = splitX + slant + 22 * scale;
-      const tW = w - tLeft - 22 * scale;
-      const tTop = h * 0.14;
+      const tLeft = splitX + slant + 28 * scale;
+      const tW = w - tLeft - 28 * scale;
+      const tTop = h * 0.13;
 
       ctx.fillStyle = "#1a1a1a";
-      ctx.font = `600 ${10 * scale}px 'Inter', sans-serif`;
+      ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
       ctx.fillText("KOREAN COURSE", tLeft, tTop);
-      ctx.fillRect(tLeft, tTop + 6 * scale, 40 * scale, 2 * scale);
+      ctx.fillRect(tLeft, tTop + 8 * scale, 48 * scale, 3 * scale);
 
-      const mSize = Math.min(50 * scale, tW * 0.18);
-      ctx.font = `800 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+      const mSize = Math.min(62 * scale, tW * 0.2);
+      ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
       ctx.fillStyle = "#1a1a1a";
-      wrapText(ctx, post.mainText, tLeft, tTop + 28 * scale, tW, mSize * 1.2);
+      wrapText(ctx, post.mainText, tLeft, tTop + 32 * scale, tW, mSize * 1.15);
 
       if (post.subtitle) {
-        const sSize = mSize * 0.44;
-        ctx.font = `${sSize}px 'Inter', sans-serif`;
-        ctx.fillStyle = "#444";
-        wrapText(ctx, post.subtitle, tLeft, h * 0.6, tW, sSize * 1.4);
+        const sSize = mSize * 0.46;
+        ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
+        ctx.fillStyle = "#333";
+        wrapText(ctx, post.subtitle, tLeft, h * 0.62, tW, sSize * 1.45);
       }
 
       // K logo + KLOVERS
-      const logoY = h - 34 * scale;
+      const logoY = h - 38 * scale;
       ctx.fillStyle = "#1a1a1a";
       ctx.beginPath();
-      ctx.arc(tLeft + 14 * scale, logoY, 13 * scale, 0, Math.PI * 2);
+      ctx.arc(tLeft + 16 * scale, logoY, 15 * scale, 0, Math.PI * 2);
       ctx.fill();
-      ctx.font = `bold ${13 * scale}px 'Inter', sans-serif`;
+      ctx.font = `bold ${15 * scale}px 'Inter', sans-serif`;
       ctx.fillStyle = "#FFFF00"; ctx.textAlign = "center";
-      ctx.fillText("K", tLeft + 14 * scale, logoY + 4 * scale);
+      ctx.fillText("K", tLeft + 16 * scale, logoY + 5 * scale);
       ctx.textAlign = "start";
       ctx.fillStyle = "#1a1a1a";
-      ctx.font = `bold ${10 * scale}px 'Inter', sans-serif`;
-      ctx.fillText("KLOVERS", tLeft + 34 * scale, logoY + 4 * scale);
+      ctx.font = `bold ${12 * scale}px 'Inter', sans-serif`;
+      ctx.fillText("KLOVERS", tLeft + 38 * scale, logoY + 5 * scale);
     }
     return;
   }
@@ -301,48 +301,48 @@ function renderPost(
   // Eyebrow
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
   ctx.fillStyle = eyeColor;
-  ctx.font = `600 ${11 * scale}px 'Inter', sans-serif`;
+  ctx.font = `700 ${14 * scale}px 'Inter', sans-serif`;
   ctx.fillText("KOREAN COURSE", tLeft, eyeY);
   ctx.fillStyle = eyeColor;
-  ctx.fillRect(tLeft, eyeY + 7 * scale, 48 * scale, 2.5 * scale);
+  ctx.fillRect(tLeft, eyeY + 9 * scale, 56 * scale, 3 * scale);
 
   if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 18 * scale; }
 
   // Main text — BIG & BOLD
-  const mSize = Math.min(isPortrait ? 80 * scale : 66 * scale, tW * (isPortrait ? 0.145 : 0.12));
-  ctx.font = `800 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+  const mSize = Math.min(isPortrait ? 96 * scale : 78 * scale, tW * (isPortrait ? 0.165 : 0.14));
+  ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
   ctx.fillStyle = isDark ? "#fff" : "#1a1a1a";
-  wrapText(ctx, post.mainText, tLeft, eyeY + 36 * scale, tW, mSize * 1.15);
+  wrapText(ctx, post.mainText, tLeft, eyeY + 42 * scale, tW, mSize * 1.12);
 
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
 
   // Subtitle
   if (post.subtitle) {
-    const sSize = mSize * 0.42;
-    ctx.font = `${sSize}px 'Inter', sans-serif`;
-    ctx.fillStyle = isDark ? "#bbb" : "#444";
-    wrapText(ctx, post.subtitle, tLeft, eyeY + mSize * 2.4 + 36 * scale, tW, sSize * 1.4);
+    const sSize = mSize * 0.44;
+    ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
+    ctx.fillStyle = isDark ? "#bbb" : "#333";
+    wrapText(ctx, post.subtitle, tLeft, eyeY + mSize * 2.4 + 42 * scale, tW, sSize * 1.45);
   }
 
   // CTA pill button
   const ctaY = h * (isPortrait ? 0.76 : 0.72);
   const ctaBg = isDark ? c.accent : "#1a1a1a";
   ctx.fillStyle = ctaBg;
-  rRect(ctx, tLeft, ctaY, 162 * scale, 38 * scale, 19 * scale);
+  rRect(ctx, tLeft, ctaY, 182 * scale, 44 * scale, 22 * scale);
   ctx.fill();
-  ctx.font = `bold ${13 * scale}px 'Inter', sans-serif`;
+  ctx.font = `bold ${15 * scale}px 'Inter', sans-serif`;
   ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText("Register Now →", tLeft + 81 * scale, ctaY + 25 * scale);
+  ctx.fillText("Register Now →", tLeft + 91 * scale, ctaY + 29 * scale);
   ctx.textAlign = "start";
 
   // Bottom black strip with hashtags
   ctx.fillStyle = isDark ? "#111" : "#1a1a1a";
-  ctx.fillRect(0, h - 44 * scale, w, 44 * scale);
-  ctx.font = `bold ${11 * scale}px 'Inter', sans-serif`;
+  ctx.fillRect(0, h - 50 * scale, w, 50 * scale);
+  ctx.font = `bold ${13 * scale}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 17 * scale);
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 19 * scale);
   ctx.textAlign = "start";
 }
 

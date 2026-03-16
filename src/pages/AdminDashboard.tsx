@@ -538,7 +538,7 @@ const AdminDashboard = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-muted/30">
+      <div id="main-content" className="min-h-screen bg-muted/30">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
           <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 md:px-6">

@@ -619,7 +619,7 @@ export default function MarketingGeneratorPage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-muted/30">
+      <div id="main-content" className="min-h-screen bg-muted/30">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
           <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 md:px-6">
@@ -985,64 +985,64 @@ export default function MarketingGeneratorPage() {
             <TabsContent value="calendar" className="space-y-6">
               {/* Campaign auto-distributor */}
               <Card className="rounded-2xl border-primary/30">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Wand2 className="h-4 w-4 text-primary" /> Auto-Schedule Campaign
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Wand2 className="h-5 w-5 text-primary" /> Auto-Schedule Campaign
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Campaign Name</label>
+                <CardContent className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-foreground">Campaign Name</label>
                       <input
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                         value={campaignName}
                         onChange={e => setCampaignName(e.target.value)}
                         placeholder="April 1 Course Launch"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Start Date</label>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-foreground">Start Date</label>
                       <input
                         type="date"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                         value={campaignStart}
                         onChange={e => setCampaignStart(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">End Date</label>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-foreground">End Date</label>
                       <input
                         type="date"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                         value={campaignEnd}
                         onChange={e => setCampaignEnd(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Posts per Day</label>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-foreground">Posts per Day</label>
                       <input
                         type="number"
                         min={1} max={5}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                         value={postsPerDay}
                         onChange={e => setPostsPerDay(Number(e.target.value))}
                       />
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button onClick={autoDistributeCampaign} disabled={distributing} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <div className="flex flex-wrap gap-3">
+                    <Button size="lg" onClick={autoDistributeCampaign} disabled={distributing} className="bg-primary text-primary-foreground hover:bg-primary/90">
                       {distributing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
                       {distributing ? "Scheduling…" : "Auto-Distribute Posts"}
                     </Button>
-                    <Button variant="outline" onClick={exportICS} disabled={!scheduledPosts.length}>
+                    <Button size="lg" variant="outline" onClick={exportICS} disabled={!scheduledPosts.length}>
                       <FileDown className="h-4 w-4 mr-2" /> Export to Google Calendar (.ics)
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={fetchScheduledPosts} disabled={calLoading}>
+                    <Button variant="ghost" size="icon" className="h-11 w-11" onClick={fetchScheduledPosts} disabled={calLoading}>
                       <RefreshCw className={`h-4 w-4 ${calLoading ? "animate-spin" : ""}`} />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     Auto-Distribute generates posts for all active groups and spreads them across the selected date range at 08:00 and 16:00 Cairo time.
                     Click <strong>Export to Google Calendar</strong> to download an .ics file — import it in Google Calendar to see all scheduled posts as events.
                   </p>
@@ -1075,36 +1075,36 @@ export default function MarketingGeneratorPage() {
 
                 return (
                   <Card className="rounded-2xl">
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-4">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{monthName}</CardTitle>
+                        <CardTitle className="text-xl">{monthName}</CardTitle>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() - 1); return d; })}>
-                            <ChevronLeft className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() - 1); return d; })}>
+                            <ChevronLeft className="h-5 w-5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() + 1); return d; })}>
-                            <ChevronRight className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() + 1); return d; })}>
+                            <ChevronRight className="h-5 w-5" />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {calLoading ? (
-                        <div className="grid grid-cols-7 gap-1">
-                          {Array(35).fill(0).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+                        <div className="grid grid-cols-7 gap-2">
+                          {Array(35).fill(0).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
                         </div>
                       ) : (
                         <>
                           {/* Day headers */}
-                          <div className="grid grid-cols-7 gap-1 mb-1">
+                          <div className="grid grid-cols-7 gap-2 mb-2">
                             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                              <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
+                              <div key={d} className="text-center text-xs font-bold text-muted-foreground py-2 tracking-wide uppercase">{d}</div>
                             ))}
                           </div>
                           {/* Calendar cells */}
-                          <div className="grid grid-cols-7 gap-1">
+                          <div className="grid grid-cols-7 gap-2">
                             {cells.map((day, idx) => {
-                              if (!day) return <div key={`empty-${idx}`} className="h-20 rounded-lg bg-muted/20" />;
+                              if (!day) return <div key={`empty-${idx}`} className="h-28 rounded-xl bg-muted/20" />;
                               const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                               const posts = byDate.get(dateStr) || [];
                               const isToday = dateStr === today;
@@ -1112,32 +1112,32 @@ export default function MarketingGeneratorPage() {
                               return (
                                 <div
                                   key={dateStr}
-                                  className={`h-20 rounded-lg p-1 border transition-colors ${
+                                  className={`h-28 rounded-xl p-2 border transition-colors ${
                                     isToday ? "border-primary bg-primary/5"
                                     : isCampaignDay ? "border-primary/20 bg-primary/5"
                                     : "border-border bg-card"
                                   }`}
                                 >
-                                  <div className={`text-[11px] font-bold mb-0.5 ${isToday ? "text-primary" : "text-foreground"}`}>{day}</div>
-                                  <div className="space-y-0.5 overflow-hidden">
+                                  <div className={`text-sm font-bold mb-1 ${isToday ? "text-primary" : "text-foreground"}`}>{day}</div>
+                                  <div className="space-y-1 overflow-hidden">
                                     {posts.slice(0, 2).map(p => (
                                       <div key={p.id} className="flex items-center gap-1 group">
-                                        <span className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate">
+                                        <span className="flex-1 text-[10px] leading-tight text-foreground bg-primary/20 rounded px-1.5 py-0.5 truncate">
                                           {p.course_title || (p.caption || "").slice(0, 25)}
                                         </span>
                                         <button
                                           onClick={() => confirmDeletePost(p.id)}
-                                          className="hidden group-hover:flex h-3 w-3 items-center justify-center text-destructive"
+                                          className="hidden group-hover:flex h-4 w-4 items-center justify-center text-destructive"
                                         >
-                                          <Trash2 className="h-2.5 w-2.5" />
+                                          <Trash2 className="h-3 w-3" />
                                         </button>
                                       </div>
                                     ))}
                                     {posts.length > 2 && (
-                                      <div className="text-[9px] text-muted-foreground pl-1">+{posts.length - 2} more</div>
+                                      <div className="text-[10px] text-muted-foreground pl-1">+{posts.length - 2} more</div>
                                     )}
                                     {posts.length === 0 && isCampaignDay && (
-                                      <div className="text-[9px] text-primary/50 pl-1">— open slot</div>
+                                      <div className="text-[10px] text-primary/50 pl-1">— open slot</div>
                                     )}
                                   </div>
                                 </div>
@@ -1147,11 +1147,11 @@ export default function MarketingGeneratorPage() {
                         </>
                       )}
                       {/* Legend */}
-                      <div className="flex flex-wrap gap-3 mt-4 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary inline-block" /> Today</span>
-                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary/20 inline-block" /> Campaign days</span>
-                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/20 inline-block" /> Scheduled post</span>
-                        <span className="ml-auto font-medium text-foreground">{scheduledPosts.length} posts scheduled total</span>
+                      <div className="flex flex-wrap gap-4 mt-5 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded bg-primary/5 border border-primary inline-block" /> Today</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded bg-primary/5 border border-primary/20 inline-block" /> Campaign days</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded bg-primary/20 inline-block" /> Scheduled post</span>
+                        <span className="ml-auto text-sm font-semibold text-foreground">{scheduledPosts.length} posts scheduled total</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -1161,23 +1161,23 @@ export default function MarketingGeneratorPage() {
               {/* Scheduled posts list */}
               {scheduledPosts.length > 0 && (
                 <Card className="rounded-2xl">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Scheduled Posts ({scheduledPosts.length})</CardTitle>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg">Scheduled Posts ({scheduledPosts.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {scheduledPosts.map(p => (
-                        <div key={p.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                          <div className="w-24 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
+                        <div key={p.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
+                          <div className="w-28 text-sm font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{p.course_title || (p.caption || "").slice(0, 60)}</p>
-                            <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo</p>
+                            <p className="text-sm font-semibold truncate">{p.course_title || (p.caption || "").slice(0, 60)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo</p>
                           </div>
-                          <Badge variant="outline" className="text-[10px] shrink-0">
+                          <Badge variant="outline" className="text-xs shrink-0">
                             {p.status}
                           </Badge>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => confirmDeletePost(p.id)}>
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => confirmDeletePost(p.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       ))}

@@ -41,9 +41,6 @@ import LessonDetailPage from "./pages/LessonDetailPage";
 import TextbookProgressPage from "./pages/TextbookProgressPage";
 import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 import DailyQuizPage from "./pages/DailyQuizPage";
-import CVLandingPage from "./pages/CVLandingPage";
-import CVBuilderPage from "./pages/CVBuilderPage";
-import CVReviewPage from "./pages/CVReviewPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,9 +105,6 @@ const App = () => (
               <Route path="/daily-quiz" element={<AuthProtectedRoute><DailyQuizPage /></AuthProtectedRoute>} />
               <Route path="/textbook/:bookId" element={<AuthProtectedRoute><TextbookPage /></AuthProtectedRoute>} />
               <Route path="/textbook/:bookId/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
-              <Route path="/cv" element={<CVLandingPage />} />
-              <Route path="/cv-builder" element={<CVBuilderPage />} />
-              <Route path="/cv-review" element={<CVReviewPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
               <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />

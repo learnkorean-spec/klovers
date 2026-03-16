@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
   // Schedule options are fetched dynamically from DB; no hardcoded fallbacks
 
 const EnrollNowPage = () => {
+  useSEO({ title: "Enroll Now | Klovers Korean Academy", description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence." });
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -306,6 +307,7 @@ const PaymentForm = ({
 
 /* ── Main Page ── */
 const EgyptPaymentPage = () => {
+  useSEO({ title: "Complete Payment | Klovers Korean Academy", description: "Complete your enrollment payment to activate your Klovers Korean course." });
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
   const navigate = useNavigate();
   const [enrollment, setEnrollment] = useState<EnrollmentData | null>(null);
