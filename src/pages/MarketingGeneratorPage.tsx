@@ -24,6 +24,10 @@ import {
 } from "@/lib/marketingEngine";
 import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
@@ -241,11 +245,14 @@ export default function MarketingGeneratorPage() {
     id: string; course_title: string | null; caption: string | null; scheduled_at: string; status: string | null;
   }>>([]);
   const [calLoading, setCalLoading] = useState(false);
-  const [campaignName, setCampaignName] = useState("April 1 Course Launch");
-  const [campaignStart, setCampaignStart] = useState("2026-03-17");
-  const [campaignEnd, setCampaignEnd] = useState("2026-04-01");
+  const [campaignName, setCampaignName] = useState("Course Launch");
+  const [campaignStart, setCampaignStart] = useState(() => new Date().toISOString().split("T")[0]);
+  const [campaignEnd, setCampaignEnd] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split("T")[0];
+  });
   const [postsPerDay, setPostsPerDay] = useState(2);
   const [distributing, setDistributing] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // postId pending deletion
 
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
@@ -263,8 +270,12 @@ export default function MarketingGeneratorPage() {
     setCalLoading(false);
   }, []);
 
-  const unschedulePost = async (postId: string) => {
-    await supabase.from("scheduled_social_posts").delete().eq("id", postId);
+  const confirmDeletePost = (postId: string) => setDeleteConfirm(postId);
+
+  const unschedulePost = async () => {
+    if (!deleteConfirm) return;
+    await supabase.from("scheduled_social_posts").delete().eq("id", deleteConfirm);
+    setDeleteConfirm(null);
     await fetchScheduledPosts();
     toast({ title: "Post removed from calendar" });
   };
@@ -1115,7 +1126,7 @@ export default function MarketingGeneratorPage() {
                                           {p.course_title || (p.caption || "").slice(0, 25)}
                                         </span>
                                         <button
-                                          onClick={() => unschedulePost(p.id)}
+                                          onClick={() => confirmDeletePost(p.id)}
                                           className="hidden group-hover:flex h-3 w-3 items-center justify-center text-destructive"
                                         >
                                           <Trash2 className="h-2.5 w-2.5" />
@@ -1165,7 +1176,7 @@ export default function MarketingGeneratorPage() {
                           <Badge variant="outline" className="text-[10px] shrink-0">
                             {p.status}
                           </Badge>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => unschedulePost(p.id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => confirmDeletePost(p.id)}>
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
                         </div>
@@ -1182,6 +1193,27 @@ export default function MarketingGeneratorPage() {
           </Tabs>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={open => { if (!open) setDeleteConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the post from the calendar. You can re-run Auto-Distribute to recreate it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={unschedulePost}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
