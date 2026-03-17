@@ -31,7 +31,7 @@ export function useLearningGoals() {
     if (!user) return;
 
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("user_learning_goals")
       .select("*")
       .eq("user_id", user.id)
