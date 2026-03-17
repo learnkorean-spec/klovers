@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, Sun, Sparkles } from "lucide-react";
+import { BookOpen, Sun, Sparkles, Clapperboard } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
