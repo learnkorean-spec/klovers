@@ -13,6 +13,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -247,6 +248,18 @@ export default function MarketingGeneratorPage() {
   const [postsPerDay, setPostsPerDay] = useState(2);
   const [distributing, setDistributing] = useState(false);
 
+  // Edit post dialog
+  const [editingPost, setEditingPost] = useState<{
+    id: string; course_title: string | null; caption: string | null; status: string | null; scheduled_at: string;
+  } | null>(null);
+
+  // Add post manually
+  const [addingPostDate, setAddingPostDate] = useState<string | null>(null);
+  const [newPost, setNewPost] = useState({ course_title: "", caption: "", time: "10:00" });
+
+  // Campaign filter
+  const [campaignFilter, setCampaignFilter] = useState("all");
+
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
     // Fetch posts from 60 days ago up to 90 days ahead for calendar display
@@ -262,6 +275,49 @@ export default function MarketingGeneratorPage() {
     setScheduledPosts(data || []);
     setCalLoading(false);
   }, []);
+
+  const campaignNames = useMemo(() =>
+    [...new Set(scheduledPosts.map(p => p.course_title).filter(Boolean))] as string[],
+    [scheduledPosts]
+  );
+
+  const filteredScheduledPosts = useMemo(() =>
+    campaignFilter === "all" ? scheduledPosts : scheduledPosts.filter(p => p.course_title === campaignFilter),
+    [scheduledPosts, campaignFilter]
+  );
+
+  const saveEditedPost = async () => {
+    if (!editingPost) return;
+    const { error } = await supabase.from("scheduled_social_posts").update({
+      caption: editingPost.caption,
+      status: editingPost.status,
+      course_title: editingPost.course_title,
+    }).eq("id", editingPost.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setScheduledPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, ...editingPost } : p));
+    setEditingPost(null);
+    toast({ title: "Post updated" });
+  };
+
+  const addPostManually = async () => {
+    if (!addingPostDate || !newPost.caption) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("scheduled_social_posts").insert({
+      scheduled_at: `${addingPostDate}T${newPost.time}:00+02:00`,
+      course_title: newPost.course_title || null,
+      caption: newPost.caption,
+      platforms: ["instagram", "facebook"],
+      status: "pending",
+      created_by: user.id,
+      registration_url: "https://kloversegy.com/enroll",
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Post added" });
+    setAddingPostDate(null);
+    setNewPost({ course_title: "", caption: "", time: "10:00" });
+    fetchScheduledPosts();
+  };
 
   const unschedulePost = async (postId: string) => {
     await supabase.from("scheduled_social_posts").delete().eq("id", postId);
@@ -407,7 +463,7 @@ export default function MarketingGeneratorPage() {
       }
 
       result.sort((a, b) => a.seats_left - b.seats_left);
-      setGroups(result.slice(0, 10));
+      setGroups(result);
     } catch (err: any) {
       toast({ title: "Error loading groups", description: err.message, variant: "destructive" });
     } finally {
@@ -816,7 +872,15 @@ export default function MarketingGeneratorPage() {
                                               <Copy className="h-3 w-3 mr-1" /> Copy
                                             </Button>
                                           </div>
-                                          <Textarea value={cap} readOnly className="text-xs min-h-[80px] resize-none" />
+                                          <Textarea
+                                            value={cap}
+                                            onChange={(e) => {
+                                              const updated = [...content.captions];
+                                              updated[i] = e.target.value;
+                                              setGeneratedContent(prev => ({ ...prev, [group.id]: { ...prev[group.id], captions: updated } }));
+                                            }}
+                                            className="text-xs min-h-[80px] resize-none"
+                                          />
                                         </div>
                                       ))}
                                     </TabsContent>
@@ -826,7 +890,15 @@ export default function MarketingGeneratorPage() {
                                         <h4 className="text-xs font-medium text-foreground">Primary Text</h4>
                                         {content.adCopy.primaryTexts.map((t, i) => (
                                           <div key={i} className="flex items-start gap-1.5">
-                                            <Textarea value={t} readOnly className="text-xs min-h-[50px] resize-none flex-1" />
+                                            <Textarea
+                                              value={t}
+                                              onChange={(e) => {
+                                                const updated = [...content.adCopy.primaryTexts];
+                                                updated[i] = e.target.value;
+                                                setGeneratedContent(prev => ({ ...prev, [group.id]: { ...prev[group.id], adCopy: { ...prev[group.id].adCopy, primaryTexts: updated } } }));
+                                              }}
+                                              className="text-xs min-h-[50px] resize-none flex-1"
+                                            />
                                             <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => copyToClipboard(t, `Primary ${i + 1}`)}>
                                               <Copy className="h-3 w-3" />
                                             </Button>
@@ -1038,6 +1110,33 @@ export default function MarketingGeneratorPage() {
                 </CardContent>
               </Card>
 
+              {/* Campaign filter bar */}
+              {scheduledPosts.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Filter by campaign:</span>
+                  <select
+                    className="rounded-lg border border-border px-2 py-1.5 text-xs bg-background"
+                    value={campaignFilter}
+                    onChange={e => setCampaignFilter(e.target.value)}
+                  >
+                    <option value="all">All ({scheduledPosts.length})</option>
+                    {campaignNames.map(n => (
+                      <option key={n} value={n}>{n} ({scheduledPosts.filter(p => p.course_title === n).length})</option>
+                    ))}
+                  </select>
+                  {campaignFilter !== "all" && (
+                    <Button variant="destructive" size="sm" onClick={async () => {
+                      await supabase.from("scheduled_social_posts").delete().eq("course_title", campaignFilter);
+                      await fetchScheduledPosts();
+                      setCampaignFilter("all");
+                      toast({ title: `Deleted "${campaignFilter}"` });
+                    }}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {/* Monthly calendar grid */}
               {(() => {
                 const year = calendarMonth.getFullYear();
@@ -1049,7 +1148,7 @@ export default function MarketingGeneratorPage() {
 
                 // Map scheduled posts by date (scheduled_at is ISO timestamp)
                 const byDate = new Map<string, typeof scheduledPosts>();
-                for (const p of scheduledPosts) {
+                for (const p of filteredScheduledPosts) {
                   const key = p.scheduled_at.split("T")[0];
                   if (!byDate.has(key)) byDate.set(key, []);
                   byDate.get(key)!.push(p);
@@ -1101,22 +1200,31 @@ export default function MarketingGeneratorPage() {
                               return (
                                 <div
                                   key={dateStr}
-                                  className={`h-20 rounded-lg p-1 border transition-colors ${
+                                  className={`relative group h-20 rounded-lg p-1 border transition-colors ${
                                     isToday ? "border-primary bg-primary/5"
                                     : isCampaignDay ? "border-primary/20 bg-primary/5"
                                     : "border-border bg-card"
                                   }`}
                                 >
                                   <div className={`text-[11px] font-bold mb-0.5 ${isToday ? "text-primary" : "text-foreground"}`}>{day}</div>
+                                  <button
+                                    className="opacity-0 group-hover:opacity-100 absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded bg-primary/20 hover:bg-primary/40 transition-opacity"
+                                    onClick={(e) => { e.stopPropagation(); setNewPost({ course_title: campaignName, caption: "", time: "10:00" }); setAddingPostDate(dateStr); }}
+                                  >
+                                    <Plus className="h-2.5 w-2.5 text-primary" />
+                                  </button>
                                   <div className="space-y-0.5 overflow-hidden">
                                     {posts.slice(0, 2).map(p => (
-                                      <div key={p.id} className="flex items-center gap-1 group">
-                                        <span className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate">
+                                      <div key={p.id} className="flex items-center gap-1 group/chip">
+                                        <button
+                                          className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate text-left hover:bg-primary/30 transition-colors"
+                                          onClick={() => setEditingPost(p)}
+                                        >
                                           {p.course_title || (p.caption || "").slice(0, 25)}
-                                        </span>
+                                        </button>
                                         <button
                                           onClick={() => unschedulePost(p.id)}
-                                          className="hidden group-hover:flex h-3 w-3 items-center justify-center text-destructive"
+                                          className="hidden group-hover/chip:flex h-3 w-3 items-center justify-center text-destructive"
                                         >
                                           <Trash2 className="h-2.5 w-2.5" />
                                         </button>
@@ -1140,7 +1248,7 @@ export default function MarketingGeneratorPage() {
                         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary inline-block" /> Today</span>
                         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary/20 inline-block" /> Campaign days</span>
                         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/20 inline-block" /> Scheduled post</span>
-                        <span className="ml-auto font-medium text-foreground">{scheduledPosts.length} posts scheduled total</span>
+                        <span className="ml-auto font-medium text-foreground">{filteredScheduledPosts.length} posts{campaignFilter !== "all" ? ` in "${campaignFilter}"` : " scheduled total"}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -1148,19 +1256,19 @@ export default function MarketingGeneratorPage() {
               })()}
 
               {/* Scheduled posts list */}
-              {scheduledPosts.length > 0 && (
+              {filteredScheduledPosts.length > 0 && (
                 <Card className="rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Scheduled Posts ({scheduledPosts.length})</CardTitle>
+                    <CardTitle className="text-base">Scheduled Posts ({filteredScheduledPosts.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {scheduledPosts.map(p => (
+                      {filteredScheduledPosts.map(p => (
                         <div key={p.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
                           <div className="w-24 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{p.course_title || (p.caption || "").slice(0, 60)}</p>
-                            <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo</p>
+                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setEditingPost(p)}>
+                            <p className="text-sm font-medium truncate hover:text-primary transition-colors">{p.course_title || (p.caption || "").slice(0, 60)}</p>
+                            <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo — click to edit</p>
                           </div>
                           <Badge variant="outline" className="text-[10px] shrink-0">
                             {p.status}
@@ -1182,6 +1290,89 @@ export default function MarketingGeneratorPage() {
           </Tabs>
         </div>
       </div>
+      {/* Edit post dialog */}
+      <Dialog open={!!editingPost} onOpenChange={open => { if (!open) setEditingPost(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Edit Scheduled Post</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Campaign / Title</label>
+              <input
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={editingPost?.course_title || ""}
+                onChange={e => setEditingPost(p => p ? { ...p, course_title: e.target.value } : p)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Caption</label>
+              <Textarea
+                className="mt-1 text-sm min-h-[140px]"
+                value={editingPost?.caption || ""}
+                onChange={e => setEditingPost(p => p ? { ...p, caption: e.target.value } : p)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Status</label>
+              <select
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={editingPost?.status || "pending"}
+                onChange={e => setEditingPost(p => p ? { ...p, status: e.target.value } : p)}
+              >
+                <option value="pending">pending</option>
+                <option value="published">published</option>
+                <option value="skipped">skipped</option>
+              </select>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(editingPost?.caption || ""); toast({ title: "Copied" }); }}>
+              <Copy className="h-3 w-3 mr-1" /> Copy Caption
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditingPost(null)}>Cancel</Button>
+            <Button onClick={saveEditedPost}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add post manually dialog */}
+      <Dialog open={!!addingPostDate} onOpenChange={open => { if (!open) setAddingPostDate(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Add Post — {addingPostDate}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Campaign / Title</label>
+              <input
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={newPost.course_title}
+                onChange={e => setNewPost(p => ({ ...p, course_title: e.target.value }))}
+                placeholder={campaignName}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Time (Cairo)</label>
+              <input
+                type="time"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={newPost.time}
+                onChange={e => setNewPost(p => ({ ...p, time: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Caption</label>
+              <Textarea
+                className="mt-1 text-sm min-h-[100px]"
+                value={newPost.caption}
+                onChange={e => setNewPost(p => ({ ...p, caption: e.target.value }))}
+                placeholder="Write your caption here…"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAddingPostDate(null)}>Cancel</Button>
+            <Button onClick={addPostManually} disabled={!newPost.caption}>Add Post</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }
