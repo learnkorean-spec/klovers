@@ -165,7 +165,7 @@ export function useSRS(): SRSState & {
 
     try {
       // Get current review record
-      const { data: review, error: fetchError } = await supabase
+      const { data: review, error: fetchError } = await (supabase as any)
         .from("vocabulary_review_history")
         .select(
           "id, difficulty_factor, interval_days, review_count, next_review_date"
