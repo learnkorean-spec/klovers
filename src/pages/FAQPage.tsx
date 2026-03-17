@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
-import { HelpCircle, MessageCircle } from "lucide-react";
+import { HelpCircle, MessageCircle, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // Inject JSON-LD into document head
 const FAQSchemaScript = ({ schema }: { schema: object }) => {
@@ -27,6 +28,7 @@ const FAQPage = () => {
   const { t, tArray } = useLanguage();
   const faqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const categories = useMemo(() => {
     const cats = new Map<string, string>();
@@ -44,9 +46,14 @@ const FAQPage = () => {
     return cats;
   }, [faqs, t]);
 
-  const filteredFaqs = activeCategory
-    ? faqs.filter(f => f.category === activeCategory)
-    : faqs;
+  const filteredFaqs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return faqs.filter(f => {
+      if (activeCategory && f.category !== activeCategory) return false;
+      if (!q) return true;
+      return f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q);
+    });
+  }, [faqs, activeCategory, searchQuery]);
 
   // JSON-LD FAQ Schema
   const faqSchema = {
@@ -83,6 +90,25 @@ const FAQPage = () => {
               </p>
             </div>
 
+            {/* Search */}
+            <div className="relative max-w-md mx-auto mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
             {/* Category filters */}
             {categories.size > 0 && (
               <div className="flex flex-wrap justify-center gap-2 mb-10">
@@ -107,18 +133,28 @@ const FAQPage = () => {
             )}
 
             <div className="max-w-3xl mx-auto">
-              <Accordion type="single" collapsible className="w-full">
-                {filteredFaqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left text-foreground hover:text-foreground/80">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+              {filteredFaqs.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Search className="h-8 w-8 mx-auto mb-3 opacity-40" />
+                  <p className="font-medium">No results for "{searchQuery}"</p>
+                  <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm text-primary hover:underline">
+                    Clear search
+                  </button>
+                </div>
+              ) : (
+                <Accordion type="single" collapsible className="w-full">
+                  {filteredFaqs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`}>
+                      <AccordionTrigger className="text-left text-foreground hover:text-foreground/80">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
             </div>
 
             {/* CTA Section */}
@@ -132,7 +168,7 @@ const FAQPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" asChild>
-                  <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq?mode=gi_t" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/601121777560?text=Hi!%20I%20have%20a%20question%20about%20Klovers." target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     WhatsApp
                   </a>
