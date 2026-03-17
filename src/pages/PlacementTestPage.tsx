@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { PLACEMENT_QUESTIONS, computePlacementResult, type PlacementResult } from "@/constants/placementQuestions";
-import { CheckCircle, ArrowRight, ArrowLeft } from "lucide-react";
+import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const QUESTIONS_PER_PAGE = 10;
@@ -82,49 +82,76 @@ const PlacementTestPage = () => {
   };
 
 
+  const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string }> = {
+    A1: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our A1 class will teach you Hangul, basic greetings, and everyday words." },
+    A2: { emoji: "🌿", tagline: "Elementary", description: "You know some basics. Our A2 class builds simple sentences, numbers, and daily conversations." },
+    B1: { emoji: "📚", tagline: "Intermediate", description: "You can hold simple conversations. Our B1 class covers grammar patterns and real-life dialogues." },
+    B2: { emoji: "🎯", tagline: "Upper-Intermediate", description: "You're comfortable in Korean. Our B2 class dives into nuanced grammar and natural speech." },
+    C1: { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our C1 class polishes academic and professional Korean." },
+    C2: { emoji: "👑", tagline: "Mastery", description: "Near-native proficiency. Our C2 class refines complex expression and prepares you for TOPIK II." },
+  };
+
   if (result) {
+    const meta = LEVEL_META[result.levelKey] ?? { emoji: "🎓", tagline: "Your Level", description: "Ready to start your Korean journey?" };
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
-          <Card className="w-full max-w-md text-center">
-            <CardHeader>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <CheckCircle className="h-8 w-8 text-primary" />
+          <div className="w-full max-w-md space-y-4">
+
+            {/* Result hero card */}
+            <Card className="text-center overflow-hidden">
+              <div className="bg-primary/10 py-8 px-6">
+                <div className="text-6xl mb-3">{meta.emoji}</div>
+                <div className="inline-block bg-primary text-primary-foreground text-xl font-bold px-5 py-2 rounded-full mb-2">
+                  {result.levelLabel}
+                </div>
+                <p className="text-sm font-semibold text-foreground">{meta.tagline}</p>
               </div>
-              <CardTitle className="text-2xl">Your Result</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <p className="text-4xl font-bold text-primary">{result.score} / {PLACEMENT_QUESTIONS.length}</p>
-                <p className="text-muted-foreground mt-1">Total Score</p>
-              </div>
-              <div>
-                <Badge className="text-base px-4 py-2">{result.levelLabel}</Badge>
-                <p className="text-sm text-muted-foreground mt-2">Recommended Level</p>
-              </div>
-              {userId ? (
-                <>
-                  <Button size="lg" className="w-full" onClick={() => navigate("/enroll")}>
-                    Enroll in Recommended Course <ArrowRight className="ml-2 h-4 w-4" />
+              <CardContent className="pt-5 pb-6 space-y-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">{meta.description}</p>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                  <span>Score: <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong></span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* CTA card */}
+            <Card>
+              <CardContent className="pt-5 pb-5 space-y-3">
+                <p className="text-sm font-semibold text-foreground text-center">Ready to start learning?</p>
+
+                <Button size="lg" className="w-full" onClick={() => navigate("/enroll")}>
+                  📚 Book a {result.levelLabel} Class <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+
+                {!userId && (
+                  <Button variant="outline" className="w-full" onClick={() => navigate("/signup")}>
+                    Save My Result — Sign Up Free
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
-                    Back to Home
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground">Create an account to save your result and enroll.</p>
-                  <Button size="lg" className="w-full" onClick={() => navigate("/signup")}>
-                    Sign Up to Save Result <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={() => navigate("/login")}>
-                    Already have an account? Log in
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                )}
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {[
+                    { icon: <Users className="h-3.5 w-3.5" />, label: "2,000+ students" },
+                    { icon: <BookOpen className="h-3.5 w-3.5" />, label: "A1–C2 levels" },
+                    { icon: <Gamepad2 className="h-3.5 w-3.5" />, label: "13 free games" },
+                  ].map(({ icon, label }) => (
+                    <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2 text-center">
+                      <span className="text-muted-foreground">{icon}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium leading-tight">{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground hover:underline pt-1">
+                  Back to home
+                </button>
+              </CardContent>
+            </Card>
+
+          </div>
         </main>
         <Footer />
       </div>
