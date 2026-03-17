@@ -90,13 +90,33 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
+      <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
+
+        {/* Social proof strip */}
+        <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5 font-medium text-foreground">⭐ 4.9 rated</span>
+          <span className="text-border">·</span>
+          <span>👥 2,000+ students</span>
+          <span className="text-border">·</span>
+          <span>🌍 15+ countries</span>
+          <span className="text-border">·</span>
+          <span className="text-green-600 font-semibold">Free to join</span>
+        </div>
+
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.createAccount") || "Create Account"}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-1">
               {t("auth.signUpSubtitle") || "Join K-Lovers and start learning Korean today"}
             </p>
+            {/* Benefit pills */}
+            <div className="flex flex-wrap justify-center gap-2 pt-3">
+              {["🎯 Free placement test", "🎮 13 learning games", "📚 Full textbook access"].map((b) => (
+                <span key={b} className="text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full font-medium">
+                  {b}
+                </span>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -152,6 +172,14 @@ const SignUpPage = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Mini testimonial */}
+        <p className="text-xs text-muted-foreground text-center max-w-xs italic">
+          "I went from zero Korean to passing TOPIK I in 6 months — the classes and games made it so fun!"
+          <br />
+          <span className="not-italic font-medium text-foreground">— Sara M., Egypt</span>
+        </p>
+
       </main>
       <Footer />
     </div>
