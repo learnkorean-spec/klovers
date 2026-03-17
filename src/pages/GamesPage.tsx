@@ -1,5 +1,6 @@
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
@@ -7,10 +8,11 @@ import KoreanMatchGame from "@/components/KoreanMatchGame";
 import HangulQuizGame from "@/components/HangulQuizGame";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { getLeagueProgress } from "@/constants/gamification";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -25,6 +27,8 @@ const CounterWordsGame = lazy(() => import("@/components/games/CounterWordsGame"
 const KDramaQuizGame = lazy(() => import("@/components/games/KDramaQuizGame"));
 const TimeTellerGame = lazy(() => import("@/components/games/TimeTellerGame"));
 
+const FREE_GAME_IDS = ["match", "hangul"];
+
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -34,31 +38,47 @@ const GameFallback = () => (
 const GamesPage = () => {
   useSEO({ title: "Korean Learning Games", description: "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: "https://kloversegy.com/games" });
   const [activeGame, setActiveGame] = useState<string>("match");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showSignupNudge, setShowSignupNudge] = useState(false);
   const { awardGameXp, progress, league } = useGamification();
   const { t } = useLanguage();
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   const games = [
-    { id: "match", title: t("games.matchTitle"), description: t("games.matchDesc"), icon: Layers, emoji: "🃏", difficulty: t("games.beginner") },
-    { id: "hangul", title: t("games.hangulTitle"), description: t("games.hangulDesc"), icon: Brain, emoji: "⚡", difficulty: t("games.beginner") },
-    { id: "sentence", title: t("games.sentenceTitle"), description: t("games.sentenceDesc"), icon: PenLine, emoji: "🧩", difficulty: t("games.beginner") },
-    { id: "numbers", title: t("games.numbersTitle"), description: t("games.numbersDesc"), icon: Hash, emoji: "🔢", difficulty: t("games.beginner") },
-    { id: "colors", title: t("games.colorsTitle"), description: t("games.colorsDesc"), icon: Palette, emoji: "🎨", difficulty: t("games.beginner") },
-    { id: "verbs", title: t("games.verbsTitle"), description: t("games.verbsDesc"), icon: BookOpen, emoji: "📝", difficulty: t("games.intermediate") },
-    { id: "greetings", title: t("games.greetingsTitle"), description: t("games.greetingsDesc"), icon: MessageCircle, emoji: "👋", difficulty: t("games.beginner") },
-    { id: "opposites", title: t("games.oppositesTitle"), description: t("games.oppositesDesc"), icon: ArrowLeftRight, emoji: "↔️", difficulty: t("games.intermediate") },
-    { id: "fillblank", title: t("games.fillblankTitle"), description: t("games.fillblankDesc"), icon: PenLine, emoji: "✏️", difficulty: t("games.intermediate") },
-    { id: "scramble", title: t("games.scrambleTitle"), description: t("games.scrambleDesc"), icon: Shuffle, emoji: "🔀", difficulty: t("games.beginner") },
-    { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate") },
-    { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner") },
-    { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner") },
+    { id: "match", title: t("games.matchTitle"), description: t("games.matchDesc"), icon: Layers, emoji: "🃏", difficulty: t("games.beginner"), free: true },
+    { id: "hangul", title: t("games.hangulTitle"), description: t("games.hangulDesc"), icon: Brain, emoji: "⚡", difficulty: t("games.beginner"), free: true },
+    { id: "sentence", title: t("games.sentenceTitle"), description: t("games.sentenceDesc"), icon: PenLine, emoji: "🧩", difficulty: t("games.beginner"), free: false },
+    { id: "numbers", title: t("games.numbersTitle"), description: t("games.numbersDesc"), icon: Hash, emoji: "🔢", difficulty: t("games.beginner"), free: false },
+    { id: "colors", title: t("games.colorsTitle"), description: t("games.colorsDesc"), icon: Palette, emoji: "🎨", difficulty: t("games.beginner"), free: false },
+    { id: "verbs", title: t("games.verbsTitle"), description: t("games.verbsDesc"), icon: BookOpen, emoji: "📝", difficulty: t("games.intermediate"), free: false },
+    { id: "greetings", title: t("games.greetingsTitle"), description: t("games.greetingsDesc"), icon: MessageCircle, emoji: "👋", difficulty: t("games.beginner"), free: false },
+    { id: "opposites", title: t("games.oppositesTitle"), description: t("games.oppositesDesc"), icon: ArrowLeftRight, emoji: "↔️", difficulty: t("games.intermediate"), free: false },
+    { id: "fillblank", title: t("games.fillblankTitle"), description: t("games.fillblankDesc"), icon: PenLine, emoji: "✏️", difficulty: t("games.intermediate"), free: false },
+    { id: "scramble", title: t("games.scrambleTitle"), description: t("games.scrambleDesc"), icon: Shuffle, emoji: "🔀", difficulty: t("games.beginner"), free: false },
+    { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate"), free: false },
+    { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner"), free: false },
+    { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner"), free: false },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
-    const xp = await awardGameXp(gameId, score, totalRounds);
-    if (xp && xp > 0) {
-      toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
+    if (isLoggedIn) {
+      const xp = await awardGameXp(gameId, score, totalRounds);
+      if (xp && xp > 0) {
+        toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
+      }
+    } else {
+      setShowSignupNudge(true);
     }
-  }, [awardGameXp, league]);
+  }, [awardGameXp, league, isLoggedIn]);
 
   const selectGame = (id: string) => {
     setActiveGame(id);
@@ -68,6 +88,34 @@ const GamesPage = () => {
   };
 
   const renderGame = () => {
+    const isGameFree = FREE_GAME_IDS.includes(activeGame);
+    const game = games.find(g => g.id === activeGame);
+
+    if (!isLoggedIn && !isGameFree) {
+      return (
+        <div className="py-20 flex flex-col items-center gap-5 text-center px-4">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <Lock className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
+            <p className="text-muted-foreground max-w-sm text-sm">
+              Create a free account to unlock all 13 games, save your XP, and build your daily streak.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <Button size="lg" asChild>
+              <a href="/signup">🚀 Sign Up Free</a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/login">Log In</a>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">No credit card needed · 2,000+ students already joined</p>
+        </div>
+      );
+    }
+
     const onComplete = (score: number, total: number) => handleGameComplete(activeGame, score, total);
     switch (activeGame) {
       case "match": return <KoreanMatchGame onGameComplete={onComplete} />;
@@ -118,8 +166,16 @@ const GamesPage = () => {
               ))}
             </div>
 
+            {/* Guest banner */}
+            {!isLoggedIn && (
+              <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
+                <span>🎮 2 free games · </span>
+                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 13</a>
+              </div>
+            )}
+
             {/* Live user stats strip */}
-            {progress.totalXp > 0 && (
+            {isLoggedIn && progress.totalXp > 0 && (
               <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
                 <div className="inline-flex items-center gap-1.5 bg-card border border-border rounded-full px-3 py-1 text-xs font-medium text-foreground shadow-sm">
                   <span>{league.emoji}</span>
@@ -146,13 +202,26 @@ const GamesPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
               {games.map((game) => {
                 const isActive = activeGame === game.id;
+                const isLocked = !isLoggedIn && !game.free;
                 return (
                   <button key={game.id} onClick={() => selectGame(game.id)} className="text-left">
-                    <Card className={`p-4 transition-all duration-200 border-2 cursor-pointer h-full ${
+                    <Card className={`p-4 transition-all duration-200 border-2 cursor-pointer h-full relative ${
                       isActive
                         ? "border-primary/50 bg-primary/5 shadow-md"
+                        : isLocked
+                        ? "border-border opacity-60 hover:opacity-80 hover:shadow-sm"
                         : "border-border hover:border-foreground/20 hover:shadow-sm"
                     }`}>
+                      {isLocked && (
+                        <div className="absolute top-2 right-2">
+                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                      )}
+                      {game.free && !isLoggedIn && (
+                        <div className="absolute top-2 right-2">
+                          <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-medium">FREE</span>
+                        </div>
+                      )}
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xl shrink-0">
                           {game.emoji}
@@ -185,6 +254,56 @@ const GamesPage = () => {
         <FinalCTA />
       </main>
       <Footer />
+
+      {/* Signup nudge modal */}
+      {showSignupNudge && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 relative">
+            <button
+              onClick={() => setShowSignupNudge(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+
+            <div className="text-center space-y-2">
+              <div className="text-4xl">🎉</div>
+              <h2 className="text-xl font-bold text-foreground">Nice work!</h2>
+              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 13 games.</p>
+            </div>
+
+            <div className="space-y-2">
+              {[
+                { icon: "⭐", text: "Save your XP and streak" },
+                { icon: "🔓", text: "Unlock all 13 Korean games" },
+                { icon: "📊", text: "Track your learning progress" },
+              ].map(({ icon, text }) => (
+                <div key={text} className="flex items-center gap-2 text-sm text-foreground">
+                  <span>{icon}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <Button className="w-full" size="lg" asChild>
+                <a href="/signup">🚀 Sign Up Free</a>
+              </Button>
+              <Button variant="outline" className="w-full" asChild>
+                <a href="/login">Already have an account? Log in</a>
+              </Button>
+            </div>
+
+            <button
+              onClick={() => setShowSignupNudge(false)}
+              className="w-full text-xs text-muted-foreground hover:underline"
+            >
+              Continue playing as guest
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
