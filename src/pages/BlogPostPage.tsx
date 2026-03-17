@@ -79,7 +79,7 @@ const BlogPostPage = () => {
       if (data) {
         setPost(data as BlogPost);
         // Track view — fire-and-forget, non-blocking
-        supabase.rpc("increment_blog_view", { post_slug: slug }).then(() => {});
+        (supabase as any).rpc("increment_blog_view", { post_slug: slug }).then(() => {});
         // Fetch related posts: same article_type, exclude current
         supabase
           .from("blog_posts")

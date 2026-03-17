@@ -229,7 +229,7 @@ export function useSRS(): SRSState & {
       }));
 
       // Use upsert to avoid duplicates
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("vocabulary_review_history")
         .upsert(recordsToInsert, {
           onConflict: "user_id,lesson_vocabulary_id",

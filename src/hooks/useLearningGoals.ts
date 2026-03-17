@@ -101,7 +101,7 @@ export function useLearningGoals() {
   );
 
   const deleteGoal = useCallback(async (goalId: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("user_learning_goals")
       .delete()
       .eq("id", goalId);

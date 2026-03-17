@@ -65,7 +65,7 @@ export function useMilestones() {
         );
         const isAchieved = newProgress >= milestone.target_value;
 
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("achievement_milestones")
           .update({
             progress_value: newProgress,
