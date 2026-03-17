@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -107,6 +107,8 @@ const AdminDashboard = () => {
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "", dir: "asc" });
+  const [leadsSort, setLeadsSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "created_at", dir: "desc" });
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -359,9 +361,25 @@ const AdminDashboard = () => {
     [leads]
   );
 
+  const sortedLeads = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      if (leadsSort.col === "name") {
+        const cmp = (a.name || "").localeCompare(b.name || "");
+        return leadsSort.dir === "asc" ? cmp : -cmp;
+      }
+      if (leadsSort.col === "country") {
+        const cmp = (a.country || "").localeCompare(b.country || "");
+        return leadsSort.dir === "asc" ? cmp : -cmp;
+      }
+      // default: created_at
+      const cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return leadsSort.dir === "asc" ? cmp : -cmp;
+    });
+  }, [filtered, leadsSort]);
+
   const exportCSV = () => {
-    const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Date"];
-    const rows = filtered.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, new Date(l.created_at).toLocaleDateString()]);
+    const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
+    const rows = sortedLeads.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, l.goal, new Date(l.created_at).toLocaleDateString()]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c || ""}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -515,26 +533,47 @@ const AdminDashboard = () => {
         : studentFilter === "leads" ? u.derived_status === "LEAD"
         : studentFilter === "stripe" ? u.source_label === "Stripe"
         : studentFilter === "egypt" ? u.source_label === "Egypt"
+        : studentFilter === "overdue" ? u.amount_due > 0
         : true;
       const matchesLevel = levelFilter === "all" || normalizeLevel(u.level || "") === levelFilter;
       return matchesSearch && matchesFilter && matchesLevel;
     });
   }, [overviewRows, studentSearch, studentFilter, levelFilter]);
 
+  // Sorted users (after filter, before pagination)
+  const sortedUsers = useMemo(() => {
+    if (!studentSort.col) return filteredUsers;
+    return [...filteredUsers].sort((a, b) => {
+      const v = (x: typeof a) =>
+        studentSort.col === "sessions_remaining" ? x.sessions_remaining
+        : studentSort.col === "amount_due" ? x.amount_due
+        : studentSort.col === "joined_at" ? new Date(x.joined_at).getTime()
+        : 0;
+      return studentSort.dir === "asc" ? v(a) - v(b) : v(b) - v(a);
+    });
+  }, [filteredUsers, studentSort]);
+
   // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
-  const pagedUsers = filteredUsers.slice(studentPage * PAGE_SIZE, (studentPage + 1) * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / PAGE_SIZE));
+  const pagedUsers = sortedUsers.slice(studentPage * PAGE_SIZE, (studentPage + 1) * PAGE_SIZE);
 
   // Reset page when filters change
   useEffect(() => { setStudentPage(0); }, [studentSearch, studentFilter, levelFilter]);
 
+  const overdueCount = overviewRows.filter(u => u.amount_due > 0).length;
   const studentFilterOptions = [
     { value: "all", label: `All (${overviewRows.length})` },
     { value: "confirmed", label: `Confirmed (${confirmedCount})` },
     { value: "leads", label: `Leads (${leadsProfileCount})` },
     { value: "stripe", label: `Stripe (${stripeCount})` },
     { value: "egypt", label: `Egypt Manual (${egyptCount})` },
+    { value: "overdue", label: `Overdue (${overdueCount})` },
   ];
+
+  const legacyEnrollmentCount = useMemo(() =>
+    enrollments.filter(e => (!e.level || e.level.trim() === '') && (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0))).length,
+    [enrollments]
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -708,7 +747,7 @@ const AdminDashboard = () => {
                     <Skeleton key={i} className="h-10 w-full rounded-lg" />
                   ))}
                 </div>
-              ) : filteredUsers.length === 0 ? (
+              ) : sortedUsers.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">No students found.</p>
               ) : (
                 <>
@@ -720,25 +759,43 @@ const AdminDashboard = () => {
                           <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Level</TableHead>
-                          <TableHead className="py-3 px-3 font-semibold text-center">Remaining</TableHead>
+                          <TableHead
+                            className="py-3 px-3 font-semibold text-center cursor-pointer select-none hover:text-primary"
+                            onClick={() => setStudentSort(s => ({ col: "sessions_remaining", dir: s.col === "sessions_remaining" && s.dir === "asc" ? "desc" : "asc" }))}
+                          >
+                            Remaining {studentSort.col === "sessions_remaining" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
+                          </TableHead>
                           <TableHead className="py-3 px-3 font-semibold text-center">Negative</TableHead>
-                          <TableHead className="py-3 px-3 font-semibold text-right">Amount Due</TableHead>
+                          <TableHead
+                            className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary"
+                            onClick={() => setStudentSort(s => ({ col: "amount_due", dir: s.col === "amount_due" && s.dir === "asc" ? "desc" : "asc" }))}
+                          >
+                            Amount Due {studentSort.col === "amount_due" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
+                          </TableHead>
                           <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
-                          <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Joined</TableHead>
+                          <TableHead
+                            className="py-3 px-3 hidden sm:table-cell font-semibold cursor-pointer select-none hover:text-primary"
+                            onClick={() => setStudentSort(s => ({ col: "joined_at", dir: s.col === "joined_at" && s.dir === "asc" ? "desc" : "asc" }))}
+                          >
+                            Joined {studentSort.col === "joined_at" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {pagedUsers.map((u) => (
-                          <TableRow key={u.user_id} className={cn("odd:bg-muted/30 hover:bg-muted/50 transition cursor-pointer", selectedStudentId === u.user_id && "ring-2 ring-primary/40")} onClick={() => setSelectedStudentId(selectedStudentId === u.user_id ? null : (u.enrollment_id ? u.user_id : null))}>
+                          <TableRow key={u.user_id} className={cn("group odd:bg-muted/30 hover:bg-muted/50 transition cursor-pointer", selectedStudentId === u.user_id && "ring-2 ring-primary/40")} onClick={() => setSelectedStudentId(selectedStudentId === u.user_id ? null : (u.enrollment_id ? u.user_id : null))}>
                             <TableCell className="py-3 px-3 font-medium">{u.name || "—"}</TableCell>
                             <TableCell className="py-3 px-3">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block max-w-[240px] truncate">{u.email}</span>
-                                </TooltipTrigger>
-                                <TooltipContent>{u.email}</TooltipContent>
-                              </Tooltip>
+                              <div className="flex items-center gap-1 max-w-[240px]">
+                                <span className="truncate flex-1 text-sm">{u.email}</span>
+                                <button
+                                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(u.email); toast({ title: "Copied" }); }}
+                                >
+                                  <Copy className="h-3 w-3 text-muted-foreground" />
+                                </button>
+                              </div>
                             </TableCell>
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
@@ -761,7 +818,7 @@ const AdminDashboard = () => {
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between pt-4">
                       <p className="text-xs text-muted-foreground">
-                        Page {studentPage + 1} of {totalPages} · {filteredUsers.length} results
+                        Page {studentPage + 1} of {totalPages} · {sortedUsers.length} results
                       </p>
                       <div className="flex items-center gap-1">
                         <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage === 0} onClick={() => setStudentPage(p => p - 1)}>
@@ -812,7 +869,7 @@ const AdminDashboard = () => {
                           onChange={(e) => setShowLegacyEnrollments(e.target.checked)}
                           className="rounded"
                         />
-                        Show Legacy
+                        Show Legacy ({legacyEnrollmentCount})
                       </label>
                       <Button
                         variant="outline"
@@ -1175,22 +1232,31 @@ const AdminDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
-                        <TableHead className="py-3 px-3 font-semibold">Name</TableHead>
+                        <TableHead
+                          className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary"
+                          onClick={() => setLeadsSort(s => ({ col: "name", dir: s.col === "name" && s.dir === "asc" ? "desc" : "asc" }))}
+                        >Name {leadsSort.col === "name" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                         <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
-                        <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Country</TableHead>
+                        <TableHead
+                          className="py-3 px-3 hidden md:table-cell font-semibold cursor-pointer select-none hover:text-primary"
+                          onClick={() => setLeadsSort(s => ({ col: "country", dir: s.col === "country" && s.dir === "asc" ? "desc" : "asc" }))}
+                        >Country {leadsSort.col === "country" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                         <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Plan</TableHead>
                         <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Duration</TableHead>
                         <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Schedule</TableHead>
-                        <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Timezone</TableHead>
+                        <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Goal</TableHead>
                         <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
                         <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Linked</TableHead>
-                        <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Date</TableHead>
+                        <TableHead
+                          className="py-3 px-3 hidden sm:table-cell font-semibold cursor-pointer select-none hover:text-primary"
+                          onClick={() => setLeadsSort(s => ({ col: "created_at", dir: s.col === "created_at" && s.dir === "asc" ? "desc" : "asc" }))}
+                        >Date {leadsSort.col === "created_at" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                         <TableHead className="py-3 px-3 w-10"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filtered.map((lead) => (
-                        <TableRow key={lead.id} className="odd:bg-muted/30 hover:bg-muted/50 transition">
+                      {sortedLeads.map((lead) => (
+                        <TableRow key={lead.id} className="group odd:bg-muted/30 hover:bg-muted/50 transition">
                           <TableCell className="py-3 px-3 font-medium">
                             {editingLeadId === lead.id ? (
                               <Input value={editForm.name || ""} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-sm" />
@@ -1200,12 +1266,15 @@ const AdminDashboard = () => {
                             {editingLeadId === lead.id ? (
                               <Input value={editForm.email || ""} onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} className="h-8 text-sm" />
                             ) : (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block max-w-[240px] truncate">{lead.email}</span>
-                                </TooltipTrigger>
-                                <TooltipContent>{lead.email}</TooltipContent>
-                              </Tooltip>
+                              <div className="flex items-center gap-1 max-w-[220px]">
+                                <span className="truncate flex-1 text-sm">{lead.email}</span>
+                                <button
+                                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); }}
+                                >
+                                  <Copy className="h-3 w-3 text-muted-foreground" />
+                                </button>
+                              </div>
                             )}
                           </TableCell>
                           <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
@@ -1253,10 +1322,8 @@ const AdminDashboard = () => {
                               </div>
                             ) : lead.schedule || "—"}
                           </TableCell>
-                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
-                            {editingLeadId === lead.id ? (
-                              <Input value={editForm.timezone || ""} onChange={(e) => setEditForm(f => ({ ...f, timezone: e.target.value }))} className="h-8 text-sm" />
-                            ) : lead.timezone || "—"}
+                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
+                            {lead.goal || "—"}
                           </TableCell>
                           <TableCell className="py-3 px-3">
                             {editingLeadId === lead.id ? (
