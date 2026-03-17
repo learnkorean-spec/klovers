@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+
+const WA_DIRECT = "https://wa.me/601121777560?text=" + encodeURIComponent("Hi! I'm interested in learning Korean with Klovers. Can you tell me more?");
+const WA_GROUP = "https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq";
 
 const ContactPage = () => {
   useSEO({ title: "Contact Us", description: "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.", canonical: "https://kloversegy.com/contact" });
@@ -42,75 +45,100 @@ const ContactPage = () => {
             </div>
 
             <div className="max-w-lg mx-auto space-y-6">
-              <Card className="border-border">
-                <CardContent className="p-6">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">
-                        {t("contactPage", "form.name")}
-                      </label>
-                      <Input
-                        placeholder={t("contactPage", "form.namePlaceholder")}
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">
-                        {t("contactPage", "form.email")}
-                      </label>
-                      <Input
-                        type="email"
-                        placeholder={t("contactPage", "form.emailPlaceholder")}
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">
-                        {t("contactPage", "form.subject")}
-                      </label>
-                      <Input
-                        placeholder={t("contactPage", "form.subjectPlaceholder")}
-                        value={form.subject}
-                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">
-                        {t("contactPage", "form.message")}
-                      </label>
-                      <Textarea
-                        placeholder={t("contactPage", "form.messagePlaceholder")}
-                        value={form.message}
-                        onChange={(e) => setForm({ ...form, message: e.target.value })}
-                        required
-                        rows={5}
-                      />
-                    </div>
-                    <Button type="submit" className="w-full gap-2">
-                      <Send className="h-4 w-4" />
-                      {t("contactPage", "form.send")}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
 
-              <div className="text-center">
-                <p className="text-muted-foreground mb-3">{t("contactPage", "or")}</p>
-                <Button
-                  size="lg"
-                  asChild
-                  className="gap-2 rounded-full bg-[#25D366] text-white hover:bg-[#1ebe5d]"
-                >
-                  <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq?mode=gi_t" target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="h-5 w-5" />
-                    {t("contactPage", "whatsapp")}
-                  </a>
-                </Button>
+              {/* ── Primary: Direct WhatsApp DM ── */}
+              <a
+                href={WA_DIRECT}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-6 py-5 shadow-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+              >
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <MessageCircle className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg leading-tight">Chat on WhatsApp</p>
+                  <p className="text-white/80 text-sm">Fastest way to reach us — reply within minutes</p>
+                </div>
+                <svg viewBox="0 0 24 24" className="h-5 w-5 opacity-70" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+
+              {/* ── Secondary: Join WhatsApp group ── */}
+              <a
+                href={WA_GROUP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 bg-card border border-border hover:border-[#25D366]/50 rounded-2xl px-6 py-4 transition-all hover:shadow-md"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#25D366]/10 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-[#25D366]" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground text-sm">Join our WhatsApp Community</p>
+                  <p className="text-muted-foreground text-xs">Connect with students, get updates & tips</p>
+                </div>
+                <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
+              </a>
+
+              {/* ── Tertiary: Contact form ── */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-4">Or send us a message</p>
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">
+                          {t("contactPage", "form.name")}
+                        </label>
+                        <Input
+                          placeholder={t("contactPage", "form.namePlaceholder")}
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">
+                          {t("contactPage", "form.email")}
+                        </label>
+                        <Input
+                          type="email"
+                          placeholder={t("contactPage", "form.emailPlaceholder")}
+                          value={form.email}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">
+                          {t("contactPage", "form.subject")}
+                        </label>
+                        <Input
+                          placeholder={t("contactPage", "form.subjectPlaceholder")}
+                          value={form.subject}
+                          onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">
+                          {t("contactPage", "form.message")}
+                        </label>
+                        <Textarea
+                          placeholder={t("contactPage", "form.messagePlaceholder")}
+                          value={form.message}
+                          onChange={(e) => setForm({ ...form, message: e.target.value })}
+                          required
+                          rows={5}
+                        />
+                      </div>
+                      <Button type="submit" className="w-full gap-2">
+                        <Send className="h-4 w-4" />
+                        {t("contactPage", "form.send")}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
