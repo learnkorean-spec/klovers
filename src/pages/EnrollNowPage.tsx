@@ -580,19 +580,39 @@ const EnrollNowPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-2xl">
+
+        {/* Social proof banner */}
+        <div className="flex items-center justify-center gap-3 flex-wrap mb-6 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">⭐ <strong className="text-foreground">4.9</strong> rated</span>
+          <span className="text-border">·</span>
+          <span className="flex items-center gap-1">👥 <strong className="text-foreground">2,000+</strong> students enrolled</span>
+          <span className="text-border">·</span>
+          <span className="flex items-center gap-1">🇰🇷 <strong className="text-foreground">A1–C2</strong> all levels</span>
+        </div>
+
         {/* Progress */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {stepLabels.map((label, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className={`flex items-center gap-2 ${step >= (i + 1) ? "text-foreground" : "text-muted-foreground"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= (i + 1) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {i + 1}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            {stepLabels.map((label, i) => (
+              <div key={i} className="flex flex-col items-center gap-1 flex-1">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                  step > i + 1 ? "bg-green-500 text-white" :
+                  step === i + 1 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" :
+                  "bg-muted text-muted-foreground"
+                }`}>
+                  {step > i + 1 ? "✓" : i + 1}
                 </div>
-                <span className="text-sm font-medium hidden sm:inline">{label}</span>
+                <span className={`text-xs font-medium hidden sm:block ${step >= i + 1 ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
               </div>
-              {i < 2 && <div className={`w-8 sm:w-12 h-0.5 ${step > (i + 1) ? "bg-primary" : "bg-border"}`} />}
-            </div>
-          ))}
+            ))}
+          </div>
+          {/* Progress track */}
+          <div className="relative h-1.5 bg-muted rounded-full mx-4 sm:mx-12">
+            <div
+              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${((step - 1) / 2) * 100}%` }}
+            />
+          </div>
         </div>
 
         {/* STEP 1: Choose Plan */}
@@ -975,6 +995,33 @@ const EnrollNowPage = () => {
                 {isEgypt
                   ? t("enrollNow.redirectReceipt")
                   : t("enrollNow.securePayment")}
+              </p>
+
+              {/* Trust badges */}
+              <div className="grid grid-cols-3 gap-2 pt-2">
+                {[
+                  { icon: "🔒", label: "Secure" },
+                  { icon: "✅", label: "Verified Academy" },
+                  { icon: "💬", label: "24h Support" },
+                ].map(({ icon, label }) => (
+                  <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2">
+                    <span className="text-lg">{icon}</span>
+                    <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* WhatsApp fallback */}
+              <p className="text-xs text-center text-muted-foreground pt-1">
+                Need help enrolling?{" "}
+                <a
+                  href="https://wa.me/201010003084"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 font-semibold hover:underline"
+                >
+                  💬 WhatsApp us
+                </a>
               </p>
                 </>
               )}

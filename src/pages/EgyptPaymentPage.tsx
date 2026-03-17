@@ -486,9 +486,46 @@ const EgyptPaymentPage = () => {
             <CardContent className="pt-6 text-center space-y-3">
               <h2 className="text-xl font-semibold text-destructive">Payment Rejected</h2>
               <p className="text-muted-foreground">Please contact support for assistance.</p>
+              <a
+                href="https://wa.me/201010003084"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2 rounded-lg transition-colors"
+              >
+                💬 Contact us on WhatsApp
+              </a>
             </CardContent>
           </Card>
         )}
+
+        {/* Trust badges */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {[
+            { icon: "🔒", title: "Secure Upload", desc: "Encrypted storage" },
+            { icon: "⚡", title: "Fast Review", desc: "Within 24–48h" },
+            { icon: "💬", title: "Need Help?", desc: "WhatsApp us" },
+          ].map(({ icon, title, desc }) => (
+            <div key={title} className="bg-muted/50 border border-border rounded-xl p-3 text-center">
+              <span className="text-xl block mb-1">{icon}</span>
+              <p className="text-xs font-semibold text-foreground">{title}</p>
+              <p className="text-[10px] text-muted-foreground">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* WhatsApp fallback */}
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          Having trouble?{" "}
+          <a
+            href="https://wa.me/201010003084"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-green-600 font-semibold hover:underline"
+          >
+            WhatsApp us
+          </a>{" "}
+          and we'll help you complete your enrollment.
+        </p>
       </main>
       <Footer />
     </div>

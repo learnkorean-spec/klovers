@@ -112,81 +112,119 @@ const EnrollPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
-        <Card className="w-full max-w-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Enroll Now (Manual Payment)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!tier && userCountry && (
-              <p className="text-sm text-destructive mb-4">
-                Your country "{userCountry}" is not recognized. Please update your profile.
-              </p>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Select value={planType} onValueChange={(v) => setPlanType(v as ClassType)}>
-                <SelectTrigger><SelectValue placeholder="Plan type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="group">Group Classes</SelectItem>
-                  <SelectItem value="private">Private Classes</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="w-full max-w-lg space-y-4">
 
-              <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger><SelectValue placeholder="Duration" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 Month (4 classes)</SelectItem>
-                  <SelectItem value="3">3 Months (12 classes)</SelectItem>
-                  <SelectItem value="6">6 Months (24 classes)</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Header */}
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-bold text-foreground">Complete Your Enrollment</h1>
+            <p className="text-muted-foreground text-sm">Choose your plan and submit your payment to get started</p>
+            <div className="flex items-center justify-center gap-3 flex-wrap pt-1 text-xs text-muted-foreground">
+              <span>⭐ 4.9 rated</span>
+              <span className="text-border">·</span>
+              <span>👥 2,000+ students</span>
+              <span className="text-border">·</span>
+              <span>🇰🇷 A1–C2 levels</span>
+            </div>
+          </div>
 
-              {price !== null && (
-                <div className="bg-muted rounded-lg p-4 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total</span>
-                    <span className="font-bold text-foreground text-lg">${price}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{classesIncluded} classes included</span>
-                    <span>${unitPrice}/class</span>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Order Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!tier && userCountry && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4 text-sm text-destructive">
+                  ⚠️ Your country "{userCountry}" is not recognized. Please <a href="/profile" className="underline font-medium">update your profile</a>.
                 </div>
               )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Select value={planType} onValueChange={(v) => setPlanType(v as ClassType)}>
+                  <SelectTrigger><SelectValue placeholder="Plan type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="group">👥 Group Classes</SelectItem>
+                    <SelectItem value="private">👤 Private Classes</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vodafone_cash">Vodafone Cash</SelectItem>
-                  <SelectItem value="instapay">InstaPay</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={duration} onValueChange={setDuration}>
+                  <SelectTrigger><SelectValue placeholder="Duration" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Month — 4 classes</SelectItem>
+                    <SelectItem value="3">3 Months — 12 classes</SelectItem>
+                    <SelectItem value="6">6 Months — 24 classes 🔥 Best Value</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Input
-                placeholder="Transaction reference"
-                value={txRef}
-                onChange={(e) => setTxRef(e.target.value)}
-                required
-              />
+                {price !== null && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{classesIncluded} classes included</span>
+                      <span className="text-xs text-muted-foreground">${unitPrice}/class</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-foreground">Total</span>
+                      <span className="font-bold text-2xl text-foreground">${price}</span>
+                    </div>
+                  </div>
+                )}
 
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-1">Payment receipt *</label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vodafone_cash">📱 Vodafone Cash</SelectItem>
+                    <SelectItem value="instapay">💳 InstaPay</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 <Input
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                  placeholder="Transaction reference (from your payment)"
+                  value={txRef}
+                  onChange={(e) => setTxRef(e.target.value)}
                   required
                 />
-              </div>
 
-              <Button type="submit" className="w-full" disabled={loading || !planType || !duration || !paymentMethod || price === null}>
-                {loading ? "Submitting..." : "Submit Enrollment"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1">Payment receipt *</label>
+                  <Input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">JPG, PNG, or PDF · max 5MB</p>
+                </div>
+
+                <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading || !planType || !duration || !paymentMethod || price === null}>
+                  {loading ? "Submitting..." : "🔒 Submit Enrollment"}
+                </Button>
+
+                {/* Trust badges */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: "🔒", label: "Secure" },
+                    { icon: "⚡", label: "24h Review" },
+                    { icon: "✅", label: "Verified" },
+                  ].map(({ icon, label }) => (
+                    <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2">
+                      <span className="text-base">{icon}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  Need help?{" "}
+                  <a href="https://wa.me/201010003084" target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold hover:underline">
+                    💬 WhatsApp us
+                  </a>
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </main>
       <Footer />
     </div>
