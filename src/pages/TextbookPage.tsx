@@ -12,8 +12,10 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import WorldPathMap from "@/components/WorldPathMap";
 import DailyRoutinePathMap from "@/components/DailyRoutinePathMap";
+import KDramaPathMap from "@/components/KDramaPathMap";
 import { WORLDS } from "@/constants/worlds";
 import { DAILY_ROUTINE_WORLDS } from "@/constants/dailyRoutineWorlds";
+import { KDRAMA_WORLDS } from "@/constants/kdramaWorlds";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/useSEO";
 
