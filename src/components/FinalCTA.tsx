@@ -142,7 +142,7 @@ const FinalCTA = () => {
             asChild
             className="gap-2 h-12 px-8 text-base bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0 min-w-[200px] font-semibold"
           >
-            <a href="https://wa.me/201234567890" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/601121777560" target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-4 w-4" />
               {isAr ? "واتساب" : "WhatsApp Us"}
             </a>

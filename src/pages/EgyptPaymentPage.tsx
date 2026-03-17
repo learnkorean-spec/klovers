@@ -11,7 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle } from "lucide-react";
 
-const ACCOUNT_NUMBER = "00201010003084";
+const ACCOUNT_NUMBER = "00601121777560";
 
 const METHODS = [
   { value: "vodafone_cash", label: "Vodafone Cash", icon: "📱" },
@@ -487,7 +487,7 @@ const EgyptPaymentPage = () => {
               <h2 className="text-xl font-semibold text-destructive">Payment Rejected</h2>
               <p className="text-muted-foreground">Please contact support for assistance.</p>
               <a
-                href="https://wa.me/201010003084"
+                href="https://wa.me/601121777560"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2 rounded-lg transition-colors"
@@ -517,7 +517,7 @@ const EgyptPaymentPage = () => {
         <p className="text-center text-xs text-muted-foreground mt-4">
           Having trouble?{" "}
           <a
-            href="https://wa.me/201010003084"
+            href="https://wa.me/601121777560"
             target="_blank"
             rel="noopener noreferrer"
             className="text-green-600 font-semibold hover:underline"

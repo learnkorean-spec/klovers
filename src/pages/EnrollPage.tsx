@@ -217,7 +217,7 @@ const EnrollPage = () => {
 
                 <p className="text-xs text-center text-muted-foreground">
                   Need help?{" "}
-                  <a href="https://wa.me/201010003084" target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold hover:underline">
+                  <a href="https://wa.me/601121777560" target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold hover:underline">
                     💬 WhatsApp us
                   </a>
                 </p>

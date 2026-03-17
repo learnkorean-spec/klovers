@@ -1015,7 +1015,7 @@ const EnrollNowPage = () => {
               <p className="text-xs text-center text-muted-foreground pt-1">
                 Need help enrolling?{" "}
                 <a
-                  href="https://wa.me/201010003084"
+                  href="https://wa.me/601121777560"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-600 font-semibold hover:underline"

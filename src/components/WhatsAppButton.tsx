@@ -1,4 +1,4 @@
-const WA_NUMBER = "201010003084";
+const WA_NUMBER = "601121777560";
 const WA_MESSAGE = encodeURIComponent("Hi! I'm interested in learning Korean with Klovers.");
 
 const WhatsAppButton = () => (
