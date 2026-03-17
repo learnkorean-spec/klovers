@@ -49,10 +49,10 @@ const Header = () => {
     { href: "/courses", label: t("header", "courses") },
     { href: "/pricing", label: t("header", "pricing") },
     { href: "/textbook", label: isAr ? "الكتاب" : "Textbook" },
+    { href: "/games", label: isAr ? "ألعاب" : "Games", badge: !user ? (isAr ? "مجاني" : "Free") : undefined },
   ];
 
   const moreLinks = [
-    { href: "/games", label: isAr ? "ألعاب" : "Games" },
     { href: "/blog", label: isAr ? "المدونة" : "Blog" },
     { href: "/about", label: t("header", "about") },
     { href: "/faq", label: t("header", "faq") },
@@ -80,13 +80,18 @@ const Header = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
                   isActive(link.href)
                     ? "text-foreground bg-accent"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 }`}
               >
                 {link.label}
+                {link.badge && (
+                  <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             ))}
 
@@ -190,12 +195,17 @@ const Header = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2 ${
                     isActive(link.href) ? "text-foreground bg-accent" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
+                  {"badge" in link && link.badge && (
+                    <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               ))}
 
