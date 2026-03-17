@@ -248,6 +248,13 @@ const AdminDashboard = () => {
     else { setLeads((prev) => prev.filter((l) => l.id !== id)); toast({ title: "Deleted" }); }
   };
 
+  const handleDeleteStudent = async (userId: string) => {
+    const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
+    if (error) { toast({ title: "Error", description: "Failed to delete student.", variant: "destructive" }); return; }
+    setOverviewRows((prev) => prev.filter((r) => r.user_id !== userId));
+    toast({ title: "Deleted", description: "Student record removed." });
+  };
+
   const handleDeduplicateLeads = async () => {
     // Group leads by lowercase email, keep the newest (first in array since sorted desc)
     const emailMap: Record<string, typeof leads> = {};
@@ -780,6 +787,7 @@ const AdminDashboard = () => {
                           >
                             Joined {studentSort.col === "joined_at" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
                           </TableHead>
+                          <TableHead className="py-3 px-3 w-10" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -809,6 +817,25 @@ const AdminDashboard = () => {
                               <Badge variant="outline" className="text-xs">{u.source_label}</Badge>
                             </TableCell>
                             <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(u.joined_at).toLocaleDateString()}</TableCell>
+                            <TableCell className="py-3 px-3 w-10" onClick={(e) => e.stopPropagation()}>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10">
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete student?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will permanently delete {u.name || u.email}'s profile. This cannot be undone.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteStudent(u.user_id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
