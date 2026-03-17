@@ -1,16 +1,9 @@
 import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, DollarSign, Users, Star, Globe, Zap, BookOpen, Trophy } from "lucide-react";
+import { ArrowRight, DollarSign, Users, Star, Globe } from "lucide-react";
 import heroPoster from "@/assets/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
-
-const floatingPills = [
-  { icon: Zap,           label: "Live Classes",   delay: "0s",   pos: "top-[22%] left-[6%]" },
-  { icon: BookOpen,      label: "TOPIK Prep",     delay: "0.5s", pos: "top-[22%] right-[5%]" },
-  { icon: Trophy,        label: "Certification",  delay: "1s",   pos: "bottom-[30%] left-[4%]" },
-  { icon: Star,          label: "4.9 ★ Rated",   delay: "1.5s", pos: "bottom-[30%] right-[4%]" },
-];
 
 const useCountUp = (target: number, duration = 1800) => {
   const [count, setCount] = useState(0);
@@ -117,21 +110,9 @@ const HeroSection = () => {
         한국어
       </span>
 
-      {/* ── Floating feature pills (hidden on mobile) ────────── */}
-      {floatingPills.map(({ icon: Icon, label, delay, pos }) => (
-        <div
-          key={label}
-          className={`absolute hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-full backdrop-blur-md border border-white/15 bg-white/8 text-white/90 text-sm font-semibold shadow-xl animate-mascot-bounce ${pos}`}
-          style={{ animationDelay: delay, animationDuration: `${3 + Math.random() * 1.5}s` }}
-        >
-          <Icon className="w-4 h-4 text-primary shrink-0" />
-          {label}
-        </div>
-      ))}
-
       {/* ── Hero text content ─────────────────────────────────── */}
       <div className="relative z-10 w-full px-4 text-center">
-        <div className="max-w-5xl mx-auto flex flex-col items-center gap-7">
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
 
           {/* Live badge */}
           <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-primary/20 border border-primary/50 backdrop-blur-md shadow-lg">
@@ -146,15 +127,15 @@ const HeroSection = () => {
 
           {/* Main headline */}
           <h1
-            className="font-black text-white leading-[1.0] tracking-tighter"
+            className="font-black text-white leading-[1.05] tracking-tighter"
             style={{ textShadow: "0 4px 40px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.8)" }}
           >
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7rem]">
+            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
               {t("hero", "title1")}
             </span>
             <span
-              className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7rem] text-primary mt-1"
-              style={{ textShadow: "0 0 100px hsl(60 100% 50% / 0.5), 0 0 40px hsl(60 100% 50% / 0.3), 0 4px 24px rgba(0,0,0,0.7)" }}
+              className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary mt-1"
+              style={{ textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)" }}
             >
               {t("hero", "title2")}
             </span>
@@ -162,35 +143,20 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <p
-            className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed font-medium"
+            className="text-lg sm:text-xl text-white/85 max-w-xl mx-auto leading-relaxed"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
-            Live interactive Korean classes with{" "}
-            <span className="text-primary font-bold">real progress</span>.
-            Join{" "}
-            <span className="text-white font-bold">2,000+ students</span>{" "}
-            learning Korean the right way.
+            Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.
+            Join <span className="text-white font-semibold">2,000+ students</span> learning the right way.
           </p>
 
-          {/* Level pills */}
-          <div className="flex gap-2 flex-wrap justify-center">
-            {["Beginner", "Intermediate", "Advanced", "TOPIK"].map((level) => (
-              <span
-                key={level}
-                className="px-3.5 py-1.5 rounded-full text-xs font-bold border border-white/20 bg-white/10 text-white/80 backdrop-blur-sm"
-              >
-                {level}
-              </span>
-            ))}
-          </div>
-
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-1">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
               size="lg"
               asChild
-              className="relative gap-3 text-base md:text-lg font-bold h-14 px-10 md:px-14 shadow-2xl overflow-hidden"
-              style={{ boxShadow: "0 0 40px hsl(60 100% 50% / 0.35), 0 8px 32px rgba(0,0,0,0.4)" }}
+              className="gap-2.5 text-base font-bold h-13 px-10 shadow-2xl"
+              style={{ boxShadow: "0 0 36px hsl(60 100% 50% / 0.3), 0 8px 24px rgba(0,0,0,0.4)" }}
             >
               <Link to="/enroll-now">
                 {t("hero", "startNow")}
@@ -201,27 +167,13 @@ const HeroSection = () => {
               size="lg"
               variant="outline"
               asChild
-              className="gap-3 text-base md:text-lg font-bold h-14 px-10 md:px-14 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
+              className="gap-2.5 text-base font-bold h-13 px-10 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
             >
               <Link to="/pricing">
                 <DollarSign className="h-5 w-5" />
                 {t("hero", "viewPricing")}
               </Link>
             </Button>
-          </div>
-
-          {/* Social proof avatars */}
-          <div className="flex items-center gap-3 mt-1">
-            <div className="flex -space-x-2.5">
-              {["bg-rose-400","bg-violet-400","bg-sky-400","bg-amber-400","bg-emerald-400"].map((c, i) => (
-                <div key={i} className={`w-8 h-8 rounded-full ${c} border-2 border-black/50 flex items-center justify-center text-white text-[10px] font-bold shadow`}>
-                  {["아","민","소","진","림"][i]}
-                </div>
-              ))}
-            </div>
-            <p className="text-white/70 text-sm">
-              <span className="text-white font-bold">2,000+</span> students already enrolled
-            </p>
           </div>
 
         </div>
