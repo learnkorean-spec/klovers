@@ -83,7 +83,7 @@ export function useLearningGoals() {
 
       const isCompleted = progress >= goal.target_value;
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("user_learning_goals")
         .update({
           current_progress: Math.min(progress, goal.target_value),
