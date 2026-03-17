@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +6,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FinalCTA from "@/components/FinalCTA";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, User, ArrowRight } from "lucide-react";
+import { CalendarDays, User, ArrowRight, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPost {
@@ -53,7 +54,18 @@ const BlogPage = () => {
 
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeType, setActiveType] = useState<string | null>(null);
   const { language } = useLanguage();
+
+  const typeOptions = useMemo(() => {
+    const seen = new Set<string>();
+    posts.forEach(p => { if (p.article_type) seen.add(p.article_type); });
+    return Array.from(seen);
+  }, [posts]);
+
+  const filteredPosts = useMemo(() =>
+    activeType ? posts.filter(p => p.article_type === activeType) : posts,
+  [posts, activeType]);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -110,6 +122,33 @@ const BlogPage = () => {
             </p>
           </div>
 
+          {/* Type filter pills + count */}
+          {!loading && posts.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+              <Button
+                size="sm"
+                variant={activeType === null ? "default" : "outline"}
+                onClick={() => setActiveType(null)}
+              >
+                All <span className="ml-1.5 text-xs opacity-70">({posts.length})</span>
+              </Button>
+              {typeOptions.map(type => (
+                <Button
+                  key={type}
+                  size="sm"
+                  variant={activeType === type ? "default" : "outline"}
+                  onClick={() => setActiveType(type)}
+                  className={activeType !== type ? (TYPE_COLOR[type] ? `border ${TYPE_COLOR[type].split(" ")[2]} hover:opacity-80` : "") : ""}
+                >
+                  <span className={activeType !== type ? TYPE_COLOR[type]?.split(" ").slice(0, 2).join(" ") : ""}>
+                    {TYPE_LABEL[type] || type}
+                  </span>
+                  <span className="ml-1.5 text-xs opacity-70">({posts.filter(p => p.article_type === type).length})</span>
+                </Button>
+              ))}
+            </div>
+          )}
+
           {/* Card grid */}
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -125,13 +164,17 @@ const BlogPage = () => {
                 </div>
               ))}
             </div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <p className="text-center text-foreground/50 py-16 text-lg">
-              {language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!"}
+              {posts.length === 0
+                ? (language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!")
+                : "No articles in this category."}
             </p>
           ) : (
             <ol className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" role="list">
-              {posts.map((post, idx) => (
+              {filteredPosts.map((post, idx) => {
+                const readingTime = Math.max(1, Math.ceil((post.description?.split(/\s+/).length || 0) * 8 / 200));
+                return (
                 <li key={post.id} role="listitem">
                   <Link to={`/blog/${post.slug}`} className="group block h-full">
                     <article className="h-full rounded-2xl border border-border bg-card overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 flex flex-col">
@@ -190,19 +233,25 @@ const BlogPage = () => {
                           {post.description}
                         </p>
 
-                        {/* Footer: author / date */}
-                        <div className="flex items-center justify-between text-xs text-foreground/50 border-t border-border pt-3 mt-auto">
+                        {/* Footer: author / date / reading time */}
+                        <div className="flex items-center justify-between text-xs text-foreground/50 border-t border-border pt-3 mt-auto flex-wrap gap-1">
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
                             {post.author}
                           </span>
-                          <time
-                            dateTime={post.published_at || post.created_at}
-                            className="flex items-center gap-1"
-                          >
-                            <CalendarDays className="h-3 w-3" />
-                            {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                          </time>
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {readingTime} min
+                            </span>
+                            <time
+                              dateTime={post.published_at || post.created_at}
+                              className="flex items-center gap-1"
+                            >
+                              <CalendarDays className="h-3 w-3" />
+                              {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                            </time>
+                          </div>
                         </div>
 
                         {/* Read more */}
@@ -214,7 +263,8 @@ const BlogPage = () => {
                     </article>
                   </Link>
                 </li>
-              ))}
+                );
+              })}
             </ol>
           )}
         </div>

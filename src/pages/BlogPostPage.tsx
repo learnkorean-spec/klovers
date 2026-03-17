@@ -54,6 +54,7 @@ const BlogPostPage = () => {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [relatedPosts, setRelatedPosts] = useState<Pick<BlogPost, "id"|"title"|"slug"|"description"|"hero_image"|"hero_alt"|"article_type"|"author"|"published_at"|"created_at">[]>([]);
   const { language } = useLanguage();
 
   const handleCopyLink = useCallback(() => {
@@ -78,6 +79,32 @@ const BlogPostPage = () => {
         setPost(data as BlogPost);
         // Track view — fire-and-forget, non-blocking
         supabase.rpc("increment_blog_view", { post_slug: slug }).then(() => {});
+        // Fetch related posts: same article_type, exclude current
+        supabase
+          .from("blog_posts")
+          .select("id, title, slug, description, hero_image, hero_alt, article_type, author, published_at, created_at")
+          .eq("published", true)
+          .eq("lang", data.lang || "en")
+          .eq("article_type", data.article_type)
+          .neq("slug", slug)
+          .order("view_count", { ascending: false })
+          .limit(3)
+          .then(({ data: rel }) => {
+            if (rel && rel.length > 0) {
+              setRelatedPosts(rel as any);
+            } else {
+              // Fallback: any recent posts in same lang
+              supabase
+                .from("blog_posts")
+                .select("id, title, slug, description, hero_image, hero_alt, article_type, author, published_at, created_at")
+                .eq("published", true)
+                .eq("lang", data.lang || "en")
+                .neq("slug", slug)
+                .order("view_count", { ascending: false })
+                .limit(3)
+                .then(({ data: fallback }) => setRelatedPosts((fallback as any) || []));
+            }
+          });
       } else if (language === "ar" && !slug.endsWith("-ar")) {
         const { data: arData } = await supabase
           .from("blog_posts")
@@ -430,6 +457,47 @@ const BlogPostPage = () => {
                   {kw}
                 </Badge>
               ))}
+            </div>
+          )}
+
+          {/* Related posts */}
+          {relatedPosts.length > 0 && (
+            <div className="mt-14 pt-10 border-t border-border">
+              <h2 className="text-lg font-bold text-foreground mb-5">You might also like</h2>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {relatedPosts.map((rp) => (
+                  <Link
+                    key={rp.id}
+                    to={`/blog/${rp.slug}`}
+                    className="group block rounded-xl border border-border bg-card overflow-hidden hover:border-primary/30 hover:shadow-md transition-all"
+                  >
+                    {rp.hero_image ? (
+                      <div className="aspect-video overflow-hidden bg-muted">
+                        <img
+                          src={rp.hero_image}
+                          alt={rp.hero_alt || rp.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-3xl">📖</div>
+                    )}
+                    <div className="p-3">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[rp.article_type] || "bg-muted text-muted-foreground border-border"}`}>
+                        {TYPE_LABEL[rp.article_type] || rp.article_type}
+                      </span>
+                      <h3 className="text-sm font-semibold text-foreground mt-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                        {rp.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <CalendarDays className="h-3 w-3" />
+                        {new Date(rp.published_at || rp.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 
