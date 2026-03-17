@@ -23,6 +23,7 @@ interface Enrollment {
   created_at: string;
   level: string | null;
   enrollment_status: string;
+  sessions_remaining: number;
 }
 
 const COLORS = [
@@ -44,7 +45,7 @@ const SalesAnalytics = () => {
   useEffect(() => {
     const fetch = async () => {
       const [eRes, lRes, pRes] = await Promise.all([
-        supabase.from("enrollments").select("id,user_id,plan_type,duration,classes_included,amount,currency,payment_status,approval_status,payment_provider,created_at,level,enrollment_status"),
+        supabase.from("enrollments").select("id,user_id,plan_type,duration,classes_included,amount,currency,payment_status,approval_status,payment_provider,created_at,level,enrollment_status,sessions_remaining"),
         supabase.from("leads").select("id,status,created_at,user_id"),
         supabase.from("profiles").select("user_id,status,created_at"),
       ]);
@@ -81,6 +82,8 @@ const SalesAnalytics = () => {
     return data;
   }, [paidEnrollments, months]);
 
+  const activeStudents = paidEnrollments.filter(e => (e.sessions_remaining ?? 0) > 0).length;
+
   const totalRevenue = paidEnrollments.reduce((s, e) => s + Number(e.amount), 0);
   const avgOrderValue = paidEnrollments.length > 0 ? totalRevenue / paidEnrollments.length : 0;
 
@@ -88,14 +91,21 @@ const SalesAnalytics = () => {
   const prevMonthRevenue = revenueByMonth[revenueByMonth.length - 2]?.revenue ?? 0;
   const revenueGrowth = prevMonthRevenue > 0 ? ((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 : 0;
 
-  // Plan breakdown
+  // Plan breakdown with MoM
   const planBreakdown = useMemo(() => {
-    const map: Record<string, { count: number; revenue: number }> = {};
+    const thisMonthStart = startOfMonth(now);
+    const thisMonthEnd = endOfMonth(now);
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const lastMonthEnd = endOfMonth(subMonths(now, 1));
+    const map: Record<string, { count: number; revenue: number; thisMonth: number; lastMonth: number }> = {};
     paidEnrollments.forEach(e => {
       const key = `${e.plan_type} – ${e.duration}mo`;
-      if (!map[key]) map[key] = { count: 0, revenue: 0 };
+      if (!map[key]) map[key] = { count: 0, revenue: 0, thisMonth: 0, lastMonth: 0 };
       map[key].count++;
       map[key].revenue += Number(e.amount);
+      const cd = parseISO(e.created_at);
+      if (isWithinInterval(cd, { start: thisMonthStart, end: thisMonthEnd })) map[key].thisMonth++;
+      else if (isWithinInterval(cd, { start: lastMonthStart, end: lastMonthEnd })) map[key].lastMonth++;
     });
     return Object.entries(map).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.revenue - a.revenue);
   }, [paidEnrollments]);
@@ -169,7 +179,7 @@ const SalesAnalytics = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -208,6 +218,16 @@ const SalesAnalytics = () => {
               <span className="text-xs text-muted-foreground">Paid Students</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{paidEnrollments.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-xl p-2 bg-teal-500/10"><BarChart3 className="h-4 w-4 text-teal-600" /></div>
+              <span className="text-xs text-muted-foreground">Active Students</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{activeStudents}</p>
+            <p className="text-xs text-muted-foreground mt-1">sessions remaining &gt; 0</p>
           </CardContent>
         </Card>
       </div>
@@ -308,17 +328,28 @@ const SalesAnalytics = () => {
                 <TableHead className="text-right">Enrollments</TableHead>
                 <TableHead className="text-right">Revenue</TableHead>
                 <TableHead className="text-right">Avg</TableHead>
+                <TableHead className="text-right">MoM %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {planBreakdown.map(p => (
-                <TableRow key={p.name}>
-                  <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell className="text-right">{p.count}</TableCell>
-                  <TableCell className="text-right">${p.revenue.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">${(p.revenue / p.count).toFixed(0)}</TableCell>
-                </TableRow>
-              ))}
+              {planBreakdown.map(p => {
+                const mom = p.lastMonth > 0 ? ((p.thisMonth - p.lastMonth) / p.lastMonth * 100) : null;
+                return (
+                  <TableRow key={p.name}>
+                    <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell className="text-right">{p.count}</TableCell>
+                    <TableCell className="text-right">${p.revenue.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">${(p.revenue / p.count).toFixed(0)}</TableCell>
+                    <TableCell className="text-right">
+                      {mom !== null ? (
+                        <span className={mom >= 0 ? "text-emerald-600" : "text-destructive"}>
+                          {mom >= 0 ? "+" : ""}{mom.toFixed(0)}%
+                        </span>
+                      ) : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
