@@ -90,7 +90,7 @@ interface OverviewRow {
 const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
 
-import { normalizeLevel } from "@/constants/levels";
+import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -106,6 +106,7 @@ const AdminDashboard = () => {
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -113,6 +114,7 @@ const AdminDashboard = () => {
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
   const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
+  const [enrollmentSearch, setEnrollmentSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
@@ -352,6 +354,11 @@ const AdminDashboard = () => {
     });
   }, [leads, search, statusFilter, planFilter, confirmedEmails]);
 
+  const statusCounts = useMemo(() =>
+    leads.reduce((acc, l) => { acc[l.status] = (acc[l.status] || 0) + 1; return acc; }, {} as Record<string, number>),
+    [leads]
+  );
+
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Date"];
     const rows = filtered.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, new Date(l.created_at).toLocaleDateString()]);
@@ -509,16 +516,17 @@ const AdminDashboard = () => {
         : studentFilter === "stripe" ? u.source_label === "Stripe"
         : studentFilter === "egypt" ? u.source_label === "Egypt"
         : true;
-      return matchesSearch && matchesFilter;
+      const matchesLevel = levelFilter === "all" || normalizeLevel(u.level || "") === levelFilter;
+      return matchesSearch && matchesFilter && matchesLevel;
     });
-  }, [overviewRows, studentSearch, studentFilter]);
+  }, [overviewRows, studentSearch, studentFilter, levelFilter]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
   const pagedUsers = filteredUsers.slice(studentPage * PAGE_SIZE, (studentPage + 1) * PAGE_SIZE);
 
   // Reset page when filters change
-  useEffect(() => { setStudentPage(0); }, [studentSearch, studentFilter]);
+  useEffect(() => { setStudentPage(0); }, [studentSearch, studentFilter, levelFilter]);
 
   const studentFilterOptions = [
     { value: "all", label: `All (${overviewRows.length})` },
@@ -583,6 +591,7 @@ const AdminDashboard = () => {
 
           <Tabs value={adminTab} onValueChange={setAdminTab}>
             <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
+              {/* Operations */}
               <TabsTrigger value="students" className={TAB_CLS}>
                 <Users className="h-4 w-4" /> Users ({overviewRows.length})
               </TabsTrigger>
@@ -594,6 +603,8 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="leads" className={TAB_CLS}>CRM Leads</TabsTrigger>
               <TabsTrigger value="manage" className={TAB_CLS}>Manage</TabsTrigger>
+              {/* Learning */}
+              <div className="w-px h-5 bg-border mx-1 self-center shrink-0" />
               <TabsTrigger value="group-attendance" className={TAB_CLS}>
                 Groups
                 {pendingAttendance > 0 && (
@@ -601,15 +612,19 @@ const AdminDashboard = () => {
                 )}
               </TabsTrigger>
               <TabsTrigger value="group-matcher" className={TAB_CLS}>Matcher</TabsTrigger>
-              <TabsTrigger value="notifications" className={TAB_CLS}>
-                <Bell className="h-4 w-4" /> Alerts
-              </TabsTrigger>
-              <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
+              <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
+              {/* Content */}
+              <div className="w-px h-5 bg-border mx-1 self-center shrink-0" />
               <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
               <TabsTrigger value="campaigns" className={TAB_CLS}>
                 <Mail className="h-4 w-4" /> Campaigns
               </TabsTrigger>
-              <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
+              {/* Config */}
+              <div className="w-px h-5 bg-border mx-1 self-center shrink-0" />
+              <TabsTrigger value="notifications" className={TAB_CLS}>
+                <Bell className="h-4 w-4" /> Alerts
+              </TabsTrigger>
+              <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
               <TabsTrigger value="sales" className={TAB_CLS}>
                 <BarChart3 className="h-4 w-4" /> Sales
               </TabsTrigger>
@@ -654,12 +669,23 @@ const AdminDashboard = () => {
                         ))}
                       </div>
                     )}
-                    {/* Search + Export */}
+                    {/* Search + Level filter + Export */}
                     <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input placeholder="Search by name or email..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} className="pl-9" />
                       </div>
+                      <Select value={levelFilter} onValueChange={setLevelFilter}>
+                        <SelectTrigger className="w-full sm:w-40">
+                          <SelectValue placeholder="All Levels" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Levels</SelectItem>
+                          {LEVEL_SELECT_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => {
                         const headers = ["Name", "Email", "Country", "Level", "Remaining Sessions", "Status", "Source", "Joined"];
                         const rows = filteredUsers.map(u => [u.name, u.email, u.country, u.level, u.sessions_remaining, u.derived_status, u.source_label, new Date(u.joined_at).toLocaleDateString()]);
@@ -817,6 +843,10 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <Tabs defaultValue="under_review">
+                  <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Search by name, email or plan…" value={enrollmentSearch} onChange={(e) => setEnrollmentSearch(e.target.value)} className="pl-9" />
+                  </div>
                   <TabsList className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3 h-auto bg-transparent p-0 w-full">
                     {[
                       { value: "under_review", label: "Under Review", count: enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length },
@@ -841,6 +871,13 @@ const AdminDashboard = () => {
                         : e.approval_status === "REJECTED";
                       if (!matchesTab) return false;
                       if (!showLegacyEnrollments && isLegacy(e)) return false;
+                      if (enrollmentSearch) {
+                        const q = enrollmentSearch.toLowerCase();
+                        const name = e.profiles?.name?.toLowerCase() ?? "";
+                        const email = e.profiles?.email?.toLowerCase() ?? "";
+                        const plan = e.plan_type?.toLowerCase() ?? "";
+                        if (!name.includes(q) && !email.includes(q) && !plan.includes(q)) return false;
+                      }
                       return true;
                     });
                     return (
@@ -1081,11 +1118,11 @@ const AdminDashboard = () => {
                       <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Filter status" /></SelectTrigger>
+                      <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Filter status" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="confirmed">Confirmed (Paid)</SelectItem>
-                        <SelectItem value="all">All</SelectItem>
-                        {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        <SelectItem value="confirmed">Confirmed (Paid) ({confirmedEmails.size})</SelectItem>
+                        <SelectItem value="all">All ({leads.length})</SelectItem>
+                        {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s} ({statusCounts[s] ?? 0})</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Select value={planFilter} onValueChange={setPlanFilter}>
