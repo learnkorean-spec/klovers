@@ -14,10 +14,10 @@ const MILESTONE_ICONS: Record<string, React.ReactNode> = {
 };
 
 const TIER_COLORS: Record<number, string> = {
-  1: "border-amber-200 bg-amber-50",
-  2: "border-gray-300 bg-gray-50",
-  3: "border-yellow-300 bg-yellow-50",
-  4: "border-purple-300 bg-purple-50",
+  1: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40",
+  2: "border-muted bg-muted/40",
+  3: "border-yellow-300 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/40",
+  4: "border-purple-300 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/40",
 };
 
 const TIER_BADGES: Record<number, string> = {

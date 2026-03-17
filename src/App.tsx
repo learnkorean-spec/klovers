@@ -41,6 +41,7 @@ import LessonDetailPage from "./pages/LessonDetailPage";
 import TextbookProgressPage from "./pages/TextbookProgressPage";
 import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 import DailyQuizPage from "./pages/DailyQuizPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,7 +97,7 @@ const App = () => (
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostPage />} />
               <Route path="/dashboard/schedule" element={<AuthProtectedRoute><MySchedulePage /></AuthProtectedRoute>} />
-              <Route path="/resubmit-schedule" element={<ResubmitSchedulePage />} />
+              <Route path="/resubmit-schedule" element={<AuthProtectedRoute><ResubmitSchedulePage /></AuthProtectedRoute>} />
               <Route path="/placement-test" element={<PlacementTestPage />} />
               <Route path="/games" element={<AuthProtectedRoute><GamesPage /></AuthProtectedRoute>} />
               <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
@@ -105,6 +106,7 @@ const App = () => (
               <Route path="/daily-quiz" element={<AuthProtectedRoute><DailyQuizPage /></AuthProtectedRoute>} />
               <Route path="/textbook/:bookId" element={<AuthProtectedRoute><TextbookPage /></AuthProtectedRoute>} />
               <Route path="/textbook/:bookId/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
+              <Route path="/profile" element={<AuthProtectedRoute><ProfilePage /></AuthProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
               <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />

@@ -5,22 +5,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SITE_URL = "https://klovers.lovable.app";
+const SITE_URL = "https://kloversegy.com";
 
 const STATIC_ROUTES = [
-  { path: "/", priority: "1.0", changefreq: "weekly" },
-  { path: "/courses", priority: "0.8", changefreq: "monthly" },
-  { path: "/pricing", priority: "0.8", changefreq: "monthly" },
-  { path: "/about", priority: "0.7", changefreq: "monthly" },
-  { path: "/faq", priority: "0.6", changefreq: "monthly" },
-  { path: "/contact", priority: "0.6", changefreq: "monthly" },
-  { path: "/blog", priority: "0.9", changefreq: "daily" },
-  { path: "/games", priority: "0.7", changefreq: "weekly" },
-  { path: "/textbook", priority: "0.7", changefreq: "weekly" },
-  { path: "/placement-test", priority: "0.6", changefreq: "monthly" },
-  { path: "/enroll", priority: "0.8", changefreq: "monthly" },
-  { path: "/signup", priority: "0.7", changefreq: "monthly" },
-  { path: "/login", priority: "0.5", changefreq: "monthly" },
+  { path: "/",               priority: "1.0", changefreq: "weekly"   },
+  { path: "/courses",        priority: "0.9", changefreq: "weekly"   },
+  { path: "/pricing",        priority: "0.9", changefreq: "monthly"  },
+  { path: "/about",          priority: "0.8", changefreq: "monthly"  },
+  { path: "/blog",           priority: "0.8", changefreq: "weekly"   },
+  { path: "/placement-test", priority: "0.8", changefreq: "monthly"  },
+  { path: "/enroll",         priority: "0.8", changefreq: "monthly"  },
+  { path: "/textbook",       priority: "0.7", changefreq: "weekly"   },
+  { path: "/games",          priority: "0.7", changefreq: "weekly"   },
+  { path: "/faq",            priority: "0.7", changefreq: "monthly"  },
+  { path: "/contact",        priority: "0.7", changefreq: "monthly"  },
+  // NOTE: /login /signup /profile excluded — private/low-value pages
 ];
 
 Deno.serve(async (req) => {

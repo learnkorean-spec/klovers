@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ForgotPasswordPage = () => {
-  useSEO({ title: "Forgot Password | Klovers Korean Academy", description: "Reset your Klovers account password to regain access to your Korean lessons." });
+  useSEO({ title: "Forgot Password | Klovers Korean Academy", description: "Reset your Klovers account password to regain access to your Korean lessons.", noindex: true });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

@@ -7,9 +7,9 @@ import { Trophy, Flame, Crown, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RANK_STYLES: Record<number, string> = {
-  1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30",
-  2: "bg-gray-100 border-gray-400 dark:bg-gray-800/40",
-  3: "bg-amber-100 border-amber-400 dark:bg-amber-900/30",
+  1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700",
+  2: "bg-muted border-muted-foreground/30",
+  3: "bg-amber-100 border-amber-400 dark:bg-amber-900/30 dark:border-amber-700",
 };
 
 const RANK_ICONS: Record<number, React.ReactNode> = {

@@ -6,6 +6,7 @@ interface SEOProps {
   canonical?: string;
   ogImage?: string;
   type?: "website" | "article";
+  noindex?: boolean;
 }
 
 const BASE_URL = "https://kloversegy.com";
@@ -20,6 +21,7 @@ export const useSEO = ({
   canonical,
   ogImage = DEFAULT_IMAGE,
   type = "website",
+  noindex = false,
 }: SEOProps) => {
   useEffect(() => {
     const fullTitle = `${title} | Klovers`;
@@ -31,6 +33,10 @@ export const useSEO = ({
       const el = document.querySelector(selector);
       if (el) el.setAttribute(attr, value);
     };
+
+    // Robots (noindex for private pages)
+    const robotsMeta = document.querySelector('meta[name="robots"]');
+    if (robotsMeta) robotsMeta.setAttribute("content", noindex ? "noindex, nofollow" : "index, follow");
 
     // Standard meta
     setMeta('meta[name="description"]', "content", description);

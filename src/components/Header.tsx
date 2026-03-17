@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, UserCircle, ChevronDown, LogOut, LayoutDashboard, CalendarDays, Zap, Brain, Sun, Moon } from "lucide-react";
+import { Menu, X, Globe, UserCircle, ChevronDown, LogOut, LayoutDashboard, CalendarDays, Zap, Brain, Sun, Moon, Settings } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
@@ -139,6 +139,10 @@ const Header = () => {
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     {isAr ? "لوحة التحكم" : "My Dashboard"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    {isAr ? "ملفي الشخصي" : "My Profile"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/dashboard/schedule")}>
                     <CalendarDays className="h-4 w-4 mr-2" />

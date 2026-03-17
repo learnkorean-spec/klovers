@@ -22,11 +22,12 @@ import { LearningGoalsCard } from "@/components/LearningGoalsCard";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { DailyBonusCard } from "@/components/DailyBonusCard";
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
+import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
 
 interface EnrollmentRecord {
   id: string;
@@ -180,6 +181,7 @@ const StudentDashboard = () => {
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
   const [groupName, setGroupName] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -328,6 +330,7 @@ const StudentDashboard = () => {
       }
 
       setLoading(false);
+      if (!isOnboardingDone()) setShowWelcome(true);
       } catch (err) {
         setFetchError(err instanceof Error ? err.message : "Failed to load your dashboard. Please refresh.");
         setLoading(false);
@@ -416,15 +419,56 @@ const StudentDashboard = () => {
     { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50" },
   ];
 
+  const handleExportProgress = () => {
+    const lines: string[] = [
+      "KLOVERS KOREAN ACADEMY — STUDENT PROGRESS REPORT",
+      "=".repeat(50),
+      `Generated: ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}`,
+      "",
+      "STUDENT",
+      `  Name:    ${userName || "—"}`,
+      `  Level:   ${profileLevel || "—"}`,
+      "",
+      "LEARNING STATS",
+      `  Total XP:        ${gamification.totalXp.toLocaleString()}`,
+      `  Day Streak:      ${gamification.streak.current_streak} days`,
+      `  Lessons Done:    ${lessonsCompleted} / 45`,
+      `  League:          ${league ? `${league.emoji} ${league.name}` : "Beginner"}`,
+      "",
+      "ATTENDANCE",
+      `  Sessions logged: ${attendanceDates.length}`,
+      ...attendanceDates.map((d, i) => `  ${String(i + 1).padStart(3, " ")}. ${new Date(d.date + "T00:00:00").toLocaleDateString("en-GB")}  (${d.source})`),
+      "",
+      "PLACEMENT TEST",
+      placementTest
+        ? `  Score: ${placementTest.score}  |  Level: ${placementTest.level}  |  Date: ${new Date(placementTest.created_at).toLocaleDateString("en-GB")}`
+        : "  No placement test on record",
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `klovers-progress-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-muted/20">
+      <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
       <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
-          <div>
-            <p className="text-sm text-muted-foreground">{todayStr}</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">{todayStr}</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0 mt-1">
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Export Progress</span>
+            </Button>
           </div>
 
           {/* ── Quick Stats (always visible) ── */}

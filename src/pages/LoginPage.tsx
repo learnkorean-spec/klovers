@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LoginPage = () => {
-  useSEO({ title: "Login | Klovers Korean Academy", description: "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard." });
+  useSEO({ title: "Login | Klovers Korean Academy", description: "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

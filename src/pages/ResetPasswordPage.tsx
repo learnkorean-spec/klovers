@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ResetPasswordPage = () => {
-  useSEO({ title: "Reset Password | Klovers Korean Academy", description: "Set a new password for your Klovers Korean Academy account." });
+  useSEO({ title: "Reset Password | Klovers Korean Academy", description: "Set a new password for your Klovers Korean Academy account.", noindex: true });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
