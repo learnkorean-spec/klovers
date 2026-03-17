@@ -33,6 +33,19 @@ const BOOKS = [
     gradient: "from-accent/20 to-accent/5",
     border: "border-accent/30 hover:border-accent/60",
   },
+  {
+    key: "kdrama",
+    titleEn: "K-Drama Korean",
+    titleAr: "كورية الدراما",
+    subtitleEn: "30 Drama-Based Lessons",
+    subtitleAr: "٣٠ درس من الدراما الكورية",
+    descEn: "Learn Korean through iconic K-Drama dialogues, slang, and cultural context.",
+    descAr: "تعلم الكورية من خلال حوارات الدراما الأيقونية والعامية والسياق الثقافي.",
+    emoji: "🎬",
+    icon: Clapperboard,
+    gradient: "from-rose-500/20 to-rose-500/5",
+    border: "border-rose-500/30 hover:border-rose-500/60",
+  },
 ];
 
 const TextbookHubPage = () => {
