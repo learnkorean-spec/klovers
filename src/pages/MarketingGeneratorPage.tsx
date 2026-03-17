@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
   Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud, Brush,
-  CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2,
+  CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2, CalendarPlus,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -221,6 +221,13 @@ interface GeneratedImages {
   "1x1"?: string;
   "4x5"?: string;
   story?: string;
+}
+
+function toGCalUrl(post: { scheduled_at: string; course_title: string | null; caption: string | null }) {
+  const start = new Date(post.scheduled_at);
+  const end = new Date(start.getTime() + 30 * 60 * 1000);
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(post.course_title || "Marketing Post")}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent((post.caption || "").slice(0, 500))}&sf=true&output=xml`;
 }
 
 export default function MarketingGeneratorPage() {
@@ -1096,8 +1103,11 @@ export default function MarketingGeneratorPage() {
                       {distributing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
                       {distributing ? "Scheduling…" : "Auto-Distribute Posts"}
                     </Button>
-                    <Button variant="outline" onClick={exportICS} disabled={!scheduledPosts.length}>
-                      <FileDown className="h-4 w-4 mr-2" /> Export to Google Calendar (.ics)
+                    <Button variant="outline" onClick={() => { exportICS(); setTimeout(() => window.open("https://calendar.google.com/calendar/r/settings/export", "_blank"), 600); }} disabled={!scheduledPosts.length}>
+                      <CalendarPlus className="h-4 w-4 mr-2" /> Export + Open Google Calendar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={exportICS} disabled={!scheduledPosts.length} title="Download .ics only">
+                      <FileDown className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={fetchScheduledPosts} disabled={calLoading}>
                       <RefreshCw className={`h-4 w-4 ${calLoading ? "animate-spin" : ""}`} />
@@ -1105,7 +1115,8 @@ export default function MarketingGeneratorPage() {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Auto-Distribute generates posts for all active groups and spreads them across the selected date range at 08:00 and 16:00 Cairo time.
-                    Click <strong>Export to Google Calendar</strong> to download an .ics file — import it in Google Calendar to see all scheduled posts as events.
+                    <strong> Export + Open Google Calendar</strong> downloads the .ics file and opens Google Calendar — make sure you're signed in as <strong>reham.elshrkawy@gmail.com</strong>, then go to Settings → Import & Export → Import to load all posts.
+                    Or click the <CalendarPlus className="inline h-3 w-3 mx-0.5" /> icon next to any individual post to add it directly.
                   </p>
                 </CardContent>
               </Card>
@@ -1273,6 +1284,14 @@ export default function MarketingGeneratorPage() {
                           <Badge variant="outline" className="text-[10px] shrink-0">
                             {p.status}
                           </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => window.open(toGCalUrl(p), "_blank")}>
+                                <CalendarPlus className="h-3.5 w-3.5 text-blue-500" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Add to Google Calendar</TooltipContent>
+                          </Tooltip>
                           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => unschedulePost(p.id)}>
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
