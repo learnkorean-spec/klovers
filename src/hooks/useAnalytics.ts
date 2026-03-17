@@ -120,7 +120,7 @@ export function useAnalytics(): AnalyticsData {
       }
 
       // Get vocabulary mastery levels
-      const { data: reviewData } = await supabase
+      const { data: reviewData } = await (supabase as any)
         .from("vocabulary_review_history")
         .select("interval_days")
         .eq("user_id", user.id);

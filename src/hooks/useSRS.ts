@@ -104,7 +104,7 @@ export function useSRS(): SRSState & {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("vocabulary_review_history")
         .select(
           `
@@ -165,7 +165,7 @@ export function useSRS(): SRSState & {
 
     try {
       // Get current review record
-      const { data: review, error: fetchError } = await supabase
+      const { data: review, error: fetchError } = await (supabase as any)
         .from("vocabulary_review_history")
         .select(
           "id, difficulty_factor, interval_days, review_count, next_review_date"
@@ -190,7 +190,7 @@ export function useSRS(): SRSState & {
       const nextReviewDate = getNextReviewDate(newInterval);
 
       // Update review record
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from("vocabulary_review_history")
         .update({
           difficulty_factor: newDifficulty,
@@ -229,7 +229,7 @@ export function useSRS(): SRSState & {
       }));
 
       // Use upsert to avoid duplicates
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("vocabulary_review_history")
         .upsert(recordsToInsert, {
           onConflict: "user_id,lesson_vocabulary_id",

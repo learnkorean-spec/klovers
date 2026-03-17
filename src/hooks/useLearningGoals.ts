@@ -31,7 +31,7 @@ export function useLearningGoals() {
     if (!user) return;
 
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("user_learning_goals")
       .select("*")
       .eq("user_id", user.id)
@@ -58,7 +58,7 @@ export function useLearningGoals() {
       else if (timePeriod === "weekly") targetDate.setDate(targetDate.getDate() + 7);
       else if (timePeriod === "monthly") targetDate.setMonth(targetDate.getMonth() + 1);
 
-      const { error } = await supabase.from("user_learning_goals").insert({
+      const { error } = await (supabase as any).from("user_learning_goals").insert({
         user_id: user.id,
         goal_type: goalType,
         goal_name: goalName,
@@ -83,7 +83,7 @@ export function useLearningGoals() {
 
       const isCompleted = progress >= goal.target_value;
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("user_learning_goals")
         .update({
           current_progress: Math.min(progress, goal.target_value),
@@ -101,7 +101,7 @@ export function useLearningGoals() {
   );
 
   const deleteGoal = useCallback(async (goalId: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("user_learning_goals")
       .delete()
       .eq("id", goalId);
