@@ -1011,6 +1011,24 @@ const EnrollNowPage = () => {
                 ))}
               </div>
 
+              {/* What happens next */}
+              <div className="border border-border rounded-xl p-4 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">What happens next?</p>
+                {[
+                  { step: "1", icon: "✅", title: "Payment confirmed", desc: "You get an instant email receipt." },
+                  { step: "2", icon: "📅", title: "Schedule matched", desc: "We confirm your class slot within 24 h." },
+                  { step: "3", icon: "🎉", title: "First class!", desc: "We send your meeting link — ready to learn!" },
+                ].map(({ step: s, icon, title, desc }) => (
+                  <div key={s} className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">{s}</div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{icon} {title}</p>
+                      <p className="text-xs text-muted-foreground">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* WhatsApp fallback */}
               <p className="text-xs text-center text-muted-foreground pt-1">
                 Need help enrolling?{" "}

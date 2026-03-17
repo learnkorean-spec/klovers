@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,7 @@ const FAQPage = () => {
         </section>
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };

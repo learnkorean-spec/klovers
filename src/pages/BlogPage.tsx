@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 import FinalCTA from "@/components/FinalCTA";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -274,6 +275,7 @@ const BlogPage = () => {
         </div>
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };

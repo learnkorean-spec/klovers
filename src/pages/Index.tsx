@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
@@ -23,6 +23,53 @@ const SectionFallback = () => (
 
 const Index = () => {
   useSEO({ title: "Learn Korean Online", description: "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.", canonical: "https://kloversegy.com/" });
+
+  useEffect(() => {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "Korean Language Courses at Klovers",
+      description: "Online Korean language courses for all levels — from A1 beginner to C2 advanced.",
+      url: "https://kloversegy.com/pricing",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          item: {
+            "@type": "Course",
+            name: "Group Korean Classes",
+            description: "Live online group Korean classes for A1–C2 levels. Small groups, expert teachers, flexible schedule.",
+            provider: { "@type": "Organization", name: "Klovers Korean Academy", url: "https://kloversegy.com" },
+            url: "https://kloversegy.com/enroll-now?classType=group",
+            educationalLevel: "Beginner to Advanced",
+            inLanguage: "ko",
+            offers: { "@type": "Offer", price: "25", priceCurrency: "USD", availability: "https://schema.org/InStock" },
+          },
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          item: {
+            "@type": "Course",
+            name: "Private Korean Classes",
+            description: "One-on-one private Korean lessons tailored to your goals and schedule.",
+            provider: { "@type": "Organization", name: "Klovers Korean Academy", url: "https://kloversegy.com" },
+            url: "https://kloversegy.com/enroll-now?classType=private",
+            educationalLevel: "Beginner to Advanced",
+            inLanguage: "ko",
+            offers: { "@type": "Offer", price: "50", priceCurrency: "USD", availability: "https://schema.org/InStock" },
+          },
+        },
+      ],
+    };
+    const el = document.createElement("script");
+    el.id = "home-course-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = JSON.stringify(schema);
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />
