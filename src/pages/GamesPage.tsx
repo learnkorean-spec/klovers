@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { getLeagueProgress } from "@/constants/gamification";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X } from "lucide-react";
@@ -41,6 +42,7 @@ const GamesPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
   const { awardGameXp, progress, league } = useGamification();
+  const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -247,20 +249,43 @@ const GamesPage = () => {
           </div>
         </section>
 
-        {/* Guest leaderboard teaser */}
-        {!isLoggedIn && (
-          <section className="py-8 px-4 bg-muted/20 border-t border-border">
-            <div className="max-w-md mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-foreground flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-500" /> Top Players This Week
-                </h2>
-                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">See your rank →</a>
-              </div>
-              <div className="relative rounded-2xl overflow-hidden border border-border bg-card">
-                {/* Rows */}
-                <div className="divide-y divide-border">
-                  {[
+        {/* Leaderboard — real data for logged-in, teaser for guests */}
+        <section className="py-8 px-4 bg-muted/20 border-t border-border">
+          <div className="max-w-md mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-foreground flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" /> Top Players
+              </h2>
+              {!isLoggedIn && (
+                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">Sign up to join →</a>
+              )}
+            </div>
+            <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>
+              <div className="divide-y divide-border">
+                {isLoggedIn ? (
+                  lbLoading ? (
+                    <div className="py-8 text-center text-sm text-muted-foreground">Loading leaderboard…</div>
+                  ) : xpLeaderboard.length === 0 ? (
+                    <div className="py-8 text-center text-sm text-muted-foreground">No data yet. Play games to earn XP!</div>
+                  ) : (
+                    xpLeaderboard.slice(0, 10).map((p, idx) => {
+                      const rankEmojis = ["🥇", "🥈", "🥉"];
+                      const emoji = idx < 3 ? rankEmojis[idx] : `${idx + 1}`;
+                      return (
+                        <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-primary/5" : ""}`}>
+                          <span className="text-base w-6 text-center font-bold">{emoji}</span>
+                          <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-primary font-bold" : "text-foreground"}`}>
+                            {p.name}{p.isCurrentUser ? " (you)" : ""}
+                          </span>
+                          <span className="text-xs text-yellow-700 font-semibold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full">
+                            {p.value.toLocaleString()} XP
+                          </span>
+                        </div>
+                      );
+                    })
+                  )
+                ) : (
+                  [
                     { rank: 1, name: "Sara M.", xp: 1840, emoji: "🥇" },
                     { rank: 2, name: "Ahmed K.", xp: 1620, emoji: "🥈" },
                     { rank: 3, name: "Yuki T.", xp: 1380, emoji: "🥉" },
@@ -274,23 +299,25 @@ const GamesPage = () => {
                         {p.xp.toLocaleString()} XP
                       </span>
                     </div>
-                  ))}
-                </div>
-                {/* Blur overlay for bottom rows */}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-card to-transparent pointer-events-none" />
-                {/* CTA overlay */}
-                <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3 gap-1">
-                  <a
-                    href="/signup"
-                    className="text-xs bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-semibold hover:bg-primary/90 transition-colors shadow-md"
-                  >
-                    🏆 Sign up to see your rank
-                  </a>
-                </div>
+                  ))
+                )}
               </div>
+              {!isLoggedIn && (
+                <>
+                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3">
+                    <a
+                      href="/signup"
+                      className="text-xs bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-semibold hover:bg-primary/90 transition-colors shadow-md"
+                    >
+                      🏆 Sign up to see your rank
+                    </a>
+                  </div>
+                </>
+              )}
             </div>
-          </section>
-        )}
+          </div>
+        </section>
 
         {/* Active game */}
         <div id="active-game-area" className="border-t border-border scroll-mt-20">
