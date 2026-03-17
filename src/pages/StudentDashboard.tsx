@@ -182,6 +182,7 @@ const StudentDashboard = () => {
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
   const [groupName, setGroupName] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [weeklyXp, setWeeklyXp] = useState(0);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -210,6 +211,18 @@ const StudentDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
+
+      // Weekly XP: from Monday 00:00 local time
+      const now = new Date();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      monday.setHours(0, 0, 0, 0);
+      const { data: weeklyXpData } = await supabase
+        .from("student_xp")
+        .select("xp_earned")
+        .eq("user_id", session.user.id)
+        .gte("created_at", monday.toISOString());
+      setWeeklyXp((weeklyXpData || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0));
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -553,6 +566,69 @@ const StudentDashboard = () => {
               ))}
             </div>
           </div>
+
+          {/* ── Weekly XP goal bar + Book a class ── */}
+          {(() => {
+            const WEEKLY_GOAL = 300;
+            const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
+            const msg = pct >= 100 ? "🎉 Weekly goal crushed!" : pct >= 60 ? "Almost there — keep going!" : pct >= 30 ? "Good start — keep it up!" : "Start earning XP today!";
+            return (
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="bg-card border border-border rounded-2xl px-5 py-4 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-foreground">Weekly XP Goal</span>
+                    <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
+                  </div>
+                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{msg}</p>
+                </div>
+                <a
+                  href={`https://wa.me/601121777560?text=${encodeURIComponent("Hi! I'd like to book my next Korean class.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-5 py-4 transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  <span className="text-2xl">📅</span>
+                  <div>
+                    <p className="font-semibold text-sm leading-tight">Book a Class</p>
+                    <p className="text-white/80 text-xs">Message us on WhatsApp</p>
+                  </div>
+                </a>
+              </div>
+            );
+          })()}
+
+          {/* ── Profile completion bar (only for enrolled users with incomplete items) ── */}
+          {checklistItems.length > 0 && (() => {
+            const done = checklistItems.filter(i => i.completed).length;
+            const total = checklistItems.length;
+            if (done === total) return null;
+            const pct = Math.round((done / total) * 100);
+            return (
+              <div className="flex items-center gap-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <div className="relative w-10 h-10 shrink-0">
+                  <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15" fill="none" stroke="#fde68a" strokeWidth="3" />
+                    <circle cx="18" cy="18" r="15" fill="none" stroke="#f59e0b" strokeWidth="3"
+                      strokeDasharray={`${(pct / 100) * 94.2} 94.2`} strokeLinecap="round" />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">{pct}%</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-amber-800 text-sm">Profile {pct}% complete</p>
+                  <p className="text-amber-700 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 text-amber-800 hover:bg-amber-100" onClick={() => navigate("/dashboard?complete=name")}>
+                  Complete
+                </Button>
+              </div>
+            );
+          })()}
 
           {hasNoData ? (
             /* ── No-enrollment state: show learning features + enroll CTA ── */
