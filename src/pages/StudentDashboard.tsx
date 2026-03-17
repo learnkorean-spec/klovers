@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { useSEO } from "@/hooks/useSEO";
@@ -40,6 +40,8 @@ interface EnrollmentRecord {
   currency: string;
   created_at: string;
   level: string | null;
+  preferred_days: string[] | null;
+  timezone: string | null;
 }
 
 interface ChecklistItem {
@@ -107,6 +109,10 @@ const ProfileCard = ({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(displayName);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!editingName) setNameValue(displayName);
+  }, [displayName, editingName]);
 
   const handleSaveName = async () => {
     if (!nameValue.trim() || nameValue.trim() === displayName) {
@@ -183,6 +189,7 @@ const StudentDashboard = () => {
   const [groupName, setGroupName] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
   const vocabStorageKey = `vocab_xp_${new Date().toISOString().split("T")[0]}`;
   const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
@@ -352,7 +359,7 @@ const StudentDashboard = () => {
       }
     };
     load();
-  }, [navigate, gateLoading, resetBlocked]);
+  }, [navigate, gateLoading, resetBlocked, retryCount]);
 
   const handleItemCompleted = (key: string, _value: string) => {
     setChecklistItems((prev) =>
@@ -392,7 +399,7 @@ const StudentDashboard = () => {
             <p className="text-destructive font-medium">Failed to load dashboard</p>
             <p className="text-muted-foreground text-sm">{fetchError}</p>
             <button
-              onClick={() => { setFetchError(null); setLoading(true); }}
+              onClick={() => { setFetchError(null); setLoading(true); setRetryCount(c => c + 1); }}
               className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity"
             >
               Try again
