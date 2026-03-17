@@ -25,9 +25,7 @@ interface BlogPost {
   lang: string;
   published_at: string | null;
   created_at: string;
-  view_count: number;
-  featured: boolean;
-  seo_priority: number;
+  seo_score: number | null;
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -72,12 +70,10 @@ const BlogPage = () => {
     const fetchPosts = async () => {
       const { data } = await supabase
         .from("blog_posts")
-        .select("id, title, slug, description, keywords, article_type, hero_image, hero_alt, author, lang, published_at, created_at, view_count, featured, seo_priority")
+        .select("id, title, slug, description, keywords, article_type, hero_image, hero_alt, author, lang, published_at, created_at, seo_score")
         .eq("published", true)
         .eq("lang", language)
-        .order("featured", { ascending: false })
-        .order("seo_priority", { ascending: false })
-        .order("view_count", { ascending: false })
+        .order("seo_score", { ascending: false, nullsFirst: false })
         .order("published_at", { ascending: false });
       setPosts((data as BlogPost[]) || []);
       setLoading(false);
@@ -202,22 +198,12 @@ const BlogPage = () => {
                           <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[post.article_type] || "bg-muted text-muted-foreground border-border"}`}>
                             {TYPE_LABEL[post.article_type] || post.article_type}
                           </span>
-                          {post.featured && (
+                          {idx === 0 && (
                             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                               ⭐ {language === "ar" ? "مميز" : "Featured"}
                             </span>
                           )}
-                          {!post.featured && post.view_count >= 100 && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
-                              🔥 {language === "ar" ? "رائج" : "Trending"}
-                            </span>
-                          )}
-                          {!post.featured && post.view_count >= 50 && post.view_count < 100 && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                              👀 {language === "ar" ? "مشهور" : "Popular"}
-                            </span>
-                          )}
-                          {post.seo_priority >= 8 && !post.featured && (
+                          {(post.seo_score ?? 0) >= 80 && idx > 0 && (
                             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                               ✨ {language === "ar" ? "موصى به" : "Top Pick"}
                             </span>

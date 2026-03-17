@@ -88,7 +88,7 @@ const BlogPostPage = () => {
           .eq("lang", data.lang || "en")
           .eq("article_type", data.article_type)
           .neq("slug", slug)
-          .order("view_count", { ascending: false })
+          .order("published_at", { ascending: false })
           .limit(3)
           .then(({ data: rel }) => {
             if (rel && rel.length > 0) {
@@ -101,7 +101,7 @@ const BlogPostPage = () => {
                 .eq("published", true)
                 .eq("lang", data.lang || "en")
                 .neq("slug", slug)
-                .order("view_count", { ascending: false })
+                .order("published_at", { ascending: false })
                 .limit(3)
                 .then(({ data: fallback }) => setRelatedPosts((fallback as any) || []));
             }

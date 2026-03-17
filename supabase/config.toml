@@ -1,5 +1,8 @@
 project_id = "rahpkflknkofuuhnbfyc"
 
+[functions.seed-blogs]
+verify_jwt = false
+
 [functions.send-monthly-marketing-report]
 verify_jwt = false
 
