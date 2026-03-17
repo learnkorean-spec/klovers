@@ -492,6 +492,28 @@ const StudentDashboard = () => {
             );
           })()}
 
+          {/* ── Sessions running low banner ── */}
+          {(() => {
+            if (enrollments.length === 0) return null;
+            const latest = enrollments[0];
+            const remaining = latest.sessions_total - attendanceDates.length;
+            if (remaining > 2) return null;
+            return (
+              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm">
+                <span className="text-2xl">📦</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-blue-900">
+                    {remaining <= 0 ? "Your package is finished!" : `Only ${remaining} session${remaining === 1 ? "" : "s"} left!`}
+                  </p>
+                  <p className="text-blue-700 text-xs">Renew now to keep your momentum going.</p>
+                </div>
+                <Button size="sm" className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate("/enroll-now")}>
+                  Renew
+                </Button>
+              </div>
+            );
+          })()}
+
           {/* ── Quick Stats (always visible) ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {quickStats.map(({ label, value, icon: Icon, color }) => (
