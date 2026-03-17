@@ -190,7 +190,7 @@ export function useSRS(): SRSState & {
       const nextReviewDate = getNextReviewDate(newInterval);
 
       // Update review record
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from("vocabulary_review_history")
         .update({
           difficulty_factor: newDifficulty,
