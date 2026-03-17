@@ -247,6 +247,51 @@ const GamesPage = () => {
           </div>
         </section>
 
+        {/* Guest leaderboard teaser */}
+        {!isLoggedIn && (
+          <section className="py-8 px-4 bg-muted/20 border-t border-border">
+            <div className="max-w-md mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold text-foreground flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-amber-500" /> Top Players This Week
+                </h2>
+                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">See your rank →</a>
+              </div>
+              <div className="relative rounded-2xl overflow-hidden border border-border bg-card">
+                {/* Rows */}
+                <div className="divide-y divide-border">
+                  {[
+                    { rank: 1, name: "Sara M.", xp: 1840, emoji: "🥇" },
+                    { rank: 2, name: "Ahmed K.", xp: 1620, emoji: "🥈" },
+                    { rank: 3, name: "Yuki T.", xp: 1380, emoji: "🥉" },
+                    { rank: 4, name: "Lin W.", xp: 1150, emoji: "4️⃣" },
+                    { rank: 5, name: "Omar F.", xp: 980, emoji: "5️⃣" },
+                  ].map((p) => (
+                    <div key={p.rank} className="flex items-center gap-3 px-4 py-2.5">
+                      <span className="text-base w-6 text-center">{p.emoji}</span>
+                      <span className="flex-1 text-sm font-medium text-foreground">{p.name}</span>
+                      <span className="text-xs text-yellow-700 font-semibold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full">
+                        {p.xp.toLocaleString()} XP
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/* Blur overlay for bottom rows */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+                {/* CTA overlay */}
+                <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3 gap-1">
+                  <a
+                    href="/signup"
+                    className="text-xs bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-semibold hover:bg-primary/90 transition-colors shadow-md"
+                  >
+                    🏆 Sign up to see your rank
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Active game */}
         <div id="active-game-area" className="border-t border-border scroll-mt-20">
           {renderGame()}
