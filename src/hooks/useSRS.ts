@@ -104,7 +104,7 @@ export function useSRS(): SRSState & {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("vocabulary_review_history")
         .select(
           `
