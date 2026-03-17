@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight } from "lucide-react";
+import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight, Share2, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -53,7 +53,15 @@ const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
   const { language } = useLanguage();
+
+  const handleCopyLink = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, []);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -372,37 +380,61 @@ const BlogPostPage = () => {
             </ReactMarkdown>
           </div>
 
-          {/* CTA block */}
-          {post.cta_text && (
-            <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center">
-              <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">Ready to start?</p>
-              <h3 className="text-xl font-bold text-foreground mb-4">{post.cta_text}</h3>
-              {post.cta_url && (
-                <Button asChild size="lg" className="gap-2">
-                  <Link to={post.cta_url}>
-                    Get Started <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              )}
+          {/* CTA block — custom if set, default otherwise */}
+          <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
+            <p className="text-xs font-semibold text-primary uppercase tracking-widest">
+              {post.cta_text ? "Ready to start?" : "Start learning Korean today"}
+            </p>
+            <h3 className="text-xl font-bold text-foreground">
+              {post.cta_text || "Find your level with our free placement test and join 2,000+ students."}
+            </h3>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+              <Button asChild size="lg" className="gap-2">
+                <Link to={post.cta_url || "/placement-test"}>
+                  {post.cta_url ? "Get Started" : "🎯 Take the Free Placement Test"} <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="gap-2">
+                <Link to="/enroll">📚 View Courses & Pricing</Link>
+              </Button>
             </div>
-          )}
+          </div>
+
+          {/* Share row */}
+          <div className="mt-8 pt-6 border-t border-border flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Share2 className="h-3.5 w-3.5" /> Share
+            </span>
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copied!" : "Copy link"}
+            </button>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(post.title + " — " + window.location.href)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-green-200 bg-green-50 hover:bg-green-100 transition-colors text-green-700"
+            >
+              💬 WhatsApp
+            </a>
+          </div>
 
           {/* Tags */}
           {post.keywords && post.keywords.length > 0 && (
-            <div className="mt-10 pt-6 border-t border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Tags</p>
-              <div className="flex flex-wrap gap-2">
-                {post.keywords.map((kw) => (
-                  <Badge key={kw} variant="secondary" className="text-xs font-normal">
-                    {kw}
-                  </Badge>
-                ))}
-              </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {post.keywords.map((kw) => (
+                <Badge key={kw} variant="secondary" className="text-xs font-normal">
+                  {kw}
+                </Badge>
+              ))}
             </div>
           )}
 
           {/* Back to blog */}
-          <div className="mt-10">
+          <div className="mt-8">
             <Button asChild variant="outline" size="sm">
               <Link to="/blog">
                 <ArrowLeft className="h-4 w-4 mr-2" />All Articles
