@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,15 @@ import { useToast } from "@/hooks/use-toast";
 
 const QUESTIONS_PER_PAGE = 10;
 const TOTAL_PAGES = Math.ceil(PLACEMENT_QUESTIONS.length / QUESTIONS_PER_PAGE);
+
+const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string }> = {
+  A1: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our A1 class will teach you Hangul, basic greetings, and everyday words." },
+  A2: { emoji: "🌿", tagline: "Elementary", description: "You know some basics. Our A2 class builds simple sentences, numbers, and daily conversations." },
+  B1: { emoji: "📚", tagline: "Intermediate", description: "You can hold simple conversations. Our B1 class covers grammar patterns and real-life dialogues." },
+  B2: { emoji: "🎯", tagline: "Upper-Intermediate", description: "You're comfortable in Korean. Our B2 class dives into nuanced grammar and natural speech." },
+  C1: { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our C1 class polishes academic and professional Korean." },
+  C2: { emoji: "👑", tagline: "Mastery", description: "Near-native proficiency. Our C2 class refines complex expression and prepares you for TOPIK II." },
+};
 
 const PlacementTestPage = () => {
   useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
@@ -81,15 +90,6 @@ const PlacementTestPage = () => {
     setSubmitting(false);
   };
 
-
-  const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string }> = {
-    A1: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our A1 class will teach you Hangul, basic greetings, and everyday words." },
-    A2: { emoji: "🌿", tagline: "Elementary", description: "You know some basics. Our A2 class builds simple sentences, numbers, and daily conversations." },
-    B1: { emoji: "📚", tagline: "Intermediate", description: "You can hold simple conversations. Our B1 class covers grammar patterns and real-life dialogues." },
-    B2: { emoji: "🎯", tagline: "Upper-Intermediate", description: "You're comfortable in Korean. Our B2 class dives into nuanced grammar and natural speech." },
-    C1: { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our C1 class polishes academic and professional Korean." },
-    C2: { emoji: "👑", tagline: "Mastery", description: "Near-native proficiency. Our C2 class refines complex expression and prepares you for TOPIK II." },
-  };
 
   if (result) {
     const meta = LEVEL_META[result.levelKey] ?? { emoji: "🎓", tagline: "Your Level", description: "Ready to start your Korean journey?" };

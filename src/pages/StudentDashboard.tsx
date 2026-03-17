@@ -471,6 +471,27 @@ const StudentDashboard = () => {
             </Button>
           </div>
 
+          {/* ── Streak at-risk banner ── */}
+          {(() => {
+            const streak = gamification.streak.current_streak;
+            if (streak < 1) return null;
+            const today = new Date().toISOString().slice(0, 10);
+            const lastActive = gamification.streak.last_activity_date?.slice(0, 10);
+            if (lastActive === today) return null;
+            return (
+              <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm">
+                <span className="text-2xl">🔥</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-orange-800">Keep your {streak}-day streak alive!</p>
+                  <p className="text-orange-700 text-xs">Play a game or complete a lesson today before midnight.</p>
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 text-orange-800 hover:bg-orange-100" onClick={() => navigate("/games")}>
+                  Play now
+                </Button>
+              </div>
+            );
+          })()}
+
           {/* ── Quick Stats (always visible) ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {quickStats.map(({ label, value, icon: Icon, color }) => (
