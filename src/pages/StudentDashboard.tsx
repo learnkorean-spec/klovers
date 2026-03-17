@@ -167,7 +167,7 @@ const ProfileCard = ({
 const StudentDashboard = () => {
   useSEO({ title: "My Dashboard", description: "Track your Korean learning progress, schedule, and achievements on Klovers.", canonical: "https://kloversegy.com/dashboard" });
   const { loading: gateLoading, resetBlocked } = useResetGate();
-  const { progress: gamification, league, loading: gamLoading } = useGamification();
+  const { progress: gamification, league, loading: gamLoading, awardGameXp } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -183,6 +183,8 @@ const StudentDashboard = () => {
   const [groupName, setGroupName] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
+  const vocabStorageKey = `vocab_xp_${new Date().toISOString().split("T")[0]}`;
+  const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -599,6 +601,40 @@ const StudentDashboard = () => {
                     <p className="text-white/80 text-xs">Message us on WhatsApp</p>
                   </div>
                 </a>
+              </div>
+            );
+          })()}
+
+          {/* ── Vocabulary of the Day ── */}
+          {(() => {
+            const VOCAB = [
+              { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", emoji: "👋" },
+              { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", emoji: "🙏" },
+              { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", emoji: "❤️" },
+              { ko: "공부하다", rom: "gongbuhada", en: "To study", emoji: "📚" },
+              { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", emoji: "😋" },
+              { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", emoji: "💪" },
+              { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", emoji: "🐢" },
+            ];
+            const today = VOCAB[new Date().getDay() % VOCAB.length];
+            const handleVocabClaim = async () => {
+              if (vocabClaimed) return;
+              await awardGameXp("vocab_daily", 5, 1);
+              localStorage.setItem(vocabStorageKey, "1");
+              setVocabClaimed(true);
+              toast({ title: "+5 XP", description: "Vocabulary bonus earned!" });
+            };
+            return (
+              <div className="flex items-center gap-4 bg-card border border-border rounded-2xl px-5 py-4">
+                <div className="text-3xl">{today.emoji}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Word of the day</p>
+                  <p className="text-xl font-bold text-foreground leading-tight">{today.ko}</p>
+                  <p className="text-sm text-muted-foreground">{today.rom} · {today.en}</p>
+                </div>
+                <Button size="sm" variant={vocabClaimed ? "ghost" : "default"} disabled={vocabClaimed} onClick={handleVocabClaim} className="shrink-0">
+                  {vocabClaimed ? "✓ +5 XP" : "Claim +5 XP"}
+                </Button>
               </div>
             );
           })()}
