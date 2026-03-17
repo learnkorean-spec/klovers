@@ -5,7 +5,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Users, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 
@@ -83,6 +84,15 @@ const SalesAnalytics = () => {
   }, [paidEnrollments, months]);
 
   const activeStudents = paidEnrollments.filter(e => (e.sessions_remaining ?? 0) > 0).length;
+
+  const prevMonthActiveEnrollments = useMemo(() => {
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const lastMonthEnd = endOfMonth(subMonths(now, 1));
+    return paidEnrollments.filter(e => {
+      const cd = parseISO(e.created_at);
+      return isWithinInterval(cd, { start: lastMonthStart, end: lastMonthEnd });
+    }).length;
+  }, [paidEnrollments]);
 
   const totalRevenue = paidEnrollments.reduce((s, e) => s + Number(e.amount), 0);
   const avgOrderValue = paidEnrollments.length > 0 ? totalRevenue / paidEnrollments.length : 0;
@@ -227,7 +237,12 @@ const SalesAnalytics = () => {
               <span className="text-xs text-muted-foreground">Active Students</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{activeStudents}</p>
-            <p className="text-xs text-muted-foreground mt-1">sessions remaining &gt; 0</p>
+            <div className="flex items-center gap-1 mt-1">
+              {activeStudents >= prevMonthActiveEnrollments
+                ? <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+                : <ArrowDownRight className="h-3 w-3 text-destructive" />}
+              <span className={`text-xs ${activeStudents >= prevMonthActiveEnrollments ? "text-emerald-600" : "text-destructive"}`}>vs {prevMonthActiveEnrollments} last mo</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -241,7 +256,7 @@ const SalesAnalytics = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
               <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => `$${v}`} />
-              <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }} />
+              <Tooltip formatter={(v: number, _name: string, props: any) => [`$${v.toLocaleString()} (${props.payload.count} enrollments)`, "Revenue"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }} />
               <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -319,7 +334,23 @@ const SalesAnalytics = () => {
 
       {/* Plan breakdown table */}
       <Card className="rounded-2xl">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Plan Breakdown</CardTitle></CardHeader>
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Plan Breakdown</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => {
+            const headers = ["Plan", "Enrollments", "Revenue", "Avg", "MoM %"];
+            const rows = planBreakdown.map(p => {
+              const mom = p.lastMonth > 0 ? ((p.thisMonth - p.lastMonth) / p.lastMonth * 100).toFixed(0) + "%" : p.thisMonth > 0 ? "New" : "—";
+              return [p.name, p.count, p.revenue, (p.revenue / p.count).toFixed(0), mom];
+            });
+            const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = `plan-breakdown-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+            URL.revokeObjectURL(url);
+          }}>
+            <Download className="h-4 w-4 mr-1" /> CSV
+          </Button>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -334,6 +365,8 @@ const SalesAnalytics = () => {
             <TableBody>
               {planBreakdown.map(p => {
                 const mom = p.lastMonth > 0 ? ((p.thisMonth - p.lastMonth) / p.lastMonth * 100) : null;
+                const momLabel = mom !== null ? `${mom >= 0 ? "+" : ""}${mom.toFixed(0)}%` : p.thisMonth > 0 ? "New" : "—";
+                const momColor = mom !== null ? (mom >= 0 ? "text-emerald-600" : "text-destructive") : p.thisMonth > 0 ? "text-blue-600" : "text-muted-foreground";
                 return (
                   <TableRow key={p.name}>
                     <TableCell className="font-medium">{p.name}</TableCell>
@@ -341,11 +374,7 @@ const SalesAnalytics = () => {
                     <TableCell className="text-right">${p.revenue.toLocaleString()}</TableCell>
                     <TableCell className="text-right">${(p.revenue / p.count).toFixed(0)}</TableCell>
                     <TableCell className="text-right">
-                      {mom !== null ? (
-                        <span className={mom >= 0 ? "text-emerald-600" : "text-destructive"}>
-                          {mom >= 0 ? "+" : ""}{mom.toFixed(0)}%
-                        </span>
-                      ) : <span className="text-muted-foreground">—</span>}
+                      <span className={momColor}>{momLabel}</span>
                     </TableCell>
                   </TableRow>
                 );
