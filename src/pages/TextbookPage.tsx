@@ -81,6 +81,7 @@ const TextbookPage = () => {
 
   const completedCount = Object.values(progress.lessonProgress).filter(p => p.chapter_completed).length;
   const isDailyRoutine = book === "daily-routine";
+  const isKDrama = book === "kdrama";
 
   return (
     <div className="min-h-screen bg-background">
