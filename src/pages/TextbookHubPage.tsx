@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, Sun, Sparkles } from "lucide-react";
+import { BookOpen, Sun, Sparkles, Clapperboard } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +32,19 @@ const BOOKS = [
     icon: Sun,
     gradient: "from-accent/20 to-accent/5",
     border: "border-accent/30 hover:border-accent/60",
+  },
+  {
+    key: "kdrama",
+    titleEn: "K-Drama Korean",
+    titleAr: "كورية الدراما",
+    subtitleEn: "30 Drama-Based Lessons",
+    subtitleAr: "٣٠ درس من الدراما الكورية",
+    descEn: "Learn Korean through iconic K-Drama dialogues, slang, and cultural context.",
+    descAr: "تعلم الكورية من خلال حوارات الدراما الأيقونية والعامية والسياق الثقافي.",
+    emoji: "🎬",
+    icon: Clapperboard,
+    gradient: "from-rose-500/20 to-rose-500/5",
+    border: "border-rose-500/30 hover:border-rose-500/60",
   },
 ];
 

@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun } from "lucide-react";
+import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun, Clapperboard } from "lucide-react";
 import { useGamification } from "@/hooks/useGamification";
 import { LeagueProgressBar, LessonProgressDots, XpBadge } from "@/components/GamificationUI";
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
@@ -12,8 +12,10 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import WorldPathMap from "@/components/WorldPathMap";
 import DailyRoutinePathMap from "@/components/DailyRoutinePathMap";
+import KDramaPathMap from "@/components/KDramaPathMap";
 import { WORLDS } from "@/constants/worlds";
 import { DAILY_ROUTINE_WORLDS } from "@/constants/dailyRoutineWorlds";
+import { KDRAMA_WORLDS } from "@/constants/kdramaWorlds";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/useSEO";
 
@@ -32,6 +34,7 @@ interface Lesson {
 const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: string; icon: typeof BookOpen }> = {
   "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen },
   "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun },
+  "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", emoji: "🎬", icon: Clapperboard },
 };
 
 const TextbookPage = () => {
@@ -78,6 +81,7 @@ const TextbookPage = () => {
 
   const completedCount = Object.values(progress.lessonProgress).filter(p => p.chapter_completed).length;
   const isDailyRoutine = book === "daily-routine";
+  const isKDrama = book === "kdrama";
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,6 +107,8 @@ const TextbookPage = () => {
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
             {isDailyRoutine
               ? `${DAILY_ROUTINE_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درس" : "lessons"}`
+              : isKDrama
+              ? `${KDRAMA_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درس" : "lessons"}`
               : `${WORLDS.filter(w => w.topikLevel === 1).length} ${isAr ? "عوالم توبيك ١" : "TOPIK 1 worlds"} · ${WORLDS.filter(w => w.topikLevel === 2).length} ${isAr ? "عوالم توبيك ٢" : "TOPIK 2 worlds"} · ${lessons.length} ${t("textbook.heroSubtitle")}`
             }
           </p>
@@ -187,6 +193,13 @@ const TextbookPage = () => {
           ) : viewMode === "path" ? (
             isDailyRoutine ? (
               <DailyRoutinePathMap
+                lessons={lessons}
+                lessonProgress={progress.lessonProgress}
+                userId={userId}
+                bookSlug={book}
+              />
+            ) : isKDrama ? (
+              <KDramaPathMap
                 lessons={lessons}
                 lessonProgress={progress.lessonProgress}
                 userId={userId}
