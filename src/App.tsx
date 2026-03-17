@@ -42,6 +42,7 @@ import TextbookProgressPage from "./pages/TextbookProgressPage";
 import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 import DailyQuizPage from "./pages/DailyQuizPage";
 import ProfilePage from "./pages/ProfilePage";
+import WhatsAppButton from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +78,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AppInner />
+        <WhatsAppButton />
         <BrowserRouter>
           <ErrorBoundary>
             <Routes>
