@@ -12,11 +12,37 @@ const floatingPills = [
   { icon: Star,          label: "4.9 ★ Rated",   delay: "1.5s", pos: "bottom-[30%] right-[4%]" },
 ];
 
+const useCountUp = (target: number, duration = 1800) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      obs.disconnect();
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        setCount(Math.round(t * target));
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, { threshold: 0.5 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target, duration]);
+  return { count, ref };
+};
+
 const HeroSection = () => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const { count: studentCount, ref: studentRef } = useCountUp(2000);
+  const { count: ratingCount, ref: ratingRef } = useCountUp(49, 1200);
+  const { count: countryCount, ref: countryRef } = useCountUp(15);
 
   useEffect(() => {
     const conn = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string } }).connection;
@@ -208,18 +234,19 @@ const HeroSection = () => {
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
           <div className="grid grid-cols-3 gap-4 md:gap-8">
             {[
-              { icon: Users, value: "2,000+", label: "Students Taught" },
-              { icon: Star,  value: "4.9 ★",  label: "Average Rating" },
-              { icon: Globe, value: "15+",    label: "Countries" },
-            ].map(({ icon: Icon, value, label }) => (
+              { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString()}+`, label: "Students Taught" },
+              { icon: Star,  ref: ratingRef,  display: `${(ratingCount / 10).toFixed(1)} ★`, label: "Average Rating" },
+              { icon: Globe, ref: countryRef, display: `${countryCount}+`, label: "Countries" },
+            ].map(({ icon: Icon, ref: itemRef, display, label }) => (
               <div key={label} className="flex flex-col items-center gap-1 text-center group">
                 <div className="flex items-center gap-1.5">
                   <Icon className="h-4 w-4 text-primary hidden sm:block" />
                   <span
+                    ref={itemRef}
                     className="text-2xl sm:text-3xl md:text-4xl font-black text-white group-hover:text-primary transition-colors duration-300"
                     style={{ textShadow: "0 2px 16px rgba(0,0,0,0.8)" }}
                   >
-                    {value}
+                    {display}
                   </span>
                 </div>
                 <span className="text-white/55 text-xs sm:text-sm font-medium tracking-wide">
