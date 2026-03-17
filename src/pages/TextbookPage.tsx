@@ -198,6 +198,13 @@ const TextbookPage = () => {
                 userId={userId}
                 bookSlug={book}
               />
+            ) : isKDrama ? (
+              <KDramaPathMap
+                lessons={lessons}
+                lessonProgress={progress.lessonProgress}
+                userId={userId}
+                bookSlug={book}
+              />
             ) : (
               <WorldPathMap
                 lessons={lessons}
