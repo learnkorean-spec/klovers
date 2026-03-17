@@ -13,6 +13,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -24,10 +25,6 @@ import {
 } from "@/lib/marketingEngine";
 import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
@@ -245,14 +242,23 @@ export default function MarketingGeneratorPage() {
     id: string; course_title: string | null; caption: string | null; scheduled_at: string; status: string | null;
   }>>([]);
   const [calLoading, setCalLoading] = useState(false);
-  const [campaignName, setCampaignName] = useState("Course Launch");
-  const [campaignStart, setCampaignStart] = useState(() => new Date().toISOString().split("T")[0]);
-  const [campaignEnd, setCampaignEnd] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split("T")[0];
-  });
+  const [campaignName, setCampaignName] = useState("April 1 Course Launch");
+  const [campaignStart, setCampaignStart] = useState("2026-03-17");
+  const [campaignEnd, setCampaignEnd] = useState("2026-04-01");
   const [postsPerDay, setPostsPerDay] = useState(2);
   const [distributing, setDistributing] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // postId pending deletion
+
+  // Edit post dialog
+  const [editingPost, setEditingPost] = useState<{
+    id: string; course_title: string | null; caption: string | null; status: string | null; scheduled_at: string;
+  } | null>(null);
+
+  // Add post manually
+  const [addingPostDate, setAddingPostDate] = useState<string | null>(null);
+  const [newPost, setNewPost] = useState({ course_title: "", caption: "", time: "10:00" });
+
+  // Campaign filter
+  const [campaignFilter, setCampaignFilter] = useState("all");
 
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
@@ -270,12 +276,51 @@ export default function MarketingGeneratorPage() {
     setCalLoading(false);
   }, []);
 
-  const confirmDeletePost = (postId: string) => setDeleteConfirm(postId);
+  const campaignNames = useMemo(() =>
+    [...new Set(scheduledPosts.map(p => p.course_title).filter(Boolean))] as string[],
+    [scheduledPosts]
+  );
 
-  const unschedulePost = async () => {
-    if (!deleteConfirm) return;
-    await supabase.from("scheduled_social_posts").delete().eq("id", deleteConfirm);
-    setDeleteConfirm(null);
+  const filteredScheduledPosts = useMemo(() =>
+    campaignFilter === "all" ? scheduledPosts : scheduledPosts.filter(p => p.course_title === campaignFilter),
+    [scheduledPosts, campaignFilter]
+  );
+
+  const saveEditedPost = async () => {
+    if (!editingPost) return;
+    const { error } = await supabase.from("scheduled_social_posts").update({
+      caption: editingPost.caption,
+      status: editingPost.status,
+      course_title: editingPost.course_title,
+    }).eq("id", editingPost.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setScheduledPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, ...editingPost } : p));
+    setEditingPost(null);
+    toast({ title: "Post updated" });
+  };
+
+  const addPostManually = async () => {
+    if (!addingPostDate || !newPost.caption) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("scheduled_social_posts").insert({
+      scheduled_at: `${addingPostDate}T${newPost.time}:00+02:00`,
+      course_title: newPost.course_title || null,
+      caption: newPost.caption,
+      platforms: ["instagram", "facebook"],
+      status: "pending",
+      created_by: user.id,
+      registration_url: "https://kloversegy.com/enroll",
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Post added" });
+    setAddingPostDate(null);
+    setNewPost({ course_title: "", caption: "", time: "10:00" });
+    fetchScheduledPosts();
+  };
+
+  const unschedulePost = async (postId: string) => {
+    await supabase.from("scheduled_social_posts").delete().eq("id", postId);
     await fetchScheduledPosts();
     toast({ title: "Post removed from calendar" });
   };
@@ -418,7 +463,7 @@ export default function MarketingGeneratorPage() {
       }
 
       result.sort((a, b) => a.seats_left - b.seats_left);
-      setGroups(result.slice(0, 10));
+      setGroups(result);
     } catch (err: any) {
       toast({ title: "Error loading groups", description: err.message, variant: "destructive" });
     } finally {
@@ -619,7 +664,7 @@ export default function MarketingGeneratorPage() {
 
   return (
     <TooltipProvider>
-      <div id="main-content" className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-muted/30">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
           <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 md:px-6">
@@ -827,7 +872,15 @@ export default function MarketingGeneratorPage() {
                                               <Copy className="h-3 w-3 mr-1" /> Copy
                                             </Button>
                                           </div>
-                                          <Textarea value={cap} readOnly className="text-xs min-h-[80px] resize-none" />
+                                          <Textarea
+                                            value={cap}
+                                            onChange={(e) => {
+                                              const updated = [...content.captions];
+                                              updated[i] = e.target.value;
+                                              setGeneratedContent(prev => ({ ...prev, [group.id]: { ...prev[group.id], captions: updated } }));
+                                            }}
+                                            className="text-xs min-h-[80px] resize-none"
+                                          />
                                         </div>
                                       ))}
                                     </TabsContent>
@@ -837,7 +890,15 @@ export default function MarketingGeneratorPage() {
                                         <h4 className="text-xs font-medium text-foreground">Primary Text</h4>
                                         {content.adCopy.primaryTexts.map((t, i) => (
                                           <div key={i} className="flex items-start gap-1.5">
-                                            <Textarea value={t} readOnly className="text-xs min-h-[50px] resize-none flex-1" />
+                                            <Textarea
+                                              value={t}
+                                              onChange={(e) => {
+                                                const updated = [...content.adCopy.primaryTexts];
+                                                updated[i] = e.target.value;
+                                                setGeneratedContent(prev => ({ ...prev, [group.id]: { ...prev[group.id], adCopy: { ...prev[group.id].adCopy, primaryTexts: updated } } }));
+                                              }}
+                                              className="text-xs min-h-[50px] resize-none flex-1"
+                                            />
                                             <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => copyToClipboard(t, `Primary ${i + 1}`)}>
                                               <Copy className="h-3 w-3" />
                                             </Button>
@@ -985,69 +1046,96 @@ export default function MarketingGeneratorPage() {
             <TabsContent value="calendar" className="space-y-6">
               {/* Campaign auto-distributor */}
               <Card className="rounded-2xl border-primary/30">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Wand2 className="h-5 w-5 text-primary" /> Auto-Schedule Campaign
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Wand2 className="h-4 w-4 text-primary" /> Auto-Schedule Campaign
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-foreground">Campaign Name</label>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Campaign Name</label>
                       <input
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                         value={campaignName}
                         onChange={e => setCampaignName(e.target.value)}
                         placeholder="April 1 Course Launch"
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-foreground">Start Date</label>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Start Date</label>
                       <input
                         type="date"
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                         value={campaignStart}
                         onChange={e => setCampaignStart(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-foreground">End Date</label>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">End Date</label>
                       <input
                         type="date"
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                         value={campaignEnd}
                         onChange={e => setCampaignEnd(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-foreground">Posts per Day</label>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Posts per Day</label>
                       <input
                         type="number"
                         min={1} max={5}
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                         value={postsPerDay}
                         onChange={e => setPostsPerDay(Number(e.target.value))}
                       />
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button size="lg" onClick={autoDistributeCampaign} disabled={distributing} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={autoDistributeCampaign} disabled={distributing} className="bg-primary text-primary-foreground hover:bg-primary/90">
                       {distributing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
                       {distributing ? "Scheduling…" : "Auto-Distribute Posts"}
                     </Button>
-                    <Button size="lg" variant="outline" onClick={exportICS} disabled={!scheduledPosts.length}>
+                    <Button variant="outline" onClick={exportICS} disabled={!scheduledPosts.length}>
                       <FileDown className="h-4 w-4 mr-2" /> Export to Google Calendar (.ics)
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-11 w-11" onClick={fetchScheduledPosts} disabled={calLoading}>
+                    <Button variant="ghost" size="sm" onClick={fetchScheduledPosts} disabled={calLoading}>
                       <RefreshCw className={`h-4 w-4 ${calLoading ? "animate-spin" : ""}`} />
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-muted-foreground">
                     Auto-Distribute generates posts for all active groups and spreads them across the selected date range at 08:00 and 16:00 Cairo time.
                     Click <strong>Export to Google Calendar</strong> to download an .ics file — import it in Google Calendar to see all scheduled posts as events.
                   </p>
                 </CardContent>
               </Card>
+
+              {/* Campaign filter bar */}
+              {scheduledPosts.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Filter by campaign:</span>
+                  <select
+                    className="rounded-lg border border-border px-2 py-1.5 text-xs bg-background"
+                    value={campaignFilter}
+                    onChange={e => setCampaignFilter(e.target.value)}
+                  >
+                    <option value="all">All ({scheduledPosts.length})</option>
+                    {campaignNames.map(n => (
+                      <option key={n} value={n}>{n} ({scheduledPosts.filter(p => p.course_title === n).length})</option>
+                    ))}
+                  </select>
+                  {campaignFilter !== "all" && (
+                    <Button variant="destructive" size="sm" onClick={async () => {
+                      await supabase.from("scheduled_social_posts").delete().eq("course_title", campaignFilter);
+                      await fetchScheduledPosts();
+                      setCampaignFilter("all");
+                      toast({ title: `Deleted "${campaignFilter}"` });
+                    }}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Campaign
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {/* Monthly calendar grid */}
               {(() => {
@@ -1060,7 +1148,7 @@ export default function MarketingGeneratorPage() {
 
                 // Map scheduled posts by date (scheduled_at is ISO timestamp)
                 const byDate = new Map<string, typeof scheduledPosts>();
-                for (const p of scheduledPosts) {
+                for (const p of filteredScheduledPosts) {
                   const key = p.scheduled_at.split("T")[0];
                   if (!byDate.has(key)) byDate.set(key, []);
                   byDate.get(key)!.push(p);
@@ -1075,36 +1163,36 @@ export default function MarketingGeneratorPage() {
 
                 return (
                   <Card className="rounded-2xl">
-                    <CardHeader className="pb-4">
+                    <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl">{monthName}</CardTitle>
+                        <CardTitle className="text-base">{monthName}</CardTitle>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() - 1); return d; })}>
-                            <ChevronLeft className="h-5 w-5" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() - 1); return d; })}>
+                            <ChevronLeft className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() + 1); return d; })}>
-                            <ChevronRight className="h-5 w-5" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCalendarMonth(m => { const d = new Date(m); d.setMonth(d.getMonth() + 1); return d; })}>
+                            <ChevronRight className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {calLoading ? (
-                        <div className="grid grid-cols-7 gap-2">
-                          {Array(35).fill(0).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+                        <div className="grid grid-cols-7 gap-1">
+                          {Array(35).fill(0).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
                         </div>
                       ) : (
                         <>
                           {/* Day headers */}
-                          <div className="grid grid-cols-7 gap-2 mb-2">
+                          <div className="grid grid-cols-7 gap-1 mb-1">
                             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-                              <div key={d} className="text-center text-xs font-bold text-muted-foreground py-2 tracking-wide uppercase">{d}</div>
+                              <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
                             ))}
                           </div>
                           {/* Calendar cells */}
-                          <div className="grid grid-cols-7 gap-2">
+                          <div className="grid grid-cols-7 gap-1">
                             {cells.map((day, idx) => {
-                              if (!day) return <div key={`empty-${idx}`} className="h-28 rounded-xl bg-muted/20" />;
+                              if (!day) return <div key={`empty-${idx}`} className="h-20 rounded-lg bg-muted/20" />;
                               const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                               const posts = byDate.get(dateStr) || [];
                               const isToday = dateStr === today;
@@ -1112,32 +1200,41 @@ export default function MarketingGeneratorPage() {
                               return (
                                 <div
                                   key={dateStr}
-                                  className={`h-28 rounded-xl p-2 border transition-colors ${
+                                  className={`relative group h-20 rounded-lg p-1 border transition-colors ${
                                     isToday ? "border-primary bg-primary/5"
                                     : isCampaignDay ? "border-primary/20 bg-primary/5"
                                     : "border-border bg-card"
                                   }`}
                                 >
-                                  <div className={`text-sm font-bold mb-1 ${isToday ? "text-primary" : "text-foreground"}`}>{day}</div>
-                                  <div className="space-y-1 overflow-hidden">
+                                  <div className={`text-[11px] font-bold mb-0.5 ${isToday ? "text-primary" : "text-foreground"}`}>{day}</div>
+                                  <button
+                                    className="opacity-0 group-hover:opacity-100 absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded bg-primary/20 hover:bg-primary/40 transition-opacity"
+                                    onClick={(e) => { e.stopPropagation(); setNewPost({ course_title: campaignName, caption: "", time: "10:00" }); setAddingPostDate(dateStr); }}
+                                  >
+                                    <Plus className="h-2.5 w-2.5 text-primary" />
+                                  </button>
+                                  <div className="space-y-0.5 overflow-hidden">
                                     {posts.slice(0, 2).map(p => (
-                                      <div key={p.id} className="flex items-center gap-1 group">
-                                        <span className="flex-1 text-[10px] leading-tight text-foreground bg-primary/20 rounded px-1.5 py-0.5 truncate">
-                                          {p.course_title || (p.caption || "").slice(0, 25)}
-                                        </span>
+                                      <div key={p.id} className="flex items-center gap-1 group/chip">
                                         <button
-                                          onClick={() => confirmDeletePost(p.id)}
-                                          className="hidden group-hover:flex h-4 w-4 items-center justify-center text-destructive"
+                                          className="flex-1 text-[9px] leading-tight text-foreground bg-primary/20 rounded px-1 py-0.5 truncate text-left hover:bg-primary/30 transition-colors"
+                                          onClick={() => setEditingPost(p)}
                                         >
-                                          <Trash2 className="h-3 w-3" />
+                                          {p.course_title || (p.caption || "").slice(0, 25)}
+                                        </button>
+                                        <button
+                                          onClick={() => unschedulePost(p.id)}
+                                          className="hidden group-hover/chip:flex h-3 w-3 items-center justify-center text-destructive"
+                                        >
+                                          <Trash2 className="h-2.5 w-2.5" />
                                         </button>
                                       </div>
                                     ))}
                                     {posts.length > 2 && (
-                                      <div className="text-[10px] text-muted-foreground pl-1">+{posts.length - 2} more</div>
+                                      <div className="text-[9px] text-muted-foreground pl-1">+{posts.length - 2} more</div>
                                     )}
                                     {posts.length === 0 && isCampaignDay && (
-                                      <div className="text-[10px] text-primary/50 pl-1">— open slot</div>
+                                      <div className="text-[9px] text-primary/50 pl-1">— open slot</div>
                                     )}
                                   </div>
                                 </div>
@@ -1147,11 +1244,11 @@ export default function MarketingGeneratorPage() {
                         </>
                       )}
                       {/* Legend */}
-                      <div className="flex flex-wrap gap-4 mt-5 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded bg-primary/5 border border-primary inline-block" /> Today</span>
-                        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded bg-primary/5 border border-primary/20 inline-block" /> Campaign days</span>
-                        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded bg-primary/20 inline-block" /> Scheduled post</span>
-                        <span className="ml-auto text-sm font-semibold text-foreground">{scheduledPosts.length} posts scheduled total</span>
+                      <div className="flex flex-wrap gap-3 mt-4 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary inline-block" /> Today</span>
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/5 border border-primary/20 inline-block" /> Campaign days</span>
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary/20 inline-block" /> Scheduled post</span>
+                        <span className="ml-auto font-medium text-foreground">{filteredScheduledPosts.length} posts{campaignFilter !== "all" ? ` in "${campaignFilter}"` : " scheduled total"}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -1159,25 +1256,25 @@ export default function MarketingGeneratorPage() {
               })()}
 
               {/* Scheduled posts list */}
-              {scheduledPosts.length > 0 && (
+              {filteredScheduledPosts.length > 0 && (
                 <Card className="rounded-2xl">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg">Scheduled Posts ({scheduledPosts.length})</CardTitle>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Scheduled Posts ({filteredScheduledPosts.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-1">
-                      {scheduledPosts.map(p => (
-                        <div key={p.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
-                          <div className="w-28 text-sm font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate">{p.course_title || (p.caption || "").slice(0, 60)}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo</p>
+                    <div className="space-y-2">
+                      {filteredScheduledPosts.map(p => (
+                        <div key={p.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
+                          <div className="w-24 text-xs font-mono text-muted-foreground shrink-0">{p.scheduled_at.split("T")[0]}</div>
+                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setEditingPost(p)}>
+                            <p className="text-sm font-medium truncate hover:text-primary transition-colors">{p.course_title || (p.caption || "").slice(0, 60)}</p>
+                            <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo — click to edit</p>
                           </div>
-                          <Badge variant="outline" className="text-xs shrink-0">
+                          <Badge variant="outline" className="text-[10px] shrink-0">
                             {p.status}
                           </Badge>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => confirmDeletePost(p.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => unschedulePost(p.id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
                         </div>
                       ))}
@@ -1193,27 +1290,89 @@ export default function MarketingGeneratorPage() {
           </Tabs>
         </div>
       </div>
+      {/* Edit post dialog */}
+      <Dialog open={!!editingPost} onOpenChange={open => { if (!open) setEditingPost(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Edit Scheduled Post</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Campaign / Title</label>
+              <input
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={editingPost?.course_title || ""}
+                onChange={e => setEditingPost(p => p ? { ...p, course_title: e.target.value } : p)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Caption</label>
+              <Textarea
+                className="mt-1 text-sm min-h-[140px]"
+                value={editingPost?.caption || ""}
+                onChange={e => setEditingPost(p => p ? { ...p, caption: e.target.value } : p)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Status</label>
+              <select
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={editingPost?.status || "pending"}
+                onChange={e => setEditingPost(p => p ? { ...p, status: e.target.value } : p)}
+              >
+                <option value="pending">pending</option>
+                <option value="published">published</option>
+                <option value="skipped">skipped</option>
+              </select>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(editingPost?.caption || ""); toast({ title: "Copied" }); }}>
+              <Copy className="h-3 w-3 mr-1" /> Copy Caption
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditingPost(null)}>Cancel</Button>
+            <Button onClick={saveEditedPost}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Delete confirmation dialog */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={open => { if (!open) setDeleteConfirm(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove this post?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove the post from the calendar. You can re-run Auto-Distribute to recreate it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={unschedulePost}
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Add post manually dialog */}
+      <Dialog open={!!addingPostDate} onOpenChange={open => { if (!open) setAddingPostDate(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Add Post — {addingPostDate}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Campaign / Title</label>
+              <input
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={newPost.course_title}
+                onChange={e => setNewPost(p => ({ ...p, course_title: e.target.value }))}
+                placeholder={campaignName}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Time (Cairo)</label>
+              <input
+                type="time"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm mt-1 bg-background"
+                value={newPost.time}
+                onChange={e => setNewPost(p => ({ ...p, time: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Caption</label>
+              <Textarea
+                className="mt-1 text-sm min-h-[100px]"
+                value={newPost.caption}
+                onChange={e => setNewPost(p => ({ ...p, caption: e.target.value }))}
+                placeholder="Write your caption here…"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAddingPostDate(null)}>Cancel</Button>
+            <Button onClick={addPostManually} disabled={!newPost.caption}>Add Post</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }
