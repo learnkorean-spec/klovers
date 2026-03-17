@@ -146,10 +146,21 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
+      <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
+
+        {/* Welcome strip */}
+        <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
+          <span>🔥 Keep your streak</span>
+          <span className="text-border">·</span>
+          <span>⭐ 4.9 rated academy</span>
+          <span className="text-border">·</span>
+          <span>🇰🇷 A1–C2 levels</span>
+        </div>
+
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.logIn")}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Welcome back — your progress is waiting for you.</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -182,6 +193,17 @@ const LoginPage = () => {
             </form>
           </CardContent>
         </Card>
+
+        <p className="text-xs text-muted-foreground text-center">
+          New to Klovers?{" "}
+          <Link
+            to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"}
+            className="text-primary font-semibold hover:underline"
+          >
+            Create a free account →
+          </Link>
+        </p>
+
       </main>
       <Footer />
     </div>
