@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun } from "lucide-react";
+import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun, Clapperboard } from "lucide-react";
 import { useGamification } from "@/hooks/useGamification";
 import { LeagueProgressBar, LessonProgressDots, XpBadge } from "@/components/GamificationUI";
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
