@@ -70,11 +70,14 @@ Deno.serve(async (req) => {
     if (rateLimited) break;
     try {
       const isDailyRoutine = (lesson as any).book === "daily-routine";
-      const topikLevel = isDailyRoutine ? 1 : (lesson.sort_order <= 45 ? 1 : 2);
+      const isKDrama = (lesson as any).book === "kdrama";
+      const topikLevel = (isDailyRoutine || isKDrama) ? 1 : (lesson.sort_order <= 45 ? 1 : 2);
       const levelDesc = topikLevel === 1 ? "TOPIK 1 (beginner/A1-A2)" : "TOPIK 2 (elementary-intermediate/A2-B1)";
 
       const contextHint = isDailyRoutine
         ? `This is a "Daily Routine Korean" lesson focused on everyday actions and practical vocabulary for the topic "${lesson.title_en}". Focus heavily on action verbs, common phrases, and practical expressions used in daily life for this specific activity.`
+        : isKDrama
+        ? `This is a "K-Drama Korean" lesson. Generate content inspired by Korean drama scenes for the topic "${lesson.title_en}". Include dramatic expressions, emotional vocabulary, and conversational phrases commonly heard in K-Dramas. Make dialogues feel like actual drama scenes.`
         : "";
 
       const prompt = `Generate Korean language lesson content for ${levelDesc}, Lesson ${lesson.sort_order}: "${lesson.title_en}" (${lesson.title_ko}). Description: ${lesson.description}. ${contextHint}
@@ -105,9 +108,8 @@ Requirements:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-5-nano",
+          model: "google/gemini-2.5-flash",
           messages: [{ role: "user", content: prompt }],
-          temperature: 0.3,
         }),
       });
 
