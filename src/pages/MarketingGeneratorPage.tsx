@@ -11,6 +11,7 @@ import {
   ArrowLeft, Copy, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
   Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud, Brush,
   CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2, CalendarPlus,
+  MessageCircle, CalendarClock,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -20,6 +21,8 @@ import {
   type GroupData,
   generateCaptions,
   generateAdCopy,
+  generateWhatsAppMessage,
+  generateStoryScript,
   getLevelLabel,
   getUrgencyLabel,
 } from "@/lib/marketingEngine";
@@ -267,6 +270,13 @@ export default function MarketingGeneratorPage() {
   // Campaign filter
   const [campaignFilter, setCampaignFilter] = useState("all");
 
+  // WhatsApp dialog
+  const [whatsappGroup, setWhatsappGroup] = useState<GroupData | null>(null);
+
+  // Reschedule dialog
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleShift, setRescheduleShift] = useState(7);
+
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
     // Fetch posts from 60 days ago up to 90 days ahead for calendar display
@@ -317,7 +327,7 @@ export default function MarketingGeneratorPage() {
       platforms: ["instagram", "facebook"],
       status: "pending",
       created_by: user.id,
-      registration_url: "https://kloversegy.com/enroll",
+      registration_url: `https://kloversegy.com/enroll?utm_source=social&utm_medium=post&utm_campaign=${encodeURIComponent(newPost.course_title || campaignName)}`,
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Post added" });
@@ -330,6 +340,23 @@ export default function MarketingGeneratorPage() {
     await supabase.from("scheduled_social_posts").delete().eq("id", postId);
     await fetchScheduledPosts();
     toast({ title: "Post removed from calendar" });
+  };
+
+  const rescheduleCampaign = async () => {
+    const posts = scheduledPosts.filter(p => p.course_title === campaignFilter);
+    if (!posts.length) return;
+    try {
+      await Promise.all(posts.map(p => {
+        const d = new Date(p.scheduled_at);
+        d.setDate(d.getDate() + rescheduleShift);
+        return supabase.from("scheduled_social_posts").update({ scheduled_at: d.toISOString() }).eq("id", p.id);
+      }));
+      await fetchScheduledPosts();
+      setRescheduleOpen(false);
+      toast({ title: `Rescheduled ${posts.length} posts by ${rescheduleShift > 0 ? "+" : ""}${rescheduleShift} days` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
   };
 
   const autoDistributeCampaign = async () => {
@@ -369,7 +396,7 @@ export default function MarketingGeneratorPage() {
         platforms: ["instagram", "facebook"],
         status: "pending",
         created_by: user.id,
-        registration_url: "https://kloversegy.com/enroll",
+        registration_url: `https://kloversegy.com/enroll?utm_source=social&utm_medium=post&utm_campaign=${encodeURIComponent(campaignName)}`,
       };
     });
 
@@ -807,6 +834,9 @@ export default function MarketingGeneratorPage() {
                               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleGenerate(group)}>
                                 <Sparkles className="h-3 w-3 mr-1" /> Text
                               </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs text-green-700 border-green-300 hover:bg-green-50 dark:hover:bg-green-950/30" onClick={() => setWhatsappGroup(group)}>
+                                <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
+                              </Button>
                               {/* Brand canvas render buttons (exact yellow, instant) */}
                               {(["1x1", "4x5", "story"] as const).map(size => (
                                 <Button key={`canvas-${size}`} size="sm"
@@ -868,6 +898,7 @@ export default function MarketingGeneratorPage() {
                                     <TabsList className="h-auto bg-transparent p-0 gap-1.5">
                                       <TabsTrigger value="captions" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Captions</TabsTrigger>
                                       <TabsTrigger value="ads" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ad Copy</TabsTrigger>
+                                      <TabsTrigger value="story" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎬 Story</TabsTrigger>
                                     </TabsList>
 
                                     <TabsContent value="captions" className="space-y-2 mt-2">
@@ -929,6 +960,25 @@ export default function MarketingGeneratorPage() {
                                       }}>
                                         <Copy className="h-3 w-3 mr-1" /> Copy All
                                       </Button>
+                                    </TabsContent>
+
+                                    <TabsContent value="story" className="space-y-2 mt-2">
+                                      <p className="text-[10px] text-muted-foreground">3-slide script for Instagram/TikTok Stories. Copy each slide separately.</p>
+                                      {[
+                                        { label: "Slide 1 — Hook", text: generateStoryScript(group).slide1 },
+                                        { label: "Slide 2 — Details", text: generateStoryScript(group).slide2 },
+                                        { label: "Slide 3 — CTA", text: generateStoryScript(group).slide3 },
+                                      ].map(({ label, text }, i) => (
+                                        <div key={i} className="space-y-1">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
+                                            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => copyToClipboard(text, label)}>
+                                              <Copy className="h-3 w-3 mr-1" /> Copy
+                                            </Button>
+                                          </div>
+                                          <div className="bg-muted rounded-lg px-3 py-2 text-[11px] leading-relaxed whitespace-pre-line">{text}</div>
+                                        </div>
+                                      ))}
                                     </TabsContent>
                                   </Tabs>
                                 </CollapsibleContent>
@@ -1098,6 +1148,11 @@ export default function MarketingGeneratorPage() {
                       />
                     </div>
                   </div>
+                  {campaignName && (
+                    <p className="text-[11px] text-muted-foreground bg-muted/60 rounded-lg px-3 py-1.5 font-mono truncate">
+                      🔗 {`https://kloversegy.com/enroll?utm_source=social&utm_medium=post&utm_campaign=${encodeURIComponent(campaignName)}`}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <Button onClick={autoDistributeCampaign} disabled={distributing} className="bg-primary text-primary-foreground hover:bg-primary/90">
                       {distributing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
@@ -1136,17 +1191,51 @@ export default function MarketingGeneratorPage() {
                     ))}
                   </select>
                   {campaignFilter !== "all" && (
-                    <Button variant="destructive" size="sm" onClick={async () => {
-                      await supabase.from("scheduled_social_posts").delete().eq("course_title", campaignFilter);
-                      await fetchScheduledPosts();
-                      setCampaignFilter("all");
-                      toast({ title: `Deleted "${campaignFilter}"` });
-                    }}>
-                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Campaign
-                    </Button>
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setRescheduleOpen(true)}>
+                        <CalendarClock className="h-3.5 w-3.5 mr-1" /> Reschedule
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={async () => {
+                        await supabase.from("scheduled_social_posts").delete().eq("course_title", campaignFilter);
+                        await fetchScheduledPosts();
+                        setCampaignFilter("all");
+                        toast({ title: `Deleted "${campaignFilter}"` });
+                      }}>
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Campaign
+                      </Button>
+                    </>
                   )}
                 </div>
               )}
+
+              {/* Post status KPI bar */}
+              {(() => {
+                const monthStr = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, "0")}`;
+                const monthPosts = scheduledPosts.filter(p => p.scheduled_at.startsWith(monthStr));
+                if (!monthPosts.length) return null;
+                const pending = monthPosts.filter(p => p.status === "pending").length;
+                const published = monthPosts.filter(p => p.status === "published").length;
+                const skipped = monthPosts.filter(p => p.status === "skipped").length;
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {pending > 0 && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                        <CalendarDays className="h-3.5 w-3.5" /> Pending: {pending}
+                      </div>
+                    )}
+                    {published > 0 && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-400">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Published: {published}
+                      </div>
+                    )}
+                    {skipped > 0 && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-400">
+                        ❌ Skipped: {skipped}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Monthly calendar grid */}
               {(() => {
@@ -1389,6 +1478,56 @@ export default function MarketingGeneratorPage() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setAddingPostDate(null)}>Cancel</Button>
             <Button onClick={addPostManually} disabled={!newPost.caption}>Add Post</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* WhatsApp broadcast dialog */}
+      <Dialog open={!!whatsappGroup} onOpenChange={open => { if (!open) setWhatsappGroup(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>📱 WhatsApp Broadcast — {whatsappGroup && getLevelLabel(whatsappGroup.level)}</DialogTitle>
+          </DialogHeader>
+          {whatsappGroup && (
+            <div className="space-y-3">
+              <div className="bg-green-50 dark:bg-green-950/20 rounded-xl px-4 py-3 text-sm whitespace-pre-line border border-green-200 dark:border-green-800 leading-relaxed">
+                {generateWhatsAppMessage(whatsappGroup)}
+              </div>
+              <p className="text-xs text-muted-foreground">Copy and paste into WhatsApp Broadcast, Status, or Stories.</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setWhatsappGroup(null)}>Close</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => { if (whatsappGroup) copyToClipboard(generateWhatsAppMessage(whatsappGroup), "WhatsApp message"); }}
+            >
+              <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy Message
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reschedule campaign dialog */}
+      <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Reschedule Campaign</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Shift all posts in <strong>"{campaignFilter}"</strong> by:
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/30"
+                value={rescheduleShift}
+                onChange={e => setRescheduleShift(Number(e.target.value))}
+              />
+              <span className="text-sm text-muted-foreground">days (negative = move earlier)</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRescheduleOpen(false)}>Cancel</Button>
+            <Button onClick={rescheduleCampaign}>Reschedule</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

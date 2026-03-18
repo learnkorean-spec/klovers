@@ -84,3 +84,31 @@ export function generateAdCopy(group: GroupData) {
 
   return { primaryTexts, headlines, descriptions, cta: "Sign Up" };
 }
+
+// ─── WhatsApp Broadcast Template ───
+
+export function generateWhatsAppMessage(group: GroupData): string {
+  const level = getLevelLabel(group.level);
+  const slug = level.toLowerCase().replace(/\s+/g, "-");
+  const seatsLine = group.seats_left <= 5
+    ? `⏳ فضلوا بس ${group.seats_left} مقعد!\n`
+    : "";
+  const regUrl = `https://kloversegy.com/enroll?utm_source=whatsapp&utm_campaign=${encodeURIComponent(slug)}`;
+  return `السلام عليكم 🌸\n\n📣 ${level} Korean Course\n🗓 ${group.day_name}s at ${group.start_time}\n⏱ ${group.duration_min} minutes/session\n\n✅ تعلم الكورية من الصفر مع مجموعة صغيرة ومتابعة شخصية\n${seatsLine}\n📲 سجل هنا:\n${regUrl}\n\n#Klovers #تعلم_الكورية #KoreanLanguage`;
+}
+
+// ─── Story Script (3-slide) ───
+
+export function generateStoryScript(group: GroupData): { slide1: string; slide2: string; slide3: string } {
+  const level = getLevelLabel(group.level);
+  const urgency = group.seats_left <= 3
+    ? `🔴 آخر ${group.seats_left} مقعد!`
+    : group.seats_left <= 6
+    ? `⚡ ${group.seats_left} seats left`
+    : "✅ Open Registration";
+  return {
+    slide1: `Want to speak Korean? 🇰🇷\n\n${level}\nStarts ${group.day_name}s at ${group.start_time}\n\n👆 Swipe to see details`,
+    slide2: `📚 ${level}\n🗓 Every ${group.day_name} • ${group.start_time}\n⏱ ${group.duration_min} min sessions\n👥 Small group\n${urgency}\n\n✨ Real Korean from week one`,
+    slide3: `Ready to start? 🚀\n\n📲 Register now:\nkloversegy.com/enroll\n\n🔗 Link in bio\n\n#Klovers #LearnKorean #KoreanCourse`,
+  };
+}
