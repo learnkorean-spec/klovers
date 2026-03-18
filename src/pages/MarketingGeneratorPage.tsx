@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  ArrowLeft, Copy, Download, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
+  ArrowLeft, Copy, Sparkles, Image, Info, RefreshCw, Loader2, Palette,
   Grid3X3, Monitor, Smartphone, Zap, CheckCircle2, ChevronDown, ChevronUp, DownloadCloud, Brush,
   CalendarDays, ChevronLeft, ChevronRight, Plus, Wand2, FileDown, Trash2, CalendarPlus,
 } from "lucide-react";
