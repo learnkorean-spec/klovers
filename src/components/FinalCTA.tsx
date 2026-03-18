@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles, Users, Star, Zap, MessageCircle } from "lucide-re
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 const SOCIAL_PROOF = [
   { icon: Users, value: "2,000+", label: "Active Students" },
@@ -142,7 +143,7 @@ const FinalCTA = () => {
             asChild
             className="gap-2 h-12 px-8 text-base bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0 min-w-[200px] font-semibold"
           >
-            <a href="https://wa.me/601121777560" target="_blank" rel="noopener noreferrer">
+            <a href={WHATSAPP_BASE} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-4 w-4" />
               {isAr ? "واتساب" : "WhatsApp Us"}
             </a>

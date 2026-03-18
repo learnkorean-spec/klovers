@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPrivateAvailability } from "@/lib/privateAvailability";
 import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -1033,7 +1034,7 @@ const EnrollNowPage = () => {
               <p className="text-xs text-center text-muted-foreground pt-1">
                 Need help enrolling?{" "}
                 <a
-                  href="https://wa.me/601121777560"
+                  href={WHATSAPP_BASE}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-600 font-semibold hover:underline"

@@ -10,8 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageCircle, Send, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
-const WA_DIRECT = "https://wa.me/601121777560?text=" + encodeURIComponent("Hi! I'm interested in learning Korean with Klovers. Can you tell me more?");
+const WA_DIRECT = `${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I'm interested in learning Korean with Klovers. Can you tell me more?")}`;
 const WA_GROUP = "https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq";
 
 const ContactPage = () => {

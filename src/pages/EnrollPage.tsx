@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 type TierKey = "local" | "regional" | "global";
 type ClassType = "group" | "private";
@@ -217,7 +218,7 @@ const EnrollPage = () => {
 
                 <p className="text-xs text-center text-muted-foreground">
                   Need help?{" "}
-                  <a href="https://wa.me/601121777560" target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold hover:underline">
+                  <a href={WHATSAPP_BASE} target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold hover:underline">
                     💬 WhatsApp us
                   </a>
                 </p>

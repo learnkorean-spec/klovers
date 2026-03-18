@@ -1,4 +1,5 @@
-const WA_NUMBER = "601121777560";
+import { WHATSAPP_NUMBER } from "@/lib/siteConfig";
+const WA_NUMBER = WHATSAPP_NUMBER;
 const WA_MESSAGE = encodeURIComponent("Hi! I'm interested in learning Korean with Klovers.");
 
 const WhatsAppButton = () => (

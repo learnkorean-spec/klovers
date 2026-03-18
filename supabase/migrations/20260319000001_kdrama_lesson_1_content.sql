@@ -3,7 +3,7 @@
 
 DO $$
 DECLARE
-  l_id uuid;
+  l_id integer;
 BEGIN
   SELECT id INTO l_id
     FROM public.textbook_lessons

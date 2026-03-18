@@ -6,6 +6,7 @@ import PricingSection from "@/components/PricingSection";
 import EnrollSection from "@/components/EnrollSection";
 import ScrollToTop from "@/components/ScrollToTop";
 import { X } from "lucide-react";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 const ExitNudge = () => {
   const [visible, setVisible] = useState(false);
@@ -36,7 +37,7 @@ const ExitNudge = () => {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <a
-            href="https://wa.me/601121777560?text=Hi!%20I%20need%20help%20choosing%20a%20Klovers%20plan."
+            href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I need help choosing a Klovers plan.")}`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-white text-primary text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors"
