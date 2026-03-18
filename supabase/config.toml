@@ -1,4 +1,4 @@
-project_id = "yqzjsmqrtxwaxqzyhxki"
+project_id = "rahpkflknkofuuhnbfyc"
 
 [functions.seed-blogs]
 verify_jwt = false
