@@ -25,8 +25,9 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
+import StudentPreferenceStep from "@/components/StudentPreferenceStep";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -102,6 +103,10 @@ const EnrollNowPage = () => {
 
   // Korean level selection — selectedLevel stores the DB key (e.g. "foundation", "level_1")
   const [selectedLevel, setSelectedLevel] = useState(p("level"));
+
+  // Student preference for scheduling
+  const [preferredDayOfWeek, setPreferredDayOfWeek] = useState<number | null>(null);
+  const [preferredStartTime, setPreferredStartTime] = useState<string>("");
 
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -457,6 +462,13 @@ const EnrollNowPage = () => {
     }
   };
 
+  // Handle preference step submission
+  const handlePreferenceSubmit = (day: number, time: string) => {
+    setPreferredDayOfWeek(day);
+    setPreferredStartTime(time);
+    setStep(4); // Move to payment step
+  };
+
   const handlePay = async () => {
     // Block payment if schedule fields are missing
     if (!selectedLevel || preferredDays.length === 0 || !selectedPackageId) {
@@ -510,6 +522,9 @@ const EnrollNowPage = () => {
       if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedFields.package_id = selectedPackageId;
       if (preferredTime) schedFields.preferred_time = preferredTime;
       if (preferredDays.length > 0) schedFields.preferred_days = preferredDays;
+      // Add student preference for scheduling (from step 3)
+      if (preferredDayOfWeek !== null) schedFields.preferred_day_of_week = preferredDayOfWeek;
+      if (preferredStartTime) schedFields.preferred_start_time = preferredStartTime;
 
       const { data: existingRows } = await supabase
         .from("enrollments")
@@ -877,8 +892,18 @@ const EnrollNowPage = () => {
           </Card>
         )}
 
-        {/* STEP 3: Pay & Enroll */}
+        {/* STEP 3: Preferred Day & Time */}
         {step === 3 && (
+          <StudentPreferenceStep
+            onBack={() => setStep(2)}
+            onNext={handlePreferenceSubmit}
+            loading={loading}
+            userLevel={selectedLevel}
+          />
+        )}
+
+        {/* STEP 4: Pay & Enroll */}
+        {step === 4 && (
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">

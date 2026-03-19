@@ -17,8 +17,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight, UserPlus, Search } from "lucide-react";
+import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight, UserPlus, Search, Lightbulb } from "lucide-react";
 import AdminNotifications from "./AdminNotifications";
+import { getSuggestedPackages, type SuggestedPackage, formatSuggestion } from "@/lib/scheduleAutomation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 import { LEVEL_KEYS, mapLegacyLevel } from "@/constants/levels";
@@ -77,6 +79,7 @@ interface WaitlistRow {
 // ─── Packages Manager ────────────────────────────────────────────────────────
 
 const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }) => {
+  const { user } = useAuth();
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [pkgHasGroup, setPkgHasGroup] = useState<Record<string, boolean>>({});
@@ -84,6 +87,11 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   const [editing, setEditing] = useState<Package | null>(null);
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterActive, setFilterActive] = useState("all");
+
+  // Suggestion state
+  const [suggestions, setSuggestions] = useState<SuggestedPackage[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false);
 
   // Form state
   const [fLevel, setFLevel] = useState(LEVELS[0]);
@@ -314,6 +322,68 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
     fetchPackages();
   };
 
+  // Load suggestions based on teacher availability
+  const handleLoadSuggestions = async () => {
+    try {
+      setSuggestionsLoading(true);
+      if (!user) {
+        toast({ title: "Error", description: "Not logged in", variant: "destructive" });
+        return;
+      }
+      const suggested = await getSuggestedPackages(user.id, LEVELS);
+      setSuggestions(suggested);
+      setShowSuggestionsDialog(true);
+    } catch (error: any) {
+      console.error("Error loading suggestions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load suggestions",
+        variant: "destructive",
+      });
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  // Quick-add a suggested package
+  const handleQuickAddPackage = async (suggestion: SuggestedPackage) => {
+    const dayName = DAY_NAMES[suggestion.day_of_week];
+    try {
+      const { error } = await (supabase as any)
+        .from("schedule_packages")
+        .insert({
+          level: suggestion.level,
+          day_of_week: suggestion.day_of_week,
+          start_time: suggestion.start_time,
+          duration_min: 90,
+          timezone: "Africa/Cairo",
+          capacity: 5,
+          is_active: true,
+          course_type: "group",
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Added ${suggestion.level} on ${dayName} at ${suggestion.start_time}`,
+      });
+
+      // Refresh packages
+      await fetchPackages();
+
+      // Remove from suggestions
+      setSuggestions(suggestions.filter((s) => s !== suggestion));
+    } catch (error: any) {
+      console.error("Error creating package:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create package",
+        variant: "destructive",
+      });
+    }
+  };
+
   const displayed = packages.filter((p) => {
     const lvl = filterLevel === "all" || p.level === filterLevel;
     const act = filterActive === "all" || (filterActive === "active" ? p.is_active : !p.is_active);
@@ -339,7 +409,18 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> New Slot</Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleLoadSuggestions}
+            disabled={suggestionsLoading}
+          >
+            <Lightbulb className="h-4 w-4 mr-1" />
+            {suggestionsLoading ? "Loading..." : "View Suggestions"}
+          </Button>
+          <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> New Slot</Button>
+        </div>
       </div>
 
       {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
@@ -480,6 +561,55 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
             </div>
             <Button className="w-full" onClick={handleSave}>{editing ? "Save Changes" : "Create Slot"}</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* SUGGESTIONS DIALOG */}
+      <Dialog open={showSuggestionsDialog} onOpenChange={setShowSuggestionsDialog}>
+        <DialogContent className="max-w-2xl max-h-96 overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Suggested Schedule Packages</DialogTitle>
+            <DialogDescription>
+              Based on your availability and student preferences. Click "Add" to create any of these packages.
+            </DialogDescription>
+          </DialogHeader>
+
+          {suggestions.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              All suggested packages already exist! Your availability is fully covered.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {suggestions.map((suggestion, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 border rounded-lg bg-muted/50 hover:bg-muted transition"
+                >
+                  <div className="flex-1">
+                    <div className="font-semibold">
+                      {suggestion.level} • {DAY_NAMES[suggestion.day_of_week]} @ {suggestion.start_time}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {suggestion.studentCount > 0 ? (
+                        <span className="text-green-600 font-medium">
+                          {suggestion.studentCount} {suggestion.studentCount === 1 ? "student" : "students"} want this slot
+                        </span>
+                      ) : (
+                        <span>No requests yet, but available per your schedule</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handleQuickAddPackage(suggestion)}
+                    disabled={suggestion.existsAlready}
+                  >
+                    {suggestion.existsAlready ? "Exists" : "Add"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

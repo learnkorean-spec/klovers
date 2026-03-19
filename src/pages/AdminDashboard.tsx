@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,8 @@ import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
 import AdminNotifications from "@/components/admin/AdminNotifications";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
 import GroupMatcher from "@/components/admin/GroupMatcher";
+import TeacherAvailabilityManager from "@/components/admin/TeacherAvailabilityManager";
+import StudentPreferenceDashboard from "@/components/admin/StudentPreferenceDashboard";
 
 import BulkEmailManager from "@/components/admin/BulkEmailManager";
 
@@ -671,6 +673,12 @@ const AdminDashboard = () => {
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
               <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
+              <TabsTrigger value="availability" className={TAB_CLS}>
+                <Clock className="h-4 w-4" /> Availability
+              </TabsTrigger>
+              <TabsTrigger value="preferences" className={TAB_CLS}>
+                <BarChart3 className="h-4 w-4" /> Preferences
+              </TabsTrigger>
               <TabsTrigger value="sales" className={TAB_CLS}>
                 <BarChart3 className="h-4 w-4" /> Sales
               </TabsTrigger>
@@ -1529,6 +1537,16 @@ const AdminDashboard = () => {
             {/* PLACEMENT TESTS TAB */}
             <TabsContent value="placement-tests">
               <PlacementTestsManager />
+            </TabsContent>
+
+            {/* TEACHER AVAILABILITY TAB */}
+            <TabsContent value="availability">
+              <TeacherAvailabilityManager />
+            </TabsContent>
+
+            {/* STUDENT PREFERENCES TAB */}
+            <TabsContent value="preferences">
+              <StudentPreferenceDashboard />
             </TabsContent>
 
             {/* SALES ANALYTICS TAB */}
