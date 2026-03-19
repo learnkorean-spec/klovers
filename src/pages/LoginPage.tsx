@@ -132,14 +132,28 @@ const LoginPage = () => {
     // Always save intended redirect so we can use it after OAuth callback
     const intendedRedirect = redirectTo || "/dashboard";
     localStorage.setItem("enroll_redirect", intendedRedirect);
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/login` },
-    });
-    if (error) {
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/login` },
+      });
+      if (error) {
+        localStorage.removeItem("enroll_redirect");
+        const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+        toast({
+          title: `${providerName} sign-in unavailable`,
+          description: `Please use email and password to log in, or contact support.`,
+          variant: "destructive",
+        });
+      }
+    } catch {
       localStorage.removeItem("enroll_redirect");
-      toast({ title: t("auth.loginFailed"), description: `Could not sign in with ${provider}.`, variant: "destructive" });
+      toast({
+        title: "Sign-in failed",
+        description: "Please use email and password to log in.",
+        variant: "destructive",
+      });
     }
   };
 
