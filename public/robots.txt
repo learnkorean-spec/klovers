@@ -1,8 +1,27 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /dashboard
-Disallow: /reset-password
+
+# Auth pages — no value indexing these
+Disallow: /login
+Disallow: /signup
 Disallow: /forgot-password
+Disallow: /reset-password
+
+# Admin area
+Disallow: /admin
+Disallow: /admin/
+
+# Student-only protected areas
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /profile
+Disallow: /pay/
+Disallow: /resubmit-schedule
+
+# Enrollment-gated content (requires active enrollment)
+Disallow: /textbook
+Disallow: /textbook/
+Disallow: /review
+Disallow: /daily-quiz
 
 Sitemap: https://kloversegy.com/sitemap.xml
