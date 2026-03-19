@@ -92,7 +92,7 @@ const MeetTeacher = () => {
             <div className="pt-2">
               <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
                 <Link to="/enroll-now">
-                  Start Learning Today
+                  {t("teacher", "cta")}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>

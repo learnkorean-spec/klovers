@@ -40,6 +40,7 @@ export const translations = {
         { label: "Structured", description: "Curriculum" },
         { label: "Professional", description: "Teaching Team" },
       ],
+      cta: "Start Learning Today",
     },
     howItWorks: {
       title: "How It Works",
@@ -50,6 +51,7 @@ export const translations = {
         { title: "Practice & Feedback", description: "Get regular feedback and practice exercises" },
         { title: "Clear Progress", description: "Track your improvement with structured milestones" },
       ],
+      cta: "Get Started Now",
     },
     roadmap: {
       title: "Your Learning Roadmap",
@@ -63,6 +65,8 @@ export const translations = {
         { title: "Level 5", description: "Advanced nuance, formal language, topic discussion.", level: "TOPIK 5 / C1" },
         { title: "Level 6", description: "Near-native comprehension, idioms, and advanced expression.", level: "TOPIK 6 / C2" },
       ],
+      cta: "Find Your Level",
+      ctaSub: "Take our free placement test",
     },
     testimonials: {
       title: "What Our Students Say",
@@ -600,6 +604,7 @@ export const translations = {
         { label: "منهج", description: "منظم" },
         { label: "فريق", description: "تدريس محترف" },
       ],
+      cta: "ابدأ التعلم الآن",
     },
     howItWorks: {
       title: "كيف يعمل",
@@ -610,6 +615,7 @@ export const translations = {
         { title: "تمارين وملاحظات", description: "احصل على ملاحظات منتظمة وتمارين ممارسة" },
         { title: "تقدم واضح", description: "تتبع تحسنك مع معالم منظمة" },
       ],
+      cta: "ابدأ الآن",
     },
     roadmap: {
       title: "خارطة طريق التعلم",
@@ -623,6 +629,8 @@ export const translations = {
         { title: "مستوى 5", description: "فروقات دقيقة ولغة رسمية ونقاشات.", level: "TOPIK 5 / C1" },
         { title: "مستوى 6", description: "فهم شبه أصلي وتعبيرات متقدمة واصطلاحات.", level: "TOPIK 6 / C2" },
       ],
+      cta: "اكتشف مستواك",
+      ctaSub: "خذ اختبار التحديد المستوى المجاني",
     },
     testimonials: {
       title: "ماذا يقول طلابنا",

@@ -151,11 +151,11 @@ const LearningRoadmap = () => {
         <div className="text-center mt-12">
           <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
             <Link to="/placement-test">
-              Find Your Level
+              {t("roadmap", "cta")}
               <ArrowRight className="h-5 w-5" />
             </Link>
           </Button>
-          <p className="text-sm text-muted-foreground mt-3">Take our free placement test</p>
+          <p className="text-sm text-muted-foreground mt-3">{t("roadmap", "ctaSub")}</p>
         </div>
       </div>
     </section>
