@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap } from "lucide-react";
+import { ChevronDown, BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LEVEL_META: Record<string, { color: string; bg: string; border: string; icon: React.ElementType; emoji: string }> = {
@@ -143,6 +145,17 @@ const LearningRoadmap = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-12">
+          <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
+            <Link to="/placement-test">
+              Find Your Level
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
+          <p className="text-sm text-muted-foreground mt-3">Take our free placement test</p>
         </div>
       </div>
     </section>

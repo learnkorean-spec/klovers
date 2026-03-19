@@ -1,5 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Users, BookOpen, Award } from "lucide-react";
+import { Users, BookOpen, Award, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 const highlightIcons = [Users, BookOpen, Award];
@@ -85,6 +87,16 @@ const MeetTeacher = () => {
             <p className="text-muted-foreground text-sm md:text-base leading-relaxed border-l-2 border-primary pl-4 italic">
               {t("teacher", "bio4")}
             </p>
+
+            {/* CTA */}
+            <div className="pt-2">
+              <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
+                <Link to="/enroll-now">
+                  Start Learning Today
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
           </div>
 
         </div>

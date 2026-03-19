@@ -64,7 +64,7 @@ const HeroSection = () => {
         src={heroPoster}
         alt=""
         aria-hidden="true"
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ${
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns ${
           videoReady ? "opacity-0" : "opacity-100"
         }`}
       />
@@ -83,10 +83,10 @@ const HeroSection = () => {
         />
       )}
 
-      {/* Cinematic gradient — stronger vignette */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/35 to-black/85" />
+      {/* Cinematic gradient — lighter to show skyline */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60" />
       {/* Side vignettes for depth */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/25" />
 
       {/* Primary colour glow behind headline */}
       <div
@@ -143,7 +143,7 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <p
-            className="text-lg sm:text-xl text-white/85 max-w-xl mx-auto leading-relaxed"
+            className="text-xl sm:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
             Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.

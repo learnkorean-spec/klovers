@@ -224,6 +224,13 @@ All colors MUST be HSL.
   50% { opacity: 0.3; transform: translate(-50%, 0) scale(1.15); }
 }
 
+@keyframes ken-burns {
+  0%   { transform: scale(1)    translate(0, 0); }
+  50%  { transform: scale(1.08) translate(-1%, -0.5%); }
+  100% { transform: scale(1)    translate(0, 0); }
+}
+.animate-ken-burns { animation: ken-burns 25s ease-in-out infinite; }
+
 .animate-bounce-up {
   animation: bounce-up 1.5s ease-out forwards;
 }

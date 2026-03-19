@@ -1,5 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Video, Users, MessageCircle, TrendingUp } from "lucide-react";
+import { Video, Users, MessageCircle, TrendingUp, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const stepIcons = [Video, Users, MessageCircle, TrendingUp];
@@ -39,12 +41,22 @@ const HowItWorks = () => {
                     </div>
                     {/* dir="auto" lets each card's text flow in the document's language direction */}
                     <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base" dir="auto">{step.title}</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed" dir="auto">{step.description}</p>
+                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed" dir="auto">{step.description}</p>
                   </CardContent>
                 </Card>
               </div>
             );
           })}
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-10">
+          <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
+            <Link to="/enroll-now">
+              Get Started Now
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
