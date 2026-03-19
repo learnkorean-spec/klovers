@@ -64,6 +64,8 @@ const HeroSection = () => {
         src={heroPoster}
         alt=""
         aria-hidden="true"
+        fetchPriority="high"
+        decoding="async"
         className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns ${
           videoReady ? "opacity-0" : "opacity-100"
         }`}
