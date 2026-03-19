@@ -11,15 +11,15 @@ const STATIC_ROUTES = [
   { path: "/",               priority: "1.0", changefreq: "weekly"   },
   { path: "/courses",        priority: "0.9", changefreq: "weekly"   },
   { path: "/pricing",        priority: "0.9", changefreq: "monthly"  },
+  { path: "/enroll",         priority: "0.9", changefreq: "monthly"  },
   { path: "/about",          priority: "0.8", changefreq: "monthly"  },
   { path: "/blog",           priority: "0.8", changefreq: "weekly"   },
   { path: "/placement-test", priority: "0.8", changefreq: "monthly"  },
-  { path: "/enroll",         priority: "0.8", changefreq: "monthly"  },
-  { path: "/textbook",       priority: "0.7", changefreq: "weekly"   },
+  { path: "/enroll-now",     priority: "0.8", changefreq: "monthly"  },
   { path: "/games",          priority: "0.7", changefreq: "weekly"   },
   { path: "/faq",            priority: "0.7", changefreq: "monthly"  },
   { path: "/contact",        priority: "0.7", changefreq: "monthly"  },
-  // NOTE: /login /signup /profile excluded — private/low-value pages
+  // Excluded: /login /signup /profile /textbook /dashboard — private/auth pages
 ];
 
 Deno.serve(async (req) => {
