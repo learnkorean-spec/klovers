@@ -110,9 +110,9 @@ const PricingSection = () => {
           <Badge variant="secondary" className="mb-4">
             {t("pricing", "badge")}
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             {t("pricing", "title")}
-          </h2>
+          </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
             {t("pricing", "subtitle")}
           </p>

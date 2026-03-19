@@ -25,9 +25,9 @@ const CoursesSection = () => {
           <Badge variant="secondary" className="mb-4">
             {t("courses", "badge")}
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             {t("courses", "title")}
-          </h2>
+          </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {t("courses", "subtitle")}
           </p>

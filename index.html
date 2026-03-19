@@ -9,6 +9,11 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://kloversegy.com/" />
 
+    <!-- hreflang: bilingual site (EN + AR toggled client-side at same URLs) -->
+    <link rel="alternate" hreflang="en" href="https://kloversegy.com/" />
+    <link rel="alternate" hreflang="ar" href="https://kloversegy.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://kloversegy.com/" />
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Klovers" />
@@ -108,13 +113,27 @@
           }
         ]
       },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer support",
-        "url": "https://kloversegy.com/contact",
-        "availableLanguage": ["English", "Arabic"]
-      },
-      "sameAs": []
+      "email": "koreanlovers.net@gmail.com",
+      "telephone": "+601121777560",
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "url": "https://kloversegy.com/contact",
+          "availableLanguage": ["English", "Arabic"]
+        },
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "contactOption": "TollFree",
+          "url": "https://wa.me/601121777560",
+          "availableLanguage": ["English", "Arabic"]
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/Klovers.net/",
+        "https://www.tiktok.com/@klovers.net"
+      ]
     }
     </script>
 
