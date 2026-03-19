@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
 import StudentGroupAttendance from "@/components/StudentGroupAttendance";
+import UpcomingSessionsCard from "@/components/UpcomingSessionsCard";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
@@ -925,6 +926,7 @@ const StudentDashboard = () => {
               })}
 
               {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
+              <UpcomingSessionsCard />
               <StudentGroupAttendance />
             </>
           )}

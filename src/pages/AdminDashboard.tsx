@@ -41,6 +41,7 @@ import SchedulingManager from "@/components/admin/SchedulingManager";
 import AdminSettings from "@/components/admin/AdminSettings";
 import PlacementTestsManager from "@/components/admin/PlacementTestsManager";
 import SalesAnalytics from "@/components/admin/SalesAnalytics";
+import SessionAttendanceManager from "@/components/admin/SessionAttendanceManager";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -673,6 +674,9 @@ const AdminDashboard = () => {
                 <Bell className="h-4 w-4" /> Alerts
               </TabsTrigger>
               <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
+              <TabsTrigger value="session-attendance" className={TAB_CLS}>
+                <FileCheck className="h-4 w-4" /> Attendance
+              </TabsTrigger>
               <TabsTrigger value="availability" className={TAB_CLS}>
                 <Clock className="h-4 w-4" /> Availability
               </TabsTrigger>
@@ -1555,6 +1559,9 @@ const AdminDashboard = () => {
             </TabsContent>
 
             {/* SETTINGS TAB */}
+            <TabsContent value="session-attendance">
+              <SessionAttendanceManager />
+            </TabsContent>
             <TabsContent value="settings">
               <AdminSettings />
             </TabsContent>
