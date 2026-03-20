@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,15 @@ import { AlertCircle, Calendar } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Fallback preset times shown when teacher hasn't configured availability yet
+const PRESET_TIMES = [
+  { time: "09:00", label: "9:00 AM — Morning" },
+  { time: "12:00", label: "12:00 PM — Midday" },
+  { time: "15:00", label: "3:00 PM — Afternoon" },
+  { time: "18:00", label: "6:00 PM — Evening" },
+  { time: "20:00", label: "8:00 PM — Night" },
+];
 
 interface StudentPreferenceStepProps {
   onBack: () => void;
@@ -135,32 +144,52 @@ const StudentPreferenceStep = ({
           {/* Time Selection */}
           {loadingTimes ? (
             <div className="text-center text-muted-foreground py-4">Loading available times...</div>
-          ) : timesForDay.length === 0 ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">
-                No times available for {DAYS[parseInt(preferredDay)]} yet. Please choose another day.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <Label htmlFor="time-select" className="font-semibold">
-                What time works best?
-              </Label>
-              <Select value={preferredTime} onValueChange={setPreferredTime}>
-                <SelectTrigger id="time-select">
-                  <SelectValue placeholder="Select a time..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {timesForDay.map((slot) => (
-                    <SelectItem key={slot.time} value={slot.time}>
-                      {slot.time} ({parseInt(slot.time) >= 12 ? "PM" : "AM"})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          ) : !preferredDay ? null : (() => {
+            // Use live teacher times if available, otherwise fall back to preset options
+            const usePresets = availableTimes.length === 0;
+            const timeOptions = usePresets
+              ? PRESET_TIMES.map((p) => ({ time: p.time, label: p.label }))
+              : timesForDay.map((slot) => {
+                  const [h] = slot.time.split(":").map(Number);
+                  const ampm = h >= 12 ? "PM" : "AM";
+                  const h12 = h % 12 || 12;
+                  return { time: slot.time, label: `${h12}:${slot.time.split(":")[1]} ${ampm}` };
+                });
+
+            return (
+              <div className="space-y-3">
+                <Label htmlFor="time-select" className="font-semibold">
+                  What time works best?
+                </Label>
+                {usePresets && (
+                  <p className="text-xs text-muted-foreground">
+                    💡 Suggest a time — we'll build the live schedule based on most-requested slots.
+                  </p>
+                )}
+                {timeOptions.length === 0 ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
+                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800">
+                      No times for {DAYS[parseInt(preferredDay)]} yet. Please choose another day.
+                    </p>
+                  </div>
+                ) : (
+                  <Select value={preferredTime} onValueChange={setPreferredTime}>
+                    <SelectTrigger id="time-select">
+                      <SelectValue placeholder="Select a time..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeOptions.map((opt) => (
+                        <SelectItem key={opt.time} value={opt.time}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Error message */}
           {formError && (
@@ -170,10 +199,10 @@ const StudentPreferenceStep = ({
           )}
 
           {/* Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
-            <p className="font-semibold mb-1">Why we're asking:</p>
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-900 dark:text-blue-200">
+            <p className="font-semibold mb-1">📊 Why we're asking:</p>
             <p>
-              Your preference helps us understand which time slots are most in demand. If your preferred time isn't available yet, we may create it based on student requests!
+              Your preference is recorded and shown to our admin. The most-requested days &amp; times get turned into live schedule slots — so you directly influence when classes are created!
             </p>
           </div>
         </CardContent>

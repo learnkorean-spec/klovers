@@ -20,7 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight, UserPlus, Search, Lightbulb } from "lucide-react";
 import AdminNotifications from "./AdminNotifications";
 import { getSuggestedPackages, type SuggestedPackage, formatSuggestion } from "@/lib/scheduleAutomation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 import { LEVEL_KEYS, mapLegacyLevel } from "@/constants/levels";
