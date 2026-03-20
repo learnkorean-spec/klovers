@@ -966,7 +966,8 @@ const AdminDashboard = () => {
                         : tab === "approved" ? e.approval_status === "APPROVED"
                         : e.approval_status === "REJECTED";
                       if (!matchesTab) return false;
-                      if (!showLegacyEnrollments && isLegacy(e)) return false;
+                      const isActionable = e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW";
+                      if (!showLegacyEnrollments && isLegacy(e) && !isActionable) return false;
                       if (enrollmentSearch) {
                         const q = enrollmentSearch.toLowerCase();
                         const name = e.profiles?.name?.toLowerCase() ?? "";
