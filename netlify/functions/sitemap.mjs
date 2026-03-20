@@ -5,8 +5,8 @@
  */
 
 const SITE_URL     = "https://kloversegy.com";
-const SUPABASE_URL = "https://rahpkflknkofuuhnbfyc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhaHBrZmxrbmtvZnV1aG5iZnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MzEyOTksImV4cCI6MjA4NjQwNzI5OX0.ZY416BgNYNoPgasvT6tXJ09OlYe8kSCgnl-qmxAT_oE";
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://ewtdgpbybkceokfohhyg.supabase.co";
+const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_do5UbZuz93WnJYXp1ZQg5g_j6K4DiFh";
 
 const STATIC_ROUTES = [
   { path: "/",               priority: "1.0", changefreq: "weekly",  lastmod: "2026-03-20" },

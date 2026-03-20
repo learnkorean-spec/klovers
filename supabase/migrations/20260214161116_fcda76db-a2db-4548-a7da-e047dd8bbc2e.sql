@@ -2,7 +2,7 @@
 ALTER TABLE public.profiles ADD COLUMN avatar_url text DEFAULT '';
 
 -- Create public avatars bucket
-INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true);
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true) ON CONFLICT (id) DO NOTHING;
 
 -- Anyone can view avatars
 CREATE POLICY "Avatar images are publicly accessible"

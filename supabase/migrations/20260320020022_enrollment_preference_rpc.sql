@@ -32,8 +32,8 @@ CREATE OR REPLACE FUNCTION submit_enrollment_with_preference(
   p_amount numeric,
   p_unit_price numeric,
   p_payment_provider text,
-  p_stripe_payment_intent_id text DEFAULT NULL,
   p_level text,
+  p_stripe_payment_intent_id text DEFAULT NULL,
   p_preferred_day_of_week int DEFAULT NULL,
   p_preferred_start_time text DEFAULT NULL
 )

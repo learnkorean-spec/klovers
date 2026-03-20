@@ -45,7 +45,7 @@ BEFORE UPDATE ON public.blog_posts
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
-INSERT INTO storage.buckets (id, name, public) VALUES ('blog-images', 'blog-images', true);
+INSERT INTO storage.buckets (id, name, public) VALUES ('blog-images', 'blog-images', true) ON CONFLICT (id) DO NOTHING;
 
 CREATE POLICY "Anyone can view blog images"
 ON storage.objects FOR SELECT

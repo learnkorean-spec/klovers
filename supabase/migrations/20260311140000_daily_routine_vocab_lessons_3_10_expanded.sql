@@ -3,14 +3,14 @@
 
 DO $$
 DECLARE
-  shower_id uuid;
-  hair_id uuid;
-  face_id uuid;
-  teeth_id uuid;
-  shaving_id uuid;
-  glasses_id uuid;
-  dressed_id uuid;
-  makeup_id uuid;
+  shower_id integer;
+  hair_id integer;
+  face_id integer;
+  teeth_id integer;
+  shaving_id integer;
+  glasses_id integer;
+  dressed_id integer;
+  makeup_id integer;
 BEGIN
   SELECT id INTO shower_id FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 3;
   SELECT id INTO hair_id FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 4;
@@ -46,7 +46,7 @@ BEGIN
   (shower_id, '샤워 시간',    'syawo sigan',     'shower time',                  12),
   (shower_id, '거품',         'geopum',          'lather/foam',                  13),
   (shower_id, '헹구다',       'haengguda',       'to rinse',                     14),
-  (shower_id, '몸을 씻다',    'momeul sseosda',  'to wash one\'s body',          15),
+  (shower_id, '몸을 씻다',    'momeul sseosda',  'to wash one''s body',          15),
   (shower_id, '수도꼭지',     'sudokkokji',      'water faucet',                 16),
   (shower_id, '물 온도',      'mul ondo',        'water temperature',            17),
   (shower_id, '거울',         'geoul',           'mirror',                       18),
@@ -61,7 +61,7 @@ BEGIN
   (shower_id, 'A', '샤워 시간이 너무 길어요!', 'Syawo sigan-i neomu gireoyo!', 'Your shower time is too long!', 1),
   (shower_id, 'B', '금방 끝낼게요. 2분 만에!', 'Geumbang kkeulnalgeyo. 2bun man-e!', 'I''ll finish quickly. In 2 minutes!', 2),
   (shower_id, 'A', '샴푸부터 헹굴 때까지?', 'Syampu buteo haenggul ttae kkaji?', 'From shampooing to rinsing?', 3),
-  (shower_id, 'B', '네, 준비됐어요!', 'Ne, junbidwaesseoyo!', 'Yes, I\'m ready!', 4);
+  (shower_id, 'B', '네, 준비됐어요!', 'Ne, junbidwaesseoyo!', 'Yes, I''m ready!', 4);
 
   INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
   (shower_id, '"샤워"는 무엇입니까?', '["bath", "shower", "water", "soap"]', 1, '"샤워" is a shower', 1),
@@ -105,7 +105,7 @@ BEGIN
   (hair_id, 'A', '머리 감았어?', 'Meori gamasso?', 'Did you wash your hair?', 1),
   (hair_id, 'B', '응, 방금 감았어. 지금 드라이 중이야.', 'Eung, banggeum gamasso. Jigeum deurai jung-iya.', 'Yeah, just washed it. Drying now.', 2),
   (hair_id, 'A', '머릿결이 반짝거리네! 뭘 썼어?', 'Meoritgyeol-i bangjak-georine! Mwol ssasseo?', 'Your hair is shiny! What did you use?', 3),
-  (hair_id, 'B', '요즘 새로운 샴푸를 써봤어. 정말 좋아!', 'Yojeum saerooun syampu-reul sseobwasso. Jeongmal joa!', 'I tried a new shampoo recently. It\'s really good!', 4);
+  (hair_id, 'B', '요즘 새로운 샴푸를 써봤어. 정말 좋아!', 'Yojeum saerooun syampu-reul sseobwasso. Jeongmal joa!', 'I tried a new shampoo recently. It''s really good!', 4);
 
   INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
   (hair_id, '"드라이하다"는 무엇을 의미합니까?', '["to wash", "to blow-dry", "to comb", "to style"]', 1, '"드라이하다" means to blow-dry', 1),
@@ -147,7 +147,7 @@ BEGIN
 
   INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
   (face_id, 'A', '여드름이 많아졌네요.', 'Yeodeureum-i manajyeojne.', 'You have more acne.', 1),
-  (face_id, 'B', '요즘 스트레스가 많아서요.', 'Yojeum seutolesseuga manaseo.', 'I\'ve been stressed lately.', 2),
+  (face_id, 'B', '요즘 스트레스가 많아서요.', 'Yojeum seutolesseuga manaseo.', 'I''ve been stressed lately.', 2),
   (face_id, 'A', '아침저녁으로 잘 세수하고 토너, 로션을 꼭 사용하세요.', 'Achimjeonyeog-euro jal sesuhago toneo, rosyon-eul kkkok sayong-haseyo.', 'Wash your face morning and night, and be sure to use toner and lotion.', 3),
   (face_id, 'B', '네, 감사합니다. 마스크팩도 할까요?', 'Ne, gamsahamnida. Maseukeupaek-do halkkayo?', 'Thanks. Should I do a face mask too?', 4);
 
@@ -193,7 +193,7 @@ BEGIN
   (teeth_id, 'A', '양치질했니?', 'Yangchijilhaetni?', 'Did you brush your teeth?', 1),
   (teeth_id, 'B', '아직 안 했어요.', 'Ajik an haesseoyo.', 'Not yet.', 2),
   (teeth_id, 'A', '밥 먹고 난 후에 양치질을 해야지! 충치가 생길 수 있어.', 'Bab meokgo nan hue-e yangchijireul hae yaji! Chungchi-ga saenggyul su isseo.', 'You should brush after eating! You could get cavities.', 3),
-  (teeth_id, 'B', '알겠어요. 지금 할게요!', 'Algetsoyo. Jigeum halgeyo!', 'Okay, I\'ll do it now!', 4);
+  (teeth_id, 'B', '알겠어요. 지금 할게요!', 'Algetsoyo. Jigeum halgeyo!', 'Okay, I''ll do it now!', 4);
 
   INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
   (teeth_id, '"칫솔"은 무엇입니까?', '["toothpaste", "toothbrush", "mouth", "teeth"]', 1, '"칫솔" is a toothbrush', 1),
@@ -202,7 +202,7 @@ BEGIN
   (teeth_id, '치아를 건강하게 유지하려면?', '["설탕 많이 먹기", "정기적 양치와 불소", "딱딱한 음식 피하기", "물을 마시지 않기"]', 1, 'Regular brushing and fluoride keep teeth healthy', 4);
 
   INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
-  (teeth_id, '건강한 치아는 평생의 자산이다. 아침, 점심, 저녁 세 끼 식사 후에 양치질을 해야 한다. 칫솔의 모가 너무 뻣뻣하지 않은 것을 선택하고 부드럽게 닦는 것이 중요하다. 치약은 불소가 함유된 것을 사용하면 충치 예방에 도움이 된다. 음식을 먹은 직후에는 양치질을 하지 말고 30분 정도 기다린 후에 하는 것이 좋다. 정기적으로 치과에 가서 스케일링을 받으면 더욱 건강한 치아를 유지할 수 있다.', 'Healthy teeth are lifelong assets. Brush after all three meals. Choose a toothbrush with soft bristles and brush gently. Using fluoride toothpaste helps prevent cavities. Don\'t brush immediately after eating; wait about 30 minutes. Regular dental checkups and scaling keep teeth healthier.', 1);
+  (teeth_id, '건강한 치아는 평생의 자산이다. 아침, 점심, 저녁 세 끼 식사 후에 양치질을 해야 한다. 칫솔의 모가 너무 뻣뻣하지 않은 것을 선택하고 부드럽게 닦는 것이 중요하다. 치약은 불소가 함유된 것을 사용하면 충치 예방에 도움이 된다. 음식을 먹은 직후에는 양치질을 하지 말고 30분 정도 기다린 후에 하는 것이 좋다. 정기적으로 치과에 가서 스케일링을 받으면 더욱 건강한 치아를 유지할 수 있다.', 'Healthy teeth are lifelong assets. Brush after all three meals. Choose a toothbrush with soft bristles and brush gently. Using fluoride toothpaste helps prevent cavities. Don''t brush immediately after eating; wait about 30 minutes. Regular dental checkups and scaling keep teeth healthier.', 1);
 
   -- ============================================================
   -- LESSON 7: SHAVING
@@ -231,13 +231,13 @@ BEGIN
 
   INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, sort_order) VALUES
   (shaving_id, 'Using ~아/어서 (so, then)', '~아/어서', 'Sequential. 면도하고 나서 로션을 바른다 (After shaving, apply lotion)', 1),
-  (shaving_id, 'Using ~으면 안 되다 (mustn\'t)', '~으면 안 되다', 'Prohibition. 너무 세게 면도하면 안 된다 (don\'t shave too hard)', 2);
+  (shaving_id, 'Using ~으면 안 되다 (mustn''t)', '~으면 안 되다', 'Prohibition. 너무 세게 면도하면 안 된다 (don''t shave too hard)', 2);
 
   INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
   (shaving_id, 'A', '오늘 면도했어요?', 'Oneul myeondohaesseoyo?', 'Did you shave today?', 1),
   (shaving_id, 'B', '네, 이른 아침에 했어요. 수염이 자라서요.', 'Ne, ireun achim-e haesseoyo. Suyeom-i jaraseo.', 'Yes, early this morning. My beard was growing.', 2),
   (shaving_id, 'A', '피부가 자극받았어요?', 'Pibu-ga jageubadasseoeyo?', 'Is your skin irritated?', 3),
-  (shaving_id, 'B', '조금요. 그래서 로션을 바르고 있어요.', 'Jogeumyo. Geuraeseo rosyon-eul bareugo isseoyo.', 'A bit. That\'s why I\'m applying lotion.', 4);
+  (shaving_id, 'B', '조금요. 그래서 로션을 바르고 있어요.', 'Jogeumyo. Geuraeseo rosyon-eul bareugo isseoyo.', 'A bit. That''s why I''m applying lotion.', 4);
 
   INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
   (shaving_id, '"면도"는 무엇입니까?', '["to trim", "to shave", "to cut hair", "to groom"]', 1, '"면도하다" means to shave', 1),
@@ -279,8 +279,8 @@ BEGIN
 
   INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
   (glasses_id, 'A', '안경을 자주 쓰세요?', 'Angyeongeul jaju sseuseo?', 'Do you wear glasses often?', 1),
-  (glasses_id, 'B', '네, 근시라서 안경이 필수예요.', 'Ne, geunsi-raseo angyeong-i pilsuye.', 'Yes, I\'m nearsighted so glasses are necessary.', 2),
-  (glasses_id, 'A', '혹시 렌즈는 안 쓰세요?', 'Hoksi renjeu-neun an sseuseo?', 'Don\'t you wear contact lenses?', 3),
+  (glasses_id, 'B', '네, 근시라서 안경이 필수예요.', 'Ne, geunsi-raseo angyeong-i pilsuye.', 'Yes, I''m nearsighted so glasses are necessary.', 2),
+  (glasses_id, 'A', '혹시 렌즈는 안 쓰세요?', 'Hoksi renjeu-neun an sseuseo?', 'Don''t you wear contact lenses?', 3),
   (glasses_id, 'B', '렌즈는 관리가 어려워서 안경이 더 편해요.', 'Renjeu-neun gwanri-ga eoryeowoseo angyeong-i deo pyeonhae.', 'Contact lens care is difficult, so glasses are more convenient.', 4);
 
   INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
@@ -323,7 +323,7 @@ BEGIN
 
   INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
   (dressed_id, 'A', '오늘 뭘 입을까?', 'Oneul mweol ibeulkka?', 'What should I wear today?', 1),
-  (dressed_id, 'B', '날씨가 추우니까 외투를 입으세요.', 'Nalssyiga chuu-nikka oetuereul iphseyo.', 'It\'s cold, so wear a coat.', 2),
+  (dressed_id, 'B', '날씨가 추우니까 외투를 입으세요.', 'Nalssyiga chuu-nikka oetuereul iphseyo.', 'It''s cold, so wear a coat.', 2),
   (dressed_id, 'A', '어떤 색깔이 어울릴까요?', 'Eotteon saekkal-i eoullilkkayo?', 'What color would suit me?', 3),
   (dressed_id, 'B', '검은색이나 회색 외투가 멋있어요!', 'Geomeunsaek-ina hoesaek oetuega meossisseoyo!', 'Black or gray coats look great!', 4);
 

@@ -63,7 +63,7 @@ CREATE POLICY "Admins can view all attendance" ON public.attendance_requests FOR
 CREATE POLICY "Admins can update attendance" ON public.attendance_requests FOR UPDATE USING (public.has_role(auth.uid(), 'admin'));
 
 -- Storage bucket for receipts
-INSERT INTO storage.buckets (id, name, public) VALUES ('receipts', 'receipts', true);
+INSERT INTO storage.buckets (id, name, public) VALUES ('receipts', 'receipts', true) ON CONFLICT (id) DO NOTHING;
 
 CREATE POLICY "Users can upload receipts" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'receipts' AND auth.uid()::text = (storage.foldername(name))[1]);
 CREATE POLICY "Anyone can view receipts" ON storage.objects FOR SELECT USING (bucket_id = 'receipts');

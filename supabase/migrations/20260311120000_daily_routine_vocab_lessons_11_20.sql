@@ -4,16 +4,16 @@
 
 DO $$
 DECLARE
-  cooking_id   uuid;
-  eating_id    uuid;
-  dishes_id    uuid;
-  cleaning_id  uuid;
-  laundry_id   uuid;
-  garden_id    uuid;
-  phone_id     uuid;
-  tv_id        uuid;
-  radio_id     uuid;
-  web_id       uuid;
+  cooking_id   integer;
+  eating_id    integer;
+  dishes_id    integer;
+  cleaning_id  integer;
+  laundry_id   integer;
+  garden_id    integer;
+  phone_id     integer;
+  tv_id        integer;
+  radio_id     integer;
+  web_id       integer;
 BEGIN
   SELECT id INTO cooking_id  FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 11;
   SELECT id INTO eating_id   FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 12;

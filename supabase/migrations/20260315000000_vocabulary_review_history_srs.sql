@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS vocabulary_review_history (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
-  lesson_vocabulary_id BIGINT NOT NULL REFERENCES lesson_vocabulary(id) ON DELETE CASCADE,
+  lesson_vocabulary_id UUID NOT NULL REFERENCES lesson_vocabulary(id) ON DELETE CASCADE,
   next_review_date DATE NOT NULL DEFAULT CURRENT_DATE,
   review_count INT NOT NULL DEFAULT 0,
   difficulty_factor NUMERIC(4,2) NOT NULL DEFAULT 2.5, -- SM-2 algorithm factor
@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS vocabulary_review_history (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   -- Ensure each user has only one review history per vocabulary item
-  UNIQUE(user_id, lesson_vocabulary_id),
-
-  -- Index for querying cards due for review
-  INDEX idx_user_next_review (user_id, next_review_date)
+  UNIQUE(user_id, lesson_vocabulary_id)
 );
+
+-- Index for querying cards due for review
+CREATE INDEX IF NOT EXISTS idx_user_next_review ON vocabulary_review_history (user_id, next_review_date);
 
 -- Enable RLS for vocabulary_review_history
 ALTER TABLE vocabulary_review_history ENABLE ROW LEVEL SECURITY;

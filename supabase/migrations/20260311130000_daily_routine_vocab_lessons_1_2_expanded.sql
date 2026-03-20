@@ -3,8 +3,8 @@
 
 DO $$
 DECLARE
-  sleeping_id uuid;
-  waking_id uuid;
+  sleeping_id integer;
+  waking_id integer;
 BEGIN
   SELECT id INTO sleeping_id FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 1;
   SELECT id INTO waking_id FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 2;
@@ -84,10 +84,10 @@ BEGIN
     (waking_id, '아침',              'achim',               'morning',                          10),
     (waking_id, '새벽',              'saebyeok',            'dawn',                             11),
     (waking_id, '졸음',              'joreum',              'sleepiness',                       12),
-    (waking_id, '정신을 차리다',     'jeongshineul charida','to come to one\'s senses',        13),
+    (waking_id, '정신을 차리다',     'jeongshineul charida','to come to one''s senses',        13),
     (waking_id, '샤워하다',          'syaweohada',          'to take a shower',                 14),
     (waking_id, '아침 준비를 하다',  'achim junbireul hada','to prepare for the morning',       15),
-    (waking_id, '일어날 시간이다',   'ireonaol sigan-ida',  'it\'s time to wake up',            16),
+    (waking_id, '일어날 시간이다',   'ireonaol sigan-ida',  'it''s time to wake up',            16),
     (waking_id, '환기하다',          'hwanghada',           'to ventilate/air out',             17),
     (waking_id, '침대에서 나오다',   'chimdaeseo naoda',    'to get out of bed',                18),
     (waking_id, '상큼하다',          'sangkeumhada',        'to be fresh',                      19),
