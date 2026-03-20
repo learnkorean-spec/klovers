@@ -64,9 +64,8 @@ const HeroSection = () => {
         src={heroPoster}
         alt=""
         aria-hidden="true"
-        fetchPriority="high"
         decoding="async"
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns ${
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
           videoReady ? "opacity-0" : "opacity-100"
         }`}
       />
@@ -86,14 +85,14 @@ const HeroSection = () => {
       )}
 
       {/* Cinematic gradient — lighter to show skyline */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/65" />
       {/* Side vignettes for depth */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/25" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
       {/* Primary colour glow behind headline */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[340px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.12) 0%, transparent 70%)" }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.18) 0%, transparent 70%)" }}
       />
 
       {/* ── Decorative large Korean text (backdrop) ──────────── */}
@@ -113,7 +112,7 @@ const HeroSection = () => {
       </span>
 
       {/* ── Hero text content ─────────────────────────────────── */}
-      <div className="relative z-10 w-full px-4 text-center">
+      <div className="relative z-10 w-full px-3 sm:px-4 text-center">
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
 
           {/* Live badge */}
@@ -129,15 +128,18 @@ const HeroSection = () => {
 
           {/* Main headline */}
           <h1
-            className="font-black text-white leading-[1.05] tracking-tighter"
+            className="font-black text-white leading-[1.05] tracking-tighter w-full"
             style={{ textShadow: "0 4px 40px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.8)" }}
           >
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
+            <span className="block" style={{ fontSize: "clamp(1.4rem, 5.5vw, 4rem)" }}>
               {t("hero", "title1")}
             </span>
             <span
-              className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary mt-1"
-              style={{ textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)" }}
+              className="block text-primary mt-1"
+              style={{
+                fontSize: "clamp(1.4rem, 6.4vw, 5rem)",
+                textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)"
+              }}
             >
               {t("hero", "title2")}
             </span>
@@ -145,10 +147,10 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <p
-            className="text-xl sm:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl md:text-2xl text-white/85 max-w-lg mx-auto leading-relaxed text-pretty px-1"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
-            Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.
+            Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.{" "}
             Join <span className="text-white font-semibold">2,000+ students</span> learning the right way.
           </p>
 
