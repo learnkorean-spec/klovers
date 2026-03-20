@@ -1,3 +1,5 @@
+// send-profile-reminders: auto daily email for leads with missing info
+// project: ewtdgpbybkceokfohhyg
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -11,7 +13,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
-const DASHBOARD_URL = "https://klovers.lovable.app/dashboard";
+const ENROLL_URL = "https://kloversegy.com/enroll-now";
 
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
@@ -29,17 +31,29 @@ async function sendEmail(to: string, subject: string, html: string) {
   return await res.json();
 }
 
-interface MissingField {
-  label_en: string;
-  label_ar: string;
-  param: string; // query param key
+function getMissingFields(lead: Record<string, string>): string[] {
+  const missing: string[] = [];
+  if (!lead.name || lead.name.trim() === "") missing.push("Full Name");
+  if (!lead.country || lead.country.trim() === "") missing.push("Country");
+  if (!lead.level || lead.level.trim() === "") missing.push("Korean Level");
+  return missing;
 }
 
-function buildReminderEmail(name: string, missing: MissingField[], lang: string) {
-  const isAr = lang === "ar";
+function isArabicCountry(country: string): boolean {
+  const arabicCountries = ["egypt", "مصر", "saudi", "السعودية", "uae", "الإمارات",
+    "iraq", "العراق", "jordan", "الأردن", "morocco", "المغرب", "algeria", "الجزائر",
+    "tunisia", "تونس", "libya", "ليبيا", "sudan", "السودان", "yemen", "اليمن",
+    "syria", "سوريا", "lebanon", "لبنان", "palestine", "فلسطين", "bahrain",
+    "البحرين", "qatar", "قطر", "oman", "عمان", "kuwait", "الكويت"];
+  return arabicCountries.some(c => country.toLowerCase().includes(c));
+}
+
+function buildReminderEmail(name: string, missing: string[], country: string) {
+  const isAr = country ? isArabicCountry(country) : false;
+  const displayName = name && name.trim() ? name : (isAr ? "مرحباً" : "there");
 
   const missingItems = missing
-    .map((f) => `<li style="margin: 4px 0;">${isAr ? f.label_ar : f.label_en}</li>`)
+    .map((f) => `<li style="margin: 4px 0;">✏️ ${f}</li>`)
     .join("");
 
   const missingBox = `
@@ -48,41 +62,43 @@ function buildReminderEmail(name: string, missing: MissingField[], lang: string)
       <ul style="color: #ffffff; margin: 0; padding-${isAr ? "right" : "left"}: 20px;">${missingItems}</ul>
     </div>`;
 
-  const ctaBtnStyle = `display: inline-block; background: #FFFF00; color: #000000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;`;
-
-  const ctaBtn = `<a href="${DASHBOARD_URL}" style="${ctaBtnStyle}">${isAr ? "أكمل بياناتك الآن" : "Complete Your Profile Now"}</a>`;
+  const ctaBtn = `<a href="${ENROLL_URL}" style="display: inline-block; background: #FFFF00; color: #000000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold;">${isAr ? "أكمل بياناتك الآن" : "Complete My Profile Now"}</a>`;
 
   if (isAr) {
     return {
       subject: "KLovers — أكمل بياناتك لبدء الدروس 📝",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px; background: #ffffff; direction: rtl; text-align: right;">
-          <h1 style="color: #000000; font-size: 28px;">مرحباً ${name || ""}!</h1>
-          <p style="font-size: 18px;">👋</p>
-          <p style="color: #333; font-size: 15px; line-height: 1.6;">لاحظنا أن بعض بياناتك غير مكتملة. يرجى إكمالها حتى نتمكن من ترتيب حصصك.</p>
-          ${missingBox}
-          <p style="color: #333; font-size: 15px; line-height: 1.6;">اضغط على الزر أدناه للذهاب مباشرة إلى لوحة التحكم وإكمال بياناتك:</p>
-          <div style="text-align: center; margin: 24px 0;">
-            ${ctaBtn}
+          <div style="background: #000; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h2 style="color: #FFFF00; margin: 0; font-size: 24px; letter-spacing: 1px;">KLovers</h2>
+            <p style="color: #ccc; margin: 4px 0 0; font-size: 12px;">Korean Language Academy</p>
           </div>
-          <p style="color: #999; font-size: 12px; margin-top: 32px;">— فريق KLovers</p>
+          <div style="padding: 28px 24px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
+            <h1 style="color: #000000; font-size: 24px;">مرحباً ${displayName}! 👋</h1>
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">لاحظنا أن بعض بياناتك غير مكتملة. يرجى إكمالها حتى نتمكن من مطابقتك مع الدرس الكوري المناسب لمستواك وجدولك.</p>
+            ${missingBox}
+            <div style="text-align: center; margin: 24px 0;">${ctaBtn}</div>
+            <p style="color: #999; font-size: 12px; margin-top: 32px; text-align: center;">— فريق KLovers</p>
+          </div>
         </div>`,
     };
   }
 
   return {
-    subject: "KLovers — Complete your profile to start classes 📝",
+    subject: "Complete your KLovers profile to get started 📝",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px; background: #ffffff;">
-        <h1 style="color: #000000; font-size: 28px;">Hi ${name || "there"}!</h1>
-        <p style="font-size: 18px;">👋</p>
-        <p style="color: #333; font-size: 15px; line-height: 1.6;">We noticed some of your information is still missing. Please complete it so we can arrange your classes.</p>
-        ${missingBox}
-        <p style="color: #333; font-size: 15px; line-height: 1.6;">Click the button below to go directly to your dashboard and fill in the details:</p>
-        <div style="text-align: center; margin: 24px 0;">
-          ${ctaBtn}
+        <div style="background: #000; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h2 style="color: #FFFF00; margin: 0; font-size: 24px; letter-spacing: 1px;">KLovers</h2>
+          <p style="color: #ccc; margin: 4px 0 0; font-size: 12px;">Korean Language Academy</p>
         </div>
-        <p style="color: #999; font-size: 12px; margin-top: 32px;">— The KLovers Team</p>
+        <div style="padding: 28px 24px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
+          <h1 style="color: #000000; font-size: 24px;">Hi ${displayName}! 👋</h1>
+          <p style="color: #333; font-size: 15px; line-height: 1.6;">We noticed some of your profile information is still missing. Fill it in so we can match you with the right Korean class for your level and schedule.</p>
+          ${missingBox}
+          <div style="text-align: center; margin: 24px 0;">${ctaBtn}</div>
+          <p style="color: #999; font-size: 12px; margin-top: 32px; text-align: center;">— The KLovers Team</p>
+        </div>
       </div>`,
   };
 }
@@ -97,62 +113,46 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: enrollments, error: eErr } = await supabase
-      .from("enrollments")
-      .select("id, user_id, preferred_days, timezone")
-      .eq("approval_status", "APPROVED")
-      .eq("payment_status", "PAID");
+    // Fetch all non-enrolled leads
+    const { data: leads, error: leadsErr } = await supabase
+      .from("leads")
+      .select("id, name, email, country, level, goal, status")
+      .neq("status", "enrolled");
 
-    if (eErr) throw eErr;
-
-    const { data: profiles, error: pErr } = await supabase
-      .from("profiles")
-      .select("user_id, name, email, level, country");
-
-    if (pErr) throw pErr;
-
-    const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+    if (leadsErr) throw leadsErr;
 
     let sent = 0;
     let skipped = 0;
+    const sentIds: string[] = [];
 
-    for (const enrollment of enrollments || []) {
-      const profile = profileMap.get(enrollment.user_id) as any;
-      if (!profile?.email) { skipped++; continue; }
+    for (const lead of leads || []) {
+      if (!lead.email) { skipped++; continue; }
 
-      const missing: MissingField[] = [];
-
-      if (!profile.name || profile.name.trim() === "") {
-        missing.push({ label_en: "Full Name", label_ar: "الاسم الكامل", param: "name" });
-      }
-      if (!profile.level || profile.level.trim() === "") {
-        missing.push({ label_en: "Korean Level", label_ar: "مستوى اللغة الكورية", param: "level" });
-      }
-      if (!profile.country || profile.country.trim() === "") {
-        missing.push({ label_en: "Country", label_ar: "البلد", param: "country" });
-      }
-      if (!enrollment.timezone || enrollment.timezone.trim() === "") {
-        missing.push({ label_en: "Timezone", label_ar: "المنطقة الزمنية", param: "timezone" });
-      }
-      if (!enrollment.preferred_days || enrollment.preferred_days.length === 0) {
-        missing.push({ label_en: "Preferred Class Days", label_ar: "أيام الحصص المفضلة", param: "days" });
-      }
-
+      const missing = getMissingFields(lead as Record<string, string>);
       if (missing.length === 0) { skipped++; continue; }
 
-      const lang = ["egypt", "مصر", "saudi", "السعودية", "uae", "الإمارات", "iraq", "العراق", "jordan", "الأردن", "morocco", "المغرب", "algeria", "الجزائر", "tunisia", "تونس", "libya", "ليبيا", "sudan", "السودان", "yemen", "اليمن", "syria", "سوريا", "lebanon", "لبنان", "palestine", "فلسطين", "bahrain", "البحرين", "qatar", "قطر", "oman", "عمان", "kuwait", "الكويت"]
-        .some(c => (profile.country || "").toLowerCase().includes(c)) ? "ar" : "en";
-
-      const { subject, html } = buildReminderEmail(profile.name, missing, lang);
-
       try {
-        await sendEmail(profile.email, subject, html);
+        const { subject, html } = buildReminderEmail(lead.name, missing, lead.country || "");
+        await sendEmail(lead.email, subject, html);
+        sentIds.push(lead.id);
         sent++;
-        await new Promise((r) => setTimeout(r, 1000));
+        // Small delay to avoid rate limiting
+        await new Promise((r) => setTimeout(r, 500));
       } catch (emailErr) {
-        console.error(`Failed to send to ${profile.email}:`, emailErr);
+        console.error(`Failed to send to ${lead.email}:`, emailErr);
       }
     }
+
+    // Mark sent leads as 'contacted' (only if still 'new')
+    if (sentIds.length > 0) {
+      await supabase
+        .from("leads")
+        .update({ status: "contacted" })
+        .in("id", sentIds)
+        .eq("status", "new");
+    }
+
+    console.log(`Profile reminders: sent=${sent}, skipped=${skipped}`);
 
     return new Response(
       JSON.stringify({ success: true, sent, skipped }),
