@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const SignUpPage = () => {
@@ -73,19 +72,6 @@ const SignUpPage = () => {
     }
   };
 
-  const handleSocialLogin = async (provider: "google" | "apple") => {
-    const intendedRedirect = redirectTo || "/dashboard";
-    localStorage.setItem("enroll_redirect", intendedRedirect);
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/login` },
-    });
-    if (error) {
-      localStorage.removeItem("enroll_redirect");
-      toast({ title: t("auth.signUpFailed") || "Sign up failed", description: `Could not sign up with ${provider}.`, variant: "destructive" });
-    }
-  };
 
   return (
     <div className="min-h-screen">

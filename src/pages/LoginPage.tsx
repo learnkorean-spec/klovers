@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LoginPage = () => {
@@ -55,8 +54,6 @@ const LoginPage = () => {
       let description = t("auth.invalidCredentials");
       if (error.message?.includes("Email not confirmed")) {
         description = t("auth.emailNotConfirmed");
-      } else if (error.message?.includes("Invalid login credentials")) {
-        description = t("auth.invalidCredentials") + " " + (t("auth.trySocialLogin") || "If you signed up with Google or Apple, please use that method to log in.");
       }
       toast({ title: t("auth.loginFailed"), description, variant: "destructive" });
       setLoading(false);
@@ -128,7 +125,7 @@ const LoginPage = () => {
     }
   };
 
-  const handleSocialLogin = async (provider: "google" | "apple") => {
+  const handleSocialLogin = async (provider: "google") => {
     // Always save intended redirect so we can use it after OAuth callback
     const intendedRedirect = redirectTo || "/dashboard";
     localStorage.setItem("enroll_redirect", intendedRedirect);
@@ -140,9 +137,8 @@ const LoginPage = () => {
       });
       if (error) {
         localStorage.removeItem("enroll_redirect");
-        const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
         toast({
-          title: `${providerName} sign-in unavailable`,
+          title: `Google sign-in unavailable`,
           description: `Please use email and password to log in, or contact support.`,
           variant: "destructive",
         });

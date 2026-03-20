@@ -17,7 +17,7 @@ type SignInOptions = {
 
 export const lovable = {
   auth: {
-    signInWithOAuth: async (provider: "google" | "apple", opts?: SignInOptions) => {
+    signInWithOAuth: async (provider: "google", opts?: SignInOptions) => {
       if (isLocal) {
         // Native Supabase OAuth — no cloud proxy required
         const { error } = await supabase.auth.signInWithOAuth({
