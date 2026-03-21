@@ -71,30 +71,19 @@ const CompleteProfilePage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-lead`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            name: form.name.trim(),
-            email: form.email.trim().toLowerCase(),
-            country: form.country,
-            level: form.level,
-            goal: form.goal,
-            source: "complete-profile",
-            user_id: session?.user?.id,
-          }),
-        }
-      );
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          country: form.country,
+          level: form.level,
+          goal: form.goal,
+          source: "complete-profile",
+          user_id: session?.user?.id,
+        },
+      });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to save. Please try again.");
-      }
+      if (error) throw new Error(error.message || "Failed to save. Please try again.");
 
       setDone(true);
     } catch (err: any) {
