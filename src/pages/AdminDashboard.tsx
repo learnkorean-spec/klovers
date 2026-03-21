@@ -636,7 +636,26 @@ const AdminDashboard = () => {
             enrolledCount={lifecycleConfirmedTotal}
             activeCount={lifecycleActive}
             completedCount={lifecycleCompleted + lifecycleLocked}
+            pendingCount={actionableEnrollments}
+            onPendingClick={() => setAdminTab("enrollments")}
           />
+
+          {/* Pending enrollments alert */}
+          {actionableEnrollments > 0 && (
+            <div
+              className="flex items-center gap-3 rounded-xl border border-amber-400/60 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
+              onClick={() => setAdminTab("enrollments")}
+            >
+              <Bell className="h-5 w-5 text-amber-600 shrink-0 animate-pulse" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
+                  {actionableEnrollments} enrollment{actionableEnrollments > 1 ? "s" : ""} need{actionableEnrollments === 1 ? "s" : ""} your attention
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Pending payment or under review — click to open Enrollments tab</p>
+              </div>
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 shrink-0">View →</span>
+            </div>
+          )}
 
           <Tabs value={adminTab} onValueChange={setAdminTab}>
             <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
@@ -966,7 +985,8 @@ const AdminDashboard = () => {
                         : tab === "approved" ? e.approval_status === "APPROVED"
                         : e.approval_status === "REJECTED";
                       if (!matchesTab) return false;
-                      if (!showLegacyEnrollments && isLegacy(e)) return false;
+                      const isActionable = e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW";
+                      if (!showLegacyEnrollments && isLegacy(e) && !isActionable) return false;
                       if (enrollmentSearch) {
                         const q = enrollmentSearch.toLowerCase();
                         const name = e.profiles?.name?.toLowerCase() ?? "";

@@ -58,12 +58,12 @@ const BlogPage = () => {
 
   const typeOptions = useMemo(() => {
     const seen = new Set<string>();
-    posts.forEach(p => { if (p.article_type) seen.add(p.article_type); });
+    posts.forEach(p => { if (p.article_type) seen.add(p.article_type.toLowerCase()); });
     return Array.from(seen);
   }, [posts]);
 
   const filteredPosts = useMemo(() =>
-    activeType ? posts.filter(p => p.article_type === activeType) : posts,
+    activeType ? posts.filter(p => p.article_type?.toLowerCase() === activeType) : posts,
   [posts, activeType]);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ const BlogPage = () => {
                   <span className={activeType !== type ? TYPE_COLOR[type]?.split(" ").slice(0, 2).join(" ") : ""}>
                     {TYPE_LABEL[type] || type}
                   </span>
-                  <span className="ml-1.5 text-xs opacity-70">({posts.filter(p => p.article_type === type).length})</span>
+                  <span className="ml-1.5 text-xs opacity-70">({posts.filter(p => p.article_type?.toLowerCase() === type).length})</span>
                 </Button>
               ))}
             </div>
