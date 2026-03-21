@@ -26,6 +26,14 @@ import {
   getLevelLabel,
   getUrgencyLabel,
 } from "@/lib/marketingEngine";
+import {
+  type SlotPostDraft,
+  getTeacherAvailability,
+  getAvailableClassSlots,
+  generatePostsFromAvailableSlots,
+  saveGeneratedDrafts,
+  formatTime12,
+} from "@/lib/scheduleSlotEngine";
 import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
 
@@ -270,6 +278,14 @@ export default function MarketingGeneratorPage() {
   // Campaign filter
   const [campaignFilter, setCampaignFilter] = useState("all");
 
+  // ── Slot-based Auto Generator state ──
+  const [slotDrafts, setSlotDrafts] = useState<SlotPostDraft[]>([]);
+  const [slotLoading, setSlotLoading] = useState(false);
+  const [slotsFound, setSlotsFound] = useState<number | null>(null);
+  const [hasTeacherAvailability, setHasTeacherAvailability] = useState<boolean | null>(null);
+  const [savingDrafts, setSavingDrafts] = useState(false);
+  const [draftCampaignName, setDraftCampaignName] = useState(`Class Openings — ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}`);
+
   // WhatsApp dialog
   const [whatsappGroup, setWhatsappGroup] = useState<GroupData | null>(null);
 
@@ -505,7 +521,49 @@ export default function MarketingGeneratorPage() {
     }
   }, []);
 
-  useEffect(() => { fetchGroups(); fetchScheduledPosts(); }, [fetchGroups, fetchScheduledPosts]);
+  const fetchSlotDrafts = useCallback(async () => {
+    setSlotLoading(true);
+    try {
+      const availability = await getTeacherAvailability();
+      setHasTeacherAvailability(availability.length > 0);
+      if (!availability.length) { setSlotsFound(0); setSlotDrafts([]); setSlotLoading(false); return; }
+      const openSlots = await getAvailableClassSlots(availability);
+      setSlotsFound(openSlots.length);
+      const drafts = generatePostsFromAvailableSlots(openSlots);
+      setSlotDrafts(drafts);
+    } catch (err: any) {
+      toast({ title: "Error loading schedule", description: err.message, variant: "destructive" });
+    } finally {
+      setSlotLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchGroups(); fetchScheduledPosts(); fetchSlotDrafts(); }, [fetchGroups, fetchScheduledPosts, fetchSlotDrafts]);
+
+  async function handleSaveAllDraftsToCalendar(approved?: boolean) {
+    const draftsToSave = approved
+      ? slotDrafts.filter(d => d.approved)
+      : slotDrafts;
+    if (!draftsToSave.length) {
+      toast({ title: "Nothing to save", description: approved ? "Approve some drafts first." : "Generate drafts first." });
+      return;
+    }
+    setSavingDrafts(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast({ title: "Not logged in", variant: "destructive" }); setSavingDrafts(false); return; }
+    const { saved, errors } = await saveGeneratedDrafts(draftsToSave, draftCampaignName, user.id);
+    toast({ title: `${saved} draft${saved !== 1 ? "s" : ""} added to Calendar`, description: errors ? `${errors} failed.` : "Open Campaign Calendar to review." });
+    await fetchScheduledPosts();
+    setSavingDrafts(false);
+  }
+
+  function toggleDraftApproval(id: string) {
+    setSlotDrafts(prev => prev.map(d => d.id === id ? { ...d, approved: !d.approved } : d));
+  }
+
+  function approveAllDrafts() {
+    setSlotDrafts(prev => prev.map(d => ({ ...d, approved: true })));
+  }
 
   function formatTime(timeStr: string): string {
     const [h, m] = timeStr.split(":");
@@ -730,28 +788,215 @@ export default function MarketingGeneratorPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
-          <Tabs defaultValue="calendar" className="w-full">
+          <Tabs defaultValue="generator" className="w-full">
             <TabsList className="mb-6">
-              <TabsTrigger value="calendar"><CalendarDays className="h-4 w-4 mr-1.5" /> Campaign Calendar</TabsTrigger>
               <TabsTrigger value="generator"><Sparkles className="h-4 w-4 mr-1.5" /> Auto Generator</TabsTrigger>
+              <TabsTrigger value="calendar"><CalendarDays className="h-4 w-4 mr-1.5" /> Campaign Calendar</TabsTrigger>
               <TabsTrigger value="creator"><Palette className="h-4 w-4 mr-1.5" /> Creator Hub</TabsTrigger>
               <TabsTrigger value="archive">📁 Archive</TabsTrigger>
             </TabsList>
 
             <TabsContent value="generator" className="space-y-6">
+
+              {/* ── SLOT-BASED SECTION ────────────────────────────────── */}
+              <div className="space-y-4">
+
+                {/* Header + stats row */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" /> Schedule-Based Post Generator
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Reads teacher availability → detects open class slots → generates ready-to-post drafts
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={fetchSlotDrafts} disabled={slotLoading}>
+                    <RefreshCw className={`h-4 w-4 mr-1.5 ${slotLoading ? "animate-spin" : ""}`} />
+                    {slotLoading ? "Scanning…" : "Generate From Schedule"}
+                  </Button>
+                </div>
+
+                {/* Stats bar */}
+                {slotsFound !== null && (
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 text-sm">
+                      <CalendarClock className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{slotsFound}</span>
+                      <span className="text-muted-foreground">available teaching slots</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 text-sm">
+                      <Wand2 className="h-4 w-4 text-emerald-600" />
+                      <span className="font-semibold text-foreground">{slotDrafts.length}</span>
+                      <span className="text-muted-foreground">post drafts generated</span>
+                    </div>
+                    {slotDrafts.filter(d => d.approved).length > 0 && (
+                      <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl px-4 py-2.5 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span className="font-semibold text-foreground">{slotDrafts.filter(d => d.approved).length}</span>
+                        <span className="text-muted-foreground">approved</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Loading state */}
+                {slotLoading && (
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+                  </div>
+                )}
+
+                {/* Empty: no teacher availability set up */}
+                {!slotLoading && hasTeacherAvailability === false && (
+                  <Card className="rounded-2xl border-dashed">
+                    <CardContent className="py-14 text-center space-y-3">
+                      <CalendarClock className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+                      <p className="font-semibold text-foreground">No class availability found</p>
+                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                        Add teacher schedule availability to generate class-based marketing posts. Go to Admin → Availability to set it up.
+                      </p>
+                      <Button size="sm" variant="outline" onClick={() => window.open("/admin", "_self")}>
+                        Set Up Availability
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Empty: availability exists but all slots booked */}
+                {!slotLoading && hasTeacherAvailability === true && slotDrafts.length === 0 && (
+                  <Card className="rounded-2xl border-dashed">
+                    <CardContent className="py-14 text-center space-y-3">
+                      <CheckCircle2 className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+                      <p className="font-semibold text-foreground">No open teaching slots right now</p>
+                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                        All current slots are booked or unavailable. You can still generate evergreen content manually using the groups below.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Draft cards */}
+                {!slotLoading && slotDrafts.length > 0 && (
+                  <>
+                    {/* Bulk action bar */}
+                    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/40 rounded-xl border border-border">
+                      <input
+                        type="text"
+                        value={draftCampaignName}
+                        onChange={e => setDraftCampaignName(e.target.value)}
+                        className="flex-1 min-w-0 text-sm bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                        placeholder="Campaign name…"
+                      />
+                      <Button size="sm" variant="outline" onClick={approveAllDrafts}>
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Approve All
+                      </Button>
+                      <Button size="sm" onClick={() => handleSaveAllDraftsToCalendar(false)} disabled={savingDrafts}>
+                        {savingDrafts ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5 mr-1.5" />}
+                        Add All to Calendar
+                      </Button>
+                      {slotDrafts.some(d => d.approved) && (
+                        <Button size="sm" variant="outline" className="border-emerald-400 text-emerald-700 hover:bg-emerald-50" onClick={() => handleSaveAllDraftsToCalendar(true)} disabled={savingDrafts}>
+                          <CalendarPlus className="h-3.5 w-3.5 mr-1.5" /> Add Approved Only
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Draft grid */}
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {slotDrafts.map(draft => {
+                        const postTypeColors: Record<string, string> = {
+                          limited_seats_alert: "border-red-300 bg-red-50/50 dark:bg-red-950/10",
+                          new_class_opportunity: "border-blue-300 bg-blue-50/50 dark:bg-blue-950/10",
+                          private_opening: "border-purple-300 bg-purple-50/50 dark:bg-purple-950/10",
+                          weekend_class: "border-amber-300 bg-amber-50/50 dark:bg-amber-950/10",
+                          group_opening: "",
+                        };
+                        const postTypeLabel: Record<string, string> = {
+                          limited_seats_alert: "⚡ Limited Seats",
+                          new_class_opportunity: "🆕 New Class",
+                          private_opening: "🎯 Private",
+                          weekend_class: "📅 Weekend",
+                          group_opening: "👥 Group Opening",
+                        };
+                        return (
+                          <Card key={draft.id} className={`rounded-2xl transition-all ${draft.approved ? "ring-2 ring-emerald-400/60 border-emerald-300" : ""} ${postTypeColors[draft.postType] || ""}`}>
+                            <CardHeader className="pb-2 pt-4 px-4">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-muted-foreground">{postTypeLabel[draft.postType]}</p>
+                                  <CardTitle className="text-sm leading-snug mt-0.5">{draft.title}</CardTitle>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    📅 {new Date(draft.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                    {draft.seatsAvailable !== null && (
+                                      <span className={`ml-2 font-semibold ${draft.seatsAvailable <= 3 ? "text-red-600" : "text-emerald-600"}`}>
+                                        · {draft.seatsAvailable} seat{draft.seatsAvailable !== 1 ? "s" : ""} left
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => toggleDraftApproval(draft.id)}
+                                  className={`shrink-0 p-1.5 rounded-full transition-colors ${draft.approved ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+                                  title={draft.approved ? "Approved — click to unapprove" : "Click to approve"}
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                              <Textarea
+                                value={draft.caption}
+                                onChange={e => setSlotDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, caption: e.target.value } : d))}
+                                className="text-xs min-h-[80px] resize-none"
+                                placeholder="Caption…"
+                              />
+                              <div className="flex flex-wrap gap-1.5">
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => copyToClipboard(draft.caption, "Caption")}>
+                                  <Copy className="h-3 w-3 mr-1" /> Copy
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => toggleDraftApproval(draft.id)}>
+                                  {draft.approved ? "✓ Approved" : "Approve"}
+                                </Button>
+                                <Button size="sm" className="h-7 text-xs" onClick={async () => {
+                                  setSavingDrafts(true);
+                                  const { data: { user } } = await supabase.auth.getUser();
+                                  if (user) {
+                                    await saveGeneratedDrafts([draft], draftCampaignName, user.id);
+                                    toast({ title: "Added to Calendar" });
+                                    await fetchScheduledPosts();
+                                  }
+                                  setSavingDrafts(false);
+                                }}>
+                                  <CalendarPlus className="h-3 w-3 mr-1" /> Add to Calendar
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* ── DIVIDER ───────────────────────────────────────────── */}
+              {groups.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Group-based posts</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+              )}
+
+              {/* ── LEGACY GROUP CARDS (keep all existing logic) ─────── */}
               {loading ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {[1, 2, 3, 4].map(i => (
                     <Skeleton key={i} className="h-48 rounded-2xl" />
                   ))}
                 </div>
-              ) : groups.length === 0 ? (
-                <Card className="rounded-2xl">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    No groups with available seats found.
-                  </CardContent>
-                </Card>
-              ) : (
+              ) : groups.length > 0 ? (
                 <>
                   {/* Bulk Actions Bar */}
                   <Card className="rounded-2xl border-primary/30 bg-foreground">
