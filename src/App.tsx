@@ -43,6 +43,7 @@ import TextbookProgressPage from "./pages/TextbookProgressPage";
 import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 import DailyQuizPage from "./pages/DailyQuizPage";
 import ProfilePage from "./pages/ProfilePage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient({
@@ -110,6 +111,7 @@ const App = () => (
               <Route path="/textbook/:bookId" element={<EnrollmentProtectedRoute><TextbookPage /></EnrollmentProtectedRoute>} />
               <Route path="/textbook/:bookId/:lessonId" element={<EnrollmentProtectedRoute><LessonDetailPage /></EnrollmentProtectedRoute>} />
               <Route path="/profile" element={<AuthProtectedRoute><ProfilePage /></AuthProtectedRoute>} />
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
               <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
