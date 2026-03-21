@@ -27,12 +27,12 @@ const ExitNudge = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-3 max-w-2xl mx-auto mb-4 rounded-xl shadow-2xl">
+      <div className="bg-primary text-black px-4 py-3 flex items-center justify-between gap-3 max-w-2xl mx-auto mb-4 rounded-xl shadow-2xl">
         <div className="flex items-center gap-3">
           <span className="text-2xl">💬</span>
           <div>
             <p className="font-semibold text-sm">Not sure which plan to pick?</p>
-            <p className="text-xs text-primary-foreground/80">Chat with us — we'll find the best fit for you.</p>
+            <p className="text-xs text-black/70">Chat with us — we'll find the best fit for you.</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -40,11 +40,11 @@ const ExitNudge = () => {
             href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I need help choosing a Klovers plan.")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white text-primary text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors"
+            className="bg-black text-primary text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-black/80 transition-colors"
           >
             WhatsApp
           </a>
-          <button onClick={() => setVisible(false)} aria-label="Dismiss" className="text-primary-foreground/70 hover:text-primary-foreground">
+          <button onClick={() => setVisible(false)} aria-label="Dismiss" className="text-black/60 hover:text-black">
             <X className="h-4 w-4" />
           </button>
         </div>
