@@ -42,6 +42,7 @@ import AdminSettings from "@/components/admin/AdminSettings";
 import PlacementTestsManager from "@/components/admin/PlacementTestsManager";
 import SalesAnalytics from "@/components/admin/SalesAnalytics";
 import SessionAttendanceManager from "@/components/admin/SessionAttendanceManager";
+import StudentHealthPanel from "@/components/admin/StudentHealthPanel";
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -558,6 +559,7 @@ const AdminDashboard = () => {
         studentSort.col === "sessions_remaining" ? x.sessions_remaining
         : studentSort.col === "amount_due" ? x.amount_due
         : studentSort.col === "joined_at" ? new Date(x.joined_at).getTime()
+        : studentSort.col === "attendance_pct" ? (x.sessions_total > 0 ? (x.sessions_total - x.sessions_remaining) / x.sessions_total : -1)
         : 0;
       return studentSort.dir === "asc" ? v(a) - v(b) : v(b) - v(a);
     });
@@ -639,6 +641,8 @@ const AdminDashboard = () => {
             pendingCount={actionableEnrollments}
             onPendingClick={() => setAdminTab("enrollments")}
           />
+
+          <StudentHealthPanel overviewRows={overviewRows} />
 
           {/* Pending enrollments alert */}
           {actionableEnrollments > 0 && (
@@ -803,6 +807,12 @@ const AdminDashboard = () => {
                           >
                             Remaining {studentSort.col === "sessions_remaining" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
                           </TableHead>
+                          <TableHead
+                            className="py-3 px-3 font-semibold text-center cursor-pointer select-none hover:text-primary hidden sm:table-cell"
+                            onClick={() => setStudentSort(s => ({ col: "attendance_pct", dir: s.col === "attendance_pct" && s.dir === "asc" ? "desc" : "asc" }))}
+                          >
+                            Attend% {studentSort.col === "attendance_pct" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
+                          </TableHead>
                           <TableHead className="py-3 px-3 font-semibold text-center">Negative</TableHead>
                           <TableHead
                             className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary"
@@ -839,6 +849,16 @@ const AdminDashboard = () => {
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
                             <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.sessions_remaining}</TableCell>
+                            <TableCell className="py-3 px-3 text-center hidden sm:table-cell">
+                              {u.sessions_total > 0 ? (() => {
+                                const pct = Math.round(((u.sessions_total - u.sessions_remaining) / u.sessions_total) * 100);
+                                return (
+                                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${pct >= 80 ? "bg-green-100 text-green-700" : pct >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                                    {pct}%
+                                  </span>
+                                );
+                              })() : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.negative_sessions > 0 ? <span className="text-destructive">{u.negative_sessions}</span> : "—"}</TableCell>
                             <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}</span> : "—"}</TableCell>
                             <TableCell className="py-3 px-3">
@@ -1264,6 +1284,62 @@ const AdminDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-4">
+
+              {/* Lead Conversion Summary */}
+              {leads.length > 0 && (() => {
+                const sourceMap: Record<string, { total: number; converted: number }> = {};
+                leads.forEach(l => {
+                  const src = l.source || "unknown";
+                  if (!sourceMap[src]) sourceMap[src] = { total: 0, converted: 0 };
+                  sourceMap[src].total++;
+                  if (l.user_id || l.status === "enrolled") sourceMap[src].converted++;
+                });
+                const totalNew = leads.filter(l => l.status === "new").length;
+                const staleNew = leads.filter(l => l.status === "new" && new Date(l.created_at) < new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)).length;
+                const funnelNew = leads.filter(l => l.status === "new").length;
+                const funnelContacted = leads.filter(l => l.status === "contacted").length;
+                const funnelEnrolled = leads.filter(l => l.status === "enrolled" || confirmedEmails.has(l.email?.toLowerCase())).length;
+                const funnelMax = Math.max(funnelNew, 1);
+                return (
+                  <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+                    {/* Source pills */}
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(sourceMap).sort((a, b) => b[1].total - a[1].total).slice(0, 6).map(([src, { total, converted }]) => (
+                        <span key={src} className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-background border border-border rounded-full px-2.5 py-1">
+                          <span className="text-foreground capitalize">{src}</span>
+                          <span className="text-muted-foreground">{total}</span>
+                          <span className="text-emerald-600 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
+                        </span>
+                      ))}
+                    </div>
+                    {/* Follow-up alert */}
+                    {staleNew > 0 && (
+                      <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg px-3 py-1.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        <span><strong>{staleNew}</strong> new lead{staleNew > 1 ? "s" : ""} older than 3 days with no follow-up</span>
+                      </div>
+                    )}
+                    {/* Mini funnel */}
+                    <div className="flex items-center gap-3 text-xs">
+                      {[
+                        { label: "New", count: funnelNew, color: "bg-blue-500" },
+                        { label: "Contacted", count: funnelContacted, color: "bg-amber-500" },
+                        { label: "Enrolled", count: funnelEnrolled, color: "bg-emerald-500" },
+                      ].map(({ label, count, color }) => (
+                        <div key={label} className="flex-1">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-muted-foreground">{label}</span>
+                            <span className="font-semibold text-foreground">{count}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.round((count / leads.length) * 100)}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {leadsError && (
                 <Alert variant="destructive">

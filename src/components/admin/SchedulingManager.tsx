@@ -423,6 +423,26 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
         </div>
       </div>
 
+      {!loading && packages.length > 0 && (() => {
+        const fullCount = packages.filter(p => {
+          const cap = p.total_capacity ?? p.capacity;
+          return cap > 0 && (p.member_count ?? 0) >= cap;
+        }).length;
+        const openCount = packages.filter(p => {
+          const cap = p.total_capacity ?? p.capacity;
+          return cap > 0 && (p.member_count ?? 0) < cap;
+        }).length;
+        return (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/30 rounded-xl px-4 py-2.5">
+            <span className="font-medium text-foreground">{packages.length} groups total</span>
+            <span>·</span>
+            <span className="text-red-600 font-medium">{fullCount} full</span>
+            <span>·</span>
+            <span className="text-emerald-600 font-medium">{openCount} with open spots</span>
+          </div>
+        );
+      })()}
+
       {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
         <div className="border rounded-xl overflow-auto">
           <Table>
@@ -435,6 +455,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
                 <TableHead>Duration</TableHead>
                 <TableHead>Timezone</TableHead>
                 <TableHead>Active / Capacity</TableHead>
+                <TableHead>Fill Rate</TableHead>
                 <TableHead>Seats Left</TableHead>
                 <TableHead>Waitlist</TableHead>
                 <TableHead>Status</TableHead>
@@ -455,6 +476,18 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
                   <TableCell className="text-xs text-muted-foreground">{p.timezone.replace(/_/g, " ")}</TableCell>
                   <TableCell>
                     <span className="font-mono text-sm">{p.member_count ?? 0}/{p.total_capacity ?? p.capacity}</span>
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const cap = p.total_capacity ?? p.capacity;
+                      const members = p.member_count ?? 0;
+                      if (!cap) return <span className="text-muted-foreground text-xs">—</span>;
+                      const pct = Math.round((members / cap) * 100);
+                      const cls = pct >= 75 ? "bg-green-100 text-green-700 border-green-200"
+                        : pct >= 40 ? "bg-amber-100 text-amber-700 border-amber-200"
+                        : "bg-red-100 text-red-700 border-red-200";
+                      return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${cls}`}>{pct}%</span>;
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Badge variant={seatsLeft > 2 ? "secondary" : seatsLeft > 0 ? "default" : "destructive"} className="text-xs">
