@@ -27,13 +27,13 @@ const WhyLearnKorean = () => {
         </div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8 max-w-5xl mx-auto">
           {items.map((item, index) => (
             <div
               key={index}
               className="group rounded-3xl border border-border bg-background hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center"
             >
-              <div className="p-7 md:p-8 flex flex-col items-center gap-5">
+              <div className="p-4 md:p-8 flex flex-col items-center gap-3 md:gap-5">
                 {/* Icon bubble */}
                 <div className="w-18 h-18 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-300"
                   style={{ width: "4.5rem", height: "4.5rem" }}

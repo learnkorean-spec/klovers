@@ -192,7 +192,7 @@ const HeroSection = () => {
       </div>
 
       {/* ── Stats strip ──────────────────────────────────────── */}
-      <div className="relative z-10 w-full mt-auto pt-10 pb-14 px-4">
+      <div className="relative z-10 w-full mt-auto pt-10 pb-24 sm:pb-14 px-4 pr-20 sm:pr-4">
         <div className="max-w-3xl mx-auto">
           {/* Divider */}
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
