@@ -51,7 +51,7 @@ const LearningRoadmap = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-widest mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary text-black text-xs font-semibold uppercase tracking-widest mb-4">
             Your Journey
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">

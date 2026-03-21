@@ -35,10 +35,10 @@ const WhyLearnKorean = () => {
             >
               <div className="p-4 md:p-8 flex flex-col items-center gap-3 md:gap-5">
                 {/* Icon bubble */}
-                <div className="w-18 h-18 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-300"
+                <div className="w-18 h-18 rounded-2xl bg-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300"
                   style={{ width: "4.5rem", height: "4.5rem" }}
                 >
-                  <span className="text-primary group-hover:text-primary-foreground transition-colors">
+                  <span className="text-black">
                     {iconMap[item.icon] || <BookOpen className="h-9 w-9" />}
                   </span>
                 </div>
