@@ -30,8 +30,14 @@ export const useSEO = ({
     document.title = fullTitle;
 
     const setMeta = (selector: string, attr: string, value: string) => {
-      const el = document.querySelector(selector);
-      if (el) el.setAttribute(attr, value);
+      let el = document.querySelector(selector) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta") as HTMLMetaElement;
+        const match = selector.match(/\[([^\]="]+)="([^"]+)"\]/);
+        if (match) el.setAttribute(match[1], match[2]);
+        document.head.appendChild(el);
+      }
+      el.setAttribute(attr, value);
     };
 
     // Robots (noindex for private pages)
