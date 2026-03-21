@@ -593,7 +593,8 @@ const AdminDashboard = () => {
     setRefreshing(false);
   };
 
-  const TAB_CLS = "shrink-0 rounded-full px-4 py-2 text-sm border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-2";
+  const TAB_CLS = "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium border border-border data-[state=active]:bg-primary data-[state=active]:text-black data-[state=active]:border-primary bg-background gap-1.5 h-auto";
+  const TAB_GROUP_LABEL = "text-[10px] font-bold text-muted-foreground uppercase tracking-widest self-center shrink-0 pr-1";
 
   return (
     <TooltipProvider>
@@ -662,56 +663,72 @@ const AdminDashboard = () => {
           )}
 
           <Tabs value={adminTab} onValueChange={setAdminTab}>
-            <TabsList className="w-full flex gap-2 overflow-x-auto whitespace-nowrap pb-2 h-auto bg-transparent p-0">
-              {/* Operations */}
-              <TabsTrigger value="students" className={TAB_CLS}>
-                <Users className="h-4 w-4" /> Users ({overviewRows.length})
-              </TabsTrigger>
-              <TabsTrigger value="enrollments" className={TAB_CLS}>
-                <FileCheck className="h-4 w-4" /> Enrollments
-                {actionableEnrollments > 0 && (
-                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{actionableEnrollments}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="leads" className={TAB_CLS}>CRM Leads</TabsTrigger>
-              <TabsTrigger value="manage" className={TAB_CLS}>Manage</TabsTrigger>
-              {/* Learning */}
-              <div className="w-px h-5 bg-border mx-1 self-center shrink-0" />
-              <TabsTrigger value="group-attendance" className={TAB_CLS}>
-                Groups
-                {pendingAttendance > 0 && (
-                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{pendingAttendance}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="group-matcher" className={TAB_CLS}>Matcher</TabsTrigger>
-              <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
-              {/* Content */}
-              <div className="w-px h-5 bg-border mx-1 self-center shrink-0" />
-              <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
-              <TabsTrigger value="campaigns" className={TAB_CLS}>
-                <Mail className="h-4 w-4" /> Campaigns
-              </TabsTrigger>
-              {/* Config */}
-              <div className="w-px h-5 bg-border mx-1 self-center shrink-0" />
-              <TabsTrigger value="notifications" className={TAB_CLS}>
-                <Bell className="h-4 w-4" /> Alerts
-              </TabsTrigger>
-              <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
-              <TabsTrigger value="session-attendance" className={TAB_CLS}>
-                <FileCheck className="h-4 w-4" /> Attendance
-              </TabsTrigger>
-              <TabsTrigger value="availability" className={TAB_CLS}>
-                <Clock className="h-4 w-4" /> Availability
-              </TabsTrigger>
-              <TabsTrigger value="preferences" className={TAB_CLS}>
-                <BarChart3 className="h-4 w-4" /> Preferences
-              </TabsTrigger>
-              <TabsTrigger value="sales" className={TAB_CLS}>
-                <BarChart3 className="h-4 w-4" /> Sales
-              </TabsTrigger>
-              <TabsTrigger value="settings" className={TAB_CLS}>
-                <Settings className="h-4 w-4" /> Settings
-              </TabsTrigger>
+            <TabsList className="w-full h-auto bg-card border border-border rounded-2xl p-3 flex flex-col gap-2">
+              {/* Operations row */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={TAB_GROUP_LABEL}>Ops</span>
+                <TabsTrigger value="students" className={TAB_CLS}>
+                  <Users className="h-3.5 w-3.5" /> Users
+                  <span className="opacity-60">({overviewRows.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="enrollments" className={TAB_CLS}>
+                  <FileCheck className="h-3.5 w-3.5" /> Enrollments
+                  {actionableEnrollments > 0 && (
+                    <Badge variant="destructive" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{actionableEnrollments}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="leads" className={TAB_CLS}>
+                  <Users className="h-3.5 w-3.5" /> CRM Leads
+                </TabsTrigger>
+                <TabsTrigger value="manage" className={TAB_CLS}>Manage</TabsTrigger>
+                <TabsTrigger value="sales" className={TAB_CLS}>
+                  <BarChart3 className="h-3.5 w-3.5" /> Sales
+                </TabsTrigger>
+              </div>
+
+              <div className="w-full h-px bg-border" />
+
+              {/* Learning row */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={TAB_GROUP_LABEL}>Learn</span>
+                <TabsTrigger value="group-attendance" className={TAB_CLS}>
+                  Groups
+                  {pendingAttendance > 0 && (
+                    <Badge variant="destructive" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{pendingAttendance}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="group-matcher" className={TAB_CLS}>Matcher</TabsTrigger>
+                <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
+                <TabsTrigger value="session-attendance" className={TAB_CLS}>
+                  <FileCheck className="h-3.5 w-3.5" /> Attendance
+                </TabsTrigger>
+                <TabsTrigger value="preferences" className={TAB_CLS}>
+                  <BarChart3 className="h-3.5 w-3.5" /> Preferences
+                </TabsTrigger>
+              </div>
+
+              <div className="w-full h-px bg-border" />
+
+              {/* Content & Config row */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={TAB_GROUP_LABEL}>Content</span>
+                <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
+                <TabsTrigger value="campaigns" className={TAB_CLS}>
+                  <Mail className="h-3.5 w-3.5" /> Campaigns
+                </TabsTrigger>
+                <div className="w-px h-4 bg-border mx-1 self-center" />
+                <span className={TAB_GROUP_LABEL}>Config</span>
+                <TabsTrigger value="notifications" className={TAB_CLS}>
+                  <Bell className="h-3.5 w-3.5" /> Alerts
+                </TabsTrigger>
+                <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
+                <TabsTrigger value="availability" className={TAB_CLS}>
+                  <Clock className="h-3.5 w-3.5" /> Availability
+                </TabsTrigger>
+                <TabsTrigger value="settings" className={TAB_CLS}>
+                  <Settings className="h-3.5 w-3.5" /> Settings
+                </TabsTrigger>
+              </div>
             </TabsList>
 
             {/* STUDENTS TAB */}
