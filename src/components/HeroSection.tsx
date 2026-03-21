@@ -114,17 +114,15 @@ const HeroSection = () => {
         한국어
       </span>
 
-      {/* ── Hero text content ─────────────────────────────────── */}
-      <div className="relative z-10 w-full px-3 sm:px-4 text-center">
-        <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
+      {/* ── Hero text content — truly centered ───────────────── */}
+      <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-36">
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
           {/* Live badge — split pill design */}
           <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-primary/40 backdrop-blur-md">
-            {/* Left: brand stamp */}
             <div className="bg-primary px-4 py-2 flex items-center gap-2">
               <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 K-LOVERS</span>
             </div>
-            {/* Right: live indicator */}
             <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
@@ -139,13 +137,13 @@ const HeroSection = () => {
             className="font-black text-white leading-[1.05] tracking-tighter w-full"
             style={{ textShadow: "0 4px 40px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.8)" }}
           >
-            <span className="block" style={{ fontSize: "clamp(1.4rem, 5.5vw, 4rem)" }}>
+            <span className="block" style={{ fontSize: "clamp(2rem, 5.5vw, 4.5rem)" }}>
               {t("hero", "title1")}
             </span>
             <span
               className="block text-primary mt-1"
               style={{
-                fontSize: "clamp(1.4rem, 6.4vw, 5rem)",
+                fontSize: "clamp(2.4rem, 6.8vw, 5.5rem)",
                 textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)"
               }}
             >
@@ -155,7 +153,7 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <p
-            className="text-lg sm:text-xl md:text-2xl text-white/85 max-w-lg mx-auto leading-relaxed text-pretty px-1"
+            className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
             Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.{" "}
@@ -163,11 +161,11 @@ const HeroSection = () => {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center w-full sm:w-auto">
             <Button
               size="lg"
               asChild
-              className="gap-2.5 text-base font-bold h-13 px-10 shadow-2xl"
+              className="gap-2.5 text-base font-bold px-10 shadow-2xl"
               style={{ boxShadow: "0 0 36px hsl(60 100% 50% / 0.3), 0 8px 24px rgba(0,0,0,0.4)" }}
             >
               <Link to="/enroll-now">
@@ -179,7 +177,7 @@ const HeroSection = () => {
               size="lg"
               variant="outline"
               asChild
-              className="gap-2.5 text-base font-bold h-13 px-10 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
+              className="gap-2.5 text-base font-bold px-10 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
             >
               <Link to="/pricing">
                 <DollarSign className="h-5 w-5" />
@@ -191,11 +189,10 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* ── Stats strip ──────────────────────────────────────── */}
-      <div className="relative z-10 w-full mt-auto pt-10 pb-24 sm:pb-14 px-4 pr-20 sm:pr-4">
+      {/* ── Stats strip — absolutely pinned to bottom ─────────── */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 sm:pb-10 px-4">
         <div className="max-w-3xl mx-auto">
-          {/* Divider */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-6" />
           <div className="grid grid-cols-3 gap-4 md:gap-8">
             {[
               { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: "Students Taught" },
@@ -207,25 +204,18 @@ const HeroSection = () => {
                   <Icon className="h-4 w-4 text-primary hidden sm:block" />
                   <span
                     ref={itemRef}
-                    className="text-2xl sm:text-3xl md:text-4xl font-black text-white group-hover:text-primary transition-colors duration-300"
+                    className="text-2xl sm:text-3xl md:text-4xl font-black text-white"
                     style={{ textShadow: "0 2px 16px rgba(0,0,0,0.8)" }}
                   >
                     {display}
                   </span>
                 </div>
-                <span className="text-white/55 text-xs sm:text-sm font-medium tracking-wide">
+                <span className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">
                   {label}
                 </span>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 animate-bounce opacity-60">
-        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1.5">
-          <div className="w-1 h-2.5 bg-white/50 rounded-full" />
         </div>
       </div>
     </section>
