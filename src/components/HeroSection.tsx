@@ -84,10 +84,10 @@ const HeroSection = () => {
         />
       )}
 
-      {/* Cinematic gradient — lighter to show skyline */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/65" />
-      {/* Side vignettes for depth */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+      {/* Cinematic gradient — just enough for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-black/55" />
+      {/* Bottom scrim for stats readability */}
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
 
       {/* Primary colour glow behind headline */}
       <div
@@ -115,15 +115,20 @@ const HeroSection = () => {
       <div className="relative z-10 w-full px-3 sm:px-4 text-center">
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
 
-          {/* Live badge */}
-          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-primary/20 border border-primary/50 backdrop-blur-md shadow-lg">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
-            </span>
-            <span className="text-primary text-xs md:text-sm font-extrabold tracking-[0.18em] uppercase">
-              K-Lovers Korean Academy — Enrolling Now
-            </span>
+          {/* Live badge — split pill design */}
+          <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-primary/40 backdrop-blur-md">
+            {/* Left: brand stamp */}
+            <div className="bg-primary px-4 py-2 flex items-center gap-2">
+              <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 K-LOVERS</span>
+            </div>
+            {/* Right: live indicator */}
+            <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              <span className="text-white text-xs font-semibold tracking-[0.12em] uppercase">Enrolling Now</span>
+            </div>
           </div>
 
           {/* Main headline */}
