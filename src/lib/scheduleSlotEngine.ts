@@ -122,7 +122,7 @@ function buildCaption(slot: AvailableClassSlot): string {
 export async function getTeacherAvailability(): Promise<TeacherAvailabilitySlot[]> {
   const { data, error } = await (supabase as any)
     .from("teacher_availability")
-    .select("teacher_id, day_of_week, start_time, is_available, course_type")
+    .select("teacher_id, day_of_week, start_time, is_available")
     .eq("is_available", true)
     .order("day_of_week")
     .order("start_time");
@@ -137,7 +137,7 @@ export async function getTeacherAvailability(): Promise<TeacherAvailabilitySlot[
     dayOfWeek: r.day_of_week,
     startTime: r.start_time,
     isAvailable: r.is_available,
-    classType: (r.course_type as "group" | "private") || "group",
+    classType: "group" as const,
   }));
 }
 
