@@ -58,13 +58,16 @@ const HeroSection = () => {
     <section
       id="home"
       className="relative min-h-[100svh] flex flex-col items-center justify-center pt-16 overflow-hidden"
+      style={{ backgroundColor: "#3d2a10" }}
     >
       {/* ── Background layer ─────────────────────────────────── */}
       <img
         src={heroPoster}
         alt=""
         aria-hidden="true"
-        decoding="async"
+        loading="eager"
+        fetchPriority="high"
+        decoding="sync"
         className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
           videoReady ? "opacity-0" : "opacity-100"
         }`}
@@ -195,9 +198,9 @@ const HeroSection = () => {
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
           <div className="grid grid-cols-3 gap-4 md:gap-8">
             {[
-              { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString()}+`, label: "Students Taught" },
+              { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: "Students Taught" },
               { icon: Star,  ref: ratingRef,  display: `${(ratingCount / 10).toFixed(1)} ★`, label: "Average Rating" },
-              { icon: Globe, ref: countryRef, display: `${countryCount}+`, label: "Countries" },
+              { icon: Globe, ref: countryRef, display: `${countryCount.toLocaleString('en-US')}+`, label: "Countries" },
             ].map(({ icon: Icon, ref: itemRef, display, label }) => (
               <div key={label} className="flex flex-col items-center gap-1 text-center group">
                 <div className="flex items-center gap-1.5">
