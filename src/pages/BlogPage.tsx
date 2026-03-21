@@ -211,7 +211,7 @@ const BlogPage = () => {
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
+                        <h2 className="text-base font-bold text-foreground line-clamp-2 leading-snug mb-2">
                           {post.title}
                         </h2>
 
