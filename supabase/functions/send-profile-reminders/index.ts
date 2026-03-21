@@ -11,7 +11,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
-const SITE_URL = "https://kloversegy.com";
+const SITE_URL = "https://statuesque-dusk-8db757.netlify.app";
 
 async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
