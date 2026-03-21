@@ -43,6 +43,7 @@ import TextbookProgressPage from "./pages/TextbookProgressPage";
 import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 import DailyQuizPage from "./pages/DailyQuizPage";
 import ProfilePage from "./pages/ProfilePage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient({
@@ -103,13 +104,14 @@ const App = () => (
               <Route path="/resubmit-schedule" element={<AuthProtectedRoute><ResubmitSchedulePage /></AuthProtectedRoute>} />
               <Route path="/placement-test" element={<PlacementTestPage />} />
               <Route path="/games" element={<GamesPage />} />
-              <Route path="/textbook" element={<EnrollmentProtectedRoute><TextbookHubPage /></EnrollmentProtectedRoute>} />
-              <Route path="/textbook/progress" element={<EnrollmentProtectedRoute><TextbookProgressPage /></EnrollmentProtectedRoute>} />
-              <Route path="/review" element={<EnrollmentProtectedRoute><VocabularyReviewPage /></EnrollmentProtectedRoute>} />
-              <Route path="/daily-quiz" element={<EnrollmentProtectedRoute><DailyQuizPage /></EnrollmentProtectedRoute>} />
-              <Route path="/textbook/:bookId" element={<EnrollmentProtectedRoute><TextbookPage /></EnrollmentProtectedRoute>} />
-              <Route path="/textbook/:bookId/:lessonId" element={<EnrollmentProtectedRoute><LessonDetailPage /></EnrollmentProtectedRoute>} />
+              <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
+              <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
+              <Route path="/review" element={<AuthProtectedRoute><VocabularyReviewPage /></AuthProtectedRoute>} />
+              <Route path="/daily-quiz" element={<AuthProtectedRoute><DailyQuizPage /></AuthProtectedRoute>} />
+              <Route path="/textbook/:bookId" element={<AuthProtectedRoute><TextbookPage /></AuthProtectedRoute>} />
+              <Route path="/textbook/:bookId/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
               <Route path="/profile" element={<AuthProtectedRoute><ProfilePage /></AuthProtectedRoute>} />
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
               <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
