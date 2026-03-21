@@ -32,6 +32,7 @@ interface BlogPost {
   lang: string;
   published_at: string | null;
   created_at: string;
+  updated_at: string | null;
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -141,9 +142,13 @@ const BlogPostPage = () => {
     const locale = post.lang === "ar" ? "ar_EG" : "en_US";
     const wordCount = post.content ? post.content.split(/\s+/).length : 0;
 
+    const fallbackImage = "https://kloversegy.com/klovers-logo.jpg";
+    const ogImage = post.hero_image || fallbackImage;
+
     // Basic meta
     setMeta("description", post.description);
     setMeta("keywords", (post.keywords || []).join(", "));
+    setMeta("robots", "index, follow");
 
     // Open Graph
     setMeta("og:title", post.title, "property");
@@ -152,15 +157,14 @@ const BlogPostPage = () => {
     setMeta("og:url", `https://kloversegy.com/blog/${post.slug}`, "property");
     setMeta("og:locale", locale, "property");
     setMeta("og:site_name", "Klovers", "property");
-    if (post.hero_image) {
-      setMeta("og:image", post.hero_image, "property");
-      setMeta("og:image:width", "1200", "property");
-      setMeta("og:image:height", "630", "property");
-      if (post.hero_alt) setMeta("og:image:alt", post.hero_alt, "property");
-    }
+    setMeta("og:image", ogImage, "property");
+    setMeta("og:image:width", "1200", "property");
+    setMeta("og:image:height", "630", "property");
+    setMeta("og:image:alt", post.hero_alt || post.title, "property");
 
     // Article meta
     setMeta("article:published_time", post.published_at || post.created_at, "property");
+    if (post.updated_at) setMeta("article:modified_time", post.updated_at, "property");
     setMeta("article:author", post.author, "property");
     setMeta("article:section", TYPE_LABEL[post.article_type] || post.article_type, "property");
 
@@ -175,9 +179,10 @@ const BlogPostPage = () => {
 
     // Twitter Card
     setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:site", "@kloversegy");
     setMeta("twitter:title", post.title);
     setMeta("twitter:description", post.description);
-    if (post.hero_image) setMeta("twitter:image", post.hero_image);
+    setMeta("twitter:image", ogImage);
 
     // Canonical
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
@@ -199,9 +204,10 @@ const BlogPostPage = () => {
     jsonLd.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "BlogPosting",
+      "@id": `https://kloversegy.com/blog/${post.slug}`,
       headline: post.title,
       description: post.description,
-      image: post.hero_image || "",
+      image: ogImage,
       author: { "@type": "Person", name: post.author },
       publisher: {
         "@type": "Organization",
@@ -209,6 +215,7 @@ const BlogPostPage = () => {
         logo: { "@type": "ImageObject", url: "https://kloversegy.com/klovers-logo.jpg" },
       },
       datePublished: post.published_at || post.created_at,
+      ...(post.updated_at ? { dateModified: post.updated_at } : {}),
       url: `https://kloversegy.com/blog/${post.slug}`,
       mainEntityOfPage: { "@type": "WebPage", "@id": `https://kloversegy.com/blog/${post.slug}` },
       inLanguage: post.lang || "en",
