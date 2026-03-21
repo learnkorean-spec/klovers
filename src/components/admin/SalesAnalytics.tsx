@@ -5,8 +5,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Users, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight, Download } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight, Download, AlertCircle, MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 
@@ -25,6 +26,10 @@ interface Enrollment {
   level: string | null;
   enrollment_status: string;
   sessions_remaining: number;
+  sessions_total?: number;
+  unit_price?: number | null;
+  payment_date?: string | null;
+  profiles?: { name: string; email: string } | null;
 }
 
 const COLORS = [
@@ -46,7 +51,7 @@ const SalesAnalytics = () => {
   useEffect(() => {
     const fetch = async () => {
       const [eRes, lRes, pRes] = await Promise.all([
-        supabase.from("enrollments").select("id,user_id,plan_type,duration,classes_included,amount,currency,payment_status,approval_status,payment_provider,created_at,level,enrollment_status,sessions_remaining"),
+        supabase.from("enrollments").select("id,user_id,plan_type,duration,classes_included,amount,currency,payment_status,approval_status,payment_provider,created_at,level,enrollment_status,sessions_remaining,sessions_total,unit_price,payment_date,profiles(name,email)"),
         supabase.from("leads").select("id,status,created_at,user_id"),
         supabase.from("profiles").select("user_id,status,created_at"),
       ]);
@@ -167,6 +172,35 @@ const SalesAnalytics = () => {
     return Object.entries(map).map(([currency, v]) => ({ currency, ...v }));
   }, [paidEnrollments]);
 
+  // Outstanding: UNPAID + APPROVED
+  const outstandingEnrollments = useMemo(() =>
+    enrollments.filter(e => e.payment_status === "UNPAID" && e.approval_status === "APPROVED"),
+    [enrollments]
+  );
+  const outstandingTotal = outstandingEnrollments.reduce((s, e) => s + Number(e.amount), 0);
+
+  // At-risk for renewal pipeline (sessions_remaining ≤ 3 and > 0)
+  const atRiskCount = useMemo(() =>
+    paidEnrollments.filter(e => (e.sessions_remaining ?? 0) <= 3 && (e.sessions_remaining ?? 0) > 0).length,
+    [paidEnrollments]
+  );
+  const avgUnitPrice = useMemo(() => {
+    const with_price = paidEnrollments.filter(e => e.unit_price && e.unit_price > 0);
+    if (!with_price.length) return 0;
+    return with_price.reduce((s, e) => s + (e.unit_price ?? 0), 0) / with_price.length;
+  }, [paidEnrollments]);
+
+  // Avg sessions used %
+  const avgSessionsUsed = useMemo(() => {
+    const withSessions = paidEnrollments.filter(e => e.sessions_total && e.sessions_total > 0);
+    if (!withSessions.length) return 0;
+    return withSessions.reduce((s, e) => {
+      const total = e.sessions_total ?? 0;
+      const used = total - (e.sessions_remaining ?? 0);
+      return s + (used / total) * 100;
+    }, 0) / withSessions.length;
+  }, [paidEnrollments]);
+
   if (loading) {
     return <div className="space-y-4">{[1,2,3].map(i => <Card key={i} className="h-32 animate-pulse bg-muted" />)}</div>;
   }
@@ -189,6 +223,43 @@ const SalesAnalytics = () => {
       </div>
 
       {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* NEW: Outstanding */}
+        <Card className="rounded-2xl border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-950/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-xl p-2 bg-red-500/10"><AlertCircle className="h-4 w-4 text-red-600" /></div>
+              <span className="text-xs text-muted-foreground">Outstanding</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">${outstandingTotal.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{outstandingEnrollments.length} unpaid approved</p>
+          </CardContent>
+        </Card>
+        {/* NEW: Renewal Pipeline */}
+        <Card className="rounded-2xl border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-xl p-2 bg-amber-500/10"><RefreshCw className="h-4 w-4 text-amber-600" /></div>
+              <span className="text-xs text-muted-foreground">Renewal Pipeline</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">${Math.round(atRiskCount * avgUnitPrice).toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{atRiskCount} at-risk × avg price</p>
+          </CardContent>
+        </Card>
+        {/* NEW: Avg Sessions Used */}
+        <Card className="rounded-2xl border-indigo-200 dark:border-indigo-800/40 bg-indigo-50 dark:bg-indigo-950/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-xl p-2 bg-indigo-500/10"><BarChart3 className="h-4 w-4 text-indigo-600" /></div>
+              <span className="text-xs text-muted-foreground">Avg Sessions Used</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{avgSessionsUsed.toFixed(0)}%</p>
+            <p className="text-xs text-muted-foreground mt-0.5">of total sessions per student</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Original KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="rounded-2xl">
           <CardContent className="p-4">
@@ -246,6 +317,72 @@ const SalesAnalytics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Overdue List */}
+      {outstandingEnrollments.length > 0 && (
+        <Card className="rounded-2xl border-red-200 dark:border-red-800/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              Unpaid Approved Enrollments ({outstandingEnrollments.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="py-2 px-4">Student</TableHead>
+                    <TableHead className="py-2 px-4">Amount</TableHead>
+                    <TableHead className="py-2 px-4 hidden sm:table-cell">Days Overdue</TableHead>
+                    <TableHead className="py-2 px-4 text-right">Contact</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {outstandingEnrollments.slice(0, 10).map(e => {
+                    const daysSince = e.payment_date
+                      ? Math.floor((Date.now() - new Date(e.payment_date).getTime()) / 86400000)
+                      : Math.floor((Date.now() - new Date(e.created_at).getTime()) / 86400000);
+                    const name = (e.profiles as any)?.name || (e.profiles as any)?.email || "—";
+                    const email = (e.profiles as any)?.email || "";
+                    return (
+                      <TableRow key={e.id}>
+                        <TableCell className="py-2 px-4">
+                          <p className="font-medium text-sm">{name}</p>
+                          <p className="text-xs text-muted-foreground">{email}</p>
+                        </TableCell>
+                        <TableCell className="py-2 px-4">
+                          <span className="font-mono text-sm text-destructive font-semibold">
+                            {e.currency === "EGP" ? "LE" : "$"}{Number(e.amount).toLocaleString()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-2 px-4 hidden sm:table-cell">
+                          <Badge variant={daysSince > 14 ? "destructive" : "secondary"} className="text-xs">
+                            {daysSince}d
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-2 px-4 text-right">
+                          {email && (
+                            <a
+                              href={`${WHATSAPP_BASE}?text=${encodeURIComponent(`Hi ${name}! This is a reminder about your pending payment for the Korean course. Please let us know if you need any help completing it.`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-700"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              WhatsApp
+                            </a>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Revenue Chart */}
       <Card className="rounded-2xl">
