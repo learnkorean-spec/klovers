@@ -204,7 +204,7 @@ const BlogPage = () => {
                             </span>
                           )}
                           {(post.seo_score ?? 0) >= 80 && idx > 0 && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
                               ✨ {language === "ar" ? "موصى به" : "Top Pick"}
                             </span>
                           )}
