@@ -352,6 +352,13 @@ export default function MarketingGeneratorPage() {
     fetchScheduledPosts();
   };
 
+  const markAsPosted = async (id: string) => {
+    const { error } = await supabase.from("scheduled_social_posts").update({ status: "published" }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setScheduledPosts(prev => prev.map(p => p.id === id ? { ...p, status: "published" } : p));
+    toast({ title: "Marked as posted ✓" });
+  };
+
   const unschedulePost = async (postId: string) => {
     await supabase.from("scheduled_social_posts").delete().eq("id", postId);
     await fetchScheduledPosts();
@@ -1615,9 +1622,25 @@ export default function MarketingGeneratorPage() {
                             <p className="text-sm font-medium truncate hover:text-primary transition-colors">{p.course_title || (p.caption || "").slice(0, 60)}</p>
                             <p className="text-[10px] text-muted-foreground">{p.scheduled_at.split("T")[1]?.slice(0, 5)} Cairo — click to edit</p>
                           </div>
-                          <Badge variant="outline" className="text-[10px] shrink-0">
+                          <Badge className={`text-[10px] shrink-0 border ${
+                            p.status === "published" ? "bg-green-100 text-green-700 border-green-200" :
+                            p.status === "skipped" ? "bg-muted text-muted-foreground border-border" :
+                            "bg-amber-100 text-amber-700 border-amber-200"
+                          }`}>
                             {p.status}
                           </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost" size="icon"
+                                className={`h-7 w-7 shrink-0 ${p.status === "published" ? "text-green-500" : "text-muted-foreground hover:text-green-500"}`}
+                                onClick={() => p.status !== "published" && markAsPosted(p.id)}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{p.status === "published" ? "Posted ✓" : "Mark as posted"}</TooltipContent>
+                          </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => window.open(toGCalUrl(p), "_blank")}>
