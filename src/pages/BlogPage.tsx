@@ -187,7 +187,7 @@ const BlogPage = () => {
                           />
                         </div>
                       ) : (
-                        <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-4xl">
+                        <div className="aspect-video bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center text-4xl">
                           📖
                         </div>
                       )}
@@ -203,7 +203,7 @@ const BlogPage = () => {
                               ⭐ {language === "ar" ? "مميز" : "Featured"}
                             </span>
                           )}
-                          {(post.seo_score ?? 0) >= 80 && idx > 0 && (
+                          {(post.seo_priority ?? 0) >= 88 && idx > 0 && (
                             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
                               ✨ {language === "ar" ? "موصى به" : "Top Pick"}
                             </span>
