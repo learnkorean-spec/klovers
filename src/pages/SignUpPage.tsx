@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { track } from "@/lib/tracking";
 
 const SignUpPage = () => {
   useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
@@ -57,6 +58,7 @@ const SignUpPage = () => {
       localStorage.setItem("enroll_redirect", redirectTo);
     }
 
+    track.completeRegistration();
     toast({
       title: t("auth.accountCreated") || "Account created!",
       description: t("auth.welcomeMessage") || "Welcome to K-Lovers! You can now sign in.",
