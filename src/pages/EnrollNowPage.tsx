@@ -26,6 +26,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import StudentPreferenceStep from "@/components/StudentPreferenceStep";
+import { track } from "@/lib/tracking";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -426,6 +427,7 @@ const EnrollNowPage = () => {
         }
         // Level sync to profile is handled by DB trigger on enrollments.level
       }
+      track.initiateCheckout({ value: finalPrice ?? 0, currency: selectedCountry === "Egypt" ? "EGP" : "USD" });
       nav(`/pay/${enrollmentId}`);
     } catch (err: any) {
       toast({ title: "Order error", description: err.message, variant: "destructive" });

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { track } from "@/lib/tracking";
 
 const LEVELS = [
   { value: "A0 – Complete Beginner", label: "A0 – Complete Beginner (I know nothing)" },
@@ -94,6 +95,7 @@ const FreeTrialPage = () => {
       }
     }
 
+    track.lead({ content_name: "free-trial" });
     setStep("success");
   };
 
