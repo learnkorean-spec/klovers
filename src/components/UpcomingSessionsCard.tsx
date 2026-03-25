@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, Clock, Loader2, Video } from "lucide-react";
 
 interface UpcomingSession {
   session_id: string;
@@ -37,20 +38,37 @@ function daysUntil(d: string) {
   return diff;
 }
 
+/** Returns true if today's local time is within the class window (10 min before → end) */
+function isClassActive(sessionDate: string, startTime: string, durationMin: number): boolean {
+  const today = new Date();
+  const sessionDay = new Date(sessionDate + "T12:00:00");
+  if (today.toDateString() !== sessionDay.toDateString()) return false;
+
+  const [h, m] = startTime.split(":").map(Number);
+  const startMs = new Date().setHours(h, m, 0, 0);
+  const openMs = startMs - 10 * 60 * 1000;       // 10 min before
+  const closeMs = startMs + durationMin * 60 * 1000; // class end
+  const nowMs = Date.now();
+  return nowMs >= openMs && nowMs <= closeMs;
+}
+
 const UpcomingSessionsCard = () => {
   const [sessions, setSessions] = useState<UpcomingSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setLoading(false); return; }
 
-      const { data, error } = await (supabase as any).rpc("get_student_upcoming_sessions", {
-        p_user_id: session.user.id,
-      });
+      const [sessRes, zoomRes] = await Promise.all([
+        (supabase as any).rpc("get_student_upcoming_sessions", { p_user_id: session.user.id }),
+        (supabase as any).from("app_settings").select("value").eq("key", "zoom_meeting_url").maybeSingle(),
+      ]);
 
-      if (!error && data) setSessions(data);
+      if (!sessRes.error && sessRes.data) setSessions(sessRes.data);
+      if (!zoomRes.error && zoomRes.data) setZoomUrl((zoomRes.data as any).value || null);
       setLoading(false);
     };
     load();
@@ -70,6 +88,7 @@ const UpcomingSessionsCard = () => {
 
   const next = sessions[0];
   const days = daysUntil(next.session_date);
+  const classActive = isClassActive(next.session_date, next.start_time, next.duration_min);
 
   return (
     <Card className="border-primary/20">
@@ -83,7 +102,7 @@ const UpcomingSessionsCard = () => {
         {/* Next class highlight */}
         <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Next Class</p>
               <p className="font-bold text-foreground text-lg">{formatDate(next.session_date)}</p>
               <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
@@ -91,6 +110,28 @@ const UpcomingSessionsCard = () => {
                 {formatTime(next.start_time)} · {next.duration_min} min · {next.timezone}
               </p>
               <p className="text-xs text-muted-foreground mt-1">{next.group_name} · {next.level}</p>
+
+              {/* Join Class button */}
+              {zoomUrl && days === 0 && (
+                <a
+                  href={zoomUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-2"
+                >
+                  <Button
+                    size="sm"
+                    className={`gap-1.5 font-bold shadow-md transition-all ${
+                      classActive
+                        ? "bg-green-600 hover:bg-green-700 text-white animate-pulse shadow-green-500/30"
+                        : "opacity-70"
+                    }`}
+                  >
+                    <Video className="h-4 w-4" />
+                    {classActive ? "Join Class Now →" : "Class Link"}
+                  </Button>
+                </a>
+              )}
             </div>
             <Badge className={days === 0 ? "bg-green-500" : days === 1 ? "bg-yellow-500" : "bg-primary"}>
               {days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `In ${days} days`}
