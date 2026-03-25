@@ -121,6 +121,14 @@ const Header = () => {
               {t("header", "langToggle")}
             </Button>
 
+            {!user && (
+              <Button size="sm" variant="outline" asChild className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
+                <Link to="/free-trial">
+                  🎁 {isAr ? "حصة مجانية" : "Free Trial"}
+                </Link>
+              </Button>
+            )}
+
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

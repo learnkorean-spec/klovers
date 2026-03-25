@@ -44,6 +44,7 @@ import { VocabularyReviewPage } from "./pages/VocabularyReviewPage";
 import DailyQuizPage from "./pages/DailyQuizPage";
 import ProfilePage from "./pages/ProfilePage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
+import FreeTrialPage from "./pages/FreeTrialPage";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient({
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="/textbook/:bookId/:lessonId" element={<AuthProtectedRoute><LessonDetailPage /></AuthProtectedRoute>} />
               <Route path="/profile" element={<AuthProtectedRoute><ProfilePage /></AuthProtectedRoute>} />
               <Route path="/complete-profile" element={<CompleteProfilePage />} />
+              <Route path="/free-trial" element={<FreeTrialPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
               <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />

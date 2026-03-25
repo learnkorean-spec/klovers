@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, DollarSign, Users, Star, Globe } from "lucide-react";
+import { ArrowRight, DollarSign, Gift, Users, Star, Globe } from "lucide-react";
 import heroPoster from "@/assets/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
@@ -179,9 +179,9 @@ const HeroSection = () => {
               asChild
               className="gap-2.5 text-base font-bold px-10 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
             >
-              <Link to="/pricing">
-                <DollarSign className="h-5 w-5" />
-                {t("hero", "viewPricing")}
+              <Link to="/free-trial">
+                <Gift className="h-5 w-5" />
+                Free Trial Class
               </Link>
             </Button>
           </div>

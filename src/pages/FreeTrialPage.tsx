@@ -1,0 +1,280 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
+import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift } from "lucide-react";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
+
+const LEVELS = [
+  { value: "A0 – Complete Beginner", label: "A0 – Complete Beginner (I know nothing)" },
+  { value: "A1 – TOPIK 1", label: "A1 – TOPIK 1 (Basic words)" },
+  { value: "A2 – TOPIK 2", label: "A2 – TOPIK 2 (Simple sentences)" },
+  { value: "B1 – TOPIK 3", label: "B1 – TOPIK 3 (Everyday conversation)" },
+  { value: "B2 – TOPIK 4", label: "B2 – TOPIK 4 (Intermediate)" },
+  { value: "C1+", label: "C1+ (Advanced)" },
+];
+
+const GOALS = [
+  "Watch K-Dramas without subtitles",
+  "Travel to Korea",
+  "Connect with Korean culture & K-Pop",
+  "Business / Work",
+  "Study in Korea / TOPIK exam",
+  "Talk with Korean friends or family",
+];
+
+const PERKS = [
+  { icon: Gift, text: "100% free — no credit card" },
+  { icon: Users, text: "Live class with real teacher" },
+  { icon: Clock, text: "45-minute session" },
+  { icon: Star, text: "Personalised level assessment" },
+];
+
+const FreeTrialPage = () => {
+  useSEO({
+    title: "Book Your Free Korean Class | Klovers Academy",
+    description: "Try a live Korean class for free. No credit card. Real teacher. 45 minutes. Join 2,000+ students learning Korean the right way.",
+    canonical: "https://kloversegy.com/free-trial",
+  });
+
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const [step, setStep] = useState<"form" | "success">("form");
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    level: "",
+    goal: "",
+    country: "",
+  });
+
+  const set = (k: keyof typeof form, v: string) =>
+    setForm((prev) => ({ ...prev, [k]: v }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.level) {
+      toast({ title: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    const goalWithPhone = [
+      form.goal || "Free trial",
+      form.phone ? `WhatsApp: ${form.phone}` : "",
+    ].filter(Boolean).join(" | ");
+
+    const { error } = await supabase.from("leads").insert({
+      name: form.name,
+      email: form.email,
+      country: form.country || "Unknown",
+      level: form.level,
+      goal: goalWithPhone,
+      status: "trial_booked",
+      source: "free-trial-page",
+    } as any);
+
+    setLoading(false);
+
+    if (error) {
+      // If it's a duplicate email, still show success (lead already exists)
+      if (!error.code?.includes("23505")) {
+        toast({ title: "Something went wrong", description: error.message, variant: "destructive" });
+        return;
+      }
+    }
+
+    setStep("success");
+  };
+
+  if (step === "success") {
+    const waMsg = encodeURIComponent(
+      `Hi! I just booked a free trial class on the Klovers website.\nName: ${form.name}\nLevel: ${form.level}\nGoal: ${form.goal}`
+    );
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-16 flex items-center justify-center min-h-screen">
+          <div className="max-w-lg mx-auto px-4 py-20 text-center">
+            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-black text-foreground mb-3">You're in! 🎉</h1>
+            <p className="text-muted-foreground text-lg mb-8">
+              We've received your booking. A teacher will confirm your free class time via WhatsApp within a few hours.
+            </p>
+            <a
+              href={`${WHATSAPP_BASE}?text=${waMsg}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold px-8 py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.02] text-base mb-4"
+            >
+              Confirm via WhatsApp
+              <ArrowRight className="h-5 w-5" />
+            </a>
+            <p className="text-sm text-muted-foreground mt-4">
+              Or explore the platform while you wait
+            </p>
+            <Button variant="outline" className="mt-3" onClick={() => navigate("/")}>
+              Back to Home
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="pt-16">
+
+        {/* Hero */}
+        <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
+          <div className="container mx-auto px-4 text-center max-w-3xl">
+            <span className="inline-block bg-primary text-black text-xs font-black tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5">
+              Free Trial
+            </span>
+            <h1 className="text-4xl md:text-6xl font-black text-foreground tracking-tight mb-5 leading-[1.05]">
+              Try Korean for <span className="text-primary">Free</span>
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
+              One live class. Real teacher. No credit card. See why 2,000+ students chose Klovers.
+            </p>
+
+            {/* Perks */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+              {PERKS.map(({ icon: Icon, text }) => (
+                <div key={text} className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-xs font-semibold text-foreground text-center">{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Form */}
+        <section className="py-12 pb-24">
+          <div className="container mx-auto px-4">
+            <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
+              <h2 className="text-2xl font-bold text-foreground mb-1">Book your free class</h2>
+              <p className="text-sm text-muted-foreground mb-8">Takes 30 seconds. We'll confirm your slot via WhatsApp.</p>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Name */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Your name <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g. Sara Ahmed"
+                    value={form.name}
+                    onChange={(e) => set("name", e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email address <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="sara@example.com"
+                    value={form.email}
+                    onChange={(e) => set("email", e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone">WhatsApp number <span className="text-muted-foreground text-xs">(recommended)</span></Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+20 100 000 0000"
+                    value={form.phone}
+                    onChange={(e) => set("phone", e.target.value)}
+                  />
+                </div>
+
+                {/* Country */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    placeholder="e.g. Egypt"
+                    value={form.country}
+                    onChange={(e) => set("country", e.target.value)}
+                  />
+                </div>
+
+                {/* Level */}
+                <div className="space-y-1.5">
+                  <Label>Current Korean level <span className="text-destructive">*</span></Label>
+                  <Select value={form.level} onValueChange={(v) => set("level", v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEVELS.map((l) => (
+                        <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Goal */}
+                <div className="space-y-1.5">
+                  <Label>Learning goal</Label>
+                  <Select value={form.goal} onValueChange={(v) => set("goal", v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Why are you learning Korean?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GOALS.map((g) => (
+                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full gap-2 text-base font-bold h-13 mt-2"
+                  disabled={loading}
+                >
+                  {loading ? "Booking..." : "Book My Free Class"}
+                  {!loading && <ArrowRight className="h-5 w-5" />}
+                </Button>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  No payment. No spam. We'll contact you to confirm your class time.
+                </p>
+              </form>
+            </div>
+          </div>
+        </section>
+
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default FreeTrialPage;

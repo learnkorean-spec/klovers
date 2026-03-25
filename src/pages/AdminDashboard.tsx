@@ -91,7 +91,7 @@ interface OverviewRow {
   amount_due: number;
 }
 
-const STATUS_OPTIONS = ["new", "contacted", "enrolled", "rejected", "lost"];
+const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
 
 import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
@@ -1486,13 +1486,14 @@ const AdminDashboard = () => {
                                 </SelectContent>
                               </Select>
                             ) : (
-                              <Badge variant={
-                                lead.status === "enrolled" ? "default"
-                                : lead.status === "rejected" ? "destructive"
-                                : lead.status === "contacted" ? "secondary"
-                                : "outline"
-                              } className="text-xs">
-                                {lead.status}
+                              <Badge className={`text-xs border ${
+                                lead.status === "enrolled" ? "bg-green-100 text-green-700 border-green-200"
+                                : lead.status === "trial_booked" ? "bg-violet-100 text-violet-700 border-violet-200"
+                                : lead.status === "rejected" || lead.status === "lost" ? "bg-red-100 text-red-700 border-red-200"
+                                : lead.status === "contacted" ? "bg-blue-100 text-blue-700 border-blue-200"
+                                : "bg-muted text-muted-foreground border-border"
+                              }`}>
+                                {lead.status === "trial_booked" ? "🎁 Trial Booked" : lead.status}
                               </Badge>
                             )}
                           </TableCell>
