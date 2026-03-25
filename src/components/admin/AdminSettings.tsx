@@ -1,16 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Lock } from "lucide-react";
+import { Lock, Video } from "lucide-react";
 
 const AdminSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Zoom / Meet link setting
+  const [zoomUrl, setZoomUrl] = useState("");
+  const [zoomSaving, setZoomSaving] = useState(false);
+
+  useEffect(() => {
+    supabase.from("app_settings" as any).select("value").eq("key", "zoom_meeting_url").maybeSingle()
+      .then(({ data }) => { if (data) setZoomUrl((data as any).value || ""); });
+  }, []);
+
+  const saveZoomUrl = async () => {
+    setZoomSaving(true);
+    const { error } = await (supabase as any).from("app_settings").upsert(
+      { key: "zoom_meeting_url", value: zoomUrl, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    setZoomSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else toast({ title: "Zoom link saved ✓" });
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +82,32 @@ const AdminSettings = () => {
   };
 
   return (
+    <div className="space-y-6 max-w-md">
+
+    {/* Zoom / Meet link */}
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Video className="h-4 w-4" />
+          Class Meeting Link (Zoom / Google Meet)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Students will see a <strong>Join Class</strong> button on their dashboard starting 10 minutes before each session.
+        </p>
+        <Input
+          type="url"
+          placeholder="https://zoom.us/j/... or meet.google.com/..."
+          value={zoomUrl}
+          onChange={(e) => setZoomUrl(e.target.value)}
+        />
+        <Button onClick={saveZoomUrl} disabled={zoomSaving} className="w-full">
+          {zoomSaving ? "Saving..." : "Save Meeting Link"}
+        </Button>
+      </CardContent>
+    </Card>
+
     <Card className="max-w-md">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
@@ -107,6 +153,8 @@ const AdminSettings = () => {
         </form>
       </CardContent>
     </Card>
+    </Card>
+    </div>
   );
 };
 
