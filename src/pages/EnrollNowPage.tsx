@@ -514,6 +514,8 @@ const EnrollNowPage = () => {
     setPreferredDayOfWeek(day);
     setPreferredStartTime(time);
     setStep(4); // Move to payment step
+    // Capture lead on checkout entry — tracks abandonment if user doesn't pay
+    submitLead();
   };
 
   // Apply promo code
