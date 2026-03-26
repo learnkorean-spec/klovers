@@ -23,7 +23,7 @@ import { LearningGoalsCard } from "@/components/LearningGoalsCard";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { DailyBonusCard } from "@/components/DailyBonusCard";
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -647,6 +647,29 @@ const StudentDashboard = () => {
             );
           })()}
 
+          {/* ── Refer a Friend ── */}
+          {userId && (() => {
+            const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
+            const copyRef = () => {
+              navigator.clipboard.writeText(refLink);
+              toast({ title: "Link copied! 🎁", description: "Share it — you'll earn 1 free session when they enroll." });
+            };
+            return (
+              <div className="flex items-center gap-4 bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-2xl px-5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900 flex items-center justify-center shrink-0">
+                  <Gift className="h-5 w-5 text-violet-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">Refer a Friend → Earn 1 Free Session</p>
+                  <p className="text-xs text-muted-foreground truncate">{refLink}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={copyRef} className="shrink-0 gap-1.5 border-violet-300 text-violet-700 hover:bg-violet-100">
+                  <Copy className="h-3.5 w-3.5" /> Copy
+                </Button>
+              </div>
+            );
+          })()}
+
           {/* ── Profile completion bar (only for enrolled users with incomplete items) ── */}
           {checklistItems.length > 0 && (() => {
             const done = checklistItems.filter(i => i.completed).length;
@@ -928,6 +951,30 @@ const StudentDashboard = () => {
               {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
               <UpcomingSessionsCard />
               <StudentGroupAttendance />
+
+              {/* ── Progress Report + Certificate ── */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank')}
+                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-primary/40 hover:bg-primary/5 transition-all text-center"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Progress Report</span>
+                  <span className="text-xs text-muted-foreground">Download PDF</span>
+                </button>
+                <button
+                  onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank')}
+                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-primary/40 hover:bg-primary/5 transition-all text-center"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Award className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Certificate</span>
+                  <span className="text-xs text-muted-foreground">Download PNG</span>
+                </button>
+              </div>
             </>
           )}
         </div>
