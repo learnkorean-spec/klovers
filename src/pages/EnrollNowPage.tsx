@@ -658,7 +658,7 @@ const EnrollNowPage = () => {
           <div className="relative h-1.5 bg-muted rounded-full mx-4 sm:mx-12">
             <div
               className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${((step - 1) / 2) * 100}%` }}
+              style={{ width: `${(Math.min(step - 1, 2) / 2) * 100}%` }}
             />
           </div>
         </div>
@@ -1106,6 +1106,17 @@ const EnrollNowPage = () => {
         )}
       </main>
       <Footer />
+
+      {/* Sticky WhatsApp help pill — shown during checkout */}
+      <a
+        href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I have a question before enrolling in Klovers.")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-[#1ebe5d] transition-colors"
+        aria-label="Chat on WhatsApp"
+      >
+        💬 Questions?
+      </a>
     </div>
   );
 };

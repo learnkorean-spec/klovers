@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle } from "lucide-react";
+import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle, Sparkles, ArrowRight } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 const ACCOUNT_NUMBER = "00601121777560";
@@ -472,14 +472,56 @@ const EgyptPaymentPage = () => {
         )}
 
         {enrollment.approval_status === "APPROVED" && (
-          <Card>
-            <CardContent className="pt-6 text-center space-y-3">
-              <CheckCircle className="h-12 w-12 mx-auto text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">Payment Approved!</h2>
-              <p className="text-muted-foreground">Your enrollment is active.</p>
-              <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {/* Success card */}
+            <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800">
+              <CardContent className="pt-6 text-center space-y-3">
+                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mx-auto">
+                  <CheckCircle className="h-9 w-9 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">You're in! 🎉</h2>
+                <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                  Your payment has been approved and your enrollment is now active. Welcome to Klovers!
+                </p>
+                <Button className="w-full sm:w-auto" onClick={() => navigate("/dashboard")}>
+                  Go to Dashboard <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Upsell card — upgrade to private */}
+            {enrollment.class_type === "group" && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="pt-5 pb-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1">Upgrade Available</p>
+                      <h3 className="font-bold text-foreground mb-1">Want faster results? Try Private.</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        1-on-1 sessions move 3× faster — personalized lessons, flexible schedule, instant feedback. Many students switch after their first month.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I just enrolled in a group class and I'm interested in upgrading to private sessions. Can you tell me more?")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                          Ask about Private →
+                        </a>
+                        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-muted-foreground">
+                          No thanks
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {enrollment.approval_status === "REJECTED" && (
