@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import WhyLearnKorean from "@/components/WhyLearnKorean";
 import Footer from "@/components/Footer";
+import StickyEnrollBar from "@/components/StickyEnrollBar";
 
 // Lazy-load below-fold sections for faster initial paint
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
@@ -106,6 +107,7 @@ const Index = () => {
         </Suspense>
       </main>
       <Footer />
+      <StickyEnrollBar />
     </div>
   );
 };

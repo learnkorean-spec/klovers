@@ -6,6 +6,7 @@ import PricingSection from "@/components/PricingSection";
 import EnrollSection from "@/components/EnrollSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import ScrollToTop from "@/components/ScrollToTop";
+import StickyEnrollBar from "@/components/StickyEnrollBar";
 import { ChevronDown, X } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
@@ -171,6 +172,7 @@ const PricingPage = () => {
       <Footer />
       <ScrollToTop />
       <ExitNudge />
+      <StickyEnrollBar />
     </div>
   );
 };
