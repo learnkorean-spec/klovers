@@ -60,6 +60,36 @@ const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
 
 const EnrollNowPage = () => {
   useSEO({ title: "Enroll Now | Klovers Korean Academy", description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence." });
+
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.id = "enroll-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Korean Language Classes — Klovers Academy",
+      "description": "Live Korean classes with real teachers. Group and private options available for all levels.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Klovers Korean Academy",
+        "url": "https://kloversegy.com"
+      },
+      "inLanguage": "ko",
+      "url": "https://kloversegy.com/enroll-now",
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://kloversegy.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Pricing", "item": "https://kloversegy.com/pricing" },
+          { "@type": "ListItem", "position": 3, "name": "Enroll Now", "item": "https://kloversegy.com/enroll-now" }
+        ]
+      }
+    });
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
+
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
 

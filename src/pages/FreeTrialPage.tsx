@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -44,6 +44,33 @@ const FreeTrialPage = () => {
     description: "Try a live Korean class for free. No credit card. Real teacher. 45 minutes. Join 2,000+ students learning Korean the right way.",
     canonical: "https://kloversegy.com/free-trial",
   });
+
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.id = "free-trial-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Free Trial Korean Class",
+      "description": "45-minute live Korean class with a real teacher. Free, no credit card required.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Klovers Korean Academy",
+        "url": "https://kloversegy.com"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "category": "Free Trial"
+      },
+      "inLanguage": "ko",
+      "url": "https://kloversegy.com/free-trial"
+    });
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
 
   const { toast } = useToast();
   const navigate = useNavigate();

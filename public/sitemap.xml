@@ -87,12 +87,30 @@
   </url>
 
   <!-- ============================
+       CONVERSION / LEAD
+       ============================ -->
+
+  <url>
+    <loc>https://kloversegy.com/free-trial</loc>
+    <lastmod>2026-03-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://kloversegy.com/affiliate</loc>
+    <lastmod>2026-03-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ============================
        BLOG
        ============================ -->
 
   <url>
     <loc>https://kloversegy.com/blog</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
