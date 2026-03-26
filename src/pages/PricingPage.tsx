@@ -55,6 +55,44 @@ const ExitNudge = () => {
 
 const PricingPage = () => {
   useSEO({ title: "Pricing & Plans", description: "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.", canonical: "https://kloversegy.com/pricing" });
+
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.id = "pricing-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Korean Language Course Plans",
+      "description": "Affordable Korean language learning plans at Klovers Academy",
+      "url": "https://kloversegy.com/pricing",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "Course",
+            "name": "Group Korean Classes",
+            "provider": { "@type": "Organization", "name": "Klovers Korean Academy" },
+            "inLanguage": "ko"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "Course",
+            "name": "Private Korean Classes",
+            "provider": { "@type": "Organization", "name": "Klovers Korean Academy" },
+            "inLanguage": "ko"
+          }
+        }
+      ]
+    });
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,25 +24,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-import BlogManager from "@/components/admin/BlogManager";
-import StudentManager from "@/components/admin/StudentManager";
-import LifecycleFunnel from "@/components/admin/LifecycleFunnel";
-import GroupAttendanceManager from "@/components/admin/GroupAttendanceManager";
-import AdminNotifications from "@/components/admin/AdminNotifications";
-import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
-import GroupMatcher from "@/components/admin/GroupMatcher";
-import TeacherAvailabilityManager from "@/components/admin/TeacherAvailabilityManager";
-import StudentPreferenceDashboard from "@/components/admin/StudentPreferenceDashboard";
+// Lazy-load heavy tab components — each loads only when its tab is first opened
+const BlogManager = lazy(() => import("@/components/admin/BlogManager"));
+const StudentManager = lazy(() => import("@/components/admin/StudentManager"));
+const LifecycleFunnel = lazy(() => import("@/components/admin/LifecycleFunnel"));
+const GroupAttendanceManager = lazy(() => import("@/components/admin/GroupAttendanceManager"));
+const AdminNotifications = lazy(() => import("@/components/admin/AdminNotifications"));
+const AdminAttendancePanel = lazy(() => import("@/components/admin/AdminAttendancePanel"));
+const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
+const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
+const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
+const BulkEmailManager = lazy(() => import("@/components/admin/BulkEmailManager"));
+const ScheduleOptionsManager = lazy(() => import("@/components/admin/ScheduleOptionsManager"));
+const SchedulingManager = lazy(() => import("@/components/admin/SchedulingManager"));
+const AdminSettings = lazy(() => import("@/components/admin/AdminSettings"));
+const PlacementTestsManager = lazy(() => import("@/components/admin/PlacementTestsManager"));
+const SalesAnalytics = lazy(() => import("@/components/admin/SalesAnalytics"));
+const SessionAttendanceManager = lazy(() => import("@/components/admin/SessionAttendanceManager"));
+const StudentHealthPanel = lazy(() => import("@/components/admin/StudentHealthPanel"));
 
-import BulkEmailManager from "@/components/admin/BulkEmailManager";
-
-import ScheduleOptionsManager from "@/components/admin/ScheduleOptionsManager";
-import SchedulingManager from "@/components/admin/SchedulingManager";
-import AdminSettings from "@/components/admin/AdminSettings";
-import PlacementTestsManager from "@/components/admin/PlacementTestsManager";
-import SalesAnalytics from "@/components/admin/SalesAnalytics";
-import SessionAttendanceManager from "@/components/admin/SessionAttendanceManager";
-import StudentHealthPanel from "@/components/admin/StudentHealthPanel";
+const TabLoader = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="w-7 h-7 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 interface Lead {
   id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
@@ -129,9 +134,9 @@ const AdminDashboard = () => {
   const fetchAll = async () => {
     setLeadsError(null);
     const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes] = await Promise.all([
-      supabase.from("leads").select("*").order("created_at", { ascending: false }),
-      supabase.from("enrollments").select("*").order("created_at", { ascending: false }),
-      supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("enrollments").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("admin_student_overview").select("*"),
       Promise.resolve({ data: [] }), // legacy batch_members — no longer used
       Promise.resolve({ data: [] }), // legacy student_groups — no longer used
@@ -662,6 +667,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          <Suspense fallback={<TabLoader />}>
           <Tabs value={adminTab} onValueChange={setAdminTab}>
             <TabsList className="w-full h-auto bg-card border border-border rounded-2xl p-3 flex flex-col gap-2">
               {/* Operations row */}
@@ -1680,6 +1686,7 @@ const AdminDashboard = () => {
               <AdminSettings />
             </TabsContent>
           </Tabs>
+          </Suspense>
         </div>
       </div>
     </TooltipProvider>

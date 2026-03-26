@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { useSEO } from "@/hooks/useSEO";
@@ -17,12 +17,25 @@ import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
 import { useGamification } from "@/hooks/useGamification";
-import { AnalyticsSection } from "@/components/AnalyticsSection";
-import { AchievementMilestoneCard } from "@/components/AchievementMilestoneCard";
-import { LearningGoalsCard } from "@/components/LearningGoalsCard";
-import { LeaderboardCard } from "@/components/LeaderboardCard";
-import { StreakCalendar } from "@/components/StreakCalendar";
-import { DailyBonusCard } from "@/components/DailyBonusCard";
+// Below-fold components — lazy loaded to keep initial paint fast
+const AnalyticsSection = lazy(() =>
+  import("@/components/AnalyticsSection").then(m => ({ default: m.AnalyticsSection }))
+);
+const AchievementMilestoneCard = lazy(() =>
+  import("@/components/AchievementMilestoneCard").then(m => ({ default: m.AchievementMilestoneCard }))
+);
+const LearningGoalsCard = lazy(() =>
+  import("@/components/LearningGoalsCard").then(m => ({ default: m.LearningGoalsCard }))
+);
+const LeaderboardCard = lazy(() =>
+  import("@/components/LeaderboardCard").then(m => ({ default: m.LeaderboardCard }))
+);
+const StreakCalendar = lazy(() =>
+  import("@/components/StreakCalendar").then(m => ({ default: m.StreakCalendar }))
+);
+const DailyBonusCard = lazy(() =>
+  import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
+);
 import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -557,6 +570,7 @@ const StudentDashboard = () => {
           </div>
 
           {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
+          <Suspense fallback={<div className="h-24 bg-muted/30 rounded-2xl animate-pulse" />}>
           <DailyBonusCard />
 
           {/* ── Quick Actions (always visible) ── */}
@@ -741,6 +755,7 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Still show gamification for unenrolled learners */}
+              <Suspense fallback={<div className="h-40 bg-muted/30 rounded-2xl animate-pulse" />}>
               <div className="grid md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
@@ -762,6 +777,7 @@ const StudentDashboard = () => {
               </div>
               <StreakCalendar />
               <LeaderboardCard />
+              </Suspense>
             </div>
           ) : (
             <>
@@ -904,6 +920,7 @@ const StudentDashboard = () => {
 
               {/* ── Leaderboard (full width) ── */}
               <LeaderboardCard />
+              </Suspense>
 
               {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />

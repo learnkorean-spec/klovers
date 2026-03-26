@@ -45,9 +45,9 @@ export function useGamification() {
 
     const [xpRes, progressRes, badgesRes, streakRes] = await Promise.all([
       supabase.from("student_xp").select("xp_earned").eq("user_id", userId),
-      supabase.from("student_lesson_progress").select("*").eq("user_id", userId),
+      supabase.from("student_lesson_progress").select("lesson_id, vocab_done, grammar_done, dialogue_done, exercises_done, reading_done, chapter_completed").eq("user_id", userId),
       supabase.from("student_badges").select("badge_key").eq("user_id", userId),
-      supabase.from("student_streaks").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("student_streaks").select("current_streak, longest_streak, last_activity_date").eq("user_id", userId).maybeSingle(),
     ]);
 
     const totalXp = (xpRes.data || []).reduce((sum: number, r: any) => sum + (r.xp_earned || 0), 0);

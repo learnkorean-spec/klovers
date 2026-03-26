@@ -68,13 +68,15 @@ const BlogPage = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("blog_posts")
         .select("id, title, slug, description, keywords, article_type, hero_image, hero_alt, author, lang, published_at, created_at, seo_score")
         .eq("published", true)
         .eq("lang", language)
         .order("seo_score", { ascending: false, nullsFirst: false })
-        .order("published_at", { ascending: false });
+        .order("published_at", { ascending: false })
+        .limit(60);
+      if (error) console.error("BlogPage fetch error:", error.message);
       setPosts((data as BlogPost[]) || []);
       setLoading(false);
     };

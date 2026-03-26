@@ -204,7 +204,7 @@ const StudentManager = () => {
 
   const fetchLegacyStudents = async () => {
     setLegacyLoading(true);
-    const { data, error } = await supabase.from("students").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("students").select("*").order("created_at", { ascending: false }).limit(200);
     if (error) toast({ title: "Error loading students", description: error.message, variant: "destructive" });
     setLegacyStudents(((data as any[]) || []).map(s => ({ ...s, group_name: s.group_name || "" })));
     setLegacyLoading(false);
