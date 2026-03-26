@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 
@@ -10,7 +10,6 @@ import { X, ArrowRight } from "lucide-react";
 const StickyEnrollBar = () => {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Show after user scrolls past 600px
   useEffect(() => {

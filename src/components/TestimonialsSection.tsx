@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { Star, Facebook } from "lucide-react";
 
 const reviews = [
