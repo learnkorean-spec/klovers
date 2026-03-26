@@ -298,6 +298,18 @@ const FreeTrialPage = () => {
                 <p className="text-xs text-muted-foreground text-center">
                   No payment. No spam. We'll contact you to confirm your class time.
                 </p>
+
+                {/* Social proof nudge */}
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <div className="flex -space-x-1.5">
+                    {["N","M","H","Y","J"].map((l) => (
+                      <div key={l} className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[9px] font-bold text-primary">{l}</div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">14 students</span> booked this week
+                  </p>
+                </div>
               </form>
             </div>
           </div>

@@ -131,6 +131,26 @@ const EnrollPage = () => {
             </div>
           </div>
 
+          {/* Teacher card */}
+          <div className="flex items-center gap-4 bg-card border border-border rounded-2xl px-5 py-4 shadow-sm">
+            <div className="relative flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center text-xl font-bold text-primary select-none">
+                ريم
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 text-base leading-none">🇰🇷</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-bold text-foreground">Reham — 선생님</p>
+                <span className="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">Certified Teacher</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">5+ years · 300+ students · A1–C2 all levels</p>
+              <p className="text-xs text-muted-foreground/80 italic mt-1 leading-relaxed">
+                "She simplifies everything — you'll notice the difference from day one."
+              </p>
+            </div>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Order Details</CardTitle>

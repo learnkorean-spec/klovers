@@ -1006,6 +1006,19 @@ const EnrollNowPage = () => {
                     </div>
                   </div>
 
+              {/* Teacher card */}
+              <div className="flex items-center gap-3 bg-muted/60 border border-border rounded-xl px-4 py-3">
+                <div className="relative flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary select-none">ريم</div>
+                  <span className="absolute -bottom-0.5 -right-0.5 text-sm leading-none">🇰🇷</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-foreground">Reham 선생님 <span className="text-xs font-normal text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">Certified</span></p>
+                  <p className="text-xs text-muted-foreground">5+ years · 300+ students · all levels</p>
+                  <div className="flex gap-0.5 mt-0.5">{"⭐⭐⭐⭐⭐".split("").map((s,i)=><span key={i} className="text-xs">{s}</span>)}</div>
+                </div>
+              </div>
+
               {/* Price Summary */}
               {duration && originalPrice !== null && finalPrice !== null && (
                 <div className="bg-muted rounded-lg p-4 space-y-2">
