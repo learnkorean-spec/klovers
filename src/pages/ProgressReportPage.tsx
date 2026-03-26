@@ -35,9 +35,11 @@ const ProgressReportPage = () => {
         supabase.from("group_attendance").select("id").eq("user_id", uid).eq("status", "present"),
         supabase.from("student_xp").select("xp_earned").eq("user_id", uid),
         supabase.from("placement_test_results").select("score, level, created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-      ]);
+      ]).catch(() => Array(5).fill({ data: null, error: true }));
 
-      const totalXp = (xpRes.data || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0);
+      const totalXp = Array.isArray(xpRes?.data)
+        ? xpRes.data.reduce((s: number, r: any) => s + (r.xp_earned || 0), 0)
+        : 0;
 
       setData({
         name: profileRes.data?.name || "Student",

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, MapPin, Star, Crown, Globe, Sparkles } from "lucide-react";
+import { Check, MapPin, Star, Crown, Globe, Sparkles, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -340,6 +340,12 @@ const PricingSection = () => {
                   </div>
 
                   <div className="space-y-2">
+                    {isActive && (
+                      <div className="flex items-center justify-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg py-2">
+                        <Users className="h-3.5 w-3.5" />
+                        <span>Limited spots this intake — enroll to reserve yours</span>
+                      </div>
+                    )}
                     <Button
                       className="w-full"
                       variant={isActive ? "default" : "outline"}

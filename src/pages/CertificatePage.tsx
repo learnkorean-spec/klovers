@@ -134,10 +134,22 @@ const CertificatePage = () => {
     ctx.fillStyle = "rgba(255,255,255,0.6)";
     ctx.fillText("KLovers Korean Academy and achieved the level of", W / 2, 448);
 
-    // Level badge background
+    // Level badge background — manual rounded rect (roundRect not supported in older Safari/Firefox)
+    const rr = (x: number, y: number, w: number, h: number, r: number) => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    };
     ctx.fillStyle = "#FFFF00";
-    ctx.beginPath();
-    ctx.roundRect(W / 2 - 160, 472, 320, 64, 12);
+    rr(W / 2 - 160, 472, 320, 64, 12);
     ctx.fill();
 
     ctx.fillStyle = "#000";
