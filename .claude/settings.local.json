@@ -193,7 +193,8 @@
       "Bash(find \"C:\\\\Users\\\\marku\\\\Clude klovers\\\\.claude\\\\worktrees\\\\trusting-mirzakhani\\\\src\\\\components\" -maxdepth 1 -name \"*.tsx\" -type f -exec wc -l {} +)",
       "Bash(find \"C:\\\\Users\\\\marku\\\\Clude klovers\\\\.claude\\\\worktrees\\\\trusting-mirzakhani\\\\src\\\\components\\\\admin\" -name \"*.tsx\" -type f -exec wc -l {} +)",
       "Bash(find \"C:\\\\Users\\\\marku\\\\Clude klovers\\\\.claude\\\\worktrees\\\\trusting-mirzakhani\\\\src\\\\lib\" -name \"*.ts\" -type f -exec wc -l {} +)",
-      "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''tailwind.config.ts'',''utf8''\\); const i=c.indexOf\\(''keyframes''\\); console.log\\(JSON.stringify\\(c.slice\\(i,i+300\\)\\)\\);\")"
+      "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''tailwind.config.ts'',''utf8''\\); const i=c.indexOf\\(''keyframes''\\); console.log\\(JSON.stringify\\(c.slice\\(i,i+300\\)\\)\\);\")",
+      "Bash(npm run:*)"
     ]
   },
   "disableAllHooks": true

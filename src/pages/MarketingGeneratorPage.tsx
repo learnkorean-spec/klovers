@@ -1344,6 +1344,8 @@ export default function MarketingGeneratorPage() {
                     </div>
                   )}
                 </>
+              ) : (
+                <p className="text-center text-muted-foreground text-sm py-8">No groups found. Add schedule groups to generate content.</p>
               )}
             </TabsContent>
 
