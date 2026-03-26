@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +42,7 @@ const PlacementTestsManager = lazy(() => import("@/components/admin/PlacementTes
 const SalesAnalytics = lazy(() => import("@/components/admin/SalesAnalytics"));
 const SessionAttendanceManager = lazy(() => import("@/components/admin/SessionAttendanceManager"));
 const StudentHealthPanel = lazy(() => import("@/components/admin/StudentHealthPanel"));
+const PromoCodesManager = lazy(() => import("@/components/admin/PromoCodesManager"));
 
 const TabLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -689,6 +690,9 @@ const AdminDashboard = () => {
                 <TabsTrigger value="manage" className={TAB_CLS}>Manage</TabsTrigger>
                 <TabsTrigger value="sales" className={TAB_CLS}>
                   <BarChart3 className="h-3.5 w-3.5" /> Sales
+                </TabsTrigger>
+                <TabsTrigger value="promos" className={TAB_CLS}>
+                  <Tag className="h-3.5 w-3.5" /> Promos
                 </TabsTrigger>
               </div>
 
@@ -1561,6 +1565,18 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Manage Students</CardTitle></CardHeader>
                 <CardContent className="pt-0"><StudentManager /></CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* PROMO CODES TAB */}
+            <TabsContent value="promos">
+              <Card className="rounded-2xl">
+                <CardHeader className="pb-4"><CardTitle className="text-base">Promo Codes</CardTitle></CardHeader>
+                <CardContent className="pt-0">
+                  <Suspense fallback={<TabLoader />}>
+                    <PromoCodesManager />
+                  </Suspense>
+                </CardContent>
               </Card>
             </TabsContent>
 
