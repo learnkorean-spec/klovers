@@ -10,6 +10,7 @@ const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 const HomeBlogSection = lazy(() => import("@/components/HomeBlogSection"));
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
 const HomeGamesSection = lazy(() => import("@/components/HomeGamesSection"));
@@ -87,6 +88,9 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <Testimonials />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <TestimonialsSection />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <PlacementTestCTA />
