@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,8 @@ const FreeTrialPage = () => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referredBy = searchParams.get("ref") || "";
 
   const [step, setStep] = useState<"form" | "success">("form");
   const [loading, setLoading] = useState(false);
@@ -73,6 +75,7 @@ const FreeTrialPage = () => {
     const goalWithPhone = [
       form.goal || "Free trial",
       form.phone ? `WhatsApp: ${form.phone}` : "",
+      referredBy ? `ref:${referredBy}` : "",
     ].filter(Boolean).join(" | ");
 
     const { error } = await supabase.from("leads").insert({
