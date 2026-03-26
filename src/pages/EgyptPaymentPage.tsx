@@ -29,6 +29,7 @@ const METHOD_LABELS: Record<string, string> = {
 interface EnrollmentData {
   id: string;
   plan_type: string;
+  class_type: string | null;
   duration: number;
   amount: number;
   currency: string;
@@ -325,7 +326,7 @@ const EgyptPaymentPage = () => {
 
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, plan_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+        .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
         .eq("id", enrollmentId!)
         .eq("user_id", session.user.id)
         .single();
@@ -377,7 +378,7 @@ const EgyptPaymentPage = () => {
         if (rpcError.message?.includes("PENDING_PAYMENT")) {
           const { data: refreshed } = await supabase
             .from("enrollments")
-            .select("id, plan_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+            .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
             .eq("id", enrollment.id)
             .single();
           if (refreshed) {
@@ -490,7 +491,7 @@ const EgyptPaymentPage = () => {
             </Card>
 
             {/* Upsell card — upgrade to private */}
-            {enrollment.class_type === "group" && (
+            {(enrollment.class_type === "group" || enrollment.plan_type === "group") && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="pt-5 pb-5">
                   <div className="flex items-start gap-4">
