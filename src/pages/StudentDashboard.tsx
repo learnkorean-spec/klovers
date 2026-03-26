@@ -571,7 +571,8 @@ const StudentDashboard = () => {
 
           {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
           <Suspense fallback={<div className="h-24 bg-muted/30 rounded-2xl animate-pulse" />}>
-          <DailyBonusCard />
+            <DailyBonusCard />
+          </Suspense>
 
           {/* ── Quick Actions (always visible) ── */}
           <div>
@@ -920,7 +921,6 @@ const StudentDashboard = () => {
 
               {/* ── Leaderboard (full width) ── */}
               <LeaderboardCard />
-              </Suspense>
 
               {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />
