@@ -1312,6 +1312,59 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="pt-0 space-y-4">
 
+              {/* Abandoned Checkouts — reached step 4 but didn't pay */}
+              {(() => {
+                const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+                const abandoned = leads.filter(l =>
+                  l.plan_type &&
+                  l.user_id &&
+                  !confirmedEmails.has(l.email.toLowerCase()) &&
+                  l.status !== "enrolled" &&
+                  new Date(l.created_at) > cutoff
+                ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
+                if (abandoned.length === 0) return null;
+                return (
+                  <div className="rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">{abandoned.length} Abandoned Checkout{abandoned.length > 1 ? "s" : ""}</span>
+                      <span className="text-xs text-amber-600 dark:text-amber-400 ml-1">— reached checkout but didn't pay</span>
+                    </div>
+                    <div className="space-y-2">
+                      {abandoned.map(l => {
+                        const hoursAgo = Math.round((Date.now() - new Date(l.created_at).getTime()) / 3600000);
+                        const timeLabel = hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.round(hoursAgo / 24)}d ago`;
+                        const waMsg = encodeURIComponent(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling in Klovers Korean. Your spot is still available — would you like to complete your ${l.plan_type} class enrollment? 🇰🇷`);
+                        const waLink = `https://wa.me/?text=${waMsg}`;
+                        return (
+                          <div key={l.id} className="flex items-center justify-between bg-white dark:bg-background border border-amber-100 dark:border-amber-900/40 rounded-lg px-3 py-2 gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{l.email}</p>
+                            </div>
+                            <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground shrink-0">
+                              <span className="capitalize">{l.plan_type} · {l.duration}</span>
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeLabel}</span>
+                            </div>
+                            <div className="flex gap-1.5 shrink-0">
+                              <Button size="sm" variant="outline" className="h-7 px-2 text-xs"
+                                onClick={() => { navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`); toast({ title: "Copied!", description: "Follow-up message copied to clipboard" }); }}>
+                                <Copy className="h-3 w-3 mr-1" />Copy
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
+                                <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${l.name.split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
+                                  <Mail className="h-3 w-3 mr-1" />Email
+                                </a>
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Lead Conversion Summary */}
               {leads.length > 0 && (() => {
                 const sourceMap: Record<string, { total: number; converted: number }> = {};

@@ -197,7 +197,9 @@
       "Bash(npm run:*)",
       "Bash(grep -l \"CREATE TABLE.*leads\\\\|ALTER TABLE.*leads\" /c/Users/marku/\"Clude klovers\"/.claude/worktrees/trusting-mirzakhani/supabase/migrations/*.sql)",
       "Bash(ls /c/Users/marku/Clude*/supabase/migrations/)",
-      "Bash(xargs -I {} find {} -name \"*leads*\" -type f)"
+      "Bash(xargs -I {} find {} -name \"*leads*\" -type f)",
+      "Bash(where npm:*)",
+      "Bash(curl -s http://localhost:8080/enroll-now)"
     ]
   },
   "disableAllHooks": true
