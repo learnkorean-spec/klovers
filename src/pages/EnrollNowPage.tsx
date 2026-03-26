@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck, LogIn } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck, LogIn, Tag, CheckCircle2, Loader2 } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,6 +142,14 @@ const EnrollNowPage = () => {
   // First-time discount
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Promo code
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplied, setPromoApplied] = useState<{
+    code: string; discount_pct: number | null; discount_flat: number | null; currency: string | null;
+  } | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
 
   // Dynamic schedule options from DB — no hardcoded fallbacks
   const [timeWindows, setTimeWindows] = useState<string[]>([]);
@@ -338,7 +346,14 @@ const EnrollNowPage = () => {
   }, [tier, classType, duration, isEgypt]);
 
   const discountAmount = isFirstTime && originalPrice && !isEgypt ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
-  const finalPrice = originalPrice ? originalPrice - discountAmount : null;
+  const promoDiscountAmount = useMemo(() => {
+    if (!promoApplied || !originalPrice) return 0;
+    const base = originalPrice - discountAmount;
+    if (promoApplied.discount_pct) return Math.round(base * promoApplied.discount_pct / 100 * 100) / 100;
+    if (promoApplied.discount_flat) return Math.min(promoApplied.discount_flat, base);
+    return 0;
+  }, [promoApplied, originalPrice, discountAmount]);
+  const finalPrice = originalPrice ? Math.max(0, originalPrice - discountAmount - promoDiscountAmount) : null;
 
   const canProceedStep1 = !!selectedCountry && !!tier && !!duration;
 
@@ -499,6 +514,44 @@ const EnrollNowPage = () => {
     setPreferredDayOfWeek(day);
     setPreferredStartTime(time);
     setStep(4); // Move to payment step
+  };
+
+  // Apply promo code
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoLoading(true);
+    setPromoError("");
+    setPromoApplied(null);
+    const { data, error } = await supabase
+      .from("promo_codes")
+      .select("code, discount_pct, discount_flat, currency, max_uses, uses_count, expires_at, active")
+      .eq("code", code)
+      .eq("active", true)
+      .maybeSingle();
+    if (error || !data) {
+      setPromoError("Invalid promo code. Please check and try again.");
+      setPromoLoading(false);
+      return;
+    }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      setPromoError("This promo code has expired.");
+      setPromoLoading(false);
+      return;
+    }
+    if (data.max_uses !== null && data.uses_count >= data.max_uses) {
+      setPromoError("This promo code has reached its usage limit.");
+      setPromoLoading(false);
+      return;
+    }
+    if (data.currency && data.currency !== (isEgypt ? "EGP" : "USD")) {
+      setPromoError(`This code is only valid for ${data.currency} payments.`);
+      setPromoLoading(false);
+      return;
+    }
+    setPromoApplied({ code: data.code, discount_pct: data.discount_pct, discount_flat: data.discount_flat, currency: data.currency });
+    toast({ title: `Promo code "${code}" applied! 🎉` });
+    setPromoLoading(false);
   };
 
   const handlePay = async () => {
@@ -1038,6 +1091,13 @@ const EnrollNowPage = () => {
                     </div>
                   )}
 
+                  {promoApplied && promoDiscountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" /> {promoApplied.code}</span>
+                      <span className="font-bold">-{isEgypt ? `${promoDiscountAmount.toLocaleString()} EGP` : `$${promoDiscountAmount.toFixed(2)}`}</span>
+                    </div>
+                  )}
+
                   <div className="border-t border-border pt-2 flex justify-between">
                     <span className="font-semibold text-foreground">{t("enrollNow.total")}</span>
                     <span className="font-bold text-lg text-foreground">{isEgypt ? `${finalPrice.toLocaleString()} EGP` : `$${finalPrice.toFixed(2)}`}</span>
@@ -1049,6 +1109,51 @@ const EnrollNowPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* Promo Code */}
+              <div className="space-y-1.5">
+                {!promoApplied ? (
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Promo code"
+                        value={promoInput}
+                        onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                        onKeyDown={e => e.key === "Enter" && applyPromo()}
+                        className="pl-9 uppercase placeholder:normal-case text-sm h-9"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-4 shrink-0"
+                      onClick={applyPromo}
+                      disabled={!promoInput.trim() || promoLoading}
+                    >
+                      {promoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                        {promoApplied.code} applied!
+                        {promoApplied.discount_pct ? ` (${promoApplied.discount_pct}% off)` : promoApplied.discount_flat ? ` (${isEgypt ? `EGP ${promoApplied.discount_flat}` : `$${promoApplied.discount_flat}`} off)` : ""}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => { setPromoApplied(null); setPromoInput(""); setPromoError(""); }}
+                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+              </div>
 
               {/* Schedule Summary */}
               <div className="bg-muted rounded-lg p-4 space-y-1">
