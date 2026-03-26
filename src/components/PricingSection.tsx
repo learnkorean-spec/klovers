@@ -360,6 +360,30 @@ const PricingSection = () => {
             );
           })}
         </div>
+
+        {/* Trust strip */}
+        <div className="mt-12 flex flex-wrap justify-center gap-6 text-center">
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-2xl">🛡️</span>
+            <p className="text-sm font-semibold text-foreground">First Class Guarantee</p>
+            <p className="text-xs text-muted-foreground">Not happy? Full refund after trial.</p>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-2xl">⭐</span>
+            <p className="text-sm font-semibold text-foreground">4.9 / 5.0 Rating</p>
+            <p className="text-xs text-muted-foreground">From 100% Facebook recommendations</p>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-2xl">🇰🇷</span>
+            <p className="text-sm font-semibold text-foreground">Native-Level Teacher</p>
+            <p className="text-xs text-muted-foreground">Certified & 5+ years experience</p>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-2xl">🔒</span>
+            <p className="text-sm font-semibold text-foreground">Secure Checkout</p>
+            <p className="text-xs text-muted-foreground">Manual review · No auto-charge</p>
+          </div>
+        </div>
       </div>
     </section>
   );
