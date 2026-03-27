@@ -112,20 +112,23 @@ const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => {
       className="flex-shrink-0 w-72 bg-card border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
       dir={review.lang === "ar" ? "rtl" : "ltr"}
     >
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-          {initials}
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-sm text-foreground truncate">{review.name}</span>
-            <span className="text-base leading-none">{review.flag}</span>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+            {initials}
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <StarRow />
-            <span className="text-xs text-muted-foreground">{review.date}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-sm text-foreground truncate">{review.name}</span>
+              <span className="text-base leading-none">{review.flag}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <StarRow />
+              <span className="text-xs text-muted-foreground">{review.date}</span>
+            </div>
           </div>
         </div>
+        <Facebook className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{review.text}</p>
     </div>
@@ -165,12 +168,17 @@ const TestimonialsSection = () => {
     <section className="py-20 bg-background overflow-hidden">
       <div className="container mx-auto px-4 mb-10 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-1.5 mb-5">
+        <a
+          href="https://www.facebook.com/kloversegy/reviews"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-1.5 mb-5 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+        >
           <Facebook className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
             100% Recommend · 16 Facebook Reviews
           </span>
-        </div>
+        </a>
 
         <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
           What Our Students Say
