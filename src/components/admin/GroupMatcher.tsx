@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send } from "lucide-react";
+import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { normalizeLevel } from "@/constants/levels";
 
@@ -28,6 +28,7 @@ interface UnmatchedEnrollment {
   payment_status: string | null;
   approval_status: string | null;
   created_at: string | null;
+  receipt_url: string | null;
   name?: string;
   email?: string;
 }
@@ -103,7 +104,7 @@ const GroupMatcher = () => {
     // Fetch unmatched group enrollments
     const { data: rawGroupEnrollments, error } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at")
+      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
       .is("matched_at", null);
@@ -111,7 +112,7 @@ const GroupMatcher = () => {
     // Fetch unmatched private enrollments
     const { data: rawPrivateEnrollments, error: privateError } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at")
+      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "private")
       .is("matched_at", null);
@@ -213,6 +214,27 @@ const GroupMatcher = () => {
       await handleSendReminder(userIds, `${userIds.length} students`);
     }
     setSendingAllReminders(false);
+  };
+
+  const handleViewReceipt = async (receiptUrl: string | null, studentName?: string) => {
+    if (!receiptUrl) {
+      toast({ title: "No receipt", description: "No payment proof uploaded yet.", variant: "destructive" });
+      return;
+    }
+    if (receiptUrl.startsWith("stripe:")) {
+      toast({ title: "Stripe payment", description: "Payment was processed via Stripe — no manual receipt." });
+      return;
+    }
+    if (receiptUrl.startsWith("http")) {
+      window.open(receiptUrl, "_blank");
+      return;
+    }
+    const { data, error } = await supabase.storage.from("receipts").createSignedUrl(receiptUrl, 600);
+    if (error || !data?.signedUrl) {
+      toast({ title: "Could not open receipt", description: error?.message || "Failed to generate link.", variant: "destructive" });
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
   };
 
   useEffect(() => {
@@ -571,7 +593,10 @@ const GroupMatcher = () => {
                               <Badge variant="outline" className="text-xs">{m.payment_provider}</Badge>
                             )}
                             {m.payment_method && (
-                              <span>{m.payment_method.replace(/_/g, " ")}</span>
+                              <span className="flex items-center gap-1">
+                                <CreditCard className="h-3 w-3" />
+                                {m.payment_method.replace(/_/g, " ")}
+                              </span>
                             )}
                             <span className="flex items-center gap-1">
                               <Globe className="h-3 w-3" />
@@ -580,6 +605,18 @@ const GroupMatcher = () => {
                             {m.level && (
                               <Badge variant="outline" className="text-xs">{m.level.replace(/_/g, " ")}</Badge>
                             )}
+                            <button
+                              onClick={() => handleViewReceipt(m.receipt_url, m.name)}
+                              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-colors ${
+                                m.receipt_url
+                                  ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                              }`}
+                              title={m.receipt_url ? "View payment proof" : "No receipt uploaded"}
+                            >
+                              <FileText className="h-3 w-3" />
+                              {m.receipt_url ? "View Receipt" : "No Receipt"}
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -735,9 +772,27 @@ const GroupMatcher = () => {
                           {m.classes_included != null && (
                             <span>{m.classes_included} classes</span>
                           )}
+                          {m.payment_method && (
+                            <span className="flex items-center gap-1">
+                              <CreditCard className="h-3 w-3" />
+                              {m.payment_method.replace(/_/g, " ")}
+                            </span>
+                          )}
                           {m.level ? (
                             <Badge variant="outline" className="text-xs">{m.level.replace(/_/g, " ")}</Badge>
                           ) : null}
+                          <button
+                            onClick={() => handleViewReceipt(m.receipt_url, m.name)}
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-colors ${
+                              m.receipt_url
+                                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                            }`}
+                            title={m.receipt_url ? "View payment proof" : "No receipt uploaded"}
+                          >
+                            <FileText className="h-3 w-3" />
+                            {m.receipt_url ? "View Receipt" : "No Receipt"}
+                          </button>
                         </div>
                         {(missingLevel || missingSchedule) && (
                           <div className="flex flex-wrap gap-2">
