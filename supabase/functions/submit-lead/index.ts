@@ -55,13 +55,6 @@ Deno.serve(async (req) => {
     const { name, email, country, level, goal, plan_type, duration, schedule, timezone, source, user_id } = body;
 
     // Server-side validation
-    if (!name || typeof name !== "string" || name.trim().length === 0 || name.length > 100) {
-      return new Response(
-        JSON.stringify({ error: "Invalid name. Must be 1-100 characters." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!email || typeof email !== "string" || !emailRegex.test(email) || email.length > 254) {
       return new Response(
@@ -69,6 +62,13 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Name is optional — fall back to email prefix if empty or too long
+    const resolvedName = (
+      name && typeof name === "string" && name.trim().length > 0 && name.length <= 100
+        ? name.trim()
+        : email.split("@")[0]
+    );
 
     if (country && (typeof country !== "string" || country.length > 100)) {
       return new Response(
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
 
     // Upsert by email: update existing or insert new
     const upsertPayload: Record<string, any> = {
-      name: name.trim(),
+      name: resolvedName,
       email: normalizedEmail,
       country: country?.trim() || "",
       level: level?.trim() || "",

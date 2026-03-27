@@ -320,8 +320,18 @@ const EnrollNowPage = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       setUserId(session.user.id);
-      setName(session.user.user_metadata?.name || "");
       setEmail(session.user.email || "");
+
+      // Prefer profile name → user_metadata name → email prefix as last resort
+      const metaName = session.user.user_metadata?.name || "";
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      const profileName = (profile as any)?.name || "";
+      const fallbackName = (session.user.email || "").split("@")[0];
+      setName(profileName || metaName || fallbackName);
 
       const { count } = await supabase
         .from("enrollments")
