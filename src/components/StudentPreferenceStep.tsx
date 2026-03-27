@@ -13,6 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertCircle, Calendar } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -38,6 +39,11 @@ const StudentPreferenceStep = ({
   loading,
   userLevel,
 }: StudentPreferenceStepProps) => {
+  const { t, tArray } = useLanguage();
+  const localDayNames: string[] = (tArray("enrollNow", "dayNames") as string[]).length === 7
+    ? tArray("enrollNow", "dayNames") as string[]
+    : DAYS;
+
   const [availableTimes, setAvailableTimes] = useState<{ day: number; dayName: string; time: string }[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(true);
   const [preferredDay, setPreferredDay] = useState<string>("");
@@ -94,12 +100,12 @@ const StudentPreferenceStep = ({
     setFormError("");
 
     if (!preferredDay) {
-      setFormError("Please select a day");
+      setFormError(t("enrollNow.prefStepSelectDay"));
       return;
     }
 
     if (!preferredTime) {
-      setFormError("Please select a time");
+      setFormError(t("enrollNow.prefStepSelectTimeErr"));
       return;
     }
 
@@ -112,16 +118,16 @@ const StudentPreferenceStep = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Your Preferred Schedule
+            {t("enrollNow.prefStepTitle")}
           </CardTitle>
           <CardDescription>
-            Tell us when you'd like to attend classes. This helps us create schedules based on student demand.
+            {t("enrollNow.prefStepDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Day Selection */}
           <div className="space-y-3">
-            <Label className="font-semibold">Which day do you prefer?</Label>
+            <Label className="font-semibold">{t("enrollNow.prefStepWhichDay")}</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {DAYS.map((day, idx) => (
                 <Button
@@ -135,7 +141,7 @@ const StudentPreferenceStep = ({
                   }}
                   disabled={loadingTimes}
                 >
-                  {day}
+                  {localDayNames[idx] ?? day}
                 </Button>
               ))}
             </div>
@@ -143,7 +149,7 @@ const StudentPreferenceStep = ({
 
           {/* Time Selection */}
           {loadingTimes ? (
-            <div className="text-center text-muted-foreground py-4">Loading available times...</div>
+            <div className="text-center text-muted-foreground py-4">{t("enrollNow.prefStepLoadingTimes")}</div>
           ) : !preferredDay ? null : (() => {
             // Use live teacher times if available, otherwise fall back to preset options
             const usePresets = availableTimes.length === 0;
@@ -159,24 +165,24 @@ const StudentPreferenceStep = ({
             return (
               <div className="space-y-3">
                 <Label htmlFor="time-select" className="font-semibold">
-                  What time works best?
+                  {t("enrollNow.prefStepWhatTime")}
                 </Label>
                 {usePresets && (
                   <p className="text-xs text-muted-foreground">
-                    💡 Suggest a time — we'll build the live schedule based on most-requested slots.
+                    {t("enrollNow.prefStepSuggestTime")}
                   </p>
                 )}
                 {timeOptions.length === 0 ? (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
                     <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-amber-800">
-                      No times for {DAYS[parseInt(preferredDay)]} yet. Please choose another day.
+                      {t("enrollNow.prefStepNoTimes").replace("{day}", localDayNames[parseInt(preferredDay)] ?? DAYS[parseInt(preferredDay)])}
                     </p>
                   </div>
                 ) : (
                   <Select value={preferredTime} onValueChange={setPreferredTime}>
                     <SelectTrigger id="time-select">
-                      <SelectValue placeholder="Select a time..." />
+                      <SelectValue placeholder={t("enrollNow.prefStepSelectTime")} />
                     </SelectTrigger>
                     <SelectContent>
                       {timeOptions.map((opt) => (
@@ -200,10 +206,8 @@ const StudentPreferenceStep = ({
 
           {/* Info */}
           <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-900 dark:text-blue-200">
-            <p className="font-semibold mb-1">📊 Why we're asking:</p>
-            <p>
-              Your preference is recorded and shown to our admin. The most-requested days &amp; times get turned into live schedule slots — so you directly influence when classes are created!
-            </p>
+            <p className="font-semibold mb-1">{t("enrollNow.prefStepWhyAskingTitle")}</p>
+            <p>{t("enrollNow.prefStepWhyAskingBody")}</p>
           </div>
         </CardContent>
       </Card>
@@ -216,7 +220,7 @@ const StudentPreferenceStep = ({
           onClick={onBack}
           disabled={loading}
         >
-          Back
+          {t("enrollNow.prefStepBack")}
         </Button>
         <Button
           type="button"
@@ -224,7 +228,7 @@ const StudentPreferenceStep = ({
           disabled={loading || loadingTimes || !preferredDay || !preferredTime}
           className="gap-2"
         >
-          Continue to Payment
+          {t("enrollNow.prefStepContinue")}
         </Button>
       </div>
     </div>

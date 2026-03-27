@@ -91,7 +91,10 @@ const EnrollNowPage = () => {
   }, []);
 
   const [searchParams] = useSearchParams();
-  const { t } = useLanguage();
+  const { t, tArray } = useLanguage();
+  const localDayNames: string[] = tArray("enrollNow", "dayNames").length === 7
+    ? tArray("enrollNow", "dayNames") as string[]
+    : DAY_NAMES;
 
   const initialStep = Number(searchParams.get("step")) as Step;
   const [step, setStep] = useState<Step>(initialStep === 2 || initialStep === 3 ? initialStep : 1);
@@ -885,10 +888,10 @@ const EnrollNowPage = () => {
                 ) : levelSlots.length === 0 ? (
                   <div className="space-y-3">
                     <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
-                      📅 No live schedule for this level yet — pick your preferred day and we'll create slots based on student demand!
+                      {t("enrollNow.noLiveSchedule")}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {DAY_NAMES.map((day) => (
+                      {DAY_NAMES.map((day, idx) => (
                         <button
                           type="button"
                           key={day}
@@ -899,7 +902,7 @@ const EnrollNowPage = () => {
                               : "border-border text-foreground hover:border-primary/50"
                           }`}
                         >
-                          {day}
+                          {localDayNames[idx] ?? day}
                         </button>
                       ))}
                     </div>
@@ -908,6 +911,8 @@ const EnrollNowPage = () => {
                   <div className="flex flex-wrap gap-2">
                     {levelSlots.map(({ day, time, seatsLeft }) => {
                       const isFull = classType !== "private" && seatsLeft <= 0;
+                      const dayIdx = DAY_NAMES.indexOf(day);
+                      const translatedDay = dayIdx >= 0 ? (localDayNames[dayIdx] ?? day) : day;
                       return (
                         <button
                           type="button"
@@ -922,7 +927,7 @@ const EnrollNowPage = () => {
                                 : "border-border text-foreground hover:border-primary/50"
                           }`}
                         >
-                          <span className="font-semibold">{day}</span>
+                          <span className="font-semibold">{translatedDay}</span>
                           <span className={`text-xs ${isFull ? "text-destructive font-semibold" : preferredDays.includes(day) ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                             {isFull ? t("enrollNow.full") : time}
                           </span>
@@ -984,7 +989,7 @@ const EnrollNowPage = () => {
               )}
 
               <p className="text-xs text-muted-foreground text-center">
-                Your schedule will be confirmed within 24 hours after payment.
+                {t("enrollNow.scheduleConfirmNote")}
               </p>
 
               <Button type="button" className="w-full" size="lg" disabled={!canProceedStep2} onClick={handleGoToStep3}>
