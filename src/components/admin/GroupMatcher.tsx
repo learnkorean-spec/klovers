@@ -14,6 +14,7 @@ interface UnmatchedEnrollment {
   user_id: string;
   plan_type: string;
   preferred_day: string | null;
+  preferred_days: string[] | null;
   preferred_start: string | null;
   preferred_time: string | null;
   timezone: string | null;
@@ -81,7 +82,22 @@ const DAY_NAME_TO_NUM: Record<string, number> = {
   thursday: 4, friday: 5, saturday: 6,
 };
 
-
+function computeMatchingSlots(
+  enrollment: UnmatchedEnrollment,
+  slots: { day: number; time: string }[]
+): { day: string; time: string }[] {
+  const prefDays: string[] = [
+    ...(enrollment.preferred_days || []),
+    ...(enrollment.preferred_day ? [enrollment.preferred_day] : []),
+  ];
+  const prefNums = prefDays
+    .map(d => DAY_NAME_TO_NUM[d.toLowerCase()] ?? -1)
+    .filter(n => n !== -1);
+  const filtered = prefNums.length > 0
+    ? slots.filter(s => prefNums.includes(s.day))
+    : slots;
+  return filtered.map(s => ({ day: DAY_NAMES[s.day], time: s.time.slice(0, 5) }));
+}
 
 // --- dedup: returns enrollment IDs not yet emailed within cooldown hours ---
 const AUTO_EMAIL_COOLDOWN_HOURS = 24;
@@ -110,13 +126,14 @@ function hasMissingInfo(e: UnmatchedEnrollment): boolean {
   if (!e.name || e.name === "Unknown" || e.name.trim() === "") return true;
   if (!e.level) return true;
   if (!e.timezone) return true;
-  if (e.plan_type === "private" && !e.preferred_day && !e.preferred_time) return true;
+  if (e.plan_type === "private" && !e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0) && !e.preferred_time) return true;
   return false;
 }
 
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
   const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
+  const [teacherSlots, setTeacherSlots] = useState<{ day: number; time: string }[]>([]);
   const [packages, setPackages] = useState<SchedulePackage[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +185,7 @@ const GroupMatcher = () => {
     // Fetch unmatched group enrollments
     const { data: rawGroupEnrollments, error } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
+      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
       .is("matched_at", null);
@@ -176,7 +193,7 @@ const GroupMatcher = () => {
     // Fetch unmatched private enrollments
     const { data: rawPrivateEnrollments, error: privateError } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
+      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "private")
       .is("matched_at", null);
@@ -225,6 +242,16 @@ const GroupMatcher = () => {
 
     setEnrollments(enrichGroup);
     setPrivateUnmatched(enrichPrivate);
+
+    // Fetch teacher availability for slot matching
+    const { data: availability } = await supabase
+      .from("teacher_availability")
+      .select("day_of_week, start_time")
+      .eq("is_available", true)
+      .order("day_of_week")
+      .order("start_time");
+    setTeacherSlots((availability || []).map((a: any) => ({ day: a.day_of_week, time: a.start_time })));
+
     setLoading(false);
 
     // Auto-send emails to students with missing info (deduplicated per 24 h)
@@ -813,7 +840,7 @@ const GroupMatcher = () => {
                 <div className="space-y-2">
                   {privateUnmatched.map((m) => {
                     const missingLevel = !m.level;
-                    const missingSchedule = !m.preferred_day && !m.preferred_time;
+                    const missingSchedule = !m.preferred_day && (!m.preferred_days || m.preferred_days.length === 0) && !m.preferred_time;
                     const hasMissing = missingLevel || missingSchedule;
                     return (
                       <div key={m.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-2">
@@ -883,8 +910,54 @@ const GroupMatcher = () => {
                             {m.receipt_url ? "View Receipt" : "No Receipt"}
                           </button>
                         </div>
+                        {/* Preferred days chips */}
+                        {(m.preferred_days && m.preferred_days.length > 0) ? (
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <span className="text-xs text-muted-foreground">Preferred days:</span>
+                            {m.preferred_days.map(d => (
+                              <Badge key={d} variant="outline" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-700">{d}</Badge>
+                            ))}
+                          </div>
+                        ) : m.preferred_day ? (
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <span className="text-xs text-muted-foreground">Preferred day:</span>
+                            <Badge variant="outline" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-700">{m.preferred_day}</Badge>
+                          </div>
+                        ) : null}
+
+                        {/* Time / start / timezone */}
+                        {(m.preferred_time || m.preferred_start || m.timezone) && (
+                          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
+                            {m.preferred_time && <span>⏰ Time: <span className="font-medium text-foreground">{m.preferred_time}</span></span>}
+                            {m.preferred_start && <span>📅 Start: <span className="font-medium text-foreground">{m.preferred_start}</span></span>}
+                            {m.timezone && <span>🌍 <span className="font-medium text-foreground">{m.timezone}</span></span>}
+                          </div>
+                        )}
+
+                        {/* Recommended teacher slots */}
+                        {(() => {
+                          if (teacherSlots.length === 0) return (
+                            <div className="mt-1 text-xs text-amber-600 dark:text-amber-400">⚠ No teacher availability configured yet</div>
+                          );
+                          const matches = computeMatchingSlots(m, teacherSlots);
+                          if (matches.length === 0) return (
+                            <div className="mt-1 text-xs text-amber-600 dark:text-amber-400">⚠ No teacher slots match this student's preferred days</div>
+                          );
+                          return (
+                            <div className="mt-1 flex flex-wrap items-center gap-1">
+                              <span className="text-xs font-semibold text-green-700 dark:text-green-400">✓ Recommended slots:</span>
+                              {matches.slice(0, 5).map((s, i) => (
+                                <Badge key={i} className="text-[10px] bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700">
+                                  {s.day} {s.time}
+                                </Badge>
+                              ))}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Missing info alerts */}
                         {(missingLevel || missingSchedule) && (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2 mt-1">
                             {missingLevel && (
                               <Badge variant="destructive" className="text-xs">
                                 <AlertTriangle className="h-3 w-3 mr-1" />

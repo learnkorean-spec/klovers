@@ -1164,32 +1164,38 @@ const AdminDashboard = () => {
                                   <Badge variant={e.approval_status === "APPROVED" ? "default" : e.approval_status === "REJECTED" ? "destructive" : "secondary"}>
                                     {e.approval_status}
                                   </Badge>
-                                  {e.receipt_url && e.receipt_url.length > 0 && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={async () => {
-                                        if (e.receipt_url.startsWith("stripe:")) {
-                                          toast({ title: "Stripe receipt", description: "This enrollment was paid via Stripe." });
-                                          return;
-                                        }
-                                        if (e.receipt_url.startsWith("http")) {
-                                          window.open(e.receipt_url, "_blank");
-                                          return;
-                                        }
-                                        const { data, error } = await supabase.storage
-                                          .from("receipts")
-                                          .createSignedUrl(e.receipt_url, 600);
-                                        if (error || !data?.signedUrl) {
-                                          toast({ title: "Error", description: "Could not load receipt.", variant: "destructive" });
-                                          return;
-                                        }
-                                        window.open(data.signedUrl, "_blank");
-                                      }}
-                                    >
-                                      <Eye className="h-4 w-4 mr-1" /> Receipt
-                                    </Button>
-                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={!e.receipt_url || e.receipt_url.length === 0}
+                                    className={e.receipt_url && e.receipt_url.length > 0
+                                      ? "border-green-400 text-green-700 hover:bg-green-50 dark:text-green-400 dark:border-green-600 dark:hover:bg-green-950/30"
+                                      : "opacity-50 cursor-not-allowed"
+                                    }
+                                    title={e.receipt_url && e.receipt_url.length > 0 ? "View payment receipt" : "No receipt uploaded yet"}
+                                    onClick={async () => {
+                                      if (!e.receipt_url || e.receipt_url.length === 0) return;
+                                      if (e.receipt_url.startsWith("stripe:")) {
+                                        toast({ title: "Stripe payment", description: "This enrollment was paid via Stripe — no manual receipt." });
+                                        return;
+                                      }
+                                      if (e.receipt_url.startsWith("http")) {
+                                        window.open(e.receipt_url, "_blank");
+                                        return;
+                                      }
+                                      const { data, error } = await supabase.storage
+                                        .from("receipts")
+                                        .createSignedUrl(e.receipt_url, 600);
+                                      if (error || !data?.signedUrl) {
+                                        toast({ title: "Error", description: "Could not load receipt.", variant: "destructive" });
+                                        return;
+                                      }
+                                      window.open(data.signedUrl, "_blank");
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    {e.receipt_url && e.receipt_url.length > 0 ? "Receipt ✓" : "No Receipt"}
+                                  </Button>
                                    {(e.approval_status === "PENDING" || e.approval_status === "UNDER_REVIEW" || e.approval_status === "PENDING_PAYMENT") && (
                                     <>
                                       <Button size="sm" variant="outline" onClick={() => setEditingUnitPrice((prev) => ({ ...prev, [e.id]: String(e.unit_price) }))}>
