@@ -83,6 +83,37 @@ const DAY_NAME_TO_NUM: Record<string, number> = {
 
 
 
+// --- dedup: returns enrollment IDs not yet emailed within cooldown hours ---
+const AUTO_EMAIL_COOLDOWN_HOURS = 24;
+const AUTO_EMAIL_KEY = "klovers_auto_reminder_sent";
+
+function getAutoEmailLog(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(AUTO_EMAIL_KEY) || "{}"); } catch { return {}; }
+}
+function markAutoEmailSent(ids: string[]) {
+  const log = getAutoEmailLog();
+  const now = Date.now();
+  ids.forEach(id => { log[id] = now; });
+  // prune old entries
+  Object.keys(log).forEach(id => {
+    if (now - log[id] > AUTO_EMAIL_COOLDOWN_HOURS * 3600 * 1000) delete log[id];
+  });
+  localStorage.setItem(AUTO_EMAIL_KEY, JSON.stringify(log));
+}
+function filterNotYetEmailed(ids: string[]): string[] {
+  const log = getAutoEmailLog();
+  const now = Date.now();
+  return ids.filter(id => !log[id] || now - log[id] > AUTO_EMAIL_COOLDOWN_HOURS * 3600 * 1000);
+}
+
+function hasMissingInfo(e: UnmatchedEnrollment): boolean {
+  if (!e.name || e.name === "Unknown" || e.name.trim() === "") return true;
+  if (!e.level) return true;
+  if (!e.timezone) return true;
+  if (e.plan_type === "private" && !e.preferred_day && !e.preferred_time) return true;
+  return false;
+}
+
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
   const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
@@ -93,10 +124,43 @@ const GroupMatcher = () => {
   const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
   const [sendingAllReminders, setSendingAllReminders] = useState(false);
+  const [autoEmailsSent, setAutoEmailsSent] = useState<number | null>(null);
   const [createdGroup, setCreatedGroup] = useState<{ name: string; level: string } | null>(null);
   const [suggestedSlots, setSuggestedSlots] = useState<SuggestedSlot[]>([]);
   const [nameDialogCluster, setNameDialogCluster] = useState<Cluster | null>(null);
   const [groupNameInput, setGroupNameInput] = useState("");
+
+  const autoSendMissingInfoEmails = async (
+    groupEnrollments: UnmatchedEnrollment[],
+    privateEnrollments: UnmatchedEnrollment[],
+    reviewEnrollments: UnmatchedEnrollment[]
+  ) => {
+    const allWithMissing = [
+      ...groupEnrollments,
+      ...privateEnrollments,
+      ...reviewEnrollments,
+    ].filter(hasMissingInfo);
+
+    if (allWithMissing.length === 0) return;
+
+    // Only send to those not emailed in the last 24 h
+    const toSend = filterNotYetEmailed(allWithMissing.map(e => e.id));
+    if (toSend.length === 0) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke("send-private-reminder", {
+        body: { enrollment_ids: toSend, plan_types: ["private", "group"] },
+      });
+      if (error) throw error;
+      const result = data as { sent?: number; skipped?: number };
+      if ((result.sent ?? 0) > 0) {
+        markAutoEmailSent(toSend);
+        setAutoEmailsSent(result.sent ?? 0);
+      }
+    } catch (err: any) {
+      console.error("Auto-reminder error:", err.message);
+    }
+  };
 
   const fetchUnmatched = async () => {
     setLoading(true);
@@ -162,6 +226,9 @@ const GroupMatcher = () => {
     setEnrollments(enrichGroup);
     setPrivateUnmatched(enrichPrivate);
     setLoading(false);
+
+    // Auto-send emails to students with missing info (deduplicated per 24 h)
+    autoSendMissingInfoEmails(enrichGroup, enrichPrivate, []);
   };
 
   const handleMarkAssigned = async (enrollment: UnmatchedEnrollment) => {
@@ -460,6 +527,19 @@ const GroupMatcher = () => {
 
   return (
     <div className="space-y-4">
+      {/* Auto-email notification banner */}
+      {autoEmailsSent !== null && autoEmailsSent > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 text-sm">
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0" />
+            <span className="text-yellow-800 dark:text-yellow-200 font-medium">
+              Auto-sent {autoEmailsSent} reminder{autoEmailsSent !== 1 ? "s" : ""} to students with missing info
+            </span>
+          </div>
+          <button onClick={() => setAutoEmailsSent(null)} className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 text-lg leading-none">×</button>
+        </div>
+      )}
+
       {/* Success + Suggested Slots */}
       {createdGroup && (
         <Card className="border-primary/50 bg-primary/5">
@@ -618,6 +698,15 @@ const GroupMatcher = () => {
                               {m.receipt_url ? "View Receipt" : "No Receipt"}
                             </button>
                           </div>
+                          {hasMissingInfo(m) && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {(!m.name || m.name === "Unknown") && <Badge variant="destructive" className="text-xs">Missing name</Badge>}
+                              {!m.level && <Badge variant="destructive" className="text-xs">Missing level</Badge>}
+                              {!m.timezone && <Badge variant="secondary" className="text-xs"><Clock className="h-3 w-3 mr-1" />Missing timezone</Badge>}
+                              {m.plan_type === "private" && !m.preferred_day && !m.preferred_time && <Badge variant="secondary" className="text-xs"><Clock className="h-3 w-3 mr-1" />Missing schedule</Badge>}
+                              <Badge className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">📧 Reminder sent</Badge>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
