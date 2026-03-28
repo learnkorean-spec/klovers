@@ -12,7 +12,10 @@ import Footer from "@/components/Footer";
 import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle, Sparkles, ArrowRight } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
-const ACCOUNT_NUMBER = "00601121777560";
+const METHOD_DETAILS: Record<string, { label: string; value: string }> = {
+  vodafone_cash: { label: "Send to Vodafone Cash number", value: "+201010003084" },
+  instapay:      { label: "Transfer to bank account",     value: "00601121777560" },
+};
 
 const METHODS = [
   { value: "vodafone_cash", label: "Vodafone Cash", icon: "📱" },
@@ -205,8 +208,10 @@ const PaymentForm = ({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const copyAccount = () => {
-    navigator.clipboard.writeText(ACCOUNT_NUMBER);
-    toast({ title: "Copied!", description: "Account number copied to clipboard." });
+    const detail = METHOD_DETAILS[paymentMethod];
+    if (!detail) return;
+    navigator.clipboard.writeText(detail.value);
+    toast({ title: "Copied!", description: `${detail.label} copied to clipboard.` });
   };
 
   const handleSubmit = () => {
@@ -220,17 +225,6 @@ const PaymentForm = ({
         <CardTitle className="text-lg">Submit Payment</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Account Number */}
-        <div className="bg-muted rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Transfer to this account</p>
-          <div className="flex items-center gap-2">
-            <code className="text-lg font-mono font-bold text-foreground flex-1">{ACCOUNT_NUMBER}</code>
-            <Button variant="outline" size="sm" type="button" onClick={copyAccount}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
         {/* Payment Method */}
         <div className="space-y-2">
           <Label>Payment Method *</Label>
@@ -252,6 +246,32 @@ const PaymentForm = ({
             ))}
           </div>
         </div>
+
+        {/* Transfer details — shown only after method is selected */}
+        {paymentMethod === "bank_transfer" && (
+          <div className="bg-muted rounded-lg p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">Contact us on WhatsApp to get bank transfer details</p>
+            <a
+              href={WHATSAPP_BASE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2 rounded-lg transition-colors w-full justify-center"
+            >
+              💬 Contact us on WhatsApp
+            </a>
+          </div>
+        )}
+        {paymentMethod && paymentMethod !== "bank_transfer" && METHOD_DETAILS[paymentMethod] && (
+          <div className="bg-muted rounded-lg p-4">
+            <p className="text-xs text-muted-foreground mb-1">{METHOD_DETAILS[paymentMethod].label}</p>
+            <div className="flex items-center gap-2">
+              <code className="text-lg font-mono font-bold text-foreground flex-1">{METHOD_DETAILS[paymentMethod].value}</code>
+              <Button variant="outline" size="sm" type="button" onClick={copyAccount}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Payment Date */}
         <div className="space-y-2">
