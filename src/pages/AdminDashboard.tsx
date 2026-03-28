@@ -115,6 +115,10 @@ const AdminDashboard = () => {
   const [adminTab, setAdminTab] = useState("students");
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [sendingReminder, setSendingReminder] = useState<Set<string>>(new Set());
+  const [rejectTarget, setRejectTarget] = useState<Enrollment | null>(null);
+  const [rejectReason, setRejectReason] = useState<"payment_not_received" | "time_slots_unavailable" | "other">("payment_not_received");
+  const [rejectNote, setRejectNote] = useState("");
+  const [rejecting, setRejecting] = useState(false);
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
@@ -403,6 +407,42 @@ const AdminDashboard = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectTarget) return;
+    setRejecting(true);
+    try {
+      let resubmitLink: string | undefined;
+      if (rejectReason === "time_slots_unavailable") {
+        const token = crypto.randomUUID().replace(/-/g, "");
+        await (supabase as any).from("schedule_resubmission_requests").insert({
+          enrollment_id: rejectTarget.id,
+          user_id: rejectTarget.user_id,
+          email: rejectTarget.profiles?.email || "",
+          token,
+        });
+        resubmitLink = `${window.location.origin}/resubmit-schedule?token=${token}`;
+      }
+      await handleEnrollmentAction(rejectTarget, "REJECTED");
+      await supabase.functions.invoke("send-confirmation-email", {
+        body: {
+          template: "rejection",
+          email: rejectTarget.profiles?.email,
+          name: rejectTarget.profiles?.name ?? "Student",
+          language: "ar",
+          rejection_reason: rejectReason,
+          rejection_note: rejectNote.trim() || undefined,
+          resubmit_link: resubmitLink,
+        },
+      });
+      toast({ title: "Rejected & notified", description: `Email sent to ${rejectTarget.profiles?.email}` });
+      setRejectTarget(null);
+    } catch {
+      toast({ title: "Error", description: "Failed to reject or send email.", variant: "destructive" });
+    } finally {
+      setRejecting(false);
+    }
   };
 
   const handleSendPaymentMethodReminder = async (e: Enrollment) => {
@@ -1265,7 +1305,7 @@ const AdminDashboard = () => {
                                           <Check className="h-4 w-4 mr-1" /> Approve
                                         </Button>
                                       )}
-                                      <Button size="sm" variant="destructive" onClick={() => handleEnrollmentAction(e, "REJECTED")}>
+                                      <Button size="sm" variant="destructive" onClick={() => { setRejectTarget(e); setRejectReason("payment_not_received"); setRejectNote(""); }}>
                                         <X className="h-4 w-4 mr-1" /> Reject
                                       </Button>
                                     </>
@@ -1816,6 +1856,54 @@ const AdminDashboard = () => {
           </Suspense>
         </div>
       </div>
+      {/* Rejection reason dialog */}
+      {rejectTarget && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-foreground">Reject Enrollment</h3>
+            <p className="text-sm text-muted-foreground">{rejectTarget.profiles?.name || "Unknown"} — {rejectTarget.profiles?.email}</p>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Reason *</p>
+              <div className="space-y-2">
+                {([
+                  { value: "payment_not_received", label: "💳 Payment not received", desc: "We couldn't confirm the transfer." },
+                  { value: "time_slots_unavailable", label: "📅 Time slots unavailable", desc: "Student gets a link to pick new available slots." },
+                  { value: "other", label: "✏️ Other", desc: "Provide a note below." },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setRejectReason(opt.value)}
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${rejectReason === opt.value ? "border-destructive bg-destructive/5" : "border-border hover:border-destructive/40"}`}
+                  >
+                    <p className="text-sm font-medium text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Additional note (optional)</p>
+              <textarea
+                className="w-full border border-border rounded-lg p-2 text-sm resize-none h-20 bg-background text-foreground"
+                placeholder="e.g. Please re-enroll with a clearer receipt."
+                value={rejectNote}
+                onChange={ev => setRejectNote(ev.target.value)}
+                maxLength={300}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setRejectTarget(null)} disabled={rejecting}>Cancel</Button>
+              <Button variant="destructive" onClick={handleConfirmReject} disabled={rejecting}>
+                {rejecting ? "Rejecting…" : "Confirm Reject & Notify"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </TooltipProvider>
   );
 };
