@@ -14,8 +14,11 @@ interface EmailPayload {
   sessions_total?: number;
   amount?: number;
   language?: string;
-  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review" | "payment_method_reminder";
+  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review" | "payment_method_reminder" | "rejection";
   enrollment_id?: string;
+  rejection_reason?: "payment_not_received" | "time_slots_unavailable" | "other";
+  rejection_note?: string;
+  resubmit_link?: string;
   group_name?: string;
   group_days?: string;
   group_members?: string[];
@@ -373,6 +376,95 @@ function buildPendingReviewEmail(p: EmailPayload) {
   };
 }
 
+function buildRejectionEmail(p: EmailPayload) {
+  const isAr = p.language === "ar";
+  const reason = p.rejection_reason ?? "other";
+
+  let bodyEn = "";
+  let bodyAr = "";
+  let subjectEn = "KLovers — Enrollment Update";
+  let subjectAr = "KLovers — تحديث حول تسجيلك";
+
+  if (reason === "payment_not_received") {
+    subjectEn = "KLovers — Enrollment Rejected: Payment Not Confirmed";
+    subjectAr = "KLovers — تم رفض التسجيل: لم يتم تأكيد الدفع";
+    bodyEn = `
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
+      <p>We're sorry, but your enrollment has been <strong>rejected</strong> because we were unable to confirm that the payment was received.</p>
+      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <p style="margin: 0; color: #991b1b; font-size: 13px;">💳 <strong>Reason:</strong> Payment transfer could not be confirmed.</p>
+      </div>
+      <p>Please re-enroll and make sure to transfer the correct amount and upload a clear receipt.</p>
+      <div style="margin: 24px 0; text-align: center;">
+        ${brandButton("Re-Enroll Now", "https://kloversegy.com/enroll-now")}
+      </div>
+      ${p.rejection_note ? `<p style="color: ${BRAND_MUTED}; font-size: 13px;"><strong>Note from admin:</strong> ${p.rejection_note}</p>` : ""}
+      <p style="color: ${BRAND_MUTED}; font-size: 13px;">Need help? Contact us on WhatsApp.</p>
+    `;
+    bodyAr = `
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
+      <p>نأسف لإبلاغك بأنه تم <strong>رفض</strong> طلب تسجيلك لعدم تمكننا من تأكيد استلام الدفعة.</p>
+      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <p style="margin: 0; color: #991b1b; font-size: 13px;">💳 <strong>السبب:</strong> لم يتم التحقق من تحويل الدفعة.</p>
+      </div>
+      <p>يرجى إعادة التسجيل مع التأكد من تحويل المبلغ الصحيح ورفع إيصال واضح.</p>
+      <div style="margin: 24px 0; text-align: center;">
+        ${brandButton("إعادة التسجيل", "https://kloversegy.com/enroll-now")}
+      </div>
+      ${p.rejection_note ? `<p style="color: ${BRAND_MUTED}; font-size: 13px;"><strong>ملاحظة:</strong> ${p.rejection_note}</p>` : ""}
+      <p style="color: ${BRAND_MUTED}; font-size: 13px;">تواصل معنا عبر واتساب إذا احتجت مساعدة.</p>
+    `;
+  } else if (reason === "time_slots_unavailable") {
+    subjectEn = "KLovers — No Available Time Slots — Choose a New Time";
+    subjectAr = "KLovers — لا توجد مواعيد متاحة — اختر موعداً جديداً";
+    const ctaBtn = p.resubmit_link ? brandButton(isAr ? "اختر موعدك المناسب" : "Choose Your Preferred Slot", p.resubmit_link) : "";
+    bodyEn = `
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
+      <p>Unfortunately, there are currently <strong>no available time slots</strong> that match your preferred schedule.</p>
+      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <p style="margin: 0; color: #92400e; font-size: 13px;">📅 Please use the button below to view available slots and select a new time that works for you.</p>
+      </div>
+      ${ctaBtn ? `<div style="margin: 24px 0; text-align: center;">${ctaBtn}</div>` : ""}
+      ${p.rejection_note ? `<p style="color: ${BRAND_MUTED}; font-size: 13px;"><strong>Note:</strong> ${p.rejection_note}</p>` : ""}
+      <p style="color: ${BRAND_MUTED}; font-size: 13px;">The link expires in 48 hours. Need help? Contact us on WhatsApp.</p>
+    `;
+    bodyAr = `
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
+      <p>للأسف، <strong>لا توجد مواعيد متاحة</strong> حالياً تتناسب مع جدولك المفضل.</p>
+      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <p style="margin: 0; color: #92400e; font-size: 13px;">📅 يرجى استخدام الزر أدناه لعرض المواعيد المتاحة واختيار وقت يناسبك.</p>
+      </div>
+      ${ctaBtn ? `<div style="margin: 24px 0; text-align: center;">${ctaBtn}</div>` : ""}
+      ${p.rejection_note ? `<p style="color: ${BRAND_MUTED}; font-size: 13px;"><strong>ملاحظة:</strong> ${p.rejection_note}</p>` : ""}
+      <p style="color: ${BRAND_MUTED}; font-size: 13px;">الرابط صالح لمدة 48 ساعة. تواصل معنا عبر واتساب إذا احتجت مساعدة.</p>
+    `;
+  } else {
+    bodyEn = `
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
+      <p>We're sorry, but your enrollment has been <strong>rejected</strong>.</p>
+      ${p.rejection_note ? `<div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0;"><p style="margin: 0; color: ${BRAND_TEXT};">${p.rejection_note}</p></div>` : ""}
+      <p>Please contact us if you have any questions.</p>
+      <div style="margin: 24px 0; text-align: center;">
+        ${brandButton("Contact Us on WhatsApp", "https://wa.me/201010003084")}
+      </div>
+    `;
+    bodyAr = `
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
+      <p>نأسف لإبلاغك بأنه تم <strong>رفض</strong> طلب تسجيلك.</p>
+      ${p.rejection_note ? `<div style="background: ${BRAND_GRAY}; border-right: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0;"><p style="margin: 0; color: ${BRAND_TEXT};">${p.rejection_note}</p></div>` : ""}
+      <p>تواصل معنا إذا كان لديك أي استفسار.</p>
+      <div style="margin: 24px 0; text-align: center;">
+        ${brandButton("تواصل معنا عبر واتساب", "https://wa.me/201010003084")}
+      </div>
+    `;
+  }
+
+  return {
+    subject: isAr ? subjectAr : subjectEn,
+    html: brandWrapper(isAr ? bodyAr : bodyEn, isAr),
+  };
+}
+
 function buildPaymentMethodReminderEmail(name: string, enrollmentId: string, lang: string) {
   const isAr = lang === "ar";
   const payUrl = `https://kloversegy.com/pay/${enrollmentId}`;
@@ -451,6 +543,9 @@ serve(async (req) => {
         break;
       case "payment_method_reminder":
         ({ subject, html } = buildPaymentMethodReminderEmail(name, payload.enrollment_id!, language || "ar"));
+        break;
+      case "rejection":
+        ({ subject, html } = buildRejectionEmail(payload));
         break;
       case "enrollment":
       default:
