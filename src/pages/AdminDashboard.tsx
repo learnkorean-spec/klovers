@@ -114,6 +114,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [adminTab, setAdminTab] = useState("students");
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
+  const [sendingReminder, setSendingReminder] = useState<Set<string>>(new Set());
   const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
@@ -402,6 +403,26 @@ const AdminDashboard = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleSendPaymentMethodReminder = async (e: Enrollment) => {
+    setSendingReminder(prev => new Set(prev).add(e.id));
+    try {
+      await supabase.functions.invoke("send-confirmation-email", {
+        body: {
+          template: "payment_method_reminder",
+          email: e.profiles?.email,
+          name: e.profiles?.name ?? "Student",
+          enrollment_id: e.id,
+          language: "ar",
+        },
+      });
+      toast({ title: "Reminder sent", description: `Email sent to ${e.profiles?.email}` });
+    } catch {
+      toast({ title: "Error", description: "Failed to send reminder.", variant: "destructive" });
+    } finally {
+      setSendingReminder(prev => { const s = new Set(prev); s.delete(e.id); return s; });
+    }
   };
 
   const handleEnrollmentAction = async (enrollment: Enrollment, action: "APPROVED" | "REJECTED") => {
@@ -1009,6 +1030,27 @@ const AdminDashboard = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search by name, email or plan…" value={enrollmentSearch} onChange={(e) => setEnrollmentSearch(e.target.value)} className="pl-9" />
                   </div>
+                  {(() => {
+                    const missing = enrollments.filter(e => e.currency === "EGP" && !e.payment_method && (e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW"));
+                    if (missing.length === 0) return null;
+                    return (
+                      <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-300 rounded-lg px-4 py-2.5 mb-3">
+                        <span className="text-sm text-amber-800 font-medium flex items-center gap-1.5">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          {missing.length} Egypt enrollment{missing.length > 1 ? "s" : ""} missing payment method
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-amber-400 text-amber-800 hover:bg-amber-100 shrink-0"
+                          disabled={missing.some(e => sendingReminder.has(e.id))}
+                          onClick={async () => { for (const e of missing) await handleSendPaymentMethodReminder(e); }}
+                        >
+                          Notify All ({missing.length})
+                        </Button>
+                      </div>
+                    );
+                  })()}
                   <TabsList className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3 h-auto bg-transparent p-0 w-full">
                     {[
                       { value: "under_review", label: "Under Review", count: enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length },
@@ -1056,6 +1098,22 @@ const AdminDashboard = () => {
                                   <p className="text-sm text-muted-foreground">
                                     {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {e.currency === 'EGP' ? `${Math.round(e.amount).toLocaleString()} EGP` : `$${Math.round(e.amount)}`} · Ref: {e.tx_ref || '—'}
                                     {e.payment_method && <> · <span className="font-medium">{e.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : e.payment_method === 'instapay' ? 'InstaPay' : e.payment_method === 'bank_transfer' ? 'Bank Transfer' : e.payment_method}</span></>}
+                                    {e.currency === 'EGP' && !e.payment_method && (e.approval_status === 'PENDING_PAYMENT' || e.approval_status === 'UNDER_REVIEW') && (
+                                      <span className="inline-flex items-center gap-1.5 ml-2">
+                                        <Badge variant="outline" className="text-xs border-amber-400 text-amber-700 bg-amber-50">
+                                          ⚠ Missing payment method
+                                        </Badge>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-6 text-xs border-amber-400 text-amber-700 hover:bg-amber-50"
+                                          disabled={sendingReminder.has(e.id)}
+                                          onClick={() => handleSendPaymentMethodReminder(e)}
+                                        >
+                                          {sendingReminder.has(e.id) ? "Sending…" : "Send Reminder"}
+                                        </Button>
+                                      </span>
+                                    )}
                                     {e.payment_date && <> · Paid: {e.payment_date}</>}
                                     {e.due_at && e.approval_status === 'PENDING_PAYMENT' && <> · Due: {new Date(e.due_at).toLocaleString()}</>}
                                   </p>

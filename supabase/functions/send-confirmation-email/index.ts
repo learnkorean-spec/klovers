@@ -14,7 +14,8 @@ interface EmailPayload {
   sessions_total?: number;
   amount?: number;
   language?: string;
-  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review";
+  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review" | "payment_method_reminder";
+  enrollment_id?: string;
   group_name?: string;
   group_days?: string;
   group_members?: string[];
@@ -372,6 +373,43 @@ function buildPendingReviewEmail(p: EmailPayload) {
   };
 }
 
+function buildPaymentMethodReminderEmail(name: string, enrollmentId: string, lang: string) {
+  const isAr = lang === "ar";
+  const payUrl = `https://kloversegy.com/pay/${enrollmentId}`;
+  if (isAr) {
+    return {
+      subject: "مطلوب: تأكيد طريقة الدفع الخاصة بك ⚠️",
+      html: brandWrapper(`
+        <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${name}!</h1>
+        <p>لاحظنا أنك أرسلت إيصال الدفع، لكن لم يتم تحديد <strong>طريقة الدفع</strong> بعد.</p>
+        <p>يرجى زيارة صفحة الدفع الخاصة بك لإكمال هذه الخطوة حتى يتمكن فريقنا من مراجعة طلبك والموافقة عليه.</p>
+        <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+          <p style="margin: 0; color: #92400e; font-size: 13px;">⚠️ لن يتم الموافقة على تسجيلك حتى يتم تأكيد طريقة الدفع.</p>
+        </div>
+        <div style="margin: 24px 0; text-align: center;">
+          ${brandButton("تأكيد طريقة الدفع", payUrl)}
+        </div>
+        <p style="color: ${BRAND_MUTED}; font-size: 13px;">إذا كنت بحاجة إلى مساعدة، تواصل معنا عبر واتساب.</p>
+      `, true),
+    };
+  }
+  return {
+    subject: "Action Required: Confirm your payment method ⚠️",
+    html: brandWrapper(`
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${name}!</h1>
+      <p>We noticed you submitted a payment receipt, but your <strong>payment method</strong> wasn't confirmed.</p>
+      <p>Please visit your payment page to complete this step so our team can review and approve your enrollment.</p>
+      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <p style="margin: 0; color: #92400e; font-size: 13px;">⚠️ Your enrollment won't be approved until the payment method is confirmed.</p>
+      </div>
+      <div style="margin: 24px 0; text-align: center;">
+        ${brandButton("Confirm Payment Method", payUrl)}
+      </div>
+      <p style="color: ${BRAND_MUTED}; font-size: 13px;">Need help? Contact us on WhatsApp.</p>
+    `, false),
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -410,6 +448,9 @@ serve(async (req) => {
         break;
       case "pending_review":
         ({ subject, html } = buildPendingReviewEmail(payload));
+        break;
+      case "payment_method_reminder":
+        ({ subject, html } = buildPaymentMethodReminderEmail(name, payload.enrollment_id!, language || "ar"));
         break;
       case "enrollment":
       default:
