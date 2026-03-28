@@ -10,7 +10,6 @@ import StickyEnrollBar from "@/components/StickyEnrollBar";
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
-
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 const HomeBlogSection = lazy(() => import("@/components/HomeBlogSection"));
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
@@ -86,9 +85,6 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <LearningRoadmap />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <TestimonialsSection />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <TestimonialsSection />
