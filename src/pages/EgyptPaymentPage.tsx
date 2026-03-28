@@ -346,12 +346,17 @@ const EgyptPaymentPage = () => {
 
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+        .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date, user_id")
         .eq("id", enrollmentId!)
-        .eq("user_id", session.user.id)
         .single();
 
       if (error || !data) {
+        toast({ title: "Not found", description: "Enrollment not found.", variant: "destructive" });
+        navigate("/dashboard");
+        return;
+      }
+      // Allow access if enrollment belongs to this user or was manually created (no user_id)
+      if (data.user_id && data.user_id !== session.user.id) {
         toast({ title: "Not found", description: "Enrollment not found.", variant: "destructive" });
         navigate("/dashboard");
         return;
