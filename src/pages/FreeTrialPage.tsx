@@ -41,7 +41,7 @@ const PERKS = [
 const FreeTrialPage = () => {
   useSEO({
     title: "Book Your Free Korean Class | Klovers Academy",
-    description: "Try a live Korean class for free. No credit card. Real teacher. 45 minutes. Join 2,000+ students learning Korean the right way.",
+    description: "Try a live Korean class for free. No credit card. Real teacher. 45 minutes. Join 1,000+ students learning Korean the right way.",
     canonical: "https://kloversegy.com/free-trial",
   });
 
@@ -182,7 +182,7 @@ const FreeTrialPage = () => {
               Try Korean for <span className="text-primary">Free</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
-              One live class. Real teacher. No credit card. See why 2,000+ students chose Klovers.
+              One live class. Real teacher. No credit card. See why 1,000+ students chose Klovers.
             </p>
 
             {/* Perks */}

@@ -125,7 +125,7 @@ const EnrollPage = () => {
             <div className="flex items-center justify-center gap-3 flex-wrap pt-1 text-xs text-muted-foreground">
               <span>⭐ 4.9 rated</span>
               <span className="text-border">·</span>
-              <span>👥 2,000+ students</span>
+              <span>👥 1,000+ students</span>
               <span className="text-border">·</span>
               <span>🇰🇷 A1–C2 levels</span>
             </div>

@@ -195,7 +195,7 @@ const TestimonialsSection = () => {
             ))}
           </div>
           <span className="text-lg font-bold text-foreground">4.9</span>
-          <span className="text-muted-foreground text-sm">/ 5.0 · 2,000+ students</span>
+          <span className="text-muted-foreground text-sm">/ 5.0 · 1,000+ students</span>
         </div>
       </div>
 

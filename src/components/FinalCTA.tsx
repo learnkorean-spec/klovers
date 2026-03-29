@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 const SOCIAL_PROOF = [
-  { icon: Users, value: "2,000+", label: "Active Students" },
+  { icon: Users, value: "1,000+", label: "Active Students" },
   { icon: Star,  value: "4.9★",   label: "Average Rating" },
   { icon: Zap,   value: "45",      label: "Live Lessons"   },
 ];
@@ -30,11 +30,11 @@ const FinalCTA = () => {
     return () => obs.disconnect();
   }, []);
 
-  // Animate student count 0 → 2000
+  // Animate student count 0 → 1000
   useEffect(() => {
     if (!visible) return;
     let start = 0;
-    const target = 2000;
+    const target = 1000;
     const step = Math.ceil(target / 60);
     const id = setInterval(() => {
       start = Math.min(start + step, target);

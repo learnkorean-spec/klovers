@@ -12,7 +12,7 @@ import rehamKorea1 from "@/assets/reham-korea-1.jpg";
 import rehamKorea2 from "@/assets/reham-korea-2.jpg";
 
 const TRUST_STATS = [
-  { value: "2,000+", label: "Students Taught" },
+  { value: "1,000+", label: "Students Taught" },
   { value: "4.9 ★", label: "Average Rating" },
   { value: "15+", label: "Countries" },
   { value: "A1–C2", label: "All Levels" },

@@ -155,7 +155,7 @@ const PlacementTestPage = () => {
 
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
-                    { icon: <Users className="h-3.5 w-3.5" />, label: "2,000+ students" },
+                    { icon: <Users className="h-3.5 w-3.5" />, label: "1,000+ students" },
                     { icon: <BookOpen className="h-3.5 w-3.5" />, label: "A1–C2 levels" },
                     { icon: <Gamepad2 className="h-3.5 w-3.5" />, label: "13 free games" },
                   ].map(({ icon, label }) => (

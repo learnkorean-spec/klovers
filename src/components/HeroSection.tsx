@@ -33,7 +33,7 @@ const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const { count: studentCount, ref: studentRef } = useCountUp(2000);
+  const { count: studentCount, ref: studentRef } = useCountUp(1000);
   const { count: ratingCount, ref: ratingRef } = useCountUp(49, 1200);
   const { count: countryCount, ref: countryRef } = useCountUp(15);
 
@@ -157,7 +157,7 @@ const HeroSection = () => {
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
             Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.{" "}
-            Join <span className="text-white font-semibold">2,000+ students</span> learning the right way.
+            Join <span className="text-white font-semibold">1,000+ students</span> learning the right way.
           </p>
 
           {/* CTA Buttons */}

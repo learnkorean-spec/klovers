@@ -113,7 +113,7 @@ const GamesPage = () => {
               <a href="/login">Log In</a>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">No credit card needed · 2,000+ students already joined</p>
+          <p className="text-xs text-muted-foreground">No credit card needed · 1,000+ students already joined</p>
         </div>
       );
     }

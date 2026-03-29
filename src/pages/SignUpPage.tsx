@@ -84,7 +84,7 @@ const SignUpPage = () => {
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5 font-medium text-foreground">⭐ 4.9 rated</span>
           <span className="text-border">·</span>
-          <span>👥 2,000+ students</span>
+          <span>👥 1,000+ students</span>
           <span className="text-border">·</span>
           <span>🌍 15+ countries</span>
           <span className="text-border">·</span>

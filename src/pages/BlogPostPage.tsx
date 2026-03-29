@@ -59,6 +59,21 @@ const BlogPostPage = () => {
   const [relatedPosts, setRelatedPosts] = useState<Pick<BlogPost, "id"|"title"|"slug"|"description"|"hero_image"|"hero_alt"|"article_type"|"author"|"published_at"|"created_at">[]>([]);
   const { language } = useLanguage();
 
+  // Set canonical immediately from slug so Google doesn't see homepage canonical during load
+  useEffect(() => {
+    if (!slug) return;
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = `https://kloversegy.com/blog/${slug}`;
+    // Robots: ensure indexable
+    const robots = document.querySelector('meta[name="robots"]');
+    if (robots) robots.setAttribute("content", "index, follow");
+  }, [slug]);
+
   const handleCopyLink = useCallback(() => {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setCopied(true);
@@ -421,7 +436,7 @@ const BlogPostPage = () => {
               {post.cta_text ? "Ready to start?" : "Start learning Korean today"}
             </p>
             <h3 className="text-xl font-bold text-foreground">
-              {post.cta_text || "Find your level with our free placement test and join 2,000+ students."}
+              {post.cta_text || "Find your level with our free placement test and join 1,000+ students."}
             </h3>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
               <Button asChild size="lg" className="gap-2">
