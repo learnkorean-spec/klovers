@@ -344,19 +344,13 @@ const EgyptPaymentPage = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
 
-      const { data, error } = await supabase
-        .from("enrollments")
-        .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date, user_id")
-        .eq("id", enrollmentId!)
-        .single();
+      // Use SECURITY DEFINER RPC to bypass RLS — handles manual enrollments & email-matched users
+      const { data: rows, error } = await supabase
+        .rpc("get_enrollment_for_payment", { p_enrollment_id: enrollmentId! });
+
+      const data = rows && rows.length > 0 ? rows[0] : null;
 
       if (error || !data) {
-        toast({ title: "Not found", description: "Enrollment not found.", variant: "destructive" });
-        navigate("/dashboard");
-        return;
-      }
-      // Allow access if enrollment belongs to this user or was manually created (no user_id)
-      if (data.user_id && data.user_id !== session.user.id) {
         toast({ title: "Not found", description: "Enrollment not found.", variant: "destructive" });
         navigate("/dashboard");
         return;
