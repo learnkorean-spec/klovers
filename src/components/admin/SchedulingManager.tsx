@@ -998,7 +998,15 @@ const GroupsManager = () => {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm text-muted-foreground">{groups.length} active group(s)</p>
+        <p className="text-sm text-muted-foreground">
+          {groups.length} active group(s)
+          {groups.length > 0 && (
+            <span className="ml-2">
+              · <span className="text-green-600 font-medium">{groups.filter(g => g.active_count >= g.capacity).length} full</span>
+              · <span className="text-amber-600 font-medium">{groups.filter(g => g.active_count < g.capacity).length} have open spots</span>
+            </span>
+          )}
+        </p>
         <div className="flex-1" />
         <Button variant="outline" size="sm" onClick={handleSyncAndClean} disabled={syncing}>
           <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? "animate-spin" : ""}`} />
@@ -1073,6 +1081,12 @@ const GroupsManager = () => {
                     {g.active_count >= g.capacity && (
                       <Badge variant="destructive" className="text-xs">Full</Badge>
                     )}
+                    {/* Fill rate badge */}
+                    {g.capacity > 0 && (() => {
+                      const pct = Math.round((g.active_count / g.capacity) * 100);
+                      const cls = pct >= 75 ? "bg-green-100 text-green-700 border-green-300" : pct >= 40 ? "bg-amber-100 text-amber-700 border-amber-300" : "bg-red-100 text-red-700 border-red-300";
+                      return <Badge variant="outline" className={`text-xs ${cls}`}>{pct}% full</Badge>;
+                    })()}
                   </div>
                 </div>
 
