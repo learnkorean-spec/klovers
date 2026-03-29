@@ -1,5 +1,8 @@
 project_id = "ewtdgpbybkceokfohhyg"
 
+[functions.send-name-collection-email]
+verify_jwt = false
+
 [functions.seed-blogs]
 verify_jwt = false
 
