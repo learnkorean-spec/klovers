@@ -160,6 +160,23 @@ const PricingPage = () => {
     return () => { el.remove(); };
   }, []);
 
+  useEffect(() => {
+    const faqEl = document.createElement("script");
+    faqEl.id = "pricing-faq-jsonld";
+    faqEl.setAttribute("type", "application/ld+json");
+    faqEl.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
+    });
+    document.head.appendChild(faqEl);
+    return () => { faqEl.remove(); };
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />

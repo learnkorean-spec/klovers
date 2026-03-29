@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,6 +11,26 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const CoursesPage = () => {
   useSEO({ title: "Korean Courses", description: "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.", canonical: "https://kloversegy.com/courses" });
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "courses-schema";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Korean Language Courses at Klovers",
+      "url": "https://kloversegy.com/courses",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "item": { "@type": "Course", "name": "Beginner Korean (A1–A2)", "description": "Start from scratch with Hangul, basic vocabulary, and essential grammar.", "provider": { "@id": "https://kloversegy.com/#organization" }, "url": "https://kloversegy.com/courses" } },
+        { "@type": "ListItem", "position": 2, "item": { "@type": "Course", "name": "Intermediate Korean (B1–B2)", "description": "Build fluency with grammar patterns and real-life conversation practice.", "provider": { "@id": "https://kloversegy.com/#organization" }, "url": "https://kloversegy.com/courses" } },
+        { "@type": "ListItem", "position": 3, "item": { "@type": "Course", "name": "Advanced Korean (C1–C2)", "description": "Master advanced Korean and prepare for TOPIK II.", "provider": { "@id": "https://kloversegy.com/#organization" }, "url": "https://kloversegy.com/courses" } }
+      ]
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById("courses-schema")?.remove(); };
+  }, []);
+
   const { t, tArray } = useLanguage();
   const weeklyItems = tArray("courses", "weeklyStructure.items") as { title: string; description: string }[];
   const weeklyIcons = [BookOpen, Clock, RotateCcw];

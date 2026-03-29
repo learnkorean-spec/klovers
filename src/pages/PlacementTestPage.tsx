@@ -37,6 +37,27 @@ const PlacementTestPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "placement-schema";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Quiz",
+      "name": "Free Korean Language Placement Test",
+      "description": "Take the free Klovers Korean placement test to discover your level from A1 beginner to C2 advanced and find the perfect course.",
+      "url": "https://kloversegy.com/placement-test",
+      "provider": { "@id": "https://kloversegy.com/#organization" },
+      "educationalAlignment": {
+        "@type": "AlignmentObject",
+        "educationalFramework": "TOPIK",
+        "targetName": "Korean Language Proficiency"
+      }
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById("placement-schema")?.remove(); };
+  }, []);
+
+  useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {

@@ -1,4 +1,5 @@
 import { useSEO } from "@/hooks/useSEO";
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FinalCTA from "@/components/FinalCTA";
@@ -19,6 +20,23 @@ const TRUST_STATS = [
 
 const AboutPage = () => {
   useSEO({ title: "About Us", description: "Meet the Klovers team. Our certified teachers bring years of experience teaching Korean to students worldwide.", canonical: "https://kloversegy.com/about" });
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "about-schema";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "AboutPage",
+      "url": "https://kloversegy.com/about",
+      "name": "About Klovers — Korean Lovers Academy",
+      "description": "Certified Korean teacher, born from a love of the language and a mission to make it accessible worldwide.",
+      "mainEntity": { "@id": "https://kloversegy.com/#organization" }
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById("about-schema")?.remove(); };
+  }, []);
+
   const { t, tArray } = useLanguage();
   const experienceItems = tArray("aboutPage", "experience.items") as string[];
 

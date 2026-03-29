@@ -59,7 +59,7 @@ const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
   // Schedule options are fetched dynamically from DB; no hardcoded fallbacks
 
 const EnrollNowPage = () => {
-  useSEO({ title: "Enroll Now | Klovers Korean Academy", description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence." });
+  useSEO({ title: "Enroll Now | Klovers Korean Academy", description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.", canonical: "https://kloversegy.com/enroll-now" });
 
   useEffect(() => {
     const el = document.createElement("script");

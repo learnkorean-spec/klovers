@@ -8,10 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { DollarSign, Users, Link as LinkIcon, TrendingUp, CheckCircle } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
 const COMMISSION_RATE = 20; // %
 
 export default function AffiliatePage() {
+  useSEO({
+    title: "Affiliate Program — Earn 20% Commission",
+    description: "Join the Klovers affiliate program. Earn 20% commission for every student you refer to our Korean language courses. Simple, transparent, and rewarding.",
+    canonical: "https://kloversegy.com/affiliate",
+  });
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
