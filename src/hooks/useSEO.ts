@@ -59,14 +59,18 @@ export const useSEO = ({
     setMeta('meta[name="twitter:description"]', "content", description);
     setMeta('meta[name="twitter:image"]', "content", ogImage);
 
-    // Canonical link tag
+    // Canonical — always set to current page URL (or explicit override)
+    const canonicalHref = canonical || `${BASE_URL}${window.location.pathname}`;
     let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonicalEl) {
       canonicalEl = document.createElement("link");
       canonicalEl.rel = "canonical";
       document.head.appendChild(canonicalEl);
     }
-    canonicalEl.href = canonical || `${BASE_URL}${window.location.pathname}`;
+    canonicalEl.href = canonicalHref;
+
+    // og:url always matches canonical
+    setMeta('meta[property="og:url"]', "content", canonicalHref);
 
     // Cleanup: restore defaults on unmount
     return () => {

@@ -342,19 +342,34 @@ const EgyptPaymentPage = () => {
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/login"); return; }
+      if (!session) {
+        // Save payment URL so login page redirects back here after sign-in
+        localStorage.setItem("enroll_redirect", window.location.pathname);
+        navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
 
-      // Use SECURITY DEFINER RPC to bypass RLS — handles manual enrollments & email-matched users
-      const { data: rows, error } = await supabase
-        .rpc("get_enrollment_for_payment", { p_enrollment_id: enrollmentId! });
+      // Try direct query first (works when user_id matches or is null)
+      let data: any = null;
+      const { data: direct, error: directErr } = await supabase
+        .from("enrollments")
+        .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+        .eq("id", enrollmentId!)
+        .maybeSingle();
 
-      console.log("[PaymentPage] enrollmentId:", enrollmentId, "rows:", rows, "error:", error);
+      if (!directErr && direct) {
+        data = direct;
+      } else {
+        // Fallback: use SECURITY DEFINER RPC (bypasses RLS for manual enrollments)
+        const { data: rows, error: rpcErr } = await (supabase as any)
+          .rpc("get_enrollment_for_payment", { p_enrollment_id: enrollmentId! });
+        console.log("[PaymentPage] RPC result:", rows, rpcErr);
+        data = rows && rows.length > 0 ? rows[0] : null;
+        if (rpcErr) console.error("[PaymentPage] RPC error:", rpcErr);
+      }
 
-      const data = rows && rows.length > 0 ? rows[0] : null;
-
-      if (error || !data) {
-        console.error("[PaymentPage] Not found — error:", error, "rows:", rows);
-        toast({ title: "Not found", description: "Enrollment not found.", variant: "destructive" });
+      if (!data) {
+        toast({ title: "Enrollment not found", description: `ID: ${enrollmentId}`, variant: "destructive" });
         navigate("/dashboard");
         return;
       }

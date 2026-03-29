@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard } from "lucide-react";
+import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { normalizeLevel } from "@/constants/levels";
 
@@ -130,12 +130,26 @@ function hasMissingInfo(e: UnmatchedEnrollment): boolean {
   return false;
 }
 
+interface ResubmitRequest {
+  id: string;
+  email: string;
+  enrollment_id: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+  preferred_day: string | null;
+  preferred_time: string | null;
+  level: string | null;
+  timezone: string | null;
+}
+
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
   const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
   const [teacherSlots, setTeacherSlots] = useState<{ day: number; time: string }[]>([]);
   const [packages, setPackages] = useState<SchedulePackage[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewItem[]>([]);
+  const [resubmitRequests, setResubmitRequests] = useState<ResubmitRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
   const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
@@ -251,6 +265,35 @@ const GroupMatcher = () => {
       .order("day_of_week")
       .order("start_time");
     setTeacherSlots((availability || []).map((a: any) => ({ day: a.day_of_week, time: a.start_time })));
+
+    // Fetch schedule resubmission requests (pending + recently completed)
+    const { data: resubmits } = await supabase
+      .from("schedule_resubmission_requests")
+      .select("id, email, enrollment_id, status, created_at, expires_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (resubmits && resubmits.length > 0) {
+      // For completed ones, enrich with enrollment's new schedule data
+      const enrollmentIds = resubmits.map((r: any) => r.enrollment_id);
+      const { data: enrichedEnrollments } = await supabase
+        .from("enrollments")
+        .select("id, preferred_day, preferred_time, level, timezone")
+        .in("id", enrollmentIds);
+
+      const enrollMap: Record<string, any> = {};
+      (enrichedEnrollments || []).forEach((e: any) => { enrollMap[e.id] = e; });
+
+      setResubmitRequests((resubmits as any[]).map((r: any) => ({
+        ...r,
+        preferred_day: enrollMap[r.enrollment_id]?.preferred_day ?? null,
+        preferred_time: enrollMap[r.enrollment_id]?.preferred_time ?? null,
+        level: enrollMap[r.enrollment_id]?.level ?? null,
+        timezone: enrollMap[r.enrollment_id]?.timezone ?? null,
+      })));
+    } else {
+      setResubmitRequests([]);
+    }
 
     setLoading(false);
 
@@ -565,6 +608,63 @@ const GroupMatcher = () => {
           </div>
           <button onClick={() => setAutoEmailsSent(null)} className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 text-lg leading-none">×</button>
         </div>
+      )}
+
+      {/* Schedule Resubmission Requests */}
+      {resubmitRequests.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-indigo-500" />
+                Schedule Resubmission Requests
+                <Badge className="ml-1 bg-indigo-100 text-indigo-700 border-indigo-200 text-xs">
+                  {resubmitRequests.length}
+                </Badge>
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            {resubmitRequests.map((r) => {
+              const isCompleted = r.status === "completed";
+              const isExpired = !isCompleted && new Date(r.expires_at) < new Date();
+              return (
+                <div key={r.id} className={`rounded-lg border px-4 py-3 text-sm space-y-1.5 ${
+                  isCompleted ? "border-green-200 bg-green-50 dark:bg-green-950/20" :
+                  isExpired   ? "border-muted bg-muted/30" :
+                               "border-amber-200 bg-amber-50 dark:bg-amber-950/20"
+                }`}>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="font-medium text-foreground">{r.email}</span>
+                    <Badge className={`text-xs ${
+                      isCompleted ? "bg-green-100 text-green-700 border-green-200" :
+                      isExpired   ? "bg-muted text-muted-foreground" :
+                                   "bg-amber-100 text-amber-700 border-amber-200"
+                    }`}>
+                      {isCompleted ? "✅ Completed" : isExpired ? "⏰ Expired" : "⏳ Pending"}
+                    </Badge>
+                  </div>
+                  {isCompleted && (r.level || r.preferred_day || r.preferred_time) && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {r.level && <Badge variant="outline" className="text-xs">{r.level}</Badge>}
+                      {r.preferred_day && <Badge variant="outline" className="text-xs">📅 {r.preferred_day}</Badge>}
+                      {r.preferred_time && <Badge variant="outline" className="text-xs">⏰ {r.preferred_time}</Badge>}
+                      {r.timezone && <Badge variant="outline" className="text-xs">🌍 {r.timezone}</Badge>}
+                    </div>
+                  )}
+                  {!isCompleted && !isExpired && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Waiting for student to pick a slot · Expires {new Date(r.expires_at).toLocaleString()}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Sent {new Date(r.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       )}
 
       {/* Success + Suggested Slots */}
