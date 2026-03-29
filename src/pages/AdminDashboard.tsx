@@ -115,6 +115,7 @@ const AdminDashboard = () => {
   const [adminTab, setAdminTab] = useState("students");
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [sendingReminder, setSendingReminder] = useState<Set<string>>(new Set());
+  const [sendingNameEmails, setSendingNameEmails] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<Enrollment | null>(null);
   const [rejectReason, setRejectReason] = useState<"payment_not_received" | "time_slots_unavailable" | "other">("payment_not_received");
   const [rejectNote, setRejectNote] = useState("");
@@ -329,6 +330,19 @@ const AdminDashboard = () => {
   const cancelEditLead = () => {
     setEditingLeadId(null);
     setEditForm({});
+  };
+
+  const handleSendNameCollectionEmails = async () => {
+    setSendingNameEmails(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-name-collection-email");
+      if (error) throw error;
+      toast({ title: "Done!", description: `Name request emails sent: ${data?.sent ?? 0} · Skipped: ${data?.skipped ?? 0}` });
+    } catch (err: any) {
+      toast({ title: "Error sending name emails", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingNameEmails(false);
+    }
   };
 
   const handleLinkLeadsByEmail = async () => {
@@ -1407,6 +1421,10 @@ const AdminDashboard = () => {
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleLinkLeadsByEmail}>
                       <Sparkles className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Link All</span>}
+                    </Button>
+                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleSendNameCollectionEmails} disabled={sendingNameEmails}>
+                      <Mail className="h-4 w-4" />
+                      {!isMobile && <span className="ml-1">{sendingNameEmails ? "Sending…" : "Request Names"}</span>}
                     </Button>
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
                       <Download className="h-4 w-4" />
