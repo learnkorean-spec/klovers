@@ -108,6 +108,7 @@ const EnrollNowPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [egyptPaymentMethod, setEgyptPaymentMethod] = useState<string>("");
   const nav = useNavigate();
   const isEgypt = selectedCountry === "Egypt";
 
@@ -480,6 +481,7 @@ const EnrollNowPage = () => {
         if (timezone) schedPrefs.timezone = timezone;
         // Always write level to enrollment (triggers sync to profile via DB trigger)
         if (selectedLevel) schedPrefs.level = normalizeLevel(selectedLevel);
+        if (egyptPaymentMethod) schedPrefs.payment_method = egyptPaymentMethod;
         if (Object.keys(schedPrefs).length > 0) {
           await supabase.from("enrollments").update(schedPrefs).eq("id", enrollmentId);
         }
@@ -1182,11 +1184,42 @@ const EnrollNowPage = () => {
                 <p className="text-xs text-muted-foreground">{t("enrollNow.timezone")}: {timezone}</p>
               </div>
 
+              {/* Egypt payment method selector */}
+              {isEgypt && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">طريقة الدفع / Payment Method</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: "vodafone_cash", label: "Vodafone Cash", icon: "📱" },
+                      { value: "instapay",      label: "InstaPay",      icon: "💳" },
+                      { value: "bank_transfer", label: "Bank Transfer", icon: "🏦" },
+                    ].map((m) => (
+                      <button
+                        key={m.value}
+                        type="button"
+                        onClick={() => setEgyptPaymentMethod(m.value)}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-xs font-medium transition-all ${
+                          egyptPaymentMethod === m.value
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border bg-muted/40 text-muted-foreground hover:border-foreground/30"
+                        }`}
+                      >
+                        <span className="text-xl">{m.icon}</span>
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                  {!egyptPaymentMethod && (
+                    <p className="text-xs text-amber-600">Please select a payment method to continue</p>
+                  )}
+                </div>
+              )}
+
               <Button
                 type="button"
                 className="w-full"
                 size="lg"
-                disabled={!duration || loading}
+                disabled={!duration || loading || (isEgypt && !egyptPaymentMethod)}
                 onClick={handlePay}
               >
                 {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
