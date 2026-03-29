@@ -348,9 +348,12 @@ const EgyptPaymentPage = () => {
       const { data: rows, error } = await supabase
         .rpc("get_enrollment_for_payment", { p_enrollment_id: enrollmentId! });
 
+      console.log("[PaymentPage] enrollmentId:", enrollmentId, "rows:", rows, "error:", error);
+
       const data = rows && rows.length > 0 ? rows[0] : null;
 
       if (error || !data) {
+        console.error("[PaymentPage] Not found — error:", error, "rows:", rows);
         toast({ title: "Not found", description: "Enrollment not found.", variant: "destructive" });
         navigate("/dashboard");
         return;
