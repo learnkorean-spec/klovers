@@ -716,7 +716,7 @@ const AdminDashboard = () => {
           {actionableEnrollments > 0 && (
             <div
               className="flex items-center gap-3 rounded-xl border border-amber-400/60 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
-              onClick={() => setAdminTab("enrollments")}
+              onClick={() => { setAdminTab("enrollments"); setTimeout(() => document.getElementById("admin-tabs-root")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80); }}
             >
               <Bell className="h-5 w-5 text-amber-600 shrink-0 animate-pulse" />
               <div className="flex-1 min-w-0">
@@ -730,7 +730,7 @@ const AdminDashboard = () => {
           )}
 
           <Suspense fallback={<TabLoader />}>
-          <Tabs value={adminTab} onValueChange={setAdminTab}>
+          <Tabs id="admin-tabs-root" value={adminTab} onValueChange={setAdminTab}>
             <TabsList className="w-full h-auto bg-card border border-border rounded-2xl p-3 flex flex-col gap-2">
               {/* Operations row */}
               <div className="flex flex-wrap items-center gap-1.5">
