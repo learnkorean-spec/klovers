@@ -48,6 +48,7 @@ const BRAND_GRAY = "#f5f5f5";
 const BRAND_TEXT = "#333333";
 const BRAND_MUTED = "#666666";
 const LOGO_URL = "https://klovers.lovable.app/klovers-logo.jpg";
+const SITE_URL = "https://kloversegy.com";
 
 function brandWrapper(content: string, isRtl: boolean) {
   const dir = isRtl ? 'direction: rtl; text-align: right;' : '';
@@ -66,7 +67,7 @@ function brandWrapper(content: string, isRtl: boolean) {
     <!-- Footer -->
     <div style="background: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
       <p style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;">— The KLovers Team</p>
-      <a href="https://klovers.lovable.app" style="color: #cccccc; font-size: 11px; text-decoration: none;">klovers.lovable.app</a>
+      <a href="https://kloversegy.com" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
     </div>
   </div>`;
 }
@@ -119,9 +120,9 @@ function buildWelcomeEmail(name: string, lang: string) {
           <li>🎯 بدء رحلتك في تعلم اللغة الكورية</li>
         </ul>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("اقرأ المدونة", "https://klovers.lovable.app/blog")}
+          ${brandButton("اقرأ المدونة", "https://kloversegy.com/blog")}
           &nbsp;&nbsp;
-          ${brandButton("سجّل الآن", "https://klovers.lovable.app/enroll")}
+          ${brandButton("سجّل الآن", "https://kloversegy.com/enroll-now")}
         </div>
       `, true),
     };
@@ -138,9 +139,9 @@ function buildWelcomeEmail(name: string, lang: string) {
         <li>🎯 Start your Korean learning journey</li>
       </ul>
       <div style="margin: 24px 0; text-align: center;">
-        ${brandButton("Read the Blog", "https://klovers.lovable.app/blog")}
+        ${brandButton("Read the Blog", "https://kloversegy.com/blog")}
         &nbsp;&nbsp;
-        ${brandButton("Enroll Now", "https://klovers.lovable.app/enroll")}
+        ${brandButton("Enroll Now", "https://kloversegy.com/enroll-now")}
       </div>
     `, false),
   };
@@ -163,7 +164,7 @@ function buildEnrollmentEmail(p: EmailPayload) {
         ])}
         <p>يمكنك الآن تسجيل الدخول إلى لوحة الطالب لإدارة حصصك.</p>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("لوحة الطالب", "https://klovers.lovable.app/dashboard")}
+          ${brandButton("لوحة الطالب", "https://kloversegy.com/dashboard")}
         </div>
       `, true),
     };
@@ -181,7 +182,7 @@ function buildEnrollmentEmail(p: EmailPayload) {
       ])}
       <p>You can now log in to your Student Dashboard to manage your sessions.</p>
       <div style="margin: 24px 0; text-align: center;">
-        ${brandButton("Go to Dashboard", "https://klovers.lovable.app/dashboard")}
+        ${brandButton("Go to Dashboard", "https://kloversegy.com/dashboard")}
       </div>
     `, false),
   };
@@ -220,7 +221,7 @@ function buildGroupMatchEmail(p: EmailPayload) {
         ${customHtml}
         <p>سنتواصل معك قريباً بخصوص موعد أول حصة.</p>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("لوحة الطالب", "https://klovers.lovable.app/dashboard")}
+          ${brandButton("لوحة الطالب", "https://kloversegy.com/dashboard")}
         </div>
       `, true),
     };
@@ -240,7 +241,7 @@ function buildGroupMatchEmail(p: EmailPayload) {
       ${customHtml}
       <p>We'll contact you shortly with details about your first class.</p>
       <div style="margin: 24px 0; text-align: center;">
-        ${brandButton("Go to Dashboard", "https://klovers.lovable.app/dashboard")}
+        ${brandButton("Go to Dashboard", "https://kloversegy.com/dashboard")}
       </div>
     `, false),
   };
@@ -261,7 +262,7 @@ function buildSlotConfirmedEmail(p: EmailPayload) {
         </div>
         <p>سنتواصل معك قريباً بخصوص موعد أول حصة.</p>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("لوحة الطالب", "https://klovers.lovable.app/dashboard")}
+          ${brandButton("لوحة الطالب", "https://kloversegy.com/dashboard")}
         </div>
       `, true),
     };
@@ -278,7 +279,7 @@ function buildSlotConfirmedEmail(p: EmailPayload) {
       </div>
       <p>We'll contact you shortly with details about your first class.</p>
       <div style="margin: 24px 0; text-align: center;">
-        ${brandButton("Go to Dashboard", "https://klovers.lovable.app/dashboard")}
+        ${brandButton("Go to Dashboard", "https://kloversegy.com/dashboard")}
       </div>
     `, false),
   };
@@ -312,7 +313,7 @@ function buildApprovalEmail(p: EmailPayload) {
         ${brandTable(rows)}
         <p>يمكنك الآن تسجيل الدخول إلى لوحة الطالب لمتابعة حصصك.</p>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("لوحة الطالب", "https://klovers.lovable.app/dashboard")}
+          ${brandButton("لوحة الطالب", "https://kloversegy.com/dashboard")}
         </div>
       `, true),
     };
@@ -325,7 +326,7 @@ function buildApprovalEmail(p: EmailPayload) {
       ${brandTable(rows)}
       <p>You can now log in to your Student Dashboard to track your classes.</p>
       <div style="margin: 24px 0; text-align: center;">
-        ${brandButton("Go to Dashboard", "https://klovers.lovable.app/dashboard")}
+        ${brandButton("Go to Dashboard", "https://kloversegy.com/dashboard")}
       </div>
     `, false),
   };
