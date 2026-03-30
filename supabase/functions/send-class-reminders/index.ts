@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
-const LOGO_URL = "https://klovers.lovable.app/klovers-logo.jpg";
+const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
 
 function reminderEmail(name: string, sessionDate: string, startTime: string, durationMin: number, groupName: string, level: string, zoomUrl: string | null, reminderType: "24h" | "1h") {
   const firstName = name?.split(" ")[0] || "there";

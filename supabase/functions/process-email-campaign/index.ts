@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SITE_URL = "https://klovers.lovable.app";
+const SITE_URL = "https://kloversegy.com";
 
 function buildEmail(htmlBody: string, recipientName: string | null): string {
   const firstName = recipientName?.split(" ")[0]?.trim();

@@ -51,12 +51,12 @@ serve(async (req) => {
           <h1 style="color:#6d28d9;">Welcome to KLovers, ${p.name || "Student"}! 🎉</h1>
           <p>You're registered with KLovers! Here's what you can do:</p>
           <ul>
-            <li>📖 <a href="https://klovers.lovable.app/blog" style="color:#6d28d9;">Read our blog</a></li>
-            <li>📚 <a href="https://klovers.lovable.app/enroll" style="color:#6d28d9;">Enroll in classes</a></li>
-            <li>🎯 <a href="https://klovers.lovable.app/dashboard" style="color:#6d28d9;">Student Dashboard</a></li>
+            <li>📖 <a href="https://kloversegy.com/blog" style="color:#6d28d9;">Read our blog</a></li>
+            <li>📚 <a href="https://kloversegy.com/enroll-now" style="color:#6d28d9;">Enroll in classes</a></li>
+            <li>🎯 <a href="https://kloversegy.com/dashboard" style="color:#6d28d9;">Student Dashboard</a></li>
           </ul>
           <div style="margin:24px 0;">
-            <a href="https://klovers.lovable.app/enroll" style="background:#6d28d9;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Start Learning Korean</a>
+            <a href="https://kloversegy.com/enroll-now" style="background:#6d28d9;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Start Learning Korean</a>
           </div>
           <p style="color:#999;font-size:12px;margin-top:24px;">— The KLovers Team</p>
         </div>`;

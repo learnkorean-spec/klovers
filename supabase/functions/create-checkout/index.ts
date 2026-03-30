@@ -3,8 +3,8 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const ALLOWED_ORIGINS = [
-  "https://klovers.lovable.app",
-  "https://id-preview--21511a91-fdcf-46bb-950e-98f5a8707807.lovable.app",
+  "https://kloversegy.com",
+  "https://www.kloversegy.com",
 ];
 
 function getCorsHeaders(req: Request) {
@@ -158,7 +158,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "https://klovers.lovable.app";
+    const origin = req.headers.get("origin") || "https://kloversegy.com";
 
     // Build discounts array if applicable
     const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];

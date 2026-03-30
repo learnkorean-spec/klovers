@@ -16,7 +16,7 @@ function buildEnglishEmail(name: string, overCount: number): { subject: string; 
         <p>You've used <strong>${overCount}</strong> more class${overCount === 1 ? "" : "es"} than your current package includes.</p>
         <p>To continue without interruptions, please renew your package.</p>
         <div style="margin: 24px 0;">
-          <a href="https://klovers.lovable.app/enroll-now" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Renew Package</a>
+          <a href="https://kloversegy.com/enroll-now" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Renew Package</a>
         </div>
         <p style="color: #999; font-size: 12px; margin-top: 24px;">— The KLovers Team</p>
       </div>
@@ -33,7 +33,7 @@ function buildArabicEmail(name: string, overCount: number): { subject: string; h
         <p>لقد استخدمت <strong>${overCount}</strong> حصة إضافية أكثر من باقتك الحالية.</p>
         <p>لمتابعة دروسك بدون انقطاع، يرجى تجديد باقتك.</p>
         <div style="margin: 24px 0;">
-          <a href="https://klovers.lovable.app/enroll-now" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">تجديد الباقة</a>
+          <a href="https://kloversegy.com/enroll-now" style="background: #6d28d9; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">تجديد الباقة</a>
         </div>
         <p style="color: #999; font-size: 12px; margin-top: 24px;">— فريق KLovers</p>
       </div>

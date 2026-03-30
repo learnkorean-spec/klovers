@@ -3,8 +3,8 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const ALLOWED_ORIGINS = [
-  "https://klovers.lovable.app",
-  "https://id-preview--21511a91-fdcf-46bb-950e-98f5a8707807.lovable.app",
+  "https://kloversegy.com",
+  "https://www.kloversegy.com",
 ];
 
 function getCorsHeaders(req: Request) {
