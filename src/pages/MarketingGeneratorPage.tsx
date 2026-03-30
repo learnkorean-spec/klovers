@@ -81,130 +81,98 @@ function renderBrandPost(
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
-  const s = w / 1080; // scale factor
+  const s = w / 1080;
 
-  // ── Background: pure brand yellow ──
+  // ── Yellow background ──
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // ── Diagonal black triangle (bottom-right corner) ──
+  // ── Black bottom section (clean diagonal cut) ──
+  const cutY = h * 0.55;
   ctx.fillStyle = "#111111";
   ctx.beginPath();
-  ctx.moveTo(w * 0.45, h);
-  ctx.lineTo(w, h * 0.42);
+  ctx.moveTo(0, cutY + 40 * s);
+  ctx.lineTo(w, cutY - 40 * s);
   ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
   ctx.closePath();
   ctx.fill();
 
-  // ── Giant Korean watermark 한 (faint, behind everything) ──
-  ctx.save();
-  ctx.font = `900 ${Math.round(520 * s)}px 'Arial', sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.055)";
-  ctx.textAlign = "center";
-  ctx.fillText("한", w * 0.52, h * 0.72);
-  ctx.restore();
-
-  // ── Top-left accent bar ──
+  // ── KLOVERS brand — top right ──
+  const brandSize = Math.round(26 * s);
+  ctx.font = `900 ${brandSize}px 'Arial Black', 'Impact', sans-serif`;
   ctx.fillStyle = "#111111";
-  ctx.fillRect(0, 0, 16 * s, h * 0.62);
-
-  // ── "KOREAN COURSE" eyebrow label ──
-  const eyeSize = Math.round(28 * s);
-  ctx.font = `bold ${eyeSize}px 'Arial', sans-serif`;
-  ctx.fillStyle = "#111111";
+  ctx.textAlign = "right";
+  ctx.fillText("KLOVERS", w - 40 * s, 52 * s);
   ctx.textAlign = "left";
-  ctx.letterSpacing = `${4 * s}px`;
-  ctx.fillText("KOREAN COURSE", 48 * s, 72 * s);
-  ctx.letterSpacing = "0px";
 
-  // thin rule under eyebrow
+  // ── thin accent line under brand ──
   ctx.fillStyle = "#111111";
-  ctx.fillRect(48 * s, 82 * s, 220 * s, 3 * s);
+  ctx.fillRect(w - 180 * s, 62 * s, 140 * s, 3 * s);
 
-  // ── Main title — huge black ──
-  const mainSize = Math.round(114 * s);
+  // ── Main headline (big, black on yellow) ──
+  const mainSize = Math.round(92 * s);
   ctx.font = `900 ${mainSize}px 'Arial Black', 'Impact', sans-serif`;
   ctx.fillStyle = "#000000";
   ctx.textAlign = "left";
-  wrapText(ctx, mainText, 48 * s, h * 0.31, w * 0.58, mainSize * 1.12);
+  wrapText(ctx, mainText, 48 * s, h * 0.18, w * 0.85, mainSize * 1.08);
 
-  // ── Schedule info lines ──
-  const lines = subtitle.split("\n");
-  const schedSize = Math.round(46 * s);
+  // ── Schedule pill (black pill with yellow text) ──
+  const schedSize = Math.round(36 * s);
   ctx.font = `bold ${schedSize}px 'Arial', sans-serif`;
+  const pillText = subtitle.split("\n")[0] || subtitle;
+  const pillW = ctx.measureText(pillText).width + 40 * s;
+  const pillH = schedSize * 1.7;
+  const pillX = 48 * s;
+  const pillY = cutY - 20 * s;
   ctx.fillStyle = "#111111";
-  let lineY = h * 0.56;
-  for (const line of lines) {
-    // urgency line gets yellow highlight pill
-    if (line.startsWith("🔴") || line.startsWith("⚡")) {
-      ctx.save();
-      ctx.fillStyle = "#111111";
-      const pillW = ctx.measureText(line).width + 32 * s;
-      const pillH = schedSize * 1.4;
-      drawRoundedRect(ctx, 48 * s, lineY - schedSize * 0.85, pillW, pillH, pillH / 2);
-      ctx.fill();
-      ctx.fillStyle = "#FFFF00";
-      ctx.fillText(line, 64 * s, lineY);
-      ctx.restore();
-    } else {
-      ctx.fillText(line, 48 * s, lineY);
-    }
-    lineY += schedSize * 1.45;
-  }
-
-  // ── "Register Now →" CTA pill (on black diagonal) ──
-  const ctaSize = Math.round(36 * s);
-  ctx.font = `bold ${ctaSize}px 'Arial Black', sans-serif`;
+  drawRoundedRect(ctx, pillX, pillY - pillH * 0.7, pillW, pillH, pillH / 2);
+  ctx.fill();
   ctx.fillStyle = "#FFFF00";
+  ctx.fillText(pillText, pillX + 20 * s, pillY);
+
+  // ── CTA button (yellow pill on black) ──
+  const ctaSize = Math.round(38 * s);
+  ctx.font = `900 ${ctaSize}px 'Arial Black', sans-serif`;
   const ctaText = "Register Now →";
   const ctaW = ctx.measureText(ctaText).width + 48 * s;
   const ctaH = ctaSize * 1.8;
-  const ctaX = w * 0.55;
-  const ctaY = h * 0.78;
+  const ctaX = 48 * s;
+  const ctaY = h * 0.72;
+  ctx.fillStyle = "#FFFF00";
   drawRoundedRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
   ctx.fillStyle = "#111111";
-  ctx.fillText(ctaText, ctaX + 24 * s, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText, ctaX + 24 * s, ctaY + ctaH * 0.66);
 
-  // ── Limited seats burst (top-right) when urgent ──
+  // ── Urgency badge (top right, below brand) ──
   if (isUrgent) {
-    ctx.save();
-    ctx.translate(w * 0.88, h * 0.13);
-    // draw 8-point star
+    const badgeSize = Math.round(24 * s);
+    ctx.font = `bold ${badgeSize}px 'Arial', sans-serif`;
+    const badgeText = "⚡ LIMITED SEATS";
+    const badgeW = ctx.measureText(badgeText).width + 28 * s;
+    const badgeH = badgeSize * 1.7;
+    const badgeX = w - badgeW - 40 * s;
+    const badgeY = 78 * s;
     ctx.fillStyle = "#111111";
-    ctx.beginPath();
-    const spikes = 8, outerR = 68 * s, innerR = 44 * s;
-    for (let i = 0; i < spikes * 2; i++) {
-      const r = i % 2 === 0 ? outerR : innerR;
-      const angle = (i * Math.PI) / spikes - Math.PI / 2;
-      i === 0 ? ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r)
-               : ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
-    }
-    ctx.closePath();
+    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2);
     ctx.fill();
     ctx.fillStyle = "#FFFF00";
-    ctx.textAlign = "center";
-    ctx.font = `bold ${Math.round(22 * s)}px 'Arial', sans-serif`;
-    ctx.fillText("LIMITED", 0, -10 * s);
-    ctx.fillText("SEATS", 0, 16 * s);
-    ctx.restore();
+    ctx.fillText(badgeText, badgeX + 14 * s, badgeY + badgeH * 0.64);
   }
 
-  // ── Bottom brand strip ──
-  const stripH = 90 * s;
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(0, h - stripH, w, stripH);
-
-  const tagSize = Math.round(28 * s);
-  ctx.font = `bold ${tagSize}px 'Arial', sans-serif`;
-  ctx.fillStyle = "#FFFF00";
+  // ── Bottom strip with hashtags ──
+  const stripH = 70 * s;
+  const tagSize = Math.round(22 * s);
+  ctx.font = `${tagSize}px 'Arial', sans-serif`;
+  ctx.fillStyle = "rgba(255,255,0,0.5)";
   ctx.textAlign = "left";
-  ctx.fillText(extra, 48 * s, h - stripH / 2 + tagSize * 0.35);
+  ctx.fillText(extra, 48 * s, h - stripH / 2 + tagSize * 0.3);
 
-  ctx.font = `900 ${Math.round(34 * s)}px 'Arial Black', 'Impact', sans-serif`;
-  ctx.fillStyle = "#FFFF00";
+  ctx.font = `900 ${Math.round(24 * s)}px 'Arial Black', sans-serif`;
+  ctx.fillStyle = "rgba(255,255,0,0.5)";
   ctx.textAlign = "right";
-  ctx.fillText("KLOVERS", w - 36 * s, h - stripH / 2 + tagSize * 0.5);
+  ctx.fillText("kloversegy.com", w - 40 * s, h - stripH / 2 + tagSize * 0.3);
   ctx.textAlign = "left";
 }
 
@@ -214,14 +182,17 @@ const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
   "story": [1080, 1920],
 };
 
-function renderGroupToDataUrl(group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number }, size: "1x1" | "4x5" | "story"): string {
+function renderGroupToDataUrl(
+  group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number },
+  size: "1x1" | "4x5" | "story",
+  headline?: string,
+): string {
   const [w, h] = CANVAS_SIZES[size];
   const canvas = document.createElement("canvas");
   const levelLabel = getLevelLabel(group.level);
-  const mainText = levelLabel;
+  const mainText = headline || `${levelLabel} — ${group.day_name} ${group.start_time}`;
   const isUrgent = group.seats_left <= 5;
-  const urgencyLine = group.seats_left <= 3 ? `\n🔴 Only ${group.seats_left} seats left!` : group.seats_left <= 6 ? `\n⚡ ${group.seats_left} seats available` : "";
-  const subtitle = `${group.day_name} • ${group.start_time}\n${group.duration_min} min / session${urgencyLine}`;
+  const subtitle = `${group.day_name} · ${group.start_time} · ${group.duration_min}min`;
   const extra = "#LearnKorean  #Klovers  #KoreanCourse";
   renderBrandPost(canvas, mainText, subtitle, extra, w, h, isUrgent);
   return canvas.toDataURL("image/png");
@@ -605,7 +576,16 @@ export default function MarketingGeneratorPage() {
   }
 
   function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
-    const dataUrl = renderGroupToDataUrl(group, size);
+    // Ensure content is generated first so we can use the headline
+    let content = generatedContent[group.id];
+    if (!content) {
+      const captions = generateCaptions(group);
+      const adCopy = generateAdCopy(group);
+      content = { captions, adCopy };
+      setGeneratedContent(prev => ({ ...prev, [group.id]: content! }));
+    }
+    const headline = content.adCopy.headlines[0] || getLevelLabel(group.level);
+    const dataUrl = renderGroupToDataUrl(group, size, headline);
     setGeneratedImages(prev => ({
       ...prev,
       [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
@@ -614,14 +594,17 @@ export default function MarketingGeneratorPage() {
 
   function handleBulkCanvasRender() {
     groups.forEach(group => {
-      handleGenerate(group);
-      const dataUrl = renderGroupToDataUrl(group, "1x1");
-      setGeneratedImages(prev => ({
-        ...prev,
-        [group.id]: { ...(prev[group.id] || {}), "1x1": dataUrl },
-      }));
+      const { adCopy } = handleGenerate(group);
+      const headline = adCopy.headlines[0] || getLevelLabel(group.level);
+      (["1x1", "4x5", "story"] as const).forEach(size => {
+        const dataUrl = renderGroupToDataUrl(group, size, headline);
+        setGeneratedImages(prev => ({
+          ...prev,
+          [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
+        }));
+      });
     });
-    toast({ title: "Done!", description: `${groups.length} brand-yellow images rendered instantly.` });
+    toast({ title: "Done!", description: `${groups.length} × 3 sizes rendered (1x1, 4x5, story).` });
   }
 
   async function handleGenerateImage(group: GroupData, size: "1x1" | "4x5" | "story") {
@@ -724,6 +707,57 @@ export default function MarketingGeneratorPage() {
       });
     });
     if (count) toast({ title: "Downloading!", description: `${count} images` });
+  }
+
+  function downloadPlatformPack(platform: "instagram" | "tiktok") {
+    // Generate all sizes first if not already done
+    groups.forEach(group => {
+      const hasAll = generatedImages[group.id]?.["1x1"] && generatedImages[group.id]?.["4x5"] && generatedImages[group.id]?.["story"];
+      if (!hasAll) {
+        let content = generatedContent[group.id];
+        if (!content) {
+          const captions = generateCaptions(group);
+          const adCopy = generateAdCopy(group);
+          content = { captions, adCopy };
+          setGeneratedContent(prev => ({ ...prev, [group.id]: content! }));
+        }
+        const headline = content.adCopy.headlines[0] || getLevelLabel(group.level);
+        (["1x1", "4x5", "story"] as const).forEach(size => {
+          if (!generatedImages[group.id]?.[size]) {
+            const dataUrl = renderGroupToDataUrl(group, size, headline);
+            setGeneratedImages(prev => ({
+              ...prev,
+              [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
+            }));
+          }
+        });
+      }
+    });
+
+    // Download with slight delay
+    let count = 0;
+    const sizes: ("1x1" | "4x5" | "story")[] = platform === "instagram"
+      ? ["1x1", "4x5", "story"]
+      : ["story"]; // TikTok uses 9:16
+
+    // Use setTimeout to allow state to settle after generation
+    setTimeout(() => {
+      groups.forEach(g => {
+        const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
+        sizes.forEach(size => {
+          const content = generatedContent[g.id];
+          const headline = content?.adCopy.headlines[0] || getLevelLabel(g.level);
+          // Render inline to guarantee we have the image
+          const dataUrl = renderGroupToDataUrl(g, size, headline);
+          setTimeout(() => downloadImage(dataUrl, `${platform}-${slug}-${size}.png`), count * 300);
+          count++;
+        });
+      });
+      if (count) toast({
+        title: `${platform === "instagram" ? "Instagram" : "TikTok"} Pack`,
+        description: `Downloading ${count} images (${sizes.join(", ")})`,
+      });
+    }, 100);
   }
 
   function copyAllCaptions() {
@@ -1037,6 +1071,12 @@ export default function MarketingGeneratorPage() {
                               </Button>
                             </>
                           )}
+                          <Button size="sm" onClick={() => downloadPlatformPack("instagram")} className="bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:from-purple-700 hover:to-pink-600">
+                            <DownloadCloud className="h-4 w-4 mr-1" /> Instagram Pack
+                          </Button>
+                          <Button size="sm" onClick={() => downloadPlatformPack("tiktok")} className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700">
+                            <DownloadCloud className="h-4 w-4 mr-1" /> TikTok Pack
+                          </Button>
                         </div>
                       </div>
                       {bulkGenerating && (

@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard, RefreshCw } from "lucide-react";
+import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard, RefreshCw, XCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { normalizeLevel } from "@/constants/levels";
 
@@ -154,6 +156,10 @@ const GroupMatcher = () => {
   const [creating, setCreating] = useState<string | null>(null);
   const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<UnmatchedEnrollment | null>(null);
+  const [rejectReason, setRejectReason] = useState("no_slots");
+  const [rejectNote, setRejectNote] = useState("");
+  const [rejecting, setRejecting] = useState(false);
   const [sendingAllReminders, setSendingAllReminders] = useState(false);
   const [autoEmailsSent, setAutoEmailsSent] = useState<number | null>(null);
   const [createdGroup, setCreatedGroup] = useState<{ name: string; level: string } | null>(null);
@@ -315,6 +321,61 @@ const GroupMatcher = () => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setMarkingAssigned(null);
+    }
+  };
+
+  const REJECT_REASONS: Record<string, string> = {
+    no_slots: "No available time slots matching your preferences",
+    time_unavailable: "Teacher is unavailable at your preferred time",
+    level_full: "Your requested level is currently full",
+    missing_info: "Missing required information (level or schedule preferences)",
+    payment_issue: "Payment could not be verified",
+    other: "Other",
+  };
+
+  const handleRejectClassRequest = async () => {
+    if (!rejectTarget) return;
+    setRejecting(true);
+    try {
+      const reasonText = REJECT_REASONS[rejectReason] || rejectReason;
+      const fullNote = rejectNote ? `${reasonText}. ${rejectNote}` : reasonText;
+
+      const { error } = await supabase
+        .from("enrollments")
+        .update({
+          approval_status: "REJECTED",
+          enrollment_status: "cancelled",
+          payment_status: "UNPAID",
+        } as any)
+        .eq("id", rejectTarget.id);
+      if (error) throw error;
+
+      // Send rejection email
+      await supabase.functions.invoke("send-confirmation-email", {
+        body: {
+          template: "rejection",
+          email: rejectTarget.email,
+          name: rejectTarget.name || rejectTarget.email,
+          rejection_reason: rejectReason === "no_slots" || rejectReason === "time_unavailable"
+            ? "time_slots_unavailable"
+            : rejectReason === "payment_issue"
+            ? "payment_not_received"
+            : "other",
+          rejection_note: fullNote,
+          resubmit_link: `${window.location.origin}/enroll-now`,
+          language: "ar",
+        },
+      });
+
+      toast({ title: "Rejected", description: `${rejectTarget.name}'s request has been rejected and they've been notified.` });
+      setRejectTarget(null);
+      setRejectReason("no_slots");
+      setRejectNote("");
+      fetchUnmatched();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -977,6 +1038,14 @@ const GroupMatcher = () => {
                                 "Mark Assigned"
                               )}
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => { setRejectTarget(m); setRejectReason("no_slots"); setRejectNote(""); }}
+                            >
+                              <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                            </Button>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
@@ -1105,6 +1174,57 @@ const GroupMatcher = () => {
               onClick={() => nameDialogCluster && handleCreateGroup(nameDialogCluster, groupNameInput.trim())}
             >
               Create Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Class Request Dialog */}
+      <Dialog open={!!rejectTarget} onOpenChange={open => !open && setRejectTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <XCircle className="h-4 w-4" /> Reject Class Request
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Rejecting request for <span className="font-semibold text-foreground">{rejectTarget?.name}</span> ({rejectTarget?.email}).
+                They will receive a bilingual email explaining the reason.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Reason</label>
+              <Select value={rejectReason} onValueChange={setRejectReason}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no_slots">No available time slots</SelectItem>
+                  <SelectItem value="time_unavailable">Teacher unavailable at preferred time</SelectItem>
+                  <SelectItem value="level_full">Level is currently full</SelectItem>
+                  <SelectItem value="missing_info">Missing required info</SelectItem>
+                  <SelectItem value="payment_issue">Payment could not be verified</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Additional note (optional)</label>
+              <Textarea
+                value={rejectNote}
+                onChange={e => setRejectNote(e.target.value)}
+                placeholder="e.g. We'll notify you when new slots open…"
+                className="text-sm min-h-[70px] resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectTarget(null)}>Cancel</Button>
+            <Button variant="destructive" disabled={rejecting} onClick={handleRejectClassRequest}>
+              {rejecting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5 mr-1.5" />}
+              Reject & Notify
             </Button>
           </DialogFooter>
         </DialogContent>

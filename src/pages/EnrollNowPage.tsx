@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { useSearchParams } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1081,7 +1082,7 @@ const EnrollNowPage = () => {
               {/* Teacher card */}
               <div className="flex items-center gap-3 bg-muted/60 border border-border rounded-xl px-4 py-3">
                 <div className="relative flex-shrink-0">
-                  <div className="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary select-none">ريم</div>
+                  <img src={rehamPhoto} alt="Reham 선생님" className="w-11 h-11 rounded-full object-cover object-top" />
                   <span className="absolute -bottom-0.5 -right-0.5 text-sm leading-none">🇰🇷</span>
                 </div>
                 <div className="min-w-0">
