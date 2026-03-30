@@ -340,17 +340,29 @@ const GroupMatcher = () => {
       const reasonText = REJECT_REASONS[rejectReason] || rejectReason;
       const fullNote = rejectNote ? `${reasonText}. ${rejectNote}` : reasonText;
 
+      // Only reject the SLOT ASSIGNMENT, not the enrollment itself.
+      // The student already paid — keep approval_status + payment_status intact.
+      // If the reason is a payment issue, THEN fully reject the enrollment.
+      const isPaymentReject = rejectReason === "payment_issue";
+
+      const updatePayload: Record<string, any> = isPaymentReject
+        ? { approval_status: "REJECTED", enrollment_status: "cancelled", payment_status: "UNPAID" }
+        : { slot_rejection_reason: fullNote, slot_rejection_at: new Date().toISOString() };
+
       const { error } = await supabase
         .from("enrollments")
-        .update({
-          approval_status: "REJECTED",
-          enrollment_status: "cancelled",
-          payment_status: "UNPAID",
-        } as any)
+        .update(updatePayload as any)
         .eq("id", rejectTarget.id);
       if (error) throw error;
 
-      // Send rejection email
+      // Mark as assigned so it leaves the unassigned list (slot rejected = dealt with)
+      if (!isPaymentReject) {
+        await supabase.from("enrollments")
+          .update({ matched_at: new Date().toISOString() } as any)
+          .eq("id", rejectTarget.id);
+      }
+
+      // Send notification email
       await supabase.functions.invoke("send-confirmation-email", {
         body: {
           template: "rejection",
@@ -358,7 +370,7 @@ const GroupMatcher = () => {
           name: rejectTarget.name || rejectTarget.email,
           rejection_reason: rejectReason === "no_slots" || rejectReason === "time_unavailable"
             ? "time_slots_unavailable"
-            : rejectReason === "payment_issue"
+            : isPaymentReject
             ? "payment_not_received"
             : "other",
           rejection_note: fullNote,
