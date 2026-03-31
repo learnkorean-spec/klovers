@@ -20,6 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   type GroupData,
   type PostTemplate,
+  type MonthlyPost,
   generateCaptions,
   generateAdCopy,
   generateWhatsAppMessage,
@@ -30,6 +31,10 @@ import {
   getInvitePostTemplate,
   getDiscountPostTemplate,
   getReferralPostTemplate,
+  getTestimonialPostTemplate,
+  getFAQPostTemplate,
+  getCountdownPostTemplate,
+  generateMonthlyPlan,
 } from "@/lib/marketingEngine";
 import {
   type SlotPostDraft,
@@ -292,11 +297,16 @@ export default function MarketingGeneratorPage() {
   const [draftCampaignName, setDraftCampaignName] = useState(`Class Openings — ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}`);
 
   // ── Post type campaign selector ──
-  const [postType, setPostType] = useState<"empty_slots" | "discount" | "referral" | "invite_student">("empty_slots");
+  const [postType, setPostType] = useState<"empty_slots" | "discount" | "referral" | "invite_student" | "testimonial" | "faq" | "countdown">("empty_slots");
   const [discountPct, setDiscountPct] = useState(20);
   const [discountCode, setDiscountCode] = useState("SAVE20");
   // Special post images (discount/referral/invite)
   const [specialImages, setSpecialImages] = useState<Record<string, GeneratedImages>>({});
+
+  // ── Monthly Pack state ──
+  const [monthlyPlan, setMonthlyPlan] = useState<MonthlyPost[]>([]);
+  const [monthlyImages, setMonthlyImages] = useState<Record<string, string>>({});
+  const [monthlyRendering, setMonthlyRendering] = useState(false);
 
   // WhatsApp dialog
   const [whatsappGroup, setWhatsappGroup] = useState<GroupData | null>(null);
@@ -618,6 +628,7 @@ export default function MarketingGeneratorPage() {
 
   function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
     const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
+    // Note: testimonial/faq/countdown are handled via special cards, not group cards
     const dataUrl = renderTemplateToDataUrl(tpl, size);
     setGeneratedImages(prev => ({
       ...prev,
@@ -802,6 +813,52 @@ export default function MarketingGeneratorPage() {
   const isGenerating = (groupId: string) => (generatingImages[groupId]?.size || 0) > 0;
   const isSizeGenerating = (groupId: string, size: string) => generatingImages[groupId]?.has(size) || false;
 
+  function handleGenerateMonthlyPlan() {
+    const plan = generateMonthlyPlan(groups, discountPct, discountCode);
+    setMonthlyPlan(plan);
+    setMonthlyImages({});
+    toast({ title: `30 posts generated`, description: "Click 'Render All' to create images, or render individual posts." });
+  }
+
+  async function renderAllMonthly() {
+    if (!monthlyPlan.length) return;
+    setMonthlyRendering(true);
+    const imgs: Record<string, string> = {};
+    for (const post of monthlyPlan) {
+      const dataUrl = renderTemplateToDataUrl(post.template, "1x1");
+      imgs[post.id] = dataUrl;
+    }
+    setMonthlyImages(imgs);
+    setMonthlyRendering(false);
+    toast({ title: "All 30 images rendered!" });
+  }
+
+  async function downloadMonthlyZip() {
+    const toDownload = monthlyPlan.filter(p => monthlyImages[p.id]);
+    if (!toDownload.length) {
+      toast({ title: "No images yet", description: "Click 'Render All' first." });
+      return;
+    }
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      toDownload.forEach(post => {
+        const base64 = monthlyImages[post.id].split(",")[1];
+        zip.file(`day-${String(post.day).padStart(2, "0")}-${post.postType}.png`, base64, { base64: true });
+      });
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klovers-monthly-pack-${new Date().toISOString().slice(0, 7)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `ZIP downloaded`, description: `${toDownload.length} posts` });
+    } catch (err: any) {
+      toast({ title: "ZIP error", description: err.message, variant: "destructive" });
+    }
+  }
+
   const toggleCard = (id: string) => {
     setExpandedCards(prev => {
       const next = new Set(prev);
@@ -875,6 +932,9 @@ export default function MarketingGeneratorPage() {
                   { id: "invite_student", label: "Invite Student",  icon: "👋" },
                   { id: "discount",       label: "Discount Offer",  icon: "🏷️" },
                   { id: "referral",       label: "Referral",        icon: "🤝" },
+                  { id: "testimonial",    label: "Testimonial",     icon: "🌟" },
+                  { id: "faq",            label: "FAQ",             icon: "❓" },
+                  { id: "countdown",      label: "Countdown",       icon: "⏰" },
                 ] as const).map(opt => (
                   <button
                     key={opt.id}
@@ -903,6 +963,100 @@ export default function MarketingGeneratorPage() {
                       className="w-24 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
                       placeholder="SAVE20"
                     />
+                  </div>
+                )}
+              </div>
+
+              {/* ── MONTHLY PACK (30 Posts) ───────────────────────────── */}
+              <div className="rounded-2xl border border-primary/30 bg-card overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-foreground">
+                  <div>
+                    <p className="text-sm font-bold text-primary flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4" /> Monthly Content Pack — 30 Posts
+                    </p>
+                    <p className="text-xs text-background/60 mt-0.5">
+                      All post types · Optimised sequence for max conversions
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleGenerateMonthlyPlan} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Wand2 className="h-4 w-4 mr-2" /> Generate Month Pack
+                    </Button>
+                    {monthlyPlan.length > 0 && (
+                      <>
+                        <Button variant="outline" onClick={renderAllMonthly} disabled={monthlyRendering} className="border-background/20 text-background hover:bg-background/10">
+                          {monthlyRendering ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brush className="h-4 w-4 mr-2" />}
+                          Render All
+                        </Button>
+                        <Button variant="outline" onClick={downloadMonthlyZip} className="border-background/20 text-background hover:bg-background/10">
+                          <DownloadCloud className="h-4 w-4 mr-2" /> Download ZIP
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Post type legend */}
+                <div className="flex flex-wrap gap-2 px-5 py-3 border-b bg-muted/30 text-[10px]">
+                  {([
+                    { type: "empty_slots",    icon: "📢", label: "Empty Slots",    count: 8,  color: "text-blue-600" },
+                    { type: "invite_student", icon: "👋", label: "Invite Student",  count: 5,  color: "text-green-600" },
+                    { type: "discount",       icon: "🏷️", label: "Discount",        count: 4,  color: "text-amber-600" },
+                    { type: "referral",       icon: "🤝", label: "Referral",        count: 4,  color: "text-purple-600" },
+                    { type: "testimonial",    icon: "🌟", label: "Testimonial",     count: 5,  color: "text-yellow-600" },
+                    { type: "faq",            icon: "❓", label: "FAQ",             count: 3,  color: "text-indigo-600" },
+                    { type: "countdown",      icon: "⏰", label: "Countdown",       count: 3,  color: "text-red-600" },
+                  ] as const).map(t => (
+                    <span key={t.type} className={`flex items-center gap-1 font-medium ${t.color}`}>
+                      {t.icon} {t.label} ×{t.count}
+                    </span>
+                  ))}
+                </div>
+
+                {monthlyPlan.length > 0 && (
+                  <div className="p-4 grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
+                    {monthlyPlan.map(post => {
+                      const typeConfig: Record<string, { icon: string; color: string; bg: string }> = {
+                        empty_slots:    { icon: "📢", color: "text-blue-700",   bg: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40" },
+                        invite_student: { icon: "👋", color: "text-green-700",  bg: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/40" },
+                        discount:       { icon: "🏷️", color: "text-amber-700",  bg: "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/40" },
+                        referral:       { icon: "🤝", color: "text-purple-700", bg: "bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800/40" },
+                        testimonial:    { icon: "🌟", color: "text-yellow-700", bg: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800/40" },
+                        faq:            { icon: "❓", color: "text-indigo-700", bg: "bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/40" },
+                        countdown:      { icon: "⏰", color: "text-red-700",    bg: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/40" },
+                      };
+                      const cfg = typeConfig[post.postType] || { icon: "📄", color: "text-foreground", bg: "" };
+                      const img = monthlyImages[post.id];
+
+                      return (
+                        <div key={post.id} className={`rounded-xl border p-2 space-y-1.5 ${cfg.bg}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-muted-foreground">Day {post.day}</span>
+                            <span className="text-xs">{cfg.icon}</span>
+                          </div>
+                          {img ? (
+                            <div
+                              className="aspect-square rounded-lg overflow-hidden border bg-muted cursor-pointer shadow-sm"
+                              onClick={() => downloadImage(img, `day-${post.day}-${post.postType}.png`)}
+                            >
+                              <img src={img} alt={`Day ${post.day}`} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <button
+                              className="aspect-square w-full rounded-lg border border-dashed bg-muted/40 flex flex-col items-center justify-center gap-1 hover:bg-muted/60 transition-colors"
+                              onClick={() => {
+                                const dataUrl = renderTemplateToDataUrl(post.template, "1x1");
+                                setMonthlyImages(prev => ({ ...prev, [post.id]: dataUrl }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-[9px] text-muted-foreground">Render</span>
+                            </button>
+                          )}
+                          <p className={`text-[9px] font-semibold truncate ${cfg.color}`}>{post.template.mainText}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1257,6 +1411,130 @@ export default function MarketingGeneratorPage() {
                             })}
                           </div>
                         )}
+                      </CardContent>
+                    </Card>
+
+                    {/* 🌟 Testimonial Card */}
+                    <Card className="rounded-2xl border-yellow-300/50 bg-yellow-50/30 dark:bg-yellow-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">🌟 Testimonial Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-yellow-400 text-yellow-700">Social Proof</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Student success story — builds trust</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {[0, 1, 2, 3, 4].map(idx => (
+                            <Button key={idx} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const tpl = getTestimonialPostTemplate(idx);
+                                const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+                                setSpecialImages(prev => ({ ...prev, [`testimonial_${idx}`]: { "1x1": dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />#{idx + 1}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 py-1 flex-wrap">
+                          {[0, 1, 2, 3, 4].map(idx => {
+                            const url = specialImages[`testimonial_${idx}`]?.["1x1"];
+                            if (!url) return null;
+                            return (
+                              <div key={idx} className="shrink-0">
+                                <div className="aspect-square w-14 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer" onClick={() => downloadImage(url, `klovers-testimonial-${idx + 1}.png`)}>
+                                  <img src={url} alt={`testimonial ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">#{idx + 1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* ❓ FAQ Card */}
+                    <Card className="rounded-2xl border-indigo-300/50 bg-indigo-50/30 dark:bg-indigo-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">❓ FAQ Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-indigo-400 text-indigo-700">Objection Handling</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Answer common questions — removes barriers</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {[0, 1, 2].map(idx => (
+                            <Button key={idx} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const tpl = getFAQPostTemplate(idx);
+                                const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+                                setSpecialImages(prev => ({ ...prev, [`faq_${idx}`]: { "1x1": dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />Q{idx + 1}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 py-1 flex-wrap">
+                          {[0, 1, 2].map(idx => {
+                            const url = specialImages[`faq_${idx}`]?.["1x1"];
+                            if (!url) return null;
+                            return (
+                              <div key={idx} className="shrink-0">
+                                <div className="aspect-square w-14 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer" onClick={() => downloadImage(url, `klovers-faq-${idx + 1}.png`)}>
+                                  <img src={url} alt={`faq ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">Q{idx + 1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* ⏰ Countdown Card */}
+                    <Card className="rounded-2xl border-red-300/50 bg-red-50/30 dark:bg-red-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">⏰ Countdown Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-red-400 text-red-700">Urgency</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Creates FOMO — drives last-minute sign-ups</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {groups.slice(0, 3).map((g, idx) => (
+                            <Button key={g.id} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const daysLeft = [3, 5, 2][idx];
+                                const tpl = getCountdownPostTemplate(daysLeft, getLevelLabel(g.level));
+                                const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+                                setSpecialImages(prev => ({ ...prev, [`countdown_${idx}`]: { "1x1": dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />{getLevelLabel(g.level).split(" ").slice(-1)}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 py-1 flex-wrap">
+                          {[0, 1, 2].map(idx => {
+                            const url = specialImages[`countdown_${idx}`]?.["1x1"];
+                            if (!url) return null;
+                            return (
+                              <div key={idx} className="shrink-0">
+                                <div className="aspect-square w-14 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer" onClick={() => downloadImage(url, `klovers-countdown-${idx + 1}.png`)}>
+                                  <img src={url} alt={`countdown ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">#{idx + 1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
 
