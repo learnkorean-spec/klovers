@@ -504,9 +504,11 @@ function PlatformGridPreviews({ posts, style, font, bgImage }: { posts: PostData
 // ─── Main Component ───────────────────────────────────────────────
 export default function CreatorHub() {
   const [posts, setPosts] = useState<PostData[]>([
-    { id: uid(), mainText: "Korean Level 1",          subtitle: "Friday • 6:00 PM\n60 min / session",       extraText: "#LearnKorean  #Klovers  #KoreanCourse" },
-    { id: uid(), mainText: "Master Hangul in 2 Weeks!", subtitle: "Free Challenge — Join Now",               extraText: "#Hangul  #Korean  #Klovers" },
-    { id: uid(), mainText: "Why Learn Korean?",         subtitle: "5 Reasons to Start Today",               extraText: "#KoreanLanguage  #Motivation" },
+    { id: uid(), mainText: "Korean Level 1",           subtitle: "Friday • 6:00 PM\n60 min / session",  extraText: "#LearnKorean  #Klovers  #KoreanCourse" },
+    { id: uid(), mainText: "Invite a Friend",          subtitle: "Join Korean Level 1\nEvery Friday",   extraText: "#Klovers  #LearnKorean  #KoreanCourse" },
+    { id: uid(), mainText: "20% OFF",                  subtitle: "First Month\nCode: SAVE20",           extraText: "#KoreanCourse  #Klovers  #Discount" },
+    { id: uid(), mainText: "Refer a Friend",           subtitle: "Get 1 Free Class\nShare your link",   extraText: "#Klovers  #LearnKorean  #KoreanAcademy" },
+    { id: uid(), mainText: "Why Learn Korean?",        subtitle: "5 Reasons to Start Today",            extraText: "#KoreanLanguage  #Motivation" },
   ]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [format,    setFormat]    = useState<FormatKey>("instagram");
@@ -559,7 +561,9 @@ export default function CreatorHub() {
       const pkgMap=new Map((packages||[]).map(p=>[p.id,p]));
       const counts=new Map<string,number>();
       (members||[]).forEach(m=>counts.set(m.group_id,(counts.get(m.group_id)||0)+1));
+
       const newPosts:PostData[]=[];
+
       for(const g of pkgGroups){
         const pkg=pkgMap.get(g.package_id); if(!pkg) continue;
         const seatsLeft=g.capacity-(counts.get(g.id)||0); if(seatsLeft<=0) continue;
@@ -567,12 +571,41 @@ export default function CreatorHub() {
         const [hh,mm]=pkg.start_time.split(":");
         const h=parseInt(hh),ampm=h>=12?"PM":"AM",h12=h%12||12;
         const time=`${h12}:${mm} ${ampm}`;
+        const day=DAY_NAMES[pkg.day_of_week]||"";
         const urgencyLine=seatsLeft<=3?`\n🔴 Only ${seatsLeft} seats left!`:seatsLeft<=6?`\n⚡ ${seatsLeft} seats left`:"";
-        newPosts.push({id:uid(),mainText:level,subtitle:`${DAY_NAMES[pkg.day_of_week]||""} • ${time}\n${pkg.duration_min} min / session${urgencyLine}`,extraText:seatsLeft<=5?"#LastSeats  #Klovers  #KoreanCourse":"#LearnKorean  #Klovers  #KoreanCourse"});
+
+        // 📢 Empty Slot post
+        newPosts.push({
+          id:uid(), mainText:level,
+          subtitle:`${day} • ${time}\n${pkg.duration_min} min / session${urgencyLine}`,
+          extraText:seatsLeft<=5?"#LastSeats  #Klovers  #KoreanCourse":"#LearnKorean  #Klovers  #KoreanCourse",
+        });
+
+        // 👋 Invite Student post
+        newPosts.push({
+          id:uid(), mainText:`Join ${level}`,
+          subtitle:`Every ${day} • ${time}\n${pkg.duration_min} min sessions`,
+          extraText:"#Klovers  #LearnKorean  #KoreanCourse",
+        });
       }
+
+      // 🏷️ Discount post
+      newPosts.push({
+        id:uid(), mainText:"20% OFF",
+        subtitle:"First Month\nCode: SAVE20",
+        extraText:"#KoreanCourse  #Klovers  #Discount",
+      });
+
+      // 🤝 Referral post
+      newPosts.push({
+        id:uid(), mainText:"Refer a Friend",
+        subtitle:"Get 1 Free Class\nShare your link",
+        extraText:"#Klovers  #LearnKorean  #KoreanAcademy",
+      });
+
       if(!newPosts.length){toast({title:"All groups are full"});return;}
-      setPosts(newPosts);setActiveIdx(0);
-      toast({title:`Imported ${newPosts.length} posts`,description:"Ready to render and download."});
+      setPosts(newPosts); setActiveIdx(0);
+      toast({title:`Generated ${newPosts.length} posts`,description:"📢 Empty Slots · 👋 Invite · 🏷️ Discount · 🤝 Referral"});
     } catch(err:any){toast({title:"Import error",description:err.message,variant:"destructive"});}
     finally{setImporting(false);}
   }
@@ -650,8 +683,8 @@ export default function CreatorHub() {
           {/* Import from Schedule */}
           <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-foreground">Auto-generate from Schedule</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Pulls real open class slots instantly</p>
+              <p className="text-sm font-semibold text-foreground">Auto-generate all post types</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">📢 Empty Slots · 👋 Invite · 🏷️ Discount · 🤝 Referral</p>
             </div>
             <Button size="sm" onClick={importFromSchedule} disabled={importing}>
               {importing?<Loader2 className="h-4 w-4 mr-1.5 animate-spin"/>:<Wand2 className="h-4 w-4 mr-1.5"/>}{importing?"Loading…":"Import"}
