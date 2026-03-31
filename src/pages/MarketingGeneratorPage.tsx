@@ -19,12 +19,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   type GroupData,
+  type PostTemplate,
   generateCaptions,
   generateAdCopy,
   generateWhatsAppMessage,
   generateStoryScript,
   getLevelLabel,
   getUrgencyLabel,
+  getGroupPostTemplate,
+  getInvitePostTemplate,
+  getDiscountPostTemplate,
+  getReferralPostTemplate,
 } from "@/lib/marketingEngine";
 import {
   type SlotPostDraft,
@@ -38,21 +43,21 @@ import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
-function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number, maxLines = 99) {
   const words = text.split(" ");
   let line = "";
-  let cy = y;
+  const lines: string[] = [];
   for (const word of words) {
     const test = line + word + " ";
     if (ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line.trim(), x, cy);
+      lines.push(line.trim());
       line = word + " ";
-      cy += lineH;
     } else {
       line = test;
     }
   }
-  ctx.fillText(line.trim(), x, cy);
+  if (line.trim()) lines.push(line.trim());
+  lines.slice(0, maxLines).forEach((l, i) => ctx.fillText(l, x, y + i * lineH));
 }
 
 function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -122,11 +127,12 @@ function renderBrandPost(
   ctx.fillRect(48 * s, 82 * s, 220 * s, 3 * s);
 
   // ── Main title — huge black ──
-  const mainSize = Math.round(114 * s);
+  const charLen = mainText.length;
+  const mainSize = Math.round((charLen > 22 ? 72 : charLen > 16 ? 90 : 114) * s);
   ctx.font = `900 ${mainSize}px 'Arial Black', 'Impact', sans-serif`;
   ctx.fillStyle = "#000000";
   ctx.textAlign = "left";
-  wrapText(ctx, mainText, 48 * s, h * 0.31, w * 0.58, mainSize * 1.12);
+  wrapText(ctx, mainText, 48 * s, h * 0.28, w * 0.60, mainSize * 1.18, 2);
 
   // ── Schedule info lines ──
   const lines = subtitle.split("\n");
@@ -214,17 +220,16 @@ const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
   "story": [1080, 1920],
 };
 
-function renderGroupToDataUrl(group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number }, size: "1x1" | "4x5" | "story"): string {
+function renderTemplateToDataUrl(tpl: PostTemplate, size: "1x1" | "4x5" | "story"): string {
   const [w, h] = CANVAS_SIZES[size];
   const canvas = document.createElement("canvas");
-  const levelLabel = getLevelLabel(group.level);
-  const mainText = levelLabel;
-  const isUrgent = group.seats_left <= 5;
-  const urgencyLine = group.seats_left <= 3 ? `\n🔴 Only ${group.seats_left} seats left!` : group.seats_left <= 6 ? `\n⚡ ${group.seats_left} seats available` : "";
-  const subtitle = `${group.day_name} • ${group.start_time}\n${group.duration_min} min / session${urgencyLine}`;
-  const extra = "#LearnKorean  #Klovers  #KoreanCourse";
-  renderBrandPost(canvas, mainText, subtitle, extra, w, h, isUrgent);
+  renderBrandPost(canvas, tpl.mainText, tpl.subtitle, tpl.extra, w, h, tpl.isUrgent);
   return canvas.toDataURL("image/png");
+}
+
+function renderGroupToDataUrl(group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number }, size: "1x1" | "4x5" | "story"): string {
+  const tpl = getGroupPostTemplate(group as GroupData);
+  return renderTemplateToDataUrl(tpl, size);
 }
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -285,6 +290,13 @@ export default function MarketingGeneratorPage() {
   const [hasTeacherAvailability, setHasTeacherAvailability] = useState<boolean | null>(null);
   const [savingDrafts, setSavingDrafts] = useState(false);
   const [draftCampaignName, setDraftCampaignName] = useState(`Class Openings — ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}`);
+
+  // ── Post type campaign selector ──
+  const [postType, setPostType] = useState<"empty_slots" | "discount" | "referral" | "invite_student">("empty_slots");
+  const [discountPct, setDiscountPct] = useState(20);
+  const [discountCode, setDiscountCode] = useState("SAVE20");
+  // Special post images (discount/referral/invite)
+  const [specialImages, setSpecialImages] = useState<Record<string, GeneratedImages>>({});
 
   // WhatsApp dialog
   const [whatsappGroup, setWhatsappGroup] = useState<GroupData | null>(null);
@@ -605,17 +617,37 @@ export default function MarketingGeneratorPage() {
   }
 
   function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
-    const dataUrl = renderGroupToDataUrl(group, size);
+    const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
+    const dataUrl = renderTemplateToDataUrl(tpl, size);
     setGeneratedImages(prev => ({
       ...prev,
       [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
     }));
   }
 
+  function renderSpecialPost(key: string, tpl: PostTemplate) {
+    const sizes = ["1x1", "4x5", "story"] as const;
+    const imgs: GeneratedImages = {};
+    sizes.forEach(size => { imgs[size] = renderTemplateToDataUrl(tpl, size); });
+    setSpecialImages(prev => ({ ...prev, [key]: imgs }));
+  }
+
   function handleBulkCanvasRender() {
+    if (postType === "discount") {
+      renderSpecialPost("discount", getDiscountPostTemplate(discountPct, discountCode));
+      toast({ title: "Done!", description: "Discount post rendered in 3 sizes." });
+      return;
+    }
+    if (postType === "referral") {
+      renderSpecialPost("referral", getReferralPostTemplate());
+      toast({ title: "Done!", description: "Referral post rendered in 3 sizes." });
+      return;
+    }
+    // empty_slots or invite_student
     groups.forEach(group => {
       handleGenerate(group);
-      const dataUrl = renderGroupToDataUrl(group, "1x1");
+      const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
+      const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
       setGeneratedImages(prev => ({
         ...prev,
         [group.id]: { ...(prev[group.id] || {}), "1x1": dataUrl },
@@ -710,20 +742,58 @@ export default function MarketingGeneratorPage() {
     a.click();
   }
 
-  function downloadAllImages() {
-    let count = 0;
-    groups.forEach(g => {
-      const imgs = generatedImages[g.id];
-      if (!imgs) return;
-      const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
-      (["1x1", "4x5", "story"] as const).forEach(size => {
-        if (imgs[size]) {
-          setTimeout(() => downloadImage(imgs[size]!, `${slug}-${size}.png`), count * 300);
-          count++;
-        }
+  async function downloadAsZip(platform: "instagram" | "tiktok" | "all" = "all") {
+    // Collect all rendered images based on current post type
+    const allImages: Array<{ slug: string; size: string; dataUrl: string }> = [];
+
+    if (postType === "empty_slots" || postType === "invite_student") {
+      groups.forEach(g => {
+        const imgs = generatedImages[g.id];
+        if (!imgs) return;
+        const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
+        const sizes: ("1x1" | "4x5" | "story")[] = platform === "instagram" ? ["1x1", "4x5", "story"] : platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
+        sizes.forEach(size => {
+          if (imgs[size]) allImages.push({ slug, size, dataUrl: imgs[size]! });
+        });
       });
-    });
-    if (count) toast({ title: "Downloading!", description: `${count} images` });
+    } else {
+      const key = postType;
+      const imgs = specialImages[key];
+      if (imgs) {
+        const sizes: ("1x1" | "4x5" | "story")[] = platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
+        sizes.forEach(size => {
+          if (imgs[size]) allImages.push({ slug: key, size, dataUrl: imgs[size]! });
+        });
+      }
+    }
+
+    if (!allImages.length) {
+      toast({ title: "No images to download", description: "Render images first using the Brand Render buttons." });
+      return;
+    }
+
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      allImages.forEach(({ slug, size, dataUrl }) => {
+        const base64 = dataUrl.split(",")[1];
+        zip.file(`${slug}-${size}.png`, base64, { base64: true });
+      });
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klovers-${platform}-posts-${Date.now()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `Downloaded ZIP`, description: `${allImages.length} images for ${platform}` });
+    } catch (err: any) {
+      toast({ title: "ZIP error", description: err.message, variant: "destructive" });
+    }
+  }
+
+  function downloadAllImages() {
+    downloadAsZip("all");
   }
 
   function copyAllCaptions() {
@@ -987,8 +1057,139 @@ export default function MarketingGeneratorPage() {
                 )}
               </div>
 
+              {/* ── CAMPAIGN TYPE SELECTOR ─────────────────────────── */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Brand Post Images</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-xs font-medium text-muted-foreground mr-1">Post type:</span>
+                {([
+                  { id: "empty_slots",    label: "Empty Slots",    icon: "📢" },
+                  { id: "invite_student", label: "Invite Student",  icon: "👋" },
+                  { id: "discount",       label: "Discount Offer",  icon: "🏷️" },
+                  { id: "referral",       label: "Referral",        icon: "🤝" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setPostType(opt.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      postType === opt.id
+                        ? "bg-primary text-primary-foreground border-black/40"
+                        : "bg-card text-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+
+                {/* Discount inputs */}
+                {postType === "discount" && (
+                  <div className="flex items-center gap-2 ml-2">
+                    <input
+                      type="number" min={5} max={80} value={discountPct}
+                      onChange={e => setDiscountPct(Number(e.target.value))}
+                      className="w-16 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="20"
+                    />
+                    <span className="text-xs text-muted-foreground">%</span>
+                    <input
+                      type="text" value={discountCode}
+                      onChange={e => setDiscountCode(e.target.value.toUpperCase())}
+                      className="w-24 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
+                      placeholder="SAVE20"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* ── SPECIAL POST CARDS (Discount / Referral) ─────────── */}
+              {(postType === "discount" || postType === "referral") && (
+                <div className="space-y-3">
+                  <Card className="rounded-2xl max-w-sm">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="text-sm">
+                        {postType === "discount" ? `🏷️ ${discountPct}% Discount Post` : "🤝 Referral Post"}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        {postType === "discount"
+                          ? `Code: ${discountCode} — auto-rendered as 3 sizes`
+                          : "Refer a Friend → Get 1 Free Class"}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                      {/* Render buttons */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {(["1x1", "4x5", "story"] as const).map(size => (
+                          <Button key={size} size="sm"
+                            className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                            onClick={() => {
+                              const tpl = postType === "discount"
+                                ? getDiscountPostTemplate(discountPct, discountCode)
+                                : getReferralPostTemplate();
+                              const key = postType;
+                              const dataUrl = renderTemplateToDataUrl(tpl, size);
+                              setSpecialImages(prev => ({ ...prev, [key]: { ...(prev[key] || {}), [size]: dataUrl } }));
+                            }}
+                          >
+                            <Brush className="h-3 w-3 mr-1" />{size}
+                          </Button>
+                        ))}
+                        <Button size="sm"
+                          className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                          onClick={() => {
+                            const tpl = postType === "discount"
+                              ? getDiscountPostTemplate(discountPct, discountCode)
+                              : getReferralPostTemplate();
+                            renderSpecialPost(postType, tpl);
+                            toast({ title: "All 3 sizes rendered!" });
+                          }}
+                        >
+                          <Brush className="h-3 w-3 mr-1" />All
+                        </Button>
+                      </div>
+
+                      {/* Image thumbnails */}
+                      {specialImages[postType] && Object.keys(specialImages[postType]).length > 0 && (
+                        <div className="flex gap-2 py-1">
+                          {(["1x1", "4x5", "story"] as const).map(size => {
+                            const url = specialImages[postType]?.[size];
+                            if (!url) return null;
+                            const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
+                            return (
+                              <div key={size} className="shrink-0">
+                                <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`}
+                                  onClick={() => downloadImage(url, `klovers-${postType}-${size}.png`)}
+                                >
+                                  <img src={url} alt={size} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* ZIP download */}
+                      {specialImages[postType] && Object.keys(specialImages[postType]).length > 0 && (
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadAsZip("instagram")}>
+                            <FileDown className="h-3 w-3 mr-1" /> Instagram ZIP
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadAsZip("tiktok")}>
+                            <FileDown className="h-3 w-3 mr-1" /> TikTok ZIP
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {/* ── DIVIDER ───────────────────────────────────────────── */}
-              {groups.length > 0 && (
+              {groups.length > 0 && (postType === "empty_slots" || postType === "invite_student") && (
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Group-based posts</span>
@@ -997,7 +1198,7 @@ export default function MarketingGeneratorPage() {
               )}
 
               {/* ── LEGACY GROUP CARDS (keep all existing logic) ─────── */}
-              {loading ? (
+              {(postType !== "discount" && postType !== "referral") && (loading ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {[1, 2, 3, 4].map(i => (
                     <Skeleton key={i} className="h-48 rounded-2xl" />
@@ -1032,8 +1233,14 @@ export default function MarketingGeneratorPage() {
                               <Button variant="outline" size="sm" onClick={copyAllCaptions} className="border-background/20 text-background hover:bg-background/10">
                                 <Copy className="h-4 w-4 mr-1" /> Copy All Captions
                               </Button>
-                              <Button variant="outline" size="sm" onClick={downloadAllImages} className="border-background/20 text-background hover:bg-background/10">
-                                <DownloadCloud className="h-4 w-4 mr-1" /> Download All
+                              <Button variant="outline" size="sm" onClick={() => downloadAsZip("instagram")} className="border-background/20 text-background hover:bg-background/10">
+                                <FileDown className="h-4 w-4 mr-1" /> Instagram ZIP
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => downloadAsZip("tiktok")} className="border-background/20 text-background hover:bg-background/10">
+                                <FileDown className="h-4 w-4 mr-1" /> TikTok ZIP
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => downloadAsZip("all")} className="border-background/20 text-background hover:bg-background/10">
+                                <DownloadCloud className="h-4 w-4 mr-1" /> All ZIP
                               </Button>
                             </>
                           )}
@@ -1346,7 +1553,7 @@ export default function MarketingGeneratorPage() {
                 </>
               ) : (
                 <p className="text-center text-muted-foreground text-sm py-8">No groups found. Add schedule groups to generate content.</p>
-              )}
+              ))}
             </TabsContent>
 
             <TabsContent value="creator">

@@ -97,6 +97,59 @@ export function generateWhatsAppMessage(group: GroupData): string {
   return `السلام عليكم 🌸\n\n📣 ${level} Korean Course\n🗓 ${group.day_name}s at ${group.start_time}\n⏱ ${group.duration_min} minutes/session\n\n✅ تعلم الكورية من الصفر مع مجموعة صغيرة ومتابعة شخصية\n${seatsLine}\n📲 سجل هنا:\n${regUrl}\n\n#Klovers #تعلم_الكورية #KoreanLanguage`;
 }
 
+// ─── Post Template Helpers (for canvas rendering) ───
+
+export interface PostTemplate {
+  mainText: string;
+  subtitle: string;
+  extra: string;
+  isUrgent: boolean;
+}
+
+export function getGroupPostTemplate(group: GroupData): PostTemplate {
+  const levelLabel = getLevelLabel(group.level);
+  const isUrgent = group.seats_left <= 5;
+  const urgencyLine = group.seats_left <= 3
+    ? `\n🔴 Only ${group.seats_left} seats left!`
+    : group.seats_left <= 6
+    ? `\n⚡ ${group.seats_left} seats available`
+    : "";
+  return {
+    mainText: levelLabel,
+    subtitle: `${group.day_name} • ${group.start_time}\n${group.duration_min} min / session${urgencyLine}`,
+    extra: "#LearnKorean  #Klovers  #KoreanCourse",
+    isUrgent,
+  };
+}
+
+export function getInvitePostTemplate(group: GroupData): PostTemplate {
+  const levelLabel = getLevelLabel(group.level);
+  return {
+    mainText: `Join ${levelLabel}`,
+    subtitle: `Every ${group.day_name} • ${group.start_time}\n${group.duration_min} min sessions`,
+    extra: "#LearnKorean  #Klovers  #KoreanCourse",
+    isUrgent: false,
+  };
+}
+
+export function getDiscountPostTemplate(discountPct: number, code: string): PostTemplate {
+  return {
+    mainText: `${discountPct}% OFF`,
+    subtitle: `First Month\nCode: ${code || "SAVE" + discountPct}`,
+    extra: "#KoreanCourse  #Klovers  #Discount",
+    isUrgent: true,
+  };
+}
+
+export function getReferralPostTemplate(): PostTemplate {
+  return {
+    mainText: "Refer a Friend",
+    subtitle: "Get 1 Free Class\nShare your link",
+    extra: "#Klovers  #LearnKorean  #KoreanAcademy",
+    isUrgent: false,
+  };
+}
+
 // ─── Story Script (3-slide) ───
 
 export function generateStoryScript(group: GroupData): { slide1: string; slide2: string; slide3: string } {
