@@ -46,6 +46,14 @@ import {
 } from "@/lib/scheduleSlotEngine";
 import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
+import {
+  type TemplateName,
+  type ColorTheme,
+  THEME_COLORS,
+  TEMPLATE_META,
+  renderPost,
+} from "@/lib/canvasRenderer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number, maxLines = 99) {
@@ -225,10 +233,18 @@ const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
   "story": [1080, 1920],
 };
 
-function renderTemplateToDataUrl(tpl: PostTemplate, size: "1x1" | "4x5" | "story"): string {
+function renderTemplateToDataUrl(
+  tpl: PostTemplate,
+  size: "1x1" | "4x5" | "story",
+  template: TemplateName = "classic",
+  theme: ColorTheme = "yellow",
+): string {
   const [w, h] = CANVAS_SIZES[size];
   const canvas = document.createElement("canvas");
-  renderBrandPost(canvas, tpl.mainText, tpl.subtitle, tpl.extra, w, h, tpl.isUrgent);
+  canvas.width = w; canvas.height = h;
+  const formatKey = size === "story" ? "story" : "instagram";
+  const postData = { id: "tmp", mainText: tpl.mainText, subtitle: tpl.subtitle, extraText: tpl.extra };
+  renderPost(canvas, postData, template, theme, formatKey);
   return canvas.toDataURL("image/png");
 }
 
@@ -302,6 +318,16 @@ export default function MarketingGeneratorPage() {
   const [discountCode, setDiscountCode] = useState("SAVE20");
   // Special post images (discount/referral/invite)
   const [specialImages, setSpecialImages] = useState<Record<string, GeneratedImages>>({});
+
+  // ── Design style for canvas rendering ──
+  const [activeTemplate, setActiveTemplate] = useState<TemplateName>("classic");
+  const [activeTheme, setActiveTheme] = useState<ColorTheme>("yellow");
+  // Convenience wrapper — passes current template+theme to the shared renderer
+  const renderTpl = useCallback(
+    (tpl: PostTemplate, size: "1x1" | "4x5" | "story") =>
+      renderTemplateToDataUrl(tpl, size, activeTemplate, activeTheme),
+    [activeTemplate, activeTheme],
+  );
 
   // ── Monthly Pack state ──
   const [monthlyPlan, setMonthlyPlan] = useState<MonthlyPost[]>([]);
@@ -629,7 +655,7 @@ export default function MarketingGeneratorPage() {
   function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
     const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
     // Note: testimonial/faq/countdown are handled via special cards, not group cards
-    const dataUrl = renderTemplateToDataUrl(tpl, size);
+    const dataUrl = renderTpl(tpl, size);
     setGeneratedImages(prev => ({
       ...prev,
       [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
@@ -639,7 +665,7 @@ export default function MarketingGeneratorPage() {
   function renderSpecialPost(key: string, tpl: PostTemplate) {
     const sizes = ["1x1", "4x5", "story"] as const;
     const imgs: GeneratedImages = {};
-    sizes.forEach(size => { imgs[size] = renderTemplateToDataUrl(tpl, size); });
+    sizes.forEach(size => { imgs[size] = renderTpl(tpl, size); });
     setSpecialImages(prev => ({ ...prev, [key]: imgs }));
   }
 
@@ -651,7 +677,7 @@ export default function MarketingGeneratorPage() {
     groups.forEach(group => {
       handleGenerate(group);
       const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
-      const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+      const dataUrl = renderTpl(tpl, "1x1");
       setGeneratedImages(prev => ({
         ...prev,
         [group.id]: { ...(prev[group.id] || {}), "1x1": dataUrl },
@@ -825,7 +851,7 @@ export default function MarketingGeneratorPage() {
     setMonthlyRendering(true);
     const imgs: Record<string, string> = {};
     for (const post of monthlyPlan) {
-      const dataUrl = renderTemplateToDataUrl(post.template, "1x1");
+      const dataUrl = renderTpl(post.template, "1x1");
       imgs[post.id] = dataUrl;
     }
     setMonthlyImages(imgs);
@@ -996,6 +1022,40 @@ export default function MarketingGeneratorPage() {
                   </div>
                 </div>
 
+                {/* Design pickers */}
+                <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b bg-muted/20">
+                  <span className="text-xs font-semibold text-muted-foreground">Design:</span>
+                  <Select value={activeTemplate} onValueChange={v => setActiveTemplate(v as TemplateName)}>
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TEMPLATE_META.map(t => (
+                        <SelectItem key={t.key} value={t.key} className="text-xs">
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs font-semibold text-muted-foreground">Colour:</span>
+                  <Select value={activeTheme} onValueChange={v => setActiveTheme(v as ColorTheme)}>
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.entries(THEME_COLORS) as [ColorTheme, typeof THEME_COLORS[ColorTheme]][]).map(([key, val]) => (
+                        <SelectItem key={key} value={key} className="text-xs">
+                          <span className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ background: val.dot }} />
+                            {val.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[10px] text-muted-foreground">Applies to all rendered images</span>
+                </div>
+
                 {/* Post type legend */}
                 <div className="flex flex-wrap gap-2 px-5 py-3 border-b bg-muted/30 text-[10px]">
                   {([
@@ -1045,7 +1105,7 @@ export default function MarketingGeneratorPage() {
                             <button
                               className="aspect-square w-full rounded-lg border border-dashed bg-muted/40 flex flex-col items-center justify-center gap-1 hover:bg-muted/60 transition-colors"
                               onClick={() => {
-                                const dataUrl = renderTemplateToDataUrl(post.template, "1x1");
+                                const dataUrl = renderTpl(post.template, "1x1");
                                 setMonthlyImages(prev => ({ ...prev, [post.id]: dataUrl }));
                               }}
                             >
@@ -1244,10 +1304,40 @@ export default function MarketingGeneratorPage() {
               </div>
 
               {/* ── BRAND POST IMAGES ─────────────────────────────────── */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="flex-1 h-px bg-border" />
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Brand Post Images — All Types</span>
                 <div className="flex-1 h-px bg-border" />
+              </div>
+              {/* Design pickers (shared with Monthly Pack) */}
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-2.5">
+                <span className="text-xs font-semibold text-muted-foreground">Design:</span>
+                <Select value={activeTemplate} onValueChange={v => setActiveTemplate(v as TemplateName)}>
+                  <SelectTrigger className="h-7 w-36 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATE_META.map(t => (
+                      <SelectItem key={t.key} value={t.key} className="text-xs">{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs font-semibold text-muted-foreground">Colour:</span>
+                <Select value={activeTheme} onValueChange={v => setActiveTheme(v as ColorTheme)}>
+                  <SelectTrigger className="h-7 w-36 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.entries(THEME_COLORS) as [ColorTheme, typeof THEME_COLORS[ColorTheme]][]).map(([key, val]) => (
+                      <SelectItem key={key} value={key} className="text-xs">
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ background: val.dot }} />
+                          {val.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {loading ? (
@@ -1330,7 +1420,7 @@ export default function MarketingGeneratorPage() {
                               className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={() => {
                                 const tpl = getDiscountPostTemplate(discountPct, discountCode);
-                                const dataUrl = renderTemplateToDataUrl(tpl, size);
+                                const dataUrl = renderTpl(tpl, size);
                                 setSpecialImages(prev => ({ ...prev, discount: { ...(prev.discount || {}), [size]: dataUrl } }));
                               }}
                             >
@@ -1380,7 +1470,7 @@ export default function MarketingGeneratorPage() {
                               className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={() => {
                                 const tpl = getReferralPostTemplate();
-                                const dataUrl = renderTemplateToDataUrl(tpl, size);
+                                const dataUrl = renderTpl(tpl, size);
                                 setSpecialImages(prev => ({ ...prev, referral: { ...(prev.referral || {}), [size]: dataUrl } }));
                               }}
                             >
@@ -1430,7 +1520,7 @@ export default function MarketingGeneratorPage() {
                               className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={() => {
                                 const tpl = getTestimonialPostTemplate(idx);
-                                const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+                                const dataUrl = renderTpl(tpl, "1x1");
                                 setSpecialImages(prev => ({ ...prev, [`testimonial_${idx}`]: { "1x1": dataUrl } }));
                               }}
                             >
@@ -1471,7 +1561,7 @@ export default function MarketingGeneratorPage() {
                               className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={() => {
                                 const tpl = getFAQPostTemplate(idx);
-                                const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+                                const dataUrl = renderTpl(tpl, "1x1");
                                 setSpecialImages(prev => ({ ...prev, [`faq_${idx}`]: { "1x1": dataUrl } }));
                               }}
                             >
@@ -1513,7 +1603,7 @@ export default function MarketingGeneratorPage() {
                               onClick={() => {
                                 const daysLeft = [3, 5, 2][idx];
                                 const tpl = getCountdownPostTemplate(daysLeft, getLevelLabel(g.level));
-                                const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+                                const dataUrl = renderTpl(tpl, "1x1");
                                 setSpecialImages(prev => ({ ...prev, [`countdown_${idx}`]: { "1x1": dataUrl } }));
                               }}
                             >
