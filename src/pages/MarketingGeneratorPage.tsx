@@ -944,7 +944,6 @@ export default function MarketingGeneratorPage() {
             <TabsList className="mb-6">
               <TabsTrigger value="generator"><Sparkles className="h-4 w-4 mr-1.5" /> Auto Generator</TabsTrigger>
               <TabsTrigger value="calendar"><CalendarDays className="h-4 w-4 mr-1.5" /> Campaign Calendar</TabsTrigger>
-              <TabsTrigger value="creator"><Palette className="h-4 w-4 mr-1.5" /> Creator Hub</TabsTrigger>
               <TabsTrigger value="archive">📁 Archive</TabsTrigger>
             </TabsList>
 
@@ -1120,6 +1119,25 @@ export default function MarketingGeneratorPage() {
                   </div>
                 )}
               </div>
+
+              {/* ── CUSTOM POST STUDIO (Creator Hub) ─────────────────── */}
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger asChild>
+                  <button className="w-full flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 hover:bg-muted/30 transition-colors group">
+                    <div className="flex items-center gap-3">
+                      <Palette className="h-4 w-4 text-primary" />
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-foreground">Custom Post Studio</p>
+                        <p className="text-xs text-muted-foreground">Design custom posts — templates, colour themes, photo uploads, platform previews</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4">
+                  <CreatorHub />
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* ── SLOT-BASED SECTION ────────────────────────────────── */}
               <div className="space-y-4">
@@ -1925,10 +1943,6 @@ export default function MarketingGeneratorPage() {
               ) : (
                 <p className="text-center text-muted-foreground text-sm py-8">No groups found. Add schedule groups to generate content.</p>
               )}
-            </TabsContent>
-
-            <TabsContent value="creator">
-              <CreatorHub />
             </TabsContent>
 
             {/* ── Campaign Calendar ── */}
