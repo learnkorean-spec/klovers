@@ -19,12 +19,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   type GroupData,
+  type PostTemplate,
   generateCaptions,
   generateAdCopy,
   generateWhatsAppMessage,
   generateStoryScript,
   getLevelLabel,
   getUrgencyLabel,
+  getGroupPostTemplate,
+  getInvitePostTemplate,
+  getDiscountPostTemplate,
+  getReferralPostTemplate,
 } from "@/lib/marketingEngine";
 import {
   type SlotPostDraft,
@@ -38,21 +43,21 @@ import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
-function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number, maxLines = 99) {
   const words = text.split(" ");
   let line = "";
-  let cy = y;
+  const lines: string[] = [];
   for (const word of words) {
     const test = line + word + " ";
     if (ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line.trim(), x, cy);
+      lines.push(line.trim());
       line = word + " ";
-      cy += lineH;
     } else {
       line = test;
     }
   }
-  ctx.fillText(line.trim(), x, cy);
+  if (line.trim()) lines.push(line.trim());
+  lines.slice(0, maxLines).forEach((l, i) => ctx.fillText(l, x, y + i * lineH));
 }
 
 function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -81,98 +86,131 @@ function renderBrandPost(
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
-  const s = w / 1080;
+  const s = w / 1080; // scale factor
 
-  // ── Yellow background ──
+  // ── Background: pure brand yellow ──
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // ── Black bottom section (clean diagonal cut) ──
-  const cutY = h * 0.55;
+  // ── Diagonal black triangle (bottom-right corner) ──
   ctx.fillStyle = "#111111";
   ctx.beginPath();
-  ctx.moveTo(0, cutY + 40 * s);
-  ctx.lineTo(w, cutY - 40 * s);
+  ctx.moveTo(w * 0.45, h);
+  ctx.lineTo(w, h * 0.42);
   ctx.lineTo(w, h);
-  ctx.lineTo(0, h);
   ctx.closePath();
   ctx.fill();
 
-  // ── KLOVERS brand — top right ──
-  const brandSize = Math.round(26 * s);
-  ctx.font = `900 ${brandSize}px 'Arial Black', 'Impact', sans-serif`;
+  // ── Giant Korean watermark 한 (faint, behind everything) ──
+  ctx.save();
+  ctx.font = `900 ${Math.round(520 * s)}px 'Arial', sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.055)";
+  ctx.textAlign = "center";
+  ctx.fillText("한", w * 0.52, h * 0.72);
+  ctx.restore();
+
+  // ── Top-left accent bar ──
   ctx.fillStyle = "#111111";
-  ctx.textAlign = "right";
-  ctx.fillText("KLOVERS", w - 40 * s, 52 * s);
+  ctx.fillRect(0, 0, 16 * s, h * 0.62);
+
+  // ── "KOREAN COURSE" eyebrow label ──
+  const eyeSize = Math.round(28 * s);
+  ctx.font = `bold ${eyeSize}px 'Arial', sans-serif`;
+  ctx.fillStyle = "#111111";
   ctx.textAlign = "left";
+  ctx.letterSpacing = `${4 * s}px`;
+  ctx.fillText("KOREAN COURSE", 48 * s, 72 * s);
+  ctx.letterSpacing = "0px";
 
-  // ── thin accent line under brand ──
+  // thin rule under eyebrow
   ctx.fillStyle = "#111111";
-  ctx.fillRect(w - 180 * s, 62 * s, 140 * s, 3 * s);
+  ctx.fillRect(48 * s, 82 * s, 220 * s, 3 * s);
 
-  // ── Main headline (big, black on yellow) ──
-  const mainSize = Math.round(92 * s);
+  // ── Main title — huge black ──
+  const charLen = mainText.length;
+  const mainSize = Math.round((charLen > 22 ? 72 : charLen > 16 ? 90 : 114) * s);
   ctx.font = `900 ${mainSize}px 'Arial Black', 'Impact', sans-serif`;
   ctx.fillStyle = "#000000";
   ctx.textAlign = "left";
-  wrapText(ctx, mainText, 48 * s, h * 0.18, w * 0.85, mainSize * 1.08);
+  wrapText(ctx, mainText, 48 * s, h * 0.28, w * 0.60, mainSize * 1.18, 2);
 
-  // ── Schedule pill (black pill with yellow text) ──
-  const schedSize = Math.round(36 * s);
+  // ── Schedule info lines ──
+  const lines = subtitle.split("\n");
+  const schedSize = Math.round(46 * s);
   ctx.font = `bold ${schedSize}px 'Arial', sans-serif`;
-  const pillText = subtitle.split("\n")[0] || subtitle;
-  const pillW = ctx.measureText(pillText).width + 40 * s;
-  const pillH = schedSize * 1.7;
-  const pillX = 48 * s;
-  const pillY = cutY - 20 * s;
   ctx.fillStyle = "#111111";
-  drawRoundedRect(ctx, pillX, pillY - pillH * 0.7, pillW, pillH, pillH / 2);
-  ctx.fill();
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillText(pillText, pillX + 20 * s, pillY);
+  let lineY = h * 0.56;
+  for (const line of lines) {
+    // urgency line gets yellow highlight pill
+    if (line.startsWith("🔴") || line.startsWith("⚡")) {
+      ctx.save();
+      ctx.fillStyle = "#111111";
+      const pillW = ctx.measureText(line).width + 32 * s;
+      const pillH = schedSize * 1.4;
+      drawRoundedRect(ctx, 48 * s, lineY - schedSize * 0.85, pillW, pillH, pillH / 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFFF00";
+      ctx.fillText(line, 64 * s, lineY);
+      ctx.restore();
+    } else {
+      ctx.fillText(line, 48 * s, lineY);
+    }
+    lineY += schedSize * 1.45;
+  }
 
-  // ── CTA button (yellow pill on black) ──
-  const ctaSize = Math.round(38 * s);
-  ctx.font = `900 ${ctaSize}px 'Arial Black', sans-serif`;
+  // ── "Register Now →" CTA pill (on black diagonal) ──
+  const ctaSize = Math.round(36 * s);
+  ctx.font = `bold ${ctaSize}px 'Arial Black', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
   const ctaText = "Register Now →";
   const ctaW = ctx.measureText(ctaText).width + 48 * s;
   const ctaH = ctaSize * 1.8;
-  const ctaX = 48 * s;
-  const ctaY = h * 0.72;
-  ctx.fillStyle = "#FFFF00";
+  const ctaX = w * 0.55;
+  const ctaY = h * 0.78;
   drawRoundedRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
   ctx.fillStyle = "#111111";
-  ctx.fillText(ctaText, ctaX + 24 * s, ctaY + ctaH * 0.66);
+  ctx.fillText(ctaText, ctaX + 24 * s, ctaY + ctaH * 0.65);
 
-  // ── Urgency badge (top right, below brand) ──
+  // ── Limited seats burst (top-right) when urgent ──
   if (isUrgent) {
-    const badgeSize = Math.round(24 * s);
-    ctx.font = `bold ${badgeSize}px 'Arial', sans-serif`;
-    const badgeText = "⚡ LIMITED SEATS";
-    const badgeW = ctx.measureText(badgeText).width + 28 * s;
-    const badgeH = badgeSize * 1.7;
-    const badgeX = w - badgeW - 40 * s;
-    const badgeY = 78 * s;
+    ctx.save();
+    ctx.translate(w * 0.88, h * 0.13);
+    // draw 8-point star
     ctx.fillStyle = "#111111";
-    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2);
+    ctx.beginPath();
+    const spikes = 8, outerR = 68 * s, innerR = 44 * s;
+    for (let i = 0; i < spikes * 2; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const angle = (i * Math.PI) / spikes - Math.PI / 2;
+      i === 0 ? ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r)
+               : ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+    ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#FFFF00";
-    ctx.fillText(badgeText, badgeX + 14 * s, badgeY + badgeH * 0.64);
+    ctx.textAlign = "center";
+    ctx.font = `bold ${Math.round(22 * s)}px 'Arial', sans-serif`;
+    ctx.fillText("LIMITED", 0, -10 * s);
+    ctx.fillText("SEATS", 0, 16 * s);
+    ctx.restore();
   }
 
-  // ── Bottom strip with hashtags ──
-  const stripH = 70 * s;
-  const tagSize = Math.round(22 * s);
-  ctx.font = `${tagSize}px 'Arial', sans-serif`;
-  ctx.fillStyle = "rgba(255,255,0,0.5)";
-  ctx.textAlign = "left";
-  ctx.fillText(extra, 48 * s, h - stripH / 2 + tagSize * 0.3);
+  // ── Bottom brand strip ──
+  const stripH = 90 * s;
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0, h - stripH, w, stripH);
 
-  ctx.font = `900 ${Math.round(24 * s)}px 'Arial Black', sans-serif`;
-  ctx.fillStyle = "rgba(255,255,0,0.5)";
+  const tagSize = Math.round(28 * s);
+  ctx.font = `bold ${tagSize}px 'Arial', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "left";
+  ctx.fillText(extra, 48 * s, h - stripH / 2 + tagSize * 0.35);
+
+  ctx.font = `900 ${Math.round(34 * s)}px 'Arial Black', 'Impact', sans-serif`;
+  ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "right";
-  ctx.fillText("kloversegy.com", w - 40 * s, h - stripH / 2 + tagSize * 0.3);
+  ctx.fillText("KLOVERS", w - 36 * s, h - stripH / 2 + tagSize * 0.5);
   ctx.textAlign = "left";
 }
 
@@ -182,20 +220,16 @@ const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
   "story": [1080, 1920],
 };
 
-function renderGroupToDataUrl(
-  group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number },
-  size: "1x1" | "4x5" | "story",
-  headline?: string,
-): string {
+function renderTemplateToDataUrl(tpl: PostTemplate, size: "1x1" | "4x5" | "story"): string {
   const [w, h] = CANVAS_SIZES[size];
   const canvas = document.createElement("canvas");
-  const levelLabel = getLevelLabel(group.level);
-  const mainText = headline || `${levelLabel} — ${group.day_name} ${group.start_time}`;
-  const isUrgent = group.seats_left <= 5;
-  const subtitle = `${group.day_name} · ${group.start_time} · ${group.duration_min}min`;
-  const extra = "#LearnKorean  #Klovers  #KoreanCourse";
-  renderBrandPost(canvas, mainText, subtitle, extra, w, h, isUrgent);
+  renderBrandPost(canvas, tpl.mainText, tpl.subtitle, tpl.extra, w, h, tpl.isUrgent);
   return canvas.toDataURL("image/png");
+}
+
+function renderGroupToDataUrl(group: { level: string; day_name: string; start_time: string; duration_min: number; seats_left: number }, size: "1x1" | "4x5" | "story"): string {
+  const tpl = getGroupPostTemplate(group as GroupData);
+  return renderTemplateToDataUrl(tpl, size);
 }
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -256,6 +290,13 @@ export default function MarketingGeneratorPage() {
   const [hasTeacherAvailability, setHasTeacherAvailability] = useState<boolean | null>(null);
   const [savingDrafts, setSavingDrafts] = useState(false);
   const [draftCampaignName, setDraftCampaignName] = useState(`Class Openings — ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}`);
+
+  // ── Post type campaign selector ──
+  const [postType, setPostType] = useState<"empty_slots" | "discount" | "referral" | "invite_student">("empty_slots");
+  const [discountPct, setDiscountPct] = useState(20);
+  const [discountCode, setDiscountCode] = useState("SAVE20");
+  // Special post images (discount/referral/invite)
+  const [specialImages, setSpecialImages] = useState<Record<string, GeneratedImages>>({});
 
   // WhatsApp dialog
   const [whatsappGroup, setWhatsappGroup] = useState<GroupData | null>(null);
@@ -576,35 +617,43 @@ export default function MarketingGeneratorPage() {
   }
 
   function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
-    // Ensure content is generated first so we can use the headline
-    let content = generatedContent[group.id];
-    if (!content) {
-      const captions = generateCaptions(group);
-      const adCopy = generateAdCopy(group);
-      content = { captions, adCopy };
-      setGeneratedContent(prev => ({ ...prev, [group.id]: content! }));
-    }
-    const headline = content.adCopy.headlines[0] || getLevelLabel(group.level);
-    const dataUrl = renderGroupToDataUrl(group, size, headline);
+    const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
+    const dataUrl = renderTemplateToDataUrl(tpl, size);
     setGeneratedImages(prev => ({
       ...prev,
       [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
     }));
   }
 
+  function renderSpecialPost(key: string, tpl: PostTemplate) {
+    const sizes = ["1x1", "4x5", "story"] as const;
+    const imgs: GeneratedImages = {};
+    sizes.forEach(size => { imgs[size] = renderTemplateToDataUrl(tpl, size); });
+    setSpecialImages(prev => ({ ...prev, [key]: imgs }));
+  }
+
   function handleBulkCanvasRender() {
+    if (postType === "discount") {
+      renderSpecialPost("discount", getDiscountPostTemplate(discountPct, discountCode));
+      toast({ title: "Done!", description: "Discount post rendered in 3 sizes." });
+      return;
+    }
+    if (postType === "referral") {
+      renderSpecialPost("referral", getReferralPostTemplate());
+      toast({ title: "Done!", description: "Referral post rendered in 3 sizes." });
+      return;
+    }
+    // empty_slots or invite_student
     groups.forEach(group => {
-      const { adCopy } = handleGenerate(group);
-      const headline = adCopy.headlines[0] || getLevelLabel(group.level);
-      (["1x1", "4x5", "story"] as const).forEach(size => {
-        const dataUrl = renderGroupToDataUrl(group, size, headline);
-        setGeneratedImages(prev => ({
-          ...prev,
-          [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
-        }));
-      });
+      handleGenerate(group);
+      const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
+      const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+      setGeneratedImages(prev => ({
+        ...prev,
+        [group.id]: { ...(prev[group.id] || {}), "1x1": dataUrl },
+      }));
     });
-    toast({ title: "Done!", description: `${groups.length} × 3 sizes rendered (1x1, 4x5, story).` });
+    toast({ title: "Done!", description: `${groups.length} brand-yellow images rendered instantly.` });
   }
 
   async function handleGenerateImage(group: GroupData, size: "1x1" | "4x5" | "story") {
@@ -693,71 +742,58 @@ export default function MarketingGeneratorPage() {
     a.click();
   }
 
-  function downloadAllImages() {
-    let count = 0;
-    groups.forEach(g => {
-      const imgs = generatedImages[g.id];
-      if (!imgs) return;
-      const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
-      (["1x1", "4x5", "story"] as const).forEach(size => {
-        if (imgs[size]) {
-          setTimeout(() => downloadImage(imgs[size]!, `${slug}-${size}.png`), count * 300);
-          count++;
-        }
-      });
-    });
-    if (count) toast({ title: "Downloading!", description: `${count} images` });
-  }
+  async function downloadAsZip(platform: "instagram" | "tiktok" | "all" = "all") {
+    // Collect all rendered images based on current post type
+    const allImages: Array<{ slug: string; size: string; dataUrl: string }> = [];
 
-  function downloadPlatformPack(platform: "instagram" | "tiktok") {
-    // Generate all sizes first if not already done
-    groups.forEach(group => {
-      const hasAll = generatedImages[group.id]?.["1x1"] && generatedImages[group.id]?.["4x5"] && generatedImages[group.id]?.["story"];
-      if (!hasAll) {
-        let content = generatedContent[group.id];
-        if (!content) {
-          const captions = generateCaptions(group);
-          const adCopy = generateAdCopy(group);
-          content = { captions, adCopy };
-          setGeneratedContent(prev => ({ ...prev, [group.id]: content! }));
-        }
-        const headline = content.adCopy.headlines[0] || getLevelLabel(group.level);
-        (["1x1", "4x5", "story"] as const).forEach(size => {
-          if (!generatedImages[group.id]?.[size]) {
-            const dataUrl = renderGroupToDataUrl(group, size, headline);
-            setGeneratedImages(prev => ({
-              ...prev,
-              [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
-            }));
-          }
+    if (postType === "empty_slots" || postType === "invite_student") {
+      groups.forEach(g => {
+        const imgs = generatedImages[g.id];
+        if (!imgs) return;
+        const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
+        const sizes: ("1x1" | "4x5" | "story")[] = platform === "instagram" ? ["1x1", "4x5", "story"] : platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
+        sizes.forEach(size => {
+          if (imgs[size]) allImages.push({ slug, size, dataUrl: imgs[size]! });
+        });
+      });
+    } else {
+      const key = postType;
+      const imgs = specialImages[key];
+      if (imgs) {
+        const sizes: ("1x1" | "4x5" | "story")[] = platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
+        sizes.forEach(size => {
+          if (imgs[size]) allImages.push({ slug: key, size, dataUrl: imgs[size]! });
         });
       }
-    });
+    }
 
-    // Download with slight delay
-    let count = 0;
-    const sizes: ("1x1" | "4x5" | "story")[] = platform === "instagram"
-      ? ["1x1", "4x5", "story"]
-      : ["story"]; // TikTok uses 9:16
+    if (!allImages.length) {
+      toast({ title: "No images to download", description: "Render images first using the Brand Render buttons." });
+      return;
+    }
 
-    // Use setTimeout to allow state to settle after generation
-    setTimeout(() => {
-      groups.forEach(g => {
-        const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
-        sizes.forEach(size => {
-          const content = generatedContent[g.id];
-          const headline = content?.adCopy.headlines[0] || getLevelLabel(g.level);
-          // Render inline to guarantee we have the image
-          const dataUrl = renderGroupToDataUrl(g, size, headline);
-          setTimeout(() => downloadImage(dataUrl, `${platform}-${slug}-${size}.png`), count * 300);
-          count++;
-        });
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      allImages.forEach(({ slug, size, dataUrl }) => {
+        const base64 = dataUrl.split(",")[1];
+        zip.file(`${slug}-${size}.png`, base64, { base64: true });
       });
-      if (count) toast({
-        title: `${platform === "instagram" ? "Instagram" : "TikTok"} Pack`,
-        description: `Downloading ${count} images (${sizes.join(", ")})`,
-      });
-    }, 100);
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klovers-${platform}-posts-${Date.now()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `Downloaded ZIP`, description: `${allImages.length} images for ${platform}` });
+    } catch (err: any) {
+      toast({ title: "ZIP error", description: err.message, variant: "destructive" });
+    }
+  }
+
+  function downloadAllImages() {
+    downloadAsZip("all");
   }
 
   function copyAllCaptions() {
@@ -1021,8 +1057,139 @@ export default function MarketingGeneratorPage() {
                 )}
               </div>
 
+              {/* ── CAMPAIGN TYPE SELECTOR ─────────────────────────── */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Brand Post Images</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-xs font-medium text-muted-foreground mr-1">Post type:</span>
+                {([
+                  { id: "empty_slots",    label: "Empty Slots",    icon: "📢" },
+                  { id: "invite_student", label: "Invite Student",  icon: "👋" },
+                  { id: "discount",       label: "Discount Offer",  icon: "🏷️" },
+                  { id: "referral",       label: "Referral",        icon: "🤝" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setPostType(opt.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      postType === opt.id
+                        ? "bg-primary text-primary-foreground border-black/40"
+                        : "bg-card text-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+
+                {/* Discount inputs */}
+                {postType === "discount" && (
+                  <div className="flex items-center gap-2 ml-2">
+                    <input
+                      type="number" min={5} max={80} value={discountPct}
+                      onChange={e => setDiscountPct(Number(e.target.value))}
+                      className="w-16 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="20"
+                    />
+                    <span className="text-xs text-muted-foreground">%</span>
+                    <input
+                      type="text" value={discountCode}
+                      onChange={e => setDiscountCode(e.target.value.toUpperCase())}
+                      className="w-24 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
+                      placeholder="SAVE20"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* ── SPECIAL POST CARDS (Discount / Referral) ─────────── */}
+              {(postType === "discount" || postType === "referral") && (
+                <div className="space-y-3">
+                  <Card className="rounded-2xl max-w-sm">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="text-sm">
+                        {postType === "discount" ? `🏷️ ${discountPct}% Discount Post` : "🤝 Referral Post"}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        {postType === "discount"
+                          ? `Code: ${discountCode} — auto-rendered as 3 sizes`
+                          : "Refer a Friend → Get 1 Free Class"}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                      {/* Render buttons */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {(["1x1", "4x5", "story"] as const).map(size => (
+                          <Button key={size} size="sm"
+                            className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                            onClick={() => {
+                              const tpl = postType === "discount"
+                                ? getDiscountPostTemplate(discountPct, discountCode)
+                                : getReferralPostTemplate();
+                              const key = postType;
+                              const dataUrl = renderTemplateToDataUrl(tpl, size);
+                              setSpecialImages(prev => ({ ...prev, [key]: { ...(prev[key] || {}), [size]: dataUrl } }));
+                            }}
+                          >
+                            <Brush className="h-3 w-3 mr-1" />{size}
+                          </Button>
+                        ))}
+                        <Button size="sm"
+                          className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                          onClick={() => {
+                            const tpl = postType === "discount"
+                              ? getDiscountPostTemplate(discountPct, discountCode)
+                              : getReferralPostTemplate();
+                            renderSpecialPost(postType, tpl);
+                            toast({ title: "All 3 sizes rendered!" });
+                          }}
+                        >
+                          <Brush className="h-3 w-3 mr-1" />All
+                        </Button>
+                      </div>
+
+                      {/* Image thumbnails */}
+                      {specialImages[postType] && Object.keys(specialImages[postType]).length > 0 && (
+                        <div className="flex gap-2 py-1">
+                          {(["1x1", "4x5", "story"] as const).map(size => {
+                            const url = specialImages[postType]?.[size];
+                            if (!url) return null;
+                            const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
+                            return (
+                              <div key={size} className="shrink-0">
+                                <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`}
+                                  onClick={() => downloadImage(url, `klovers-${postType}-${size}.png`)}
+                                >
+                                  <img src={url} alt={size} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* ZIP download */}
+                      {specialImages[postType] && Object.keys(specialImages[postType]).length > 0 && (
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadAsZip("instagram")}>
+                            <FileDown className="h-3 w-3 mr-1" /> Instagram ZIP
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadAsZip("tiktok")}>
+                            <FileDown className="h-3 w-3 mr-1" /> TikTok ZIP
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {/* ── DIVIDER ───────────────────────────────────────────── */}
-              {groups.length > 0 && (
+              {groups.length > 0 && (postType === "empty_slots" || postType === "invite_student") && (
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Group-based posts</span>
@@ -1031,7 +1198,7 @@ export default function MarketingGeneratorPage() {
               )}
 
               {/* ── LEGACY GROUP CARDS (keep all existing logic) ─────── */}
-              {loading ? (
+              {(postType !== "discount" && postType !== "referral") && (loading ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {[1, 2, 3, 4].map(i => (
                     <Skeleton key={i} className="h-48 rounded-2xl" />
@@ -1066,17 +1233,17 @@ export default function MarketingGeneratorPage() {
                               <Button variant="outline" size="sm" onClick={copyAllCaptions} className="border-background/20 text-background hover:bg-background/10">
                                 <Copy className="h-4 w-4 mr-1" /> Copy All Captions
                               </Button>
-                              <Button variant="outline" size="sm" onClick={downloadAllImages} className="border-background/20 text-background hover:bg-background/10">
-                                <DownloadCloud className="h-4 w-4 mr-1" /> Download All
+                              <Button variant="outline" size="sm" onClick={() => downloadAsZip("instagram")} className="border-background/20 text-background hover:bg-background/10">
+                                <FileDown className="h-4 w-4 mr-1" /> Instagram ZIP
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => downloadAsZip("tiktok")} className="border-background/20 text-background hover:bg-background/10">
+                                <FileDown className="h-4 w-4 mr-1" /> TikTok ZIP
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => downloadAsZip("all")} className="border-background/20 text-background hover:bg-background/10">
+                                <DownloadCloud className="h-4 w-4 mr-1" /> All ZIP
                               </Button>
                             </>
                           )}
-                          <Button size="sm" onClick={() => downloadPlatformPack("instagram")} className="bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:from-purple-700 hover:to-pink-600">
-                            <DownloadCloud className="h-4 w-4 mr-1" /> Instagram Pack
-                          </Button>
-                          <Button size="sm" onClick={() => downloadPlatformPack("tiktok")} className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700">
-                            <DownloadCloud className="h-4 w-4 mr-1" /> TikTok Pack
-                          </Button>
                         </div>
                       </div>
                       {bulkGenerating && (
@@ -1386,7 +1553,7 @@ export default function MarketingGeneratorPage() {
                 </>
               ) : (
                 <p className="text-center text-muted-foreground text-sm py-8">No groups found. Add schedule groups to generate content.</p>
-              )}
+              ))}
             </TabsContent>
 
             <TabsContent value="creator">
