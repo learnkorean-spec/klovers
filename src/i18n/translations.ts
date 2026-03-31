@@ -160,6 +160,7 @@ export const translations = {
       experience: {
         title: "Experience & Credentials",
         items: [
+          "12+ years of Korean language teaching experience (2012 – Present)",
           "2,000+ students taught across 15+ countries",
           "Specialized in teaching Arabic speakers",
           "TOPIK preparation expert with high student pass rates",

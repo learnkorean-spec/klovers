@@ -12,6 +12,7 @@ import rehamKorea1 from "@/assets/reham-korea-1.jpg";
 import rehamKorea2 from "@/assets/reham-korea-2.jpg";
 
 const TRUST_STATS = [
+  { value: "12+", label: "Years Teaching" },
   { value: "1,000+", label: "Students Taught" },
   { value: "4.9 ★", label: "Average Rating" },
   { value: "15+", label: "Countries" },
@@ -54,7 +55,7 @@ const AboutPage = () => {
             </p>
 
             {/* Trust stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-12">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-3xl mx-auto mb-12">
               {TRUST_STATS.map((s) => (
                 <div key={s.label} className="text-center bg-card border border-border rounded-xl px-4 py-4">
                   <div className="text-2xl font-bold text-foreground">{s.value}</div>
