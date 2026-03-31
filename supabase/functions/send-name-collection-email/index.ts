@@ -15,7 +15,7 @@ const SITE_URL = "https://kloversegy.com";
 
 // ── Brand constants (copied from send-confirmation-email) ──
 const BRAND_BLACK = "#000000";
-const BRAND_YELLOW = "#F5A623";
+const BRAND_YELLOW = "#FFFF00";
 const BRAND_DARK = "#1a1a1a";
 const BRAND_TEXT = "#333333";
 const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";

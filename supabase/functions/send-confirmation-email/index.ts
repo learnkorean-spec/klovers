@@ -42,7 +42,7 @@ const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 
 // ── Brand constants ──
 const BRAND_BLACK = "#000000";
-const BRAND_YELLOW = "#F5A623";
+const BRAND_YELLOW = "#FFFF00";
 const BRAND_DARK = "#1a1a1a";
 const BRAND_GRAY = "#f5f5f5";
 const BRAND_TEXT = "#333333";
