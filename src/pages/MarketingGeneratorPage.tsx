@@ -984,11 +984,11 @@ export default function MarketingGeneratorPage() {
                     </Button>
                     {monthlyPlan.length > 0 && (
                       <>
-                        <Button variant="outline" onClick={renderAllMonthly} disabled={monthlyRendering} className="border-background/20 text-background hover:bg-background/10">
+                        <Button variant="outline" onClick={renderAllMonthly} disabled={monthlyRendering} className="border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground">
                           {monthlyRendering ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brush className="h-4 w-4 mr-2" />}
                           Render All
                         </Button>
-                        <Button variant="outline" onClick={downloadMonthlyZip} className="border-background/20 text-background hover:bg-background/10">
+                        <Button variant="outline" onClick={downloadMonthlyZip} className="border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground">
                           <DownloadCloud className="h-4 w-4 mr-2" /> Download ZIP
                         </Button>
                       </>
