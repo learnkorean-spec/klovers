@@ -994,7 +994,7 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(3)}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>

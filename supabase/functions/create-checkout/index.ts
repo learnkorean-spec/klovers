@@ -3,6 +3,8 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const ALLOWED_ORIGINS = [
+  "https://kloversegy.com",
+  "https://www.kloversegy.com",
   "https://klovers.lovable.app",
   "https://id-preview--21511a91-fdcf-46bb-950e-98f5a8707807.lovable.app",
 ];
@@ -135,9 +137,20 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Look up user by email to check enrollment history
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-    const matchedUser = users?.find((u: any) => u.email === email);
+    // Look up user by email to check enrollment history (paginate to avoid missing users)
+    let matchedUser: any = null;
+    {
+      const lowerEmailSearch = email.toLowerCase();
+      let page = 1;
+      const perPage = 1000;
+      while (!matchedUser) {
+        const { data: { users: pageUsers } } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+        if (!pageUsers || pageUsers.length === 0) break;
+        matchedUser = pageUsers.find((u: any) => u.email?.toLowerCase() === lowerEmailSearch) ?? null;
+        if (pageUsers.length < perPage) break;
+        page++;
+      }
+    }
     if (matchedUser) {
       const { count } = await supabaseAdmin
         .from("enrollments")
