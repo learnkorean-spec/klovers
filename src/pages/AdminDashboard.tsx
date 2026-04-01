@@ -247,6 +247,8 @@ const AdminDashboard = () => {
       };
       if (enrollForm.duration !== "custom") {
         enrollPayload.duration = parseInt(enrollForm.duration);
+      } else if ((enrollForm as any)._customDuration) {
+        enrollPayload.duration = parseInt((enrollForm as any)._customDuration);
       }
       const { data: enrollment, error: enrollErr } = await supabase
         .from("enrollments")
@@ -2143,36 +2145,60 @@ const AdminDashboard = () => {
 
             {/* Custom package inputs */}
             {enrollForm.duration === "custom" ? (
-              <div className="flex gap-3 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5">
-                <div className="flex-1 space-y-1">
-                  <Label className="text-xs">Sessions</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder="e.g. 8"
-                    value={(enrollForm as any)._customSessions ?? ""}
-                    onChange={e => setEnrollForm(f => ({ ...f, _customSessions: e.target.value } as any))}
-                  />
+              <div className="space-y-3 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5">
+                <div className="flex gap-3">
+                  {/* Duration dropdown — satisfies DB constraint */}
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Duration</Label>
+                    <Select
+                      value={(enrollForm as any)._customDuration ?? ""}
+                      onValueChange={v => setEnrollForm(f => ({
+                        ...f,
+                        _customDuration: v,
+                        _customSessions: String(SESSIONS_BY_DURATION[v] ?? ""),
+                      } as any))}
+                    >
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Pick..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 month</SelectItem>
+                        <SelectItem value="3">3 months</SelectItem>
+                        <SelectItem value="6">6 months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Sessions — auto-filled from duration, editable */}
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Sessions</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 8"
+                      value={(enrollForm as any)._customSessions ?? ""}
+                      onChange={e => setEnrollForm(f => ({ ...f, _customSessions: e.target.value } as any))}
+                    />
+                  </div>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <Label className="text-xs">Amount paid</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={enrollForm.amount}
-                    onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))}
-                  />
-                </div>
-                <div className="w-24 space-y-1">
-                  <Label className="text-xs">Currency</Label>
-                  <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
-                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EGP">EGP</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex gap-3">
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs">Amount paid</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={enrollForm.amount}
+                      onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))}
+                    />
+                  </div>
+                  <div className="w-24 space-y-1">
+                    <Label className="text-xs">Currency</Label>
+                    <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="EGP">EGP</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -2226,7 +2252,7 @@ const AdminDashboard = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setManualEnrollOpen(false)}>Cancel</Button>
-            <Button onClick={handleManualEnroll} disabled={enrollSaving || (enrollForm.plan_type === "group" && !enrollForm.group_id) || (enrollForm.duration === "custom" && !((enrollForm as any)._customSessions))}>
+            <Button onClick={handleManualEnroll} disabled={enrollSaving || (enrollForm.plan_type === "group" && !enrollForm.group_id) || (enrollForm.duration === "custom" && (!((enrollForm as any)._customDuration) || !((enrollForm as any)._customSessions)))}>
               {enrollSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
               Enroll
             </Button>
