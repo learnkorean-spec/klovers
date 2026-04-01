@@ -70,7 +70,7 @@ const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProp
       <div className="relative group cursor-pointer" onClick={() => inputRef.current?.click()}>
         <Avatar className="h-16 w-16 border-2 border-primary/20">
           {currentUrl && <AvatarImage src={currentUrl} alt={name} />}
-          <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+          <AvatarFallback className="bg-primary/20 text-foreground text-lg font-semibold">
             {(name || "?").slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>

@@ -72,8 +72,8 @@ const HomeGamesSection = () => {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             {STATS.map(({ icon: Icon, value, label }) => (
               <div key={label} className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
-                <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Icon className="h-3.5 w-3.5 text-primary" />
+                <div className="h-7 w-7 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center">
+                  <Icon className="h-3.5 w-3.5 text-foreground" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-foreground text-sm leading-none">{value}</p>

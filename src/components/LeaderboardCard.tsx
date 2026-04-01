@@ -46,7 +46,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       {/* Avatar */}
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarImage src={avatarUrl || undefined} />
-        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+        <AvatarFallback className="text-xs bg-primary/20 text-foreground font-semibold">
           {name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
