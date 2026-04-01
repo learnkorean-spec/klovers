@@ -216,7 +216,7 @@ const AdminDashboard = () => {
 
   function openManualEnroll(u: OverviewRow) {
     setEnrollTarget(u);
-    setEnrollForm({ plan_type: "group", country: "egypt", duration: "1", group_id: "", level: u.level || "", amount: "1200", currency: "EGP", notes: "" });
+    setEnrollForm({ plan_type: "group", country: "egypt", duration: "1", group_id: "", level: u.level || "", amount: "1200", currency: "EGP", notes: "", _customSessions: "" } as any);
     setManualEnrollOpen(true);
   }
 
@@ -227,7 +227,9 @@ const AdminDashboard = () => {
     }
     setEnrollSaving(true);
     try {
-      const sessions = SESSIONS_BY_DURATION[enrollForm.duration] ?? 4;
+      const sessions = enrollForm.duration === "custom"
+        ? parseInt((enrollForm as any)._customSessions) || 1
+        : SESSIONS_BY_DURATION[enrollForm.duration] ?? 4;
       const amount = parseFloat(enrollForm.amount) || 0;
       const { data: enrollment, error: enrollErr } = await supabase
         .from("enrollments")
@@ -2133,18 +2135,55 @@ const AdminDashboard = () => {
                   {enrollPriceOptions.map(o => (
                     <SelectItem key={o.duration} value={o.duration}>{o.label}</SelectItem>
                   ))}
+                  <SelectItem value="custom">✏️ Manual / Custom</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Sessions + amount summary (read-only badge) */}
-            <div className="flex gap-3 text-sm bg-muted/60 rounded-lg px-3 py-2">
-              <span className="text-muted-foreground">Sessions:</span>
-              <span className="font-semibold">{SESSIONS_BY_DURATION[enrollForm.duration]}</span>
-              <span className="mx-2 text-border">|</span>
-              <span className="text-muted-foreground">Amount:</span>
-              <span className="font-semibold">{Number(enrollForm.amount).toLocaleString()} {enrollForm.currency}</span>
-            </div>
+            {/* Custom package inputs */}
+            {enrollForm.duration === "custom" ? (
+              <div className="flex gap-3 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs">Sessions</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 8"
+                    value={enrollForm.amount === enrollForm.amount ? (enrollForm as any)._customSessions ?? "" : ""}
+                    onChange={e => setEnrollForm(f => ({ ...f, _customSessions: e.target.value } as any))}
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs">Amount paid</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={enrollForm.amount}
+                    onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))}
+                  />
+                </div>
+                <div className="w-24 space-y-1">
+                  <Label className="text-xs">Currency</Label>
+                  <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EGP">EGP</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : (
+              /* Sessions + amount summary (read-only) */
+              <div className="flex gap-3 text-sm bg-muted/60 rounded-lg px-3 py-2">
+                <span className="text-muted-foreground">Sessions:</span>
+                <span className="font-semibold">{SESSIONS_BY_DURATION[enrollForm.duration]}</span>
+                <span className="mx-2 text-border">|</span>
+                <span className="text-muted-foreground">Amount:</span>
+                <span className="font-semibold">{Number(enrollForm.amount).toLocaleString()} {enrollForm.currency}</span>
+              </div>
+            )}
 
             {/* Group — only for group plan */}
             {enrollForm.plan_type === "group" && (
@@ -2186,7 +2225,7 @@ const AdminDashboard = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setManualEnrollOpen(false)}>Cancel</Button>
-            <Button onClick={handleManualEnroll} disabled={enrollSaving || (enrollForm.plan_type === "group" && !enrollForm.group_id)}>
+            <Button onClick={handleManualEnroll} disabled={enrollSaving || (enrollForm.plan_type === "group" && !enrollForm.group_id) || (enrollForm.duration === "custom" && !((enrollForm as any)._customSessions))}>
               {enrollSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
               Enroll
             </Button>
