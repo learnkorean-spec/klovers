@@ -247,7 +247,6 @@ const AdminDashboard = () => {
           amount,
           currency: enrollForm.currency,
           reviewed_at: new Date().toISOString(),
-          notes: enrollForm.notes || null,
         })
         .select("id")
         .single();
