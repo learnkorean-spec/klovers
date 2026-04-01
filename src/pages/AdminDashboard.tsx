@@ -240,7 +240,7 @@ const AdminDashboard = () => {
           approval_status: "APPROVED",
           payment_provider: "manual",
           level: enrollForm.level || null,
-          duration: parseInt(enrollForm.duration),
+          duration: enrollForm.duration === "custom" ? null : parseInt(enrollForm.duration),
           classes_included: sessions,
           sessions_remaining: sessions,
           sessions_total: sessions,
