@@ -11,8 +11,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History, Loader2 } from "lucide-react";
+import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History, Loader2, UserPlus } from "lucide-react";
 import LegacyAttendancePanel from "./LegacyAttendancePanel";
 
 // Overview row from admin_student_status_overview view
@@ -182,6 +183,12 @@ const StudentManager = () => {
     packageId: string; studentId: string; studentName: string;
     packageName: string; totalClasses: number; pricePerClass: number;
   } | null>(null);
+
+  // Manual enroll
+  const [manualEnrollOpen, setManualEnrollOpen] = useState(false);
+  const [enrollTarget, setEnrollTarget] = useState<StatusOverviewRow | null>(null);
+  const [enrollForm, setEnrollForm] = useState({ group_id: "", level: "", sessions: "16", amount: "0", currency: "EGP", notes: "" });
+  const [enrollSaving, setEnrollSaving] = useState(false);
 
   // Groups
   const [groups, setGroups] = useState<StudentGroup[]>([]);
@@ -541,6 +548,64 @@ const StudentManager = () => {
     }
   };
 
+  function openManualEnroll(u: StatusOverviewRow) {
+    setEnrollTarget(u);
+    setEnrollForm({ group_id: "", level: u.level || "", sessions: "16", amount: "0", currency: "EGP", notes: "" });
+    setManualEnrollOpen(true);
+  }
+
+  async function handleManualEnroll() {
+    if (!enrollTarget || !enrollForm.group_id) return;
+    setEnrollSaving(true);
+    try {
+      const sessions = parseInt(enrollForm.sessions) || 16;
+      const amount = parseFloat(enrollForm.amount) || 0;
+      const now = new Date().toISOString();
+
+      const { data: enrollment, error: enrollErr } = await supabase
+        .from("enrollments")
+        .insert({
+          user_id: enrollTarget.user_id,
+          plan_type: "group",
+          status: "APPROVED",
+          payment_status: "PAID",
+          approval_status: "APPROVED",
+          payment_provider: "manual",
+          level: enrollForm.level || null,
+          classes_included: sessions,
+          sessions_remaining: sessions,
+          sessions_total: sessions,
+          amount,
+          currency: enrollForm.currency,
+          reviewed_at: now,
+          notes: enrollForm.notes || null,
+        })
+        .select("id")
+        .single();
+
+      if (enrollErr) throw enrollErr;
+
+      const { error: memberErr } = await supabase
+        .from("pkg_group_members")
+        .insert({
+          group_id: enrollForm.group_id,
+          user_id: enrollTarget.user_id,
+          enrollment_id: enrollment.id,
+          member_status: "active",
+        });
+
+      if (memberErr) throw memberErr;
+
+      toast({ title: "Enrolled!", description: `${enrollTarget.name} added to group with ${sessions} sessions.` });
+      setManualEnrollOpen(false);
+      fetchOverview();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setEnrollSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <Tabs defaultValue="overview">
@@ -644,7 +709,20 @@ const StudentManager = () => {
                     };
                     return (
                       <TableRow key={u.user_id}>
-                        <TableCell className="font-medium">{u.name || "—"}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <span>{u.name || "—"}</span>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
+                              title="Manually enroll"
+                              onClick={() => openManualEnroll(u)}
+                            >
+                              <UserPlus className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                         <TableCell className="hidden md:table-cell text-muted-foreground">{u.country || "—"}</TableCell>
                         <TableCell className="hidden md:table-cell text-muted-foreground">{u.level || "—"}</TableCell>
@@ -1096,6 +1174,62 @@ const StudentManager = () => {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Enroll Dialog */}
+      <Dialog open={manualEnrollOpen} onOpenChange={setManualEnrollOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manually Enroll — {enrollTarget?.name}</DialogTitle>
+            <DialogDescription>{enrollTarget?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label>Group *</Label>
+              <Select value={enrollForm.group_id} onValueChange={v => setEnrollForm(f => ({ ...f, group_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger>
+                <SelectContent>
+                  {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Level</Label>
+              <Input value={enrollForm.level} onChange={e => setEnrollForm(f => ({ ...f, level: e.target.value }))} placeholder="e.g. level_1" />
+            </div>
+            <div className="space-y-1">
+              <Label>Sessions included</Label>
+              <Input type="number" value={enrollForm.sessions} onChange={e => setEnrollForm(f => ({ ...f, sessions: e.target.value }))} />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-1">
+                <Label>Amount paid</Label>
+                <Input type="number" value={enrollForm.amount} onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))} />
+              </div>
+              <div className="w-28 space-y-1">
+                <Label>Currency</Label>
+                <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EGP">EGP</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Notes (optional)</Label>
+              <Textarea value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManualEnrollOpen(false)}>Cancel</Button>
+            <Button onClick={handleManualEnroll} disabled={enrollSaving || !enrollForm.group_id}>
+              {enrollSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+              Enroll
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
