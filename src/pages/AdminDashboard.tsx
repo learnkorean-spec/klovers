@@ -202,15 +202,14 @@ const AdminDashboard = () => {
   const updateEnrollPlan = (patch: Partial<typeof enrollForm>) => {
     setEnrollForm(prev => {
       const next = { ...prev, ...patch };
-      const opts = (() => {
-        const durations = ["1", "3", "6"] as const;
-        if (next.country === "egypt") {
-          return durations.map(d => ({ duration: d, amount: EGP_PRICES[next.plan_type]?.[d] ?? 0, currency: "EGP" }));
-        }
-        return durations.map(d => ({ duration: d, amount: USD_PRICES[next.country]?.[next.plan_type]?.[d] ?? 0, currency: "USD" }));
-      })();
-      const chosen = opts.find(o => o.duration === next.duration) ?? opts[0];
-      return { ...next, amount: String(chosen.amount), currency: chosen.currency, duration: chosen.duration };
+      // Custom package — keep duration as "custom", don't overwrite amount/currency
+      if (next.duration === "custom") return { ...next, duration: "custom" };
+      const isEgypt = next.country === "egypt";
+      const currency = isEgypt ? "EGP" : "USD";
+      const amount = isEgypt
+        ? EGP_PRICES[next.plan_type]?.[next.duration] ?? 0
+        : USD_PRICES[next.country]?.[next.plan_type]?.[next.duration] ?? 0;
+      return { ...next, amount: String(amount), currency };
     });
   };
 
@@ -2149,7 +2148,7 @@ const AdminDashboard = () => {
                     type="number"
                     min="1"
                     placeholder="e.g. 8"
-                    value={enrollForm.amount === enrollForm.amount ? (enrollForm as any)._customSessions ?? "" : ""}
+                    value={(enrollForm as any)._customSessions ?? ""}
                     onChange={e => setEnrollForm(f => ({ ...f, _customSessions: e.target.value } as any))}
                   />
                 </div>
