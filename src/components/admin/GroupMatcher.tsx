@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard, RefreshCw, XCircle } from "lucide-react";
+import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircle2, AlertTriangle, Mail, Send, FileText, CreditCard, RefreshCw, XCircle, ChevronDown, CheckCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -148,6 +148,8 @@ interface ResubmitRequest {
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
   const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
+  const [privateMatched, setPrivateMatched] = useState<(UnmatchedEnrollment & { matched_at: string })[]>([]);
+  const [showAssigned, setShowAssigned] = useState(false);
   const [teacherSlots, setTeacherSlots] = useState<{ day: number; time: string }[]>([]);
   const [packages, setPackages] = useState<SchedulePackage[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewItem[]>([]);
@@ -218,6 +220,16 @@ const GroupMatcher = () => {
       .eq("plan_type", "private")
       .is("matched_at", null);
 
+    // Fetch already-assigned private enrollments (matched_at set)
+    const { data: rawMatchedPrivate } = await supabase
+      .from("enrollments")
+      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url, matched_at")
+      .eq("approval_status", "APPROVED")
+      .eq("plan_type", "private")
+      .not("matched_at", "is", null)
+      .order("matched_at", { ascending: false })
+      .limit(30);
+
     if (error || privateError) {
       console.error("Failed to fetch unmatched enrollments:", error || privateError);
       toast({ title: "Failed to load enrollments", description: (error || privateError)?.message, variant: "destructive" });
@@ -233,7 +245,7 @@ const GroupMatcher = () => {
 
     setPackages((pkgs as SchedulePackage[]) || []);
 
-    const allRaw = [...(rawGroupEnrollments as any[] || []), ...(rawPrivateEnrollments as any[] || [])];
+    const allRaw = [...(rawGroupEnrollments as any[] || []), ...(rawPrivateEnrollments as any[] || []), ...(rawMatchedPrivate as any[] || [])];
     const userIds = [...new Set(allRaw.map((e: any) => e.user_id))];
     const profileMap: Record<string, { name: string; email: string }> = {};
     if (userIds.length > 0) {
@@ -260,8 +272,15 @@ const GroupMatcher = () => {
       email: profileMap[e.user_id]?.email || "",
     }));
 
+    const enrichMatched = (rawMatchedPrivate as any[] || []).map((e: any) => ({
+      ...e,
+      name: profileMap[e.user_id]?.name || "Unknown",
+      email: profileMap[e.user_id]?.email || "",
+    }));
+
     setEnrollments(enrichGroup);
     setPrivateUnmatched(enrichPrivate);
+    setPrivateMatched(enrichMatched);
 
     // Fetch teacher availability for slot matching
     const { data: availability } = await supabase
@@ -305,6 +324,20 @@ const GroupMatcher = () => {
 
     // Auto-send emails to students with missing info (deduplicated per 24 h)
     autoSendMissingInfoEmails(enrichGroup, enrichPrivate, []);
+  };
+
+  const handleUnassign = async (enrollment: UnmatchedEnrollment & { matched_at: string }) => {
+    try {
+      const { error } = await supabase
+        .from("enrollments")
+        .update({ matched_at: null } as any)
+        .eq("id", enrollment.id);
+      if (error) throw error;
+      toast({ title: "Unassigned", description: `${enrollment.name} moved back to unassigned.` });
+      fetchUnmatched();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
   };
 
   const handleMarkAssigned = async (enrollment: UnmatchedEnrollment) => {
@@ -1158,6 +1191,46 @@ const GroupMatcher = () => {
                   })}
                 </div>
               </CardContent>
+            </Card>
+          )}
+          {/* Assigned Private Students */}
+          {privateMatched.length > 0 && (
+            <Card className="border-green-300 dark:border-green-700">
+              <CardHeader
+                className="pb-3 cursor-pointer select-none"
+                onClick={() => setShowAssigned(p => !p)}
+              >
+                <CardTitle className="text-base flex items-center gap-2 text-green-800 dark:text-green-300">
+                  <CheckCircle className="h-4 w-4" />
+                  Assigned Private Students ({privateMatched.length})
+                  <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showAssigned ? "rotate-180" : ""}`} />
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">Click to {showAssigned ? "hide" : "show"} — these students were marked as assigned.</p>
+              </CardHeader>
+              {showAssigned && (
+                <CardContent>
+                  <div className="space-y-2">
+                    {privateMatched.map(m => (
+                      <div key={m.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{m.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {m.email} · {m.level || "no level"} · Assigned {new Date(m.matched_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="shrink-0 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                          onClick={() => handleUnassign(m)}
+                        >
+                          Unassign
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
           )}
         </>

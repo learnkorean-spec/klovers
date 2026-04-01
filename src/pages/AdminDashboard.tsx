@@ -184,17 +184,37 @@ const AdminDashboard = () => {
     }
     setEnrollSaving(true);
     try {
-      const { error } = await supabase.rpc("admin_manual_enroll", {
-        p_user_id: enrollTarget.user_id,
-        p_plan_type: enrollForm.plan_type,
-        p_duration: parseInt(enrollForm.duration),
-        p_classes_included: sessions,
-        p_amount: amount,
-        p_currency: enrollForm.currency,
-        p_level: enrollForm.level || null,
-        p_group_id: enrollForm.plan_type === "group" && enrollForm.group_id ? enrollForm.group_id : null,
-      });
+      const txRef = "manual_" + crypto.randomUUID().replace(/-/g, "");
+      const { data: enrollment, error } = await supabase
+        .from("enrollments")
+        .insert({
+          user_id: enrollTarget.user_id,
+          plan_type: enrollForm.plan_type,
+          duration: parseInt(enrollForm.duration),
+          classes_included: sessions,
+          sessions_remaining: sessions,
+          sessions_total: sessions,
+          amount,
+          currency: enrollForm.currency,
+          payment_provider: "manual",
+          payment_status: "PAID",
+          status: "APPROVED",
+          approval_status: "APPROVED",
+          tx_ref: txRef,
+          receipt_url: "manual",
+          reviewed_at: new Date().toISOString(),
+          level: enrollForm.level || null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+
+      if (enrollForm.plan_type === "group" && enrollForm.group_id) {
+        const { error: gmError } = await supabase
+          .from("pkg_group_members")
+          .insert({ group_id: enrollForm.group_id, user_id: enrollTarget.user_id, enrollment_id: enrollment.id, member_status: "active" });
+        if (gmError) throw gmError;
+      }
       const desc = enrollForm.plan_type === "private"
         ? `${enrollTarget.name} enrolled as private — assign slot via matcher.`
         : `${enrollTarget.name} added to group with ${sessions} sessions.`;
@@ -322,10 +342,22 @@ const AdminDashboard = () => {
 
   // Level-related state removed — enrollment.level is read-only source of truth
 
+  // Helper: update a lead via admin-update-lead edge function (bypasses broken RLS policy)
+  const updateLeadViaFn = async (id: string, fields: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke("admin-update-lead", {
+      body: { id, ...fields },
+    });
+    if (error) throw new Error(error.message);
+    if (data?.error) throw new Error(data.error);
+  };
+
   const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await supabase.from("leads").update({ status: newStatus } as any).eq("id", id);
-    if (error) { toast({ title: "Error", description: "Failed to update status.", variant: "destructive" }); }
-    else { setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))); }
+    try {
+      await updateLeadViaFn(id, { status: newStatus });
+      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update status.", variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -372,24 +404,24 @@ const AdminDashboard = () => {
 
   const handleEditLead = async () => {
     if (!editingLeadId) return;
-    const { error } = await supabase.from("leads").update({
-      name: editForm.name,
-      email: editForm.email,
-      country: editForm.country || "",
-      plan_type: editForm.plan_type || "",
-      duration: editForm.duration || "",
-      schedule: editForm.schedule || "",
-      timezone: editForm.timezone || "",
-      status: editForm.status || "new",
-    } as any).eq("id", editingLeadId);
-    if (error) {
-      toast({ title: "Error", description: "Failed to update lead.", variant: "destructive" });
-      return;
+    try {
+      await updateLeadViaFn(editingLeadId, {
+        name: editForm.name,
+        email: editForm.email,
+        country: editForm.country || "",
+        plan_type: editForm.plan_type || "",
+        duration: editForm.duration || "",
+        schedule: editForm.schedule || "",
+        timezone: editForm.timezone || "",
+        status: editForm.status || "new",
+      });
+      setLeads((prev) => prev.map((l) => l.id === editingLeadId ? { ...l, ...editForm } : l));
+      setEditingLeadId(null);
+      setEditForm({});
+      toast({ title: "Lead updated" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update lead.", variant: "destructive" });
     }
-    setLeads((prev) => prev.map((l) => l.id === editingLeadId ? { ...l, ...editForm } : l));
-    setEditingLeadId(null);
-    setEditForm({});
-    toast({ title: "Lead updated" });
   };
 
   const startEditLead = (lead: Lead) => {
@@ -433,8 +465,7 @@ const AdminDashboard = () => {
     for (const lead of unlinked) {
       const userId = profileByEmail[lead.email.toLowerCase().trim()];
       if (userId) {
-        const { error } = await supabase.from("leads").update({ user_id: userId } as any).eq("id", lead.id);
-        if (!error) linked++;
+        try { await updateLeadViaFn(lead.id, { user_id: userId }); linked++; } catch { /* skip */ }
       }
     }
     toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });
