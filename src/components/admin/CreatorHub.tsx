@@ -199,6 +199,64 @@ function PlatformGridPreviews({ posts, template, theme, bgImage }: {
   );
 }
 
+// ─── Klovers Brand Design Preview Cards ───
+const KLOVERS_TEMPLATES: TemplateName[] = ["klovers_bold", "klovers_varsity", "klovers_split"];
+const KLOVERS_LABELS: Record<string, { label: string; desc: string }> = {
+  klovers_bold:    { label: "⚡ Bold",    desc: "Yellow frame + K badge" },
+  klovers_varsity: { label: "🏆 Varsity", desc: "Dark championship ring" },
+  klovers_split:   { label: "◧ Split",   desc: "Yellow / black diagonal" },
+};
+
+function KloversBrandCards({ post, theme, format, active, onSelect }: {
+  post: PostData;
+  theme: ColorTheme;
+  format: FormatKey;
+  active: TemplateName;
+  onSelect: (t: TemplateName) => void;
+}) {
+  const refs = useRef<(HTMLCanvasElement | null)[]>([null, null, null]);
+
+  useEffect(() => {
+    KLOVERS_TEMPLATES.forEach((tpl, i) => {
+      const c = refs.current[i];
+      if (!c) return;
+      c.width = 300; c.height = 300;
+      renderPost(c, post, tpl, theme, format);
+    });
+  }, [post, theme, format]);
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Klovers Brand</h3>
+      <div className="grid grid-cols-3 gap-2">
+        {KLOVERS_TEMPLATES.map((tpl, i) => {
+          const meta = KLOVERS_LABELS[tpl];
+          const isActive = active === tpl;
+          return (
+            <button
+              key={tpl}
+              onClick={() => onSelect(tpl)}
+              className={`rounded-xl overflow-hidden border-2 transition-all text-left ${
+                isActive ? "border-primary shadow-lg shadow-primary/20 scale-[1.03]" : "border-border hover:border-primary/50"
+              }`}
+            >
+              <canvas
+                ref={el => { refs.current[i] = el; }}
+                className="w-full aspect-square block"
+                style={{ imageRendering: "auto" }}
+              />
+              <div className="px-2 py-1.5 bg-card">
+                <p className="text-[11px] font-bold text-foreground leading-none">{meta.label}</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">{meta.desc}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───
 export default function CreatorHub() {
   const [posts, setPosts] = useState<PostData[]>([
@@ -345,23 +403,32 @@ export default function CreatorHub() {
         {/* Right: Controls */}
         <div className="space-y-5 overflow-y-auto max-h-[80vh] pr-1">
           {/* Template */}
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Template</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {TEMPLATE_META.map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setTemplate(t.key)}
-                  className={`text-left p-2.5 rounded-lg border text-sm transition-colors ${
-                    template === t.key
-                      ? "border-primary bg-accent"
-                      : "border-border hover:border-muted-foreground/30"
-                  }`}
-                >
-                  <span className="font-medium text-foreground block text-xs">{t.label}</span>
-                  <span className="text-muted-foreground text-[10px]">{t.desc}</span>
-                </button>
-              ))}
+          <div className="space-y-3">
+            <KloversBrandCards
+              post={activePost}
+              theme={theme}
+              format={format}
+              active={template}
+              onSelect={setTemplate}
+            />
+            <div>
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Other Templates</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {TEMPLATE_META.filter(t => !t.isKlovers).map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setTemplate(t.key)}
+                    className={`text-left p-2.5 rounded-lg border text-sm transition-colors ${
+                      template === t.key
+                        ? "border-primary bg-accent"
+                        : "border-border hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <span className="font-medium text-foreground block text-xs">{t.label}</span>
+                    <span className="text-muted-foreground text-[10px]">{t.desc}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
