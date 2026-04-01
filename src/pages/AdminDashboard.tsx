@@ -143,11 +143,32 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Manual enroll
+  // ── Manual Enroll ────────────────────────────────────────────────────────
+  // Pricing tables (mirrors EnrollNowPage)
+  const EGP_PRICES: Record<string, Record<string, number>> = {
+    group:   { "1": 1200,  "3": 3300,  "6": 6100  },
+    private: { "1": 2350,  "3": 6600,  "6": 11750 },
+  };
+  const USD_PRICES: Record<string, Record<string, Record<string, number>>> = {
+    local:    { group: { "1": 25,  "3": 70,  "6": 130 }, private: { "1": 50,  "3": 140, "6": 250  } },
+    regional: { group: { "1": 40,  "3": 110, "6": 200 }, private: { "1": 80,  "3": 220, "6": 380  } },
+    global:   { group: { "1": 60,  "3": 170, "6": 300 }, private: { "1": 120, "3": 330, "6": 580  } },
+  };
+  const SESSIONS_BY_DURATION: Record<string, number> = { "1": 4, "3": 12, "6": 24 };
+
   const [pkgGroups, setPkgGroups] = useState<{ id: string; name: string }[]>([]);
   const [manualEnrollOpen, setManualEnrollOpen] = useState(false);
   const [enrollTarget, setEnrollTarget] = useState<OverviewRow | null>(null);
-  const [enrollForm, setEnrollForm] = useState({ group_id: "", level: "", sessions: "16", amount: "0", currency: "EGP", notes: "" });
+  const [enrollForm, setEnrollForm] = useState({
+    plan_type: "group",
+    country: "egypt",
+    duration: "1",
+    group_id: "",
+    level: "",
+    amount: "1200",
+    currency: "EGP",
+    notes: "",
+  });
   const [enrollSaving, setEnrollSaving] = useState(false);
 
   useEffect(() => {
@@ -155,28 +176,70 @@ const AdminDashboard = () => {
       .then(({ data }) => { if (data) setPkgGroups(data); });
   }, []);
 
+  // Derive price options for current country + plan_type
+  const enrollPriceOptions = useMemo(() => {
+    const { plan_type, country } = enrollForm;
+    const durations = ["1", "3", "6"] as const;
+    if (country === "egypt") {
+      return durations.map(d => ({
+        duration: d,
+        amount: EGP_PRICES[plan_type]?.[d] ?? 0,
+        currency: "EGP",
+        sessions: SESSIONS_BY_DURATION[d],
+        label: `${d} month${d !== "1" ? "s" : ""} — ${SESSIONS_BY_DURATION[d]} sessions — ${(EGP_PRICES[plan_type]?.[d] ?? 0).toLocaleString()} EGP`,
+      }));
+    }
+    return durations.map(d => ({
+      duration: d,
+      amount: USD_PRICES[country]?.[plan_type]?.[d] ?? 0,
+      currency: "USD",
+      sessions: SESSIONS_BY_DURATION[d],
+      label: `${d} month${d !== "1" ? "s" : ""} — ${SESSIONS_BY_DURATION[d]} sessions — $${USD_PRICES[country]?.[plan_type]?.[d] ?? 0}`,
+    }));
+  }, [enrollForm.plan_type, enrollForm.country]);
+
+  // Auto-sync amount + currency + sessions when duration/country/plan_type changes
+  const updateEnrollPlan = (patch: Partial<typeof enrollForm>) => {
+    setEnrollForm(prev => {
+      const next = { ...prev, ...patch };
+      const opts = (() => {
+        const durations = ["1", "3", "6"] as const;
+        if (next.country === "egypt") {
+          return durations.map(d => ({ duration: d, amount: EGP_PRICES[next.plan_type]?.[d] ?? 0, currency: "EGP" }));
+        }
+        return durations.map(d => ({ duration: d, amount: USD_PRICES[next.country]?.[next.plan_type]?.[d] ?? 0, currency: "USD" }));
+      })();
+      const chosen = opts.find(o => o.duration === next.duration) ?? opts[0];
+      return { ...next, amount: String(chosen.amount), currency: chosen.currency, duration: chosen.duration };
+    });
+  };
+
   function openManualEnroll(u: OverviewRow) {
     setEnrollTarget(u);
-    setEnrollForm({ group_id: "", level: u.level || "", sessions: "16", amount: "0", currency: "EGP", notes: "" });
+    setEnrollForm({ plan_type: "group", country: "egypt", duration: "1", group_id: "", level: u.level || "", amount: "1200", currency: "EGP", notes: "" });
     setManualEnrollOpen(true);
   }
 
   async function handleManualEnroll() {
-    if (!enrollTarget || !enrollForm.group_id) return;
+    if (!enrollTarget) return;
+    if (enrollForm.plan_type === "group" && !enrollForm.group_id) {
+      toast({ title: "Select a group", variant: "destructive" }); return;
+    }
     setEnrollSaving(true);
     try {
-      const sessions = parseInt(enrollForm.sessions) || 16;
+      const sessions = SESSIONS_BY_DURATION[enrollForm.duration] ?? 4;
       const amount = parseFloat(enrollForm.amount) || 0;
       const { data: enrollment, error: enrollErr } = await supabase
         .from("enrollments")
         .insert({
           user_id: enrollTarget.user_id,
-          plan_type: "group",
+          plan_type: enrollForm.plan_type,
           status: "APPROVED",
           payment_status: "PAID",
           approval_status: "APPROVED",
           payment_provider: "manual",
           level: enrollForm.level || null,
+          duration: parseInt(enrollForm.duration),
           classes_included: sessions,
           sessions_remaining: sessions,
           sessions_total: sessions,
@@ -188,14 +251,21 @@ const AdminDashboard = () => {
         .select("id")
         .single();
       if (enrollErr) throw enrollErr;
-      const { error: memberErr } = await supabase.from("pkg_group_members").insert({
-        group_id: enrollForm.group_id,
-        user_id: enrollTarget.user_id,
-        enrollment_id: enrollment.id,
-        member_status: "active",
-      });
-      if (memberErr) throw memberErr;
-      toast({ title: "Enrolled!", description: `${enrollTarget.name} added to group with ${sessions} sessions.` });
+
+      if (enrollForm.plan_type === "group" && enrollForm.group_id) {
+        const { error: memberErr } = await supabase.from("pkg_group_members").insert({
+          group_id: enrollForm.group_id,
+          user_id: enrollTarget.user_id,
+          enrollment_id: enrollment.id,
+          member_status: "active",
+        });
+        if (memberErr) throw memberErr;
+      }
+
+      const desc = enrollForm.plan_type === "private"
+        ? `${enrollTarget.name} enrolled as private — assign slot via matcher.`
+        : `${enrollTarget.name} added to group with ${sessions} sessions.`;
+      toast({ title: "Enrolled!", description: desc });
       setManualEnrollOpen(false);
       fetchAll();
     } catch (e: any) {
@@ -2010,53 +2080,113 @@ const AdminDashboard = () => {
       )}
       {/* Manual Enroll Dialog */}
       <Dialog open={manualEnrollOpen} onOpenChange={setManualEnrollOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Manually Enroll — {enrollTarget?.name}</DialogTitle>
             <DialogDescription>{enrollTarget?.email}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
+          <div className="space-y-4 py-2">
+
+            {/* Plan type */}
             <div className="space-y-1">
-              <Label>Group *</Label>
-              <Select value={enrollForm.group_id} onValueChange={v => setEnrollForm(f => ({ ...f, group_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger>
+              <Label>Plan Type</Label>
+              <div className="flex gap-2">
+                {(["group", "private"] as const).map(pt => (
+                  <button
+                    key={pt}
+                    onClick={() => updateEnrollPlan({ plan_type: pt, group_id: "" })}
+                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors capitalize ${
+                      enrollForm.plan_type === pt
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {pt === "group" ? "👥 Group" : "👤 Private"}
+                  </button>
+                ))}
+              </div>
+              {enrollForm.plan_type === "private" && (
+                <p className="text-xs text-muted-foreground mt-1">Private enrollment — assign a slot via the Matcher after saving.</p>
+              )}
+            </div>
+
+            {/* Country / pricing tier */}
+            <div className="space-y-1">
+              <Label>Country / Pricing Region</Label>
+              <Select value={enrollForm.country} onValueChange={v => updateEnrollPlan({ country: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {pkgGroups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                  <SelectItem value="egypt">🇪🇬 Egypt (EGP)</SelectItem>
+                  <SelectItem value="local">Local — nearby countries (USD)</SelectItem>
+                  <SelectItem value="regional">Regional (USD)</SelectItem>
+                  <SelectItem value="global">Global (USD)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Package / duration — drives sessions + price */}
             <div className="space-y-1">
-              <Label>Level</Label>
-              <Input value={enrollForm.level} onChange={e => setEnrollForm(f => ({ ...f, level: e.target.value }))} placeholder="e.g. level_1" />
+              <Label>Package</Label>
+              <Select value={enrollForm.duration} onValueChange={v => updateEnrollPlan({ duration: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {enrollPriceOptions.map(o => (
+                    <SelectItem key={o.duration} value={o.duration}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-1">
-              <Label>Sessions included</Label>
-              <Input type="number" value={enrollForm.sessions} onChange={e => setEnrollForm(f => ({ ...f, sessions: e.target.value }))} />
+
+            {/* Sessions + amount summary (read-only badge) */}
+            <div className="flex gap-3 text-sm bg-muted/60 rounded-lg px-3 py-2">
+              <span className="text-muted-foreground">Sessions:</span>
+              <span className="font-semibold">{SESSIONS_BY_DURATION[enrollForm.duration]}</span>
+              <span className="mx-2 text-border">|</span>
+              <span className="text-muted-foreground">Amount:</span>
+              <span className="font-semibold">{Number(enrollForm.amount).toLocaleString()} {enrollForm.currency}</span>
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1 space-y-1">
-                <Label>Amount paid</Label>
-                <Input type="number" value={enrollForm.amount} onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))} />
-              </div>
-              <div className="w-28 space-y-1">
-                <Label>Currency</Label>
-                <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+
+            {/* Group — only for group plan */}
+            {enrollForm.plan_type === "group" && (
+              <div className="space-y-1">
+                <Label>Group *</Label>
+                <Select value={enrollForm.group_id} onValueChange={v => setEnrollForm(f => ({ ...f, group_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="EGP">EGP</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
+                    {pkgGroups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+            )}
+
+            {/* Level */}
+            <div className="space-y-1">
+              <Label>Level</Label>
+              <Select value={enrollForm.level || "__none__"} onValueChange={v => setEnrollForm(f => ({ ...f, level: v === "__none__" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Not set —</SelectItem>
+                  <SelectItem value="foundation">Foundation</SelectItem>
+                  <SelectItem value="level_1">Level 1</SelectItem>
+                  <SelectItem value="level_2">Level 2</SelectItem>
+                  <SelectItem value="level_3">Level 3</SelectItem>
+                  <SelectItem value="level_4">Level 4</SelectItem>
+                  <SelectItem value="level_5">Level 5</SelectItem>
+                  <SelectItem value="level_6">Level 6</SelectItem>
+                  <SelectItem value="A2 Elementary">A2 Elementary</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Notes */}
             <div className="space-y-1">
               <Label>Notes (optional)</Label>
-              <Textarea value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+              <Textarea value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Payment reference, special notes..." />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setManualEnrollOpen(false)}>Cancel</Button>
-            <Button onClick={handleManualEnroll} disabled={enrollSaving || !enrollForm.group_id}>
+            <Button onClick={handleManualEnroll} disabled={enrollSaving || (enrollForm.plan_type === "group" && !enrollForm.group_id)}>
               {enrollSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
               Enroll
             </Button>
