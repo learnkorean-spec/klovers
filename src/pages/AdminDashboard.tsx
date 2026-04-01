@@ -230,24 +230,27 @@ const AdminDashboard = () => {
         ? parseInt((enrollForm as any)._customSessions) || 1
         : SESSIONS_BY_DURATION[enrollForm.duration] ?? 4;
       const amount = parseFloat(enrollForm.amount) || 0;
+      const enrollPayload: Record<string, unknown> = {
+        user_id: enrollTarget.user_id,
+        plan_type: enrollForm.plan_type,
+        status: "APPROVED",
+        payment_status: "PAID",
+        approval_status: "APPROVED",
+        payment_provider: "manual",
+        level: enrollForm.level || null,
+        classes_included: sessions,
+        sessions_remaining: sessions,
+        sessions_total: sessions,
+        amount,
+        currency: enrollForm.currency,
+        reviewed_at: new Date().toISOString(),
+      };
+      if (enrollForm.duration !== "custom") {
+        enrollPayload.duration = parseInt(enrollForm.duration);
+      }
       const { data: enrollment, error: enrollErr } = await supabase
         .from("enrollments")
-        .insert({
-          user_id: enrollTarget.user_id,
-          plan_type: enrollForm.plan_type,
-          status: "APPROVED",
-          payment_status: "PAID",
-          approval_status: "APPROVED",
-          payment_provider: "manual",
-          level: enrollForm.level || null,
-          duration: enrollForm.duration === "custom" ? null : parseInt(enrollForm.duration),
-          classes_included: sessions,
-          sessions_remaining: sessions,
-          sessions_total: sessions,
-          amount,
-          currency: enrollForm.currency,
-          reviewed_at: new Date().toISOString(),
-        })
+        .insert(enrollPayload as any)
         .select("id")
         .single();
       if (enrollErr) throw enrollErr;
