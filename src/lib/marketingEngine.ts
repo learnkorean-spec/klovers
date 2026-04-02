@@ -326,6 +326,17 @@ export function generateMonthlyPlan(
   });
 }
 
+// ─── Monthly post → PostData converter (for canvas renderer) ───
+
+export function monthlyPostToPostData(post: MonthlyPost): { id: string; mainText: string; subtitle: string; extraText: string } {
+  return {
+    id: post.id,
+    mainText: post.template.mainText,
+    subtitle: post.template.subtitle,
+    extraText: post.template.extra,
+  };
+}
+
 // ─── Story Script (3-slide) ───
 
 export function generateStoryScript(group: GroupData): { slide1: string; slide2: string; slide3: string } {
