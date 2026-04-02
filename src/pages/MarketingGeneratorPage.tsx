@@ -20,6 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   type GroupData,
   type PostTemplate,
+  type MonthlyPost,
   generateCaptions,
   generateAdCopy,
   generateWhatsAppMessage,
@@ -30,6 +31,10 @@ import {
   getInvitePostTemplate,
   getDiscountPostTemplate,
   getReferralPostTemplate,
+  getTestimonialPostTemplate,
+  getFAQPostTemplate,
+  getCountdownPostTemplate,
+  generateMonthlyPlan,
 } from "@/lib/marketingEngine";
 import {
   type SlotPostDraft,
@@ -41,6 +46,14 @@ import {
 } from "@/lib/scheduleSlotEngine";
 import MarketingPostsArchive from "@/components/admin/MarketingPostsArchive";
 import CreatorHub from "@/components/admin/CreatorHub";
+import {
+  type TemplateName,
+  type ColorTheme,
+  THEME_COLORS,
+  TEMPLATE_META,
+  renderPost,
+} from "@/lib/canvasRenderer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ─── Brand canvas renderer (exact #FFFF00) ───
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number, maxLines = 99) {
@@ -220,10 +233,18 @@ const CANVAS_SIZES: Record<"1x1" | "4x5" | "story", [number, number]> = {
   "story": [1080, 1920],
 };
 
-function renderTemplateToDataUrl(tpl: PostTemplate, size: "1x1" | "4x5" | "story"): string {
+function renderTemplateToDataUrl(
+  tpl: PostTemplate,
+  size: "1x1" | "4x5" | "story",
+  template: TemplateName = "classic",
+  theme: ColorTheme = "yellow",
+): string {
   const [w, h] = CANVAS_SIZES[size];
   const canvas = document.createElement("canvas");
-  renderBrandPost(canvas, tpl.mainText, tpl.subtitle, tpl.extra, w, h, tpl.isUrgent);
+  canvas.width = w; canvas.height = h;
+  const formatKey = size === "story" ? "story" : "instagram";
+  const postData = { id: "tmp", mainText: tpl.mainText, subtitle: tpl.subtitle, extraText: tpl.extra };
+  renderPost(canvas, postData, template, theme, formatKey);
   return canvas.toDataURL("image/png");
 }
 
@@ -292,11 +313,26 @@ export default function MarketingGeneratorPage() {
   const [draftCampaignName, setDraftCampaignName] = useState(`Class Openings — ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}`);
 
   // ── Post type campaign selector ──
-  const [postType, setPostType] = useState<"empty_slots" | "discount" | "referral" | "invite_student">("empty_slots");
+  const [postType, setPostType] = useState<"empty_slots" | "discount" | "referral" | "invite_student" | "testimonial" | "faq" | "countdown">("empty_slots");
   const [discountPct, setDiscountPct] = useState(20);
   const [discountCode, setDiscountCode] = useState("SAVE20");
   // Special post images (discount/referral/invite)
   const [specialImages, setSpecialImages] = useState<Record<string, GeneratedImages>>({});
+
+  // ── Design style for canvas rendering ──
+  const [activeTemplate, setActiveTemplate] = useState<TemplateName>("classic");
+  const [activeTheme, setActiveTheme] = useState<ColorTheme>("yellow");
+  // Convenience wrapper — passes current template+theme to the shared renderer
+  const renderTpl = useCallback(
+    (tpl: PostTemplate, size: "1x1" | "4x5" | "story") =>
+      renderTemplateToDataUrl(tpl, size, activeTemplate, activeTheme),
+    [activeTemplate, activeTheme],
+  );
+
+  // ── Monthly Pack state ──
+  const [monthlyPlan, setMonthlyPlan] = useState<MonthlyPost[]>([]);
+  const [monthlyImages, setMonthlyImages] = useState<Record<string, string>>({});
+  const [monthlyRendering, setMonthlyRendering] = useState(false);
 
   // WhatsApp dialog
   const [whatsappGroup, setWhatsappGroup] = useState<GroupData | null>(null);
@@ -618,7 +654,8 @@ export default function MarketingGeneratorPage() {
 
   function handleCanvasRender(group: GroupData, size: "1x1" | "4x5" | "story") {
     const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
-    const dataUrl = renderTemplateToDataUrl(tpl, size);
+    // Note: testimonial/faq/countdown are handled via special cards, not group cards
+    const dataUrl = renderTpl(tpl, size);
     setGeneratedImages(prev => ({
       ...prev,
       [group.id]: { ...(prev[group.id] || {}), [size]: dataUrl },
@@ -628,32 +665,25 @@ export default function MarketingGeneratorPage() {
   function renderSpecialPost(key: string, tpl: PostTemplate) {
     const sizes = ["1x1", "4x5", "story"] as const;
     const imgs: GeneratedImages = {};
-    sizes.forEach(size => { imgs[size] = renderTemplateToDataUrl(tpl, size); });
+    sizes.forEach(size => { imgs[size] = renderTpl(tpl, size); });
     setSpecialImages(prev => ({ ...prev, [key]: imgs }));
   }
 
   function handleBulkCanvasRender() {
-    if (postType === "discount") {
-      renderSpecialPost("discount", getDiscountPostTemplate(discountPct, discountCode));
-      toast({ title: "Done!", description: "Discount post rendered in 3 sizes." });
-      return;
-    }
-    if (postType === "referral") {
-      renderSpecialPost("referral", getReferralPostTemplate());
-      toast({ title: "Done!", description: "Referral post rendered in 3 sizes." });
-      return;
-    }
-    // empty_slots or invite_student
+    // Always render discount + referral
+    renderSpecialPost("discount", getDiscountPostTemplate(discountPct, discountCode));
+    renderSpecialPost("referral", getReferralPostTemplate());
+    // Render all group cards using current post type template
     groups.forEach(group => {
       handleGenerate(group);
       const tpl = postType === "invite_student" ? getInvitePostTemplate(group) : getGroupPostTemplate(group);
-      const dataUrl = renderTemplateToDataUrl(tpl, "1x1");
+      const dataUrl = renderTpl(tpl, "1x1");
       setGeneratedImages(prev => ({
         ...prev,
         [group.id]: { ...(prev[group.id] || {}), "1x1": dataUrl },
       }));
     });
-    toast({ title: "Done!", description: `${groups.length} brand-yellow images rendered instantly.` });
+    toast({ title: "Done!", description: `All posts rendered — ${groups.length} group cards + Discount + Referral.` });
   }
 
   async function handleGenerateImage(group: GroupData, size: "1x1" | "4x5" | "story") {
@@ -743,29 +773,28 @@ export default function MarketingGeneratorPage() {
   }
 
   async function downloadAsZip(platform: "instagram" | "tiktok" | "all" = "all") {
-    // Collect all rendered images based on current post type
+    // Collect ALL rendered images across all types
     const allImages: Array<{ slug: string; size: string; dataUrl: string }> = [];
+    const sizes: ("1x1" | "4x5" | "story")[] = platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
 
-    if (postType === "empty_slots" || postType === "invite_student") {
-      groups.forEach(g => {
-        const imgs = generatedImages[g.id];
-        if (!imgs) return;
-        const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
-        const sizes: ("1x1" | "4x5" | "story")[] = platform === "instagram" ? ["1x1", "4x5", "story"] : platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
-        sizes.forEach(size => {
-          if (imgs[size]) allImages.push({ slug, size, dataUrl: imgs[size]! });
-        });
+    // Group cards
+    groups.forEach(g => {
+      const imgs = generatedImages[g.id];
+      if (!imgs) return;
+      const slug = getLevelLabel(g.level).replace(/\s+/g, "-").toLowerCase();
+      sizes.forEach(size => {
+        if (imgs[size]) allImages.push({ slug, size, dataUrl: imgs[size]! });
       });
-    } else {
-      const key = postType;
+    });
+
+    // Special cards (discount + referral)
+    ["discount", "referral"].forEach(key => {
       const imgs = specialImages[key];
-      if (imgs) {
-        const sizes: ("1x1" | "4x5" | "story")[] = platform === "tiktok" ? ["story"] : ["1x1", "4x5", "story"];
-        sizes.forEach(size => {
-          if (imgs[size]) allImages.push({ slug: key, size, dataUrl: imgs[size]! });
-        });
-      }
-    }
+      if (!imgs) return;
+      sizes.forEach(size => {
+        if (imgs[size as keyof GeneratedImages]) allImages.push({ slug: key, size, dataUrl: imgs[size as keyof GeneratedImages]! });
+      });
+    });
 
     if (!allImages.length) {
       toast({ title: "No images to download", description: "Render images first using the Brand Render buttons." });
@@ -809,6 +838,52 @@ export default function MarketingGeneratorPage() {
 
   const isGenerating = (groupId: string) => (generatingImages[groupId]?.size || 0) > 0;
   const isSizeGenerating = (groupId: string, size: string) => generatingImages[groupId]?.has(size) || false;
+
+  function handleGenerateMonthlyPlan() {
+    const plan = generateMonthlyPlan(groups, discountPct, discountCode);
+    setMonthlyPlan(plan);
+    setMonthlyImages({});
+    toast({ title: `30 posts generated`, description: "Click 'Render All' to create images, or render individual posts." });
+  }
+
+  async function renderAllMonthly() {
+    if (!monthlyPlan.length) return;
+    setMonthlyRendering(true);
+    const imgs: Record<string, string> = {};
+    for (const post of monthlyPlan) {
+      const dataUrl = renderTpl(post.template, "1x1");
+      imgs[post.id] = dataUrl;
+    }
+    setMonthlyImages(imgs);
+    setMonthlyRendering(false);
+    toast({ title: "All 30 images rendered!" });
+  }
+
+  async function downloadMonthlyZip() {
+    const toDownload = monthlyPlan.filter(p => monthlyImages[p.id]);
+    if (!toDownload.length) {
+      toast({ title: "No images yet", description: "Click 'Render All' first." });
+      return;
+    }
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      toDownload.forEach(post => {
+        const base64 = monthlyImages[post.id].split(",")[1];
+        zip.file(`day-${String(post.day).padStart(2, "0")}-${post.postType}.png`, base64, { base64: true });
+      });
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klovers-monthly-pack-${new Date().toISOString().slice(0, 7)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `ZIP downloaded`, description: `${toDownload.length} posts` });
+    } catch (err: any) {
+      toast({ title: "ZIP error", description: err.message, variant: "destructive" });
+    }
+  }
 
   const toggleCard = (id: string) => {
     setExpandedCards(prev => {
@@ -874,6 +949,177 @@ export default function MarketingGeneratorPage() {
             </TabsList>
 
             <TabsContent value="generator" className="space-y-6">
+
+              {/* ── POST TYPE SELECTOR (TOP) ────────────────────────── */}
+              <div className="flex flex-wrap gap-2 items-center bg-card border border-border rounded-2xl px-4 py-3">
+                <span className="text-xs font-semibold text-muted-foreground mr-1">Post type:</span>
+                {([
+                  { id: "empty_slots",    label: "Empty Slots",    icon: "📢" },
+                  { id: "invite_student", label: "Invite Student",  icon: "👋" },
+                  { id: "discount",       label: "Discount Offer",  icon: "🏷️" },
+                  { id: "referral",       label: "Referral",        icon: "🤝" },
+                  { id: "testimonial",    label: "Testimonial",     icon: "🌟" },
+                  { id: "faq",            label: "FAQ",             icon: "❓" },
+                  { id: "countdown",      label: "Countdown",       icon: "⏰" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setPostType(opt.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      postType === opt.id
+                        ? "bg-primary text-primary-foreground border-black/40"
+                        : "bg-card text-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+                {postType === "discount" && (
+                  <div className="flex items-center gap-2 ml-2">
+                    <input
+                      type="number" min={5} max={80} value={discountPct}
+                      onChange={e => setDiscountPct(Number(e.target.value))}
+                      className="w-16 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="20"
+                    />
+                    <span className="text-xs text-muted-foreground">%</span>
+                    <input
+                      type="text" value={discountCode}
+                      onChange={e => setDiscountCode(e.target.value.toUpperCase())}
+                      className="w-24 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
+                      placeholder="SAVE20"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* ── MONTHLY PACK (30 Posts) ───────────────────────────── */}
+              <div className="rounded-2xl border border-primary/30 bg-card overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-foreground">
+                  <div>
+                    <p className="text-sm font-bold text-primary flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4" /> Monthly Content Pack — 30 Posts
+                    </p>
+                    <p className="text-xs text-background/60 mt-0.5">
+                      All post types · Optimised sequence for max conversions
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleGenerateMonthlyPlan} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Wand2 className="h-4 w-4 mr-2" /> Generate Month Pack
+                    </Button>
+                    {monthlyPlan.length > 0 && (
+                      <>
+                        <Button variant="outline" onClick={renderAllMonthly} disabled={monthlyRendering} className="border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground">
+                          {monthlyRendering ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brush className="h-4 w-4 mr-2" />}
+                          Render All
+                        </Button>
+                        <Button variant="outline" onClick={downloadMonthlyZip} className="border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground">
+                          <DownloadCloud className="h-4 w-4 mr-2" /> Download ZIP
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Design pickers */}
+                <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b bg-muted/20">
+                  <span className="text-xs font-semibold text-muted-foreground">Design:</span>
+                  <Select value={activeTemplate} onValueChange={v => setActiveTemplate(v as TemplateName)}>
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TEMPLATE_META.map(t => (
+                        <SelectItem key={t.key} value={t.key} className="text-xs">
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs font-semibold text-muted-foreground">Colour:</span>
+                  <Select value={activeTheme} onValueChange={v => setActiveTheme(v as ColorTheme)}>
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.entries(THEME_COLORS) as [ColorTheme, typeof THEME_COLORS[ColorTheme]][]).map(([key, val]) => (
+                        <SelectItem key={key} value={key} className="text-xs">
+                          <span className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ background: val.dot }} />
+                            {val.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[10px] text-muted-foreground">Applies to all rendered images</span>
+                </div>
+
+                {/* Post type legend */}
+                <div className="flex flex-wrap gap-2 px-5 py-3 border-b bg-muted/30 text-[10px]">
+                  {([
+                    { type: "empty_slots",    icon: "📢", label: "Empty Slots",    count: 8,  color: "text-blue-600" },
+                    { type: "invite_student", icon: "👋", label: "Invite Student",  count: 5,  color: "text-green-600" },
+                    { type: "discount",       icon: "🏷️", label: "Discount",        count: 4,  color: "text-amber-600" },
+                    { type: "referral",       icon: "🤝", label: "Referral",        count: 4,  color: "text-purple-600" },
+                    { type: "testimonial",    icon: "🌟", label: "Testimonial",     count: 5,  color: "text-yellow-600" },
+                    { type: "faq",            icon: "❓", label: "FAQ",             count: 3,  color: "text-indigo-600" },
+                    { type: "countdown",      icon: "⏰", label: "Countdown",       count: 3,  color: "text-red-600" },
+                  ] as const).map(t => (
+                    <span key={t.type} className={`flex items-center gap-1 font-medium ${t.color}`}>
+                      {t.icon} {t.label} ×{t.count}
+                    </span>
+                  ))}
+                </div>
+
+                {monthlyPlan.length > 0 && (
+                  <div className="p-4 grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
+                    {monthlyPlan.map(post => {
+                      const typeConfig: Record<string, { icon: string; color: string; bg: string }> = {
+                        empty_slots:    { icon: "📢", color: "text-blue-700",   bg: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40" },
+                        invite_student: { icon: "👋", color: "text-green-700",  bg: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/40" },
+                        discount:       { icon: "🏷️", color: "text-amber-700",  bg: "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/40" },
+                        referral:       { icon: "🤝", color: "text-purple-700", bg: "bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800/40" },
+                        testimonial:    { icon: "🌟", color: "text-yellow-700", bg: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800/40" },
+                        faq:            { icon: "❓", color: "text-indigo-700", bg: "bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/40" },
+                        countdown:      { icon: "⏰", color: "text-red-700",    bg: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/40" },
+                      };
+                      const cfg = typeConfig[post.postType] || { icon: "📄", color: "text-foreground", bg: "" };
+                      const img = monthlyImages[post.id];
+
+                      return (
+                        <div key={post.id} className={`rounded-xl border p-2 space-y-1.5 ${cfg.bg}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-muted-foreground">Day {post.day}</span>
+                            <span className="text-xs">{cfg.icon}</span>
+                          </div>
+                          {img ? (
+                            <div
+                              className="aspect-square rounded-lg overflow-hidden border bg-muted cursor-pointer shadow-sm"
+                              onClick={() => downloadImage(img, `day-${post.day}-${post.postType}.png`)}
+                            >
+                              <img src={img} alt={`Day ${post.day}`} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <button
+                              className="aspect-square w-full rounded-lg border border-dashed bg-muted/40 flex flex-col items-center justify-center gap-1 hover:bg-muted/60 transition-colors"
+                              onClick={() => {
+                                const dataUrl = renderTpl(post.template, "1x1");
+                                setMonthlyImages(prev => ({ ...prev, [post.id]: dataUrl }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-[9px] text-muted-foreground">Render</span>
+                            </button>
+                          )}
+                          <p className={`text-[9px] font-semibold truncate ${cfg.color}`}>{post.template.mainText}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* ── SLOT-BASED SECTION ────────────────────────────────── */}
               <div className="space-y-4">
@@ -1057,148 +1303,44 @@ export default function MarketingGeneratorPage() {
                 )}
               </div>
 
-              {/* ── CAMPAIGN TYPE SELECTOR ─────────────────────────── */}
-              <div className="flex items-center gap-3">
+              {/* ── BRAND POST IMAGES ─────────────────────────────────── */}
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Brand Post Images</span>
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Brand Post Images — All Types</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
-
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-xs font-medium text-muted-foreground mr-1">Post type:</span>
-                {([
-                  { id: "empty_slots",    label: "Empty Slots",    icon: "📢" },
-                  { id: "invite_student", label: "Invite Student",  icon: "👋" },
-                  { id: "discount",       label: "Discount Offer",  icon: "🏷️" },
-                  { id: "referral",       label: "Referral",        icon: "🤝" },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => setPostType(opt.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      postType === opt.id
-                        ? "bg-primary text-primary-foreground border-black/40"
-                        : "bg-card text-foreground border-border hover:border-primary/50"
-                    }`}
-                  >
-                    {opt.icon} {opt.label}
-                  </button>
-                ))}
-
-                {/* Discount inputs */}
-                {postType === "discount" && (
-                  <div className="flex items-center gap-2 ml-2">
-                    <input
-                      type="number" min={5} max={80} value={discountPct}
-                      onChange={e => setDiscountPct(Number(e.target.value))}
-                      className="w-16 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="20"
-                    />
-                    <span className="text-xs text-muted-foreground">%</span>
-                    <input
-                      type="text" value={discountCode}
-                      onChange={e => setDiscountCode(e.target.value.toUpperCase())}
-                      className="w-24 text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
-                      placeholder="SAVE20"
-                    />
-                  </div>
-                )}
+              {/* Design pickers (shared with Monthly Pack) */}
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-2.5">
+                <span className="text-xs font-semibold text-muted-foreground">Design:</span>
+                <Select value={activeTemplate} onValueChange={v => setActiveTemplate(v as TemplateName)}>
+                  <SelectTrigger className="h-7 w-36 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATE_META.map(t => (
+                      <SelectItem key={t.key} value={t.key} className="text-xs">{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs font-semibold text-muted-foreground">Colour:</span>
+                <Select value={activeTheme} onValueChange={v => setActiveTheme(v as ColorTheme)}>
+                  <SelectTrigger className="h-7 w-36 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.entries(THEME_COLORS) as [ColorTheme, typeof THEME_COLORS[ColorTheme]][]).map(([key, val]) => (
+                      <SelectItem key={key} value={key} className="text-xs">
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block w-3 h-3 rounded-full border border-border" style={{ background: val.dot }} />
+                          {val.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* ── SPECIAL POST CARDS (Discount / Referral) ─────────── */}
-              {(postType === "discount" || postType === "referral") && (
-                <div className="space-y-3">
-                  <Card className="rounded-2xl max-w-sm">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-sm">
-                        {postType === "discount" ? `🏷️ ${discountPct}% Discount Post` : "🤝 Referral Post"}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        {postType === "discount"
-                          ? `Code: ${discountCode} — auto-rendered as 3 sizes`
-                          : "Refer a Friend → Get 1 Free Class"}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4 space-y-3 pt-0">
-                      {/* Render buttons */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {(["1x1", "4x5", "story"] as const).map(size => (
-                          <Button key={size} size="sm"
-                            className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                            onClick={() => {
-                              const tpl = postType === "discount"
-                                ? getDiscountPostTemplate(discountPct, discountCode)
-                                : getReferralPostTemplate();
-                              const key = postType;
-                              const dataUrl = renderTemplateToDataUrl(tpl, size);
-                              setSpecialImages(prev => ({ ...prev, [key]: { ...(prev[key] || {}), [size]: dataUrl } }));
-                            }}
-                          >
-                            <Brush className="h-3 w-3 mr-1" />{size}
-                          </Button>
-                        ))}
-                        <Button size="sm"
-                          className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                          onClick={() => {
-                            const tpl = postType === "discount"
-                              ? getDiscountPostTemplate(discountPct, discountCode)
-                              : getReferralPostTemplate();
-                            renderSpecialPost(postType, tpl);
-                            toast({ title: "All 3 sizes rendered!" });
-                          }}
-                        >
-                          <Brush className="h-3 w-3 mr-1" />All
-                        </Button>
-                      </div>
-
-                      {/* Image thumbnails */}
-                      {specialImages[postType] && Object.keys(specialImages[postType]).length > 0 && (
-                        <div className="flex gap-2 py-1">
-                          {(["1x1", "4x5", "story"] as const).map(size => {
-                            const url = specialImages[postType]?.[size];
-                            if (!url) return null;
-                            const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
-                            return (
-                              <div key={size} className="shrink-0">
-                                <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`}
-                                  onClick={() => downloadImage(url, `klovers-${postType}-${size}.png`)}
-                                >
-                                  <img src={url} alt={size} className="w-full h-full object-cover" />
-                                </div>
-                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* ZIP download */}
-                      {specialImages[postType] && Object.keys(specialImages[postType]).length > 0 && (
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadAsZip("instagram")}>
-                            <FileDown className="h-3 w-3 mr-1" /> Instagram ZIP
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadAsZip("tiktok")}>
-                            <FileDown className="h-3 w-3 mr-1" /> TikTok ZIP
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* ── DIVIDER ───────────────────────────────────────────── */}
-              {groups.length > 0 && (postType === "empty_slots" || postType === "invite_student") && (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Group-based posts</span>
-                  <div className="flex-1 h-px bg-border" />
-                </div>
-              )}
-
-              {/* ── LEGACY GROUP CARDS (keep all existing logic) ─────── */}
-              {(postType !== "discount" && postType !== "referral") && (loading ? (
+              {loading ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {[1, 2, 3, 4].map(i => (
                     <Skeleton key={i} className="h-48 rounded-2xl" />
@@ -1259,8 +1401,234 @@ export default function MarketingGeneratorPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Group Cards */}
+                  {/* Unified Grid: Special + Group Cards */}
                   <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+
+                    {/* 🏷️ Discount Card */}
+                    <Card className="rounded-2xl border-amber-300/50 bg-amber-50/30 dark:bg-amber-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">🏷️ {discountPct}% Discount Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">Promo</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Code: {discountCode} — renders in 3 sizes</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {(["1x1", "4x5", "story"] as const).map(size => (
+                            <Button key={size} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const tpl = getDiscountPostTemplate(discountPct, discountCode);
+                                const dataUrl = renderTpl(tpl, size);
+                                setSpecialImages(prev => ({ ...prev, discount: { ...(prev.discount || {}), [size]: dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />{size}
+                            </Button>
+                          ))}
+                          <Button size="sm"
+                            className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                            onClick={() => { renderSpecialPost("discount", getDiscountPostTemplate(discountPct, discountCode)); toast({ title: "All 3 sizes rendered!" }); }}
+                          >
+                            <Brush className="h-3 w-3 mr-1" />All
+                          </Button>
+                        </div>
+                        {specialImages.discount && Object.keys(specialImages.discount).length > 0 && (
+                          <div className="flex gap-2 py-1">
+                            {(["1x1", "4x5", "story"] as const).map(size => {
+                              const url = specialImages.discount?.[size];
+                              if (!url) return null;
+                              const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
+                              return (
+                                <div key={size} className="shrink-0">
+                                  <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`} onClick={() => downloadImage(url, `klovers-discount-${size}.png`)}>
+                                    <img src={url} alt={size} className="w-full h-full object-cover" />
+                                  </div>
+                                  <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* 🤝 Referral Card */}
+                    <Card className="rounded-2xl border-purple-300/50 bg-purple-50/30 dark:bg-purple-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">🤝 Referral Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-purple-400 text-purple-700">Referral</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Refer a Friend → Get 1 Free Class</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {(["1x1", "4x5", "story"] as const).map(size => (
+                            <Button key={size} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const tpl = getReferralPostTemplate();
+                                const dataUrl = renderTpl(tpl, size);
+                                setSpecialImages(prev => ({ ...prev, referral: { ...(prev.referral || {}), [size]: dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />{size}
+                            </Button>
+                          ))}
+                          <Button size="sm"
+                            className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                            onClick={() => { renderSpecialPost("referral", getReferralPostTemplate()); toast({ title: "All 3 sizes rendered!" }); }}
+                          >
+                            <Brush className="h-3 w-3 mr-1" />All
+                          </Button>
+                        </div>
+                        {specialImages.referral && Object.keys(specialImages.referral).length > 0 && (
+                          <div className="flex gap-2 py-1">
+                            {(["1x1", "4x5", "story"] as const).map(size => {
+                              const url = specialImages.referral?.[size];
+                              if (!url) return null;
+                              const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
+                              return (
+                                <div key={size} className="shrink-0">
+                                  <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`} onClick={() => downloadImage(url, `klovers-referral-${size}.png`)}>
+                                    <img src={url} alt={size} className="w-full h-full object-cover" />
+                                  </div>
+                                  <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* 🌟 Testimonial Card */}
+                    <Card className="rounded-2xl border-yellow-300/50 bg-yellow-50/30 dark:bg-yellow-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">🌟 Testimonial Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-yellow-400 text-yellow-700">Social Proof</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Student success story — builds trust</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {[0, 1, 2, 3, 4].map(idx => (
+                            <Button key={idx} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const tpl = getTestimonialPostTemplate(idx);
+                                const dataUrl = renderTpl(tpl, "1x1");
+                                setSpecialImages(prev => ({ ...prev, [`testimonial_${idx}`]: { "1x1": dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />#{idx + 1}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 py-1 flex-wrap">
+                          {[0, 1, 2, 3, 4].map(idx => {
+                            const url = specialImages[`testimonial_${idx}`]?.["1x1"];
+                            if (!url) return null;
+                            return (
+                              <div key={idx} className="shrink-0">
+                                <div className="aspect-square w-14 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer" onClick={() => downloadImage(url, `klovers-testimonial-${idx + 1}.png`)}>
+                                  <img src={url} alt={`testimonial ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">#{idx + 1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* ❓ FAQ Card */}
+                    <Card className="rounded-2xl border-indigo-300/50 bg-indigo-50/30 dark:bg-indigo-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">❓ FAQ Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-indigo-400 text-indigo-700">Objection Handling</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Answer common questions — removes barriers</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {[0, 1, 2].map(idx => (
+                            <Button key={idx} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const tpl = getFAQPostTemplate(idx);
+                                const dataUrl = renderTpl(tpl, "1x1");
+                                setSpecialImages(prev => ({ ...prev, [`faq_${idx}`]: { "1x1": dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />Q{idx + 1}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 py-1 flex-wrap">
+                          {[0, 1, 2].map(idx => {
+                            const url = specialImages[`faq_${idx}`]?.["1x1"];
+                            if (!url) return null;
+                            return (
+                              <div key={idx} className="shrink-0">
+                                <div className="aspect-square w-14 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer" onClick={() => downloadImage(url, `klovers-faq-${idx + 1}.png`)}>
+                                  <img src={url} alt={`faq ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">Q{idx + 1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* ⏰ Countdown Card */}
+                    <Card className="rounded-2xl border-red-300/50 bg-red-50/30 dark:bg-red-950/10">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">⏰ Countdown Post</CardTitle>
+                          <Badge variant="outline" className="text-[10px] border-red-400 text-red-700">Urgency</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Creates FOMO — drives last-minute sign-ups</p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-3 pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {groups.slice(0, 3).map((g, idx) => (
+                            <Button key={g.id} size="sm"
+                              className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const daysLeft = [3, 5, 2][idx];
+                                const tpl = getCountdownPostTemplate(daysLeft, getLevelLabel(g.level));
+                                const dataUrl = renderTpl(tpl, "1x1");
+                                setSpecialImages(prev => ({ ...prev, [`countdown_${idx}`]: { "1x1": dataUrl } }));
+                              }}
+                            >
+                              <Brush className="h-3 w-3 mr-1" />{getLevelLabel(g.level).split(" ").slice(-1)}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 py-1 flex-wrap">
+                          {[0, 1, 2].map(idx => {
+                            const url = specialImages[`countdown_${idx}`]?.["1x1"];
+                            if (!url) return null;
+                            return (
+                              <div key={idx} className="shrink-0">
+                                <div className="aspect-square w-14 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer" onClick={() => downloadImage(url, `klovers-countdown-${idx + 1}.png`)}>
+                                  <img src={url} alt={`countdown ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-[9px] text-muted-foreground block text-center mt-0.5">#{idx + 1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 📢 / 👋 Group Cards */}
                     {groups.map(group => {
                       const groupImages = generatedImages[group.id] || {};
                       const content = generatedContent[group.id];
@@ -1274,7 +1642,10 @@ export default function MarketingGeneratorPage() {
                               <div className="flex items-center gap-2">
                                 {done && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
                                 <div>
-                                  <CardTitle className="text-sm">{getLevelLabel(group.level)}</CardTitle>
+                                  <div className="flex items-center gap-1.5">
+                                    <CardTitle className="text-sm">{getLevelLabel(group.level)}</CardTitle>
+                                    <span className="text-[10px] text-muted-foreground">{postType === "invite_student" ? "👋" : "📢"}</span>
+                                  </div>
                                   <p className="text-xs text-muted-foreground mt-0.5">
                                     {group.day_name} • {group.start_time} • {group.duration_min}min
                                   </p>
@@ -1553,7 +1924,7 @@ export default function MarketingGeneratorPage() {
                 </>
               ) : (
                 <p className="text-center text-muted-foreground text-sm py-8">No groups found. Add schedule groups to generate content.</p>
-              ))}
+              )}
             </TabsContent>
 
             <TabsContent value="creator">

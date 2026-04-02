@@ -1,0 +1,8 @@
+{
+  "redirects": [
+    { "source": "/enroll", "destination": "/enroll-now", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
