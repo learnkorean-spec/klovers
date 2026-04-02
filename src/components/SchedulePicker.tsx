@@ -251,9 +251,18 @@ const SchedulePicker = ({
 
   if (packages.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>No schedule slots available{selectedLevel ? ` for ${selectedLevel}` : ""} right now.</p>
-        <p className="text-sm mt-1">Please check back later or contact support.</p>
+      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-5 space-y-3">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">📅</span>
+          <div>
+            <p className="font-semibold text-amber-900 dark:text-amber-200">
+              No live schedule{selectedLevel ? ` for ${selectedLevel}` : ""} yet
+            </p>
+            <p className="text-sm text-amber-800 dark:text-amber-300 mt-1">
+              We're building the schedule based on student demand. Continue to the next step to tell us your preferred day &amp; time — you're helping shape the timetable!
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

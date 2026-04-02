@@ -557,9 +557,9 @@ const EnrollNowPage = () => {
   };
 
   const handlePay = async () => {
-    // Block payment if schedule fields are missing
-    if (!selectedLevel || preferredDays.length === 0 || !selectedPackageId) {
-      toast({ title: "Missing schedule", description: "Please select your level and schedule slot before continuing.", variant: "destructive" });
+    // Block payment if core schedule fields are missing (package is optional — may be preference-only)
+    if (!selectedLevel || preferredDays.length === 0) {
+      toast({ title: "Missing schedule", description: "Please select your level and preferred day before continuing.", variant: "destructive" });
       setStep(2);
       return;
     }
@@ -870,12 +870,30 @@ const EnrollNowPage = () => {
                 )}
                 {!selectedLevel ? (
                   <p className="text-sm text-muted-foreground italic">{t("enrollNow.selectLevelFirst")}</p>
+                ) : levelSlots.length === 0 && classType === "private" ? (
+                  <p className="text-sm text-muted-foreground italic">{t("enrollNow.noPrivateDays")}</p>
                 ) : levelSlots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">
-                    {classType === "private"
-                      ? t("enrollNow.noPrivateDays")
-                      : t("enrollNow.noGroupSlots")}
-                  </p>
+                  <div className="space-y-3">
+                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+                      📅 No live schedule for this level yet — pick your preferred day and we'll create slots based on student demand!
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {DAY_NAMES.map((day) => (
+                        <button
+                          type="button"
+                          key={day}
+                          onClick={() => toggleDay(day)}
+                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                            preferredDays.includes(day)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {levelSlots.map(({ day, time, seatsLeft }) => {
