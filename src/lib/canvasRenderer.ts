@@ -79,281 +79,172 @@ export function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number,
 
 // ─── Klovers Brand Designs ───────────────────────────────────────────────────
 
-function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, scale: number, isPortrait: boolean) {
-  const PAD = 28 * scale;
-  const BORDER = 11 * scale;
+// Design 1 — Bold Yellow Poster: clean yellow bg, black top/bottom bars, centered headline
+function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, scale: number, _isPortrait: boolean) {
+  const S = scale;
+  const barH = 72 * S;
+  const pad = 64 * S;
 
   // Yellow background
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // Thick black border frame
-  ctx.strokeStyle = "#111111";
-  ctx.lineWidth = BORDER;
-  ctx.strokeRect(PAD + BORDER / 2, PAD + BORDER / 2, w - PAD * 2 - BORDER, h - PAD * 2 - BORDER);
-
-  // "한" faint watermark
-  ctx.save();
-  ctx.font = `900 ${280 * scale}px serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.06)";
-  ctx.textAlign = "center";
-  ctx.fillText("한", w / 2, h * 0.62);
-  ctx.restore();
-
-  // K circle badge — top right
-  const badgeR = 38 * scale;
-  const bx = w - PAD - BORDER - badgeR - 6 * scale;
-  const by = PAD + BORDER + badgeR + 6 * scale;
+  // Black top + bottom bars
   ctx.fillStyle = "#111111";
-  ctx.beginPath(); ctx.arc(bx, by, badgeR, 0, Math.PI * 2); ctx.fill();
-  ctx.font = `900 ${26 * scale}px 'Inter', sans-serif`;
+  ctx.fillRect(0, 0, w, barH);
+  ctx.fillRect(0, h - barH, w, barH);
+
+  // Top bar text
   ctx.fillStyle = "#FFFF00";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText("K", bx, by);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `700 ${13 * S}px 'Inter', sans-serif`;
+  ctx.fillText("KLOVERS  ·  한국어 학원", w / 2, barH / 2);
+
+  // Bottom bar text
+  ctx.font = `500 ${12 * S}px 'Inter', sans-serif`;
+  ctx.fillText("kloversegy.com", w / 2, h - barH / 2);
+
+  // Headline — auto-size, centered
+  ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-
-  // Eyebrow label
-  const inner = PAD + BORDER + 16 * scale;
+  const maxW = w - pad * 2;
+  const longestWord = Math.max(...post.mainText.split(/\s+/).map(wd => wd.length));
+  const fontSize = Math.min(w * 0.13, (maxW * 0.92) / (longestWord * 0.52));
+  ctx.font = `900 ${fontSize}px 'Inter', sans-serif`;
   ctx.fillStyle = "#111111";
-  ctx.textAlign = "left";
-  ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
-  ctx.fillText("KLOVERS KOREAN ACADEMY", inner, inner + 32 * scale);
-  ctx.fillRect(inner, inner + 38 * scale, 54 * scale, 3 * scale);
 
-  // Headline
-  const hlY = h * (isPortrait ? 0.34 : 0.28);
-  const hlSize = Math.min(96 * scale, (w - inner * 2) / Math.max(...post.mainText.split(" ").map(s => s.length)) * 1.5);
-  ctx.font = `900 ${hlSize}px 'Inter', 'Segoe UI', sans-serif`;
-  ctx.fillStyle = "#111111";
-  wrapText(ctx, post.mainText, inner, hlY, w - inner * 2, hlSize * 1.08, 3);
+  // Vertically center the text block in the content area
+  const contentTop = barH;
+  const contentH = h - barH * 2;
+  const estLines = Math.min(3, Math.ceil(post.mainText.replace(/\n/g, " ").length / 10));
+  const mainH = estLines * fontSize * 1.08;
+  const subH = post.subtitle ? 26 * S * 2 : 0;
+  const gap = post.subtitle ? 18 * S : 0;
+  const blockH = mainH + gap + subH;
+  const startY = contentTop + (contentH - blockH) / 2 + fontSize * 0.8;
 
-  // Subtitle
+  wrapText(ctx, post.mainText, w / 2, startY, maxW, fontSize * 1.08, 3);
+
   if (post.subtitle) {
-    const stY = hlY + hlSize * 1.08 * Math.min(post.mainText.split(" ").length, 3) + 18 * scale;
-    ctx.font = `500 ${16 * scale}px 'Inter', sans-serif`;
+    ctx.font = `400 ${18 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "#333333";
-    wrapText(ctx, post.subtitle, inner, stY, w - inner * 2, 22 * scale, 3);
+    wrapText(ctx, post.subtitle, w / 2, startY + mainH + gap, maxW * 0.85, 26 * S, 3);
   }
 
-  // CTA pill
-  const ctaW = 200 * scale;
-  const ctaH = 48 * scale;
-  const ctaX = inner;
-  const ctaY2 = h - PAD - BORDER - 72 * scale;
-  ctx.fillStyle = "#111111";
-  rRect(ctx, ctaX, ctaY2, ctaW, ctaH, ctaH / 2);
-  ctx.fill();
-  ctx.font = `bold ${15 * scale}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#FFFF00";
-  ctx.textAlign = "center";
-  ctx.fillText("Register Now →", ctaX + ctaW / 2, ctaY2 + ctaH * 0.64);
   ctx.textAlign = "left";
-
-  // Bottom black strip
-  const stripH = 36 * scale;
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(PAD + BORDER, h - PAD - BORDER - stripH, w - (PAD + BORDER) * 2, stripH);
-  ctx.font = `600 ${11 * scale}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#FFFF00";
-  ctx.textAlign = "center";
-  ctx.fillText("kloversegy.com  •  한국어 배우기", w / 2, h - PAD - BORDER - stripH + stripH * 0.68);
-  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 }
 
+// Design 2 — Dark Minimal: black bg, yellow accent bar, white headline, yellow subtitle
 function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, scale: number, _isPortrait: boolean) {
-  // Dark bg
-  ctx.fillStyle = "#0d0d0d";
+  const S = scale;
+  const pad = 72 * S;
+  const accentW = 8 * S;
+
+  // Black background
+  ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, w, h);
 
-  // Radial glow behind ring
-  const cx = w / 2, cy = h * 0.42;
-  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.52);
-  grd.addColorStop(0, "rgba(255,220,0,0.18)");
-  grd.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = grd; ctx.fillRect(0, 0, w, h);
+  // Yellow left accent bar
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(0, 0, accentW, h);
 
-  // Championship ring
-  const ringR = Math.min(w, h) * 0.28;
-  ctx.strokeStyle = "#FFD700";
-  ctx.lineWidth = 7 * scale;
-  ctx.shadowColor = "#FFD700";
-  ctx.shadowBlur = 28 * scale;
-  ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2); ctx.stroke();
-
-  // Inner ring
-  ctx.lineWidth = 2 * scale;
-  ctx.shadowBlur = 8 * scale;
-  ctx.beginPath(); ctx.arc(cx, cy, ringR * 0.84, 0, Math.PI * 2); ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // 8 dot markers on ring
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2 - Math.PI / 2;
-    const dx = cx + Math.cos(angle) * ringR;
-    const dy = cy + Math.sin(angle) * ringR;
-    ctx.fillStyle = "#FFD700";
-    ctx.beginPath(); ctx.arc(dx, dy, 5 * scale, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // Big "K" inside ring
-  ctx.font = `900 ${ringR * 1.1}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#FFD700";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.shadowColor = "#FFD700"; ctx.shadowBlur = 18 * scale;
-  ctx.fillText("K", cx, cy);
-  ctx.shadowBlur = 0; ctx.textBaseline = "alphabetic";
-
-  // White headline below ring
-  const textTop = cy + ringR + 36 * scale;
-  const hlSize = Math.min(62 * scale, w * 0.08);
-  ctx.font = `900 ${hlSize}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#ffffff";
-  ctx.textAlign = "center";
-  wrapText(ctx, post.mainText, w * 0.1, textTop, w * 0.8, hlSize * 1.1, 2);
-
-  // Yellow subtitle lines
-  if (post.subtitle) {
-    ctx.font = `500 ${15 * scale}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#FFD700";
-    wrapText(ctx, post.subtitle, w * 0.1, textTop + hlSize * 2.4, w * 0.8, 22 * scale, 2);
-  }
-
-  // Bottom strip
-  const stripH = 38 * scale;
-  ctx.fillStyle = "#FFD700";
-  ctx.fillRect(0, h - stripH, w, stripH);
-  ctx.font = `700 ${12 * scale}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#0d0d0d";
-  ctx.textAlign = "center";
-  ctx.fillText("KLOVERS KOREAN ACADEMY  •  kloversegy.com", w / 2, h - stripH + stripH * 0.68);
+  // "KLOVERS" label top-left
+  ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `700 ${13 * S}px 'Inter', sans-serif`;
+  ctx.fillText("KLOVERS  ·  한국어 학원", pad, 68 * S);
+
+  // Yellow underline under label
+  ctx.fillRect(pad, 75 * S, 56 * S, 2 * S);
+
+  // Headline — white, large, left-aligned
+  const maxW = w - pad - 48 * S;
+  const longestWord = Math.max(...post.mainText.split(/\s+/).map(wd => wd.length));
+  const fontSize = Math.min(w * 0.12, (maxW * 0.92) / (longestWord * 0.52));
+  ctx.font = `900 ${fontSize}px 'Inter', sans-serif`;
+  ctx.fillStyle = "#FFFFFF";
+  wrapText(ctx, post.mainText, pad, h * 0.35, maxW, fontSize * 1.08, 3);
+
+  if (post.subtitle) {
+    ctx.font = `400 ${17 * S}px 'Inter', sans-serif`;
+    ctx.fillStyle = "#FFFF00";
+    wrapText(ctx, post.subtitle, pad, h * 0.35 + fontSize * 2.6, maxW, 26 * S, 3);
+  }
+
+  // Bottom: website
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.font = `500 ${12 * S}px 'Inter', sans-serif`;
+  ctx.fillText("kloversegy.com", pad, h - 40 * S);
 }
 
-function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, scale: number, isPortrait: boolean) {
-  if (isPortrait) {
-    // Portrait: yellow top / black bottom with diagonal cut
-    const splitY = h * 0.48;
-    const slant = w * 0.12;
+// Design 3 — Split: top half black with white headline, bottom half yellow with CTA
+function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, scale: number, _isPortrait: boolean) {
+  const S = scale;
+  const midY = h / 2;
+  const pad = 64 * S;
+  const divH = 5 * S;
 
-    // Yellow top zone
-    ctx.fillStyle = "#FFFF00";
-    ctx.fillRect(0, 0, w, splitY + slant);
+  // Top half: black
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0, 0, w, midY);
 
-    // Black bottom zone
+  // Bottom half: yellow
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(0, midY, w, midY);
+
+  // White divider line
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, midY - divH / 2, w, divH);
+
+  // Top area: small "KLOVERS" label
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `700 ${12 * S}px 'Inter', sans-serif`;
+  ctx.fillText("KLOVERS  ·  한국어 학원", w / 2, 38 * S);
+
+  // Top area: main headline, white, centered
+  const maxW = w - pad * 2;
+  const longestWord = Math.max(...post.mainText.split(/\s+/).map(wd => wd.length));
+  const fontSize = Math.min(w * 0.12, (maxW * 0.9) / (longestWord * 0.52));
+  ctx.font = `900 ${fontSize}px 'Inter', sans-serif`;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  const hlY = 38 * S + (midY - 38 * S) / 2 - fontSize * 0.5 + fontSize * 0.8;
+  wrapText(ctx, post.mainText, w / 2, hlY, maxW, fontSize * 1.08, 2);
+
+  // Bottom area: subtitle, black, centered
+  if (post.subtitle) {
+    ctx.font = `400 ${17 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
-    ctx.beginPath();
-    ctx.moveTo(0, splitY); ctx.lineTo(w, splitY + slant);
-    ctx.lineTo(w, h); ctx.lineTo(0, h);
-    ctx.closePath(); ctx.fill();
-
-    // Thin yellow diagonal accent
-    ctx.strokeStyle = "#FFFF00";
-    ctx.lineWidth = 3 * scale;
-    ctx.beginPath();
-    ctx.moveTo(0, splitY + 12 * scale); ctx.lineTo(w, splitY + slant + 12 * scale);
-    ctx.stroke();
-
-    // K badge top-left
-    const badgeR = 34 * scale;
-    ctx.fillStyle = "#111111";
-    ctx.beginPath(); ctx.arc(40 * scale, 44 * scale, badgeR, 0, Math.PI * 2); ctx.fill();
-    ctx.font = `900 ${22 * scale}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#FFFF00";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("K", 40 * scale, 44 * scale);
-    ctx.textBaseline = "alphabetic";
-
-    // Headline in yellow zone (dark text)
-    const hlSize = Math.min(82 * scale, w * 0.12);
-    ctx.font = `900 ${hlSize}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#111111";
-    ctx.textAlign = "left";
-    wrapText(ctx, post.mainText, 36 * scale, h * 0.18, w - 72 * scale, hlSize * 1.08, 2);
-
-    // Subtitle in black zone (white text)
-    if (post.subtitle) {
-      ctx.font = `500 ${16 * scale}px 'Inter', sans-serif`;
-      ctx.fillStyle = "#ffffff";
-      wrapText(ctx, post.subtitle, 36 * scale, splitY + slant + 36 * scale, w - 72 * scale, 23 * scale, 3);
-    }
-
-    // CTA in black zone
-    const ctaW = 190 * scale, ctaH = 46 * scale;
-    const ctaY = h - 72 * scale;
-    ctx.fillStyle = "#FFFF00";
-    rRect(ctx, 36 * scale, ctaY, ctaW, ctaH, ctaH / 2);
-    ctx.fill();
-    ctx.font = `bold ${14 * scale}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#111111";
-    ctx.textAlign = "center";
-    ctx.fillText("Register Now →", 36 * scale + ctaW / 2, ctaY + ctaH * 0.64);
-    ctx.textAlign = "left";
-
-    // "KLOVERS" bottom right
-    ctx.font = `900 ${11 * scale}px 'Inter', sans-serif`;
-    ctx.fillStyle = "rgba(255,255,0,0.4)";
-    ctx.textAlign = "right";
-    ctx.fillText("KLOVERS", w - 30 * scale, h - 18 * scale);
-    ctx.textAlign = "left";
-
-  } else {
-    // Landscape/square: yellow left / black right with diagonal
-    const splitX = w * 0.5;
-    const slant = h * 0.12;
-
-    // Yellow left
-    ctx.fillStyle = "#FFFF00";
-    ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(splitX + slant, 0);
-    ctx.lineTo(splitX, h); ctx.lineTo(0, h);
-    ctx.closePath(); ctx.fill();
-
-    // Black right
-    ctx.fillStyle = "#111111";
-    ctx.beginPath();
-    ctx.moveTo(splitX + slant, 0); ctx.lineTo(w, 0);
-    ctx.lineTo(w, h); ctx.lineTo(splitX, h);
-    ctx.closePath(); ctx.fill();
-
-    // Yellow diagonal accent
-    ctx.strokeStyle = "#FFFF00";
-    ctx.lineWidth = 3 * scale;
-    ctx.beginPath();
-    ctx.moveTo(splitX + slant + 10 * scale, 0); ctx.lineTo(splitX + 10 * scale, h);
-    ctx.stroke();
-
-    // K logo on yellow
-    ctx.font = `900 ${90 * scale}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#111111";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("K", splitX * 0.5, h / 2);
-    ctx.textBaseline = "alphabetic";
-
-    // Headline on black
-    const hlSize = Math.min(52 * scale, h * 0.1);
-    const textLeft = splitX + slant + 24 * scale;
-    const textW = w - textLeft - 20 * scale;
-    ctx.font = `900 ${hlSize}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "left";
-    wrapText(ctx, post.mainText, textLeft, h * 0.28, textW, hlSize * 1.1, 3);
-
-    if (post.subtitle) {
-      ctx.font = `500 ${14 * scale}px 'Inter', sans-serif`;
-      ctx.fillStyle = "#FFD700";
-      wrapText(ctx, post.subtitle, textLeft, h * 0.62, textW, 20 * scale, 2);
-    }
-
-    // "KLOVERS" label on yellow, vertical
-    ctx.save();
-    ctx.translate(splitX * 0.82, h * 0.72);
-    ctx.rotate(-Math.PI / 2);
-    ctx.font = `900 ${11 * scale}px 'Inter', sans-serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    ctx.textAlign = "center";
-    ctx.fillText("KLOVERS", 0, 0);
-    ctx.restore();
+    wrapText(ctx, post.subtitle, w / 2, midY + 52 * S, maxW * 0.85, 26 * S, 3);
   }
+
+  // CTA pill — bottom half
+  const ctaW = 210 * S, ctaH = 52 * S;
+  const ctaX = (w - ctaW) / 2;
+  const ctaY = h - 90 * S;
+  ctx.fillStyle = "#111111";
+  rRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
+  ctx.fill();
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `700 ${15 * S}px 'Inter', sans-serif`;
+  ctx.fillText("Register Now  →", ctaX + ctaW / 2, ctaY + ctaH / 2);
+
+  // "kloversegy.com" very bottom
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.font = `500 ${11 * S}px 'Inter', sans-serif`;
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("kloversegy.com", w / 2, h - 18 * S);
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 }
 
 // ─── Main Canvas Renderer ───
