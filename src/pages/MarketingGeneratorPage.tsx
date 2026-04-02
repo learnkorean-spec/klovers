@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,11 @@ import {
   generateStoryScript,
   getLevelLabel,
   getUrgencyLabel,
+  generateMonthlyPlan,
+  monthlyPostToPostData,
+  type MonthlyPostType,
 } from "@/lib/marketingEngine";
+import { renderPost, type PostData, type TemplateName, type ColorTheme } from "@/lib/canvasRenderer";
 import {
   type SlotPostDraft,
   getTeacherAvailability,
@@ -241,6 +245,50 @@ function toGCalUrl(post: { scheduled_at: string; course_title: string | null; ca
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(post.course_title || "Marketing Post")}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent((post.caption || "").slice(0, 500))}&sf=true&output=xml`;
 }
 
+// ─── Monthly Draft Types & Design Config ───────────────────────────────────
+
+interface MonthlyDraftPost {
+  id: string;
+  day: number;
+  postType: MonthlyPostType;
+  caption: string;
+  mainText: string;
+  subtitle: string;
+  extraText: string;
+  approved: boolean;
+  scheduledDate: string;
+}
+
+const DESIGN_CONFIG: Record<1 | 2 | 3, { template: TemplateName; theme: ColorTheme; name: string; desc: string }> = {
+  1: { template: "klovers_bold",    theme: "yellow",   name: "Bold",  desc: "Attention — Yellow/Black" },
+  2: { template: "klovers_varsity", theme: "midnight", name: "Dark",  desc: "Interest — Dark/Gold" },
+  3: { template: "klovers_split",   theme: "yellow",   name: "Split", desc: "Action — Split Yellow/Black" },
+};
+
+const PostPreview = memo(function PostPreview({
+  post, template, theme, size = 270,
+}: { post: PostData; template: TemplateName; theme: ColorTheme; size?: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    canvas.width = 1080; canvas.height = 1080;
+    renderPost(canvas, post, template, theme, "instagram");
+  }, [post.mainText, post.subtitle, post.extraText, template, theme]);
+  return <canvas ref={ref} style={{ width: size, height: size, display: "block" }} className="rounded-lg" />;
+});
+
+const DesignThumb = memo(function DesignThumb({ template, theme }: { template: TemplateName; theme: ColorTheme }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    canvas.width = 1080; canvas.height = 1080;
+    renderPost(canvas, { id: "thumb", mainText: "Korean Class", subtitle: "Monday 6:00 PM", extraText: "#LearnKorean" }, template, theme, "instagram");
+  }, [template, theme]);
+  return <canvas ref={ref} style={{ width: 80, height: 80, display: "block" }} className="rounded-md" />;
+});
+
 export default function MarketingGeneratorPage() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<GroupData[]>([]);
@@ -292,6 +340,14 @@ export default function MarketingGeneratorPage() {
   // Reschedule dialog
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [rescheduleShift, setRescheduleShift] = useState(7);
+
+  // ── Monthly 30-post AIDA draft state ──
+  const [selectedDesign, setSelectedDesign] = useState<1 | 2 | 3>(1);
+  const [monthlyDrafts, setMonthlyDrafts] = useState<MonthlyDraftPost[]>([]);
+  const [editingDraft, setEditingDraft] = useState<MonthlyDraftPost | null>(null);
+  const [editDraftText, setEditDraftText] = useState({ mainText: "", subtitle: "", extraText: "" });
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [savingMonthly, setSavingMonthly] = useState(false);
 
   const fetchScheduledPosts = useCallback(async () => {
     setCalLoading(true);
@@ -572,6 +628,97 @@ export default function MarketingGeneratorPage() {
     setSlotDrafts(prev => prev.map(d => ({ ...d, approved: true })));
   }
 
+  // ── Monthly 30-post functions ──
+
+  function generateMonthlyDrafts() {
+    if (!groups.length) {
+      toast({ title: "No groups loaded", description: "Wait for groups to load first.", variant: "destructive" });
+      return;
+    }
+    const today = new Date();
+    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
+    const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      const pd = monthlyPostToPostData(post);
+      return {
+        ...pd,
+        day: post.day,
+        postType: post.postType,
+        caption: post.caption,
+        approved: false,
+        scheduledDate: d.toISOString().split("T")[0],
+      };
+    });
+    setMonthlyDrafts(drafts);
+    toast({ title: "30 posts generated!", description: "Choose your design and bulk download or save to calendar." });
+  }
+
+  async function handleBulkDownload() {
+    if (!monthlyDrafts.length) {
+      toast({ title: "No posts", description: "Generate 30 posts first." });
+      return;
+    }
+    setBulkDownloading(true);
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      const design = DESIGN_CONFIG[selectedDesign];
+      for (const post of monthlyDrafts) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1080; canvas.height = 1080;
+        renderPost(canvas, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, design.template, design.theme, "instagram");
+        const blob = await new Promise<Blob>(resolve => canvas.toBlob(b => resolve(b!), "image/png"));
+        zip.file(`day-${String(post.day).padStart(2, "0")}-${post.postType}.png`, blob);
+      }
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `klovers-posts-${new Date().toISOString().slice(0, 7)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} PNG posts in one file.` });
+    } catch (err: any) {
+      toast({ title: "Download error", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkDownloading(false);
+    }
+  }
+
+  function downloadSinglePost(post: MonthlyDraftPost) {
+    const design = DESIGN_CONFIG[selectedDesign];
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080; canvas.height = 1080;
+    renderPost(canvas, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, design.template, design.theme, "instagram");
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `day-${String(post.day).padStart(2, "0")}-${post.postType}.png`;
+    a.click();
+  }
+
+  async function saveMonthlyDraftsToCalendar() {
+    if (!monthlyDrafts.length) return;
+    setSavingMonthly(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast({ title: "Not logged in", variant: "destructive" }); setSavingMonthly(false); return; }
+    const monthLabel = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const toInsert = monthlyDrafts.map(d => ({
+      scheduled_at: `${d.scheduledDate}T10:00:00+02:00`,
+      course_title: `Monthly Plan — ${monthLabel}`,
+      caption: d.caption,
+      platforms: ["instagram", "facebook"],
+      status: "pending",
+      created_by: user.id,
+      registration_url: "https://kloversegy.com/enroll",
+    }));
+    const { error } = await supabase.from("scheduled_social_posts").insert(toInsert);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); setSavingMonthly(false); return; }
+    toast({ title: `${monthlyDrafts.length} posts added to Calendar!`, description: "Open Campaign Calendar to review." });
+    await fetchScheduledPosts();
+    setSavingMonthly(false);
+  }
+
   function formatTime(timeStr: string): string {
     const [h, m] = timeStr.split(":");
     const hour = parseInt(h);
@@ -805,548 +952,185 @@ export default function MarketingGeneratorPage() {
 
             <TabsContent value="generator" className="space-y-6">
 
-              {/* ── SLOT-BASED SECTION ────────────────────────────────── */}
-              <div className="space-y-4">
-
-                {/* Header + stats row */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              {/* ── DESIGN PICKER ─────────────────────────────────────── */}
+              <Card className="rounded-2xl border-primary/20">
+                <CardContent className="p-5 space-y-4">
                   <div>
-                    <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary" /> Schedule-Based Post Generator
-                    </h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Reads teacher availability → detects open class slots → generates ready-to-post drafts
-                    </p>
+                    <h2 className="text-sm font-bold text-foreground mb-1">Choose your design</h2>
+                    <p className="text-xs text-muted-foreground">All 3 use Klovers brand colours. Pick one before generating your 30 posts.</p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={fetchSlotDrafts} disabled={slotLoading}>
-                    <RefreshCw className={`h-4 w-4 mr-1.5 ${slotLoading ? "animate-spin" : ""}`} />
-                    {slotLoading ? "Scanning…" : "Generate From Schedule"}
-                  </Button>
-                </div>
-
-                {/* Stats bar */}
-                {slotsFound !== null && (
-                  <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 text-sm">
-                      <CalendarClock className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{slotsFound}</span>
-                      <span className="text-muted-foreground">available teaching slots</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 text-sm">
-                      <Wand2 className="h-4 w-4 text-emerald-600" />
-                      <span className="font-semibold text-foreground">{slotDrafts.length}</span>
-                      <span className="text-muted-foreground">post drafts generated</span>
-                    </div>
-                    {slotDrafts.filter(d => d.approved).length > 0 && (
-                      <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl px-4 py-2.5 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        <span className="font-semibold text-foreground">{slotDrafts.filter(d => d.approved).length}</span>
-                        <span className="text-muted-foreground">approved</span>
-                      </div>
-                    )}
+                  <div className="flex flex-wrap gap-4">
+                    {([1, 2, 3] as const).map(n => {
+                      const d = DESIGN_CONFIG[n];
+                      return (
+                        <button
+                          key={n}
+                          onClick={() => setSelectedDesign(n)}
+                          className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedDesign === n ? 'border-primary shadow-lg shadow-primary/20 bg-primary/5' : 'border-border hover:border-primary/40'}`}
+                        >
+                          <DesignThumb template={d.template} theme={d.theme} />
+                          <div className="text-center">
+                            <p className="text-xs font-bold text-foreground">{d.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{d.desc}</p>
+                          </div>
+                          {selectedDesign === n && (
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-primary">
+                              <CheckCircle2 className="h-3 w-3" /> Selected
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                {/* Loading state */}
-                {slotLoading && (
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-2xl" />)}
-                  </div>
-                )}
-
-                {/* Empty: no teacher availability set up */}
-                {!slotLoading && hasTeacherAvailability === false && (
-                  <Card className="rounded-2xl border-dashed">
-                    <CardContent className="py-14 text-center space-y-3">
-                      <CalendarClock className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-                      <p className="font-semibold text-foreground">No class availability found</p>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        Add teacher schedule availability to generate class-based marketing posts. Go to Admin → Availability to set it up.
-                      </p>
-                      <Button size="sm" variant="outline" onClick={() => window.open("/admin", "_self")}>
-                        Set Up Availability
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Empty: availability exists but all slots booked */}
-                {!slotLoading && hasTeacherAvailability === true && slotDrafts.length === 0 && (
-                  <Card className="rounded-2xl border-dashed">
-                    <CardContent className="py-14 text-center space-y-3">
-                      <CheckCircle2 className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-                      <p className="font-semibold text-foreground">No open teaching slots right now</p>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        All current slots are booked or unavailable. You can still generate evergreen content manually using the groups below.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Draft cards */}
-                {!slotLoading && slotDrafts.length > 0 && (
+              {/* ── ACTION BAR ────────────────────────────────────────── */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button onClick={generateMonthlyDrafts} disabled={loading}>
+                  <Sparkles className="h-4 w-4 mr-1.5" />
+                  Generate 30 Posts
+                </Button>
+                {monthlyDrafts.length > 0 && (
                   <>
-                    {/* Bulk action bar */}
-                    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/40 rounded-xl border border-border">
-                      <input
-                        type="text"
-                        value={draftCampaignName}
-                        onChange={e => setDraftCampaignName(e.target.value)}
-                        className="flex-1 min-w-0 text-sm bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                        placeholder="Campaign name…"
-                      />
-                      <Button size="sm" variant="outline" onClick={approveAllDrafts}>
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Approve All
-                      </Button>
-                      <Button size="sm" onClick={() => handleSaveAllDraftsToCalendar(false)} disabled={savingDrafts}>
-                        {savingDrafts ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5 mr-1.5" />}
-                        Add All to Calendar
-                      </Button>
-                      {slotDrafts.some(d => d.approved) && (
-                        <Button size="sm" variant="outline" className="border-emerald-400 text-emerald-700 hover:bg-emerald-50" onClick={() => handleSaveAllDraftsToCalendar(true)} disabled={savingDrafts}>
-                          <CalendarPlus className="h-3.5 w-3.5 mr-1.5" /> Add Approved Only
-                        </Button>
-                      )}
-                    </div>
-
-                    {/* Draft grid */}
-                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                      {slotDrafts.map(draft => {
-                        const postTypeColors: Record<string, string> = {
-                          limited_seats_alert: "border-red-300 bg-red-50/50 dark:bg-red-950/10",
-                          new_class_opportunity: "border-blue-300 bg-blue-50/50 dark:bg-blue-950/10",
-                          private_opening: "border-purple-300 bg-purple-50/50 dark:bg-purple-950/10",
-                          weekend_class: "border-amber-300 bg-amber-50/50 dark:bg-amber-950/10",
-                          group_opening: "",
-                        };
-                        const postTypeLabel: Record<string, string> = {
-                          limited_seats_alert: "⚡ Limited Seats",
-                          new_class_opportunity: "🆕 New Class",
-                          private_opening: "🎯 Private",
-                          weekend_class: "📅 Weekend",
-                          group_opening: "👥 Group Opening",
-                        };
-                        return (
-                          <Card key={draft.id} className={`rounded-2xl transition-all ${draft.approved ? "ring-2 ring-emerald-400/60 border-emerald-300" : ""} ${postTypeColors[draft.postType] || ""}`}>
-                            <CardHeader className="pb-2 pt-4 px-4">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-muted-foreground">{postTypeLabel[draft.postType]}</p>
-                                  <CardTitle className="text-sm leading-snug mt-0.5">{draft.title}</CardTitle>
-                                  <p className="text-xs text-muted-foreground mt-0.5">
-                                    📅 {new Date(draft.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                                    {draft.seatsAvailable !== null && (
-                                      <span className={`ml-2 font-semibold ${draft.seatsAvailable <= 3 ? "text-red-600" : "text-emerald-600"}`}>
-                                        · {draft.seatsAvailable} seat{draft.seatsAvailable !== 1 ? "s" : ""} left
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                                <button
-                                  onClick={() => toggleDraftApproval(draft.id)}
-                                  className={`shrink-0 p-1.5 rounded-full transition-colors ${draft.approved ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
-                                  title={draft.approved ? "Approved — click to unapprove" : "Click to approve"}
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="px-4 pb-4 space-y-3 pt-0">
-                              <Textarea
-                                value={draft.caption}
-                                onChange={e => setSlotDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, caption: e.target.value } : d))}
-                                className="text-xs min-h-[80px] resize-none"
-                                placeholder="Caption…"
-                              />
-                              <div className="flex flex-wrap gap-1.5">
-                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => copyToClipboard(draft.caption, "Caption")}>
-                                  <Copy className="h-3 w-3 mr-1" /> Copy
-                                </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => toggleDraftApproval(draft.id)}>
-                                  {draft.approved ? "✓ Approved" : "Approve"}
-                                </Button>
-                                <Button size="sm" className="h-7 text-xs" onClick={async () => {
-                                  setSavingDrafts(true);
-                                  const { data: { user } } = await supabase.auth.getUser();
-                                  if (user) {
-                                    await saveGeneratedDrafts([draft], draftCampaignName, user.id);
-                                    toast({ title: "Added to Calendar" });
-                                    await fetchScheduledPosts();
-                                  }
-                                  setSavingDrafts(false);
-                                }}>
-                                  <CalendarPlus className="h-3 w-3 mr-1" /> Add to Calendar
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
+                    <Button variant="outline" onClick={() => setMonthlyDrafts(prev => prev.map(d => ({ ...d, approved: true })))}>
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" /> Approve All
+                    </Button>
+                    <Button variant="outline" onClick={handleBulkDownload} disabled={bulkDownloading}>
+                      {bulkDownloading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <DownloadCloud className="h-4 w-4 mr-1.5" />}
+                      {bulkDownloading ? 'Zipping…' : 'Bulk Download (ZIP)'}
+                    </Button>
+                    <Button variant="outline" onClick={saveMonthlyDraftsToCalendar} disabled={savingMonthly}>
+                      {savingMonthly ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <CalendarPlus className="h-4 w-4 mr-1.5" />}
+                      Save to Calendar
+                    </Button>
                   </>
                 )}
               </div>
 
-              {/* ── DIVIDER ───────────────────────────────────────────── */}
-              {groups.length > 0 && (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Group-based posts</span>
-                  <div className="flex-1 h-px bg-border" />
-                </div>
+              {/* ── EMPTY STATE ───────────────────────────────────────── */}
+              {monthlyDrafts.length === 0 && (
+                <Card className="rounded-2xl border-dashed">
+                  <CardContent className="py-16 text-center space-y-3">
+                    <Sparkles className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+                    <p className="font-semibold text-foreground">No posts yet</p>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                      Pick a design above then click "Generate 30 Posts" to create a full month of content.
+                    </p>
+                    {loading && <p className="text-xs text-muted-foreground">Loading class groups…</p>}
+                  </CardContent>
+                </Card>
               )}
 
-              {/* ── LEGACY GROUP CARDS (keep all existing logic) ─────── */}
-              {loading ? (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {[1, 2, 3, 4].map(i => (
-                    <Skeleton key={i} className="h-48 rounded-2xl" />
+              {/* ── 30-POST GRID ──────────────────────────────────────── */}
+              {monthlyDrafts.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {monthlyDrafts.map(draft => (
+                    <Card key={draft.id} className={`rounded-2xl transition-all ${draft.approved ? 'ring-2 ring-emerald-400/60 border-emerald-300' : ''}`}>
+                      <CardContent className="p-3 space-y-3">
+                        {/* Canvas preview */}
+                        <div className="w-full overflow-hidden rounded-xl bg-muted flex justify-center">
+                          <PostPreview
+                            post={{ id: draft.id, mainText: draft.mainText, subtitle: draft.subtitle, extraText: draft.extraText }}
+                            template={DESIGN_CONFIG[selectedDesign].template}
+                            theme={DESIGN_CONFIG[selectedDesign].theme}
+                            size={270}
+                          />
+                        </div>
+                        {/* Meta */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Badge variant="secondary" className="text-[10px] font-bold">Day {draft.day}</Badge>
+                            <Badge variant="outline" className="text-[10px] capitalize">{draft.postType.replace(/_/g, ' ')}</Badge>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{draft.scheduledDate}</span>
+                        </div>
+                        {/* Caption preview */}
+                        <p className="text-xs text-muted-foreground line-clamp-2">{draft.caption}</p>
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Button
+                            size="sm" variant="outline" className="h-7 text-xs"
+                            onClick={() => { setEditingDraft(draft); setEditDraftText({ mainText: draft.mainText, subtitle: draft.subtitle, extraText: draft.extraText }); }}
+                          >
+                            <Brush className="h-3 w-3 mr-1" /> Edit
+                          </Button>
+                          <Button
+                            size="sm" variant="outline" className="h-7 text-xs"
+                            onClick={() => downloadSinglePost(draft)}
+                          >
+                            <DownloadCloud className="h-3 w-3 mr-1" /> PNG
+                          </Button>
+                          <button
+                            onClick={() => setMonthlyDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, approved: !d.approved } : d))}
+                            className={`ml-auto h-7 w-7 rounded-full flex items-center justify-center transition-colors ${draft.approved ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}
+                            title={draft.approved ? 'Approved' : 'Approve'}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-              ) : groups.length > 0 ? (
-                <>
-                  {/* Bulk Actions Bar */}
-                  <Card className="rounded-2xl border-primary/30 bg-foreground">
-                    <CardContent className="py-4 px-5">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-primary">{groups.length} groups with open seats</p>
-                          <p className="text-xs text-background/60">Use "Brand Render" for instant exact-yellow images. "AI Generate" uses credits.</p>
+              )}
+
+              {/* ── EDIT DIALOG ───────────────────────────────────────── */}
+              {editingDraft && (
+                <Dialog open={!!editingDraft} onOpenChange={() => setEditingDraft(null)}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Edit Post — Day {editingDraft.day} ({editingDraft.postType.replace(/_/g, ' ')})</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                      <div className="flex justify-center">
+                        <PostPreview
+                          post={{ id: editingDraft.id, mainText: editDraftText.mainText, subtitle: editDraftText.subtitle, extraText: editDraftText.extraText }}
+                          template={DESIGN_CONFIG[selectedDesign].template}
+                          theme={DESIGN_CONFIG[selectedDesign].theme}
+                          size={240}
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold">Main Text</label>
+                          <input
+                            className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                            value={editDraftText.mainText}
+                            onChange={e => setEditDraftText(p => ({ ...p, mainText: e.target.value }))}
+                          />
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button onClick={handleBulkCanvasRender} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                            <Brush className="h-4 w-4 mr-2" /> Brand Render All ⚡
-                          </Button>
-                          <Button variant="outline" onClick={handleBulkGenerate} disabled={bulkGenerating} className="border-background/20 text-background hover:bg-background/10">
-                            {bulkGenerating ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                {bulkProgress.label} ({bulkProgress.current}/{bulkProgress.total})
-                              </>
-                            ) : (
-                              <><Zap className="h-4 w-4 mr-2" /> AI Generate All</>
-                            )}
-                          </Button>
-                          {gridImages.length > 0 && (
-                            <>
-                              <Button variant="outline" size="sm" onClick={copyAllCaptions} className="border-background/20 text-background hover:bg-background/10">
-                                <Copy className="h-4 w-4 mr-1" /> Copy All Captions
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={downloadAllImages} className="border-background/20 text-background hover:bg-background/10">
-                                <DownloadCloud className="h-4 w-4 mr-1" /> Download All
-                              </Button>
-                            </>
-                          )}
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold">Subtitle</label>
+                          <textarea
+                            className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                            rows={3}
+                            value={editDraftText.subtitle}
+                            onChange={e => setEditDraftText(p => ({ ...p, subtitle: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold">Hashtags / Extra</label>
+                          <input
+                            className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                            value={editDraftText.extraText}
+                            onChange={e => setEditDraftText(p => ({ ...p, extraText: e.target.value }))}
+                          />
                         </div>
                       </div>
-                      {bulkGenerating && (
-                        <div className="mt-3">
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary rounded-full transition-all duration-300"
-                              style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Group Cards */}
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {groups.map(group => {
-                      const groupImages = generatedImages[group.id] || {};
-                      const content = generatedContent[group.id];
-                      const isExpanded = expandedCards.has(group.id);
-                      const done = hasContent(group.id) && hasImages(group.id);
-
-                      return (
-                        <Card key={group.id} className={`rounded-2xl transition-all ${done ? "border-primary/30" : ""}`}>
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-2">
-                                {done && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
-                                <div>
-                                  <CardTitle className="text-sm">{getLevelLabel(group.level)}</CardTitle>
-                                  <p className="text-xs text-muted-foreground mt-0.5">
-                                    {group.day_name} • {group.start_time} • {group.duration_min}min
-                                  </p>
-                                </div>
-                              </div>
-                              <Badge
-                                className={`text-[10px] border ${group.urgency_label === "Last Seats" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/20 text-foreground border-border"}`}
-                              >
-                                {group.seats_left} left
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-2 pt-0">
-                            {/* Quick action row */}
-                            <div className="flex flex-wrap gap-1.5">
-                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleGenerate(group)}>
-                                <Sparkles className="h-3 w-3 mr-1" /> Text
-                              </Button>
-                              <Button size="sm" variant="outline" className="h-7 text-xs text-green-700 border-green-300 hover:bg-green-50 dark:hover:bg-green-950/30" onClick={() => setWhatsappGroup(group)}>
-                                <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
-                              </Button>
-                              {/* Brand canvas render buttons (exact yellow, instant) */}
-                              {(["1x1", "4x5", "story"] as const).map(size => (
-                                <Button key={`canvas-${size}`} size="sm"
-                                  className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                                  onClick={() => { handleGenerate(group); handleCanvasRender(group, size); }}
-                                >
-                                  <Brush className="h-3 w-3 mr-1" />{size}
-                                </Button>
-                              ))}
-                              {/* AI image buttons */}
-                              {(["1x1", "4x5", "story"] as const).map(size => (
-                                <Button key={`ai-${size}`} size="sm" variant="ghost" className="h-7 text-xs opacity-60"
-                                  onClick={() => handleGenerateImage(group, size)}
-                                  disabled={isSizeGenerating(group.id, size)}
-                                  title="AI generate (uses credits)"
-                                >
-                                  {isSizeGenerating(group.id, size) ? (
-                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                  ) : (
-                                    <Image className="h-3 w-3 mr-1" />
-                                  )}
-                                  AI {size}
-                                </Button>
-                              ))}
-                            </div>
-
-                            {/* Image thumbnails row */}
-                            {Object.keys(groupImages).length > 0 && (
-                              <div className="flex gap-2 py-1">
-                                {(["1x1", "4x5", "story"] as const).map(size => {
-                                  const url = groupImages[size];
-                                  if (!url) return null;
-                                  const aspectClass = size === "1x1" ? "aspect-square" : size === "4x5" ? "aspect-[4/5]" : "aspect-[9/16]";
-                                  return (
-                                    <div key={size} className="shrink-0">
-                                      <div className={`${aspectClass} w-16 rounded-lg overflow-hidden border shadow-sm bg-muted cursor-pointer`}
-                                        onClick={() => downloadImage(url, `${getLevelLabel(group.level).replace(/\s+/g, "-")}-${size}.png`)}
-                                      >
-                                        <img src={url} alt={`${size}`} className="w-full h-full object-cover" />
-                                      </div>
-                                      <span className="text-[9px] text-muted-foreground block text-center mt-0.5">{size}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {/* Expandable content */}
-                            {content && (
-                              <Collapsible open={isExpanded} onOpenChange={() => toggleCard(group.id)}>
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs justify-between">
-                                    <span>View captions & ad copy</span>
-                                    {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                                  </Button>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent className="space-y-3 pt-2">
-                                  <Tabs defaultValue="captions">
-                                    <TabsList className="h-auto bg-transparent p-0 gap-1.5">
-                                      <TabsTrigger value="captions" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Captions</TabsTrigger>
-                                      <TabsTrigger value="ads" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ad Copy</TabsTrigger>
-                                      <TabsTrigger value="story" className="rounded-full px-2.5 py-1 text-[10px] border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎬 Story</TabsTrigger>
-                                    </TabsList>
-
-                                    <TabsContent value="captions" className="space-y-2 mt-2">
-                                      {content.captions.map((cap, i) => (
-                                        <div key={i} className="space-y-1">
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-[10px] text-muted-foreground">Variation {i + 1}</span>
-                                            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => copyToClipboard(cap, `Caption ${i + 1}`)}>
-                                              <Copy className="h-3 w-3 mr-1" /> Copy
-                                            </Button>
-                                          </div>
-                                          <Textarea
-                                            value={cap}
-                                            onChange={(e) => {
-                                              const updated = [...content.captions];
-                                              updated[i] = e.target.value;
-                                              setGeneratedContent(prev => ({ ...prev, [group.id]: { ...prev[group.id], captions: updated } }));
-                                            }}
-                                            className="text-xs min-h-[80px] resize-none"
-                                          />
-                                        </div>
-                                      ))}
-                                    </TabsContent>
-
-                                    <TabsContent value="ads" className="space-y-2 mt-2">
-                                      <div className="space-y-1.5">
-                                        <h4 className="text-xs font-medium text-foreground">Primary Text</h4>
-                                        {content.adCopy.primaryTexts.map((t, i) => (
-                                          <div key={i} className="flex items-start gap-1.5">
-                                            <Textarea
-                                              value={t}
-                                              onChange={(e) => {
-                                                const updated = [...content.adCopy.primaryTexts];
-                                                updated[i] = e.target.value;
-                                                setGeneratedContent(prev => ({ ...prev, [group.id]: { ...prev[group.id], adCopy: { ...prev[group.id].adCopy, primaryTexts: updated } } }));
-                                              }}
-                                              className="text-xs min-h-[50px] resize-none flex-1"
-                                            />
-                                            <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => copyToClipboard(t, `Primary ${i + 1}`)}>
-                                              <Copy className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        ))}
-                                      </div>
-                                      <div className="space-y-1.5">
-                                        <h4 className="text-xs font-medium text-foreground">Headlines</h4>
-                                        {content.adCopy.headlines.map((h, i) => (
-                                          <div key={i} className="flex items-center gap-1.5">
-                                            <code className="flex-1 bg-muted px-2 py-1.5 rounded text-xs text-foreground">{h}</code>
-                                            <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => copyToClipboard(h, `Headline ${i + 1}`)}>
-                                              <Copy className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        ))}
-                                      </div>
-                                      <Button size="sm" variant="outline" className="text-xs" onClick={() => {
-                                        const allText = `PRIMARY TEXT:\n${content.adCopy.primaryTexts.join("\n\n")}\n\nHEADLINES:\n${content.adCopy.headlines.join("\n")}\n\nDESCRIPTIONS:\n${content.adCopy.descriptions.join("\n")}\n\nCTA: ${content.adCopy.cta}`;
-                                        copyToClipboard(allText, "All ad copy");
-                                      }}>
-                                        <Copy className="h-3 w-3 mr-1" /> Copy All
-                                      </Button>
-                                    </TabsContent>
-
-                                    <TabsContent value="story" className="space-y-2 mt-2">
-                                      <p className="text-[10px] text-muted-foreground">3-slide script for Instagram/TikTok Stories. Copy each slide separately.</p>
-                                      {[
-                                        { label: "Slide 1 — Hook", text: generateStoryScript(group).slide1 },
-                                        { label: "Slide 2 — Details", text: generateStoryScript(group).slide2 },
-                                        { label: "Slide 3 — CTA", text: generateStoryScript(group).slide3 },
-                                      ].map(({ label, text }, i) => (
-                                        <div key={i} className="space-y-1">
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
-                                            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => copyToClipboard(text, label)}>
-                                              <Copy className="h-3 w-3 mr-1" /> Copy
-                                            </Button>
-                                          </div>
-                                          <div className="bg-muted rounded-lg px-3 py-2 text-[11px] leading-relaxed whitespace-pre-line">{text}</div>
-                                        </div>
-                                      ))}
-                                    </TabsContent>
-                                  </Tabs>
-                                </CollapsibleContent>
-                              </Collapsible>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-
-                  {/* Platform Grid Preview */}
-                  {gridImages.length > 0 && (
-                    <div>
-                      <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Grid3X3 className="h-4 w-4" /> Grid Preview — How Your Posts Look Together
-                        <Badge variant="outline" className="text-[10px]">{gridImages.length} images</Badge>
-                      </h2>
-                      <Tabs defaultValue="instagram" className="w-full">
-                        <TabsList className="w-full justify-start">
-                          <TabsTrigger value="instagram" className="text-xs gap-1.5">
-                            <Grid3X3 className="h-3.5 w-3.5" /> Instagram
-                          </TabsTrigger>
-                          <TabsTrigger value="facebook" className="text-xs gap-1.5">
-                            <Monitor className="h-3.5 w-3.5" /> Facebook
-                          </TabsTrigger>
-                          <TabsTrigger value="stories" className="text-xs gap-1.5">
-                            <Smartphone className="h-3.5 w-3.5" /> Stories
-                          </TabsTrigger>
-                        </TabsList>
-
-                        {/* Instagram 3x3 Grid */}
-                        <TabsContent value="instagram">
-                          <Card className="rounded-2xl">
-                            <CardContent className="p-4">
-                              <div className="bg-card border rounded-t-xl p-3 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">K</div>
-                                <div>
-                                  <p className="text-xs font-bold text-foreground">klovers_academy</p>
-                                  <p className="text-[10px] text-muted-foreground">{gridImages.filter(i => i.url).length} posts • 1.2K followers</p>
-                                </div>
-                              </div>
-                              <div
-                                className="grid gap-0.5 rounded-b-xl overflow-hidden border border-t-0 bg-border mx-auto"
-                                style={{
-                                  gridTemplateColumns: `repeat(${Math.min(3, gridImages.filter(i => i.url).length)}, 1fr)`,
-                                  maxWidth: Math.min(3, gridImages.filter(i => i.url).length) * 160,
-                                }}
-                              >
-                                {gridImages.filter(i => i.url).slice(0, 9).map((img, i) => (
-                                  <div key={i} className="aspect-square bg-muted overflow-hidden">
-                                    <img src={img.url!} alt={img.label} className="w-full h-full object-cover" />
-                                  </div>
-                                ))}
-                              </div>
-                              <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — How your grid looks on Instagram</p>
-                            </CardContent>
-                          </Card>
-                        </TabsContent>
-
-                        {/* Facebook Timeline */}
-                        <TabsContent value="facebook">
-                          <Card className="rounded-2xl">
-                            <CardContent className="p-4">
-                              <div className="space-y-3 max-w-md mx-auto">
-                                {gridImages.filter(i => i.fbUrl).slice(0, 4).map((img, i) => (
-                                  <div key={i} className="bg-card border rounded-xl overflow-hidden">
-                                    <div className="flex items-center gap-2 p-2.5">
-                                      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">K</div>
-                                      <div>
-                                        <p className="text-[10px] font-semibold text-foreground">KLovers Academy</p>
-                                        <p className="text-[9px] text-muted-foreground">Sponsored · 🌐</p>
-                                      </div>
-                                    </div>
-                                    <p className="text-[10px] text-foreground px-2.5 pb-1">{img.label}</p>
-                                    <div className="aspect-[1200/630] bg-muted overflow-hidden">
-                                      <img src={img.fbUrl!} alt={img.label} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex items-center justify-between px-2.5 py-1.5 border-t text-[9px] text-muted-foreground">
-                                      <span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              <p className="text-[10px] text-muted-foreground text-center mt-2">Facebook timeline preview</p>
-                            </CardContent>
-                          </Card>
-                        </TabsContent>
-
-                        {/* Stories Tray */}
-                        <TabsContent value="stories">
-                          <Card className="rounded-2xl">
-                            <CardContent className="p-4">
-                              <div className="flex gap-3 overflow-x-auto pb-2">
-                                {gridImages.filter(i => i.storyUrl || i.url).slice(0, 6).map((img, i) => (
-                                  <div key={i} className="shrink-0 space-y-1">
-                                    <div className="w-20 rounded-xl overflow-hidden border-2 border-primary shadow-md">
-                                      <div className="aspect-[9/16] bg-muted overflow-hidden">
-                                        <img src={img.storyUrl || img.url!} alt={img.label} className="w-full h-full object-cover" />
-                                      </div>
-                                    </div>
-                                    <p className="text-[9px] text-muted-foreground text-center truncate w-20">{img.label}</p>
-                                  </div>
-                                ))}
-                              </div>
-                              <p className="text-[10px] text-muted-foreground text-center mt-2">Swipeable story sequence</p>
-                            </CardContent>
-                          </Card>
-                        </TabsContent>
-                      </Tabs>
                     </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-center text-muted-foreground text-sm py-8">No groups found. Add schedule groups to generate content.</p>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditingDraft(null)}>Cancel</Button>
+                      <Button onClick={() => {
+                        setMonthlyDrafts(prev => prev.map(d => d.id === editingDraft.id ? { ...d, ...editDraftText } : d));
+                        setEditingDraft(null);
+                        toast({ title: 'Post updated' });
+                      }}>Save Changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               )}
+
             </TabsContent>
 
             <TabsContent value="creator">
