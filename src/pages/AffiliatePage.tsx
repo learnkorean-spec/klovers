@@ -37,19 +37,20 @@ export default function AffiliatePage() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.from("leads").insert({
-        name: form.name,
-        email: form.email,
-        source: "affiliate-application",
-        status: "new",
-        goal: [
-          "Affiliate Application",
-          form.platform ? `Platform: ${form.platform}` : "",
-          form.audience_size ? `Audience: ${form.audience_size}` : "",
-          form.notes ? `Notes: ${form.notes}` : "",
-        ].filter(Boolean).join(" | "),
-        country: "",
-        level: "affiliate",
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: form.name,
+          email: form.email.trim().toLowerCase(),
+          source: "affiliate-application",
+          goal: [
+            "Affiliate Application",
+            form.platform ? `Platform: ${form.platform}` : "",
+            form.audience_size ? `Audience: ${form.audience_size}` : "",
+            form.notes ? `Notes: ${form.notes}` : "",
+          ].filter(Boolean).join(" | "),
+          country: "",
+          level: "affiliate",
+        },
       });
       if (error) throw error;
       setSubmitted(true);

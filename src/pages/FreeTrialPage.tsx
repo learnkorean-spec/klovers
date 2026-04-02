@@ -105,24 +105,22 @@ const FreeTrialPage = () => {
       referredBy ? `ref:${referredBy}` : "",
     ].filter(Boolean).join(" | ");
 
-    const { error } = await supabase.from("leads").insert({
-      name: form.name,
-      email: form.email,
-      country: form.country || "Unknown",
-      level: form.level,
-      goal: goalWithPhone,
-      status: "trial_booked",
-      source: "free-trial-page",
-    } as any);
+    const { error } = await supabase.functions.invoke("submit-lead", {
+      body: {
+        name: form.name,
+        email: form.email.trim().toLowerCase(),
+        country: form.country || "Unknown",
+        level: form.level,
+        goal: goalWithPhone,
+        source: "free-trial-page",
+      },
+    });
 
     setLoading(false);
 
     if (error) {
-      // If it's a duplicate email, still show success (lead already exists)
-      if (!error.code?.includes("23505")) {
-        toast({ title: "Something went wrong", description: error.message, variant: "destructive" });
-        return;
-      }
+      toast({ title: "Something went wrong", description: error.message, variant: "destructive" });
+      return;
     }
 
     track.lead({ content_name: "free-trial" });
