@@ -251,10 +251,22 @@ const AdminDashboard = () => {
 
   // Level-related state removed — enrollment.level is read-only source of truth
 
+  // Helper: update a lead via admin-update-lead edge function (bypasses broken RLS policy)
+  const updateLeadViaFn = async (id: string, fields: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke("admin-update-lead", {
+      body: { id, ...fields },
+    });
+    if (error) throw new Error(error.message);
+    if (data?.error) throw new Error(data.error);
+  };
+
   const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await supabase.from("leads").update({ status: newStatus } as any).eq("id", id);
-    if (error) { toast({ title: "Error", description: "Failed to update status.", variant: "destructive" }); }
-    else { setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))); }
+    try {
+      await updateLeadViaFn(id, { status: newStatus });
+      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update status.", variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -301,24 +313,24 @@ const AdminDashboard = () => {
 
   const handleEditLead = async () => {
     if (!editingLeadId) return;
-    const { error } = await supabase.from("leads").update({
-      name: editForm.name,
-      email: editForm.email,
-      country: editForm.country || "",
-      plan_type: editForm.plan_type || "",
-      duration: editForm.duration || "",
-      schedule: editForm.schedule || "",
-      timezone: editForm.timezone || "",
-      status: editForm.status || "new",
-    } as any).eq("id", editingLeadId);
-    if (error) {
-      toast({ title: "Error", description: "Failed to update lead.", variant: "destructive" });
-      return;
+    try {
+      await updateLeadViaFn(editingLeadId, {
+        name: editForm.name,
+        email: editForm.email,
+        country: editForm.country || "",
+        plan_type: editForm.plan_type || "",
+        duration: editForm.duration || "",
+        schedule: editForm.schedule || "",
+        timezone: editForm.timezone || "",
+        status: editForm.status || "new",
+      });
+      setLeads((prev) => prev.map((l) => l.id === editingLeadId ? { ...l, ...editForm } : l));
+      setEditingLeadId(null);
+      setEditForm({});
+      toast({ title: "Lead updated" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update lead.", variant: "destructive" });
     }
-    setLeads((prev) => prev.map((l) => l.id === editingLeadId ? { ...l, ...editForm } : l));
-    setEditingLeadId(null);
-    setEditForm({});
-    toast({ title: "Lead updated" });
   };
 
   const startEditLead = (lead: Lead) => {
@@ -349,8 +361,10 @@ const AdminDashboard = () => {
     for (const lead of unlinked) {
       const userId = profileByEmail[lead.email.toLowerCase().trim()];
       if (userId) {
-        const { error } = await supabase.from("leads").update({ user_id: userId } as any).eq("id", lead.id);
-        if (!error) linked++;
+        try {
+          await updateLeadViaFn(lead.id, { user_id: userId });
+          linked++;
+        } catch { /* skip failed leads */ }
       }
     }
     toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });
