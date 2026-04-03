@@ -24,6 +24,63 @@ import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
 
+// Post templates by type — 7 distinct categories, rotated each month
+const POST_TYPE_TEMPLATES = [
+  // 0 — Announcement
+  (mo: string) => ({
+    mainText: `${mo} Korean Classes`,
+    subtitle: `🗓️ New groups starting ${mo} — register now to secure your seat`,
+    extraText: "#NewClass #LearnKorean #Klovers",
+  }),
+  // 1 — Engagement / Question
+  (_mo: string) => ({
+    mainText: "Can You Read 한글?",
+    subtitle: "🤔 Most students read Korean in under 2 hours — challenge yourself!",
+    extraText: "#Hangul #KoreanChallenge #Klovers",
+  }),
+  // 2 — Social Proof
+  (_mo: string) => ({
+    mainText: "500+ Students Enrolled",
+    subtitle: "⭐ Klovers graduates work, travel & connect in Korean",
+    extraText: "#StudentSuccess #KoreanAcademy #Cairo",
+  }),
+  // 3 — Urgency / Seats
+  (mo: string) => ({
+    mainText: "Last Seats — Don't Miss Out",
+    subtitle: `⚡ ${mo} classes filling fast — limited spots per group`,
+    extraText: "#LimitedSeats #Enroll #Klovers",
+  }),
+  // 4 — Free Trial
+  (_mo: string) => ({
+    mainText: "Try Korean for Free",
+    subtitle: "🎁 One free trial class — no commitment, no pressure",
+    extraText: "#FreeTrial #LearnKorean #KloversEgy",
+  }),
+  // 5 — K-Culture hook
+  (_mo: string) => ({
+    mainText: "Love K-Drama? Learn Korean!",
+    subtitle: "🎬 Understand your favourite shows without subtitles",
+    extraText: "#KDrama #KPop #LearnKorean #Klovers",
+  }),
+  // 6 — Career / Benefit
+  (_mo: string) => ({
+    mainText: "Korean Opens Doors",
+    subtitle: "💼 Jobs, travel, culture — Korean is your next skill",
+    extraText: "#CareerGoals #Korean #KloversAcademy",
+  }),
+];
+
+function getMonthlyDefaultPosts(): PostData[] {
+  const now = new Date();
+  const month = now.toLocaleDateString("en-US", { month: "long" });
+  // Rotate starting type by month index so each month starts with a different post type
+  const offset = now.getMonth(); // 0–11
+  return Array.from({ length: 5 }, (_, i) => {
+    const tpl = POST_TYPE_TEMPLATES[(offset + i) % POST_TYPE_TEMPLATES.length](month);
+    return { id: uid(), ...tpl };
+  });
+}
+
 interface MonthlyDraftPost {
   id: string; day: number; postType: MonthlyPostType; caption: string;
   mainText: string; subtitle: string; extraText: string;
@@ -280,11 +337,7 @@ function KloversBrandCards({ post, theme, format, active, onSelect }: {
 
 // ─── Main Component ───
 export default function CreatorHub() {
-  const [posts, setPosts] = useState<PostData[]>([
-    { id: uid(), mainText: "Korean Level 1 — Friday 6:00 PM", subtitle: "🚀 Korean 1 — Starting Friday 6:00 PM", extraText: "#LearnKorean #Klovers" },
-    { id: uid(), mainText: "Master Hangul in 2 Weeks!", subtitle: "📝 Free Hangul Challenge — Join Now", extraText: "#Hangul #Korean" },
-    { id: uid(), mainText: "Why Learn Korean?", subtitle: "🇰🇷 5 Reasons to Start Today", extraText: "#KoreanLanguage #Motivation" },
-  ]);
+  const [posts, setPosts] = useState<PostData[]>(() => getMonthlyDefaultPosts());
   const [activeIndex, setActiveIndex] = useState(0);
   const [template, setTemplate] = useState<TemplateName>("classic");
   const [theme, setTheme] = useState<ColorTheme>("yellow");
