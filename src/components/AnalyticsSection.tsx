@@ -78,25 +78,26 @@ export function AnalyticsSection() {
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={weeklyXp} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="date"
-                      stroke="#9ca3af"
+                      stroke="hsl(var(--muted-foreground))"
                       style={{ fontSize: "12px" }}
-                      tick={{ fill: "#9ca3af" }}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                     />
                     <YAxis
-                      stroke="#9ca3af"
+                      stroke="hsl(var(--muted-foreground))"
                       style={{ fontSize: "12px" }}
-                      tick={{ fill: "#9ca3af" }}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "1px solid #374151",
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
+                        color: "hsl(var(--popover-foreground))",
                       }}
-                      labelStyle={{ color: "#f3f4f6" }}
+                      labelStyle={{ color: "hsl(var(--popover-foreground))" }}
                       formatter={(value: any) => [value, "XP"]}
                     />
                     <Line
@@ -137,26 +138,27 @@ export function AnalyticsSection() {
                     data={sectionProgress}
                     margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="section"
-                      stroke="#9ca3af"
+                      stroke="hsl(var(--muted-foreground))"
                       style={{ fontSize: "12px" }}
-                      tick={{ fill: "#9ca3af" }}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
                     />
                     <YAxis
-                      stroke="#9ca3af"
+                      stroke="hsl(var(--muted-foreground))"
                       style={{ fontSize: "12px" }}
-                      tick={{ fill: "#9ca3af" }}
-                      label={{ value: "Percentage", angle: -90, position: "insideLeft" }}
+                      tick={{ fill: "hsl(var(--muted-foreground))" }}
+                      label={{ value: "Percentage", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "1px solid #374151",
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
+                        color: "hsl(var(--popover-foreground))",
                       }}
-                      labelStyle={{ color: "#f3f4f6" }}
+                      labelStyle={{ color: "hsl(var(--popover-foreground))" }}
                       formatter={(value: any) => `${value.toFixed(0)}%`}
                     />
                     <Bar dataKey="percentage" fill="#10b981" radius={[8, 8, 0, 0]} />
@@ -228,11 +230,12 @@ export function AnalyticsSection() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "1px solid #374151",
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
+                        color: "hsl(var(--popover-foreground))",
                       }}
-                      labelStyle={{ color: "#f3f4f6" }}
+                      labelStyle={{ color: "hsl(var(--popover-foreground))" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
