@@ -115,7 +115,7 @@ interface OrchestrationResponse {
 
 // ── Score badge ───────────────────────────────────────────────────────────────
 
-function ScoreBadge({ score }: { score: number | null | undefined }) {
+function ScoreBadge({ score, title }: { score: number | null | undefined; title?: string }) {
   if (score == null) return <span className="text-muted-foreground text-xs">—</span>;
   const color =
     score >= 8
@@ -124,7 +124,7 @@ function ScoreBadge({ score }: { score: number | null | undefined }) {
       ? "bg-yellow-100 text-yellow-800 border-yellow-200"
       : "bg-red-100 text-red-800 border-red-200";
   return (
-    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold border ${color}`}>
+    <span title={title} className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold border ${color}`}>
       {score}/10
     </span>
   );
@@ -144,7 +144,6 @@ function PostRow({ item }: { item: AgentReport }) {
   const [open, setOpen] = useState(false);
 
   const hasIssues = item.agents_run.length > 0;
-  const overallScore = item.seo?.score ?? item.keyword?.placement_score ?? null;
 
   return (
     <div className="border rounded-xl overflow-hidden">
@@ -163,27 +162,11 @@ function PostRow({ item }: { item: AgentReport }) {
 
         {/* Agent presence indicators */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {item.seo && <ScoreBadge score={item.seo.score} />}
-          {item.keyword && (
-            <span title="Keyword placement">
-              <ScoreBadge score={item.keyword.placement_score} />
-            </span>
-          )}
-          {item.alt_text && (
-            <span title="Alt text">
-              <ScoreBadge score={item.alt_text.alt1_score} />
-            </span>
-          )}
-          {item.content && (
-            <span title="Content">
-              <ScoreBadge score={item.content.structure_score} />
-            </span>
-          )}
-          {item.marketing && (
-            <span title="Marketing">
-              <ScoreBadge score={item.marketing.cta_score} />
-            </span>
-          )}
+          {item.seo && <ScoreBadge score={item.seo.score} title="SEO" />}
+          {item.keyword && <ScoreBadge score={item.keyword.placement_score} title="Keyword placement" />}
+          {item.alt_text && <ScoreBadge score={item.alt_text.alt1_score} title="Alt text" />}
+          {item.content && <ScoreBadge score={item.content.structure_score} title="Content" />}
+          {item.marketing && <ScoreBadge score={item.marketing.cta_score} title="Marketing" />}
         </div>
 
         {hasIssues ? (

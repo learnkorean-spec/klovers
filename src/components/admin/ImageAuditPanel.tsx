@@ -184,6 +184,7 @@ function PostRow({ item }: { item: PostAuditResult }) {
 
 function ParitySection({ groups }: { groups: ParityGroup[] }) {
   const [open, setOpen] = useState(true);
+  const completeCount = groups.filter((g) => g.is_complete).length;
 
   return (
     <Card className="rounded-xl">
@@ -195,8 +196,9 @@ function ParitySection({ groups }: { groups: ParityGroup[] }) {
         <Globe className="h-4 w-4 text-primary" />
         <span className="font-medium text-sm">Arabic ↔ English Bilingual Parity ({groups.length})</span>
         <span className="ml-auto text-xs text-muted-foreground">
-          {groups.filter((g) => g.is_complete).length} complete · {groups.filter((g) => !g.is_complete).length} incomplete
+          {completeCount} complete · {groups.length - completeCount} incomplete
         </span>
+
       </button>
 
       {open && (
@@ -301,13 +303,18 @@ export default function ImageAuditPanel() {
   }
 
   const summary = result?.summary;
+  const report = result?.report ?? [];
 
-  const filteredReport = result?.report.filter((r) =>
-    filter === "all" ? true : r.status === filter
-  ) ?? [];
+  const filteredReport = filter === "all" ? report : report.filter((r) => r.status === filter);
 
-  const incompleteGroups = result?.parity.filter((g) => !g.is_complete) ?? [];
-  const allGroups = result?.parity ?? [];
+  const filterCounts = {
+    all: report.length,
+    error: report.filter((r) => r.status === "error").length,
+    warning: report.filter((r) => r.status === "warning").length,
+    ok: report.filter((r) => r.status === "ok").length,
+  };
+
+  const incompleteGroupCount = result?.parity.filter((g) => !g.is_complete).length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -415,9 +422,9 @@ export default function ImageAuditPanel() {
           >
             <Globe className="h-3.5 w-3.5" />
             Bilingual Parity
-            {incompleteGroups.length > 0 && (
+            {incompleteGroupCount > 0 && (
               <span className="ml-1 rounded-full bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 leading-none">
-                {incompleteGroups.length}
+                {incompleteGroupCount}
               </span>
             )}
           </button>
@@ -429,21 +436,15 @@ export default function ImageAuditPanel() {
         <div className="space-y-3">
           {/* Filter bar */}
           <div className="flex flex-wrap gap-2">
-            {(["all", "error", "warning", "ok"] as const).map((f) => {
-              const count =
-                f === "all"
-                  ? result.report.length
-                  : result.report.filter((r) => r.status === f).length;
-              return (
+            {(["all", "error", "warning", "ok"] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors capitalize ${filter === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:text-foreground"}`}
                 >
-                  {f} ({count})
+                  {f} ({filterCounts[f]})
                 </button>
-              );
-            })}
+            ))}
           </div>
 
           {filteredReport.length === 0 ? (
@@ -456,7 +457,7 @@ export default function ImageAuditPanel() {
 
       {/* Parity tab */}
       {result && activeTab === "parity" && (
-        <ParitySection groups={allGroups} />
+        <ParitySection groups={result.parity} />
       )}
     </div>
   );

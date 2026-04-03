@@ -288,7 +288,10 @@ ${JSON.stringify(input)}`;
 // ── Bilingual parity analysis ──────────────────────────────────────────────────
 // Groups posts by shared hero_image URL to find EN/AR pairs
 
-function buildParityGroups(posts: BlogPost[]): ParityGroup[] {
+function buildParityGroups(
+  posts: BlogPost[],
+  auditMap: Map<string, ImageIssue[]>
+): ParityGroup[] {
   const imageMap = new Map<string, BlogPost[]>();
 
   for (const post of posts) {
@@ -300,26 +303,31 @@ function buildParityGroups(posts: BlogPost[]): ParityGroup[] {
 
   const groups: ParityGroup[] = [];
 
+  function toParityPost(p: BlogPost) {
+    const issues = auditMap.get(p.id) ?? [];
+    return {
+      id: p.id,
+      slug: p.slug,
+      lang: langLabel(p.lang),
+      has_alt: !isAltMissingOrShort(p.hero_alt),
+      has_alt_correct_lang: !issues.some(
+        (i) => i.code === "lang_mismatch_alt1" || i.code === "missing_hero_alt" || i.code === "hero_alt_too_short"
+      ),
+      published: p.published,
+    };
+  }
+
   for (const [imageUrl, group] of imageMap) {
     if (group.length < 2) {
-      // Single post using this image — check if it's unpaired
       const post = group[0];
+      const lang = langLabel(post.lang);
       groups.push({
         hero_image: imageUrl,
-        posts: [{
-          id: post.id,
-          slug: post.slug,
-          lang: langLabel(post.lang),
-          has_alt: !isAltMissingOrShort(post.hero_alt),
-          has_alt_correct_lang: !auditPost(post).some(
-            (i) => i.code === "lang_mismatch_alt1" || i.code === "missing_hero_alt"
-          ),
-          published: post.published,
-        }],
-        has_en: langLabel(post.lang) === "en",
-        has_ar: langLabel(post.lang) === "ar",
+        posts: [toParityPost(post)],
+        has_en: lang === "en",
+        has_ar: lang === "ar",
         is_complete: false,
-        missing_langs: langLabel(post.lang) === "en" ? ["ar"] : ["en"],
+        missing_langs: lang === "en" ? ["ar"] : ["en"],
       });
       continue;
     }
@@ -327,26 +335,12 @@ function buildParityGroups(posts: BlogPost[]): ParityGroup[] {
     const langs = group.map((p) => langLabel(p.lang));
     const hasEn = langs.includes("en");
     const hasAr = langs.includes("ar");
-
-    const postEntries = group.map((p) => {
-      const issues = auditPost(p);
-      return {
-        id: p.id,
-        slug: p.slug,
-        lang: langLabel(p.lang),
-        has_alt: !isAltMissingOrShort(p.hero_alt),
-        has_alt_correct_lang: !issues.some(
-          (i) => i.code === "lang_mismatch_alt1" || i.code === "missing_hero_alt" || i.code === "hero_alt_too_short"
-        ),
-        published: p.published,
-      };
-    });
+    const postEntries = group.map(toParityPost);
 
     const isComplete =
       hasEn &&
       hasAr &&
-      postEntries.every((p) => p.has_alt && p.has_alt_correct_lang) &&
-      postEntries.every((p) => p.published);
+      postEntries.every((p) => p.has_alt && p.has_alt_correct_lang && p.published);
 
     const missingLangs: string[] = [];
     if (!hasEn) missingLangs.push("en");
@@ -362,7 +356,6 @@ function buildParityGroups(posts: BlogPost[]): ParityGroup[] {
     });
   }
 
-  // Sort: incomplete first
   groups.sort((a, b) => Number(a.is_complete) - Number(b.is_complete));
   return groups;
 }
@@ -441,19 +434,23 @@ Deno.serve(async (req) => {
   const errors: string[] = [];
   let aiCallsMade = 0;
 
-  for (let i = 0; i < needsAiAlt.length; i += BATCH) {
-    const batch = needsAiAlt.slice(i, i + BATCH);
-    try {
-      const res = await generateAltText(batch, apiKey);
-      aiCallsMade++;
-      for (const [id, val] of res) aiAltResults.set(id, val);
-    } catch (err: any) {
-      errors.push(`AltGen batch ${Math.floor(i / BATCH) + 1}: ${err.message}`);
-    }
-  }
+  const batches: BlogPost[][] = [];
+  for (let i = 0; i < needsAiAlt.length; i += BATCH) batches.push(needsAiAlt.slice(i, i + BATCH));
+
+  await Promise.all(
+    batches.map(async (batch, idx) => {
+      try {
+        const res = await generateAltText(batch, apiKey);
+        aiCallsMade++;
+        for (const [id, val] of res) aiAltResults.set(id, val);
+      } catch (err: any) {
+        errors.push(`AltGen batch ${idx + 1}: ${err.message}`);
+      }
+    })
+  );
 
   // ── 4. Bilingual parity ──────────────────────────────────────────────────────
-  const parityGroups = buildParityGroups(posts as BlogPost[]);
+  const parityGroups = buildParityGroups(posts as BlogPost[], auditMap);
 
   // ── 5. Assemble per-post report ──────────────────────────────────────────────
   const report: PostAuditResult[] = (posts as BlogPost[]).map((post) => {

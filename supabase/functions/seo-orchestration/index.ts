@@ -739,7 +739,7 @@ Deno.serve(async (req) => {
   // Helper: run batched agent with error isolation
   async function runBatched<T>(
     queue: BlogPost[],
-    agentFn: (batch: BlogPost[], key: string) => Promise<Map<string, T>>,
+    agentFn: (batch: BlogPost[], apiKey: string) => Promise<Map<string, T>>,
     targetMap: Map<string, T>,
     agentName: string
   ) {
