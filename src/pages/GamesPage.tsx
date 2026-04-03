@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { getLeagueProgress } from "@/constants/gamification";
+import { getLeagueProgress, BADGES } from "@/constants/gamification";
+import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X } from "lucide-react";
 import { toast } from "sonner";
@@ -41,9 +43,25 @@ const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
-  const { awardGameXp, progress, league } = useGamification();
+  const { awardGameXp, progress, league, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
   const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
   const { t } = useLanguage();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          toast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -327,6 +345,13 @@ const GamesPage = () => {
       </main>
       <Footer />
 
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
       {/* Signup nudge modal */}
       {showSignupNudge && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

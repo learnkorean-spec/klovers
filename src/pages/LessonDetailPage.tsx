@@ -45,7 +45,7 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userId, progress, league, markSectionDone } = useGamification();
+  const { userId, progress, league, markSectionDone, awardXp, awardBadge } = useGamification();
   const { speakKorean, isSpeaking } = useSpeech();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
@@ -125,7 +125,7 @@ const LessonDetailPage = () => {
     }
   };
 
-  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done") => {
+  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" | "writing_done") => {
     if (!lesson || !userId) {
       toast({ title: t("textbook.signInRequired"), description: t("textbook.signInRequiredDesc"), variant: "destructive" });
       return;
@@ -148,12 +148,21 @@ const LessonDetailPage = () => {
     setXpFloat(xpMap[section]);
     setTimeout(() => setXpFloat(null), 1600);
 
+    // Award perfect_exercise badge if all exercise answers were correct
+    if (section === "exercises_done" && exercises.length > 0 && correctCount === exercises.length) {
+      await awardBadge("perfect_exercise");
+    }
+
     // Check if chapter just completed
-    const updatedLp = { ...lp, [section]: true };
     const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
       .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
 
     if (allDone) {
+      // Boss challenge: award badge + 25 XP bonus
+      if (isBossChallenge(lesson.sort_order)) {
+        await awardBadge("boss_slayer");
+        await awardXp(lesson.id, "bonus");
+      }
       setTimeout(() => setShowMissionComplete(true), 800);
     }
 
@@ -161,7 +170,7 @@ const LessonDetailPage = () => {
       title: `+${xpMap[section]} XP earned! ⚡`,
       description: getRandomMotivation(),
     });
-  }, [lesson, userId, progress, markSectionDone, toast, t]);
+  }, [lesson, userId, progress, markSectionDone, awardXp, awardBadge, exercises, correctCount, toast, t]);
 
   const toggleFlip = (id: string) => {
     setFlippedCards((prev) => {
@@ -754,7 +763,7 @@ const LessonDetailPage = () => {
               lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
               onComplete={(score, total) => {
                 if (score > 0) {
-                  handleMarkDone("writing_done" as any);
+                  handleMarkDone("writing_done");
                 }
               }}
             />

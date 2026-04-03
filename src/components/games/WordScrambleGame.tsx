@@ -1,11 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { RotateCcw, Trophy, Sparkles, ArrowRight } from "lucide-react";
+import { useGameData, GameVocabItem } from "@/hooks/useGameData";
 
-const WORDS = [
+interface Question { scrambled: string; answer: string; english: string; }
+
+const WORDS: Question[] = [
   { scrambled: "랑사", answer: "사랑", english: "Love" },
   { scrambled: "구친", answer: "친구", english: "Friend" },
   { scrambled: "교학", answer: "학교", english: "School" },
@@ -26,29 +29,81 @@ function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
 }
 
+function scrambleKorean(word: string): string {
+  const chars = [...word];
+  if (chars.length < 2) return word;
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  if (chars.join("") === word) { [chars[0], chars[1]] = [chars[1], chars[0]]; }
+  return chars.join("");
+}
+
+function buildQuestions(vocab: GameVocabItem[]): Question[] {
+  if (vocab.length >= 10) {
+    return shuffleArray(vocab)
+      .slice(0, 14)
+      .map(v => ({ scrambled: scrambleKorean(v.korean), answer: v.korean, english: v.meaning }));
+  }
+  return WORDS;
+}
+
 const WordScrambleGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const { t } = useLanguage();
+  const { vocab, loading: gameDataLoading } = useGameData();
   const totalRounds = 10;
-  const [questions] = useState(() => shuffleArray(WORDS).slice(0, totalRounds));
+
+  const vocabRef = useRef(vocab);
+  useEffect(() => { vocabRef.current = vocab; }, [vocab]);
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [usingLessonVocab, setUsingLessonVocab] = useState(false);
   const [round, setRound] = useState(0);
   const [input, setInput] = useState("");
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const xpAwardedRef = useRef(false);
+
+  const initQuestions = useCallback(() => {
+    const built = buildQuestions(vocabRef.current);
+    setUsingLessonVocab(vocabRef.current.length >= 10);
+    setQuestions(shuffleArray(built).slice(0, totalRounds));
+    setRound(0);
+    setScore(0);
+    setInput("");
+    setFeedback(null);
+    xpAwardedRef.current = false;
+  }, []);
+
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (!gameDataLoading && !initialized.current) {
+      initialized.current = true;
+      initQuestions();
+    }
+  }, [gameDataLoading, initQuestions]);
+
+  useEffect(() => {
+    if (round >= totalRounds && !xpAwardedRef.current) { xpAwardedRef.current = true; onGameComplete?.(score, totalRounds); }
+  }, [round, totalRounds, score, onGameComplete]);
 
   const handleSubmit = () => {
-    if (feedback) return;
+    if (feedback || questions.length === 0) return;
     const isCorrect = input.trim() === questions[round].answer;
     if (isCorrect) { setScore(s => s + 1); setFeedback("correct"); }
     else setFeedback("wrong");
   };
 
   const nextRound = () => { if (round + 1 >= totalRounds) { setRound(round + 1); return; } setRound(r => r + 1); setInput(""); setFeedback(null); };
-  const restart = () => { setRound(0); setScore(0); setInput(""); setFeedback(null); };
 
-  const xpAwardedRef = useRef(false);
-  useEffect(() => {
-    if (round >= totalRounds && !xpAwardedRef.current) { xpAwardedRef.current = true; onGameComplete?.(score, totalRounds); }
-  }, [round, totalRounds, score, onGameComplete]);
+  if (gameDataLoading || questions.length === 0) {
+    return (
+      <section className="py-12 px-4">
+        <div className="max-w-lg mx-auto text-center text-muted-foreground animate-pulse">Loading vocab…</div>
+      </section>
+    );
+  }
 
   if (round >= totalRounds) {
     return (
@@ -57,7 +112,7 @@ const WordScrambleGame = ({ onGameComplete }: { onGameComplete?: (score: number,
         <h2 className="text-2xl font-bold text-foreground">{t("games.scrambleComplete")}</h2>
         <p className="text-muted-foreground">{score}/{totalRounds} {t("games.correct")}</p>
         <Badge variant="secondary" className="text-lg px-4 py-1">+{score * 5} XP</Badge>
-        <Button onClick={restart} className="gap-2"><RotateCcw className="h-4 w-4" /> {t("games.playAgain")}</Button>
+        <Button onClick={initQuestions} className="gap-2"><RotateCcw className="h-4 w-4" /> {t("games.playAgain")}</Button>
       </Card></section>
     );
   }
@@ -68,7 +123,10 @@ const WordScrambleGame = ({ onGameComplete }: { onGameComplete?: (score: number,
       <div className="max-w-lg mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <Badge variant="outline">{t("games.round")} {round + 1}/{totalRounds}</Badge>
-          <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{score * 5} XP</Badge>
+          <div className="flex items-center gap-2">
+            {usingLessonVocab && <Badge variant="outline" className="text-xs gap-1">📚 From your lessons</Badge>}
+            <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{score * 5} XP</Badge>
+          </div>
         </div>
         <Card className="p-6 text-center space-y-4">
           <p className="text-sm text-muted-foreground">{t("games.scramblePrompt")}</p>
@@ -91,7 +149,7 @@ const WordScrambleGame = ({ onGameComplete }: { onGameComplete?: (score: number,
           </p>}
         </Card>
         {feedback && <Button onClick={nextRound} className="w-full gap-2">{t("games.next")} <ArrowRight className="h-4 w-4" /></Button>}
-        <Button variant="ghost" size="sm" onClick={restart} className="w-full gap-1"><RotateCcw className="h-3 w-3" /> {t("games.restart")}</Button>
+        <Button variant="ghost" size="sm" onClick={initQuestions} className="w-full gap-1"><RotateCcw className="h-3 w-3" /> {t("games.restart")}</Button>
       </div>
     </section>
   );
