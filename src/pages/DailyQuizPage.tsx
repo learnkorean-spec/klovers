@@ -332,7 +332,7 @@ const DailyQuizPage = () => {
               <div
                 className={cn(
                   "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full",
-                  result.passed ? "bg-green-100" : "bg-orange-100"
+                  result.passed ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"
                 )}
               >
                 <CheckCircle
@@ -443,8 +443,8 @@ const DailyQuizPage = () => {
                         key={idx}
                         className={cn(
                           "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all",
-                          showAnswer && isCorrect && "bg-green-50 border-green-500",
-                          showAnswer && selected && !isCorrect && "bg-red-50 border-red-500",
+                          showAnswer && isCorrect && "bg-green-50 dark:bg-green-900/20 border-green-500",
+                          showAnswer && selected && !isCorrect && "bg-red-50 dark:bg-red-900/20 border-red-500",
                           !showAnswer && "hover:border-primary/40 hover:bg-accent"
                         )}
                       >
@@ -478,8 +478,8 @@ const DailyQuizPage = () => {
                       "mt-4 p-3 rounded-lg",
                       answers[currentExercise.id] ===
                         currentExercise.correct_index
-                        ? "bg-green-50 text-green-700"
-                        : "bg-red-50 text-red-700"
+                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                        : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
                     )}
                   >
                     <p className="text-sm">

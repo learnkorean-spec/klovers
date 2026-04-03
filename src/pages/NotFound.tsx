@@ -1,23 +1,26 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Home, Gamepad2, BookOpen, HelpCircle, FileText, Phone } from "lucide-react";
 
-const QUICK_LINKS = [
-  { href: "/", label: "Home", icon: Home, desc: "Back to the start" },
-  { href: "/games", label: "Free Games", icon: Gamepad2, desc: "Play without logging in", badge: "Free" },
-  { href: "/placement-test", label: "Placement Test", icon: BookOpen, desc: "Find your level" },
-  { href: "/pricing", label: "Pricing", icon: FileText, desc: "See plans & costs" },
-  { href: "/faq", label: "FAQ", icon: HelpCircle, desc: "Common questions" },
-  { href: "/contact", label: "Contact", icon: Phone, desc: "Get in touch" },
-];
-
 const NotFound = () => {
   useSEO({ title: "Page Not Found", description: "This page doesn't exist.", noindex: true });
   const location = useLocation();
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+
+  const QUICK_LINKS = [
+    { href: "/", label: isAr ? "الرئيسية" : "Home", icon: Home, desc: isAr ? "العودة للبداية" : "Back to the start" },
+    { href: "/games", label: isAr ? "ألعاب مجانية" : "Free Games", icon: Gamepad2, desc: isAr ? "العب بدون تسجيل" : "Play without logging in", badge: isAr ? "مجاني" : "Free" },
+    { href: "/placement-test", label: isAr ? "اختبار المستوى" : "Placement Test", icon: BookOpen, desc: isAr ? "اعرف مستواك" : "Find your level" },
+    { href: "/pricing", label: isAr ? "الأسعار" : "Pricing", icon: FileText, desc: isAr ? "الخطط والأسعار" : "See plans & costs" },
+    { href: "/faq", label: isAr ? "الأسئلة الشائعة" : "FAQ", icon: HelpCircle, desc: isAr ? "أسئلة شائعة" : "Common questions" },
+    { href: "/contact", label: isAr ? "تواصل معنا" : "Contact", icon: Phone, desc: isAr ? "تواصل معنا" : "Get in touch" },
+  ];
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -44,10 +47,10 @@ const NotFound = () => {
                 </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">잠깐! — "Wait!" in Korean</p>
-            <h1 className="text-3xl font-extrabold text-foreground">Page not found</h1>
+            <p className="text-xs text-muted-foreground">{isAr ? "잠깐! — \"انتظر!\" بالكورية" : "잠깐! — \"Wait!\" in Korean"}</p>
+            <h1 className="text-3xl font-extrabold text-foreground">{isAr ? "الصفحة غير موجودة" : "Page not found"}</h1>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-              This page doesn't exist or has been moved. Here are some places you might be looking for:
+              {isAr ? "هذه الصفحة غير موجودة أو تم نقلها. إليك بعض الأماكن التي قد تبحث عنها:" : "This page doesn't exist or has been moved. Here are some places you might be looking for:"}
             </p>
           </div>
 
@@ -60,7 +63,7 @@ const NotFound = () => {
                 className="group flex flex-col items-center gap-2 p-4 bg-card border border-border rounded-xl hover:border-primary/40 hover:shadow-md transition-all duration-200 text-center relative"
               >
                 {badge && (
-                  <span className="absolute top-2 right-2 text-[9px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                  <span className="absolute top-2 right-2 text-[9px] bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-semibold leading-none">
                     {badge}
                   </span>
                 )}
@@ -76,7 +79,7 @@ const NotFound = () => {
           </div>
 
           <Button asChild size="lg" className="gap-2">
-            <Link to="/"><Home className="h-4 w-4" /> Back to Home</Link>
+            <Link to="/"><Home className="h-4 w-4" /> {isAr ? "العودة للرئيسية" : "Back to Home"}</Link>
           </Button>
 
         </div>

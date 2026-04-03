@@ -201,12 +201,12 @@ const GamesPage = () => {
                   <span>{league.emoji}</span>
                   <span>{league.name}</span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1 text-xs font-medium text-yellow-700">
+                <div className="inline-flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-200">
                   <Zap className="h-3.5 w-3.5" />
                   <span>{progress.totalXp.toLocaleString()} XP</span>
                 </div>
                 {progress.streak.current_streak > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-xs font-medium text-orange-700">
+                  <div className="inline-flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 text-xs font-medium text-orange-700 dark:text-orange-200">
                     <Flame className="h-3.5 w-3.5" />
                     <span>{progress.streak.current_streak} day streak</span>
                   </div>
@@ -239,7 +239,7 @@ const GamesPage = () => {
                       )}
                       {game.free && !isLoggedIn && (
                         <div className="absolute top-2 right-2">
-                          <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-medium">FREE</span>
+                          <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-medium">FREE</span>
                         </div>
                       )}
                       <div className="flex items-start gap-3">
@@ -295,7 +295,7 @@ const GamesPage = () => {
                           <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-primary font-bold" : "text-foreground"}`}>
                             {p.name}{p.isCurrentUser ? " (you)" : ""}
                           </span>
-                          <span className="text-xs text-yellow-700 font-semibold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full">
+                          <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full">
                             {p.value.toLocaleString()} XP
                           </span>
                         </div>
@@ -313,7 +313,7 @@ const GamesPage = () => {
                     <div key={p.rank} className="flex items-center gap-3 px-4 py-2.5">
                       <span className="text-base w-6 text-center">{p.emoji}</span>
                       <span className="flex-1 text-sm font-medium text-foreground">{p.name}</span>
-                      <span className="text-xs text-yellow-700 font-semibold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full">
                         {p.xp.toLocaleString()} XP
                       </span>
                     </div>
