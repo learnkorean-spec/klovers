@@ -2,6 +2,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { ThemeProvider } from "./contexts/ThemeContext.tsx";
+import { preloadMascot } from "./lib/canvasRenderer";
+preloadMascot();
 
 // Redirect any non-production domain to kloversegy.com
 const CANONICAL = "kloversegy.com";
