@@ -73,6 +73,31 @@ const StudentGroupAttendance = () => {
       };
     });
 
+    const attendableRows = result.filter(r => r.status === "present" || r.status === "late");
+    if (attendableRows.length > 0) {
+      const activityTypes = attendableRows.map(r => `attendance_${r.session_id}`);
+      const { data: existingXp } = await supabase
+        .from("student_xp")
+        .select("activity_type")
+        .eq("user_id", session.user.id)
+        .in("activity_type", activityTypes);
+
+      const awardedSet = new Set((existingXp || []).map((x: any) => x.activity_type));
+
+      for (const row of attendableRows) {
+        const actType = `attendance_${row.session_id}`;
+        if (!awardedSet.has(actType)) {
+          const xp = row.status === "present" ? 25 : 10;
+          await supabase.from("student_xp").insert({
+            user_id: session.user.id,
+            lesson_id: null,
+            activity_type: actType,
+            xp_earned: xp,
+          });
+        }
+      }
+    }
+
     setRows(result.sort((a, b) => b.session_date.localeCompare(a.session_date)));
     setLoading(false);
   };

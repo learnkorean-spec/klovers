@@ -3,9 +3,12 @@ import { useSEO } from "@/hooks/useSEO";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
+import { XP_VALUES } from "@/constants/gamification";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { BADGES } from "@/constants/gamification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -42,8 +45,23 @@ const DailyQuizPage = () => {
 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { awardXp } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          toast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const [exercises, setExercises] = useState<ExerciseItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +92,7 @@ const DailyQuizPage = () => {
       .from("student_xp")
       .select("id")
       .eq("user_id", user.id)
-      .eq("activity_type", "daily_quiz")
+      .eq("activity_type", "challenge")
       .gte("created_at", today.toISOString())
       .limit(1)
       .maybeSingle();
@@ -174,27 +192,8 @@ const DailyQuizPage = () => {
 
     const percentage = Math.round((correctCount / exercises.length) * 100);
     const passed = percentage >= 70;
-    const xpEarned = 30; // Base XP for daily quiz
+    const xpEarned = XP_VALUES.challenge;
 
-    // Save quiz result to student_xp
-    const { error } = await supabase.from("student_xp").insert({
-      user_id: user!.id,
-      lesson_id: null,
-      activity_type: "daily_quiz",
-      xp_earned: xpEarned,
-    });
-
-    if (error) {
-      toast({
-        title: "Error saving quiz",
-        description: error.message,
-        variant: "destructive",
-      });
-      setSubmitting(false);
-      return;
-    }
-
-    // Award XP through gamification system
     await awardXp(0, "challenge");
 
     setResult({
@@ -397,6 +396,13 @@ const DailyQuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
       <main id="main-content" className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Progress */}
