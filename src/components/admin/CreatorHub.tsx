@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Monitor, Smartphone, DownloadCloud } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Monitor, Smartphone, DownloadCloud, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   type PostData,
@@ -18,8 +19,28 @@ import {
   TEMPLATE_META,
   renderPost,
 } from "@/lib/canvasRenderer";
+import { generateMonthlyPlan, monthlyPostToPostData, type MonthlyPostType, type GroupData } from "@/lib/marketingEngine";
+import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
+
+interface MonthlyDraftPost {
+  id: string; day: number; postType: MonthlyPostType; caption: string;
+  mainText: string; subtitle: string; extraText: string;
+  approved: boolean; scheduledDate: string;
+}
+
+const PostPreview = memo(function PostPreview({ post, template, theme, size = 270 }: {
+  post: PostData; template: TemplateName; theme: ColorTheme; size?: number;
+}) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    c.width = 1080; c.height = 1080;
+    renderPost(c, post, template, theme, "instagram");
+  }, [post.mainText, post.subtitle, post.extraText, template, theme]);
+  return <canvas ref={ref} style={{ width: size, height: size, display: "block" }} className="rounded-lg" />;
+});
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -271,6 +292,14 @@ export default function CreatorHub() {
   const [mainFontStyle, setMainFontStyle] = useState<string>("Bold Italic");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
 
+  // ── Monthly generator state ──
+  const [groups, setGroups] = useState<GroupData[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(true);
+  const [monthlyDrafts, setMonthlyDrafts] = useState<MonthlyDraftPost[]>([]);
+  const [editingDraft, setEditingDraft] = useState<MonthlyDraftPost | null>(null);
+  const [editDraftText, setEditDraftText] = useState({ mainText: "", subtitle: "", extraText: "" });
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activePost = posts[activeIndex] || posts[0];
 
@@ -337,6 +366,74 @@ export default function CreatorHub() {
       setTimeout(() => link.click(), i * 200);
     });
     toast({ title: "Downloading all!", description: `${posts.length} images at ${fmt.w}×${fmt.h}` });
+  }
+
+  // ── Fetch groups for monthly generator ──
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: pkgGroups } = await supabase.from("pkg_groups").select("id, name, capacity, package_id, is_active").eq("is_active", true);
+        if (!pkgGroups?.length) { setGroupsLoading(false); return; }
+        const packageIds = [...new Set(pkgGroups.map(g => g.package_id))];
+        const { data: packages } = await supabase.from("schedule_packages").select("id, level, day_of_week, start_time, duration_min, capacity, is_active").in("id", packageIds).eq("is_active", true);
+        const pkgMap = new Map((packages || []).map(p => [p.id, p]));
+        const { data: members } = await supabase.from("pkg_group_members").select("group_id, user_id, member_status").eq("member_status", "active");
+        const memberCounts = new Map<string, number>();
+        (members || []).forEach(m => { memberCounts.set(m.group_id, (memberCounts.get(m.group_id) || 0) + 1); });
+        const DAY_NAMES: Record<number, string> = { 0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday" };
+        const fmt12 = (t: string) => { const [h, m] = t.split(":"); const hr = parseInt(h); return `${hr % 12 || 12}:${m} ${hr >= 12 ? "PM" : "AM"}`; };
+        const result: GroupData[] = [];
+        for (const g of pkgGroups) {
+          const pkg = pkgMap.get(g.package_id); if (!pkg) continue;
+          const activeMembers = memberCounts.get(g.id) || 0;
+          const seatsLeft = g.capacity - activeMembers; if (seatsLeft <= 0) continue;
+          result.push({ id: g.id, name: g.name, level: pkg.level, day_name: DAY_NAMES[pkg.day_of_week] || "Unknown", start_time: fmt12(pkg.start_time), duration_min: pkg.duration_min, capacity: g.capacity, active_members: activeMembers, seats_left: seatsLeft, urgency_label: seatsLeft <= 2 ? "🔥 Last 2 seats" : seatsLeft <= 5 ? "⚡ Few seats" : "✅ Open", package_id: g.package_id });
+        }
+        setGroups(result);
+      } catch { /* silently fail */ }
+      finally { setGroupsLoading(false); }
+    })();
+  }, []);
+
+  function generateMonthlyDrafts() {
+    if (!groups.length) { toast({ title: "No groups loaded", description: "Still loading class data…", variant: "destructive" }); return; }
+    const today = new Date();
+    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
+    const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      const pd = monthlyPostToPostData(post);
+      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0] };
+    });
+    setMonthlyDrafts(drafts);
+    toast({ title: "30 posts generated!", description: "Using your current design. Bulk download as ZIP when ready." });
+  }
+
+  async function handleBulkDownload() {
+    if (!monthlyDrafts.length) return;
+    setBulkDownloading(true);
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      for (const post of monthlyDrafts) {
+        const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
+        renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, template, theme, "instagram");
+        const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
+        zip.file(`day-${String(post.day).padStart(2, "0")}-${post.postType}.png`, blob);
+      }
+      const content = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(content);
+      a.download = `klovers-30posts-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
+      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} posts ready to upload manually.` });
+    } catch (err: any) {
+      toast({ title: "Download error", description: err.message, variant: "destructive" });
+    } finally { setBulkDownloading(false); }
+  }
+
+  function downloadSinglePost(post: MonthlyDraftPost) {
+    const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
+    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, template, theme, "instagram");
+    const a = document.createElement("a"); a.href = c.toDataURL("image/png");
+    a.download = `day-${String(post.day).padStart(2, "0")}-${post.postType}.png`; a.click();
   }
 
   function handleBulkUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -595,12 +692,137 @@ export default function CreatorHub() {
           <Grid3X3 className="h-4 w-4" /> Platform Grid Preview
           <Badge variant="outline" className="text-[10px]">{posts.length} posts</Badge>
         </h2>
-        <PlatformGridPreviews
-          posts={posts}
-          template={template}
-          theme={theme}
-          bgImage={bgImage}
-        />
+        <PlatformGridPreviews posts={posts} template={template} theme={theme} bgImage={bgImage} />
+      </div>
+
+      {/* ── Monthly 30-Post Generator ── */}
+      <div className="border-t pt-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Monthly 30-Post Pack
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Auto-generates 30 AIDA-scheduled posts using your current design & theme</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={generateMonthlyDrafts} disabled={groupsLoading}>
+              <Sparkles className="h-4 w-4 mr-1.5" />
+              {groupsLoading ? "Loading…" : "Generate 30 Posts"}
+            </Button>
+            {monthlyDrafts.length > 0 && (
+              <>
+                <Button variant="outline" onClick={handleBulkDownload} disabled={bulkDownloading}>
+                  {bulkDownloading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <DownloadCloud className="h-4 w-4 mr-1.5" />}
+                  {bulkDownloading ? "Zipping…" : `Download All ${monthlyDrafts.length} (ZIP)`}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setMonthlyDrafts([])} className="text-xs text-muted-foreground">
+                  Clear
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Empty state */}
+        {monthlyDrafts.length === 0 && (
+          <Card className="rounded-2xl border-dashed">
+            <CardContent className="py-12 text-center space-y-2">
+              <Sparkles className="h-8 w-8 text-muted-foreground/40 mx-auto" />
+              <p className="text-sm font-medium text-foreground">No posts generated yet</p>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                Pick your template &amp; theme above, then click "Generate 30 Posts". Download the ZIP and upload manually to Instagram, Facebook, etc.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 30-post grid */}
+        {monthlyDrafts.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {monthlyDrafts.map(draft => (
+              <Card key={draft.id} className={`rounded-2xl transition-all ${draft.approved ? "ring-2 ring-emerald-400/60 border-emerald-300" : ""}`}>
+                <CardContent className="p-3 space-y-3">
+                  <div className="w-full overflow-hidden rounded-xl bg-muted flex justify-center">
+                    <PostPreview
+                      post={{ id: draft.id, mainText: draft.mainText, subtitle: draft.subtitle, extraText: draft.extraText }}
+                      template={template}
+                      theme={theme}
+                      size={270}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Badge variant="secondary" className="text-[10px] font-bold">Day {draft.day}</Badge>
+                      <Badge variant="outline" className="text-[10px] capitalize">{draft.postType.replace(/_/g, " ")}</Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{draft.scheduledDate}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{draft.caption}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Button size="sm" variant="outline" className="h-7 text-xs"
+                      onClick={() => { setEditingDraft(draft); setEditDraftText({ mainText: draft.mainText, subtitle: draft.subtitle, extraText: draft.extraText }); }}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadSinglePost(draft)}>
+                      <DownloadCloud className="h-3 w-3 mr-1" /> PNG
+                    </Button>
+                    <button
+                      onClick={() => setMonthlyDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, approved: !d.approved } : d))}
+                      className={`ml-auto h-7 w-7 rounded-full flex items-center justify-center transition-colors ${draft.approved ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+                      title={draft.approved ? "Approved" : "Mark approved"}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Edit dialog */}
+        {editingDraft && (
+          <Dialog open={!!editingDraft} onOpenChange={() => setEditingDraft(null)}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit — Day {editingDraft.day} ({editingDraft.postType.replace(/_/g, " ")})</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                <div className="flex justify-center">
+                  <PostPreview
+                    post={{ id: editingDraft.id, mainText: editDraftText.mainText, subtitle: editDraftText.subtitle, extraText: editDraftText.extraText }}
+                    template={template} theme={theme} size={240}
+                  />
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: "Main Text", key: "mainText" as const, rows: 2 },
+                    { label: "Subtitle", key: "subtitle" as const, rows: 3 },
+                    { label: "Hashtags / Extra", key: "extraText" as const, rows: 1 },
+                  ].map(({ label, key, rows }) => (
+                    <div key={key} className="space-y-1">
+                      <label className="text-xs font-semibold">{label}</label>
+                      <textarea
+                        rows={rows}
+                        className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                        value={editDraftText[key]}
+                        onChange={e => setEditDraftText(p => ({ ...p, [key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingDraft(null)}>Cancel</Button>
+                <Button onClick={() => {
+                  setMonthlyDrafts(prev => prev.map(d => d.id === editingDraft.id ? { ...d, ...editDraftText } : d));
+                  setEditingDraft(null);
+                  toast({ title: "Post updated" });
+                }}>Save Changes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
