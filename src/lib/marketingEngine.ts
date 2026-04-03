@@ -337,6 +337,31 @@ export function monthlyPostToPostData(post: MonthlyPost): { id: string; mainText
   };
 }
 
+// ─── Publishing copy export (for captions.txt in ZIP) ───
+
+const POST_TYPE_LABELS: Record<MonthlyPostType, string> = {
+  empty_slots:    "Class Opening",
+  invite_student: "Student Invite",
+  discount:       "Promotion",
+  referral:       "Referral",
+  testimonial:    "Student Story",
+  faq:            "FAQ",
+  countdown:      "Countdown",
+};
+
+export function generatePublishingCopy(post: {
+  day: number;
+  postType: MonthlyPostType;
+  caption: string;
+  scheduledDate: string;
+}): string {
+  const label = POST_TYPE_LABELS[post.postType];
+  const date = post.scheduledDate
+    ? new Date(post.scheduledDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    : "";
+  return `=== Day ${post.day} — ${label} ===\n📅 ${date}\n\n${post.caption}\n\n---`;
+}
+
 // ─── Story Script (3-slide) ───
 
 export function generateStoryScript(group: GroupData): { slide1: string; slide2: string; slide3: string } {

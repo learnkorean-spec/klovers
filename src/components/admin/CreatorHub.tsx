@@ -19,7 +19,7 @@ import {
   TEMPLATE_META,
   renderPost,
 } from "@/lib/canvasRenderer";
-import { generateMonthlyPlan, monthlyPostToPostData, type MonthlyPostType, type GroupData } from "@/lib/marketingEngine";
+import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, type MonthlyPostType, type GroupData } from "@/lib/marketingEngine";
 import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
@@ -85,7 +85,25 @@ interface MonthlyDraftPost {
   id: string; day: number; postType: MonthlyPostType; caption: string;
   mainText: string; subtitle: string; extraText: string;
   approved: boolean; scheduledDate: string;
+  templateName: TemplateName; themeName: ColorTheme;
 }
+
+const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; themeName: ColorTheme }> = {
+  empty_slots:    { templateName: "klovers_bold",    themeName: "yellow" },
+  countdown:      { templateName: "klovers_bold",    themeName: "yellow" },
+  testimonial:    { templateName: "klovers_varsity", themeName: "midnight" },
+  faq:            { templateName: "klovers_varsity", themeName: "midnight" },
+  referral:       { templateName: "klovers_varsity", themeName: "midnight" },
+  discount:       { templateName: "klovers_split",   themeName: "yellow" },
+  invite_student: { templateName: "klovers_split",   themeName: "yellow" },
+};
+
+const BALANCE_CYCLE: TemplateName[] = ["klovers_bold", "klovers_varsity", "klovers_split"];
+const BALANCE_THEME: Record<TemplateName, ColorTheme> = {
+  klovers_bold: "yellow", klovers_varsity: "midnight", klovers_split: "yellow",
+  classic: "yellow", character: "yellow", minimal: "yellow",
+  gradient: "yellow", neon: "midnight", dark: "midnight", editorial: "yellow",
+};
 
 const PostPreview = memo(function PostPreview({ post, template, theme, size = 270 }: {
   post: PostData; template: TemplateName; theme: ColorTheme; size?: number;
@@ -466,13 +484,24 @@ export default function CreatorHub() {
     if (!groups.length) { toast({ title: "No groups loaded", description: "Still loading class data…", variant: "destructive" }); return; }
     const today = new Date();
     const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
+    const recentTemplates: TemplateName[] = [];
     const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
       const d = new Date(today); d.setDate(d.getDate() + i);
       const pd = monthlyPostToPostData(post);
-      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0] };
+      let { templateName: tpl, themeName: thm } = POST_TYPE_AFFINITY[post.postType];
+      // Enforce ≤2 consecutive same template
+      if (recentTemplates.length >= 2 &&
+          recentTemplates[recentTemplates.length - 1] === tpl &&
+          recentTemplates[recentTemplates.length - 2] === tpl) {
+        const others = BALANCE_CYCLE.filter(t => t !== tpl);
+        tpl = others[i % others.length];
+        thm = BALANCE_THEME[tpl];
+      }
+      recentTemplates.push(tpl);
+      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm };
     });
     setMonthlyDrafts(drafts);
-    toast({ title: "30 posts generated!", description: "Using your current design. Bulk download as ZIP when ready." });
+    toast({ title: "30 posts generated!", description: "Each post uses a balanced design. Download ZIP when ready." });
   }
 
   async function handleBulkDownload() {
@@ -483,14 +512,16 @@ export default function CreatorHub() {
       const zip = new JSZip();
       for (const post of monthlyDrafts) {
         const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-        renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, template, theme, "instagram");
+        renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram");
         const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
         zip.file(`day-${String(post.day).padStart(2, "0")}-${post.postType}.png`, blob);
       }
+      const captionBlocks = monthlyDrafts.map(generatePublishingCopy).join("\n\n");
+      zip.file("captions.txt", captionBlocks);
       const content = await zip.generateAsync({ type: "blob" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(content);
       a.download = `klovers-30posts-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
-      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} posts ready to upload manually.` });
+      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} images + captions.txt ready to upload.` });
     } catch (err: any) {
       toast({ title: "Download error", description: err.message, variant: "destructive" });
     } finally { setBulkDownloading(false); }
@@ -498,7 +529,7 @@ export default function CreatorHub() {
 
   function downloadSinglePost(post: MonthlyDraftPost) {
     const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, template, theme, "instagram");
+    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram");
     const a = document.createElement("a"); a.href = c.toDataURL("image/png");
     a.download = `day-${String(post.day).padStart(2, "0")}-${post.postType}.png`; a.click();
   }
@@ -812,8 +843,8 @@ export default function CreatorHub() {
                   <div className="w-full overflow-hidden rounded-xl bg-muted flex justify-center">
                     <PostPreview
                       post={{ id: draft.id, mainText: draft.mainText, subtitle: draft.subtitle, extraText: draft.extraText }}
-                      template={template}
-                      theme={theme}
+                      template={draft.templateName}
+                      theme={draft.themeName}
                       size={270}
                     />
                   </div>
@@ -858,7 +889,7 @@ export default function CreatorHub() {
                 <div className="flex justify-center">
                   <PostPreview
                     post={{ id: editingDraft.id, mainText: editDraftText.mainText, subtitle: editDraftText.subtitle, extraText: editDraftText.extraText }}
-                    template={template} theme={theme} size={240}
+                    template={editingDraft.templateName} theme={editingDraft.themeName} size={240}
                   />
                 </div>
                 <div className="space-y-3">
