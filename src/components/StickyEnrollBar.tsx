@@ -50,7 +50,7 @@ const StickyEnrollBar = () => {
         <div className="flex items-center gap-2 flex-shrink-0">
           <Link
             to="/free-trial"
-            className="text-xs font-semibold text-white/70 hover:text-white transition-colors hidden sm:block"
+            className="text-xs font-semibold text-white/85 hover:text-white transition-colors hidden sm:block"
           >
             Free Trial
           </Link>
@@ -63,7 +63,7 @@ const StickyEnrollBar = () => {
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="text-white/40 hover:text-white/80 transition-colors ml-1"
+            className="text-white/60 hover:text-white/90 transition-colors ml-1"
           >
             <X className="h-4 w-4" />
           </button>
