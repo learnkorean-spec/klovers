@@ -24,11 +24,11 @@ interface BlogPost {
 const TYPE_LABEL: Record<string, string> = { howto: "How-To", listicle: "Listicle", longform: "Article", news: "News", review: "Review" };
 const TYPE_LABEL_AR: Record<string, string> = { howto: "كيفية", listicle: "قائمة", longform: "مقال", news: "أخبار", review: "مراجعة" };
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-700 border-blue-200",
-  listicle: "bg-green-100 text-green-700 border-green-200",
-  longform: "bg-purple-100 text-purple-700 border-purple-200",
-  news: "bg-red-100 text-red-700 border-red-200",
-  review: "bg-orange-100 text-orange-700 border-orange-200",
+  howto: "bg-blue-100 text-blue-800 border-blue-200",
+  listicle: "bg-green-100 text-green-800 border-green-200",
+  longform: "bg-purple-100 text-purple-800 border-purple-200",
+  news: "bg-red-100 text-red-800 border-red-200",
+  review: "bg-orange-100 text-orange-800 border-orange-200",
 };
 
 function readingTime(desc: string) {

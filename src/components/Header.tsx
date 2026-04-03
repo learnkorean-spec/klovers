@@ -88,7 +88,7 @@ const Header = () => {
               >
                 {link.label}
                 {link.badge && (
-                  <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                  <span className="text-[10px] bg-green-100 text-green-800 border border-green-300 px-1.5 py-0.5 rounded-full font-semibold leading-none">
                     {link.badge}
                   </span>
                 )}
@@ -210,7 +210,7 @@ const Header = () => {
                 >
                   {link.label}
                   {"badge" in link && link.badge && (
-                    <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                    <span className="text-[10px] bg-green-100 text-green-800 border border-green-300 px-1.5 py-0.5 rounded-full font-semibold leading-none">
                       {link.badge as React.ReactNode}
                     </span>
                   )}
