@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import React, { lazy, Suspense, useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { useSEO } from "@/hooks/useSEO";
@@ -44,6 +44,7 @@ import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
 import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface EnrollmentRecord {
   id: string;
@@ -447,11 +448,29 @@ const StudentDashboard = () => {
 
   const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
 
+  // Level-up flash: detect league change since last session
+  const [showLevelUpFlash, setShowLevelUpFlash] = useState(false);
+  const levelUpChecked = useRef(false);
+  useEffect(() => {
+    if (levelUpChecked.current || !league) return;
+    levelUpChecked.current = true;
+    const prevLeague = sessionStorage.getItem("kl_last_league");
+    if (prevLeague && prevLeague !== league.key) {
+      setShowLevelUpFlash(true);
+      setTimeout(() => setShowLevelUpFlash(false), 2200);
+    }
+    sessionStorage.setItem("kl_last_league", league.key);
+  }, [league]);
+
+  // Animated count-up for numeric stats
+  const xpCountUp = useCountUp(gamification.totalXp, 1200);
+  const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
+
   const quickStats = useMemo(() => [
-    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
-    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
-    { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
-    { label: "League", value: league?.emoji ? `${league.emoji} ${league.name}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+    { label: "Total XP", rawValue: gamification.totalXp, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Day Streak", rawValue: gamification.streak.current_streak, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
+    { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
   ], [gamification.totalXp, gamification.streak.current_streak, lessonsCompleted, league]);
 
   const quickActions = useMemo(() => [
@@ -497,6 +516,15 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-muted/20">
+      {showLevelUpFlash && (
+        <div className="fixed inset-0 z-50 pointer-events-none animate-level-up-flash flex items-center justify-center bg-primary/30">
+          <div className="animate-scale-in text-center">
+            <p className="text-5xl mb-2">{league?.emoji}</p>
+            <p className="text-2xl font-black text-foreground text-outlined-lg">Level Up!</p>
+            <p className="text-lg font-bold text-foreground">{league?.name}</p>
+          </div>
+        </div>
+      )}
       <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
       <main id="main-content" className="pt-24 pb-16 px-4">
@@ -558,21 +586,32 @@ const StudentDashboard = () => {
 
           {/* ── Quick Stats (always visible) ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickStats.map(({ label, value, icon: Icon, color }) => (
-              <Card key={label} className="border-border">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-                      <Icon className="h-4 w-4" />
+            {quickStats.map(({ label, rawValue, icon: Icon, color }, idx) => {
+              let displayValue: string;
+              if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
+              else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
+              else if (label === "Lessons Done") displayValue = `${rawValue}/45`;
+              else displayValue = league?.emoji ? `${league.emoji} ${league.name}` : "Beginner";
+              return (
+                <Card
+                  key={label}
+                  className="border-border hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 animate-fade-up"
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                >
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                        <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                      <p className="font-bold text-foreground text-sm leading-tight truncate">{value}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
@@ -581,15 +620,16 @@ const StudentDashboard = () => {
           </Suspense>
 
           {/* ── Quick Actions (always visible) ── */}
-          <div>
+          <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {quickActions.map(({ label, desc, emoji, path, color }) => (
+              {quickActions.map(({ label, desc, emoji, path, color }, idx) => (
                 <button
                   key={label}
                   onClick={() => navigate(path)}
                   aria-label={`${label}: ${desc}`}
-                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-all ${color}`}
+                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all ${color} animate-fade-up`}
+                  style={{ animationDelay: `${180 + idx * 60}ms` }}
                 >
                   <div className="text-2xl mb-2">{emoji}</div>
                   <p className="font-semibold text-foreground text-sm">{label}</p>
@@ -613,8 +653,8 @@ const StudentDashboard = () => {
                   </div>
                   <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 animate-bar-grow"
+                      style={{ "--bar-target": `${pct}%` } as React.CSSProperties}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">{msg}</p>

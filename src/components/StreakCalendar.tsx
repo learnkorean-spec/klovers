@@ -170,16 +170,18 @@ export function StreakCalendar() {
                     const dateStr = day.toISOString().split("T")[0];
                     const isToday = dateStr === today;
                     const isActive = activeDates.has(dateStr);
+                    const cellDelay = (wi * 7 + di) * 8;
                     return (
                       <div
                         key={di}
                         title={`${dateStr}${isActive ? " ✓ Active" : ""}`}
                         className={cn(
-                          "h-3.5 rounded-sm transition-all",
+                          "h-3.5 rounded-sm transition-all animate-cell-pop",
                           getColor(dateStr),
                           isToday && "ring-1 ring-primary ring-offset-1",
                           isActive && "opacity-100",
                         )}
+                        style={{ animationDelay: `${cellDelay}ms` }}
                       />
                     );
                   })}

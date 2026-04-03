@@ -93,7 +93,7 @@ const App = () => (
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="bottom-center" />
         <AppInner />
         <WhatsAppButton />
         <BrowserRouter>

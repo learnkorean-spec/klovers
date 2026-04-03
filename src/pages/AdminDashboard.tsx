@@ -176,6 +176,7 @@ const AdminDashboard = () => {
   const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(new Set());
   const [bulkApproving, setBulkApproving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [copiedLeadId, setCopiedLeadId] = useState<string | null>(null);
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -929,7 +930,10 @@ const AdminDashboard = () => {
                 <TabsTrigger value="enrollments" className={TAB_CLS}>
                   <FileCheck className="h-3.5 w-3.5" /> Enrollments
                   {actionableEnrollments > 0 && (
-                    <Badge variant="destructive" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{actionableEnrollments}</Badge>
+                    <span className="relative inline-flex">
+                      <Badge variant="destructive" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{actionableEnrollments}</Badge>
+                      <span className="absolute inset-0 rounded-full bg-destructive/60 animate-ping" />
+                    </span>
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="leads" className={TAB_CLS}>
@@ -1397,7 +1401,7 @@ const AdminDashboard = () => {
                         {filtered.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">No {tab.replace(/_/g, " ")} enrollments.</p>
                         ) : pagedEnrollments.map((e) => (
-                          <Card key={e.id} className={selectedEnrollmentIds.has(e.id) ? "ring-2 ring-primary/50" : ""}>
+                          <Card key={e.id} className={selectedEnrollmentIds.has(e.id) ? "ring-2 ring-primary/50 animate-flash-bg" : ""}>
                             <CardContent className="pt-6">
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-start gap-3">
@@ -1671,7 +1675,7 @@ const AdminDashboard = () => {
 
             {/* Sticky bulk action bar — floats above bottom when enrollments are selected */}
             {selectedEnrollmentIds.size > 0 && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background/95 backdrop-blur border border-border shadow-xl rounded-2xl px-5 py-3">
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background/95 backdrop-blur border border-border shadow-xl rounded-2xl px-5 py-3 animate-slide-up">
                 <p className="text-sm font-semibold text-foreground">
                   {selectedEnrollmentIds.size} enrollment{selectedEnrollmentIds.size > 1 ? "s" : ""} selected
                 </p>
@@ -1769,8 +1773,13 @@ const AdminDashboard = () => {
                             </div>
                             <div className="flex gap-1.5 shrink-0">
                               <Button size="sm" variant="outline" className="h-7 px-2 text-xs"
-                                onClick={() => { navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`); toast({ title: "Copied!", description: "Follow-up message copied to clipboard" }); }}>
-                                <Copy className="h-3 w-3 mr-1" />Copy
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
+                                  toast({ title: "Copied!", description: "Follow-up message copied to clipboard" });
+                                  setCopiedLeadId(l.id);
+                                  setTimeout(() => setCopiedLeadId(id => id === l.id ? null : id), 1500);
+                                }}>
+                                {copiedLeadId === l.id ? <><Check className="h-3 w-3 mr-1 text-green-600" />Copied!</> : <><Copy className="h-3 w-3 mr-1" />Copy</>}
                               </Button>
                               <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
                                 <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${l.name.split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
@@ -1906,10 +1915,10 @@ const AdminDashboard = () => {
                                 <span className="truncate flex-1 text-sm">{lead.email}</span>
                                 <button
                                   className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
-                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); }}
+                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
                                   aria-label="Copy email address"
                                 >
-                                  <Copy className="h-3 w-3 text-muted-foreground" />
+                                  {copiedLeadId === lead.id + "_email" ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
                                 </button>
                               </div>
                             )}

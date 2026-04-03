@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LEAGUES, getLeague, getLeagueProgress, BADGES } from "@/constants/gamification";
 import { cn } from "@/lib/utils";
 import { Flame, Trophy, Star, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 // --- XP Badge (small inline) ---
 export function XpBadge({ xp, className }: { xp: number; className?: string }) {
@@ -28,6 +29,12 @@ export function LeagueProgressBar({ totalXp }: { totalXp: number }) {
   const league = getLeague(totalXp);
   const pct = getLeagueProgress(totalXp);
   const nextLeague = LEAGUES[league.index + 1];
+  const [displayPct, setDisplayPct] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDisplayPct(pct), 80);
+    return () => clearTimeout(t);
+  }, [pct]);
 
   return (
     <div className="space-y-2">
@@ -48,7 +55,7 @@ export function LeagueProgressBar({ totalXp }: { totalXp: number }) {
           </p>
         )}
       </div>
-      <Progress value={pct} className="h-3" />
+      <Progress value={displayPct} className="h-3 transition-all duration-1000 ease-out" />
     </div>
   );
 }
@@ -113,7 +120,7 @@ export function StreakDisplay({
           "text-muted-foreground"
         )} />
         <div>
-          <p className="text-lg font-bold text-foreground">{currentStreak}</p>
+          <p className={cn("text-lg font-bold text-foreground", isAtRisk && "animate-shake")}>{currentStreak}</p>
           <p className="text-xs text-muted-foreground">
             {isAtRisk ? "⚠️ At risk today!" : "Day Streak"}
           </p>
@@ -155,7 +162,7 @@ export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: str
             key={b.key}
             className={cn(
               "rounded-xl border p-3 text-center transition-all",
-              earned ? "border-primary/40 bg-primary/5" : "border-border/50 bg-muted/30 opacity-50"
+              earned ? "border-primary/40 bg-primary/5 animate-badge-burst" : "border-border/50 bg-muted/30 opacity-50"
             )}
           >
             <span className="text-2xl block mb-1">{b.emoji}</span>
