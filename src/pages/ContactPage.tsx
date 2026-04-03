@@ -17,7 +17,8 @@ const WA_GROUP = "https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq";
 
 const ContactPage = () => {
   useSEO({ title: "Contact Us", description: "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.", canonical: "https://kloversegy.com/contact" });
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
@@ -58,8 +59,8 @@ const ContactPage = () => {
                   <MessageCircle className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-lg leading-tight">Chat on WhatsApp</p>
-                  <p className="text-white/80 text-sm">Fastest way to reach us — reply within minutes</p>
+                  <p className="font-bold text-lg leading-tight">{isAr ? "تحدث عبر واتساب" : "Chat on WhatsApp"}</p>
+                  <p className="text-white/80 text-sm">{isAr ? "أسرع طريقة للتواصل — نرد خلال دقائق" : "Fastest way to reach us — reply within minutes"}</p>
                 </div>
                 <svg viewBox="0 0 24 24" className="h-5 w-5 opacity-70" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
               </a>
@@ -75,15 +76,15 @@ const ContactPage = () => {
                   <Users className="h-5 w-5 text-[#25D366]" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-foreground text-sm">Join our WhatsApp Community</p>
-                  <p className="text-muted-foreground text-xs">Connect with students, get updates & tips</p>
+                  <p className="font-semibold text-foreground text-sm">{isAr ? "انضم لمجتمعنا على واتساب" : "Join our WhatsApp Community"}</p>
+                  <p className="text-muted-foreground text-xs">{isAr ? "تواصل مع الطلاب واحصل على تحديثات ونصائح" : "Connect with students, get updates & tips"}</p>
                 </div>
                 <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
               </a>
 
               {/* ── Tertiary: Contact form ── */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-4">Or send us a message</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-4">{isAr ? "أو أرسل لنا رسالة" : "Or send us a message"}</p>
                 <Card className="border-border">
                   <CardContent className="p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
