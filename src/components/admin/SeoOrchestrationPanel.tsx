@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Play, Wrench, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Sparkles, Link, TrendingUp, AlertTriangle, PlusCircle } from "lucide-react";
+import { Loader2, Play, Wrench, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Sparkles, Link, TrendingUp, AlertTriangle, PlusCircle, FileText, ExternalLink } from "lucide-react";
 
 // ── Types (mirrors seo-orchestration/index.ts) ────────────────────────────────
 
@@ -307,6 +307,14 @@ function PostRow({ item }: { item: AgentReport }) {
   );
 }
 
+interface GenerationResult {
+  slug: string;
+  title: string;
+  id?: string;
+  status: "created" | "exists" | "error";
+  error?: string;
+}
+
 // ── Priority badge ────────────────────────────────────────────────────────────
 
 function PriorityBadge({ priority }: { priority: "high" | "medium" | "low" }) {
@@ -327,33 +335,150 @@ function PriorityBadge({ priority }: { priority: "high" | "medium" | "low" }) {
 
 function TopicGapPanel({ data }: { data: TopicGapResult }) {
   const [clusterOpen, setClusterOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [generating, setGenerating] = useState(false);
+  const [genResults, setGenResults] = useState<GenerationResult[]>([]);
+
+  const MAX_SELECT = 5;
+
+  function toggleSelect(slug: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) {
+        next.delete(slug);
+      } else if (next.size < MAX_SELECT) {
+        next.add(slug);
+      }
+      return next;
+    });
+  }
+
+  async function generateSelected() {
+    const specs = data.recommended_articles.filter((a) => selected.has(a.slug));
+    if (specs.length === 0) return;
+    setGenerating(true);
+    setGenResults([]);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("article-generator", {
+        body: { articles: specs },
+      });
+      if (error) throw error;
+      setGenResults(res.results ?? []);
+      toast({
+        title: `${res.summary.created} article${res.summary.created !== 1 ? "s" : ""} created`,
+        description:
+          res.summary.skipped > 0
+            ? `${res.summary.skipped} already existed, ${res.summary.failed} failed`
+            : res.summary.failed > 0
+            ? `${res.summary.failed} failed`
+            : "All drafts saved — review and publish from the Blog tab.",
+      });
+    } catch (err: any) {
+      toast({ title: "Generation failed", description: err.message ?? "Unknown error", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  const createdSlugs = new Set(genResults.filter((r) => r.status === "created").map((r) => r.slug));
+  const existingSlugs = new Set(genResults.filter((r) => r.status === "exists").map((r) => r.slug));
+  const errorSlugs = new Set(genResults.filter((r) => r.status === "error").map((r) => r.slug));
 
   return (
     <div className="space-y-4">
       {/* Recommended articles */}
       <Card className="rounded-xl">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <PlusCircle className="h-4 w-4 text-primary" />
-            Recommended New Articles ({data.recommended_articles.length})
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <PlusCircle className="h-4 w-4 text-primary" />
+              Recommended New Articles ({data.recommended_articles.length})
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {selected.size > 0 && (
+                <span className="text-xs text-muted-foreground">{selected.size}/{MAX_SELECT} selected</span>
+              )}
+              <Button
+                size="sm"
+                onClick={generateSelected}
+                disabled={selected.size === 0 || generating}
+                className="h-7 text-xs"
+              >
+                {generating
+                  ? <><Loader2 className="h-3 w-3 animate-spin mr-1.5" /> Generating…</>
+                  : <><FileText className="h-3 w-3 mr-1.5" /> Generate {selected.size > 0 ? `(${selected.size})` : ""}</>
+                }
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Select up to {MAX_SELECT} articles to generate as drafts. Each gets a full SEO-optimised article body.
+          </p>
         </CardHeader>
         <CardContent className="pt-0 space-y-2">
-          {data.recommended_articles.map((a, i) => (
-            <div key={i} className="flex flex-col gap-1 p-3 rounded-lg border bg-muted/30 text-sm">
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-medium leading-tight">{a.title}</p>
-                <PriorityBadge priority={a.priority} />
+          {data.recommended_articles.map((a) => {
+            const isSelected = selected.has(a.slug);
+            const isCreated = createdSlugs.has(a.slug);
+            const isExisting = existingSlugs.has(a.slug);
+            const hasError = errorSlugs.has(a.slug);
+            const errMsg = genResults.find((r) => r.slug === a.slug)?.error;
+
+            return (
+              <div
+                key={a.slug}
+                onClick={() => !isCreated && !isExisting && !generating && toggleSelect(a.slug)}
+                className={`flex flex-col gap-1 p-3 rounded-lg border text-sm transition-colors select-none
+                  ${isCreated ? "border-green-300 bg-green-50/60 cursor-default" :
+                    isExisting ? "border-blue-200 bg-blue-50/40 cursor-default" :
+                    hasError ? "border-red-200 bg-red-50/40 cursor-default" :
+                    isSelected ? "border-primary bg-primary/5 cursor-pointer" :
+                    "border bg-muted/30 hover:bg-muted/50 cursor-pointer"}`}
+              >
+                <div className="flex items-start gap-2.5">
+                  {/* Status/checkbox */}
+                  <span className="mt-0.5 shrink-0">
+                    {isCreated ? <CheckCircle className="h-4 w-4 text-green-600" /> :
+                     isExisting ? <CheckCircle className="h-4 w-4 text-blue-500" /> :
+                     hasError ? <AlertCircle className="h-4 w-4 text-red-500" /> :
+                     <span className={`flex h-4 w-4 rounded border-2 items-center justify-center ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
+                       {isSelected && <span className="block h-2 w-2 rounded-sm bg-white" />}
+                     </span>
+                    }
+                  </span>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium leading-tight">{a.title}</p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <PriorityBadge priority={a.priority} />
+                        {isCreated && (
+                          <a
+                            href={`/blog/${a.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-primary flex items-center gap-0.5 hover:underline"
+                          >
+                            view <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
+                      <span className="font-mono bg-background border rounded px-1">{a.target_keyword}</span>
+                      <Badge variant="outline" className="text-xs">{a.article_type}</Badge>
+                      <Badge variant="outline" className="text-xs">{a.search_intent}</Badge>
+                      <span className="font-mono text-primary">/{a.slug}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{a.reason}</p>
+                    {isCreated && <p className="text-xs text-green-700 font-medium mt-0.5">Draft created — publish from the Blog tab</p>}
+                    {isExisting && <p className="text-xs text-blue-700 mt-0.5">Already exists in blog</p>}
+                    {hasError && <p className="text-xs text-red-600 mt-0.5">{errMsg ?? "Generation failed"}</p>}
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="font-mono bg-background border rounded px-1">{a.target_keyword}</span>
-                <Badge variant="outline" className="text-xs">{a.article_type}</Badge>
-                <Badge variant="outline" className="text-xs">{a.search_intent}</Badge>
-                <span className="font-mono text-primary">/{a.slug}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">{a.reason}</p>
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
 
