@@ -16,7 +16,9 @@ import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
+import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
 import { useGamification } from "@/hooks/useGamification";
+import { BADGES } from "@/constants/gamification";
 // Below-fold components — lazy loaded to keep initial paint fast
 const AnalyticsSection = lazy(() =>
   import("@/components/AnalyticsSection").then(m => ({ default: m.AnalyticsSection }))
@@ -38,7 +40,7 @@ const DailyBonusCard = lazy(() =>
 );
 import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
 import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
@@ -187,7 +189,7 @@ const ProfileCard = ({
 const StudentDashboard = () => {
   useSEO({ title: "My Dashboard", description: "Track your Korean learning progress, schedule, and achievements on Klovers.", canonical: "https://kloversegy.com/dashboard" });
   const { loading: gateLoading, resetBlocked } = useResetGate();
-  const { progress: gamification, league, loading: gamLoading, awardGameXp } = useGamification();
+  const { progress: gamification, league, loading: gamLoading, awardGameXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -208,6 +210,22 @@ const StudentDashboard = () => {
   const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { toast: uiToast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          uiToast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const FIELD_MAP: Record<string, string> = {
     name: "Full name",
@@ -997,6 +1015,13 @@ const StudentDashboard = () => {
         </div>
       </main>
       <Footer />
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
     </div>
   );
 };

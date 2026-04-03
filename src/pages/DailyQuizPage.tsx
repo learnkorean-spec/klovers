@@ -6,6 +6,8 @@ import { useGamification } from "@/hooks/useGamification";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { BADGES } from "@/constants/gamification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -42,8 +44,23 @@ const DailyQuizPage = () => {
 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { awardXp } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          toast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const [exercises, setExercises] = useState<ExerciseItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -397,6 +414,13 @@ const DailyQuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
       <main id="main-content" className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Progress */}

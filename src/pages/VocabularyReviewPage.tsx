@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VocabularyReview } from "@/components/VocabularyReview";
@@ -10,6 +10,9 @@ import Footer from "@/components/Footer";
 import { BookOpen, ArrowLeft, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { useToast } from "@/hooks/use-toast";
+import { BADGES } from "@/constants/gamification";
 
 export function VocabularyReviewPage() {
   useSEO({
@@ -20,9 +23,25 @@ export function VocabularyReviewPage() {
 
   const navigate = useNavigate();
   const { dueCards, loading: srsLoading, recordReview } = useSRS();
-  const { awardXp } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
+  const { toast: uiToast } = useToast();
   const [sessionStarted, setSessionStarted] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          uiToast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const handleReviewComplete = async (vocabId: number, quality: number) => {
     try {
@@ -135,6 +154,13 @@ export function VocabularyReviewPage() {
         </div>
       </main>
       <Footer />
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
     </div>
   );
 }
