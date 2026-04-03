@@ -13,8 +13,8 @@ const LEVELS = [
 ];
 
 const FEATURES = [
-  { icon: ClipboardCheck, label: "40 Questions" },
-  { icon: Clock,          label: "~10 Minutes" },
+  { icon: ClipboardCheck, label: "20 Questions" },
+  { icon: Clock,          label: "~5 Minutes" },
   { icon: Target,         label: "TOPIK-Based" },
   { icon: Brain,          label: "Instant Results" },
 ];
@@ -93,7 +93,7 @@ const PlacementTestCTA = () => {
             </h2>
 
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Our free TOPIK-based test pinpoints your exact level — A1 to C2 — and gives you a personalised study roadmap in under 10 minutes.
+              Our free TOPIK-aligned test pinpoints your exact level — A1 to C2 — in just 20 questions and gives you a personalised study roadmap in under 5 minutes.
             </p>
 
             {/* Feature pills */}
@@ -170,7 +170,7 @@ const PlacementTestCTA = () => {
 
                 {/* Card footer */}
                 <div className="px-5 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">40 questions · adaptive scoring</span>
+                  <span className="text-xs text-muted-foreground">20 questions · TOPIK-aligned</span>
                   <span className="text-xs font-bold text-primary">FREE</span>
                 </div>
               </div>
