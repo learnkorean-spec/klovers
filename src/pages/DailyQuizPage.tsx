@@ -3,6 +3,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
+import { XP_VALUES } from "@/constants/gamification";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -91,7 +92,7 @@ const DailyQuizPage = () => {
       .from("student_xp")
       .select("id")
       .eq("user_id", user.id)
-      .eq("activity_type", "daily_quiz")
+      .eq("activity_type", "challenge")
       .gte("created_at", today.toISOString())
       .limit(1)
       .maybeSingle();
@@ -191,27 +192,8 @@ const DailyQuizPage = () => {
 
     const percentage = Math.round((correctCount / exercises.length) * 100);
     const passed = percentage >= 70;
-    const xpEarned = 30; // Base XP for daily quiz
+    const xpEarned = XP_VALUES.challenge;
 
-    // Save quiz result to student_xp
-    const { error } = await supabase.from("student_xp").insert({
-      user_id: user!.id,
-      lesson_id: null,
-      activity_type: "daily_quiz",
-      xp_earned: xpEarned,
-    });
-
-    if (error) {
-      toast({
-        title: "Error saving quiz",
-        description: error.message,
-        variant: "destructive",
-      });
-      setSubmitting(false);
-      return;
-    }
-
-    // Award XP through gamification system
     await awardXp(0, "challenge");
 
     setResult({

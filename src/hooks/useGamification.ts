@@ -318,6 +318,16 @@ export function useGamification() {
     return totalXpEarned;
   }, [userId, progress.totalXp, progress.badges, updateStreak, fetchProgress]);
 
+  const awardBadge = useCallback(async (badgeKey: string) => {
+    if (!userId || progress.badges.includes(badgeKey)) return;
+    await supabase.from("student_badges").upsert(
+      { user_id: userId, badge_key: badgeKey },
+      { onConflict: "user_id,badge_key" }
+    );
+    setNewBadges(prev => [...prev, badgeKey]);
+    setProgress(prev => ({ ...prev, badges: [...prev.badges, badgeKey] }));
+  }, [userId, progress.badges]);
+
   const clearLeaguePromotion = useCallback(() => setLeaguePromotion(null), []);
   const clearNewBadges = useCallback(() => setNewBadges([]), []);
 
@@ -330,6 +340,7 @@ export function useGamification() {
     loading,
     leaguePromotion,
     newBadges,
+    awardBadge,
     clearLeaguePromotion,
     clearNewBadges,
     awardXp,
