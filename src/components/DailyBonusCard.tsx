@@ -102,7 +102,7 @@ export function DailyBonusCard() {
     <Card className={cn(
       "border-2 transition-all",
       claimed
-        ? "border-green-500/30 bg-green-500/5"
+        ? "border-green-500/30 bg-green-500/5 dark:border-green-500/20 dark:bg-green-500/10"
         : "border-primary/30 bg-gradient-to-r from-primary/5 to-yellow-500/5"
     )}>
       <CardContent className="pt-4 pb-4">
@@ -110,10 +110,10 @@ export function DailyBonusCard() {
           <div className="flex items-center gap-3">
             <div className={cn(
               "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0",
-              claimed ? "bg-green-100" : "bg-primary/10"
+              claimed ? "bg-green-100 dark:bg-green-900/30" : "bg-primary/10"
             )}>
               {claimed
-                ? <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ? <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                 : <Gift className="h-5 w-5 text-primary" />
               }
             </div>
@@ -122,11 +122,11 @@ export function DailyBonusCard() {
                 {claimed ? "Daily Bonus Claimed!" : "Daily Login Bonus"}
               </p>
               <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                <Badge variant="outline" className="text-xs gap-1 text-yellow-600 border-yellow-300">
+                <Badge variant="outline" className="text-xs gap-1 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-600">
                   <Zap className="h-3 w-3" /> +{bonusXp} XP base
                 </Badge>
                 {streakBonus > 0 && (
-                  <Badge variant="outline" className="text-xs gap-1 text-orange-600 border-orange-300">
+                  <Badge variant="outline" className="text-xs gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600">
                     🔥 +{streakBonus} XP ({streakBonusLabel})
                   </Badge>
                 )}
@@ -144,7 +144,7 @@ export function DailyBonusCard() {
               {claiming ? "Claiming..." : `Claim +${totalBonus} XP`}
             </Button>
           ) : (
-            <Badge className="bg-green-600 flex-shrink-0">
+            <Badge className="bg-green-600 dark:bg-green-500 flex-shrink-0">
               +{totalBonus} XP earned
             </Badge>
           )}
