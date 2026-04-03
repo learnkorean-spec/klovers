@@ -102,7 +102,7 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   // ── Black top bar ──
   ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, w, topH);
-  ctx.font = `700 ${12 * S}px 'Inter', sans-serif`;
+  ctx.font = `700 ${20 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
   ctx.fillText("KLOVERS KOREAN ACADEMY", w / 2, topH * 0.70);
@@ -121,10 +121,10 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
 
   // ── Eyebrow ──
-  ctx.font = `600 ${11 * S}px 'Inter', sans-serif`;
+  ctx.font = `600 ${18 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "#111111";
-  ctx.fillText("KOREAN COURSE", pad, topH + 32 * S);
-  ctx.fillRect(pad, topH + 36 * S, 40 * S, 2 * S);
+  ctx.fillText("KOREAN COURSE", pad, topH + 36 * S);
+  ctx.fillRect(pad, topH + 42 * S, 40 * S, 2 * S);
 
   // ── ATTENTION: Massive headline (FIXED start, max 2 lines) ──
   const hlMax = w - pad * 2 - bR * 2 - 20 * S;
@@ -138,28 +138,28 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.fillRect(pad, h * 0.57, 44 * S, 3 * S);
 
   // ── Subtitle (FIXED zone — never computed from headline) ──
-  ctx.font = `400 ${15 * S}px 'Inter', sans-serif`;
+  ctx.font = `400 ${26 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "#222222";
-  wrapText(ctx, post.subtitle, pad, h * 0.615, w - pad * 2, 22 * S, 3);
+  wrapText(ctx, post.subtitle, pad, h * 0.615, w - pad * 2, 34 * S, 3);
 
   // ── Black bottom bar ──
   ctx.fillStyle = "#111111";
   ctx.fillRect(0, botY, w, botH);
 
   // ── Yellow CTA pill ──
-  const ctaH = 40 * S, ctaW = 176 * S;
+  const ctaH = 52 * S, ctaW = 210 * S;
   const ctaY = botY + (botH - ctaH) * 0.38;
   ctx.fillStyle = "#FFFF00";
   rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = `700 ${13 * S}px 'Inter', sans-serif`;
+  ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
   ctx.fillText("Register Now →", pad + ctaW / 2, ctaY + ctaH * 0.67);
   ctx.textAlign = "left";
 
   // ── Website ──
-  ctx.font = `400 ${10 * S}px 'Inter', sans-serif`;
+  ctx.font = `400 ${14 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "rgba(255,255,0,0.5)";
   ctx.textAlign = "right";
   ctx.fillText("kloversegy.com", w - pad, botY + botH * 0.80);
@@ -186,7 +186,7 @@ function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: 
   ctx.fillRect(0, 0, 5 * S, h);
 
   // ── KLOVERS eyebrow ──
-  ctx.font = `900 ${12 * S}px 'Inter', sans-serif`;
+  ctx.font = `900 ${20 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.fillText("KLOVERS", pad, h * 0.075);
 
@@ -195,7 +195,7 @@ function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: 
   ctx.fillRect(pad, h * 0.105, w * 0.38, 4 * S);
 
   // ── "KOREAN COURSE" label ──
-  ctx.font = `400 ${11 * S}px 'Inter', sans-serif`;
+  ctx.font = `400 ${16 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "rgba(255,255,255,0.45)";
   ctx.fillText("KOREAN COURSE", pad, h * 0.165);
 
@@ -210,22 +210,22 @@ function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: 
   ctx.fillRect(pad, h * 0.57, w - pad * 2, 2 * S);
 
   // ── Subtitle (FIXED zone) ──
-  ctx.font = `400 ${15 * S}px 'Inter', sans-serif`;
+  ctx.font = `400 ${24 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "rgba(255,255,255,0.75)";
-  wrapText(ctx, post.subtitle, pad, h * 0.625, w - pad * 2, 22 * S, 3);
+  wrapText(ctx, post.subtitle, pad, h * 0.625, w - pad * 2, 32 * S, 3);
 
   // ── Yellow bottom strip ──
-  const stripH = 44 * S;
+  const stripH = 56 * S;
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, h - stripH, w, stripH);
 
   // CTA text in strip
-  ctx.font = `700 ${13 * S}px 'Inter', sans-serif`;
+  ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "#111111";
   ctx.fillText("Register Now →", pad, h - stripH + stripH * 0.67);
 
   // Website right-aligned
-  ctx.font = `400 ${10 * S}px 'Inter', sans-serif`;
+  ctx.font = `400 ${14 * S}px 'Inter', sans-serif`;
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.textAlign = "right";
   ctx.fillText("kloversegy.com", w - pad, h - stripH + stripH * 0.67);
@@ -276,7 +276,7 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     ctx.fillText("K", lCx, h * 0.43);
 
     // LEFT: KLOVERS label
-    ctx.font = `700 ${11 * S}px 'Inter', sans-serif`;
+    ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
     ctx.textBaseline = "alphabetic"; ctx.textAlign = "center";
     ctx.fillText("KLOVERS", lCx, h * 0.73);
@@ -285,7 +285,7 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     // RIGHT: eyebrow
     const rLeft = splitX + slant + 22 * S;
     const rW = w - rLeft - 22 * S;
-    ctx.font = `600 ${11 * S}px 'Inter', sans-serif`;
+    ctx.font = `600 ${17 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "rgba(255,255,0,0.65)";
     ctx.fillText("ENROLL TODAY", rLeft, h * 0.19);
     ctx.fillStyle = "#FFFF00";
@@ -298,25 +298,25 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     wrapText(ctx, post.mainText, rLeft, h * 0.30, rW, hlSize * 1.08, 2);
 
     // RIGHT: subtitle (FIXED zone)
-    ctx.font = `400 ${13 * S}px 'Inter', sans-serif`;
+    ctx.font = `400 ${20 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "rgba(255,255,0,0.80)";
-    wrapText(ctx, post.subtitle, rLeft, h * 0.60, rW, 19 * S, 2);
+    wrapText(ctx, post.subtitle, rLeft, h * 0.60, rW, 27 * S, 2);
 
     // RIGHT: CTA pill (FIXED)
-    const ctaH = 44 * S, ctaW = Math.min(rW * 0.85, 200 * S);
+    const ctaH = 50 * S, ctaW = Math.min(rW * 0.90, 220 * S);
     const ctaX = rLeft + (rW - ctaW) / 2;
     const ctaY = h * 0.74;
     ctx.fillStyle = "#FFFF00";
     rRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
     ctx.fill();
-    ctx.font = `700 ${14 * S}px 'Inter', sans-serif`;
+    ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
     ctx.textAlign = "center";
     ctx.fillText("Register Now →", ctaX + ctaW / 2, ctaY + ctaH * 0.67);
     ctx.textAlign = "left";
 
     // RIGHT: website
-    ctx.font = `400 ${10 * S}px 'Inter', sans-serif`;
+    ctx.font = `400 ${14 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "rgba(255,255,0,0.40)";
     ctx.textAlign = "center";
     ctx.fillText("kloversegy.com", rLeft + rW / 2, h * 0.91);
@@ -363,24 +363,24 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     wrapText(ctx, post.mainText, pad, h * 0.19, w - pad * 2, hlSize * 1.08, 2);
 
     // BOTTOM: subtitle (FIXED zone)
-    ctx.font = `400 ${16 * S}px 'Inter', sans-serif`;
+    ctx.font = `400 ${24 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "rgba(255,255,255,0.85)";
-    wrapText(ctx, post.subtitle, pad, h * 0.60, w - pad * 2, 24 * S, 3);
+    wrapText(ctx, post.subtitle, pad, h * 0.60, w - pad * 2, 32 * S, 3);
 
     // BOTTOM: CTA pill
-    const ctaH = 48 * S, ctaW = w - pad * 2;
+    const ctaH = 56 * S, ctaW = w - pad * 2;
     const ctaY = h * 0.74;
     ctx.fillStyle = "#FFFF00";
     rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
     ctx.fill();
-    ctx.font = `700 ${15 * S}px 'Inter', sans-serif`;
+    ctx.font = `700 ${20 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
     ctx.textAlign = "center";
     ctx.fillText("Register Now →", w / 2, ctaY + ctaH * 0.67);
     ctx.textAlign = "left";
 
     // Website
-    ctx.font = `400 ${11 * S}px 'Inter', sans-serif`;
+    ctx.font = `400 ${15 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "rgba(255,255,0,0.45)";
     ctx.textAlign = "center";
     ctx.fillText("kloversegy.com", w / 2, h * 0.90);
@@ -712,10 +712,10 @@ export function renderPost(
   // Eyebrow at FIXED h*0.18
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
   ctx.fillStyle = eyeColor;
-  ctx.font = `700 ${14 * scale}px 'Inter', sans-serif`;
+  ctx.font = `700 ${20 * scale}px 'Inter', sans-serif`;
   ctx.fillText("KOREAN COURSE", tLeft, h * 0.18);
   ctx.fillStyle = eyeColor;
-  ctx.fillRect(tLeft, h * 0.18 + 8 * scale, 56 * scale, 3 * scale);
+  ctx.fillRect(tLeft, h * 0.18 + 10 * scale, 56 * scale, 3 * scale);
 
   if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 18 * scale; }
 
@@ -741,18 +741,18 @@ export function renderPost(
   ctx.fillStyle = ctaBg;
   rRect(ctx, tLeft, ctaY, 182 * scale, 44 * scale, 22 * scale);
   ctx.fill();
-  ctx.font = `bold ${15 * scale}px 'Inter', sans-serif`;
+  ctx.font = `bold ${18 * scale}px 'Inter', sans-serif`;
   ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText("Register Now →", tLeft + 91 * scale, ctaY + 29 * scale);
+  ctx.fillText("Register Now →", tLeft + 91 * scale, ctaY + 30 * scale);
   ctx.textAlign = "start";
 
   // Footer strip with hashtags
   ctx.fillStyle = isDark ? "#111" : "#1a1a1a";
-  ctx.fillRect(0, h - 50 * scale, w, 50 * scale);
-  ctx.font = `bold ${13 * scale}px 'Inter', sans-serif`;
+  ctx.fillRect(0, h - 54 * scale, w, 54 * scale);
+  ctx.font = `bold ${16 * scale}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 19 * scale);
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 20 * scale);
   ctx.textAlign = "start";
 }
