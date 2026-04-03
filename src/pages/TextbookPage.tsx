@@ -101,10 +101,10 @@ const TextbookPage = () => {
             <config.icon className="h-4 w-4" />
             {config.emoji} {isAr ? config.titleAr : config.titleEn}
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {isAr ? config.titleAr : config.titleEn}
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
             {isDailyRoutine
               ? `${DAILY_ROUTINE_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درس" : "lessons"}`
               : isKDrama
