@@ -12,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { getLeagueProgress, BADGES } from "@/constants/gamification";
-import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -29,6 +29,13 @@ const WordScrambleGame = lazy(() => import("@/components/games/WordScrambleGame"
 const CounterWordsGame = lazy(() => import("@/components/games/CounterWordsGame"));
 const KDramaQuizGame = lazy(() => import("@/components/games/KDramaQuizGame"));
 const TimeTellerGame = lazy(() => import("@/components/games/TimeTellerGame"));
+const TypeKoreanGame = lazy(() => import("@/components/games/TypeKoreanGame"));
+const RomanizationGame = lazy(() => import("@/components/games/RomanizationGame"));
+const FlashcardGame = lazy(() => import("@/components/games/FlashcardGame"));
+const SpeedReadGame = lazy(() => import("@/components/games/SpeedReadGame"));
+const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGame"));
+const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
+const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
 
 const FREE_GAME_IDS = ["match", "hangul"];
 
@@ -43,7 +50,8 @@ const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
-  const { awardGameXp, progress, league, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
+  const { awardGameXp, progress, league, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
+  const [xpFloat, setXpFloat] = useState<number | null>(null);
   const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -87,12 +95,20 @@ const GamesPage = () => {
     { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate"), free: false },
     { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner"), free: false },
     { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner"), free: false },
+    { id: "typekorean", title: t("games.typekoreanTitle"), description: t("games.typekoreanDesc"), icon: Keyboard, emoji: "⌨️", difficulty: t("games.intermediate"), free: false },
+    { id: "romanization", title: t("games.romanizationTitle"), description: t("games.romanizationDesc"), icon: Volume2, emoji: "🔤", difficulty: t("games.beginner"), free: false },
+    { id: "flashcard", title: t("games.flashcardTitle"), description: t("games.flashcardDesc"), icon: CreditCard, emoji: "🃏", difficulty: t("games.beginner"), free: false },
+    { id: "speedread", title: t("games.speedreadTitle"), description: t("games.speedreadDesc"), icon: ZapIcon, emoji: "⚡", difficulty: t("games.intermediate"), free: false },
+    { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner"), free: false },
+    { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate"), free: false },
+    { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner"), free: false },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
     if (isLoggedIn) {
       const xp = await awardGameXp(gameId, score, totalRounds);
       if (xp && xp > 0) {
+        setXpFloat(xp);
         toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
       }
     } else {
@@ -120,7 +136,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Create a free account to unlock all 13 games, save your XP, and build your daily streak.
+              Create a free account to unlock all 20 games, save your XP, and build your daily streak.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -151,6 +167,13 @@ const GamesPage = () => {
       case "counters": return <Suspense fallback={<GameFallback />}><CounterWordsGame onGameComplete={onComplete} /></Suspense>;
       case "kdrama": return <Suspense fallback={<GameFallback />}><KDramaQuizGame onGameComplete={onComplete} /></Suspense>;
       case "time": return <Suspense fallback={<GameFallback />}><TimeTellerGame onGameComplete={onComplete} /></Suspense>;
+      case "typekorean": return <Suspense fallback={<GameFallback />}><TypeKoreanGame onGameComplete={onComplete} /></Suspense>;
+      case "romanization": return <Suspense fallback={<GameFallback />}><RomanizationGame onGameComplete={onComplete} /></Suspense>;
+      case "flashcard": return <Suspense fallback={<GameFallback />}><FlashcardGame onGameComplete={onComplete} /></Suspense>;
+      case "speedread": return <Suspense fallback={<GameFallback />}><SpeedReadGame onGameComplete={onComplete} /></Suspense>;
+      case "readingchoice": return <Suspense fallback={<GameFallback />}><ReadingChoiceGame onGameComplete={onComplete} /></Suspense>;
+      case "sentenceread": return <Suspense fallback={<GameFallback />}><SentenceReadGame onGameComplete={onComplete} /></Suspense>;
+      case "phonics": return <Suspense fallback={<GameFallback />}><PhonicsReadGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };
@@ -190,7 +213,7 @@ const GamesPage = () => {
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 13</a>
+                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 20</a>
               </div>
             )}
 
@@ -345,6 +368,8 @@ const GamesPage = () => {
       </main>
       <Footer />
 
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
       {leaguePromotion && (
         <LeaguePromotionModal
           fromLeague={leaguePromotion.fromLeague}
@@ -373,7 +398,7 @@ const GamesPage = () => {
             <div className="space-y-2">
               {[
                 { icon: "⭐", text: "Save your XP and streak" },
-                { icon: "🔓", text: "Unlock all 13 Korean games" },
+                { icon: "🔓", text: "Unlock all 20 Korean games" },
                 { icon: "📊", text: "Track your learning progress" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">

@@ -7,7 +7,7 @@ import { XP_VALUES } from "@/constants/gamification";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
 import { BADGES } from "@/constants/gamification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +45,8 @@ const DailyQuizPage = () => {
 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { awardXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
+  const [xpFloat, setXpFloat] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -195,6 +196,7 @@ const DailyQuizPage = () => {
     const xpEarned = XP_VALUES.challenge;
 
     await awardXp(0, "challenge");
+    setXpFloat(xpEarned);
 
     setResult({
       score: correctCount,
@@ -396,6 +398,8 @@ const DailyQuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
       {leaguePromotion && (
         <LeaguePromotionModal
           fromLeague={leaguePromotion.fromLeague}
