@@ -36,6 +36,44 @@ interface AgentReport {
   alt_text?: AltTextAgentResult;
   content?: ContentAgentResult;
   marketing?: MarketingAgentResult;
+  internal_links?: InternalLinkingResult;
+}
+
+// ── Portfolio-level results (not per-post) ────────────────────────────────────
+
+interface TopicGapResult {
+  recommended_articles: RecommendedArticle[];
+  cannibalization_warnings: CannibalizationWarning[];
+  topic_clusters: TopicCluster[];
+}
+
+interface RecommendedArticle {
+  title: string;
+  slug: string;
+  target_keyword: string;
+  search_intent: "informational" | "navigational" | "transactional";
+  article_type: string;
+  priority: "high" | "medium" | "low";
+  reason: string;
+}
+
+interface CannibalizationWarning {
+  post_slugs: string[];
+  shared_keyword: string;
+  recommendation: string;
+}
+
+interface TopicCluster {
+  cluster_name: string;
+  pillar_slug: string | null;
+  supporting_slugs: string[];
+  gap: string | null;
+}
+
+interface InternalLinkingResult {
+  links_to_posts: Array<{ target_slug: string; anchor_text: string }>;
+  links_to_pages: Array<{ url: string; anchor_text: string }>;
+  missing_link_score: number; // 0-10 (10 = great, 0 = no internal links)
 }
 
 interface SeoAgentResult {
@@ -83,6 +121,8 @@ interface OrchestratorSummary {
   avg_seo_score: number | null;
   posts_needing_work: number;
   fixes_applied: number;
+  topic_gaps_found: number;
+  cannibalization_warnings: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -417,6 +457,154 @@ ${JSON.stringify(input)}`;
   return results;
 }
 
+// ── Agent: Topic Cluster (portfolio-level, 1 AI call for all posts) ───────────
+// Analyzes the full content portfolio at once to find gaps, overlaps, clusters
+
+async function runTopicClusterAgent(
+  posts: BlogPost[],
+  apiKey: string
+): Promise<TopicGapResult | null> {
+  if (posts.length === 0) return null;
+
+  // Only English posts for topic gap analysis (Arabic are translations)
+  const enPosts = posts.filter((p) => p.lang === "en");
+
+  const input = enPosts.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    keywords: (p.keywords ?? []).slice(0, 4),
+    article_type: p.article_type ?? "longform",
+    headings: extractHeadings(p.content ?? "").slice(0, 5),
+  }));
+
+  const prompt = `You are an SEO content strategist for Klovers, a Korean language learning platform targeting Arabic speakers and K-drama fans (primarily Egyptian/Middle East market).
+
+Analyze this existing blog portfolio and provide:
+
+1. **recommended_articles**: 6 high-value articles the site is MISSING. Focus on:
+   - High-search-volume Korean learning topics for Arabic/Egyptian learners
+   - K-drama and K-pop adjacent content
+   - TOPIK exam preparation
+   - Korean culture and travel
+   - Topics that fill clear gaps in the current portfolio
+
+2. **cannibalization_warnings**: Any 2 posts that target the same keyword and compete with each other (if any found)
+
+3. **topic_clusters**: Group existing posts into 3-4 thematic clusters. For each cluster, identify the pillar post (or null if missing) and note any content gap
+
+Return ONLY a JSON object with no markdown:
+{
+  "recommended_articles": [{
+    "title": "...",
+    "slug": "...",
+    "target_keyword": "...",
+    "search_intent": "informational",
+    "article_type": "howto",
+    "priority": "high",
+    "reason": "..."
+  }],
+  "cannibalization_warnings": [{
+    "post_slugs": ["slug1","slug2"],
+    "shared_keyword": "...",
+    "recommendation": "..."
+  }],
+  "topic_clusters": [{
+    "cluster_name": "...",
+    "pillar_slug": "...",
+    "supporting_slugs": ["..."],
+    "gap": "..."
+  }]
+}
+
+Existing articles:
+${JSON.stringify(input)}`;
+
+  const raw = await callAI(apiKey, prompt);
+  return parseJSON<TopicGapResult>(raw);
+}
+
+// ── Agent: Internal Linking (all posts in one call) ───────────────────────────
+// For each post, suggests 2-3 links to other posts and 1-2 links to core pages
+
+async function runInternalLinkingAgent(
+  posts: BlogPost[],
+  apiKey: string
+): Promise<Map<string, InternalLinkingResult>> {
+  const results = new Map<string, InternalLinkingResult>();
+  if (posts.length === 0) return results;
+
+  // Build compact index: slug → title + first heading
+  const index = posts.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    first_heading: extractHeadings(p.content ?? "")[0] ?? "",
+    keywords: (p.keywords ?? []).slice(0, 2),
+  }));
+
+  // For each post, check existing links in content (rough check)
+  const input = posts.map((p) => {
+    const content = p.content ?? "";
+    const existingLinks = (content.match(/\[([^\]]+)\]\(([^)]+)\)/g) ?? []).length;
+    return {
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      existing_link_count: existingLinks,
+      intro: firstNChars(content, 150),
+    };
+  });
+
+  const prompt = `You are an internal linking SEO specialist for Klovers, a Korean language learning platform.
+
+Given the article index and per-post data, suggest internal links for each post:
+- 2-3 links to OTHER posts in the index (use exact slugs)
+- 1-2 links to core site pages: /courses, /textbook, /placement-test, /pricing, /enroll-now
+- Anchor text must be natural and contextual (not "click here")
+- Score missing_link_score: 0-10 where 10 = article has great internal linking, 0 = no links at all
+
+Boost connectivity: posts about alphabet/hangul should link to textbook; grammar posts to courses; K-drama posts to other K-drama content.
+
+Article index:
+${JSON.stringify(index)}
+
+Per-post analysis:
+${JSON.stringify(input)}
+
+Return ONLY a JSON array with no markdown:
+[{
+  "id":"...",
+  "missing_link_score":4,
+  "links_to_posts":[
+    {"target_slug":"korean-grammar-sentence-structure","anchor_text":"Korean sentence structure guide"},
+    {"target_slug":"topik-exam-guide-2025","anchor_text":"prepare for the TOPIK exam"}
+  ],
+  "links_to_pages":[
+    {"url":"/placement-test","anchor_text":"take our free placement test"},
+    {"url":"/textbook","anchor_text":"our free Korean textbook"}
+  ]
+}]`;
+
+  const raw = await callAI(apiKey, prompt);
+  const parsed = parseJSON<Array<{
+    id: string;
+    missing_link_score: number;
+    links_to_posts: Array<{ target_slug: string; anchor_text: string }>;
+    links_to_pages: Array<{ url: string; anchor_text: string }>;
+  }>>(raw);
+
+  if (parsed) {
+    for (const item of parsed) {
+      results.set(item.id, {
+        missing_link_score: item.missing_link_score,
+        links_to_posts: item.links_to_posts ?? [],
+        links_to_pages: item.links_to_pages ?? [],
+      });
+    }
+  }
+
+  return results;
+}
+
 // ── Triage: decide which agents to run per post (zero AI cost) ────────────────
 
 interface TriageResult {
@@ -425,6 +613,7 @@ interface TriageResult {
   needsAltText: boolean;
   needsContent: boolean;
   needsMarketing: boolean;
+  needsInternalLinks: boolean;
 }
 
 function triagePost(post: BlogPost): TriageResult {
@@ -437,6 +626,10 @@ function triagePost(post: BlogPost): TriageResult {
 
   const wordCount = countWords(post.content ?? "");
 
+  // Check for existing internal links in content (rough heuristic)
+  const content = post.content ?? "";
+  const linkMatches = (content.match(/\[([^\]]+)\]\(([^)]+)\)/g) ?? []).length;
+
   return {
     needsSeo: (post.seo_score ?? 0) < 70,
     needsKeyword: !keywordInTitle || keywords.length < 3,
@@ -446,6 +639,7 @@ function triagePost(post: BlogPost): TriageResult {
       (!!post.hero_image_2 && (!post.hero_alt_2 || post.hero_alt_2.trim().length < 10)),
     needsContent: wordCount < 800,
     needsMarketing: !post.cta_text || !post.cta_url,
+    needsInternalLinks: linkMatches < 2,
   };
 }
 
@@ -516,6 +710,7 @@ Deno.serve(async (req) => {
   const altTextQueue: BlogPost[] = [];
   const contentQueue: BlogPost[] = [];
   const marketingQueue: BlogPost[] = [];
+  const internalLinkQueue: BlogPost[] = [];
 
   for (const post of posts as BlogPost[]) {
     const t = triagePost(post);
@@ -525,6 +720,7 @@ Deno.serve(async (req) => {
     if (t.needsAltText) altTextQueue.push(post);
     if (t.needsContent) contentQueue.push(post);
     if (t.needsMarketing) marketingQueue.push(post);
+    if (t.needsInternalLinks) internalLinkQueue.push(post);
   }
 
   // ── 3. Run agents in parallel batches (max 5 posts per AI call) ─────────────
@@ -536,6 +732,7 @@ Deno.serve(async (req) => {
   const altTextResults = new Map<string, AltTextAgentResult>();
   const contentResults = new Map<string, ContentAgentResult>();
   const marketingResults = new Map<string, MarketingAgentResult>();
+  const internalLinkResults = new Map<string, InternalLinkingResult>();
 
   const errors: string[] = [];
 
@@ -557,12 +754,37 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Internal linking agent: pass ALL posts as context (single call), returns per-post results
+  async function runInternalLinking() {
+    if (internalLinkQueue.length === 0) return;
+    try {
+      const res = await runInternalLinkingAgent(posts as BlogPost[], apiKey!);
+      aiCallsMade++;
+      for (const [id, val] of res) internalLinkResults.set(id, val);
+    } catch (err: any) {
+      errors.push(`InternalLinking: ${err.message}`);
+    }
+  }
+
+  // Topic cluster: single portfolio-level call (always run)
+  let topicGapResult: TopicGapResult | null = null;
+  async function runTopicCluster() {
+    try {
+      topicGapResult = await runTopicClusterAgent(posts as BlogPost[], apiKey!);
+      aiCallsMade++;
+    } catch (err: any) {
+      errors.push(`TopicCluster: ${err.message}`);
+    }
+  }
+
   await Promise.all([
     runBatched(seoQueue, runSeoAnalyzerAgent, seoResults, "SeoAnalyzer"),
     runBatched(keywordQueue, runKeywordAgent, keywordResults, "KeywordAgent"),
     runBatched(altTextQueue, runAltTextAgent, altTextResults, "AltTextAgent"),
     runBatched(contentQueue, runContentQualityAgent, contentResults, "ContentAgent"),
     runBatched(marketingQueue, runMarketingAgent, marketingResults, "MarketingAgent"),
+    runInternalLinking(),
+    runTopicCluster(),
   ]);
 
   // ── 4. Assemble report ──────────────────────────────────────────────────────
@@ -574,6 +796,7 @@ Deno.serve(async (req) => {
     if (t.needsAltText && altTextResults.has(post.id)) agentsRun.push("alt_text");
     if (t.needsContent && contentResults.has(post.id)) agentsRun.push("content");
     if (t.needsMarketing && marketingResults.has(post.id)) agentsRun.push("marketing");
+    if (t.needsInternalLinks && internalLinkResults.has(post.id)) agentsRun.push("internal_links");
 
     return {
       id: post.id,
@@ -586,6 +809,7 @@ Deno.serve(async (req) => {
       alt_text: altTextResults.get(post.id),
       content: contentResults.get(post.id),
       marketing: marketingResults.get(post.id),
+      internal_links: internalLinkResults.get(post.id),
     };
   });
 
@@ -640,15 +864,24 @@ Deno.serve(async (req) => {
       (keywordQueue.length > 0 ? 1 : 0) +
       (altTextQueue.length > 0 ? 1 : 0) +
       (contentQueue.length > 0 ? 1 : 0) +
-      (marketingQueue.length > 0 ? 1 : 0),
+      (marketingQueue.length > 0 ? 1 : 0) +
+      (internalLinkQueue.length > 0 ? 1 : 0) +
+      1, // topic cluster always runs
     ai_calls_made: aiCallsMade,
     avg_seo_score: avgSeoScore,
     posts_needing_work: report.filter((r) => r.agents_run.length > 0).length,
     fixes_applied: fixesApplied,
+    topic_gaps_found: topicGapResult?.recommended_articles?.length ?? 0,
+    cannibalization_warnings: topicGapResult?.cannibalization_warnings?.length ?? 0,
   };
 
   return new Response(
-    JSON.stringify({ summary, report, errors: errors.length > 0 ? errors : undefined }),
+    JSON.stringify({
+      summary,
+      report,
+      topic_gaps: topicGapResult,
+      errors: errors.length > 0 ? errors : undefined,
+    }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });
