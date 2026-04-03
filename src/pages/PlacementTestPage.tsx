@@ -14,16 +14,16 @@ import { PLACEMENT_QUESTIONS, computePlacementResult, type PlacementResult } fro
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const QUESTIONS_PER_PAGE = 10;
+const QUESTIONS_PER_PAGE = 5;
 const TOTAL_PAGES = Math.ceil(PLACEMENT_QUESTIONS.length / QUESTIONS_PER_PAGE);
 
+// Keys match levelKey values returned by computePlacementResult
 const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string }> = {
-  A1: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our A1 class will teach you Hangul, basic greetings, and everyday words." },
-  A2: { emoji: "🌿", tagline: "Elementary", description: "You know some basics. Our A2 class builds simple sentences, numbers, and daily conversations." },
-  B1: { emoji: "📚", tagline: "Intermediate", description: "You can hold simple conversations. Our B1 class covers grammar patterns and real-life dialogues." },
-  B2: { emoji: "🎯", tagline: "Upper-Intermediate", description: "You're comfortable in Korean. Our B2 class dives into nuanced grammar and natural speech." },
-  C1: { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our C1 class polishes academic and professional Korean." },
-  C2: { emoji: "👑", tagline: "Mastery", description: "Near-native proficiency. Our C2 class refines complex expression and prepares you for TOPIK II." },
+  foundation: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words." },
+  level_1:    { emoji: "🌿", tagline: "Beginner (A1)", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations." },
+  level_2:    { emoji: "📚", tagline: "Elementary (A2)", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues." },
+  level_3:    { emoji: "🎯", tagline: "Intermediate (B1–B2)", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech." },
+  level_5:    { emoji: "🏆", tagline: "Advanced (C1–C2)", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II." },
 };
 
 const PlacementTestPage = () => {
@@ -133,7 +133,7 @@ const PlacementTestPage = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">{meta.description}</p>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span>Score: <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong></span>
+                  <span>Score: <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong> · TOPIK-aligned</span>
                 </div>
               </CardContent>
             </Card>
@@ -185,7 +185,7 @@ const PlacementTestPage = () => {
       <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Placement Test</h1>
-          <p className="text-muted-foreground">Answer all 40 questions to find your recommended Korean level.</p>
+          <p className="text-muted-foreground">Answer all 20 questions to find your recommended Korean level — aligned with the TOPIK exam.</p>
         </div>
 
         {/* Progress */}
@@ -203,7 +203,10 @@ const PlacementTestPage = () => {
             <Card key={q.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3 mb-4">
-                  <Badge variant="outline" className="shrink-0 text-xs">{q.section}</Badge>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <Badge variant="outline" className="text-xs">{q.section}</Badge>
+                    <Badge variant="secondary" className="text-[10px] font-normal">{q.level}</Badge>
+                  </div>
                   <p className="font-medium">
                     <span className="text-muted-foreground mr-2">Q{q.id}.</span>
                     {q.question}
