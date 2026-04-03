@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { useSEO } from "@/hooks/useSEO";
@@ -328,26 +328,14 @@ const StudentDashboard = () => {
             .eq("status", "APPROVED"),
         ]);
 
-        const dates: AttendanceDate[] = [];
-        if (adminRes.data) {
-          for (const r of adminRes.data) {
-            dates.push({ date: r.session_date, source: "Admin" });
-          }
-        }
-        if (pkgRes.data) {
-          for (const r of pkgRes.data) {
+        const dates: AttendanceDate[] = [
+          ...(adminRes.data || []).map(r => ({ date: r.session_date, source: "Admin" as const })),
+          ...(pkgRes.data || []).flatMap(r => {
             const sessions = r.pkg_group_sessions as { session_date: string } | null;
-            if (sessions?.session_date) {
-              dates.push({ date: sessions.session_date, source: "Group" });
-            }
-          }
-        }
-        if (selfRes.data) {
-          for (const r of selfRes.data) {
-            dates.push({ date: r.request_date, source: "Self" });
-          }
-        }
-        dates.sort((a, b) => a.date.localeCompare(b.date));
+            return sessions?.session_date ? [{ date: sessions.session_date, source: "Group" as const }] : [];
+          }),
+          ...(selfRes.data || []).map(r => ({ date: r.request_date, source: "Self" as const })),
+        ].sort((a, b) => a.date.localeCompare(b.date));
         setAttendanceDates(dates);
 
         // Fetch group membership
@@ -441,19 +429,19 @@ const StudentDashboard = () => {
 
   const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
 
-  const quickStats = [
-    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100" },
-    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100" },
-    { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100" },
-    { label: "League", value: league?.emoji ? `${league.emoji} ${league.name.split(" ")[0]}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100" },
-  ];
+  const quickStats = useMemo(() => [
+    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
+    { label: "League", value: league?.emoji ? `${league.emoji} ${league.name}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+  ], [gamification.totalXp, gamification.streak.current_streak, lessonsCompleted, league]);
 
-  const quickActions = [
-    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50" },
-    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50" },
-    { label: "Games", desc: "13 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50" },
-    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50" },
-  ];
+  const quickActions = useMemo(() => [
+    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
+    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
+    { label: "Games", desc: "13 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
+    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
+  ], []);
 
   const handleExportProgress = () => {
     const lines: string[] = [
@@ -515,13 +503,13 @@ const StudentDashboard = () => {
             const lastActive = gamification.streak.last_activity_date?.slice(0, 10);
             if (lastActive === today) return null;
             return (
-              <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm">
-                <span className="text-2xl">🔥</span>
+              <div className="flex items-center gap-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3 text-sm">
+                <span className="text-2xl animate-bounce">🔥</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-orange-800">Keep your {streak}-day streak alive!</p>
-                  <p className="text-orange-700 text-xs">Play a game or complete a lesson today before midnight.</p>
+                  <p className="font-semibold text-orange-800 dark:text-orange-300">Keep your {streak}-day streak alive!</p>
+                  <p className="text-orange-700 dark:text-orange-400 text-xs">Play a game or complete a lesson today before midnight.</p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 text-orange-800 hover:bg-orange-100" onClick={() => navigate("/games")}>
+                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30" onClick={() => navigate("/games")}>
                   Play now
                 </Button>
               </div>
@@ -582,6 +570,7 @@ const StudentDashboard = () => {
                 <button
                   key={label}
                   onClick={() => navigate(path)}
+                  aria-label={`${label}: ${desc}`}
                   className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-all ${color}`}
                 >
                   <div className="text-2xl mb-2">{emoji}</div>
@@ -692,7 +681,7 @@ const StudentDashboard = () => {
             if (done === total) return null;
             const pct = Math.round((done / total) * 100);
             return (
-              <div className="flex items-center gap-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl px-4 py-3">
                 <div className="relative w-10 h-10 shrink-0">
                   <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#fde68a" strokeWidth="3" />
@@ -702,10 +691,10 @@ const StudentDashboard = () => {
                   <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">{pct}%</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-amber-800 text-sm">Profile {pct}% complete</p>
-                  <p className="text-amber-700 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
+                  <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Complete your registration ({done}/{total} items)</p>
+                  <p className="text-amber-700 dark:text-amber-400 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 text-amber-800 hover:bg-amber-100" onClick={() => navigate("/dashboard?complete=name")}>
+                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30" onClick={() => navigate("/dashboard?complete=name")}>
                   Complete
                 </Button>
               </div>
@@ -764,7 +753,9 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamification.badges.length > 0 ? (
+                    {gamLoading ? (
+                      <BadgeGrid earnedBadges={[]} loading />
+                    ) : gamification.badges.length > 0 ? (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />
@@ -804,7 +795,9 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamification.badges.length > 0 ? (
+                    {gamLoading ? (
+                      <BadgeGrid earnedBadges={[]} loading />
+                    ) : gamification.badges.length > 0 ? (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />

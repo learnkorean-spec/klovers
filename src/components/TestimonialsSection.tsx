@@ -180,7 +180,7 @@ const TestimonialsSection = () => {
           </span>
         </a>
 
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-3">
           What Our Students Say
         </h2>
         <p className="text-muted-foreground max-w-xl mx-auto text-base">

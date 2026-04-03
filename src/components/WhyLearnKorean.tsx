@@ -13,7 +13,7 @@ const WhyLearnKorean = () => {
   const items = tArray("whyLearn", "items") as { title: string; description: string; icon: string }[];
 
   return (
-    <section className="py-20 md:py-32 bg-card">
+    <section className="py-20 md:py-28 bg-card">
       <div className="container mx-auto px-4">
 
         {/* Section header */}
