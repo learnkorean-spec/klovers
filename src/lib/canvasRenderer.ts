@@ -613,36 +613,37 @@ export function renderPost(
       ctx.fillText("Register Now →", pad + ctaW / 2, ctaY + ctaH * 0.67);
       ctx.textAlign = "left";
     } else {
-      // Fallback without mascot
+      // Fallback without mascot — use fixed safe zones
       ctx.save();
-      ctx.font = `900 ${h * 0.55}px serif`;
-      ctx.fillStyle = "rgba(0,0,0,0.07)";
+      ctx.font = `900 ${Math.round(h * 0.55)}px serif`;
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("한", w / 2, h * 0.5);
+      ctx.fillText("K", w / 2, h * 0.5);
+      ctx.textBaseline = "alphabetic";
       ctx.restore();
 
-      const pad = 54 * scale;
-      ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
+      const pad = 44 * scale;
+      ctx.font = `700 ${Math.round(18 * scale)}px 'Inter', sans-serif`;
       ctx.fillStyle = "#111111";
-      ctx.fillText("KLOVERS ACADEMY", pad, h * 0.18);
+      ctx.fillText("KLOVERS ACADEMY", pad, h * 0.155);
 
-      const hlSize = Math.min(80 * scale, (w - pad * 2) / 6);
-      ctx.font = `900 ${hlSize}px 'Inter', sans-serif`;
+      const hlSize = Math.min(88 * scale, (w - pad * 2) / 6);
+      ctx.font = `900 ${Math.round(hlSize)}px 'Inter', sans-serif`;
       ctx.fillStyle = "#111111";
-      wrapText(ctx, post.mainText, pad, h * 0.28, w - pad * 2, hlSize * 1.08, 2);
+      wrapText(ctx, post.mainText, pad, h * 0.27, w - pad * 2, Math.round(hlSize * 1.08), 2);
 
       if (post.subtitle) {
-        ctx.font = `400 ${15 * scale}px 'Inter', sans-serif`;
+        ctx.font = `400 ${Math.round(hlSize * 0.42)}px 'Inter', sans-serif`;
         ctx.fillStyle = "#333";
-        wrapText(ctx, post.subtitle, pad, h * 0.58, w - pad * 2, 22 * scale, 3);
+        wrapText(ctx, post.subtitle, pad, h * 0.60, w - pad * 2, Math.round(hlSize * 0.42 * 1.45), 3);
       }
 
-      const ctaH = 42 * scale, ctaW = 180 * scale;
-      const ctaY = h * 0.76;
+      const ctaH = Math.round(52 * scale), ctaW = Math.round(220 * scale);
+      const ctaY = h * 0.75;
       ctx.fillStyle = "#111111";
       rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
       ctx.fill();
-      ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
+      ctx.font = `700 ${Math.round(18 * scale)}px 'Inter', sans-serif`;
       ctx.fillStyle = "#FFFF00";
       ctx.textAlign = "center";
       ctx.fillText("Register Now →", pad + ctaW / 2, ctaY + ctaH * 0.67);
@@ -706,56 +707,58 @@ export function renderPost(
 
   if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 24 * scale; }
 
-  // Text layout — all positions FIXED as fractions of h
-  const pad    = 54 * scale;
-  const tLeft  = template === "editorial" ? w * 0.12 : pad;
-  const tW     = w - tLeft - pad;
+  // Text layout — all positions FIXED as fractions of h with proper safe zones
+  const pad    = 44 * scale;  // Standard 44px safe margin (4% of 1080px)
+  const tLeft  = template === "editorial" ? pad * 2 : pad;
+  const tW     = w - tLeft - pad;  // Ensure text never extends beyond right margin
   const eyeColor = isDark ? (template === "neon" ? c.accent : "#aaa") : "#1a1a1a";
 
-  // Eyebrow at FIXED h*0.18
+  // Eyebrow at FIXED h*0.155 (upper eyebrow zone)
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
   ctx.fillStyle = eyeColor;
-  ctx.font = `700 ${20 * scale}px 'Inter', sans-serif`;
-  ctx.fillText("KOREAN COURSE", tLeft, h * 0.18);
+  ctx.font = `700 ${Math.round(20 * scale)}px 'Inter', sans-serif`;
+  ctx.fillText("KOREAN COURSE", tLeft, h * 0.155);
   ctx.fillStyle = eyeColor;
-  ctx.fillRect(tLeft, h * 0.18 + 10 * scale, 56 * scale, 3 * scale);
+  ctx.fillRect(tLeft, h * 0.155 + 8 * scale, 44 * scale, 3 * scale);
 
   if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 18 * scale; }
 
-  // Headline at FIXED h*0.26 (max 2 lines)
-  const mSize = Math.min(isPortrait ? 88 * scale : 76 * scale, tW * (isPortrait ? 0.16 : 0.13));
-  ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+  // Headline at FIXED h*0.27 (well-separated from eyebrow, max 2 lines)
+  const mSize = Math.min(isPortrait ? 96 * scale : 80 * scale, tW * 0.15);
+  ctx.font = `900 ${Math.round(mSize)}px 'Inter', 'Segoe UI', sans-serif`;
   ctx.fillStyle = isDark ? "#fff" : "#1a1a1a";
-  wrapText(ctx, post.mainText, tLeft, h * 0.26, tW, mSize * 1.12, 2);
+  wrapText(ctx, post.mainText, tLeft, h * 0.27, tW, Math.round(mSize * 1.12), 2);
 
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
 
-  // Subtitle at FIXED h*0.58 — position never depends on headline
+  // Subtitle at FIXED h*0.60 — position never depends on headline
   if (post.subtitle) {
-    const sSize = mSize * 0.44;
+    const sSize = Math.round(mSize * 0.42);
     ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
     ctx.fillStyle = isDark ? "#bbb" : "#333";
-    wrapText(ctx, post.subtitle, tLeft, h * 0.58, tW, sSize * 1.45, 3);
+    wrapText(ctx, post.subtitle, tLeft, h * 0.60, tW, Math.round(sSize * 1.45), 3);
   }
 
-  // CTA pill at FIXED position
-  const ctaY  = h * (isPortrait ? 0.76 : 0.72);
+  // CTA pill at FIXED position (h*0.75)
+  const ctaH  = Math.round(52 * scale);
+  const ctaW  = Math.round(220 * scale);
+  const ctaY  = h * 0.75;
   const ctaBg = isDark ? c.accent : "#1a1a1a";
   ctx.fillStyle = ctaBg;
-  rRect(ctx, tLeft, ctaY, 182 * scale, 44 * scale, 22 * scale);
+  rRect(ctx, tLeft, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = `bold ${18 * scale}px 'Inter', sans-serif`;
+  ctx.font = `bold ${Math.round(18 * scale)}px 'Inter', sans-serif`;
   ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText("Register Now →", tLeft + 91 * scale, ctaY + 30 * scale);
-  ctx.textAlign = "start";
+  ctx.fillText("Register Now →", tLeft + ctaW / 2, ctaY + ctaH * 0.67);
+  ctx.textAlign = "left";
 
-  // Footer strip with hashtags
+  // Footer strip with hashtags (h*0.88–h*1.0)
   ctx.fillStyle = isDark ? "#111" : "#1a1a1a";
-  ctx.fillRect(0, h - 54 * scale, w, 54 * scale);
-  ctx.font = `bold ${16 * scale}px 'Inter', sans-serif`;
+  ctx.fillRect(0, h * 0.88, w, h * 0.12);
+  ctx.font = `bold ${Math.round(16 * scale)}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 20 * scale);
-  ctx.textAlign = "start";
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h * 0.94);
+  ctx.textAlign = "left";
 }
