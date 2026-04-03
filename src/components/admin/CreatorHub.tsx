@@ -484,7 +484,7 @@ export default function CreatorHub() {
   }, []);
 
   function generateMonthlyDrafts() {
-    if (!groups.length) { toast({ title: "No groups loaded", description: "Still loading class data…", variant: "destructive" }); return; }
+    if (groupsLoading) { toast({ title: "Loading class data…", description: "Please wait a moment and try again.", variant: "destructive" }); return; }
     const today = new Date();
     const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
     const recentTemplates: TemplateName[] = [];
