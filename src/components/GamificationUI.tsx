@@ -1,4 +1,5 @@
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LEAGUES, getLeague, getLeagueProgress, BADGES } from "@/constants/gamification";
 import { cn } from "@/lib/utils";
 import { Flame, Trophy, Star, Zap } from "lucide-react";
@@ -35,12 +36,15 @@ export function LeagueProgressBar({ totalXp }: { totalXp: number }) {
           <span className="text-2xl">{league.emoji}</span>
           <div>
             <p className="text-sm font-bold text-foreground">{league.name}</p>
-            <p className="text-xs text-muted-foreground">{totalXp} XP total</p>
+            <p className="text-xs text-muted-foreground">
+              {totalXp.toLocaleString()} XP · League {league.index + 1} of {LEAGUES.length}
+            </p>
           </div>
         </div>
         {nextLeague && (
-          <p className="text-xs text-muted-foreground">
-            {nextLeague.minXp - totalXp} XP to {nextLeague.name}
+          <p className="text-xs text-muted-foreground text-right">
+            {(nextLeague.minXp - totalXp).toLocaleString()} XP to<br />
+            <span className="font-medium">{nextLeague.emoji} {nextLeague.name}</span>
           </p>
         )}
       </div>
@@ -89,14 +93,30 @@ export function LeagueCard({ leagueKey, totalXp }: { leagueKey: string; totalXp:
 }
 
 // --- Streak Display ---
-export function StreakDisplay({ currentStreak, longestStreak }: { currentStreak: number; longestStreak: number }) {
+export function StreakDisplay({
+  currentStreak,
+  longestStreak,
+  isAtRisk = false,
+}: {
+  currentStreak: number;
+  longestStreak: number;
+  isAtRisk?: boolean;
+}) {
   return (
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-2">
-        <Flame className={cn("h-6 w-6", currentStreak > 0 ? "text-orange-500" : "text-muted-foreground")} />
+        <Flame className={cn(
+          "h-6 w-6 transition-colors",
+          isAtRisk ? "text-red-500 animate-pulse" :
+          currentStreak > 7 ? "text-orange-500" :
+          currentStreak > 0 ? "text-orange-400" :
+          "text-muted-foreground"
+        )} />
         <div>
           <p className="text-lg font-bold text-foreground">{currentStreak}</p>
-          <p className="text-xs text-muted-foreground">Day Streak</p>
+          <p className="text-xs text-muted-foreground">
+            {isAtRisk ? "⚠️ At risk today!" : "Day Streak"}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -111,7 +131,21 @@ export function StreakDisplay({ currentStreak, longestStreak }: { currentStreak:
 }
 
 // --- Badge Grid ---
-export function BadgeGrid({ earnedBadges }: { earnedBadges: string[] }) {
+export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: string[]; loading?: boolean }) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-border/50 p-3 space-y-2 animate-pulse">
+            <Skeleton className="h-8 w-8 mx-auto rounded-full" />
+            <Skeleton className="h-3 w-16 mx-auto rounded" />
+            <Skeleton className="h-2.5 w-12 mx-auto rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {BADGES.map((b) => {

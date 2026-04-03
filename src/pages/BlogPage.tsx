@@ -37,11 +37,11 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-700 border-blue-200",
-  listicle: "bg-green-100 text-green-700 border-green-200",
-  longform: "bg-purple-100 text-purple-700 border-purple-200",
-  news: "bg-red-100 text-red-700 border-red-200",
-  review: "bg-orange-100 text-orange-700 border-orange-200",
+  howto: "bg-blue-100 text-blue-800 border-blue-200",
+  listicle: "bg-green-100 text-green-800 border-green-200",
+  longform: "bg-purple-100 text-purple-800 border-purple-200",
+  news: "bg-red-100 text-red-800 border-red-200",
+  review: "bg-orange-100 text-orange-800 border-orange-200",
 };
 
 const BlogPage = () => {
@@ -111,10 +111,10 @@ const BlogPage = () => {
             <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
               {language === "ar" ? "📝 المدونة" : "📝 Blog"}
             </Badge>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
               {language === "ar" ? "مدونة K-Lovers" : "K-Lovers Blog"}
             </h1>
-            <p className="text-foreground/60 max-w-xl mx-auto text-lg leading-relaxed">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
               {language === "ar"
                 ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية."
                 : "Tips, guides, and insights for your Korean learning journey."}

@@ -172,10 +172,10 @@ const GamesPage = () => {
               <Gamepad2 className="h-4 w-4" />
               {t("games.learnPlay")}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">
               {t("games.title")}
             </h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
               {t("games.subtitle").replace("{count}", String(games.length))}
             </p>
 

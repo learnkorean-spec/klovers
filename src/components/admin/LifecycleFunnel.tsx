@@ -12,10 +12,10 @@ interface FunnelProps {
 }
 
 const stages = [
-  { key: "leads", label: "Leads", icon: UserPlus, accent: "bg-blue-500", light: "bg-blue-500/10", text: "text-blue-600" },
-  { key: "registered", label: "Registered", icon: Users, accent: "bg-indigo-500", light: "bg-indigo-500/10", text: "text-indigo-600" },
-  { key: "enrolled", label: "Enrolled", icon: CreditCard, accent: "bg-amber-500", light: "bg-amber-500/10", text: "text-amber-600" },
-  { key: "active", label: "Active", icon: GraduationCap, accent: "bg-emerald-500", light: "bg-emerald-500/10", text: "text-emerald-600" },
+  { key: "leads", label: "Leads", icon: UserPlus, accent: "bg-blue-500", light: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+  { key: "registered", label: "Registered", icon: Users, accent: "bg-indigo-500", light: "bg-indigo-500/10", text: "text-indigo-600 dark:text-indigo-400" },
+  { key: "enrolled", label: "Enrolled", icon: CreditCard, accent: "bg-amber-500", light: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  { key: "active", label: "Active", icon: GraduationCap, accent: "bg-emerald-500", light: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
   { key: "completed", label: "Completed", icon: Award, accent: "bg-primary", light: "bg-primary/10", text: "text-primary" },
 ];
 
