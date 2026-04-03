@@ -239,11 +239,11 @@ const PlacementTestPage = () => {
 
           {/* Stats */}
           <div className="flex gap-3 mb-6 text-sm flex-wrap">
-            <span className="flex items-center gap-1.5 bg-green-500/10 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full font-medium">
+            <span className="flex items-center gap-1.5 bg-green-500/10 text-green-800 dark:text-green-300 px-3 py-1.5 rounded-full font-medium">
               <span className="h-2 w-2 rounded-full bg-green-500 inline-block" /> {totalAnswered} answered
             </span>
             {totalSkipped > 0 && (
-              <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-full font-medium">
+              <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-800 dark:text-amber-300 px-3 py-1.5 rounded-full font-medium">
                 <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" /> {totalSkipped} skipped
               </span>
             )}
@@ -271,8 +271,8 @@ const PlacementTestPage = () => {
                             onClick={() => { setPage(Math.floor((q.id - 1) / QUESTIONS_PER_PAGE)); setPhase("test"); }}
                             className={[
                               "rounded-lg border text-sm font-semibold py-2.5 transition-colors",
-                              st === "answered"   ? "bg-green-500/15 border-green-500/30 text-green-700 dark:text-green-400 hover:bg-green-500/25" : "",
-                              st === "skipped"    ? "bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/25" : "",
+                              st === "answered"   ? "bg-green-500/15 border-green-500/30 text-green-800 dark:text-green-300 hover:bg-green-500/25" : "",
+                              st === "skipped"    ? "bg-amber-500/15 border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25" : "",
                               st === "unanswered" ? "bg-muted/60 border-border text-muted-foreground hover:bg-muted" : "",
                             ].join(" ")}
                           >
@@ -306,10 +306,10 @@ const PlacementTestPage = () => {
     const meta = LEVEL_META[result.levelKey] ?? { emoji: "🎓", tagline: "Your Level", description: "Ready to start your Korean journey?" };
 
     const confidenceChip = result.confidence === "solid"
-      ? { label: "Confident placement", color: "bg-green-500/10 text-green-700 dark:text-green-400" }
+      ? { label: "Confident placement", color: "bg-green-500/10 text-green-800 dark:text-green-300" }
       : result.confidence === "borderline-up"
-      ? { label: `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-amber-500/10 text-amber-700 dark:text-amber-400" }
-      : { label: `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-700 dark:text-amber-400" };
+      ? { label: `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" }
+      : { label: `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" };
 
     // Section breakdown (5 Vocab, 10 Grammar, 5 Reading)
     const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 5 };
@@ -472,8 +472,8 @@ const PlacementTestPage = () => {
                       <div className="flex items-start gap-2 mb-2">
                         <span className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded ${
                           wasSkipped ? "bg-muted text-muted-foreground" :
-                          isCorrect  ? "bg-green-500/15 text-green-700 dark:text-green-400" :
-                                       "bg-red-500/15 text-red-700 dark:text-red-400"
+                          isCorrect  ? "bg-green-500/15 text-green-800 dark:text-green-300" :
+                                       "bg-red-500/15 text-red-800 dark:text-red-300"
                         }`}>
                           {wasSkipped ? "—" : isCorrect ? "✓" : "✗"}
                         </span>
@@ -483,11 +483,11 @@ const PlacementTestPage = () => {
                       {!wasSkipped && (
                         <div className="ml-7 text-xs space-y-1 mb-2">
                           {!isCorrect && (
-                            <p className="text-red-600 dark:text-red-400">
+                            <p className="text-red-700 dark:text-red-300">
                               Your answer: {q.options[userAnswer] ?? "—"}
                             </p>
                           )}
-                          <p className="text-green-700 dark:text-green-400 font-medium">
+                          <p className="text-green-800 dark:text-green-300 font-medium">
                             Correct: {q.options[q.correctIndex]}
                           </p>
                         </div>
@@ -524,14 +524,14 @@ const PlacementTestPage = () => {
             <span className="flex items-center gap-2">
               Section {page + 1} of {TOTAL_PAGES}
               {elapsedSeconds > 0 && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground/60">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Timer className="h-3 w-3" />{formatTime(elapsedSeconds)}
                 </span>
               )}
             </span>
             <span className="flex items-center gap-2 text-xs">
-              <span className="text-green-600 dark:text-green-400 font-medium">{totalAnswered} answered</span>
-              {totalSkipped > 0 && <span className="text-amber-500 font-medium">{totalSkipped} skipped</span>}
+              <span className="text-green-800 dark:text-green-300 font-medium">{totalAnswered} answered</span>
+              {totalSkipped > 0 && <span className="text-amber-800 dark:text-amber-300 font-medium">{totalSkipped} skipped</span>}
               {totalRemaining > 0 && <span>{totalRemaining} left</span>}
             </span>
           </div>
