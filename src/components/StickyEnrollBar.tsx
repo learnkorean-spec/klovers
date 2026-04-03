@@ -37,7 +37,7 @@ const StickyEnrollBar = () => {
       role="complementary"
       aria-label="Enrollment call to action"
     >
-      <div className="bg-black border-t border-primary/40 px-4 py-3 flex items-center justify-between gap-3 max-w-4xl mx-auto">
+      <div className="bg-black border-t border-primary/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 max-w-4xl mx-auto">
         {/* Left: text */}
         <div className="flex items-center gap-3 min-w-0">
           <span className="text-primary text-lg flex-shrink-0">🇰🇷</span>
