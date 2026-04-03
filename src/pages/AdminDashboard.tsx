@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2 } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2, Image } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +49,7 @@ const SessionAttendanceManager = lazy(() => import("@/components/admin/SessionAt
 const StudentHealthPanel = lazy(() => import("@/components/admin/StudentHealthPanel"));
 const PromoCodesManager = lazy(() => import("@/components/admin/PromoCodesManager"));
 const SeoOrchestrationPanel = lazy(() => import("@/components/admin/SeoOrchestrationPanel"));
+const ImageAuditPanel = lazy(() => import("@/components/admin/ImageAuditPanel"));
 
 const TabLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -902,6 +903,9 @@ const AdminDashboard = () => {
                 <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
                 <TabsTrigger value="seo-orchestration" className={TAB_CLS}>
                   <Sparkles className="h-3.5 w-3.5" /> SEO AI
+                </TabsTrigger>
+                <TabsTrigger value="image-audit" className={TAB_CLS}>
+                  <Image className="h-3.5 w-3.5" /> Images
                 </TabsTrigger>
                 <TabsTrigger value="campaigns" className={TAB_CLS}>
                   <Mail className="h-3.5 w-3.5" /> Campaigns
@@ -1916,6 +1920,11 @@ const AdminDashboard = () => {
             {/* SEO ORCHESTRATION TAB */}
             <TabsContent value="seo-orchestration">
               <SeoOrchestrationPanel />
+            </TabsContent>
+
+            {/* IMAGE AUDIT TAB */}
+            <TabsContent value="image-audit">
+              <ImageAuditPanel />
             </TabsContent>
 
             {/* CAMPAIGNS TAB */}
