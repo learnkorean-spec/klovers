@@ -91,54 +91,57 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // ── Faint 한 watermark ──
+  // ── Decorative faint "K" watermark (latin — always renders) ──
   ctx.save();
-  ctx.font = `900 ${Math.round(h * 0.52)}px serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.055)";
+  ctx.font = `900 ${Math.round(h * 0.60)}px 'Inter', 'Segoe UI Black', sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.045)";
   ctx.textAlign = "right";
-  ctx.fillText("한", w - 12 * S, h * 0.80);
+  ctx.textBaseline = "bottom";
+  ctx.fillText("K", w + 10 * S, h * 0.86);
+  ctx.textBaseline = "alphabetic";
   ctx.restore();
 
   // ── Black top bar ──
   ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, w, topH);
-  ctx.font = `700 ${20 * S}px 'Inter', sans-serif`;
+  ctx.font = `700 ${Math.round(20 * S)}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText("KLOVERS KOREAN ACADEMY", w / 2, topH * 0.70);
+  ctx.fillText("KLOVERS KOREAN ACADEMY", w / 2, topH * 0.72);
   ctx.textAlign = "left";
 
-  // ── K circle badge top-right of content zone ──
-  const bR = 28 * S;
+  // ── Eyebrow zone (h*0.09 – h*0.21) — clearly above headline ──
+  const eyeY = h * 0.155;
+  ctx.font = `700 ${Math.round(16 * S)}px 'Inter', sans-serif`;
+  ctx.fillStyle = "#111111";
+  ctx.fillText("KOREAN COURSE", pad, eyeY);
+  ctx.fillRect(pad, eyeY + 6 * S, 44 * S, 3 * S);
+
+  // ── K circle badge — right-aligned, same eyebrow zone ──
+  const bR = 30 * S;
   const bx = w - pad - bR;
-  const by = topH + 40 * S + bR;
+  const by = h * 0.155;
   ctx.fillStyle = "#111111";
   ctx.beginPath(); ctx.arc(bx, by, bR, 0, Math.PI * 2); ctx.fill();
-  ctx.font = `900 ${18 * S}px 'Inter', sans-serif`;
+  ctx.font = `900 ${Math.round(22 * S)}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText("K", bx, by);
   ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
 
-  // ── Eyebrow ──
-  ctx.font = `600 ${18 * S}px 'Inter', sans-serif`;
-  ctx.fillStyle = "#111111";
-  ctx.fillText("KOREAN COURSE", pad, topH + 36 * S);
-  ctx.fillRect(pad, topH + 42 * S, 40 * S, 2 * S);
-
-  // ── ATTENTION: Massive headline (FIXED start, max 2 lines) ──
-  const hlMax = w - pad * 2 - bR * 2 - 20 * S;
-  const hlSize = Math.min(90 * S, hlMax / 5.5);
+  // ── ATTENTION: Massive headline — starts at h*0.27, well below eyebrow ──
+  const hlMax = w - pad * 2;
+  const hlSize = Math.min(96 * S, hlMax / 5.2);
   ctx.font = `900 ${hlSize}px 'Inter', 'Segoe UI Black', sans-serif`;
   ctx.fillStyle = "#111111";
-  wrapText(ctx, post.mainText, pad, topH + 72 * S, hlMax, hlSize * 1.08, 2);
+  wrapText(ctx, post.mainText, pad, h * 0.27, hlMax, hlSize * 1.10, 2);
 
   // ── Divider (FIXED) ──
   ctx.fillStyle = "#111111";
   ctx.fillRect(pad, h * 0.57, 44 * S, 3 * S);
 
-  // ── Subtitle (FIXED zone — never computed from headline) ──
-  ctx.font = `400 ${26 * S}px 'Inter', sans-serif`;
+  // ── Subtitle (FIXED zone) ──
+  ctx.font = `400 ${Math.round(26 * S)}px 'Inter', sans-serif`;
   ctx.fillStyle = "#222222";
   wrapText(ctx, post.subtitle, pad, h * 0.615, w - pad * 2, 34 * S, 3);
 
@@ -147,19 +150,19 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.fillRect(0, botY, w, botH);
 
   // ── Yellow CTA pill ──
-  const ctaH = 52 * S, ctaW = 210 * S;
+  const ctaH = 52 * S, ctaW = 220 * S;
   const ctaY = botY + (botH - ctaH) * 0.38;
   ctx.fillStyle = "#FFFF00";
   rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
+  ctx.font = `700 ${Math.round(18 * S)}px 'Inter', sans-serif`;
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
   ctx.fillText("Register Now →", pad + ctaW / 2, ctaY + ctaH * 0.67);
   ctx.textAlign = "left";
 
   // ── Website ──
-  ctx.font = `400 ${14 * S}px 'Inter', sans-serif`;
+  ctx.font = `400 ${Math.round(14 * S)}px 'Inter', sans-serif`;
   ctx.fillStyle = "rgba(255,255,0,0.5)";
   ctx.textAlign = "right";
   ctx.fillText("kloversegy.com", w - pad, botY + botH * 0.80);
