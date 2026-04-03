@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
+import { Component, ReactNode, lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 // Lazy-load heavy tab components — each loads only when its tab is first opened
@@ -105,6 +105,30 @@ interface OverviewRow {
 const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
 
+// Error boundary for lazy-loaded tab components
+class TabErrorBoundary extends Component<
+  { name: string; children: ReactNode },
+  { error: boolean }
+> {
+  state = { error: false };
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <Card className="rounded-2xl">
+          <CardContent className="py-12 text-center space-y-3">
+            <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
+            <p className="text-sm text-muted-foreground">
+              Failed to load <strong>{this.props.name}</strong>. Try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 
 const AdminDashboard = () => {
@@ -117,7 +141,11 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("confirmed");
   const [planFilter, setPlanFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [adminTab, setAdminTab] = useState("students");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const adminTab = searchParams.get("tab") ?? "students";
+  const setAdminTab = useCallback((tab: string) => {
+    setSearchParams({ tab }, { replace: true });
+  }, [setSearchParams]);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [sendingReminder, setSendingReminder] = useState<Set<string>>(new Set());
   const [sendingNameEmails, setSendingNameEmails] = useState(false);
@@ -131,6 +159,8 @@ const AdminDashboard = () => {
   const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "", dir: "asc" });
   const [leadsSort, setLeadsSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "created_at", dir: "desc" });
   const [leadsError, setLeadsError] = useState<string | null>(null);
+  const [leadsPage, setLeadsPage] = useState(0);
+  const [quickStatusLeadId, setQuickStatusLeadId] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
@@ -513,6 +543,9 @@ const AdminDashboard = () => {
       return leadsSort.dir === "asc" ? cmp : -cmp;
     });
   }, [filtered, leadsSort]);
+
+  const leadsPageCount = Math.ceil(sortedLeads.length / PAGE_SIZE);
+  const pagedLeads = sortedLeads.slice(leadsPage * PAGE_SIZE, (leadsPage + 1) * PAGE_SIZE);
 
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
@@ -1069,14 +1102,32 @@ const AdminDashboard = () => {
                               {u.sessions_total > 0 ? (() => {
                                 const pct = Math.round(((u.sessions_total - u.sessions_remaining) / u.sessions_total) * 100);
                                 return (
-                                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${pct >= 80 ? "bg-green-100 text-green-700" : pct >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${pct >= 80 ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : pct >= 50 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"}`} aria-label={`${pct}% attendance`}>
                                     {pct}%
                                   </span>
                                 );
                               })() : <span className="text-muted-foreground">—</span>}
                             </TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.negative_sessions > 0 ? <span className="text-destructive">{u.negative_sessions}</span> : "—"}</TableCell>
-                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}</span> : "—"}</TableCell>
+                            <TableCell className="py-3 px-3 text-right font-mono" onClick={(e) => e.stopPropagation()}>
+                              {u.amount_due > 0 ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <a
+                                        href={`mailto:${u.email}?subject=Outstanding Balance - Klovers&body=Hi ${(u.name || "").split(" ")[0]},%0A%0AYou have an outstanding balance of ${u.currency === "EGP" ? "LE" : "$"}${Math.round(u.amount_due).toLocaleString()}. Please arrange payment at your earliest convenience.%0A%0ABest,%0AKlovers Team`}
+                                        className="inline-flex items-center gap-1 text-destructive hover:text-destructive/80 transition-colors text-xs font-semibold"
+                                        aria-label={`Send payment request to ${u.name}`}
+                                      >
+                                        {u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}
+                                        <Mail className="h-3 w-3 flex-shrink-0" />
+                                      </a>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Send payment request email</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : "—"}
+                            </TableCell>
                             <TableCell className="py-3 px-3">
                               <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.derived_status}</Badge>
                             </TableCell>
@@ -1510,9 +1561,9 @@ const AdminDashboard = () => {
                   <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+                      <Input placeholder="Search by name or email..." value={search} onChange={(e) => { setSearch(e.target.value); setLeadsPage(0); }} className="pl-9" />
                     </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setLeadsPage(0); }}>
                       <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Filter status" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="confirmed">Confirmed (Paid) ({confirmedEmails.size})</SelectItem>
@@ -1520,7 +1571,7 @@ const AdminDashboard = () => {
                         {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s} ({statusCounts[s] ?? 0})</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Select value={planFilter} onValueChange={setPlanFilter}>
+                    <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setLeadsPage(0); }}>
                       <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Plan type" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Plans</SelectItem>
@@ -1706,7 +1757,7 @@ const AdminDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedLeads.map((lead) => (
+                      {pagedLeads.map((lead) => (
                         <TableRow key={lead.id} className="group odd:bg-muted/30 hover:bg-muted/50 transition">
                           <TableCell className="py-3 px-3 font-medium">
                             {editingLeadId === lead.id ? (
@@ -1722,6 +1773,7 @@ const AdminDashboard = () => {
                                 <button
                                   className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
                                   onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); }}
+                                  aria-label="Copy email address"
                                 >
                                   <Copy className="h-3 w-3 text-muted-foreground" />
                                 </button>
@@ -1784,14 +1836,38 @@ const AdminDashboard = () => {
                                   {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                 </SelectContent>
                               </Select>
+                            ) : quickStatusLeadId === lead.id ? (
+                              <Select
+                                value={lead.status}
+                                onValueChange={async (v) => {
+                                  const { error } = await supabase.from("crm_leads").update({ status: v }).eq("id", lead.id);
+                                  if (!error) {
+                                    setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: v } : l));
+                                    toast({ title: "Status updated" });
+                                  }
+                                  setQuickStatusLeadId(null);
+                                }}
+                                open
+                                onOpenChange={(open) => { if (!open) setQuickStatusLeadId(null); }}
+                              >
+                                <SelectTrigger className="h-8 text-sm w-32"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
                             ) : (
-                              <Badge className={`text-xs border ${
-                                lead.status === "enrolled" ? "bg-green-100 text-green-700 border-green-200"
-                                : lead.status === "trial_booked" ? "bg-violet-100 text-violet-700 border-violet-200"
-                                : lead.status === "rejected" || lead.status === "lost" ? "bg-red-100 text-red-700 border-red-200"
-                                : lead.status === "contacted" ? "bg-blue-100 text-blue-700 border-blue-200"
-                                : "bg-muted text-muted-foreground border-border"
-                              }`}>
+                              <Badge
+                                className={`text-xs border cursor-pointer hover:opacity-80 transition-opacity ${
+                                  lead.status === "enrolled" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                                  : lead.status === "trial_booked" ? "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-800"
+                                  : lead.status === "rejected" || lead.status === "lost" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                                  : lead.status === "contacted" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                  : "bg-muted text-muted-foreground border-border"
+                                }`}
+                                onClick={() => setQuickStatusLeadId(lead.id)}
+                                title="Click to change status"
+                                aria-label={`Lead status: ${lead.status}. Click to change.`}
+                              >
                                 {lead.status === "trial_booked" ? "🎁 Trial Booked" : lead.status}
                               </Badge>
                             )}
@@ -1817,12 +1893,12 @@ const AdminDashboard = () => {
                                 </>
                               ) : (
                                 <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)} aria-label="Edit lead">
                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                   </Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete lead"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                       <AlertDialogHeader>
@@ -1843,6 +1919,21 @@ const AdminDashboard = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  {leadsPageCount > 1 && (
+                    <div className="flex items-center justify-between p-3 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        Page {leadsPage + 1} of {leadsPageCount} · {sortedLeads.length} leads
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={leadsPage === 0} onClick={() => setLeadsPage(p => p - 1)} aria-label="Previous page">
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={leadsPage >= leadsPageCount - 1} onClick={() => setLeadsPage(p => p + 1)} aria-label="Next page">
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : null}
                 </CardContent>
@@ -1853,7 +1944,11 @@ const AdminDashboard = () => {
             <TabsContent value="manage">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Manage Students</CardTitle></CardHeader>
-                <CardContent className="pt-0"><StudentManager /></CardContent>
+                <CardContent className="pt-0">
+                  <TabErrorBoundary name="Student Manager">
+                    <StudentManager />
+                  </TabErrorBoundary>
+                </CardContent>
               </Card>
             </TabsContent>
 
@@ -1862,9 +1957,11 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Promo Codes</CardTitle></CardHeader>
                 <CardContent className="pt-0">
-                  <Suspense fallback={<TabLoader />}>
-                    <PromoCodesManager />
-                  </Suspense>
+                  <TabErrorBoundary name="Promo Codes">
+                    <Suspense fallback={<TabLoader />}>
+                      <PromoCodesManager />
+                    </Suspense>
+                  </TabErrorBoundary>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1874,30 +1971,38 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Group Attendance</CardTitle></CardHeader>
                 <CardContent className="pt-0">
-                  <GroupAttendanceManager
-                    overviewRows={overviewRows}
-                    selectedStudentId={selectedStudentId}
-                    onStudentSelect={setSelectedStudentId}
-                    attendanceReqs={attendanceReqs}
-                    onAttendanceAction={handleAttendanceAction}
-                    onRevertAttendance={handleRevertAttendance}
-                    userGroupMap={userGroupMap}
-                    onUpdated={fetchAll}
-                  />
+                  <TabErrorBoundary name="Group Attendance">
+                    <GroupAttendanceManager
+                      overviewRows={overviewRows}
+                      selectedStudentId={selectedStudentId}
+                      onStudentSelect={setSelectedStudentId}
+                      attendanceReqs={attendanceReqs}
+                      onAttendanceAction={handleAttendanceAction}
+                      onRevertAttendance={handleRevertAttendance}
+                      userGroupMap={userGroupMap}
+                      onUpdated={fetchAll}
+                    />
+                  </TabErrorBoundary>
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* GROUP MATCHER TAB */}
             <TabsContent value="group-matcher">
-              <GroupMatcher />
+              <TabErrorBoundary name="Group Matcher">
+                <GroupMatcher />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* NOTIFICATIONS TAB */}
             <TabsContent value="notifications">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Notifications</CardTitle></CardHeader>
-                <CardContent className="pt-0"><AdminNotifications /></CardContent>
+                <CardContent className="pt-0">
+                  <TabErrorBoundary name="Notifications">
+                    <AdminNotifications />
+                  </TabErrorBoundary>
+                </CardContent>
               </Card>
             </TabsContent>
 
@@ -1905,14 +2010,20 @@ const AdminDashboard = () => {
             <TabsContent value="blog">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Blog Manager</CardTitle></CardHeader>
-                <CardContent className="pt-0"><BlogManager /></CardContent>
+                <CardContent className="pt-0">
+                  <TabErrorBoundary name="Blog Manager">
+                    <BlogManager />
+                  </TabErrorBoundary>
+                </CardContent>
               </Card>
             </TabsContent>
 
             {/* CAMPAIGNS TAB */}
             <TabsContent value="campaigns">
               <div className="space-y-6">
-                <BulkEmailManager />
+                <TabErrorBoundary name="Email Campaigns">
+                  <BulkEmailManager />
+                </TabErrorBoundary>
                 <Card className="rounded-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -1951,44 +2062,64 @@ const AdminDashboard = () => {
                     <CardTitle className="text-base">Scheduling Operations</CardTitle>
                     <p className="text-sm text-muted-foreground">Manage packages, groups, waitlists, and notifications.</p>
                   </CardHeader>
-                  <CardContent><SchedulingManager /></CardContent>
+                  <CardContent>
+                    <TabErrorBoundary name="Scheduling Manager">
+                      <SchedulingManager />
+                    </TabErrorBoundary>
+                  </CardContent>
                 </Card>
                 <Card className="rounded-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base">Schedule Preference Options</CardTitle>
                     <p className="text-sm text-muted-foreground">Edit the weekdays, time windows, and start date options shown to students during enrollment.</p>
                   </CardHeader>
-                  <CardContent><ScheduleOptionsManager /></CardContent>
+                  <CardContent>
+                    <TabErrorBoundary name="Schedule Options">
+                      <ScheduleOptionsManager />
+                    </TabErrorBoundary>
+                  </CardContent>
                 </Card>
               </div>
             </TabsContent>
 
             {/* PLACEMENT TESTS TAB */}
             <TabsContent value="placement-tests">
-              <PlacementTestsManager />
+              <TabErrorBoundary name="Placement Tests">
+                <PlacementTestsManager />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* TEACHER AVAILABILITY TAB */}
             <TabsContent value="availability">
-              <TeacherAvailabilityManager />
+              <TabErrorBoundary name="Teacher Availability">
+                <TeacherAvailabilityManager />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* STUDENT PREFERENCES TAB */}
             <TabsContent value="preferences">
-              <StudentPreferenceDashboard />
+              <TabErrorBoundary name="Student Preferences">
+                <StudentPreferenceDashboard />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* SALES ANALYTICS TAB */}
             <TabsContent value="sales">
-              <SalesAnalytics />
+              <TabErrorBoundary name="Sales Analytics">
+                <SalesAnalytics />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* SETTINGS TAB */}
             <TabsContent value="session-attendance">
-              <SessionAttendanceManager />
+              <TabErrorBoundary name="Session Attendance">
+                <SessionAttendanceManager />
+              </TabErrorBoundary>
             </TabsContent>
             <TabsContent value="settings">
-              <AdminSettings />
+              <TabErrorBoundary name="Settings">
+                <AdminSettings />
+              </TabErrorBoundary>
             </TabsContent>
           </Tabs>
           </Suspense>
