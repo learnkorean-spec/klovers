@@ -111,9 +111,11 @@ const PostPreview = memo(function PostPreview({ post, template, theme, size = 27
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
-    c.width = 1080; c.height = 1080;
+    // Render at display size so scale = 1.0, making fonts readable at any size
+    c.width = size;
+    c.height = size;
     renderPost(c, post, template, theme, "instagram");
-  }, [post.mainText, post.subtitle, post.extraText, template, theme]);
+  }, [post.mainText, post.subtitle, post.extraText, template, theme, size]);
   return <canvas ref={ref} style={{ width: size, height: size, display: "block" }} className="rounded-lg" />;
 });
 
