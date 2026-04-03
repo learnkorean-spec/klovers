@@ -16,7 +16,7 @@ import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
-import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration } from "@/components/XpAnimation";
 import { useGamification } from "@/hooks/useGamification";
 import { BADGES } from "@/constants/gamification";
 // Below-fold components — lazy loaded to keep initial paint fast
@@ -190,7 +190,7 @@ const ProfileCard = ({
 const StudentDashboard = () => {
   useSEO({ title: "My Dashboard", description: "Track your Korean learning progress, schedule, and achievements on Klovers.", canonical: "https://kloversegy.com/dashboard" });
   const { loading: gateLoading, resetBlocked } = useResetGate();
-  const { progress: gamification, league, loading: gamLoading, awardGameXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
+  const { progress: gamification, league, loading: gamLoading, awardGameXp, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -468,15 +468,15 @@ const StudentDashboard = () => {
 
   const quickStats = useMemo(() => [
     { label: "Total XP", rawValue: gamification.totalXp, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
-    { label: "Day Streak", rawValue: gamification.streak.current_streak, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Day Streak", rawValue: gamification.streak.current_streak, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
     { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
     { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
-  ], [gamification.totalXp, gamification.streak.current_streak, lessonsCompleted, league]);
+  ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league]);
 
   const quickActions = useMemo(() => [
     { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
     { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
-    { label: "Games", desc: "13 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
+    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
     { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
   ], []);
 
@@ -586,7 +586,7 @@ const StudentDashboard = () => {
 
           {/* ── Quick Stats (always visible) ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickStats.map(({ label, rawValue, icon: Icon, color }, idx) => {
+            {quickStats.map(({ label, rawValue, sub, icon: Icon, color }, idx) => {
               let displayValue: string;
               if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
               else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
@@ -606,6 +606,7 @@ const StudentDashboard = () => {
                       <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">{label}</p>
                         <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
+                        {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
                       </div>
                     </div>
                   </CardContent>
@@ -1048,6 +1049,7 @@ const StudentDashboard = () => {
         </div>
       </main>
       <Footer />
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
       {leaguePromotion && (
         <LeaguePromotionModal
           fromLeague={leaguePromotion.fromLeague}

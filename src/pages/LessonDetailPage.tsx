@@ -18,7 +18,7 @@ import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } f
 import { getWorldForLesson } from "@/constants/worlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MissionCompleteOverlay, XpFloatAnimation } from "@/components/XpAnimation";
+import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
 import { Progress } from "@/components/ui/progress";
 
 interface Lesson {
@@ -45,7 +45,7 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userId, progress, league, markSectionDone, awardXp, awardBadge } = useGamification();
+  const { userId, progress, league, markSectionDone, awardXp, awardBadge, streakCelebration, clearStreakCelebration } = useGamification();
   const { speakKorean, isSpeaking } = useSpeech();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
@@ -268,6 +268,7 @@ const LessonDetailPage = () => {
 
       {/* XP Float Animation */}
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
 
       {/* Mission Complete Overlay */}
       {showMissionComplete && (

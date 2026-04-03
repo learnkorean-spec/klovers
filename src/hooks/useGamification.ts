@@ -31,6 +31,7 @@ export function useGamification() {
   const [loading, setLoading] = useState(true);
   const [leaguePromotion, setLeaguePromotion] = useState<{ fromLeague: string; toLeague: string } | null>(null);
   const [newBadges, setNewBadges] = useState<string[]>([]);
+  const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -112,24 +113,36 @@ export function useGamification() {
       last_activity_date: today,
     };
 
-    if (newStreak >= 3) updates.streak_3_earned = true;
-    if (newStreak >= 7) updates.streak_7_earned = true;
-    if (newStreak >= 14) updates.streak_14_earned = true;
-    if (newStreak >= 30) updates.streak_30_earned = true;
+    // Award streak_bonus XP when streak continues (not reset)
+    if (wasYesterday) {
+      await supabase.from("student_xp").insert({
+        user_id: uid,
+        lesson_id: null,
+        activity_type: "streak_bonus",
+        xp_earned: XP_VALUES.streak_bonus,
+      });
+    }
 
-    const streakBadges = [
-      { threshold: 3, key: "streak_3" },
-      { threshold: 7, key: "streak_7" },
-      { threshold: 14, key: "streak_14" },
-      { threshold: 30, key: "streak_30" },
-    ];
+    const milestones = [
+      { threshold: 3, key: "streak_3", flag: "streak_3_earned" },
+      { threshold: 7, key: "streak_7", flag: "streak_7_earned" },
+      { threshold: 14, key: "streak_14", flag: "streak_14_earned" },
+      { threshold: 30, key: "streak_30", flag: "streak_30_earned" },
+    ] as const;
 
-    for (const sb of streakBadges) {
-      if (newStreak >= sb.threshold) {
+    let newMilestone = false;
+    for (const m of milestones) {
+      if (newStreak >= m.threshold) {
+        updates[m.flag] = true;
         await supabase.from("student_badges").upsert(
-          { user_id: uid, badge_key: sb.key },
+          { user_id: uid, badge_key: m.key },
           { onConflict: "user_id,badge_key" }
         );
+        // Trigger celebration only when this milestone is first crossed
+        if (!existing[m.flag] && !newMilestone) {
+          newMilestone = true;
+          setStreakCelebration(newStreak);
+        }
       }
     }
 
@@ -201,6 +214,15 @@ export function useGamification() {
           { user_id: userId, badge_key: "first_chapter" },
           { onConflict: "user_id,badge_key" }
         );
+        // Seoul Explorer — completing any K-Drama lesson
+        const { data: lessonMeta } = await supabase
+          .from("textbook_lessons")
+          .select("book")
+          .eq("id", lessonId)
+          .maybeSingle();
+        if (lessonMeta?.book === "kdrama") {
+          await awardBadge("seoul_explorer");
+        }
       }
     } else {
       await supabase.from("student_lesson_progress").insert({
@@ -330,6 +352,7 @@ export function useGamification() {
 
   const clearLeaguePromotion = useCallback(() => setLeaguePromotion(null), []);
   const clearNewBadges = useCallback(() => setNewBadges([]), []);
+  const clearStreakCelebration = useCallback(() => setStreakCelebration(null), []);
 
   const league = getLeague(progress.totalXp);
 
@@ -340,9 +363,11 @@ export function useGamification() {
     loading,
     leaguePromotion,
     newBadges,
+    streakCelebration,
     awardBadge,
     clearLeaguePromotion,
     clearNewBadges,
+    clearStreakCelebration,
     awardXp,
     awardGameXp,
     markSectionDone,
