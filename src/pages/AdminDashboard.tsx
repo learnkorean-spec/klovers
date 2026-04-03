@@ -177,6 +177,10 @@ const AdminDashboard = () => {
   const [bulkApproving, setBulkApproving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [copiedLeadId, setCopiedLeadId] = useState<string | null>(null);
+  const [contactedLeadIds, setContactedLeadIds] = useState<Set<string>>(new Set());
+  const [leadsSourceFilter, setLeadsSourceFilter] = useState("");
+  const [showOverdueOnly, setShowOverdueOnly] = useState(false);
+  const [referralStats, setReferralStats] = useState({ total: 0, thisMonth: 0 });
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -268,7 +272,7 @@ const AdminDashboard = () => {
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes, referralRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }).limit(200),
@@ -277,6 +281,7 @@ const AdminDashboard = () => {
       Promise.resolve({ data: [] }), // legacy student_groups — no longer used
       supabase.from("schedule_options").select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
       supabase.from("profiles").select("user_id, name, email, level, country"),
+      supabase.from("referral_conversions").select("converted_at"),
     ]);
 
     if (weekdaysRes.data && (weekdaysRes.data as any[]).length > 0) {
@@ -372,6 +377,15 @@ const AdminDashboard = () => {
       }));
     }
     if (overviewRes.data) setOverviewRows(overviewRes.data as any[]);
+    if (referralRes.data) {
+      const firstOfMonth = new Date();
+      firstOfMonth.setDate(1);
+      firstOfMonth.setHours(0, 0, 0, 0);
+      setReferralStats({
+        total: referralRes.data.length,
+        thisMonth: (referralRes.data as any[]).filter(r => new Date(r.converted_at) >= firstOfMonth).length,
+      });
+    }
     setUserGroupMap(_userGroupMap);
     setLoading(false);
   };
@@ -520,16 +534,22 @@ const AdminDashboard = () => {
     return emails;
   }, [overviewRows]);
 
+  const uniqueSources = useMemo(() =>
+    [...new Set(leads.map(l => l.source).filter(Boolean))] as string[],
+    [leads]
+  );
+
   const filtered = useMemo(() => {
     return leads.filter((l) => {
       const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
       const isConfirmed = l.status === "enrolled" || confirmedEmails.has(l.email.toLowerCase());
       const matchesPlan = planFilter === "all" || l.plan_type === planFilter;
-      if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan;
-      if (statusFilter === "all") return matchesSearch && matchesPlan;
-      return matchesSearch && l.status === statusFilter && matchesPlan;
+      const matchesSource = !leadsSourceFilter || l.source === leadsSourceFilter;
+      if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan && matchesSource;
+      if (statusFilter === "all") return matchesSearch && matchesPlan && matchesSource;
+      return matchesSearch && l.status === statusFilter && matchesPlan && matchesSource;
     });
-  }, [leads, search, statusFilter, planFilter, confirmedEmails]);
+  }, [leads, search, statusFilter, planFilter, confirmedEmails, leadsSourceFilter]);
 
   const statusCounts = useMemo(() =>
     leads.reduce((acc, l) => { acc[l.status] = (acc[l.status] || 0) + 1; return acc; }, {} as Record<string, number>),
@@ -899,6 +919,22 @@ const AdminDashboard = () => {
           />
 
           <StudentHealthPanel overviewRows={overviewRows} />
+
+          {/* Referral program stats */}
+          {referralStats.total > 0 && (
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-pink-100 dark:bg-pink-900/30 shrink-0">
+                <Tag className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Referral Program</p>
+                <p className="font-semibold text-sm text-foreground">
+                  {referralStats.total} total conversion{referralStats.total !== 1 ? "s" : ""}
+                  {referralStats.thisMonth > 0 && <span className="text-emerald-600 dark:text-emerald-400 ml-2">· +{referralStats.thisMonth} this month</span>}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Pending enrollments alert */}
           {actionableEnrollments > 0 && (
@@ -1315,9 +1351,20 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <Tabs defaultValue="under_review" onValueChange={() => setEnrollmentPage(0)}>
-                  <div className="relative mb-3">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search by name, email or plan…" value={enrollmentSearch} onChange={(e) => setEnrollmentSearch(e.target.value)} className="pl-9" />
+                  <div className="flex gap-2 mb-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Search by name, email or plan…" value={enrollmentSearch} onChange={(e) => setEnrollmentSearch(e.target.value)} className="pl-9" />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={showOverdueOnly ? "default" : "outline"}
+                      onClick={() => setShowOverdueOnly(v => !v)}
+                      className="shrink-0 gap-1.5"
+                    >
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {!isMobile && "Overdue only"}
+                    </Button>
                   </div>
                   {(() => {
                     const missing = enrollments.filter(e => e.currency === "EGP" && !e.payment_method && (e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW"));
@@ -1365,6 +1412,7 @@ const AdminDashboard = () => {
                       if (!matchesTab) return false;
                       const isActionable = e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW";
                       if (!showLegacyEnrollments && isLegacy(e) && !isActionable) return false;
+                      if (showOverdueOnly && !e.negative_since) return false;
                       if (enrollmentSearch) {
                         const q = enrollmentSearch.toLowerCase();
                         const name = e.profiles?.name?.toLowerCase() ?? "";
@@ -1420,7 +1468,17 @@ const AdminDashboard = () => {
                                     />
                                   )}
                                 <div className="space-y-1 flex-1">
-                                  <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
+                                    {e.negative_since && (() => {
+                                      const days = Math.max(0, Math.floor((Date.now() - new Date(e.negative_since).getTime()) / 86400000));
+                                      return (
+                                        <Badge variant="destructive" className="text-[10px] h-5 px-1.5 shrink-0">
+                                          Overdue {days}d
+                                        </Badge>
+                                      );
+                                    })()}
+                                  </div>
                                   <p className="text-sm text-muted-foreground">
                                     {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {e.currency === 'EGP' ? `${Math.round(e.amount).toLocaleString()} EGP` : `$${Math.round(e.amount)}`} · Ref: {e.tx_ref || '—'}
                                     {e.payment_method && <> · <span className="font-medium">{e.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : e.payment_method === 'instapay' ? 'InstaPay' : e.payment_method === 'bank_transfer' ? 'Bank Transfer' : e.payment_method}</span></>}
@@ -1716,6 +1774,15 @@ const AdminDashboard = () => {
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
+                    {uniqueSources.length > 0 && (
+                      <Select value={leadsSourceFilter} onValueChange={(v) => { setLeadsSourceFilter(v); setLeadsPage(0); }}>
+                        <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="All sources" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All sources</SelectItem>
+                          {uniqueSources.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )}
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleDeduplicateLeads}>
                       <Eraser className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Deduplicate</span>}
@@ -1771,14 +1838,19 @@ const AdminDashboard = () => {
                               <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeLabel}</span>
                             </div>
                             <div className="flex gap-1.5 shrink-0">
-                              <Button size="sm" variant="outline" className="h-7 px-2 text-xs"
+                              <Button size="sm" variant="outline" className={`h-7 px-2 text-xs ${contactedLeadIds.has(l.id) && copiedLeadId !== l.id ? "border-green-400 text-green-700 dark:text-green-400" : ""}`}
                                 onClick={() => {
                                   navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
                                   toast({ title: "Copied!", description: "Follow-up message copied to clipboard" });
+                                  setContactedLeadIds(prev => new Set(prev).add(l.id));
                                   setCopiedLeadId(l.id);
                                   setTimeout(() => setCopiedLeadId(id => id === l.id ? null : id), 1500);
                                 }}>
-                                {copiedLeadId === l.id ? <><Check className="h-3 w-3 mr-1 text-green-600" />Copied!</> : <><Copy className="h-3 w-3 mr-1" />Copy</>}
+                                {copiedLeadId === l.id
+                                  ? <><Check className="h-3 w-3 mr-1 text-green-600" />Copied!</>
+                                  : contactedLeadIds.has(l.id)
+                                    ? <><Check className="h-3 w-3 mr-1 text-green-600" />Sent ✓</>
+                                    : <><Copy className="h-3 w-3 mr-1" />Copy</>}
                               </Button>
                               <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
                                 <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${l.name.split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
