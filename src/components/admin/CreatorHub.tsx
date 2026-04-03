@@ -353,6 +353,7 @@ export default function CreatorHub() {
   const [editDraftText, setEditDraftText] = useState({ mainText: "", subtitle: "", extraText: "" });
   const [bulkDownloading, setBulkDownloading] = useState(false);
 
+  const groupPostsAdded = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activePost = posts[activeIndex] || posts[0];
 
@@ -443,6 +444,19 @@ export default function CreatorHub() {
           result.push({ id: g.id, name: g.name, level: pkg.level, day_name: DAY_NAMES[pkg.day_of_week] || "Unknown", start_time: fmt12(pkg.start_time), duration_min: pkg.duration_min, capacity: g.capacity, active_members: activeMembers, seats_left: seatsLeft, urgency_label: seatsLeft <= 2 ? "🔥 Last 2 seats" : seatsLeft <= 5 ? "⚡ Few seats" : "✅ Open", package_id: g.package_id });
         }
         setGroups(result);
+
+        // Prepend real open-slot announcements to the posts panel (once only)
+        if (!groupPostsAdded.current && result.length > 0) {
+          groupPostsAdded.current = true;
+          const urgencyIcon = (seats: number) => seats <= 2 ? "🔥" : seats <= 5 ? "⚡" : "✅";
+          const groupPosts: PostData[] = result.map(g => ({
+            id: uid(),
+            mainText: `${g.level} Korean — ${g.day_name} ${g.start_time}`,
+            subtitle: `${urgencyIcon(g.seats_left)} ${g.seats_left} seat${g.seats_left === 1 ? "" : "s"} left — Register now before it fills up!`,
+            extraText: "#OpenClass #LearnKorean #Klovers #" + g.day_name,
+          }));
+          setPosts(prev => [...groupPosts, ...prev]);
+        }
       } catch { /* silently fail */ }
       finally { setGroupsLoading(false); }
     })();
