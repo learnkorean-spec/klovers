@@ -11,19 +11,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { PLACEMENT_QUESTIONS, computePlacementResult, type PlacementResult } from "@/constants/placementQuestions";
-import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users } from "lucide-react";
+import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const QUESTIONS_PER_PAGE = 10;
+const QUESTIONS_PER_PAGE = 5;
 const TOTAL_PAGES = Math.ceil(PLACEMENT_QUESTIONS.length / QUESTIONS_PER_PAGE);
 
+// Keys match levelKey values returned by computePlacementResult
 const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string }> = {
-  A1: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our A1 class will teach you Hangul, basic greetings, and everyday words." },
-  A2: { emoji: "🌿", tagline: "Elementary", description: "You know some basics. Our A2 class builds simple sentences, numbers, and daily conversations." },
-  B1: { emoji: "📚", tagline: "Intermediate", description: "You can hold simple conversations. Our B1 class covers grammar patterns and real-life dialogues." },
-  B2: { emoji: "🎯", tagline: "Upper-Intermediate", description: "You're comfortable in Korean. Our B2 class dives into nuanced grammar and natural speech." },
-  C1: { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our C1 class polishes academic and professional Korean." },
-  C2: { emoji: "👑", tagline: "Mastery", description: "Near-native proficiency. Our C2 class refines complex expression and prepares you for TOPIK II." },
+  foundation: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words." },
+  level_1:    { emoji: "🌿", tagline: "Beginner (A1)", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations." },
+  level_2:    { emoji: "📚", tagline: "Elementary (A2)", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues." },
+  level_3:    { emoji: "🎯", tagline: "Intermediate (B1–B2)", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech." },
+  level_5:    { emoji: "🏆", tagline: "Advanced (C1–C2)", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II." },
 };
 
 const PlacementTestPage = () => {
@@ -33,6 +33,7 @@ const PlacementTestPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [skipped, setSkipped] = useState<Set<number>>(new Set());
   const [result, setResult] = useState<PlacementResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -60,9 +61,7 @@ const PlacementTestPage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUserId(session.user.id);
-      }
+      if (session) setUserId(session.user.id);
     };
     checkAuth();
   }, []);
@@ -72,20 +71,44 @@ const PlacementTestPage = () => {
     (page + 1) * QUESTIONS_PER_PAGE
   );
 
-  const answeredOnPage = currentQuestions.filter((q) => answers[q.id] !== undefined).length;
   const totalAnswered = Object.keys(answers).length;
-  const progressPercent = (totalAnswered / PLACEMENT_QUESTIONS.length) * 100;
+  const totalSkipped  = skipped.size;
+  const totalDone     = totalAnswered + totalSkipped;
+  const totalRemaining = PLACEMENT_QUESTIONS.length - totalDone;
+  const progressPercent = (totalDone / PLACEMENT_QUESTIONS.length) * 100;
+
+  const handleSkip = (id: number) => {
+    // Remove any existing answer and mark as skipped
+    setAnswers((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSkipped((prev) => new Set(prev).add(id));
+  };
+
+  const handleUnskip = (id: number) => {
+    setSkipped((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
 
   const handleSubmit = async () => {
-    if (totalAnswered < PLACEMENT_QUESTIONS.length) {
-      toast({ title: "Please answer all questions", description: `${PLACEMENT_QUESTIONS.length - totalAnswered} questions remaining.`, variant: "destructive" });
-      return;
+    // Warn if questions remain unattempted (not answered AND not skipped)
+    if (totalRemaining > 0) {
+      toast({
+        title: `${totalRemaining} question${totalRemaining > 1 ? "s" : ""} not yet attempted`,
+        description: "Skipped questions count as 0. Submitting now will use what you've answered.",
+      });
+      // Give them a moment to decide — second click submits
+      if (totalAnswered === 0) return; // nothing answered at all — block
     }
 
     const res = computePlacementResult(answers);
 
     if (!userId) {
-      // Not logged in — show result but prompt to sign up to save
       setResult(res);
       return;
     }
@@ -104,13 +127,11 @@ const PlacementTestPage = () => {
       return;
     }
 
-    // Update profile level
     await supabase.from("profiles").update({ level: res.levelKey }).eq("user_id", userId);
 
     setResult(res);
     setSubmitting(false);
   };
-
 
   if (result) {
     const meta = LEVEL_META[result.levelKey] ?? { emoji: "🎓", tagline: "Your Level", description: "Ready to start your Korean journey?" };
@@ -133,7 +154,7 @@ const PlacementTestPage = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">{meta.description}</p>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span>Score: <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong></span>
+                  <span>Score: <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong> · TOPIK-aligned</span>
                 </div>
               </CardContent>
             </Card>
@@ -185,45 +206,88 @@ const PlacementTestPage = () => {
       <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Placement Test</h1>
-          <p className="text-muted-foreground">Answer all 40 questions to find your recommended Korean level.</p>
+          <p className="text-muted-foreground">Answer or skip 20 questions to find your recommended Korean level — aligned with the TOPIK exam.</p>
         </div>
 
         {/* Progress */}
         <div className="mb-6 space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Page {page + 1} of {TOTAL_PAGES}</span>
-            <span>{totalAnswered} / {PLACEMENT_QUESTIONS.length} answered</span>
+            <span>Section {page + 1} of {TOTAL_PAGES} · <span className="font-medium text-foreground">{currentQuestions[0]?.level}</span></span>
+            <span className="flex items-center gap-2">
+              <span>{totalAnswered} answered</span>
+              {totalSkipped > 0 && (
+                <span className="text-amber-500">{totalSkipped} skipped</span>
+              )}
+              {totalRemaining > 0 && (
+                <span className="text-muted-foreground/60">{totalRemaining} left</span>
+              )}
+            </span>
           </div>
           <Progress value={progressPercent} className="h-2" />
         </div>
 
         {/* Questions */}
         <div className="space-y-6">
-          {currentQuestions.map((q, idx) => (
-            <Card key={q.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-4">
-                  <Badge variant="outline" className="shrink-0 text-xs">{q.section}</Badge>
-                  <p className="font-medium">
-                    <span className="text-muted-foreground mr-2">Q{q.id}.</span>
-                    {q.question}
-                  </p>
-                </div>
-                <RadioGroup
-                  value={answers[q.id]?.toString()}
-                  onValueChange={(val) => setAnswers((prev) => ({ ...prev, [q.id]: parseInt(val) }))}
-                  className="space-y-2 ml-1"
-                >
-                  {q.options.map((opt, oi) => (
-                    <div key={oi} className="flex items-center space-x-3">
-                      <RadioGroupItem value={oi.toString()} id={`q${q.id}-o${oi}`} />
-                      <Label htmlFor={`q${q.id}-o${oi}`} className="cursor-pointer text-sm">{opt}</Label>
+          {currentQuestions.map((q) => {
+            const isSkipped = skipped.has(q.id);
+            return (
+              <Card
+                key={q.id}
+                className={isSkipped ? "opacity-50 border-dashed" : undefined}
+              >
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <Badge variant="outline" className="text-xs">{q.section}</Badge>
+                      <Badge variant="secondary" className="text-[10px] font-normal">{q.level}</Badge>
                     </div>
-                  ))}
-                </RadioGroup>
-              </CardContent>
-            </Card>
-          ))}
+                    <p className="font-medium">
+                      <span className="text-muted-foreground mr-2">Q{q.id}.</span>
+                      {q.question}
+                    </p>
+                  </div>
+
+                  {isSkipped ? (
+                    <div className="flex items-center justify-between ml-1">
+                      <span className="text-sm text-muted-foreground italic">Skipped — counts as 0</span>
+                      <button
+                        onClick={() => handleUnskip(q.id)}
+                        className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+                      >
+                        <Undo2 className="h-3.5 w-3.5" />
+                        Answer this question
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <RadioGroup
+                        value={answers[q.id]?.toString()}
+                        onValueChange={(val) => setAnswers((prev) => ({ ...prev, [q.id]: parseInt(val) }))}
+                        className="space-y-2 ml-1"
+                      >
+                        {q.options.map((opt, oi) => (
+                          <div key={oi} className="flex items-center space-x-3">
+                            <RadioGroupItem value={oi.toString()} id={`q${q.id}-o${oi}`} />
+                            <Label htmlFor={`q${q.id}-o${oi}`} className="cursor-pointer text-sm">{opt}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+
+                      <div className="mt-4 ml-1">
+                        <button
+                          onClick={() => handleSkip(q.id)}
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <SkipForward className="h-3.5 w-3.5" />
+                          Skip this question
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Navigation */}
@@ -241,7 +305,7 @@ const PlacementTestPage = () => {
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={submitting}>
+            <Button onClick={handleSubmit} disabled={submitting || totalAnswered === 0}>
               {submitting ? "Submitting…" : "Submit Test"}
             </Button>
           )}

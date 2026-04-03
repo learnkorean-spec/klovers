@@ -24,11 +24,11 @@ interface BlogPost {
 const TYPE_LABEL: Record<string, string> = { howto: "How-To", listicle: "Listicle", longform: "Article", news: "News", review: "Review" };
 const TYPE_LABEL_AR: Record<string, string> = { howto: "كيفية", listicle: "قائمة", longform: "مقال", news: "أخبار", review: "مراجعة" };
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-700 border-blue-200",
-  listicle: "bg-green-100 text-green-700 border-green-200",
-  longform: "bg-purple-100 text-purple-700 border-purple-200",
-  news: "bg-red-100 text-red-700 border-red-200",
-  review: "bg-orange-100 text-orange-700 border-orange-200",
+  howto: "bg-blue-100 text-blue-800 border-blue-200",
+  listicle: "bg-green-100 text-green-800 border-green-200",
+  longform: "bg-purple-100 text-purple-800 border-purple-200",
+  news: "bg-red-100 text-red-800 border-red-200",
+  review: "bg-orange-100 text-orange-800 border-orange-200",
 };
 
 function readingTime(desc: string) {
@@ -62,17 +62,17 @@ const HomeBlogSection = () => {
   const labels = isAr ? TYPE_LABEL_AR : TYPE_LABEL;
 
   return (
-    <section className="py-16 bg-background">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-muted border border-border px-4 py-2 rounded-full text-sm font-medium mb-4">
             <BookOpen className="h-4 w-4" />
             {isAr ? "📝 المدونة" : "📝 Blog"}
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-2">
             {isAr ? "أحدث المقالات" : "Latest from Our Blog"}
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-sm">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
             {isAr ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية." : "Tips, guides, and insights for your Korean learning journey."}
           </p>
         </div>

@@ -8,7 +8,7 @@ const WhatsAppButton = () => (
     target="_blank"
     rel="noopener noreferrer"
     aria-label="Chat with us on WhatsApp"
-    className="fixed bottom-20 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-lg hover:bg-[#1ebe5d] hover:scale-105 active:scale-95 transition-all duration-200"
+    className="fixed bottom-24 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-lg hover:bg-[#1ebe5d] hover:scale-105 active:scale-95 transition-all duration-200"
   >
     {/* WhatsApp SVG icon */}
     <svg viewBox="0 0 32 32" fill="white" className="w-7 h-7" aria-hidden="true">

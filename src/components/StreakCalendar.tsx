@@ -117,11 +117,11 @@ export function StreakCalendar() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-orange-500" />
+            <Flame className="h-5 w-5 text-orange-500 dark:text-orange-400" />
             Activity Calendar
           </span>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="gap-1 text-orange-600 border-orange-300">
+            <Badge variant="outline" className="gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600">
               🔥 {currentStreak} day streak
             </Badge>
             {longestStreak > 0 && (
