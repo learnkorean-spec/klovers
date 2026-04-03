@@ -38,3 +38,12 @@ verify_jwt = false
 
 [functions.generate-lesson-scene]
 verify_jwt = false
+
+[functions.seo-orchestration]
+verify_jwt = false
+
+[functions.image-audit]
+verify_jwt = false
+
+[functions.article-generator]
+verify_jwt = false
