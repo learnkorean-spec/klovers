@@ -263,26 +263,19 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     ctx.moveTo(splitX + slant + 8 * S, 0); ctx.lineTo(splitX + 8 * S, h);
     ctx.stroke();
 
-    // LEFT: faint 한 watermark
+    // LEFT: Large K (centered)
     const lCx = splitX * 0.5;
-    ctx.save();
-    ctx.font = `900 ${splitX * 0.9}px serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.06)";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("한", lCx, h * 0.5);
-    ctx.restore();
-
-    // LEFT: Large K
-    ctx.font = `900 ${splitX * 0.52}px 'Inter', sans-serif`;
+    ctx.font = `900 ${Math.round(splitX * 0.48)}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("K", lCx, h * 0.43);
+    ctx.fillText("K", lCx, h * 0.40);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
 
-    // LEFT: KLOVERS label
-    ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
+    // LEFT: KLOVERS label (well below K, no overlap)
+    ctx.font = `700 ${Math.round(18 * S)}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
-    ctx.textBaseline = "alphabetic"; ctx.textAlign = "center";
-    ctx.fillText("KLOVERS", lCx, h * 0.73);
+    ctx.textAlign = "center";
+    ctx.fillText("KLOVERS", lCx, h * 0.70);
     ctx.textAlign = "left";
 
     // RIGHT: eyebrow
@@ -678,14 +671,14 @@ export function renderPost(
     ctx.restore();
   }
 
-  // 한 watermark
+  // Decorative K watermark (Latin — always renders, no overlap)
   if (isBrand) {
     ctx.save();
-    ctx.font = `bold ${h * 0.58}px serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.065)";
-    ctx.textAlign = "right";
-    ctx.fillText("한", w - 18 * scale, h * 0.82);
-    ctx.textAlign = "start";
+    ctx.font = `900 ${Math.round(h * 0.60)}px 'Inter', 'Segoe UI Black', sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.045)";
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("K", w + 10 * scale, h * 0.86);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
     ctx.restore();
   }
 
