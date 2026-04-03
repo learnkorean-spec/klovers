@@ -120,11 +120,12 @@ const PostPreview = memo(function PostPreview({ post, template, theme, size = 27
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
 // ─── Platform Grid Previews ───
-function PlatformGridPreviews({ posts, template, theme, bgImage }: {
+function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }: {
   posts: PostData[];
   template: TemplateName;
   theme: ColorTheme;
   bgImage: HTMLImageElement | null;
+  postTemplates?: Array<{ template: TemplateName; theme: ColorTheme }>;
 }) {
   const igRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const fbRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -134,20 +135,22 @@ function PlatformGridPreviews({ posts, template, theme, bgImage }: {
   useEffect(() => {
     const display = posts.slice(0, 9);
     display.forEach((post, i) => {
+      const t = postTemplates?.[i]?.template ?? template;
+      const th = postTemplates?.[i]?.theme ?? theme;
       // Instagram 1:1
       const ig = igRefs.current[i];
-      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, template, theme, "instagram", bgImage); }
+      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, t, th, "instagram", bgImage); }
       // Facebook
       const fb = fbRefs.current[i];
-      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, template, theme, "facebook", bgImage); }
+      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, t, th, "facebook", bgImage); }
       // Story
       const st = storyRefs.current[i];
-      if (st) { st.width = 180; st.height = 320; renderPost(st, post, template, theme, "story", bgImage); }
+      if (st) { st.width = 180; st.height = 320; renderPost(st, post, t, th, "story", bgImage); }
       // TikTok
       const tt = tiktokRefs.current[i];
-      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, template, theme, "tiktok", bgImage); }
+      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, t, th, "tiktok", bgImage); }
     });
-  }, [posts, template, theme, bgImage]);
+  }, [posts, template, theme, bgImage, postTemplates]);
 
   const display = posts.slice(0, 9);
   if (display.length < 1) return null;
@@ -790,7 +793,16 @@ export default function CreatorHub() {
           <Grid3X3 className="h-4 w-4" /> Platform Grid Preview
           <Badge variant="outline" className="text-[10px]">{posts.length} posts</Badge>
         </h2>
-        <PlatformGridPreviews posts={posts} template={template} theme={theme} bgImage={bgImage} />
+        <PlatformGridPreviews
+          posts={posts}
+          template={template}
+          theme={theme}
+          bgImage={bgImage}
+          postTemplates={posts.map((_, i) => ({
+            template: BALANCE_CYCLE[i % BALANCE_CYCLE.length],
+            theme: BALANCE_THEME[BALANCE_CYCLE[i % BALANCE_CYCLE.length]],
+          }))}
+        />
       </div>
 
       {/* ── Monthly 30-Post Generator ── */}
