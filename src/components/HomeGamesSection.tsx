@@ -59,7 +59,7 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <div className="inline-flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-full text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-black/25 shadow-sm">
             <Gamepad2 className="h-4 w-4" />
             {t("games.learnPlay")}
           </div>
