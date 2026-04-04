@@ -59,6 +59,9 @@ interface EnrollmentRecord {
   level: string | null;
   preferred_days: string[] | null;
   timezone: string | null;
+  approval_status: string | null;
+  payment_status: string | null;
+  negative_since: string | null;
 }
 
 interface ChecklistItem {
@@ -157,7 +160,7 @@ const ProfileCard = ({
             {editingName ? (
               <div className="flex items-center gap-2">
                 <Input
-                  className="h-8 w-[180px] text-sm"
+                  className="h-8 flex-1 max-w-[200px] text-sm"
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
                   autoFocus
@@ -204,6 +207,7 @@ const StudentDashboard = () => {
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
   const [groupName, setGroupName] = useState<string | null>(null);
+  const [pendingEnrollments, setPendingEnrollments] = useState<{ id: string; plan_type: string; approval_status: string }[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
@@ -289,9 +293,18 @@ const StudentDashboard = () => {
         setPlacementTest(ptData as PlacementTestResult);
       }
 
+      // Also fetch pending/under-review enrollments to surface them as banners
+      const { data: pendingData } = await supabase
+        .from("enrollments")
+        .select("id, plan_type, approval_status")
+        .eq("user_id", session.user.id)
+        .in("approval_status", ["PENDING", "UNDER_REVIEW", "PENDING_PAYMENT"])
+        .order("created_at", { ascending: false });
+      if (pendingData) setPendingEnrollments(pendingData as any[]);
+
       const { data: enrollmentData } = await supabase
         .from("enrollments")
-        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level")
+        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level, approval_status, payment_status, negative_since")
         .eq("user_id", session.user.id)
         .eq("approval_status", "APPROVED")
         .eq("payment_status", "PAID")
@@ -396,7 +409,7 @@ const StudentDashboard = () => {
         <main id="main-content" className="pt-24 pb-16 px-4">
           <div className="max-w-5xl mx-auto space-y-6">
             <Skeleton className="h-8 w-48" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
             </div>
             <Skeleton className="h-16 rounded-xl" />
@@ -584,8 +597,23 @@ const StudentDashboard = () => {
             );
           })()}
 
+          {/* ── Pending enrollment banners ── */}
+          {pendingEnrollments.map(pe => {
+            const statusLabel = pe.approval_status === "PENDING_PAYMENT" ? "Awaiting payment" : pe.approval_status === "UNDER_REVIEW" ? "Under review" : "Pending approval";
+            const statusColor = pe.approval_status === "PENDING_PAYMENT" ? "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800 text-amber-800 dark:text-amber-300" : "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800 text-blue-800 dark:text-blue-300";
+            return (
+              <div key={pe.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${statusColor}`}>
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold capitalize">{pe.plan_type} class enrollment — {statusLabel}</p>
+                  <p className="text-xs opacity-80">Our team will contact you once your enrollment is confirmed.</p>
+                </div>
+              </div>
+            );
+          })}
+
           {/* ── Quick Stats (always visible) ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {quickStats.map(({ label, rawValue, sub, icon: Icon, color }, idx) => {
               let displayValue: string;
               if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
@@ -623,7 +651,7 @@ const StudentDashboard = () => {
           {/* ── Quick Actions (always visible) ── */}
           <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               {quickActions.map(({ label, desc, emoji, path, color }, idx) => (
                 <button
                   key={label}
@@ -763,14 +791,49 @@ const StudentDashboard = () => {
           {hasNoData ? (
             /* ── No-enrollment state: show learning features + enroll CTA ── */
             <div className="space-y-6">
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="pt-6 text-center space-y-3">
-                  <AlertCircle className="h-10 w-10 mx-auto text-primary" />
-                  <h2 className="text-xl font-semibold text-foreground">No Active Plan Yet</h2>
-                  <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enroll to get live classes, personalized coaching, and track your attendance.</p>
-                  <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardContent className="pt-6 pb-6 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <GraduationCap className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Start Your Korean Journey</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Join live classes with expert teachers, track your progress, and connect with other K-drama fans learning Korean.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                    {[
+                      { emoji: "🎓", text: "Live group & private classes" },
+                      { emoji: "📊", text: "Progress tracking & analytics" },
+                      { emoji: "🏆", text: "XP, badges & leaderboards" },
+                    ].map(({ emoji, text }) => (
+                      <div key={text} className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 border border-border">
+                        <span>{emoji}</span>
+                        <span className="text-muted-foreground">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">Enroll Now</Button>
+                    <Button variant="outline" size="lg" onClick={() => navigate("/free-trial")} className="flex-1">Book a Free Trial</Button>
+                  </div>
                 </CardContent>
               </Card>
+
+              {/* Show pending enrollments if any */}
+              {pendingEnrollments.length > 0 && pendingEnrollments.map(pe => {
+                const statusLabel = pe.approval_status === "PENDING_PAYMENT" ? "Awaiting payment" : pe.approval_status === "UNDER_REVIEW" ? "Under review" : "Pending approval";
+                return (
+                  <div key={pe.id} className="flex items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold capitalize">{pe.plan_type} enrollment — {statusLabel}</p>
+                      <p className="text-xs opacity-80">Our team will confirm your class soon. Check back here for updates.</p>
+                    </div>
+                  </div>
+                );
+              })}
 
               {/* Still show level test for unenrolled */}
               <Card>
@@ -941,10 +1004,33 @@ const StudentDashboard = () => {
                             <span><strong>{extra}</strong> extra sessions — Due: <strong>{curr}{due.toLocaleString()}</strong></span>
                           </div>
                         )}
+                        {enrollment.negative_since && (() => {
+                          const days = Math.max(0, Math.floor((Date.now() - new Date(enrollment.negative_since).getTime()) / 86400000));
+                          return (
+                            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-lg p-2">
+                              <AlertCircle className="h-4 w-4 shrink-0" />
+                              <span>Balance overdue for <strong>{days} day{days !== 1 ? "s" : ""}</strong> — please settle to continue classes.</span>
+                            </div>
+                          );
+                        })()}
                         {groupName && (
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Users className="h-3.5 w-3.5" />
-                            <span>Group: <strong className="text-foreground">{groupName}</strong></span>
+                          <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
+                            <Users className="h-4 w-4 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Your Class</p>
+                              <p className="text-sm font-semibold text-foreground truncate">{groupName}</p>
+                            </div>
+                            {enrollment.preferred_days && enrollment.preferred_days.length > 0 && (
+                              <Badge variant="outline" className="ml-auto shrink-0 text-xs">
+                                {enrollment.preferred_days.slice(0, 3).map(d => d.slice(0, 3)).join(" · ")}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {!groupName && (
+                          <div className="flex items-center gap-2 rounded-lg bg-muted/40 border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                            <Users className="h-4 w-4 shrink-0" />
+                            <span>Class assignment in progress — we'll notify you shortly.</span>
                           </div>
                         )}
                       </CardContent>
@@ -1022,7 +1108,7 @@ const StudentDashboard = () => {
               <StudentGroupAttendance />
 
               {/* ── Progress Report + Certificate ── */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank')}
                   className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-primary/40 hover:bg-primary/5 transition-all text-center"

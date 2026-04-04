@@ -30,7 +30,19 @@ const TIER_BADGES: Record<number, string> = {
 export function AchievementMilestoneCard() {
   const { groupedMilestones, completionPercentage, newlyAchieved } = useMilestones();
 
-  if (groupedMilestones.length === 0) return null;
+  if (groupedMilestones.length === 0) {
+    return (
+      <Card className="border-dashed border-muted-foreground/20">
+        <CardContent className="pt-6 pb-6 text-center space-y-3">
+          <Trophy className="h-10 w-10 mx-auto text-muted-foreground/40" />
+          <div>
+            <p className="font-semibold text-foreground text-sm">No milestones yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Complete lessons and earn XP to unlock milestone rewards.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
