@@ -59,8 +59,6 @@ interface EnrollmentRecord {
   level: string | null;
   preferred_days: string[] | null;
   timezone: string | null;
-  approval_status: string | null;
-  payment_status: string | null;
   negative_since: string | null;
 }
 
@@ -263,52 +261,30 @@ const StudentDashboard = () => {
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
       monday.setHours(0, 0, 0, 0);
-      const { data: weeklyXpData } = await supabase
-        .from("student_xp")
-        .select("xp_earned")
-        .eq("user_id", session.user.id)
-        .gte("created_at", monday.toISOString());
-      setWeeklyXp((weeklyXpData || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0));
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("avatar_url, name, level, country")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+      // Run all independent queries in parallel
+      const [weeklyXpRes, profileRes, ptRes, pendingRes, enrollmentRes] = await Promise.all([
+        supabase.from("student_xp").select("xp_earned").eq("user_id", session.user.id).gte("created_at", monday.toISOString()),
+        supabase.from("profiles").select("avatar_url, name, level, country").eq("user_id", session.user.id).maybeSingle(),
+        supabase.from("placement_tests").select("score, level, created_at").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("enrollments").select("id, plan_type, approval_status").eq("user_id", session.user.id).in("approval_status", ["PENDING", "UNDER_REVIEW", "PENDING_PAYMENT"]).order("created_at", { ascending: false }),
+        supabase.from("enrollments").select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level, negative_since").eq("user_id", session.user.id).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }),
+      ]);
+
+      const weeklyXpData = weeklyXpRes.data;
+      const profile = profileRes.data;
+      const ptData = ptRes.data;
+      const pendingData = pendingRes.data;
+      const enrollmentData = enrollmentRes.data;
+
+      setWeeklyXp((weeklyXpData || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0));
       if (profile) {
         setAvatarUrl(profile.avatar_url || "");
         setUserName(profile.name || "");
         setProfileLevel(profile.level || "");
       }
-
-      // Fetch latest placement test result
-      const { data: ptData } = await supabase
-        .from("placement_tests")
-        .select("score, level, created_at")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (ptData) {
-        setPlacementTest(ptData as PlacementTestResult);
-      }
-
-      // Also fetch pending/under-review enrollments to surface them as banners
-      const { data: pendingData } = await supabase
-        .from("enrollments")
-        .select("id, plan_type, approval_status")
-        .eq("user_id", session.user.id)
-        .in("approval_status", ["PENDING", "UNDER_REVIEW", "PENDING_PAYMENT"])
-        .order("created_at", { ascending: false });
+      if (ptData) setPlacementTest(ptData as PlacementTestResult);
       if (pendingData) setPendingEnrollments(pendingData as any[]);
-
-      const { data: enrollmentData } = await supabase
-        .from("enrollments")
-        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level, approval_status, payment_status, negative_since")
-        .eq("user_id", session.user.id)
-        .eq("approval_status", "APPROVED")
-        .eq("payment_status", "PAID")
-        .order("created_at", { ascending: false });
 
       if (enrollmentData && enrollmentData.length > 0) {
         setEnrollments(enrollmentData as EnrollmentRecord[]);
