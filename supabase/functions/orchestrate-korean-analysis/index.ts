@@ -177,34 +177,69 @@ Deno.serve(async (req) => {
     forceRegenerate = body.force_regenerate === true;
   } catch { /* no body */ }
 
-  // Fetch lessons to process
+  // Fetch lessons to process — topik_level may not exist yet; we fall back to sort_order heuristic
   let query = supabase
     .from("textbook_lessons")
-    .select("id, sort_order, title_en, title_ko, description, book, topik_level")
+    .select("id, sort_order, title_en, title_ko, description, book")
     .eq("is_published", true)
+    .order("book")
     .order("sort_order");
 
   if (lessonId) query = query.eq("id", lessonId);
   else if (bookFilter) query = query.eq("book", bookFilter);
-  if (topikFilter !== null) query = query.eq("topik_level", topikFilter);
 
-  const { data: lessons, error: fetchErr } = await (query as any);
-  if (fetchErr || !lessons?.length) {
+  const { data: rawLessons, error: fetchErr } = await (query as any);
+  if (fetchErr || !rawLessons?.length) {
     return new Response(JSON.stringify({ error: fetchErr?.message ?? "No lessons found" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
+  // Enrich lessons with topik_level — try to read from DB, fall back to sort_order heuristic
+  const { data: topikRows } = await supabase
+    .from("textbook_lessons")
+    .select("id, topik_level")
+    .in("id", rawLessons.map((l: any) => l.id)) as any;
+
+  const topikMap = new Map<number, number>();
+  (topikRows ?? []).forEach((r: any) => { if (r.topik_level != null) topikMap.set(r.id, r.topik_level); });
+
+  function inferTopikLevel(lesson: any): number {
+    if (topikMap.has(lesson.id)) return topikMap.get(lesson.id)!;
+    if (lesson.book === "daily-routine" || lesson.book === "kdrama") return 1;
+    const s = lesson.sort_order;
+    if (s <= 10) return 0;
+    if (s <= 50) return 1;
+    if (s <= 90) return 2;
+    if (s <= 120) return 3;
+    if (s <= 150) return 4;
+    if (s <= 165) return 5;
+    return 6;
+  }
+
+  const lessons = rawLessons.map((l: any) => ({ ...l, topik_level: inferTopikLevel(l) }));
+
+  // Apply topik_level filter after enrichment
+  const filteredLessons = topikFilter !== null
+    ? lessons.filter((l: any) => l.topik_level === topikFilter)
+    : lessons;
+
+  if (!filteredLessons.length) {
+    return new Response(JSON.stringify({ error: `No lessons found for topik_level=${topikFilter}` }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Filter to unpopulated unless force_regenerate
-  let toProcess = lessons;
+  let toProcess = filteredLessons;
   if (!forceRegenerate) {
     const { data: existingVocab } = await supabase.from("lesson_vocabulary").select("lesson_id");
     const populated = new Set((existingVocab ?? []).map((v: any) => v.lesson_id));
-    toProcess = lessons.filter((l: any) => !populated.has(l.id));
+    toProcess = filteredLessons.filter((l: any) => !populated.has(l.id));
   }
 
   if (!toProcess.length) {
-    return new Response(JSON.stringify({ message: "All lessons already have content", total: lessons.length }), {
+    return new Response(JSON.stringify({ message: "All lessons already have content", total: filteredLessons.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -215,6 +250,17 @@ Deno.serve(async (req) => {
   for (const lesson of batch) {
     const sectionsGenerated: string[] = [];
     try {
+      // If force_regenerate, delete existing content first to avoid duplicates
+      if (forceRegenerate) {
+        await Promise.all([
+          supabase.from("lesson_vocabulary").delete().eq("lesson_id", lesson.id),
+          supabase.from("lesson_grammar").delete().eq("lesson_id", lesson.id),
+          supabase.from("lesson_dialogues").delete().eq("lesson_id", lesson.id),
+          supabase.from("lesson_reading").delete().eq("lesson_id", lesson.id),
+          supabase.from("lesson_exercises").delete().eq("lesson_id", lesson.id),
+        ]);
+      }
+
       const prompt = buildPrompt(lesson);
       const rawText = await callAI(apiKey, prompt);
 
@@ -327,8 +373,9 @@ Deno.serve(async (req) => {
 
   return new Response(
     JSON.stringify({
-      lessons_processed: results.length,
-      remaining: toProcess.length - results.length,
+      lessons_processed: results.filter((r: any) => !r.error).length,
+      remaining: toProcess.length - batch.length,
+      errors: results.filter((r: any) => r.error).length,
       results,
       orchestra_sections: SECTIONS,
     }),
