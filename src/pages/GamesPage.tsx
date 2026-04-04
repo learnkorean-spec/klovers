@@ -228,7 +228,7 @@ const GamesPage = () => {
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 20</a>
+                <a href="/signup" className="text-primary text-outlined font-semibold hover:underline">Sign up to unlock all 20</a>
               </div>
             )}
 
@@ -313,7 +313,7 @@ const GamesPage = () => {
                 <Trophy className="h-4 w-4 text-amber-500" /> Top Players
               </h2>
               {!isLoggedIn && (
-                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">Sign up to join →</a>
+                <a href="/signup" className="text-xs text-primary text-outlined font-semibold hover:underline">Sign up to join →</a>
               )}
             </div>
             <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>

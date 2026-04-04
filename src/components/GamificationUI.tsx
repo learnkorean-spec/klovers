@@ -85,7 +85,7 @@ export function LeagueCard({ leagueKey, totalXp }: { leagueKey: string; totalXp:
               {l.maxXp === Infinity ? `${l.minXp}+ XP` : `${l.minXp} – ${l.maxXp} XP`}
             </p>
             {isCurrent && (
-              <span className="mt-2 inline-block text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+              <span className="mt-2 inline-block text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full border border-black/25">
                 Current
               </span>
             )}

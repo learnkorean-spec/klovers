@@ -56,7 +56,7 @@ const StickyEnrollBar = () => {
           </Link>
           <Link
             to="/enroll-now"
-            className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-black/25"
           >
             Enroll Now <ArrowRight className="h-3.5 w-3.5" />
           </Link>

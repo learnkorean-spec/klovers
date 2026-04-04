@@ -213,7 +213,7 @@ const LessonDetailPage = () => {
         <Header />
         <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-primary text-outlined underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -238,7 +238,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary text-outlined underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -538,7 +538,7 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold border border-black/25">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (

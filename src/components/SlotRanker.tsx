@@ -251,7 +251,7 @@ const SlotRanker = ({ selectedLevel, onComplete }: SlotRankerProps) => {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     {rank && (
-                      <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center border border-black/25">
                         {rank}
                       </span>
                     )}

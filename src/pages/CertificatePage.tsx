@@ -211,12 +211,12 @@ const CertificatePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center py-10 px-4">
-      <h1 className="text-white text-2xl font-bold mb-2">Your KLovers Certificate</h1>
-      <p className="text-gray-400 text-sm mb-6">Download and share on Instagram, Facebook, or LinkedIn!</p>
+    <div className="min-h-screen bg-background flex flex-col items-center py-10 px-4">
+      <h1 className="text-foreground text-2xl font-bold mb-2">Your KLovers Certificate</h1>
+      <p className="text-muted-foreground text-sm mb-6">Download and share on Instagram, Facebook, or LinkedIn!</p>
 
       {loading ? (
-        <div className="text-gray-400">Generating certificate…</div>
+        <div className="text-muted-foreground">Generating certificate…</div>
       ) : (
         <>
           <canvas
@@ -227,7 +227,7 @@ const CertificatePage = () => {
           <Button onClick={download} className="mt-6 gap-2 text-base font-bold px-8" size="lg">
             <Download className="h-5 w-5" /> Download Certificate (PNG)
           </Button>
-          <p className="text-gray-500 text-xs mt-3">Right-click → Save image, or use the button above</p>
+          <p className="text-muted-foreground text-xs mt-3">Right-click → Save image, or use the button above</p>
         </>
       )}
     </div>

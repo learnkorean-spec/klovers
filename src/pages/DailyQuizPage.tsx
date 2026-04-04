@@ -301,7 +301,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary">{exercises.length}</p>
+                <p className="text-4xl font-bold text-primary text-outlined">{exercises.length}</p>
                 <p className="text-muted-foreground mt-1">Questions from your completed lessons</p>
               </div>
               <div className="pt-4 border-t">
@@ -348,7 +348,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary">
+                <p className="text-4xl font-bold text-primary text-outlined">
                   {result.score}/{result.total}
                 </p>
                 <p className="text-muted-foreground mt-1">

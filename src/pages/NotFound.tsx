@@ -40,7 +40,7 @@ const NotFound = () => {
               {["잠", "깐", "!"].map((ch, i) => (
                 <span
                   key={ch}
-                  className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 font-bold text-primary border border-primary/20 animate-bounce"
+                  className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 font-bold text-primary text-outlined border border-primary/20 animate-bounce"
                   style={{ animationDelay: `${i * 150}ms`, animationDuration: "2s" }}
                 >
                   {ch}

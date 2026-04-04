@@ -78,7 +78,7 @@ const PlacementTestCTA = () => {
               visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
             }`}
           >
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full text-sm font-semibold text-primary">
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full text-sm font-semibold text-primary text-outlined">
               <Sparkles className="h-4 w-4" />
               Free Assessment · No Sign-up Needed
             </div>
