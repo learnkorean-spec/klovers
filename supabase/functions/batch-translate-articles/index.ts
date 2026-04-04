@@ -72,10 +72,9 @@ ${post.content}`;
   const aiData = await aiRes.json();
   const rawContent = aiData.choices?.[0]?.message?.content || "";
 
-  let translated;
   const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("No JSON in AI response");
-  translated = JSON.parse(jsonMatch[0]);
+  const translated = JSON.parse(jsonMatch[0]);
 
   const arPost = {
     title: translated.title || post.title,
@@ -164,7 +163,7 @@ Deno.serve(async (req) => {
   })();
 
   // Use waitUntil for background processing
-  // @ts-ignore - EdgeRuntime is available in Deno Deploy
+  // @ts-expect-error - EdgeRuntime is available in Deno Deploy
   if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
     EdgeRuntime.waitUntil(promise);
   }
