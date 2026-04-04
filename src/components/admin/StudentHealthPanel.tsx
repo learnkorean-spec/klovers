@@ -3,18 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, DollarSign, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-
-interface OverviewRow {
-  user_id: string;
-  name: string;
-  email: string;
-  approval_status: string | null;
-  derived_status: string;
-  sessions_remaining: number;
-  sessions_total: number;
-  unit_price: number | null;
-  currency: string | null;
-}
+import type { OverviewRow } from "@/types/admin";
 
 interface Props {
   overviewRows: OverviewRow[];
