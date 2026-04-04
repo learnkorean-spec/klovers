@@ -3,6 +3,12 @@ import App from "./App.tsx";
 import "./index.css";
 import { ThemeProvider } from "./contexts/ThemeContext.tsx";
 
+// Reload the page when a lazy-loaded chunk fails to fetch (stale deploy).
+// Vite fires this event when a dynamic import 404s after a new production build.
+window.addEventListener("vite:preloadError", () => {
+  window.location.reload();
+});
+
 // Redirect any non-production domain to kloversegy.com
 const CANONICAL = "kloversegy.com";
 if (
