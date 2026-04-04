@@ -77,6 +77,111 @@ export function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number,
   lines.slice(0, maxLines).forEach((l, i) => ctx.fillText(l, x, y + i * lineH));
 }
 
+// ─── Placement Result Card ────────────────────────────────────────────────────
+
+export interface PlacementCardData {
+  levelEmoji: string;
+  levelLabel: string;
+  tagline: string;
+  score: number;
+  total: number;
+}
+
+/**
+ * Draws a 1080×1080 branded result card onto the provided canvas.
+ * Call canvas.toDataURL('image/png') afterwards to get the download URL.
+ */
+export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCardData): void {
+  const W = 1080, H = 1080;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+
+  // Background
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(0, 0, W, H);
+
+  // Inner white panel
+  ctx.fillStyle = "#ffffff";
+  rRect(ctx, 60, 60, W - 120, H - 120, 40);
+  ctx.fill();
+
+  // Top accent bar
+  ctx.fillStyle = "#EBC82E";
+  rRect(ctx, 60, 60, W - 120, 160, 40);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(60, 160, W - 120, 40);
+
+  // "K" logo circle (top-left)
+  ctx.fillStyle = "#1a1a1a";
+  ctx.beginPath();
+  ctx.arc(160, 140, 56, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.font = "bold 64px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("K", 160, 144);
+
+  // Brand name (top-right area)
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 38px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  ctx.fillText("KLOVERS", W - 100, 120);
+  ctx.font = "24px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#333333";
+  ctx.fillText("Korean Academy", W - 100, 162);
+
+  // Emoji (large, centered)
+  ctx.font = "160px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.levelEmoji, W / 2, 380);
+
+  // Level label pill
+  ctx.fillStyle = "#1a1a1a";
+  rRect(ctx, 180, 490, W - 360, 90, 45);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.font = "bold 38px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.levelLabel, W / 2, 535);
+
+  // Tagline
+  ctx.fillStyle = "#444444";
+  ctx.font = "32px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText(data.tagline, W / 2, 610);
+
+  // Score badge
+  ctx.fillStyle = "#f5f5f5";
+  rRect(ctx, W / 2 - 140, 680, 280, 90, 20);
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 52px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.fillText(`${data.score} / ${data.total}`, W / 2, 725);
+  ctx.font = "26px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#888";
+  ctx.fillText("TOPIK-aligned score", W / 2, 800);
+
+  // Divider
+  ctx.strokeStyle = "#e5e5e5";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(160, 860);
+  ctx.lineTo(W - 160, 860);
+  ctx.stroke();
+
+  // URL footer
+  ctx.fillStyle = "#888888";
+  ctx.font = "28px system-ui, -apple-system, sans-serif";
+  ctx.fillText("kloversegy.com/placement-test", W / 2, 920);
+}
+
 // ─── KLOVERS BRAND DESIGNS ───────────────────────────────────────────────────
 // All use fixed zone fractions so preview (270px CSS / 1080px canvas) = download (1080px canvas)
 

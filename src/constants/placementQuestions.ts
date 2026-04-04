@@ -16,6 +16,7 @@ export interface PlacementQuestion {
   id: number;
   section: "Vocabulary" | "Grammar" | "Reading";
   level: string;
+  difficulty: 1 | 2 | 3 | 4 | 5;
   question: string;
   options: string[];
   correctIndex: number;
@@ -28,6 +29,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 1,
     section: "Vocabulary",
     level: "Foundation",
+    difficulty: 1,
     question: "What does 안녕하세요 mean?",
     options: ["Thank you", "Goodbye", "Hello", "Sorry"],
     correctIndex: 2,
@@ -37,6 +39,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 2,
     section: "Vocabulary",
     level: "Foundation",
+    difficulty: 1,
     question: "What does 감사합니다 mean?",
     options: ["I'm sorry", "Thank you", "Goodbye", "Please"],
     correctIndex: 1,
@@ -46,6 +49,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 3,
     section: "Grammar",
     level: "Foundation",
+    difficulty: 1,
     question: "How many basic vowels does Hangul have?",
     options: ["10", "14", "21", "8"],
     correctIndex: 0,
@@ -55,6 +59,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 4,
     section: "Reading",
     level: "Foundation",
+    difficulty: 1,
     question: "Which syllable block reads 'ka'?",
     options: ["가", "나", "다", "라"],
     correctIndex: 0,
@@ -66,6 +71,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 5,
     section: "Vocabulary",
     level: "TOPIK 1",
+    difficulty: 2,
     question: "What does 학생 mean?",
     options: ["Teacher", "Student", "Doctor", "Friend"],
     correctIndex: 1,
@@ -75,6 +81,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 6,
     section: "Grammar",
     level: "TOPIK 1",
+    difficulty: 2,
     question: "Which particle marks the subject of a sentence?",
     options: ["을/를", "이/가", "에", "도"],
     correctIndex: 1,
@@ -84,6 +91,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 7,
     section: "Grammar",
     level: "TOPIK 1",
+    difficulty: 2,
     question: "Complete: 저는 학생___.",
     options: ["입니다", "합니다", "있다", "없다"],
     correctIndex: 0,
@@ -93,6 +101,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 8,
     section: "Reading",
     level: "TOPIK 1",
+    difficulty: 2,
     question: "'나는 사과를 먹습니다' — What is being eaten?",
     options: ["Bread", "Rice", "Apple", "Banana"],
     correctIndex: 2,
@@ -104,6 +113,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 9,
     section: "Grammar",
     level: "TOPIK 2",
+    difficulty: 3,
     question: "What does the ending -고 싶다 express?",
     options: ["Obligation", "Want / desire", "Ability", "Permission"],
     correctIndex: 1,
@@ -113,6 +123,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 10,
     section: "Grammar",
     level: "TOPIK 2",
+    difficulty: 3,
     question: "Choose the correct connector: 비가 오___ 우산을 가져가세요.",
     options: ["고", "면", "지만", "니까"],
     correctIndex: 3,
@@ -122,6 +133,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 11,
     section: "Reading",
     level: "TOPIK 2",
+    difficulty: 3,
     question: "'어제 친구를 만났습니다' — When did the meeting happen?",
     options: ["Today", "Tomorrow", "Yesterday", "Last week"],
     correctIndex: 2,
@@ -131,6 +143,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 12,
     section: "Grammar",
     level: "TOPIK 2",
+    difficulty: 3,
     question: "Which ending makes a polite request?",
     options: ["-ㅂ시다", "-아/어 주세요", "-겠습니다", "-습니다"],
     correctIndex: 1,
@@ -142,6 +155,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 13,
     section: "Grammar",
     level: "TOPIK 3–4",
+    difficulty: 4,
     question: "What does -(으)ㄹ 수 있다 express?",
     options: ["Must", "Should", "Can / is able to", "Want to"],
     correctIndex: 2,
@@ -151,6 +165,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 14,
     section: "Vocabulary",
     level: "TOPIK 3–4",
+    difficulty: 4,
     question: "What does 경험 mean?",
     options: ["Experiment", "Experience", "Competition", "Education"],
     correctIndex: 1,
@@ -160,6 +175,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 15,
     section: "Reading",
     level: "TOPIK 3–4",
+    difficulty: 4,
     question: "'환경을 보호하기 위해 노력해야 합니다' — The sentence is about:",
     options: ["Health care", "Environmental protection", "Economic growth", "Education reform"],
     correctIndex: 1,
@@ -169,6 +185,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 16,
     section: "Grammar",
     level: "TOPIK 3–4",
+    difficulty: 4,
     question: "What nuance does -더라고요 convey?",
     options: ["Hearsay", "Personal past observation", "Future intention", "Suggestion"],
     correctIndex: 1,
@@ -180,6 +197,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 17,
     section: "Grammar",
     level: "TOPIK 5–6",
+    difficulty: 5,
     question: "What does -는 바람에 express?",
     options: ["Despite", "Unintended negative cause", "Purpose", "Condition"],
     correctIndex: 1,
@@ -189,6 +207,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 18,
     section: "Vocabulary",
     level: "TOPIK 5–6",
+    difficulty: 5,
     question: "What does 모순 mean?",
     options: ["Harmony", "Contradiction", "Tradition", "Evolution"],
     correctIndex: 1,
@@ -198,6 +217,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 19,
     section: "Reading",
     level: "TOPIK 5–6",
+    difficulty: 5,
     question: "'인공지능의 발전이 인간의 노동 시장에 미치는 영향은 다각적으로 분석되어야 한다' — The sentence discusses:",
     options: ["AI ethics only", "Multi-faceted analysis of AI's impact on labor", "Robot manufacturing", "Internet security"],
     correctIndex: 1,
@@ -207,6 +227,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     id: 20,
     section: "Grammar",
     level: "TOPIK 5–6",
+    difficulty: 5,
     question: "What does -기는커녕 express?",
     options: ["Not only… but also", "Far from (doing something), let alone", "In order to", "As long as"],
     correctIndex: 1,
@@ -268,3 +289,44 @@ export function computePlacementResult(answers: Record<number, number>): Placeme
 
   return { score, levelKey, levelLabel, confidence, sectionScores };
 }
+
+// ─── Study Roadmaps ────────────────────────────────────────────────────────
+
+export interface RoadmapWeek {
+  week: number;
+  title: string;
+  tasks: string[];
+}
+
+export const STUDY_ROADMAPS: Record<string, RoadmapWeek[]> = {
+  foundation: [
+    { week: 1, title: "Master the Korean alphabet", tasks: ["Learn 14 basic consonants (ㄱ ㄴ ㄷ ㄹ …)", "Learn 10 basic vowels (ㅏ ㅑ ㅓ ㅕ …)", "Practice reading syllable blocks aloud"] },
+    { week: 2, title: "Pronunciation & syllable rules", tasks: ["Understand batchim (final consonants)", "Practice liaison & nasalisation rules", "Read simple syllables at speed (가나다라…)"] },
+    { week: 3, title: "Core greetings & self-introduction", tasks: ["안녕하세요 · 감사합니다 · 미안합니다", "Introduce yourself: 저는 [name]입니다", "Numbers 1–10 in both counting systems"] },
+    { week: 4, title: "Everyday basics", tasks: ["Days of the week & months", "Common classroom phrases", "Start Klovers Foundation class"] },
+  ],
+  level_1: [
+    { week: 1, title: "Sentence structure & particles", tasks: ["Subject particle 이/가, object particle 을/를", "Topic particle 은/는 vs subject particle", "Build 5 simple Subject–Verb sentences daily"] },
+    { week: 2, title: "Core verbs & adjectives", tasks: ["가다·오다·먹다·마시다·보다", "좋다·싫다·크다·작다 (descriptive verbs)", "Conjugate into formal polite -ㅂ니다/습니다"] },
+    { week: 3, title: "Present, past & future tense", tasks: ["Present: -아요/어요", "Past: -았어요/었어요", "Future: -(으)ㄹ 거예요"] },
+    { week: 4, title: "Daily conversation practice", tasks: ["Ordering food at a café", "Asking for prices & locations", "Start Klovers Level 1 class"] },
+  ],
+  level_2: [
+    { week: 1, title: "Connectors & reasons", tasks: ["Reason: -아서/어서 and -니까", "Sequence: -고 (and then)", "Practice writing 5 linked sentences per day"] },
+    { week: 2, title: "Expressing desire & ability", tasks: ["-고 싶다 (want to)", "-(으)ㄹ 수 있다/없다 (can/cannot)", "Polite requests: -아/어 주세요"] },
+    { week: 3, title: "Conditionals & time", tasks: ["If/when: -(으)면", "While: -는 동안", "Duration: -동안 vs -후에"] },
+    { week: 4, title: "Reading short Korean texts", tasks: ["Read one Korean children's book passage weekly", "Expand vocabulary to 500+ words", "Start Klovers Level 2 class"] },
+  ],
+  level_3: [
+    { week: 1, title: "Advanced grammar patterns", tasks: ["-더라고요 (past personal observation)", "-는 바람에 (unintended negative cause)", "-(으)ㄹ 뻔했다 (almost did)"] },
+    { week: 2, title: "Indirect speech & nuance", tasks: ["Indirect speech: -다고 하다 / -라고 하다", "Quoted commands: -(으)라고 하다", "Distinguish formal & informal registers"] },
+    { week: 3, title: "Intermediate reading comprehension", tasks: ["Read Korean news headlines daily", "Summarise articles in Korean (3–5 sentences)", "Learn 20 new TOPIK 3 vocabulary words per week"] },
+    { week: 4, title: "Natural speech & idioms", tasks: ["Watch 1 Korean drama episode with Korean subtitles", "Shadow native speakers for pronunciation", "Start Klovers Level 3–4 class"] },
+  ],
+  level_5: [
+    { week: 1, title: "Advanced grammar nuance", tasks: ["-(으)ㄴ/는 셈이다 (amounts to / practically)", "-기는커녕 (far from, let alone)", "모순·영향·논쟁 — C1 vocabulary lists"] },
+    { week: 2, title: "Academic & professional Korean", tasks: ["Write a 200-word opinion paragraph in Korean", "Learn formal writing endings (-ㄴ바, -인즉)", "Study Korean business email patterns"] },
+    { week: 3, title: "TOPIK II writing practice", tasks: ["Practice 200-word descriptive essays (설명문)", "Practice 700-word argumentative essays (논설문)", "Review past TOPIK II writing prompts"] },
+    { week: 4, title: "Mastery & refinement", tasks: ["Read Korean newspaper editorials & opinion columns", "Maintain a Korean journal (한국어 일기)", "Start Klovers Level 5–6 advanced class"] },
+  ],
+};
