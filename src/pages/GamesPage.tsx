@@ -15,7 +15,7 @@ import { getLeagueProgress, BADGES } from "@/constants/gamification";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones, MessagesSquare, Layers2, ListOrdered, Bug, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -36,6 +36,11 @@ const SpeedReadGame = lazy(() => import("@/components/games/SpeedReadGame"));
 const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGame"));
 const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
 const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
+const DialogueFillGame = lazy(() => import("@/components/games/DialogueFillGame"));
+const SpeechLevelGame = lazy(() => import("@/components/games/SpeechLevelGame"));
+const GrammarPatternGame = lazy(() => import("@/components/games/GrammarPatternGame"));
+const ConversationOrderGame = lazy(() => import("@/components/games/ConversationOrderGame"));
+const ErrorCatchGame = lazy(() => import("@/components/games/ErrorCatchGame"));
 
 const FREE_GAME_IDS = ["match", "hangul"];
 
@@ -102,6 +107,11 @@ const GamesPage = () => {
     { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner"), free: false },
     { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate"), free: false },
     { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner"), free: false },
+    { id: "dialoguefill", title: t("games.dialoguefillTitle"), description: t("games.dialoguefillDesc"), icon: MessagesSquare, emoji: "💬", difficulty: t("games.intermediate"), free: false },
+    { id: "speechlevel", title: t("games.speechlevelTitle"), description: t("games.speechlevelDesc"), icon: ChevronUp, emoji: "🎭", difficulty: t("games.intermediate"), free: false },
+    { id: "grammarpattern", title: t("games.grammarpatternTitle"), description: t("games.grammarpatternDesc"), icon: Layers2, emoji: "📐", difficulty: t("games.advanced"), free: false },
+    { id: "conversationorder", title: t("games.conversationorderTitle"), description: t("games.conversationorderDesc"), icon: ListOrdered, emoji: "🔢", difficulty: t("games.advanced"), free: false },
+    { id: "errorcatch", title: t("games.errorcatchTitle"), description: t("games.errorcatchDesc"), icon: Bug, emoji: "🔍", difficulty: t("games.advanced"), free: false },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
@@ -136,7 +146,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Create a free account to unlock all 20 games, save your XP, and build your daily streak.
+              Create a free account to unlock all 25 games, save your XP, and build your daily streak.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -174,6 +184,11 @@ const GamesPage = () => {
       case "readingchoice": return <Suspense fallback={<GameFallback />}><ReadingChoiceGame onGameComplete={onComplete} /></Suspense>;
       case "sentenceread": return <Suspense fallback={<GameFallback />}><SentenceReadGame onGameComplete={onComplete} /></Suspense>;
       case "phonics": return <Suspense fallback={<GameFallback />}><PhonicsReadGame onGameComplete={onComplete} /></Suspense>;
+      case "dialoguefill": return <Suspense fallback={<GameFallback />}><DialogueFillGame onGameComplete={onComplete} /></Suspense>;
+      case "speechlevel": return <Suspense fallback={<GameFallback />}><SpeechLevelGame onGameComplete={onComplete} /></Suspense>;
+      case "grammarpattern": return <Suspense fallback={<GameFallback />}><GrammarPatternGame onGameComplete={onComplete} /></Suspense>;
+      case "conversationorder": return <Suspense fallback={<GameFallback />}><ConversationOrderGame onGameComplete={onComplete} /></Suspense>;
+      case "errorcatch": return <Suspense fallback={<GameFallback />}><ErrorCatchGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };
