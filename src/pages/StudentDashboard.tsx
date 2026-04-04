@@ -1043,22 +1043,30 @@ const StudentDashboard = () => {
               <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
 
               {/* ── Achievements + Goals (two-col) ── */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <AchievementMilestoneCard />
-                <LearningGoalsCard />
-              </div>
+              <Suspense fallback={<div className="grid md:grid-cols-2 gap-4"><div className="h-40 bg-muted/30 rounded-2xl animate-pulse" /><div className="h-40 bg-muted/30 rounded-2xl animate-pulse" /></div>}>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <AchievementMilestoneCard />
+                  <LearningGoalsCard />
+                </div>
+              </Suspense>
 
               {/* ── Analytics (full width) ── */}
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
-                <AnalyticsSection />
-              </div>
+              <Suspense fallback={<div className="h-64 bg-muted/30 rounded-2xl animate-pulse" />}>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
+                  <AnalyticsSection />
+                </div>
+              </Suspense>
 
               {/* ── Streak Calendar (full width) ── */}
-              <StreakCalendar />
+              <Suspense fallback={<div className="h-48 bg-muted/30 rounded-2xl animate-pulse" />}>
+                <StreakCalendar />
+              </Suspense>
 
               {/* ── Leaderboard (full width) ── */}
-              <LeaderboardCard />
+              <Suspense fallback={<div className="h-64 bg-muted/30 rounded-2xl animate-pulse" />}>
+                <LeaderboardCard />
+              </Suspense>
 
               {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />
