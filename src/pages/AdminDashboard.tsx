@@ -59,52 +59,7 @@ const TabLoader = () => (
   </div>
 );
 
-interface Lead {
-  id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
-  plan_type: string; duration: string; schedule: string; timezone: string; source: string; user_id: string | null;
-}
-
-interface Enrollment {
-  id: string; user_id: string; plan_type: string; duration: number; classes_included: number;
-  amount: number; unit_price: number; tx_ref: string; receipt_url: string; status: string;
-  payment_status: string; approval_status: string; payment_provider: string | null;
-  admin_review_required: boolean; sessions_remaining: number;
-  created_at: string; profiles?: { name: string; email: string; level?: string } | null;
-  currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
-  preferred_days?: string[] | null; preferred_day?: string | null; preferred_time?: string | null; timezone?: string | null;
-  level?: string | null; package_id?: string | null;
-}
-
-interface AttendanceReq {
-  id: string; user_id: string; request_date: string; status: string; created_at: string;
-  profiles?: { name: string; email: string; credits: number } | null;
-}
-
-interface OverviewRow {
-  user_id: string;
-  name: string;
-  email: string;
-  country: string;
-  level: string;
-  joined_at: string;
-  enrollment_id: string | null;
-  payment_status: string | null;
-  approval_status: string | null;
-  payment_method: string | null;
-  payment_provider: string | null;
-  sessions_total: number;
-  sessions_remaining: number;
-  enrollment_created_at: string | null;
-  plan_type: string | null;
-  duration: number | null;
-  amount: number | null;
-  currency: string | null;
-  derived_status: string;
-  source_label: string;
-  unit_price: number | null;
-  negative_sessions: number;
-  amount_due: number;
-}
+// Lead, Enrollment, AttendanceReq, OverviewRow — imported from @/types/admin
 
 const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
@@ -134,6 +89,8 @@ class TabErrorBoundary extends Component<
 }
 
 import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
+import type { Lead, Enrollment, AttendanceReq, OverviewRow } from "@/types/admin";
+import { formatTime, exportCSV as exportCSVUtil } from "@/lib/admin-utils";
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -284,18 +241,18 @@ const AdminDashboard = () => {
       supabase.from("referral_conversions").select("converted_at"),
     ]);
 
-    if (weekdaysRes.data && (weekdaysRes.data as any[]).length > 0) {
-      setScheduleWeekdays((weekdaysRes.data as any[]).map((r: any) => r.label));
+    if (weekdaysRes.data && weekdaysRes.data.length > 0) {
+      setScheduleWeekdays(weekdaysRes.data.map((r) => r.label));
     }
 
     // Build profile map: first from direct profiles table, then enrich with overview
     const profileMap: Record<string, { name: string; email: string; level?: string }> = {};
-    const overviewByEmail: Record<string, any> = {};
-    const leadsByEmail: Record<string, any> = {};
+    const overviewByEmail: Record<string, Record<string, unknown>> = {};
+    const leadsByEmail: Record<string, Lead> = {};
 
     // Index leads by email for level fallback
     if (leadsRes.data) {
-      (leadsRes.data as any[]).forEach((l: any) => {
+      (leadsRes.data as Lead[]).forEach((l) => {
         if (l.email) leadsByEmail[l.email.toLowerCase()] = l;
       });
       setLeadsByEmail(leadsByEmail);
@@ -303,7 +260,7 @@ const AdminDashboard = () => {
 
     // Index direct profiles (always available for admin)
     if (profilesRes.data) {
-      (profilesRes.data as any[]).forEach((p: any) => {
+      profilesRes.data.forEach((p) => {
         const leadLevel = leadsByEmail[p.email?.toLowerCase()]?.level;
         profileMap[p.user_id] = {
           name: p.name,
@@ -316,14 +273,14 @@ const AdminDashboard = () => {
 
     // Enrich/override with admin_student_overview data
     if (overviewRes.data) {
-      (overviewRes.data as any[]).forEach((r: any) => {
+      (overviewRes.data as OverviewRow[]).forEach((r) => {
         const existingLevel = profileMap[r.user_id]?.level;
         profileMap[r.user_id] = {
           name: r.name || profileMap[r.user_id]?.name,
           email: r.email || profileMap[r.user_id]?.email,
           level: (r.level && r.level.trim() !== "") ? r.level : (existingLevel || ""),
         };
-        overviewByEmail[r.email?.toLowerCase()] = r;
+        overviewByEmail[r.email?.toLowerCase()] = r as unknown as Record<string, unknown>;
       });
     }
 
@@ -353,20 +310,20 @@ const AdminDashboard = () => {
     }
 
     if (enrollRes.data) {
-      const enrichedEnrollments = (enrollRes.data as any[]).map((e) => ({
+      const enrichedEnrollments = enrollRes.data.map((e) => ({
         ...e,
         profiles: profileMap[e.user_id] || null,
-      }));
+      })) as Enrollment[];
       setEnrollments(enrichedEnrollments);
 
       // Enrollment level/days are read-only — no admin editing needed
     }
     if (attendRes.data) {
-      const overviewMap: Record<string, any> = {};
+      const overviewMap: Record<string, OverviewRow> = {};
       if (overviewRes.data) {
-        (overviewRes.data as any[]).forEach((r: any) => { overviewMap[r.user_id] = r; });
+        (overviewRes.data as OverviewRow[]).forEach((r) => { overviewMap[r.user_id] = r; });
       }
-      setAttendanceReqs((attendRes.data as any[]).map((a) => {
+      setAttendanceReqs(attendRes.data.map((a) => {
         const ov = overviewMap[a.user_id];
         return {
           ...a,
@@ -374,16 +331,16 @@ const AdminDashboard = () => {
             ? { ...profileMap[a.user_id], credits: ov?.sessions_remaining ?? 0 }
             : null,
         };
-      }));
+      }) as AttendanceReq[]);
     }
-    if (overviewRes.data) setOverviewRows(overviewRes.data as any[]);
+    if (overviewRes.data) setOverviewRows(overviewRes.data as OverviewRow[]);
     if (referralRes.data) {
       const firstOfMonth = new Date();
       firstOfMonth.setDate(1);
       firstOfMonth.setHours(0, 0, 0, 0);
       setReferralStats({
         total: referralRes.data.length,
-        thisMonth: (referralRes.data as any[]).filter(r => new Date(r.converted_at) >= firstOfMonth).length,
+        thisMonth: referralRes.data.filter(r => new Date(r.converted_at) >= firstOfMonth).length,
       });
     }
     setUserGroupMap(_userGroupMap);
@@ -511,7 +468,7 @@ const AdminDashboard = () => {
     const { data: profiles } = await supabase.from("profiles").select("user_id, email");
     if (!profiles) return;
     const profileByEmail: Record<string, string> = {};
-    for (const p of profiles as any[]) {
+    for (const p of (profiles ?? []) as { user_id: string; email: string }[]) {
       if (p.email) profileByEmail[p.email.toLowerCase().trim()] = p.user_id;
     }
     for (const lead of unlinked) {
@@ -578,11 +535,7 @@ const AdminDashboard = () => {
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
     const rows = sortedLeads.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, l.goal, new Date(l.created_at).toLocaleDateString()]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c || ""}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    exportCSVUtil(headers, rows, "leads");
   };
 
   const handleConfirmReject = async () => {
@@ -592,7 +545,7 @@ const AdminDashboard = () => {
       let resubmitLink: string | undefined;
       if (rejectReason === "time_slots_unavailable") {
         const token = crypto.randomUUID().replace(/-/g, "");
-        await (supabase as any).from("schedule_resubmission_requests").insert({
+        await supabase.from("schedule_resubmission_requests").insert({
           enrollment_id: rejectTarget.id,
           user_id: rejectTarget.user_id,
           email: rejectTarget.profiles?.email || "",
@@ -645,7 +598,7 @@ const AdminDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const updates: any = {
+    const updates: Record<string, unknown> = {
       status: action,
       approval_status: action,
       reviewed_at: new Date().toISOString(),
@@ -734,7 +687,7 @@ const AdminDashboard = () => {
   const handleRevertEnrollment = async (enrollment: Enrollment) => {
     const { error } = await supabase.rpc("revert_enrollment", {
       _enrollment_id: enrollment.id,
-    } as any);
+    });
     if (error) {
       toast({ title: "Error", description: error.message || "Failed to revert enrollment.", variant: "destructive" });
       return;
@@ -757,7 +710,7 @@ const AdminDashboard = () => {
     if (action === "APPROVED") {
       const { data, error } = await supabase.rpc("approve_attendance_request", {
         _request_id: req.id,
-      } as any);
+      });
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to approve.", variant: "destructive" });
         return;
@@ -766,7 +719,7 @@ const AdminDashboard = () => {
     } else {
       const { error } = await supabase.rpc("reject_attendance_request", {
         _request_id: req.id,
-      } as any);
+      });
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to reject.", variant: "destructive" });
         return;
@@ -777,7 +730,7 @@ const AdminDashboard = () => {
   };
 
   const handleRevertAttendance = async (req: AttendanceReq) => {
-    const { error } = await supabase.rpc("revert_attendance_request" as any, {
+    const { error } = await supabase.rpc("revert_attendance_request", {
       _request_id: req.id,
     });
     if (error) {
@@ -1327,11 +1280,11 @@ const AdminDashboard = () => {
                         size="sm"
                         className="h-7 text-xs"
                         onClick={async () => {
-                          const { data, error } = await supabase.rpc("backfill_missing_enrollments" as any);
+                          const { data, error } = await supabase.rpc("backfill_missing_enrollments");
                           if (error) {
                             toast({ title: "Backfill failed", description: error.message, variant: "destructive" });
                           } else {
-                            const result = data as any;
+                            const result = data as Record<string, number> | null;
                             toast({ title: "Backfill complete", description: `Fixed: ${result?.fixed ?? 0}, Remaining: ${result?.remaining ?? 0}` });
                             fetchAll();
                           }
@@ -1568,7 +1521,7 @@ const AdminDashboard = () => {
                                             className="h-6 text-xs"
                                             onClick={async () => {
                                               const token = crypto.randomUUID().replace(/-/g, "");
-                                              const { error: insertErr } = await (supabase as any)
+                                              const { error: insertErr } = await supabase
                                                 .from("schedule_resubmission_requests")
                                                 .insert({
                                                   enrollment_id: e.id,

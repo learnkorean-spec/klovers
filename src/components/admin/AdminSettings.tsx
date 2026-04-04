@@ -22,19 +22,24 @@ const AdminSettings = () => {
   const [reminderSending, setReminderSending] = useState<"24h" | "1h" | null>(null);
 
   useEffect(() => {
-    supabase.from("app_settings" as any).select("value").eq("key", "zoom_meeting_url").maybeSingle()
-      .then(({ data }) => { if (data) setZoomUrl((data as any).value || ""); });
+    supabase.from("app_settings").select("value").eq("key", "zoom_meeting_url").maybeSingle()
+      .then(({ data }) => { if (data) setZoomUrl(data.value || ""); });
   }, []);
 
   const saveZoomUrl = async () => {
     setZoomSaving(true);
-    const { error } = await (supabase as any).from("app_settings").upsert(
-      { key: "zoom_meeting_url", value: zoomUrl, updated_at: new Date().toISOString() },
-      { onConflict: "key" }
-    );
-    setZoomSaving(false);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Zoom link saved ✓" });
+    try {
+      const { error } = await supabase.from("app_settings").upsert(
+        { key: "zoom_meeting_url", value: zoomUrl, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+      else toast({ title: "Zoom link saved" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to save", variant: "destructive" });
+    } finally {
+      setZoomSaving(false);
+    }
   };
 
   const sendReminders = async (type: "24h" | "1h") => {
@@ -73,29 +78,32 @@ const AdminSettings = () => {
       return;
     }
     setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast({ title: "Error", description: "Not authenticated.", variant: "destructive" });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Error", description: "Not authenticated.", variant: "destructive" });
+        return;
+      }
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session.user.email!,
+        password: currentPassword,
+      });
+      if (signInError) {
+        toast({ title: "Error", description: "Current password is incorrect.", variant: "destructive" });
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Password updated", description: "Your password has been changed successfully." });
+        setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+      }
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to update password", variant: "destructive" });
+    } finally {
       setLoading(false);
-      return;
     }
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: session.user.email!,
-      password: currentPassword,
-    });
-    if (signInError) {
-      toast({ title: "Error", description: "Current password is incorrect.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Password updated", description: "Your password has been changed successfully." });
-      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-    }
-    setLoading(false);
   };
 
   return (
@@ -167,18 +175,18 @@ const AdminSettings = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleChangePassword} className="space-y-4">
+          <form onSubmit={handleChangePassword} className="space-y-4" aria-label="Change password">
             <div>
-              <label className="text-sm font-medium text-foreground">Current Password</label>
-              <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required className="mt-1" />
+              <label htmlFor="current-password" className="text-sm font-medium text-foreground">Current Password</label>
+              <Input id="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required className="mt-1" autoComplete="current-password" />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">New Password</label>
-              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required className="mt-1" />
+              <label htmlFor="new-password" className="text-sm font-medium text-foreground">New Password</label>
+              <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required className="mt-1" autoComplete="new-password" />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">Confirm New Password</label>
-              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="mt-1" />
+              <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">Confirm New Password</label>
+              <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="mt-1" autoComplete="new-password" />
             </div>
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Updating..." : "Update Password"}

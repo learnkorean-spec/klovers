@@ -69,7 +69,7 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
       return;
     }
 
-    const slotIds = (slots as any[]).map((s: any) => s.id);
+    const slotIds = (slots).map((s: any) => s.id);
 
     // Get student_slot_preferences matched to these slots
     const { data: prefs } = await supabase
@@ -77,21 +77,21 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
       .select("user_id, assigned_slot_id")
       .in("assigned_slot_id", slotIds);
 
-    if (!prefs || (prefs as any[]).length === 0) {
+    if (!prefs || (prefs).length === 0) {
       setMembers([]);
       setLoadingMembers(false);
       return;
     }
 
-    const userIds = [...new Set((prefs as any[]).map((p: any) => p.user_id))];
+    const userIds = [...new Set((prefs).map((p: any) => p.user_id))];
 
     const { data: profiles } = await supabase
-      .from("profiles" as any)
+      .from("profiles")
       .select("user_id, name, email, level")
       .in("user_id", userIds);
 
     const enriched: SlotMember[] = userIds.map((uid) => {
-      const profile = (profiles as any[] || []).find((p: any) => p.user_id === uid);
+      const profile = (profiles || []).find((p) => p.user_id === uid);
       return {
         user_id: uid,
         name: profile?.name || "Unknown",
@@ -123,7 +123,7 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
     try {
       // Create student_groups entry
       const { data: group, error: groupError } = await supabase
-        .from("student_groups" as any)
+        .from("student_groups")
         .insert({
           name: groupName.trim(),
           schedule_day: slotInfo.day,
@@ -131,18 +131,18 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
           course_type: "group",
           level: slotInfo.level,
           capacity: Math.max(members.length, 5),
-        } as any)
+        })
         .select("id")
         .single();
 
       if (groupError || !group) throw new Error(groupError?.message || "Failed to create group");
 
-      const groupId = (group as any).id;
+      const groupId = group.id;
 
       // Mark notification as read + store group id reference
       await supabase
-        .from("admin_notifications" as any)
-        .update({ read: true, related_group_id: groupId } as any)
+        .from("admin_notifications")
+        .update({ read: true, related_group_id: groupId })
         .eq("id", notification.id);
 
       setCreatedGroupName(groupName.trim());
@@ -241,7 +241,7 @@ const AdminNotifications = () => {
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     let query = supabase
-      .from("admin_notifications" as any)
+      .from("admin_notifications")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
@@ -254,7 +254,7 @@ const AdminNotifications = () => {
     if (error) {
       console.error("Failed to fetch notifications:", error);
     }
-    setNotifications((data as any as Notification[]) || []);
+    setNotifications((data as Notification[]) || []);
     setLoading(false);
   }, [filter]);
 
@@ -264,8 +264,8 @@ const AdminNotifications = () => {
 
   const markRead = async (id: string) => {
     await supabase
-      .from("admin_notifications" as any)
-      .update({ read: true } as any)
+      .from("admin_notifications")
+      .update({ read: true })
       .eq("id", id);
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
@@ -274,8 +274,8 @@ const AdminNotifications = () => {
     const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
     if (unreadIds.length === 0) return;
     await supabase
-      .from("admin_notifications" as any)
-      .update({ read: true } as any)
+      .from("admin_notifications")
+      .update({ read: true })
       .in("id", unreadIds);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
@@ -338,7 +338,7 @@ const AdminNotifications = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1 flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Badge variant={typeColor(n.type) as any} className="text-xs">{n.type}</Badge>
+                      <Badge variant={typeColor(n.type)} className="text-xs">{n.type}</Badge>
                       {!n.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0" />}
                     </div>
                     <p className="text-sm text-foreground">{n.message}</p>
@@ -363,7 +363,7 @@ const AdminNotifications = () => {
                     )}
                   </div>
                   {!n.read && (
-                    <Button variant="ghost" size="sm" className="shrink-0" onClick={() => markRead(n.id)}>
+                    <Button variant="ghost" size="sm" className="shrink-0" onClick={() => markRead(n.id)} aria-label="Mark as read">
                       <Check className="h-4 w-4" />
                     </Button>
                   )}
