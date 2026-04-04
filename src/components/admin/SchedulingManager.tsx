@@ -1255,13 +1255,13 @@ const WaitlistManager = () => {
     const pkgIds = pkgs.map((p: Package) => p.id);
     const pkgCount: Record<string, number> = {};
     if (pkgIds.length > 0) {
-      const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id").in("package_id", pkgIds);
-      const gIds = (groups || []).map((g: any) => g.id);
+      const { data: groups } = await supabase.from("pkg_groups").select("id, package_id").in("package_id", pkgIds);
+      const gIds = (groups || []).map((g) => g.id);
       const gPkg: Record<string, string> = {};
-      (groups || []).forEach((g: any) => { gPkg[g.id] = g.package_id; });
+      (groups || []).forEach((g) => { gPkg[g.id] = g.package_id; });
       if (gIds.length > 0) {
-        const { data: mems } = await (supabase as any).from("pkg_group_members").select("group_id, member_status").in("group_id", gIds).eq("member_status", "active");
-        (mems || []).forEach((m: any) => {
+        const { data: mems } = await supabase.from("pkg_group_members").select("group_id, member_status").in("group_id", gIds).eq("member_status", "active");
+        (mems || []).forEach((m) => {
           const pid = gPkg[m.group_id];
           if (pid) pkgCount[pid] = (pkgCount[pid] || 0) + 1;
         });
@@ -1292,19 +1292,19 @@ const WaitlistManager = () => {
     // Remove from old waitlist group
     const row = rows.find((r) => r.user_id === userId);
     if (row) {
-      await (supabase as any).from("pkg_group_members").delete().eq("group_id", row.group_id).eq("user_id", userId);
+      await supabase.from("pkg_group_members").delete().eq("group_id", row.group_id).eq("user_id", userId);
     }
     // Use unified RPC
     const { data: enr } = await supabase.from("enrollments").select("id").eq("user_id", userId).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }).limit(1).maybeSingle();
-    const { data: result, error } = await (supabase as any).rpc("assign_student_to_group", {
+    const { data: result, error } = await supabase.rpc("assign_student_to_group", {
       _package_id: packageId,
       _user_id: userId,
-      _enrollment_id: enr ? (enr as any).id : null,
+      _enrollment_id: enr ? enr.id : null,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      const r = result as any;
+      const r = result as Record<string, unknown> | null;
       if (r?.status === "assigned") {
         toast({ title: "Assigned!", description: `Student moved to "${r.group_name}".` });
       } else if (r?.status === "waitlisted") {
@@ -1389,17 +1389,17 @@ const PrivateTimeConfig = () => {
   useEffect(() => {
     const load = async () => {
       const [timeRes, daysRes, pkgRes] = await Promise.all([
-        (supabase as any)
+        supabase
           .from("app_settings")
           .select("value")
           .eq("key", "private_time_options")
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("app_settings")
           .select("value")
           .eq("key", "private_class_days")
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("schedule_packages")
           .select("day_of_week")
           .eq("is_active", true)
@@ -1414,7 +1414,7 @@ const PrivateTimeConfig = () => {
       }
 
       // Group days (blocked for private)
-      const gDays = [...new Set((pkgRes.data as any[] || []).map((r: any) => r.day_of_week as number))];
+      const gDays = [...new Set((pkgRes.data || []).map((r) => r.day_of_week))];
       setGroupDays(gDays);
 
       // Private days
@@ -1431,7 +1431,7 @@ const PrivateTimeConfig = () => {
 
   const saveTimeOptions = async (updated: string[]) => {
     setSaving(true);
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("app_settings")
       .upsert({ key: "private_time_options", value: JSON.stringify(updated), updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) {
@@ -1445,7 +1445,7 @@ const PrivateTimeConfig = () => {
 
   const savePrivateDays = async (updated: string[]) => {
     setSavingDays(true);
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("app_settings")
       .upsert({ key: "private_class_days", value: JSON.stringify(updated), updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) {
