@@ -208,20 +208,19 @@ const PlacementTestPage = () => {
     finalTimeRef.current = elapsedSeconds;
     localStorage.removeItem(STORAGE_KEY);
     const res = computePlacementResult(answers);
-    if (!userId) { setResult(res); setPhase("result"); return; }
-    setSubmitting(true);
-    const { error } = await supabase.from("placement_tests").insert({
-      user_id: userId, score: res.score, level: res.levelKey,
-    });
-    if (error) {
-      toast({ title: "Error saving result", description: error.message, variant: "destructive" });
-      setSubmitting(false);
-      return;
-    }
-    await supabase.from("profiles").update({ level: res.levelKey }).eq("user_id", userId);
+    // Always show result immediately — save to Supabase in background if logged in
     setResult(res);
     setPhase("result");
-    setSubmitting(false);
+    if (userId) {
+      setSubmitting(true);
+      const { error } = await supabase.from("placement_tests").insert({
+        user_id: userId, score: res.score, level: res.levelKey,
+      });
+      if (!error) {
+        await supabase.from("profiles").update({ level: res.levelKey }).eq("user_id", userId);
+      }
+      setSubmitting(false);
+    }
   };
 
   const handleRetake = () => {
