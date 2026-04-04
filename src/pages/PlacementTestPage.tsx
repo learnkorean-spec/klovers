@@ -10,8 +10,13 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PLACEMENT_QUESTIONS, computePlacementResult, type PlacementResult } from "@/constants/placementQuestions";
-import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { PLACEMENT_QUESTIONS, computePlacementResult, STUDY_ROADMAPS, type PlacementResult } from "@/constants/placementQuestions";
+import { drawPlacementCard } from "@/lib/canvasRenderer";
+import { SITE_URL } from "@/lib/siteConfig";
+import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const QUESTIONS_PER_PAGE = 5;
@@ -54,13 +59,27 @@ const PlacementTestPage = () => {
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
   const [focusedQId, setFocusedQId] = useState<number | null>(null);
   const [showExplanations, setShowExplanations] = useState(false);
+  const [showRoadmap, setShowRoadmap] = useState(false);
   const [result, setResult] = useState<PlacementResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const skippedRef   = useRef(skipped);
-  const startTimeRef = useRef<number | null>(null);
-  const finalTimeRef = useRef(0);
+  const [autoAdvance, setAutoAdvance] = useState(() => localStorage.getItem("klovers_autoadvance") === "true");
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadSaving, setLeadSaving] = useState(false);
+  const [leadSaved, setLeadSaved] = useState(false);
+  const skippedRef      = useRef(skipped);
+  const autoAdvanceRef  = useRef(autoAdvance);
+  const startTimeRef    = useRef<number | null>(null);
+  const finalTimeRef    = useRef(0);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => { skippedRef.current = skipped; }, [skipped]);
+  useEffect(() => { autoAdvanceRef.current = autoAdvance; }, [autoAdvance]);
+  // Cleanup advance timer when page or phase changes
+  useEffect(() => {
+    return () => { if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current); };
+  }, [page, phase]);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -208,16 +227,60 @@ const PlacementTestPage = () => {
   const handleRetake = () => {
     localStorage.removeItem(STORAGE_KEY);
     setAnswers({}); setSkipped(new Set()); setPage(0);
-    setFocusedQId(null); setResult(null); setShowExplanations(false);
+    setFocusedQId(null); setResult(null); setShowExplanations(false); setShowRoadmap(false);
+    setLeadSaved(false); setLeadName(""); setLeadEmail("");
     setElapsedSeconds(0); startTimeRef.current = null; finalTimeRef.current = 0;
     setPhase("test");
   };
 
   const handleShare = (res: PlacementResult) => {
-    const text = `I scored ${res.score}/20 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → kloversegy.com/placement-test`;
+    const text = `I scored ${res.score}/20 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
       .then(() => toast({ title: "Copied to clipboard!", description: "Share your level with friends." }))
-      .catch(() => toast({ title: "kloversegy.com/placement-test", description: "Copy the link to share your result." }));
+      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: "Copy the link to share your result." }));
+  };
+
+  const handleWhatsApp = (res: PlacementResult) => {
+    const text = encodeURIComponent(`I scored ${res.score}/20 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDownloadCard = (res: PlacementResult) => {
+    const meta = LEVEL_META[res.levelKey] ?? { emoji: "🎓", tagline: "Korean Learner" };
+    const canvas = document.createElement("canvas");
+    drawPlacementCard(canvas, {
+      levelEmoji: meta.emoji,
+      levelLabel: res.levelLabel,
+      tagline: meta.tagline,
+      score: res.score,
+      total: PLACEMENT_QUESTIONS.length,
+    });
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `klovers-${res.levelKey}.png`;
+    a.click();
+    toast({ title: "Card downloaded!", description: "Share your level on social media." });
+  };
+
+  const handleLeadSubmit = async () => {
+    if (!leadName.trim() || !leadEmail.trim()) {
+      toast({ title: "Please enter your name and email.", variant: "destructive" }); return;
+    }
+    setLeadSaving(true);
+    await supabase.from("leads").insert({
+      name: leadName.trim(),
+      email: leadEmail.trim(),
+      level: result?.levelKey ?? "",
+      source: "placement_test",
+      status: "new",
+    });
+    setLeadSaving(false);
+    setLeadSaved(true);
+  };
+
+  const toggleAutoAdvance = (val: boolean) => {
+    setAutoAdvance(val);
+    localStorage.setItem("klovers_autoadvance", String(val));
   };
 
   // ── Review screen ──────────────────────────────────────────
@@ -413,6 +476,40 @@ const PlacementTestPage = () => {
             </CardContent>
           </Card>
 
+          {/* Study roadmap */}
+          {STUDY_ROADMAPS[result.levelKey] && (
+            <Card>
+              <CardContent className="pt-5 pb-5">
+                <button
+                  onClick={() => setShowRoadmap(v => !v)}
+                  className="flex w-full items-center justify-between text-sm font-semibold text-foreground"
+                >
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    Your 4-week study roadmap
+                  </span>
+                  {showRoadmap ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+                {showRoadmap && (
+                  <div className="mt-4 space-y-4">
+                    {STUDY_ROADMAPS[result.levelKey].map((week) => (
+                      <div key={week.week} className="border-t border-border pt-4 first:border-0 first:pt-0">
+                        <p className="text-xs font-bold text-primary mb-1.5">Week {week.week}: {week.title}</p>
+                        <ul className="space-y-1">
+                          {week.tasks.map((task, ti) => (
+                            <li key={ti} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                              <span className="text-primary mt-0.5 shrink-0">•</span>{task}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* CTA */}
           <Card>
             <CardContent className="pt-5 pb-5 space-y-3">
@@ -425,6 +522,14 @@ const PlacementTestPage = () => {
                   Save My Result — Sign Up Free
                 </Button>
               )}
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => setLeadDialogOpen(true)}>
+                  📚 Get free study plan
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
+                  <Download className="h-3.5 w-3.5" /> Download card
+                </Button>
+              </div>
               <div className="grid grid-cols-3 gap-2 pt-1">
                 {[
                   { icon: <Users className="h-3.5 w-3.5" />, label: "1,000+ students" },
@@ -439,10 +544,16 @@ const PlacementTestPage = () => {
               </div>
               <div className="flex gap-2 pt-1">
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleShare(result)}>
-                  <Share2 className="h-3.5 w-3.5" /> Share result
+                  <Share2 className="h-3.5 w-3.5" /> Copy result
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleWhatsApp(result)}>
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  WhatsApp
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={handleRetake}>
-                  <RefreshCw className="h-3.5 w-3.5" /> Retake test
+                  <RefreshCw className="h-3.5 w-3.5" /> Retake
                 </Button>
               </div>
               <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground hover:underline">
@@ -501,6 +612,41 @@ const PlacementTestPage = () => {
             </CardContent>
           </Card>
 
+          {/* Lead capture dialog */}
+          <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Get your free study plan</DialogTitle>
+                <DialogDescription>
+                  We'll send a personalised {result.levelLabel} study plan to your inbox.
+                </DialogDescription>
+              </DialogHeader>
+              {leadSaved ? (
+                <div className="text-center py-4 space-y-2">
+                  <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
+                  <p className="font-semibold text-sm">We'll send your plan shortly!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Your name"
+                    value={leadName}
+                    onChange={e => setLeadName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Your email"
+                    type="email"
+                    value={leadEmail}
+                    onChange={e => setLeadEmail(e.target.value)}
+                  />
+                  <Button className="w-full" onClick={handleLeadSubmit} disabled={leadSaving}>
+                    {leadSaving ? "Sending…" : "Send me the plan"}
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
         </main>
         <Footer />
       </div>
@@ -529,10 +675,14 @@ const PlacementTestPage = () => {
                 </span>
               )}
             </span>
-            <span className="flex items-center gap-2 text-xs">
+            <span className="flex items-center gap-3 text-xs">
               <span className="text-green-800 dark:text-green-300 font-medium">{totalAnswered} answered</span>
               {totalSkipped > 0 && <span className="text-amber-800 dark:text-amber-300 font-medium">{totalSkipped} skipped</span>}
               {totalRemaining > 0 && <span>{totalRemaining} left</span>}
+              <span className="flex items-center gap-1 ml-1 text-muted-foreground" title="Auto-advance to next question after answering">
+                <Switch id="auto-advance" checked={autoAdvance} onCheckedChange={toggleAutoAdvance} className="scale-75 origin-right" />
+                <label htmlFor="auto-advance" className="cursor-pointer select-none hidden sm:inline">Auto</label>
+              </span>
             </span>
           </div>
           <Progress value={progressPercent} className="h-1.5" />
@@ -581,6 +731,7 @@ const PlacementTestPage = () => {
             return (
               <Card
                 key={q.id}
+                id={`question-card-${q.id}`}
                 onClick={() => !isSkipped && setFocusedQId(q.id)}
                 className={[
                   "cursor-pointer transition-all",
@@ -593,6 +744,9 @@ const PlacementTestPage = () => {
                     <div className="flex flex-col gap-1 shrink-0">
                       <Badge variant="outline" className="text-xs">{q.section}</Badge>
                       <Badge variant="secondary" className="text-[10px] font-normal">{q.level}</Badge>
+                      <span className="text-[10px] text-amber-500 tracking-tighter text-center" title={`Difficulty ${q.difficulty}/5`}>
+                        {"★".repeat(q.difficulty)}{"☆".repeat(5 - q.difficulty)}
+                      </span>
                     </div>
                     <p className="font-medium text-sm leading-snug">
                       <span className="text-muted-foreground mr-1.5">Q{q.id}.</span>
@@ -618,6 +772,19 @@ const PlacementTestPage = () => {
                           startTimer();
                           setFocusedQId(q.id);
                           setAnswers((prev) => ({ ...prev, [q.id]: parseInt(val) }));
+                          if (autoAdvanceRef.current) {
+                            clearTimeout(advanceTimerRef.current!);
+                            const idx = currentQuestions.findIndex(cq => cq.id === q.id);
+                            advanceTimerRef.current = setTimeout(() => {
+                              const nextOnPage = currentQuestions.slice(idx + 1).find(cq => !skippedRef.current.has(cq.id));
+                              if (nextOnPage) {
+                                setFocusedQId(nextOnPage.id);
+                                document.getElementById(`question-card-${nextOnPage.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              } else if (page < TOTAL_PAGES - 1) {
+                                setTimeout(() => setPage(p => p + 1), 250);
+                              }
+                            }, 350);
+                          }
                         }}
                         className="space-y-2 ml-1"
                       >
