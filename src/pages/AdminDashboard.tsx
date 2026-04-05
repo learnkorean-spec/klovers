@@ -1631,8 +1631,7 @@ const AdminDashboard = () => {
                                     </AlertDialogContent>
                                   </AlertDialog>
                                 </div>
-                                </div>{/* close space-y-1 flex-1 */}
-                              </div>{/* close flex items-start gap-3 */}
+                                </div>{/* close flex items-start gap-3 */}
                               </div>{/* close flex flex-col md:flex-row */}
                             </CardContent>
                           </Card>
