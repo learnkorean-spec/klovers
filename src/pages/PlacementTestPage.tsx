@@ -13,10 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { PLACEMENT_QUESTIONS, computePlacementResult, STUDY_ROADMAPS, type PlacementResult } from "@/constants/placementQuestions";
+import { PLACEMENT_QUESTIONS, SPEAKING_PROMPTS, computePlacementResult, STUDY_ROADMAPS, type PlacementResult } from "@/constants/placementQuestions";
+import { useSpeech } from "@/hooks/useSpeech";
 import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
 import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
-import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin } from "lucide-react";
+import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin, Volume2, Square, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const QUESTIONS_PER_PAGE = 6;
@@ -64,12 +65,21 @@ const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
   level_5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
 };
 
+function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string): string {
+  const score = ratings.reduce((a, b) => a + b, 0);
+  const label = levelKey.replace("_", " ");
+  if (score >= 8) return `Excellent! Your spoken Korean matches your ${label} placement.`;
+  if (score >= 5) return "Good effort! Keep practising speaking alongside your reading and grammar.";
+  return "Your spoken Korean needs more practice — consider starting 1 level below your MCQ result.";
+}
+
 const PlacementTestPage = () => {
   useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { speakKorean, isSpeaking, cancel: cancelSpeech } = useSpeech();
   const [userId, setUserId] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"test" | "review" | "result">("test");
+  const [phase, setPhase] = useState<"test" | "review" | "result" | "speaking_test">("test");
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
@@ -85,6 +95,13 @@ const PlacementTestPage = () => {
   const [leadEmail, setLeadEmail] = useState("");
   const [leadSaving, setLeadSaving] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
+  // Speaking assessment state
+  const [speakingIndex, setSpeakingIndex] = useState(0);
+  const [speakingRatings, setSpeakingRatings] = useState<(0 | 1 | 2)[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
   const skippedRef      = useRef(skipped);
   const autoAdvanceRef  = useRef(autoAdvance);
   const startTimeRef    = useRef<number | null>(null);
@@ -302,6 +319,43 @@ const PlacementTestPage = () => {
     toast({ title: "Certificate downloaded!", description: "Share your achievement on LinkedIn or CV." });
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setRecordingUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setIsRecording(true);
+      setRecordingUrl(null);
+    } catch {
+      toast({ title: "Microphone access denied", description: "Enable microphone access to record yourself.", variant: "destructive" });
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  const handleSpeakingRate = (rating: 0 | 1 | 2) => {
+    const next = [...speakingRatings, rating];
+    setSpeakingRatings(next);
+    setRecordingUrl(null);
+    cancelSpeech();
+    if (speakingIndex + 1 < 5) {
+      setSpeakingIndex(i => i + 1);
+    } else {
+      setPhase("result");
+    }
+  };
+
   const handleLeadSubmit = async () => {
     if (!leadName.trim() || !leadEmail.trim()) {
       toast({ title: "Please enter your name and email.", variant: "destructive" }); return;
@@ -404,6 +458,100 @@ const PlacementTestPage = () => {
     );
   }
 
+  // ── Speaking test screen ────────────────────────────────────
+  if (phase === "speaking_test" && result) {
+    const prompts = SPEAKING_PROMPTS[result.levelKey] ?? SPEAKING_PROMPTS["foundation"];
+    const currentPrompt = prompts[speakingIndex];
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+          <div className="text-center space-y-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Speaking Assessment</p>
+            <h1 className="text-xl font-bold">Prompt {speakingIndex + 1} of 5</h1>
+            <Progress value={(speakingIndex / 5) * 100} className="h-1.5 mt-2" />
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 pb-6 space-y-5 text-center">
+              {/* Korean phrase */}
+              <div className="space-y-1">
+                <p className="text-3xl font-bold tracking-wide leading-relaxed">{currentPrompt.korean}</p>
+                <p className="text-xs text-muted-foreground font-mono">{currentPrompt.romanisation}</p>
+              </div>
+
+              {/* Hear model pronunciation */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => isSpeaking ? cancelSpeech() : speakKorean(currentPrompt.korean)}
+              >
+                {isSpeaking
+                  ? <><Square className="h-3.5 w-3.5" /> Stop</>
+                  : <><Volume2 className="h-3.5 w-3.5" /> Hear model pronunciation</>}
+              </Button>
+
+              {/* Record yourself */}
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground font-medium">Say it yourself, then rate how you did:</p>
+                {!isRecording && !recordingUrl && (
+                  <Button variant="outline" className="w-full gap-2" onClick={startRecording}>
+                    <Mic className="h-4 w-4" /> Record yourself (optional)
+                  </Button>
+                )}
+                {isRecording && (
+                  <Button variant="destructive" className="w-full gap-2 animate-pulse" onClick={stopRecording}>
+                    <Square className="h-4 w-4" /> Stop recording
+                  </Button>
+                )}
+                {recordingUrl && !isRecording && (
+                  <audio controls src={recordingUrl} className="w-full h-10 mt-1" />
+                )}
+              </div>
+
+              {/* Self-rating */}
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-green-700 border-green-500/30 bg-green-500/5 hover:bg-green-500/15 font-semibold"
+                  onClick={() => handleSpeakingRate(2)}
+                >
+                  ✓ Nailed it
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-amber-700 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 font-semibold"
+                  onClick={() => handleSpeakingRate(1)}
+                >
+                  ～ Almost
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-700 border-red-500/30 bg-red-500/5 hover:bg-red-500/15 font-semibold"
+                  onClick={() => handleSpeakingRate(0)}
+                >
+                  ✗ Struggled
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <button
+            className="w-full text-xs text-muted-foreground hover:underline"
+            onClick={() => { cancelSpeech(); setPhase("result"); }}
+          >
+            Skip speaking test → go back to result
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   // ── Result screen ───────────────────────────────────────────
   if (phase === "result" && result) {
     const meta = LEVEL_META[result.levelKey] ?? { emoji: "🎓", tagline: "Your Level", description: "Ready to start your Korean journey?" };
@@ -415,7 +563,7 @@ const PlacementTestPage = () => {
       : { label: `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" };
 
     // Section breakdown (5 Vocab, 10 Grammar, 10 Reading, 5 Speaking)
-    const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 10, Speaking: 5 };
+    const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 5, Listening: 5, Speaking: 5 };
 
     // Band breakdown (6 per band)
     const bandBreakdown = BAND_LABELS.map((band, bi) => {
@@ -483,7 +631,7 @@ const PlacementTestPage = () => {
               {/* By section */}
               <div className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">By skill</p>
-                {(["Vocabulary", "Grammar", "Reading", "Speaking"] as const).map(sec => {
+                {(["Vocabulary", "Grammar", "Reading", "Listening", "Speaking"] as const).map(sec => {
                   const correct = result.sectionScores[sec];
                   const total = sectionTotal[sec];
                   const pct = Math.round((correct / total) * 100);
@@ -503,7 +651,7 @@ const PlacementTestPage = () => {
 
               {/* Weak area action card */}
               {(() => {
-                const weakest = (["Vocabulary", "Grammar", "Reading", "Speaking"] as const)
+                const weakest = (["Vocabulary", "Grammar", "Reading", "Listening", "Speaking"] as const)
                   .map(sec => ({ sec, pct: result.sectionScores[sec] / sectionTotal[sec] }))
                   .sort((a, b) => a.pct - b.pct)[0];
                 if (!weakest || weakest.pct >= 0.7) return null;
@@ -511,6 +659,7 @@ const PlacementTestPage = () => {
                   Vocabulary: { tip: "Build your Korean vocabulary with free interactive games.", link: "/games", label: "Play vocab games" },
                   Grammar:    { tip: "Practise Korean grammar patterns with guided exercises.", link: "/games", label: "Grammar exercises" },
                   Reading:    { tip: "Improve your reading comprehension with our blog articles.", link: "/blog", label: "Read articles" },
+                  Listening:  { tip: "Train your ear with Korean dialogues, K-dramas, and audio exercises.", link: "/games", label: "Listening games" },
                   Speaking:   { tip: "Book a conversation class to improve your spoken Korean.", link: "/enroll", label: "Book speaking class" },
                 };
                 const { tip, link, label } = tips[weakest.sec];
@@ -651,6 +800,25 @@ const PlacementTestPage = () => {
                   <RefreshCw className="h-3.5 w-3.5" /> Retake
                 </Button>
               </div>
+              {/* Speaking assessment CTA */}
+              {speakingRatings.length === 0 && (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => { setSpeakingIndex(0); setSpeakingRatings([]); setRecordingUrl(null); setPhase("speaking_test"); }}
+                >
+                  <Mic className="h-4 w-4" /> Test My Speaking (5 prompts · ~3 min)
+                </Button>
+              )}
+              {speakingRatings.length === 5 && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1">
+                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Mic className="h-3.5 w-3.5 text-primary" />
+                    Speaking score: {speakingRatings.reduce((a, b) => a + b, 0)}/10
+                  </p>
+                  <p className="text-xs text-muted-foreground">{speakingSummary(speakingRatings, result.levelKey)}</p>
+                </div>
+              )}
               <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground hover:underline">
                 Back to home
               </button>
@@ -685,6 +853,19 @@ const PlacementTestPage = () => {
                         </span>
                         <p className="text-sm font-medium leading-snug">Q{q.id}. {q.question}</p>
                       </div>
+
+                      {/* Listening passage revealed in review */}
+                      {q.section === "Listening" && q.passage && (
+                        <div className="ml-7 mb-2 rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 text-xs space-y-1.5">
+                          <p className="font-medium text-foreground leading-relaxed">{q.passage}</p>
+                          <button
+                            className="flex items-center gap-1 text-primary hover:underline text-[11px]"
+                            onClick={() => speakKorean(q.passage!)}
+                          >
+                            <Volume2 className="h-3 w-3" /> Listen again
+                          </button>
+                        </div>
+                      )}
 
                       {!wasSkipped && (
                         <div className="ml-7 text-xs space-y-1 mb-2">
@@ -854,11 +1035,25 @@ const PlacementTestPage = () => {
                     </p>
                   </div>
 
-                  {q.passage && (
+                  {q.passage && q.section === "Listening" ? (
+                    <div className="flex flex-col items-center gap-2 mb-4 py-4 bg-primary/5 rounded-xl border border-primary/15">
+                      <p className="text-xs text-muted-foreground">Listen to the passage, then answer below</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => isSpeaking ? cancelSpeech() : speakKorean(q.passage!)}
+                      >
+                        {isSpeaking
+                          ? <><Square className="h-3.5 w-3.5" /> Stop</>
+                          : <><Volume2 className="h-3.5 w-3.5" /> Listen</>}
+                      </Button>
+                    </div>
+                  ) : q.passage ? (
                     <div className="bg-muted/50 border-l-4 border-primary/40 rounded-r-lg px-4 py-3 mb-4 text-sm leading-relaxed text-foreground font-medium">
                       {q.passage}
                     </div>
-                  )}
+                  ) : null}
 
                   {isSkipped ? (
                     <div className="flex items-center justify-between ml-1">
