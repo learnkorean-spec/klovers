@@ -10,31 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-
-type TierKey = "local" | "regional" | "global";
-type ClassType = "group" | "private";
-type Duration = 1 | 3 | 6;
-
-const DURATION_MAP: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
-
-const tierCountries: Record<TierKey, string[]> = {
-  local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
-  regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
-  global: ["UAE", "Saudi Arabia", "Qatar", "Bahrain", "Oman", "Kuwait", "United States", "United Kingdom", "Germany", "France", "Canada", "Australia", "Japan", "South Korea", "China"],
-};
-
-const tierPrices: Record<TierKey, Record<ClassType, Record<Duration, number>>> = {
-  local: { group: { 1: 25, 3: 70, 6: 130 }, private: { 1: 50, 3: 140, 6: 250 } },
-  regional: { group: { 1: 40, 3: 110, 6: 200 }, private: { 1: 80, 3: 220, 6: 380 } },
-  global: { group: { 1: 60, 3: 170, 6: 300 }, private: { 1: 120, 3: 330, 6: 580 } },
-};
-
-function getTierForCountry(country: string): TierKey | null {
-  for (const [tier, countries] of Object.entries(tierCountries)) {
-    if (countries.includes(country)) return tier as TierKey;
-  }
-  return null;
-}
+import { type TierKey, type ClassType, type Duration, tierPrices, getTierForCountry, DURATION_CLASSES } from "@/lib/stripePrices";
 
 const EnrollPage = () => {
   useSEO({ title: "Enroll Now", description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.", canonical: "https://kloversegy.com/enroll" });
@@ -73,7 +49,7 @@ const EnrollPage = () => {
     return tierPrices[tier]?.[planType as ClassType]?.[Number(duration) as Duration] ?? null;
   }, [tier, planType, duration]);
 
-  const classesIncluded = duration ? DURATION_MAP[Number(duration) as Duration] : 0;
+  const classesIncluded = duration ? DURATION_CLASSES[Number(duration) as Duration] : 0;
   const unitPrice = price && classesIncluded ? (price / classesIncluded).toFixed(2) : "0.00";
 
   const handleSubmit = async (e: React.FormEvent) => {
