@@ -363,9 +363,7 @@ const EgyptPaymentPage = () => {
         // Fallback: use SECURITY DEFINER RPC (bypasses RLS for manual enrollments)
         const { data: rows, error: rpcErr } = await (supabase as any)
           .rpc("get_enrollment_for_payment", { p_enrollment_id: enrollmentId! });
-        console.log("[PaymentPage] RPC result:", rows, rpcErr);
         data = rows && rows.length > 0 ? rows[0] : null;
-        if (rpcErr) console.error("[PaymentPage] RPC error:", rpcErr);
       }
 
       if (!data) {
