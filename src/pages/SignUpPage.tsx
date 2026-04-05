@@ -20,6 +20,11 @@ const SignUpPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect");
+  // Capture referrer ID from URL param or localStorage (set by free-trial page)
+  const referrerId = searchParams.get("ref") ?? localStorage.getItem("referrer_id");
+  if (searchParams.get("ref")) {
+    localStorage.setItem("referrer_id", searchParams.get("ref")!);
+  }
   const { t, language } = useLanguage();
   const isAr = language === "ar";
 
@@ -60,6 +65,19 @@ const SignUpPage = () => {
     }
 
     track.completeRegistration();
+
+    // Record referral if this signup came via a referral link
+    if (referrerId && data.user) {
+      try {
+        await supabase.functions.invoke("record-referral", {
+          body: { referrerId, referredEmail: email.trim().toLowerCase() },
+        });
+        localStorage.removeItem("referrer_id");
+      } catch {
+        // Non-critical — don't block signup on referral failure
+      }
+    }
+
     toast({
       title: t("auth.accountCreated") || "Account created!",
       description: t("auth.welcomeMessage") || "Welcome to K-Lovers! You can now sign in.",

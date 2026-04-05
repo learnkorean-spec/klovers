@@ -197,6 +197,7 @@ const StudentDashboard = () => {
   const [userId, setUserId] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("");
+  const [referralCount, setReferralCount] = useState(0);
   const [profileLevel, setProfileLevel] = useState("");
   const [placementTest, setPlacementTest] = useState<PlacementTestResult | null>(null);
   const [hasNoData, setHasNoData] = useState(false);
@@ -253,6 +254,14 @@ const StudentDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
+
+      // Referral count
+      const { count: refCount } = await supabase
+        .from("referral_conversions")
+        .select("*", { count: "exact", head: true })
+        .eq("referrer_user_id", session.user.id)
+        .eq("xp_awarded", true);
+      setReferralCount(refCount || 0);
 
       // Weekly XP: from Monday 00:00 local time
       const now = new Date();
@@ -723,8 +732,13 @@ const StudentDashboard = () => {
                   <Gift className="h-5 w-5 text-violet-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">Refer a Friend → Earn 1 Free Session</p>
+                  <p className="text-sm font-bold text-foreground">Refer a Friend → Earn 150 XP</p>
                   <p className="text-xs text-muted-foreground truncate">{refLink}</p>
+                  {referralCount > 0 && (
+                    <p className="text-xs text-violet-600 font-medium mt-0.5">
+                      🎁 {referralCount} friend{referralCount !== 1 ? "s" : ""} joined · +{referralCount * 150} XP earned
+                    </p>
+                  )}
                 </div>
                 <Button size="sm" variant="outline" onClick={copyRef} className="shrink-0 gap-1.5 border-violet-300 text-violet-700 hover:bg-violet-100">
                   <Copy className="h-3.5 w-3.5" /> Copy
