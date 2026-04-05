@@ -163,6 +163,15 @@ export function useGamification() {
       xp_earned: xp,
     });
 
+    // Early Bird badge — studying before 8 AM
+    const hour = new Date().getHours();
+    if (hour < 8) {
+      await supabase.from("student_badges").upsert(
+        { user_id: userId, badge_key: "early_bird" },
+        { onConflict: "user_id,badge_key" }
+      );
+    }
+
     await updateStreak(userId);
 
     const newProgress = await fetchProgress();
@@ -223,6 +232,15 @@ export function useGamification() {
         if (lessonMeta?.book === "kdrama") {
           await awardBadge("seoul_explorer");
         }
+        // Boss Slayer — boss lessons are every 5th lesson (sort_order % 5 === 0)
+        const { data: lessonMeta2 } = await supabase
+          .from("textbook_lessons")
+          .select("sort_order")
+          .eq("id", lessonId)
+          .maybeSingle();
+        if (lessonMeta2?.sort_order && lessonMeta2.sort_order % 5 === 0) {
+          await awardBadge("boss_slayer");
+        }
       }
     } else {
       await supabase.from("student_lesson_progress").insert({
@@ -280,6 +298,24 @@ export function useGamification() {
     }
     if (chapterCount >= 45) {
       await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "topik_ready" }, { onConflict: "user_id,badge_key" });
+    }
+
+    // Bilingual Explorer — lessons completed in 2+ different textbooks
+    if (allProgress.length > 0) {
+      const lessonIds = allProgress.filter((p: any) => p.chapter_completed).map((p: any) => p.lesson_id);
+      if (lessonIds.length > 0) {
+        const { data: books } = await supabase
+          .from("textbook_lessons")
+          .select("book")
+          .in("id", lessonIds);
+        const uniqueBooks = new Set((books || []).map((b: any) => b.book).filter(Boolean));
+        if (uniqueBooks.size >= 2) {
+          await supabase.from("student_badges").upsert(
+            { user_id: userId, badge_key: "bilingual_explorer" },
+            { onConflict: "user_id,badge_key" }
+          );
+        }
+      }
     }
   }, [userId]);
 
