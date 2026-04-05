@@ -1459,7 +1459,7 @@ const AdminDashboard = () => {
                       attendanceReqs={attendanceReqs}
                       onAttendanceAction={handleAttendanceAction}
                       onRevertAttendance={handleRevertAttendance}
-                      userGroupMap={userGroupMap}
+                      userGroupMap={{}}
                       onUpdated={invalidateAll}
                     />
                   </TabErrorBoundary>
