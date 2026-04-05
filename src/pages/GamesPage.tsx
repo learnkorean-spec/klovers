@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from "react";
-import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -13,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { getLeagueProgress, BADGES } from "@/constants/gamification";
-import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones, MessagesSquare, Layers2, ListOrdered, Bug, ChevronUp, Crown, Ban, Timer, MapPin, FileText } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -37,16 +36,6 @@ const SpeedReadGame = lazy(() => import("@/components/games/SpeedReadGame"));
 const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGame"));
 const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
 const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
-const DialogueFillGame = lazy(() => import("@/components/games/DialogueFillGame"));
-const SpeechLevelGame = lazy(() => import("@/components/games/SpeechLevelGame"));
-const GrammarPatternGame = lazy(() => import("@/components/games/GrammarPatternGame"));
-const ConversationOrderGame = lazy(() => import("@/components/games/ConversationOrderGame"));
-const ErrorCatchGame = lazy(() => import("@/components/games/ErrorCatchGame"));
-const HonorificGame = lazy(() => import("@/components/games/HonorificGame"));
-const NegationGame = lazy(() => import("@/components/games/NegationGame"));
-const TenseShiftGame = lazy(() => import("@/components/games/TenseShiftGame"));
-const SituationPickGame = lazy(() => import("@/components/games/SituationPickGame"));
-const StoryGapGame = lazy(() => import("@/components/games/StoryGapGame"));
 
 const FREE_GAME_IDS = ["match", "hangul"];
 
@@ -63,6 +52,7 @@ const GamesPage = () => {
   const [showSignupNudge, setShowSignupNudge] = useState(false);
   const { awardGameXp, progress, league, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [xpFloat, setXpFloat] = useState<number | null>(null);
+  const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
   const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -113,16 +103,6 @@ const GamesPage = () => {
     { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner"), free: false },
     { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate"), free: false },
     { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner"), free: false },
-    { id: "dialoguefill", title: t("games.dialoguefillTitle"), description: t("games.dialoguefillDesc"), icon: MessagesSquare, emoji: "💬", difficulty: t("games.intermediate"), free: false },
-    { id: "speechlevel", title: t("games.speechlevelTitle"), description: t("games.speechlevelDesc"), icon: ChevronUp, emoji: "🎭", difficulty: t("games.intermediate"), free: false },
-    { id: "grammarpattern", title: t("games.grammarpatternTitle"), description: t("games.grammarpatternDesc"), icon: Layers2, emoji: "📐", difficulty: t("games.advanced"), free: false },
-    { id: "conversationorder", title: t("games.conversationorderTitle"), description: t("games.conversationorderDesc"), icon: ListOrdered, emoji: "🔢", difficulty: t("games.advanced"), free: false },
-    { id: "errorcatch", title: t("games.errorcatchTitle"), description: t("games.errorcatchDesc"), icon: Bug, emoji: "🔍", difficulty: t("games.advanced"), free: false },
-    { id: "honorific", title: t("games.honorificTitle"), description: t("games.honorificDesc"), icon: Crown, emoji: "🙇", difficulty: t("games.intermediate"), free: false },
-    { id: "negation", title: t("games.negationTitle"), description: t("games.negationDesc"), icon: Ban, emoji: "✋", difficulty: t("games.intermediate"), free: false },
-    { id: "tenseshift", title: t("games.tenseshiftTitle"), description: t("games.tenseshiftDesc"), icon: Timer, emoji: "⏱️", difficulty: t("games.intermediate"), free: false },
-    { id: "situationpick", title: t("games.situationpickTitle"), description: t("games.situationpickDesc"), icon: MapPin, emoji: "🇰🇷", difficulty: t("games.advanced"), free: false },
-    { id: "storygap", title: t("games.storygapTitle"), description: t("games.storygapDesc"), icon: FileText, emoji: "📖", difficulty: t("games.advanced"), free: false },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
@@ -131,6 +111,10 @@ const GamesPage = () => {
       if (xp && xp > 0) {
         setXpFloat(xp);
         toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
+      }
+      // Show perfect score overlay
+      if (score === totalRounds && totalRounds > 0) {
+        setShowPerfectScore({ score, total: totalRounds });
       }
     } else {
       setShowSignupNudge(true);
@@ -195,16 +179,6 @@ const GamesPage = () => {
       case "readingchoice": return <Suspense fallback={<GameFallback />}><ReadingChoiceGame onGameComplete={onComplete} /></Suspense>;
       case "sentenceread": return <Suspense fallback={<GameFallback />}><SentenceReadGame onGameComplete={onComplete} /></Suspense>;
       case "phonics": return <Suspense fallback={<GameFallback />}><PhonicsReadGame onGameComplete={onComplete} /></Suspense>;
-      case "dialoguefill": return <Suspense fallback={<GameFallback />}><DialogueFillGame onGameComplete={onComplete} /></Suspense>;
-      case "speechlevel": return <Suspense fallback={<GameFallback />}><SpeechLevelGame onGameComplete={onComplete} /></Suspense>;
-      case "grammarpattern": return <Suspense fallback={<GameFallback />}><GrammarPatternGame onGameComplete={onComplete} /></Suspense>;
-      case "conversationorder": return <Suspense fallback={<GameFallback />}><ConversationOrderGame onGameComplete={onComplete} /></Suspense>;
-      case "errorcatch": return <Suspense fallback={<GameFallback />}><ErrorCatchGame onGameComplete={onComplete} /></Suspense>;
-      case "honorific": return <Suspense fallback={<GameFallback />}><HonorificGame onGameComplete={onComplete} /></Suspense>;
-      case "negation": return <Suspense fallback={<GameFallback />}><NegationGame onGameComplete={onComplete} /></Suspense>;
-      case "tenseshift": return <Suspense fallback={<GameFallback />}><TenseShiftGame onGameComplete={onComplete} /></Suspense>;
-      case "situationpick": return <Suspense fallback={<GameFallback />}><SituationPickGame onGameComplete={onComplete} /></Suspense>;
-      case "storygap": return <Suspense fallback={<GameFallback />}><StoryGapGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };
@@ -244,7 +218,7 @@ const GamesPage = () => {
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-primary text-outlined font-semibold hover:underline">Sign up to unlock all 20</a>
+                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 30 games</a>
               </div>
             )}
 
@@ -329,7 +303,7 @@ const GamesPage = () => {
                 <Trophy className="h-4 w-4 text-amber-500" /> Top Players
               </h2>
               {!isLoggedIn && (
-                <a href="/signup" className="text-xs text-primary text-outlined font-semibold hover:underline">Sign up to join →</a>
+                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">Sign up to join →</a>
               )}
             </div>
             <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>
@@ -393,15 +367,20 @@ const GamesPage = () => {
 
         {/* Active game */}
         <div id="active-game-area" className="border-t border-border scroll-mt-20">
-          <PageErrorBoundary context="this game" onRetry={() => {/* game re-renders on state change */}}>
-            {renderGame()}
-          </PageErrorBoundary>
+          {renderGame()}
         </div>
         <FinalCTA />
       </main>
       <Footer />
 
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {showPerfectScore && (
+        <PerfectScoreOverlay
+          score={showPerfectScore.score}
+          total={showPerfectScore.total}
+          onContinue={() => setShowPerfectScore(null)}
+        />
+      )}
       {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
       {leaguePromotion && (
         <LeaguePromotionModal
@@ -425,13 +404,13 @@ const GamesPage = () => {
             <div className="text-center space-y-2">
               <div className="text-4xl">🎉</div>
               <h2 className="text-xl font-bold text-foreground">Nice work!</h2>
-              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 13 games.</p>
+              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 30 games.</p>
             </div>
 
             <div className="space-y-2">
               {[
                 { icon: "⭐", text: "Save your XP and streak" },
-                { icon: "🔓", text: "Unlock all 20 Korean games" },
+                { icon: "🔓", text: "Unlock all 30 Korean games" },
                 { icon: "📊", text: "Track your learning progress" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">

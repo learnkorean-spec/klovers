@@ -34,6 +34,9 @@ export function VocabularyReviewPage() {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [masteredCount, setMasteredCount] = useState(0);
   const [reviewedCount, setReviewedCount] = useState(0);
+  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
+  const [lessonOptions, setLessonOptions] = useState<{ id: number; title: string }[]>([]);
+  const [sessionCardCount, setSessionCardCount] = useState(0);
 
   useEffect(() => {
     if (newBadges.length > 0) {
@@ -50,39 +53,38 @@ export function VocabularyReviewPage() {
     }
   }, [newBadges]);
 
+  useEffect(() => {
+    if (dueCards.length === 0) return;
+    const lessonIds = [...new Set(dueCards.map(c => c.lesson_id).filter(Boolean))];
+    if (lessonIds.length === 0) return;
+    supabase
+      .from("textbook_lessons")
+      .select("id, title_en, sort_order")
+      .in("id", lessonIds)
+      .order("sort_order")
+      .then(({ data }) => {
+        setLessonOptions((data || []).map((l: any) => ({ id: l.id, title: `Lesson ${l.sort_order}: ${l.title_en}` })));
+      });
+  }, [dueCards]);
+
+  const filteredCards = selectedLessonId ? dueCards.filter(c => c.lesson_id === selectedLessonId) : dueCards;
+
   const handleReviewComplete = async (vocabId: number, quality: number) => {
     try {
       await recordReview(vocabId, quality);
       setXpEarned((prev) => prev + 5);
-      setReviewedCount((prev) => prev + 1);
-      if (quality >= 4) setMasteredCount((prev) => prev + 1);
       await awardXp(0, "review");
-
-      // Check review_rookie badge — award after 10 review sessions
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        const { count } = await supabase
-          .from("student_xp")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id)
-          .eq("activity_type", "review");
-        if ((count || 0) >= 10) {
-          await supabase.from("student_badges").upsert(
-            { user_id: session.user.id, badge_key: "review_rookie" },
-            { onConflict: "user_id,badge_key" }
-          );
-        }
-      }
     } catch {
       toast.error("Could not save review. Please try again.");
     }
   };
 
   useEffect(() => {
-    if (reviewedCount > 0 && reviewedCount >= dueCards.length && !sessionComplete) {
+    if (reviewedCount > 0 && sessionCardCount > 0 && reviewedCount >= sessionCardCount && !sessionComplete) {
       setSessionComplete(true);
     }
-  }, [reviewedCount, dueCards.length, sessionComplete]);
+  }, [reviewedCount, sessionCardCount, sessionComplete]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -106,9 +108,9 @@ export function VocabularyReviewPage() {
           {!sessionStarted && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[
-                { label: isAr ? "مطلوب اليوم" : "Due Today", value: dueCards.length, sub: isAr ? "بطاقات جاهزة للمراجعة" : "cards ready to review" },
-                { label: isAr ? "الوقت المطلوب" : "Time Needed", value: Math.max(1, Math.ceil(dueCards.length / 20)), sub: isAr ? "دقائق (~20 بطاقة/دقيقة)" : "minutes (~20 cards/min)" },
-                { label: isAr ? "XP متاحة" : "XP Available", value: `${dueCards.length * 5}`, sub: isAr ? "5 XP لكل بطاقة" : "5 XP per card" },
+                { label: isAr ? "مطلوب اليوم" : "Due Today", value: filteredCards.length, sub: isAr ? "بطاقات جاهزة للمراجعة" : "cards ready to review" },
+                { label: isAr ? "الوقت المطلوب" : "Time Needed", value: Math.max(1, Math.ceil(filteredCards.length / 20)), sub: isAr ? "دقائق (~20 بطاقة/دقيقة)" : "minutes (~20 cards/min)" },
+                { label: isAr ? "XP متاحة" : "XP Available", value: `${filteredCards.length * 5}`, sub: isAr ? "5 XP لكل بطاقة" : "5 XP per card" },
               ].map(({ label, value, sub }) => (
                 <Card key={label}>
                   <CardHeader className="pb-3">
@@ -150,10 +152,27 @@ export function VocabularyReviewPage() {
                 <Zap className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Review?</h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  You have <strong>{dueCards.length}</strong> vocabulary items ready.
-                  This session will take about {Math.max(1, Math.ceil(dueCards.length / 20))} minutes.
+                  You have <strong>{filteredCards.length}</strong> vocabulary items ready.
+                  This session will take about {Math.max(1, Math.ceil(filteredCards.length / 20))} minutes.
                 </p>
-                <Button onClick={() => setSessionStarted(true)} size="lg" className="gap-2">
+                {lessonOptions.length > 1 && (
+                  <div className="mb-6 text-left">
+                    <label className="block text-sm font-medium text-foreground mb-2">Filter by lesson</label>
+                    <select
+                      value={selectedLessonId ?? ""}
+                      onChange={e => setSelectedLessonId(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">All lessons ({dueCards.length} cards)</option>
+                      {lessonOptions.map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.title} ({dueCards.filter(c => c.lesson_id === l.id).length} cards)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <Button onClick={() => { setSessionCardCount(filteredCards.length); setSessionStarted(true); }} size="lg" className="gap-2">
                   <BookOpen className="w-4 h-4" /> Start Review Session
                 </Button>
                 <div className="mt-8 text-left space-y-3 bg-muted/50 p-6 rounded-xl">
@@ -202,7 +221,7 @@ export function VocabularyReviewPage() {
               </Card>
             ) : (
               <div>
-                <VocabularyReview cards={dueCards} onComplete={handleReviewComplete} isLoading={srsLoading} />
+                <VocabularyReview cards={filteredCards} onComplete={handleReviewComplete} isLoading={srsLoading} />
                 {xpEarned > 0 && (
                   <div className="mt-8 text-center">
                     <Card className="border-primary/20 bg-primary/5">

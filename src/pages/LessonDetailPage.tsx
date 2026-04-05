@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
 import { Progress } from "@/components/ui/progress";
+import { NextStepCard } from "@/components/NextStepCard";
 
 interface Lesson {
   id: number;
@@ -364,6 +365,11 @@ const LessonDetailPage = () => {
             <span className="text-2xl">⭐</span>
             <p className="font-bold text-foreground">{t("textbook.missionComplete")}</p>
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
+          </div>
+        )}
+        {lp?.chapter_completed && (
+          <div className="mb-6">
+            <NextStepCard completedType="lesson" lessonSection={activeTab} />
           </div>
         )}
 
