@@ -448,7 +448,7 @@ const StudentDashboard = () => {
         <main id="main-content" className="pt-24 pb-16 px-4">
           <div className="max-w-5xl mx-auto space-y-6">
             <Skeleton className="h-8 w-48" />
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
             </div>
             <Skeleton className="h-16 rounded-xl" />
@@ -1264,7 +1264,7 @@ const StudentDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
                           { label: "Package", val: enrollment.sessions_total },
                           { label: "Used", val: totalUsed },
