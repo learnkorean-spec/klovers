@@ -15,7 +15,7 @@ import { getLeagueProgress, BADGES } from "@/constants/gamification";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones, MessagesSquare, Layers2, ListOrdered, Bug, ChevronUp } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones, MessagesSquare, Layers2, ListOrdered, Bug, ChevronUp, Crown, Ban, Timer, MapPin, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -41,6 +41,11 @@ const SpeechLevelGame = lazy(() => import("@/components/games/SpeechLevelGame"))
 const GrammarPatternGame = lazy(() => import("@/components/games/GrammarPatternGame"));
 const ConversationOrderGame = lazy(() => import("@/components/games/ConversationOrderGame"));
 const ErrorCatchGame = lazy(() => import("@/components/games/ErrorCatchGame"));
+const HonorificGame = lazy(() => import("@/components/games/HonorificGame"));
+const NegationGame = lazy(() => import("@/components/games/NegationGame"));
+const TenseShiftGame = lazy(() => import("@/components/games/TenseShiftGame"));
+const SituationPickGame = lazy(() => import("@/components/games/SituationPickGame"));
+const StoryGapGame = lazy(() => import("@/components/games/StoryGapGame"));
 
 const FREE_GAME_IDS = ["match", "hangul"];
 
@@ -112,6 +117,11 @@ const GamesPage = () => {
     { id: "grammarpattern", title: t("games.grammarpatternTitle"), description: t("games.grammarpatternDesc"), icon: Layers2, emoji: "📐", difficulty: t("games.advanced"), free: false },
     { id: "conversationorder", title: t("games.conversationorderTitle"), description: t("games.conversationorderDesc"), icon: ListOrdered, emoji: "🔢", difficulty: t("games.advanced"), free: false },
     { id: "errorcatch", title: t("games.errorcatchTitle"), description: t("games.errorcatchDesc"), icon: Bug, emoji: "🔍", difficulty: t("games.advanced"), free: false },
+    { id: "honorific", title: t("games.honorificTitle"), description: t("games.honorificDesc"), icon: Crown, emoji: "🙇", difficulty: t("games.intermediate"), free: false },
+    { id: "negation", title: t("games.negationTitle"), description: t("games.negationDesc"), icon: Ban, emoji: "✋", difficulty: t("games.intermediate"), free: false },
+    { id: "tenseshift", title: t("games.tenseshiftTitle"), description: t("games.tenseshiftDesc"), icon: Timer, emoji: "⏱️", difficulty: t("games.intermediate"), free: false },
+    { id: "situationpick", title: t("games.situationpickTitle"), description: t("games.situationpickDesc"), icon: MapPin, emoji: "🇰🇷", difficulty: t("games.advanced"), free: false },
+    { id: "storygap", title: t("games.storygapTitle"), description: t("games.storygapDesc"), icon: FileText, emoji: "📖", difficulty: t("games.advanced"), free: false },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
@@ -146,7 +156,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Create a free account to unlock all 25 games, save your XP, and build your daily streak.
+              Create a free account to unlock all 30 games, save your XP, and build your daily streak.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -189,6 +199,11 @@ const GamesPage = () => {
       case "grammarpattern": return <Suspense fallback={<GameFallback />}><GrammarPatternGame onGameComplete={onComplete} /></Suspense>;
       case "conversationorder": return <Suspense fallback={<GameFallback />}><ConversationOrderGame onGameComplete={onComplete} /></Suspense>;
       case "errorcatch": return <Suspense fallback={<GameFallback />}><ErrorCatchGame onGameComplete={onComplete} /></Suspense>;
+      case "honorific": return <Suspense fallback={<GameFallback />}><HonorificGame onGameComplete={onComplete} /></Suspense>;
+      case "negation": return <Suspense fallback={<GameFallback />}><NegationGame onGameComplete={onComplete} /></Suspense>;
+      case "tenseshift": return <Suspense fallback={<GameFallback />}><TenseShiftGame onGameComplete={onComplete} /></Suspense>;
+      case "situationpick": return <Suspense fallback={<GameFallback />}><SituationPickGame onGameComplete={onComplete} /></Suspense>;
+      case "storygap": return <Suspense fallback={<GameFallback />}><StoryGapGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };
