@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { getLeagueProgress, BADGES } from "@/constants/gamification";
-import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
@@ -52,6 +52,7 @@ const GamesPage = () => {
   const [showSignupNudge, setShowSignupNudge] = useState(false);
   const { awardGameXp, progress, league, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [xpFloat, setXpFloat] = useState<number | null>(null);
+  const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
   const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -110,6 +111,10 @@ const GamesPage = () => {
       if (xp && xp > 0) {
         setXpFloat(xp);
         toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
+      }
+      // Show perfect score overlay
+      if (score === totalRounds && totalRounds > 0) {
+        setShowPerfectScore({ score, total: totalRounds });
       }
     } else {
       setShowSignupNudge(true);
@@ -369,6 +374,13 @@ const GamesPage = () => {
       <Footer />
 
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {showPerfectScore && (
+        <PerfectScoreOverlay
+          score={showPerfectScore.score}
+          total={showPerfectScore.total}
+          onContinue={() => setShowPerfectScore(null)}
+        />
+      )}
       {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
       {leaguePromotion && (
         <LeaguePromotionModal
