@@ -182,6 +182,141 @@ export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCard
   ctx.fillText("kloversegy.com/placement-test", W / 2, 920);
 }
 
+// ─── Placement Certificate (landscape 1200×850) ───────────────────────────────
+
+export interface PlacementCertificateData {
+  levelEmoji: string;
+  levelLabel: string;
+  tagline: string;
+  score: number;
+  total: number;
+  date: string;
+}
+
+/**
+ * Draws a landscape 1200×850 "Certificate of Language Assessment" onto the provided canvas.
+ */
+export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: PlacementCertificateData): void {
+  const W = 1200, H = 850;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+
+  // White background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+
+  // Gold header bar
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(0, 0, W, 120);
+
+  // Gold footer bar
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(0, H - 80, W, 80);
+
+  // Gold left accent strip
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(0, 0, 14, H);
+
+  // Gold right accent strip
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(W - 14, 0, 14, H);
+
+  // "K" logo circle (header, left side)
+  ctx.fillStyle = "#1a1a1a";
+  ctx.beginPath();
+  ctx.arc(80, 60, 44, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.font = "bold 52px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("K", 80, 63);
+
+  // Brand name (header)
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 32px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText("KLOVERS KOREAN ACADEMY", 144, 50);
+  ctx.font = "20px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#333333";
+  ctx.fillText("kloversegy.com", 144, 84);
+
+  // "Certificate of Language Assessment" title
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 48px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("Certificate of Language Assessment", W / 2, 154);
+
+  // Subtitle line
+  ctx.fillStyle = "#888888";
+  ctx.font = "24px system-ui, -apple-system, sans-serif";
+  ctx.fillText("TOPIK-Aligned · 30-Question Assessment", W / 2, 218);
+
+  // Horizontal divider
+  ctx.strokeStyle = "#EBC82E";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(100, 268);
+  ctx.lineTo(W - 100, 268);
+  ctx.stroke();
+
+  // Large level emoji
+  ctx.font = "120px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.levelEmoji, W / 2, 390);
+
+  // Level label pill
+  ctx.fillStyle = "#1a1a1a";
+  rRect(ctx, W / 2 - 260, 462, 520, 80, 40);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.font = "bold 34px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.levelLabel, W / 2, 502);
+
+  // Tagline
+  ctx.fillStyle = "#555555";
+  ctx.font = "26px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText(data.tagline, W / 2, 562);
+
+  // Score badge (bottom-right)
+  ctx.fillStyle = "#f5f5f5";
+  rRect(ctx, W - 260, 580, 220, 100, 16);
+  ctx.fill();
+  ctx.strokeStyle = "#EBC82E";
+  ctx.lineWidth = 3;
+  rRect(ctx, W - 260, 580, 220, 100, 16);
+  ctx.stroke();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 44px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(`${data.score} / ${data.total}`, W - 150, 622);
+  ctx.font = "18px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#888";
+  ctx.fillText("Score", W - 150, 664);
+
+  // Date (bottom-left)
+  ctx.fillStyle = "#888888";
+  ctx.font = "22px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.date, 50, 630);
+
+  // Footer URL
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "22px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("kloversegy.com/placement-test", W / 2, H - 40);
+}
+
 // ─── KLOVERS BRAND DESIGNS ───────────────────────────────────────────────────
 // All use fixed zone fractions so preview (270px CSS / 1080px canvas) = download (1080px canvas)
 
