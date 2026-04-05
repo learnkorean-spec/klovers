@@ -1907,3 +1907,1748 @@ BEGIN
    'Expressing emotions is very important in language learning. Korean has unique emotional expressions not found in English. For example, "설레다" expresses the fluttery feeling of anticipation, and "그립다" conveys the longing to see someone or something that is far away or gone. Most emotion adjectives conjugate with -아요/어요, and many follow the ㅂ irregular pattern. When stating the cause of an emotion, "-아/어서" is used.',
    1);
 END $$;
+
+-- ============================================================
+-- LESSON 27: Hobbies (취미)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=27;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=27 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '취미', 'chwimi', 'hobby', 1),
+  (l_id, '독서', 'dokseo', 'reading (books)', 2),
+  (l_id, '음악 감상', 'eumak gamsang', 'listening to music', 3),
+  (l_id, '영화 보기', 'yeonghwa bogi', 'watching movies', 4),
+  (l_id, '요리하다', 'yorihada', 'to cook', 5),
+  (l_id, '게임하다', 'geimhada', 'to play games', 6),
+  (l_id, '여행하다', 'yeohaenghada', 'to travel', 7),
+  (l_id, '사진 찍기', 'sajin jjikgi', 'taking photos', 8),
+  (l_id, '그림 그리기', 'geurim geurigi', 'drawing/painting', 9),
+  (l_id, '등산하다', 'deungsanhada', 'to hike', 10),
+  (l_id, '낚시하다', 'naksihada', 'to fish', 11),
+  (l_id, '운동하다', 'undonghada', 'to exercise', 12),
+  (l_id, '즐기다', 'jeulgida', 'to enjoy', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Talking About Hobbies: ~기 (Nominalization)',
+   '[Verb stem] + -기 + [이에요/좋아해요/싫어해요]',
+   'The -기 suffix nominalizes a verb (turns it into a noun phrase), allowing it to function as subject or object. This is the standard way to describe hobby activities in Korean.',
+   '[{"korean":"취미가 뭐예요?","english":"What is your hobby?"},{"korean":"저는 사진 찍기를 좋아해요.","english":"I like taking photos."},{"korean":"요리하기가 어려워요.","english":"Cooking is difficult."}]',
+   1),
+  (l_id,
+   'Frequency: 자주/가끔/거의 안',
+   '자주(often) / 가끔(sometimes) / 거의 안 + verb(almost never)',
+   'These adverbs modify the verb to express how frequently an activity is done.',
+   '[{"korean":"저는 자주 등산해요.","english":"I often go hiking."},{"korean":"가끔 낚시해요.","english":"I sometimes fish."},{"korean":"요즘 거의 운동을 안 해요.","english":"Lately I almost never exercise."}]',
+   2),
+  (l_id,
+   '같이 ~해요 — Suggesting Activities Together',
+   '같이 + [Verb]-아요/어요 / 같이 ~할래요?',
+   '같이 means "together." 할래요? is a friendly invitation/suggestion. Used to propose doing hobbies together.',
+   '[{"korean":"같이 영화 볼래요?","english":"Would you like to watch a movie together?"},{"korean":"주말에 같이 등산해요!","english":"Let''s go hiking together this weekend!"},{"korean":"저는 요리를 좋아하는데, 같이 할래요?","english":"I like cooking — would you like to do it together?"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '민준', '수진 씨 취미가 뭐예요?', 'Sujin ssi chwimi-ga mwoyeyo?', 'Sujin, what is your hobby?', 1),
+  (l_id, '수진', '저는 독서랑 사진 찍기를 좋아해요. 민준 씨는요?', 'Jeoneun dokseorang sajin jjikgi-reul joahaeyo. Minjun ssi-neunyo?', 'I like reading and photography. What about you?', 2),
+  (l_id, '민준', '저는 등산을 자주 해요. 주말마다 산에 가요.', 'Jeoneun deungsaneul jaju haeyo. Jumal-mada san-e gayo.', 'I often go hiking. I go to the mountains every weekend.', 3),
+  (l_id, '수진', '와, 멋있어요! 저는 등산을 별로 안 좋아해요. 힘들어서요.', 'Wa, meositsseoyo! Jeoneun deungsaneul byeolo an joahaeyo. Himdeureoseoyo.', 'Wow, cool! I don''t like hiking much. It is hard.', 4),
+  (l_id, '민준', '처음에는 힘들지만 경치가 너무 좋아요. 한번 같이 가 봐요!', 'Cheoeum-eneun himdeuljiman gyeongchi-ga neomu joayo. Hanbeon gachi ga bwayo!', 'It is hard at first, but the scenery is amazing. Let''s try going together once!', 5),
+  (l_id, '수진', '그래요? 그럼 쉬운 코스로 한번 가 봐요!', 'Geureayo? Geureom swiun koseu-ro hanbeon ga bwayo!', 'Really? Then let''s try an easy course!', 6),
+  (l_id, '민준', '좋아요! 이번 주 토요일 어때요?', 'Joayo! Ibeon ju toyoil eottaeyo?', 'Great! How about this Saturday?', 7),
+  (l_id, '수진', '좋아요, 기대돼요!', 'Joayo, gidae-waeyo!', 'Sounds good, I am excited!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What does the -기 suffix do to a verb?', '["Makes it negative","Turns it into a noun","Makes it past tense","Adds polite ending"]', 1, '-기 nominalizes the verb: 등산하다 → 등산하기(hiking as a noun), 요리하다 → 요리하기(cooking).', 1),
+  (l_id, '"자주" means:', '["sometimes","always","often","rarely"]', 2, '자주 = often/frequently. 가끔 = sometimes. 항상 = always. 거의 안 = rarely/almost never.', 2),
+  (l_id, 'How do you say "I like taking photos"?', '["저는 사진 찍기를 좋아해요","저는 사진 찍기가 좋습니다가","저는 사진을 찍기가 좋아","저는 사진을 찍기 할래요"]', 0, '사진 찍기(nominalized form) + 를(object particle) + 좋아해요 = I like taking photos.', 3),
+  (l_id, 'Which phrase invites someone to do something together?', '["같이 할래요?","같이 했어요?","같이 안 해요","같이 해야 해요"]', 0, '같이 할래요? = Would you like to do it together? A friendly invitation.', 4),
+  (l_id, 'What does 등산하다 mean?', '["to swim","to hike","to ski","to fish"]', 1, '등산하다 = to hike / climb a mountain. 등산 (登山) literally = climbing a mountain.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '취미를 이야기하는 것은 새로운 친구를 사귈 때 좋은 화제입니다. 한국 사람들이 자주 즐기는 취미로는 등산, 독서, 요리, 사진 찍기, 게임 등이 있습니다. 취미를 말할 때는 동사에 -기를 붙여 명사화한 후 "좋아해요"와 함께 씁니다. 예를 들어 "독서하기를 좋아해요"나 줄여서 "독서를 좋아해요"라고 합니다. 공통된 취미가 있으면 "같이 ~해요"라고 제안할 수 있습니다.',
+   'Talking about hobbies is a great conversation topic when making new friends. Popular hobbies enjoyed by Koreans include hiking, reading, cooking, photography, and gaming. When talking about hobbies, the verb is nominalized with -기 and combined with "좋아해요." For example, "독서하기를 좋아해요" or shortened to "독서를 좋아해요" (I like reading). If you share a common hobby, you can suggest "같이 ~해요" (Let''s do ~ together).',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 28: Shopping (쇼핑)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=28;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=28 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '쇼핑하다', 'syoping-hada', 'to shop', 1),
+  (l_id, '가게', 'gage', 'store / shop', 2),
+  (l_id, '백화점', 'baekhwajeom', 'department store', 3),
+  (l_id, '시장', 'sijang', 'market', 4),
+  (l_id, '얼마예요?', 'eolma-yeyo?', 'How much is it?', 5),
+  (l_id, '비싸다', 'bissada', 'to be expensive', 6),
+  (l_id, '싸다', 'ssada', 'to be cheap/inexpensive', 7),
+  (l_id, '사이즈', 'saijeu', 'size', 8),
+  (l_id, '입어 보다', 'ibeo boda', 'to try on (clothing)', 9),
+  (l_id, '색깔', 'saekkal', 'color', 10),
+  (l_id, '교환하다', 'gyohwanhada', 'to exchange / return', 11),
+  (l_id, '할인', 'harin', 'discount', 12),
+  (l_id, '영수증', 'yeongsujeung', 'receipt', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Trying Something: -아/어 보다',
+   '[Verb stem] + -아/어 보다 = try doing',
+   '-아/어 보다 expresses trying or attempting an action. It is used to suggest or describe trying something for the first time.',
+   '[{"korean":"이거 입어 봐도 돼요?","english":"May I try this on?"},{"korean":"한번 먹어 보세요.","english":"Please try eating it (just once)."},{"korean":"저도 써 봤어요.","english":"I also tried using it."}]',
+   1),
+  (l_id,
+   'Asking for Permission: -아/어도 돼요?',
+   '[Verb stem] + -아/어도 돼요? = Is it okay if I ~?',
+   'This structure politely asks for permission. The affirmative answer is 네, 돼요 (Yes, that''s fine); the negative is 안 돼요 (No, that''s not okay).',
+   '[{"korean":"입어 봐도 돼요?","english":"May I try it on?"},{"korean":"사진 찍어도 돼요?","english":"May I take a photo?"},{"korean":"여기 앉아도 돼요?","english":"May I sit here?"}]',
+   2),
+  (l_id,
+   'Comparing: 이것보다 저것이 더 ~',
+   '[A] + 보다 + [B] + 이/가 더 + [adjective]',
+   '보다 (than) is used for comparisons. 더 (more) precedes the adjective. The thing that is "more ~" takes the subject particle.',
+   '[{"korean":"이것보다 저것이 더 싸요.","english":"That one is cheaper than this one."},{"korean":"빨간색보다 파란색이 더 예뻐요.","english":"Blue is prettier than red."},{"korean":"저 가방보다 이 가방이 더 좋아요.","english":"I like this bag better than that one."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '점원', '어서 오세요! 뭘 찾으세요?', 'Eoseo oseyo! Mwol chajeuseyo?', 'Welcome! What are you looking for?', 1),
+  (l_id, '손님', '티셔츠를 보고 싶어요.', 'Tisyeocheureul bogo sipeoyo.', 'I would like to look at t-shirts.', 2),
+  (l_id, '점원', '이쪽이에요. 어떤 색깔을 좋아하세요?', 'Ijjog-i-eyo. Eotteon saekkal-eul joahaseyo?', 'They are over here. What color do you like?', 3),
+  (l_id, '손님', '흰색이 있어요?', 'Huinsaeg-i isseoyo?', 'Do you have white?', 4),
+  (l_id, '점원', '네, 있어요. 사이즈가 어떻게 되세요?', 'Ne, isseoyo. Saijeu-ga eotteoke doeseyo?', 'Yes, we do. What is your size?', 5),
+  (l_id, '손님', '미디엄이요. 입어 봐도 돼요?', 'Midieoum-iyo. Ibeo bwado dwaeyo?', 'Medium. May I try it on?', 6),
+  (l_id, '점원', '네, 피팅룸은 저쪽이에요.', 'Ne, piting-rum-eun jeojjog-i-eyo.', 'Yes, the fitting room is over there.', 7),
+  (l_id, '손님', '얼마예요?', 'Eolma-yeyo?', 'How much is it?', 8),
+  (l_id, '점원', '이만 원이에요. 지금 10% 할인 중이에요.', 'Iman won-i-eyo. Jigeum sip peosenteu harin jung-i-eyo.', 'It is 20,000 won. There is a 10% discount right now.', 9);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How do you ask to try on clothes in Korean?', '["입어 보고 싶어요","입어 봐도 돼요?","입어 보지 마세요","입어 봤어요?"]', 1, '입어 봐도 돼요? = May I try it on? Uses -아/어도 돼요? (permission structure).', 1),
+  (l_id, '"이것보다 저것이 더 비싸요" means:', '["This is more expensive than that","That is more expensive than this","Both are expensive","Neither is expensive"]', 1, '이것보다 = than this; 저것이 = that (subject); 더 비싸요 = is more expensive. → That is more expensive than this.', 2),
+  (l_id, 'What does 할인 mean?', '["receipt","exchange","discount","size"]', 2, '할인(割引) = discount.', 3),
+  (l_id, '싸다 means:', '["to be expensive","to be cheap/inexpensive","to be on sale","to be big"]', 1, '싸다 = to be cheap/inexpensive. 비싸다 = to be expensive.', 4),
+  (l_id, '"한번 먹어 보세요" means:', '["Please do not eat it","Did you try eating it?","Please try eating it once","You must eat it"]', 2, '-아/어 보세요 = please try doing. 먹어 보세요 = please try eating/tasting it.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국에는 다양한 쇼핑 장소가 있습니다. 백화점, 쇼핑몰, 재래시장, 온라인 쇼핑몰 등이 있습니다. 물건을 살 때는 "얼마예요?"라고 가격을 물어볼 수 있습니다. 옷을 살 때는 "입어 봐도 돼요?"라고 착용해 볼 수 있습니다. 가격이 비싸다고 생각하면 "좀 깎아 주세요"라고 할인을 요청할 수 있습니다. 계산 후에는 영수증을 받는 것이 좋습니다. 교환이나 환불이 필요할 때도 영수증이 필요합니다.',
+   'Korea has a variety of shopping venues: department stores, shopping malls, traditional markets, and online shopping malls. When buying something, you can ask the price with "얼마예요?" When buying clothes, you can ask to try them on with "입어 봐도 돼요?" If you think the price is too high, you can request a discount with "좀 깎아 주세요." It is a good idea to get a receipt after payment. A receipt is also needed if you need to exchange or return an item.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 29: Transportation (교통수단)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=29;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=29 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '지하철', 'jihacheol', 'subway / metro', 1),
+  (l_id, '버스', 'beoseu', 'bus', 2),
+  (l_id, '택시', 'taeksi', 'taxi', 3),
+  (l_id, '기차', 'gicha', 'train', 4),
+  (l_id, '비행기', 'bihaenggi', 'airplane', 5),
+  (l_id, '자동차', 'jadongcha', 'car / automobile', 6),
+  (l_id, '자전거', 'jajeon-geo', 'bicycle', 7),
+  (l_id, '타다', 'tada', 'to ride / get on (transport)', 8),
+  (l_id, '내리다', 'naerida', 'to get off (transport)', 9),
+  (l_id, '갈아타다', 'garatada', 'to transfer (to another line)', 10),
+  (l_id, '정류장', 'jeongnyujang', 'bus stop', 11),
+  (l_id, '역', 'yeok', 'station', 12),
+  (l_id, '교통카드', 'gyotong-kadu', 'transit card (T-money etc.)', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Means of Transportation: ~(으)로 타다/가다',
+   '[Transport] + (으)로 + 가다/오다/타다',
+   '(으)로 marks the means or method. After consonant-final nouns, use 으로; after vowel-final nouns, use 로.',
+   '[{"korean":"지하철로 가요.","english":"I go by subway."},{"korean":"버스로 왔어요.","english":"I came by bus."},{"korean":"택시로 갈게요.","english":"I will go by taxi."}]',
+   1),
+  (l_id,
+   'Expressing Duration of Travel: ~까지 얼마나 걸려요?',
+   '[Destination] + 까지 + 얼마나 + 걸려요?',
+   '까지 = until/to (destination particle). 걸리다 = to take (time). This asks how long it takes to get somewhere.',
+   '[{"korean":"여기서 강남까지 얼마나 걸려요?","english":"How long does it take from here to Gangnam?"},{"korean":"지하철로 삼십 분쯤 걸려요.","english":"It takes about 30 minutes by subway."},{"korean":"걸어서 오 분이에요.","english":"It is 5 minutes on foot."}]',
+   2),
+  (l_id,
+   'Giving Destination to Taxi Driver: ~(으)로 가 주세요',
+   '[Destination] + (으)로 가 주세요',
+   'The standard way to give a destination to a taxi driver or when requesting transport direction.',
+   '[{"korean":"홍대로 가 주세요.","english":"Please take me to Hongdae."},{"korean":"인천 공항으로 가 주세요.","english":"Please take me to Incheon Airport."},{"korean":"이 주소로 가 주세요.","english":"Please go to this address."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '경복궁까지 어떻게 가요?', 'Gyeongbokgung-kkaji eotteoke gayo?', 'How do I get to Gyeongbokgung?', 1),
+  (l_id, '민준', '지하철이 제일 편해요. 3호선 타세요.', 'Jihacheol-i jeil pyeonhaeyo. Samhoseon taseyo.', 'The subway is the most convenient. Take Line 3.', 2),
+  (l_id, '수진', '어디서 타야 해요?', 'Eodiseo taya haeyo?', 'Where do I board?', 3),
+  (l_id, '민준', '충무로역에서 타면 돼요. 경복궁역에서 내리세요.', 'Chungmuro-yeok-eseo tamyeon dwaeyo. Gyeongbokgung-yeok-eseo naeriseyo.', 'You can board at Chungmuro Station. Get off at Gyeongbokgung Station.', 4),
+  (l_id, '수진', '갈아타야 해요?', 'Garataya haeyo?', 'Do I need to transfer?', 5),
+  (l_id, '민준', '아니요, 직행이에요. 얼마나 걸려요?', 'Aniyo, jikaeng-i-eyo. Eolmana geollyeoyo?', 'No, it is a direct line. How long does it take?', 6),
+  (l_id, '수진', '이십 분쯤요?', 'Isip bunjjeum-yo?', 'About twenty minutes?', 7),
+  (l_id, '민준', '맞아요. 교통카드 있어요?', 'Majayo. Gyotong-kadu isseoyo?', 'That''s right. Do you have a transit card?', 8),
+  (l_id, '수진', '네, T머니 있어요. 감사해요!', 'Ne, T-meoni isseoyo. Gamsahaeyo!', 'Yes, I have T-money. Thank you!', 9);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, '"지하철로 가요" means:', '["I go to the subway","I go by subway","I ride the subway station","I transfer to the subway"]', 1, '지하철로 = by subway ((으)로 = means of transport); 가요 = go. → I go by subway.', 1),
+  (l_id, 'What does 갈아타다 mean?', '["to get on","to get off","to transfer (transport)","to drive"]', 2, '갈아타다 = to transfer from one line/vehicle to another.', 2),
+  (l_id, 'How do you tell a taxi driver to go to Hongdae?', '["홍대로 갑니까?","홍대로 가 주세요","홍대에서 가요","홍대가 어디예요?"]', 1, '홍대로 가 주세요 = Please take me to Hongdae. Uses (으)로 (direction) + 가 주세요 (please go).', 3),
+  (l_id, '"얼마나 걸려요?" asks about:', '["the price","the distance","the duration / how long it takes","the destination"]', 2, '얼마나 걸려요? = How long does it take? 걸리다 = to take (time).', 4),
+  (l_id, 'What transit card is commonly used in Seoul?', '["카카오페이","T머니","신한카드","교통카드만"]', 1, 'T머니 (T-money) is the most common transit card used in Seoul''s public transportation.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '서울의 대중교통은 세계 최고 수준입니다. 지하철, 버스, 택시가 발달되어 있어 이동이 매우 편리합니다. 서울 지하철은 9개 노선이 있고 대부분의 주요 지역을 연결합니다. 교통카드(T머니)를 사용하면 지하철과 버스를 환승할 때 요금 할인을 받을 수 있습니다. 목적지까지 가는 방법을 물을 때는 "어떻게 가요?"라고 합니다. 소요 시간을 물을 때는 "얼마나 걸려요?"라고 합니다.',
+   'Seoul''s public transportation is among the best in the world. Subways, buses, and taxis are well-developed, making getting around very convenient. The Seoul subway has nine lines and connects most major areas. Using a transit card (T-money) allows discounts when transferring between subways and buses. To ask how to get to a destination, say "어떻게 가요?" To ask how long it takes, say "얼마나 걸려요?"',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 30: Directions (길 안내)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=30;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=30 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '오른쪽', 'oreunjjok', 'right side', 1),
+  (l_id, '왼쪽', 'oenjjok', 'left side', 2),
+  (l_id, '앞', 'ap', 'front', 3),
+  (l_id, '뒤', 'dwi', 'back / behind', 4),
+  (l_id, '옆', 'yeop', 'beside / next to', 5),
+  (l_id, '직진하다', 'jikjinhada', 'to go straight', 6),
+  (l_id, '돌다', 'dolda', 'to turn', 7),
+  (l_id, '건너다', 'geonneoda', 'to cross (street/bridge)', 8),
+  (l_id, '길을 잃다', 'gireul ilta', 'to get lost', 9),
+  (l_id, '지도', 'jido', 'map', 10),
+  (l_id, '근처', 'geuncheo', 'nearby / vicinity', 11),
+  (l_id, '모퉁이', 'motungi', 'corner (of a road)', 12),
+  (l_id, '신호등', 'sinhodeng', 'traffic light', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Giving Directions: -아/어서 + next action',
+   '[Action 1] + -아/어서 + [Action 2]',
+   '-아/어서 here means "and then" (sequential action). Used to chain direction steps: go straight and then turn left.',
+   '[{"korean":"직진해서 오른쪽으로 도세요.","english":"Go straight and then turn right."},{"korean":"신호등에서 왼쪽으로 도세요.","english":"Turn left at the traffic light."},{"korean":"다리를 건너서 두 번째 골목에서 오른쪽이에요.","english":"Cross the bridge, and at the second alley, it is on the right."}]',
+   1),
+  (l_id,
+   'Location Expressions: ~에 있어요',
+   '[Place/building] + 이/가 + [location] + 에 있어요',
+   '있어요 (to exist/be located) combined with location nouns and postpositions gives directions.',
+   '[{"korean":"편의점이 오른쪽에 있어요.","english":"The convenience store is on the right."},{"korean":"학교 앞에 있어요.","english":"It is in front of the school."},{"korean":"지하철역 옆에 있어요.","english":"It is next to the subway station."}]',
+   2),
+  (l_id,
+   'Asking for Directions: ~이/가 어디에 있어요?',
+   '[Place] + 이/가 어디에 있어요? / ~에 가려면 어떻게 해요?',
+   'Two standard ways to ask for directions: asking where something is, or asking how to get somewhere.',
+   '[{"korean":"화장실이 어디에 있어요?","english":"Where is the restroom?"},{"korean":"명동에 가려면 어떻게 해요?","english":"How do I get to Myeongdong?"},{"korean":"여기서 가까워요?","english":"Is it close from here?"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '외국인', '실례합니다. 남산타워에 어떻게 가요?', 'Silrye hamnida. Namsantawo-e eotteoke gayo?', 'Excuse me. How do I get to Namsan Tower?', 1),
+  (l_id, '한국인', '버스나 케이블카를 타면 돼요. 버스는 2호선 충무로역 근처에서 타요.', 'Beosu-na keibeulka-reul tamyeon dwaeyo. Beosu-neun ichoseon Chungmuro-yeok geuncheo-eseo tayo.', 'You can take a bus or cable car. The bus departs near Chungmuro Station on Line 2.', 2),
+  (l_id, '외국인', '걸어서 갈 수 있어요?', 'Georeo-seo gal su isseoyo?', 'Can I go on foot?', 3),
+  (l_id, '한국인', '네, 걸어서도 갈 수 있어요. 그런데 좀 멀어요. 한 삼십 분쯤 걸려요.', 'Ne, georeo-seodo gal su isseoyo. Geureonde jom meoroyo. Han samsip bunjjeum geollyeoyo.', 'Yes, you can walk. But it is a bit far. It takes about thirty minutes.', 4),
+  (l_id, '외국인', '어느 방향으로 가야 해요?', 'Eoneu banghyang-euro gaya haeyo?', 'Which direction should I go?', 5),
+  (l_id, '한국인', '저 신호등에서 왼쪽으로 돌아서 직진하세요. 오른쪽에 케이블카 입구가 보여요.', 'Jeo sinhodeng-eseo oenjjok-euro dorасeo jikjinhaseyo. Oreunjjog-e keibeulka ipgu-ga boyeoyo.', 'Turn left at that traffic light and go straight. You will see the cable car entrance on your right.', 6),
+  (l_id, '외국인', '감사합니다!', 'Gamsahamnida!', 'Thank you!', 7),
+  (l_id, '한국인', '천만에요. 좋은 시간 보내세요!', 'Cheonman-eyo. Joeun sigan bonaeseyo!', 'Not at all. Have a great time!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How do you say "Turn right at the traffic light"?', '["신호등에서 오른쪽에 돌아요","신호등에서 오른쪽으로 도세요","신호등을 오른쪽 도세요","신호등에 오른쪽으로 가세요"]', 1, '신호등에서(at the traffic light) + 오른쪽으로(to the right) + 도세요(please turn). The correct direction particle is (으)로.', 1),
+  (l_id, '"직진하다" means:', '["to turn","to go straight","to cross","to stop"]', 1, '직진(直進)하다 = to go straight. 직 = straight; 진 = advance.', 2),
+  (l_id, '"편의점이 어디에 있어요?" is asking:', '["Is there a convenience store?","Where is the convenience store?","What is a convenience store?","How far is the convenience store?"]', 1, '어디에 있어요? = Where is it? 편의점이 = the convenience store (subject). → Where is the convenience store?', 3),
+  (l_id, 'Which postposition means "next to"?', '["앞에","뒤에","옆에","위에"]', 2, '옆에 = next to / beside. 앞에 = in front of; 뒤에 = behind; 위에 = above.', 4),
+  (l_id, 'How do you say "Cross the street and go straight"?', '["길을 건너고 직진해요","길을 건너서 직진하세요","길에서 건너 직진해요","길을 건너면 직진이에요"]', 1, '건너서 = cross and then (-아/어서 sequential). 직진하세요 = please go straight. Together: cross the street and then go straight.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국에서 길을 물어볼 때는 "실례합니다"로 시작하는 것이 예의입니다. 목적지를 물을 때는 "[장소]에 어떻게 가요?" 또는 "[장소]이/가 어디에 있어요?"라고 합니다. 방향을 안내할 때는 "직진하세요", "오른쪽/왼쪽으로 도세요", "신호등에서 건너세요" 등의 표현을 씁니다. 한국어에서 위치를 나타낼 때는 "오른쪽에", "왼쪽에", "앞에", "뒤에", "옆에" 등의 표현을 사용합니다. 요즘은 스마트폰 지도 앱이 발달해 길 찾기가 더 쉬워졌습니다.',
+   'In Korea, it is polite to start with "실례합니다" (excuse me) when asking for directions. To ask how to get somewhere, say "[place]에 어떻게 가요?" or "[place]이/가 어디에 있어요?" When giving directions, expressions such as "직진하세요" (go straight), "오른쪽/왼쪽으로 도세요" (turn right/left), and "신호등에서 건너세요" (cross at the traffic light) are used. To indicate location in Korean, expressions like "오른쪽에," "왼쪽에," "앞에," "뒤에," and "옆에" are used. These days, smartphone map apps have made finding one''s way much easier.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 31: At School (학교에서)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=31;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=31 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '학교', 'hakgyo', 'school', 1),
+  (l_id, '교실', 'gyosil', 'classroom', 2),
+  (l_id, '선생님', 'seonsaengnim', 'teacher', 3),
+  (l_id, '학생', 'haksaeng', 'student', 4),
+  (l_id, '칠판', 'chilpan', 'blackboard / whiteboard', 5),
+  (l_id, '책상', 'chaeksang', 'desk', 6),
+  (l_id, '공책', 'gongchaek', 'notebook', 7),
+  (l_id, '연필', 'yeonpil', 'pencil', 8),
+  (l_id, '시험', 'siheom', 'exam / test', 9),
+  (l_id, '숙제', 'sukje', 'homework', 10),
+  (l_id, '수업', 'sueop', 'class / lesson', 11),
+  (l_id, '도서관', 'doseogwan', 'library', 12),
+  (l_id, '방학', 'banghak', 'school vacation', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Existence in a Place: ~에 있어요 / ~에서 ~해요',
+   'Static location: ~에 있어요 / Action location: ~에서 ~해요',
+   'Use ~에 있어요 for static existence (X is in location). Use ~에서 for where an action takes place.',
+   '[{"korean":"교실에 학생이 있어요.","english":"There is a student in the classroom."},{"korean":"도서관에서 공부해요.","english":"I study at the library."},{"korean":"학교에서 수업을 들어요.","english":"I attend class at school."}]',
+   1),
+  (l_id,
+   'Obligation: -아/어야 해요',
+   '[Verb stem] + -아/어야 해요 = must / have to',
+   '-아야/어야 해요 expresses obligation or necessity. Colloquially it is sometimes shortened to -아/어야 돼요.',
+   '[{"korean":"숙제를 해야 해요.","english":"I have to do my homework."},{"korean":"시험공부를 해야 해요.","english":"I have to study for the exam."},{"korean":"일찍 자야 해요.","english":"I have to sleep early."}]',
+   2),
+  (l_id,
+   'Asking Politely in Class: ~가르쳐 주세요 / 다시 말해 주세요',
+   '가르쳐 주세요 = please teach me / 다시 말해 주세요 = please say it again',
+   'Useful classroom phrases for asking the teacher to explain or repeat.',
+   '[{"korean":"이 단어가 무슨 뜻이에요?","english":"What does this word mean?"},{"korean":"다시 말해 주세요.","english":"Please say it again."},{"korean":"좀 더 천천히 말해 주세요.","english":"Please speak a bit more slowly."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '선생님', '오늘 숙제 했어요?', 'Oneul sukje haesseoyo?', 'Did you do today''s homework?', 1),
+  (l_id, '학생', '네, 했어요. 그런데 세 번 문제가 어려웠어요.', 'Ne, haesseoyo. Geureonde se beon munje-ga eoryeoweosseoyo.', 'Yes, I did. But problem number three was difficult.', 2),
+  (l_id, '선생님', '어떤 부분이요?', 'Eotteon bubun-iyo?', 'Which part?', 3),
+  (l_id, '학생', '동사 변화가 헷갈려요. 다시 설명해 주세요.', 'Dongsa byeonhwa-ga hetgallyeoyo. Dasi seolmyeonghae juseyo.', 'The verb conjugation is confusing me. Please explain it again.', 4),
+  (l_id, '선생님', '알겠어요. 칠판을 보세요.', 'Algesseoyo. Chilpan-eul boseyo.', 'Got it. Look at the board.', 5),
+  (l_id, '학생', '(나중에) 선생님, 이번 시험 언제예요?', '(Najunge) Seonsaengnim, ibeon siheom eonje-yeyo?', '(Later) Teacher, when is the next exam?', 6),
+  (l_id, '선생님', '다음 주 금요일이에요. 열심히 공부하세요!', 'Daeum ju geum-yoil-i-eyo. Yeolsimhi gongbuhaseyo!', 'It is next Friday. Study hard!', 7),
+  (l_id, '학생', '네, 열심히 하겠습니다!', 'Ne, yeolsimhi hagesseumnida!', 'Yes, I will work hard!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How do you say "I have to do homework"?', '["숙제를 해요","숙제를 해야 해요","숙제를 하고 싶어요","숙제를 했어요"]', 1, '숙제를 해야 해요 = I have to do homework. -아야/어야 해요 = must/have to.', 1),
+  (l_id, '"도서관에서 공부해요" means:', '["There is a library at school","I study at the library","I am at the library","I like the library"]', 1, '도서관에서 = at the library (action location); 공부해요 = study. → I study at the library.', 2),
+  (l_id, 'How do you ask a teacher to repeat something?', '["다시 써 주세요","다시 말해 주세요","더 크게 쓰세요","말하지 마세요"]', 1, '다시 말해 주세요 = Please say it again. 다시 = again; 말하다 = to speak; -아/어 주세요 = please do.', 3),
+  (l_id, 'What does 방학 mean?', '["vacation from school","school day","exam period","homework"]', 0, '방학 = school vacation / holiday period (summer or winter break).', 4),
+  (l_id, 'Which particle marks WHERE an action takes place?', '["에","에서","을/를","이/가"]', 1, '에서 marks the place where an action occurs: 학교에서 공부해요.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국의 학교생활은 매우 바쁩니다. 학생들은 아침 일찍 등교해서 오후 늦게 하교합니다. 수업 시간에는 선생님 말씀을 잘 듣고 공책에 필기합니다. 수업이 끝나면 숙제를 해야 합니다. 시험이 가까워지면 도서관이나 독서실에서 열심히 공부합니다. 한국에서는 교육을 매우 중요하게 여깁니다. 방학 때도 학원에 다니는 학생들이 많습니다.',
+   'School life in Korea is very busy. Students arrive at school early in the morning and leave late in the afternoon. During class, they listen carefully to the teacher and take notes in their notebooks. After class they must do their homework. As exams approach, they study hard at the library or study cafes. Education is considered very important in Korea. Even during vacations, many students attend private academies (학원).',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 32: At Work (직장에서)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=32;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=32 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '회사', 'hoesa', 'company / office', 1),
+  (l_id, '직원', 'jigeowon', 'employee / staff member', 2),
+  (l_id, '상사', 'sangsa', 'superior / boss', 3),
+  (l_id, '부하', 'buha', 'subordinate', 4),
+  (l_id, '회의', 'hoeui', 'meeting', 5),
+  (l_id, '출근하다', 'chulgeunhada', 'to go to work / clock in', 6),
+  (l_id, '퇴근하다', 'toegeunhada', 'to leave work / clock out', 7),
+  (l_id, '야근하다', 'yageunhada', 'to work overtime', 8),
+  (l_id, '휴가', 'hyuga', 'vacation / leave', 9),
+  (l_id, '급여', 'geubyeo', 'salary / wages', 10),
+  (l_id, '보고서', 'bogoseo', 'report (document)', 11),
+  (l_id, '마감', 'magam', 'deadline', 12),
+  (l_id, '이메일', 'imeil', 'email', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Formal Request at Work: ~해 주시겠어요?',
+   '[Verb stem] + -아/어 주시겠어요? = Would you please ~?',
+   '-아/어 주시겠어요? is more deferential than -아/어 주세요. Used when asking superiors or clients for something.',
+   '[{"korean":"이 보고서 검토해 주시겠어요?","english":"Would you please review this report?"},{"korean":"내일까지 보내 주시겠어요?","english":"Would you please send it by tomorrow?"},{"korean":"잠깐 시간 내 주시겠어요?","english":"Would you spare a moment please?"}]',
+   1),
+  (l_id,
+   'Reporting Completion: ~했습니다',
+   '[Verb stem] + -았/었습니다 (formal report)',
+   'In workplace Korean, completed actions are reported in formal -았/었습니다 form to superiors.',
+   '[{"korean":"보고서 작성 완료했습니다.","english":"I have completed the report."},{"korean":"고객 미팅 참석했습니다.","english":"I attended the client meeting."},{"korean":"이메일 보냈습니다.","english":"I sent the email."}]',
+   2),
+  (l_id,
+   'Expressing Difficulty at Work: ~기 힘들어요 / ~기 어려워요',
+   '[Verb stem] + -기 (가) 힘들어요/어려워요',
+   'These structures express that doing something is physically or cognitively difficult.',
+   '[{"korean":"마감을 맞추기가 어려워요.","english":"It is difficult to meet the deadline."},{"korean":"야근하기가 힘들어요.","english":"Working overtime is hard."},{"korean":"혼자 하기는 어려워요.","english":"It is difficult to do alone."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '상사', '이 프로젝트 언제까지 완료할 수 있어요?', 'I peurojeekteu eonje-kkaji wanryo-hal su isseoyo?', 'By when can you complete this project?', 1),
+  (l_id, '직원', '이번 주 금요일까지 완료하겠습니다.', 'Ibeon ju geumyoil-kkaji wanryohagesseumnida.', 'I will complete it by this Friday.', 2),
+  (l_id, '상사', '알겠어요. 중간 보고도 해 주세요.', 'Algesseoyo. Junggan bogo-do hae juseyo.', 'Got it. Please also give interim reports.', 3),
+  (l_id, '직원', '네, 수요일에 중간 보고 드리겠습니다.', 'Ne, suyoil-e junggan bogo deurigesseumnida.', 'Yes, I will give an interim report on Wednesday.', 4),
+  (l_id, '직원2', '(동료에게) 오늘 야근해야 해요?', '(Dongnyo-ege) Oneul yageunhaeya haeyo?', '(To a colleague) Do you have to work overtime today?', 5),
+  (l_id, '직원', '네, 마감이 내일이라서요. 피곤하지만 어쩔 수 없어요.', 'Ne, magami naeil-iraseoyo. Pigonhajiman eojjeol su eopseoyo.', 'Yes, because the deadline is tomorrow. I am tired but there is nothing I can do.', 6),
+  (l_id, '직원2', '힘내요! 같이 커피 한 잔 해요.', 'Himnaeyo! Gachi keopi han jan haeyo.', 'Hang in there! Let''s grab a coffee together.', 7),
+  (l_id, '직원', '고마워요, 큰 힘이 돼요!', 'Gomawoyo, keun himi dwaeyo!', 'Thank you, that is a big encouragement!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which expression is MORE deferential when asking a superior to do something?', '["~해 주세요","~해 주시겠어요?","~해 봐요","~해도 돼요?"]', 1, '-아/어 주시겠어요? (Would you please?) is more formal/deferential than -아/어 주세요 (please do).', 1),
+  (l_id, 'What does 야근하다 mean?', '["to take a day off","to arrive early","to work overtime","to resign"]', 2, '야근(夜勤)하다 = to do night work = to work overtime.', 2),
+  (l_id, '"보고서 작성 완료했습니다" is appropriate when:', '["Asking a colleague for help","Reporting to a superior that a report is done","Making a complaint","Requesting vacation"]', 1, 'Formal -았/었습니다 is used in workplace reporting to superiors.', 3),
+  (l_id, '"마감을 맞추기가 어려워요" means:', '["The deadline was easy to meet","It is difficult to meet the deadline","I met the deadline","The deadline is tomorrow"]', 1, '-기가 어려워요 = it is difficult to do. 마감을 맞추기 = meeting the deadline (noun phrase).', 4),
+  (l_id, 'How do you say "I leave work at 6 PM"?', '["여섯 시에 출근해요","여섯 시에 퇴근해요","여섯 시에 야근해요","여섯 시에 회의해요"]', 1, '퇴근하다 = to leave work. 여섯 시에 퇴근해요 = I leave work at 6.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국의 직장 문화에는 독특한 특징이 있습니다. 상하관계를 중시하여 상사에게는 존댓말을 쓰고 정중하게 대합니다. 회의나 보고가 많고, 마감 기한을 엄수하는 것이 중요합니다. 야근이 많은 편이었지만 최근에는 워라밸(일과 생활의 균형)을 중시하는 문화로 바뀌고 있습니다. 직장에서 업무를 마쳤을 때는 상사에게 완료 보고를 드리는 것이 예의입니다. "수고하셨습니다"는 동료나 상사에게 하는 일상적인 수고 인사입니다.',
+   'Korean workplace culture has distinctive characteristics. Hierarchical relationships are valued highly; honorific speech is used with superiors, and interactions are respectful. There are many meetings and reports, and meeting deadlines is important. Overtime work used to be common, but recently the culture has been shifting toward emphasizing work-life balance (워라밸). It is etiquette to report task completion to one''s superior. "수고하셨습니다" (you have worked hard) is a common phrase of acknowledgment toward colleagues and superiors.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 33: At the Hospital (병원에서)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=33;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=33 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '병원', 'byeongwon', 'hospital / clinic', 1),
+  (l_id, '의사', 'uisa', 'doctor', 2),
+  (l_id, '간호사', 'ganhosa', 'nurse', 3),
+  (l_id, '약', 'yak', 'medicine', 4),
+  (l_id, '처방전', 'cheobangjeon', 'prescription', 5),
+  (l_id, '증상', 'jeungsang', 'symptom', 6),
+  (l_id, '열', 'yeol', 'fever', 7),
+  (l_id, '기침', 'gichim', 'cough', 8),
+  (l_id, '콧물', 'konmul', 'runny nose', 9),
+  (l_id, '감기', 'gamgi', 'cold (illness)', 10),
+  (l_id, '독감', 'dokgam', 'influenza / flu', 11),
+  (l_id, '수술', 'susul', 'surgery / operation', 12),
+  (l_id, '입원하다', 'ibwonhada', 'to be hospitalized', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Describing Symptoms: -이/가 있어요 / -이/가 나요',
+   '[Symptom] + 이/가 있어요 = I have [symptom] / -이/가 나요 = [symptom] is coming',
+   'Two natural patterns for describing medical symptoms. 있어요 is used for ongoing states; 나다 is used for symptoms that "manifest."',
+   '[{"korean":"열이 있어요.","english":"I have a fever."},{"korean":"기침이 나요.","english":"I have a cough (lit. cough comes)."},{"korean":"콧물이 나요.","english":"I have a runny nose."}]',
+   1),
+  (l_id,
+   'Expressing Duration of Illness: ~부터 ~이에요',
+   '[Time/Day] + 부터 + 아팠어요',
+   '부터 = from (a starting point in time). Used to express when symptoms began.',
+   '[{"korean":"어제부터 아팠어요.","english":"I have been sick since yesterday."},{"korean":"삼 일 전부터 기침이 나요.","english":"I have had a cough for three days."},{"korean":"오전부터 열이 있어요.","english":"I have had a fever since morning."}]',
+   2),
+  (l_id,
+   'Medical Instructions: ~하루에 ~번 드세요',
+   '하루에 [number] 번 드세요 = Take it [number] times a day',
+   'The standard formula for giving medicine instructions. 드시다 is the honorific for 먹다/마시다.',
+   '[{"korean":"하루에 세 번 드세요.","english":"Take it three times a day."},{"korean":"식후에 드세요.","english":"Take it after meals."},{"korean":"이틀 동안 드세요.","english":"Take it for two days."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '간호사', '어떻게 오셨어요?', 'Eotteoke osyeosseoyo?', 'What brings you in today?', 1),
+  (l_id, '환자', '어제부터 목이 아프고 열도 있어요.', 'Eoje-buteo mogi apeugeo yeoldo isseoyo.', 'Since yesterday my throat has been hurting and I have a fever too.', 2),
+  (l_id, '간호사', '알겠어요. 잠깐 기다리세요. 의사 선생님이 곧 오실 거예요.', 'Algesseoyo. Jamkkan gidariseyo. Uisa seonsaengnim-i got osil geoyeyo.', 'I see. Please wait a moment. The doctor will be right with you.', 3),
+  (l_id, '의사', '어디가 불편하세요?', 'Eodiga bulpyeonhaseyo?', 'Where are you uncomfortable?', 4),
+  (l_id, '환자', '목이 아프고, 기침이 나고, 콧물도 나요. 열도 37.8도예요.', 'Mogi apeugeo, gichimi nago, konmuldo nayo. Yeoldo samsip-chil-jeom-pal-do-yeyo.', 'My throat hurts, I have a cough and a runny nose. My fever is 37.8 degrees.', 5),
+  (l_id, '의사', '언제부터요?', 'Eonje-buteo-yo?', 'Since when?', 6),
+  (l_id, '환자', '어제 저녁부터요.', 'Eoje jeonyeok-buteo-yo.', 'Since yesterday evening.', 7),
+  (l_id, '의사', '감기네요. 약을 처방해 드릴게요. 하루에 세 번, 식후에 드세요.', 'Gamgi-neyo. Yageul cheobanghae deurilgeyo. Haruge se beon, sikhu-e deuseyo.', 'It is a cold. I will prescribe medicine. Take it three times a day after meals.', 8),
+  (l_id, '환자', '며칠 드세요?', 'Myeochil deuseyo?', 'For how many days?', 9),
+  (l_id, '의사', '삼 일 동안 드세요. 푹 쉬세요.', 'Sam-il dong-an deuseyo. Puk swiseyo.', 'Take it for three days. Rest well.', 10);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, '"열이 있어요" means:', '["I have a runny nose","I have a cough","I have a fever","I have a headache"]', 2, '열 = fever; 이 = subject particle; 있어요 = have. → I have a fever.', 1),
+  (l_id, 'How do you say "I have been sick since yesterday"?', '["어제 아파요","어제부터 아팠어요","어제까지 아팠어요","어제도 아파요"]', 1, '어제부터 = since yesterday; 아팠어요 = was sick (past). → I have been sick since yesterday.', 2),
+  (l_id, '"하루에 세 번 드세요" means:', '["Take it three times a week","Take it three times a day","Take it for three days","Take three at once"]', 1, '하루에 = per day; 세 번 = three times; 드세요 = please take/have. → Take it three times a day.', 3),
+  (l_id, 'What is 처방전?', '["a receipt","a prescription","a test result","an appointment card"]', 1, '처방전(處方箋) = a medical prescription document.', 4),
+  (l_id, 'What does 식후에 mean in a medicine instruction?', '["before meals","after meals","with water","at bedtime"]', 1, '식후(食後) = after eating. 식전(食前) = before eating. 식후에 = after meals.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국에서 병원에 가면 먼저 접수를 하고 대기실에서 기다립니다. 의사 선생님이 부르면 진찰실에 들어갑니다. 의사에게 증상을 설명할 때는 "[신체 부위]가 아파요"나 "열이 있어요"처럼 말합니다. 의사가 약을 처방하면 처방전을 들고 약국에 갑니다. 약사에게 처방전을 건네면 약을 받을 수 있습니다. 약을 받을 때는 복용 방법을 잘 들어야 합니다. 한국의 의료비는 건강보험 덕분에 상대적으로 저렴합니다.',
+   'When you go to a hospital in Korea, you first register at reception and wait in the waiting room. When the doctor calls you, you enter the examination room. When explaining symptoms to the doctor, you say things like "[body part]가 아파요" or "열이 있어요." If the doctor prescribes medicine, you take the prescription to a pharmacy. The pharmacist will give you your medicine when you hand over the prescription. When receiving medicine, listen carefully to the dosage instructions. Thanks to national health insurance, medical costs in Korea are relatively affordable.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 34: Months and Dates (월과 날짜)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=34;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=34 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '월', 'wol', 'month (counter)', 1),
+  (l_id, '일', 'il', 'day (date counter)', 2),
+  (l_id, '년', 'nyeon', 'year', 3),
+  (l_id, '오늘', 'oneul', 'today', 4),
+  (l_id, '어제', 'eoje', 'yesterday', 5),
+  (l_id, '내일', 'naeil', 'tomorrow', 6),
+  (l_id, '이번 달', 'ibeon dal', 'this month', 7),
+  (l_id, '다음 달', 'daeum dal', 'next month', 8),
+  (l_id, '지난달', 'jinan dal', 'last month', 9),
+  (l_id, '생일', 'saengil', 'birthday', 10),
+  (l_id, '기념일', 'ginyeomil', 'anniversary', 11),
+  (l_id, '날짜', 'naljja', 'date (calendar)', 12),
+  (l_id, '몇 월 며칠', 'myeot wol myeochil', 'what month and day', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Expressing Dates: Year/Month/Day Order',
+   '[Year] 년 [Month] 월 [Day] 일 — always Sino-Korean numbers',
+   'Korean dates follow the order Year → Month → Day (opposite of American English). All components use Sino-Korean numbers. 년 = year, 월 = month, 일 = day.',
+   '[{"korean":"이천이십육 년 사 월 오 일","english":"April 5, 2026 (written: 2026년 4월 5일)"},{"korean":"생일이 언제예요?","english":"When is your birthday?"},{"korean":"삼 월 일 일은 삼일절이에요.","english":"March 1st is Independence Movement Day."}]',
+   1),
+  (l_id,
+   'Asking Dates: 언제예요? / 몇 월 며칠이에요?',
+   '언제예요? = When is it? / 몇 월 며칠이에요? = What month and day?',
+   '언제 (when) is the general time question word. 몇 월 며칠 specifically asks for the month and day of the month.',
+   '[{"korean":"오늘이 몇 월 며칠이에요?","english":"What is today''s date?"},{"korean":"시험이 언제예요?","english":"When is the exam?"},{"korean":"생일이 몇 월이에요?","english":"What month is your birthday?"}]',
+   2),
+  (l_id,
+   'Relative Time Expressions: 그저께/어제/오늘/내일/모레',
+   '그저께=day before yesterday, 어제=yesterday, 오늘=today, 내일=tomorrow, 모레=day after tomorrow',
+   'Korean has specific words for each day relative to today. These do not take the time particle 에 when used as adverbs.',
+   '[{"korean":"그저께 서울에 왔어요.","english":"I came to Seoul the day before yesterday."},{"korean":"내일 뭐 해요?","english":"What are you doing tomorrow?"},{"korean":"모레가 제 생일이에요.","english":"My birthday is the day after tomorrow."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '민준', '수진 씨 생일이 언제예요?', 'Sujin ssi saengil-i eonje-yeyo?', 'When is your birthday, Sujin?', 1),
+  (l_id, '수진', '오 월 십오 일이에요. 민준 씨는요?', 'O-wol sibon-il-i-eyo. Minjun ssi-neunyo?', 'It is May 15th. And yours?', 2),
+  (l_id, '민준', '저는 십이 월 삼십일이에요. 크리스마스 다음 날이에요.', 'Jeoneun siboi-wol samsip-il-i-eyo. Keuriseumaseu daeum nal-i-eyo.', 'Mine is December 31st. It is the day after Christmas.', 3),
+  (l_id, '수진', '와, 연말이네요! 생일 파티를 어떻게 해요?', 'Wa, yeonmal-ineyo! Saengil pati-reul eotteoke haeyo?', 'Wow, end of year! How do you celebrate your birthday?', 4),
+  (l_id, '민준', '보통 친구들이랑 카운트다운 파티를 같이 해요. 재미있어요.', 'Botong chingudeul-irang kaunteudown pati-reul gachi haeyo. Jaemisseoyo.', 'Usually I do a countdown party with friends. It is fun.', 5),
+  (l_id, '수진', '좋겠다! 저는 오 월에 한강에서 파티를 해요.', 'Jokessda! Jeoneun o-wol-e han-gang-eseo pati-reul haeyo.', 'How nice! I have a party at the Han River in May.', 6),
+  (l_id, '민준', '꼭 초대해 주세요!', 'Kkok chodaehae juseyo!', 'Please definitely invite me!', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How is the date "September 3" expressed in Korean?', '["구 월 삼 일","셋째 달 사흘","구월 삼","nine/three"]', 0, '구(9) 월 삼(3) 일 = September 3rd. Months and days use Sino-Korean numbers.', 1),
+  (l_id, 'What is the Korean date order?', '["Day/Month/Year","Month/Day/Year","Year/Month/Day","Month/Year/Day"]', 2, 'Korean dates go Year (년) → Month (월) → Day (일): 2026년 4월 5일.', 2),
+  (l_id, '"모레" means:', '["yesterday","today","tomorrow","the day after tomorrow"]', 3, '모레 = the day after tomorrow. 어제=yesterday, 오늘=today, 내일=tomorrow.', 3),
+  (l_id, 'To ask "What is today''s date?" you say:', '["오늘이 언제예요?","오늘이 몇 월 며칠이에요?","오늘은 무슨 요일이에요?","오늘 날씨가 어때요?"]', 1, '몇 월 며칠이에요? specifically asks for the month and day. 언제 is also fine but vaguer.', 4),
+  (l_id, 'What does 기념일 mean?', '["birthday","holiday","anniversary","calendar"]', 2, '기념일(記念日) = anniversary / commemorative day.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어로 날짜를 말할 때는 년, 월, 일 순서로 말합니다. 예를 들어 2026년 4월 5일은 "이천이십육 년 사 월 오 일"이라고 합니다. 월과 일에는 한자어 숫자를 사용합니다. 날짜와 관련된 질문은 "몇 월 며칠이에요?"라고 합니다. 한국의 중요한 기념일로는 설날(음력 1월 1일), 추석(음력 8월 15일), 삼일절(3월 1일), 광복절(8월 15일) 등이 있습니다. 생일을 물어볼 때는 "생일이 언제예요?"라고 합니다.',
+   'When expressing dates in Korean, the order is year, month, day. For example, April 5, 2026 is said "이천이십육 년 사 월 오 일." Sino-Korean numbers are used for months and days. To ask about dates, the question is "몇 월 며칠이에요?" Important Korean holidays include Seollal (Lunar New Year, 1st day of the 1st lunar month), Chuseok (Harvest Festival, 15th of the 8th lunar month), Independence Movement Day (March 1st), and Liberation Day (August 15th). To ask about someone''s birthday, say "생일이 언제예요?"',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 35: Telling Prices (가격 말하기)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=35;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=35 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '원', 'won', 'Korean won (currency)', 1),
+  (l_id, '가격', 'gagyeok', 'price', 2),
+  (l_id, '얼마예요?', 'eolma-yeyo?', 'How much is it?', 3),
+  (l_id, '비싸다', 'bissada', 'to be expensive', 4),
+  (l_id, '싸다', 'ssada', 'to be cheap', 5),
+  (l_id, '할인', 'harin', 'discount', 6),
+  (l_id, '세일', 'seil', 'sale', 7),
+  (l_id, '거스름돈', 'geoseureum-don', 'change (money returned)', 8),
+  (l_id, '현금', 'hyeongeum', 'cash', 9),
+  (l_id, '카드', 'kadu', 'card (credit/debit)', 10),
+  (l_id, '영수증', 'yeongsujeung', 'receipt', 11),
+  (l_id, '공짜', 'gongjja', 'free (of charge)', 12),
+  (l_id, '깎아 주세요', 'kkakka juseyo', 'please give me a discount', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Asking and Stating Prices',
+   '얼마예요? / [Number] 원이에요.',
+   'Price is stated using Sino-Korean numbers + 원 (Korean currency). 얼마예요? (How much?) is the standard price question.',
+   '[{"korean":"이거 얼마예요?","english":"How much is this?"},{"korean":"이만 오천 원이에요.","english":"It is 25,000 won."},{"korean":"모두 얼마예요?","english":"How much is it altogether?"}]',
+   1),
+  (l_id,
+   'Reacting to Prices: 너무 비싸요 / 좀 깎아 주세요',
+   '너무 비싸요 = too expensive / 좀 깎아 주세요 = please reduce the price a little',
+   'At traditional markets (시장), bargaining is expected. 좀 깎아 주세요 is the polite way to ask for a discount.',
+   '[{"korean":"너무 비싸요. 좀 깎아 주세요.","english":"It is too expensive. Please give me a discount."},{"korean":"더 싸게 해 주세요.","english":"Please make it cheaper."},{"korean":"이걸로 하면 얼마예요?","english":"How much if I take this?"}]',
+   2),
+  (l_id,
+   'Payment Method: ~(으)로 계산할게요',
+   '현금으로 / 카드로 계산할게요',
+   '(으)로 marks means: 현금으로 = by cash; 카드로 = by card. 계산하다 = to pay/calculate.',
+   '[{"korean":"카드로 계산할게요.","english":"I will pay by card."},{"korean":"현금으로 드릴게요.","english":"I will give you cash."},{"korean":"영수증 주세요.","english":"Please give me a receipt."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '손님', '이 귤 한 봉지에 얼마예요?', 'I gyul han bongji-e eolma-yeyo?', 'How much is a bag of these tangerines?', 1),
+  (l_id, '상인', '오천 원이에요.', 'Ocheon won-i-eyo.', 'It is 5,000 won.', 2),
+  (l_id, '손님', '좀 비싸네요. 사천 원에 안 돼요?', 'Jom bissaneyo. Sacheon won-e an dwaeyo?', 'A bit expensive. Is 4,000 won not possible?', 3),
+  (l_id, '상인', '그럼 두 봉지에 팔천 원 어때요?', 'Geureom du bongji-e palcheon won eottaeyo?', 'Then how about two bags for 8,000 won?', 4),
+  (l_id, '손님', '좋아요! 두 봉지 주세요.', 'Joayo! Du bongji juseyo.', 'Great! Two bags please.', 5),
+  (l_id, '상인', '여기요.', 'Yeogiyo.', 'Here you are.', 6),
+  (l_id, '손님', '현금으로 드릴게요. 만 원 드릴게요.', 'Hyeongeum-euro deurilgeyo. Man won deurilgeyo.', 'I will pay cash. Here is 10,000 won.', 7),
+  (l_id, '상인', '거스름돈 이천 원 드릴게요.', 'Geoseureum-don icheon won deurilgeyo.', 'Here is 2,000 won change.', 8),
+  (l_id, '손님', '감사합니다!', 'Gamsahamnida!', 'Thank you!', 9);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How do you say 45,000 won in Korean?', '["사만오천 원","사십오천 원","사만 오천 원","오사만 원"]', 2, '사만(40,000) + 오천(5,000) = 사만 오천 원. 사십오천 is not a valid Korean number form.', 1),
+  (l_id, 'Which phrase politely asks for a discount?', '["더 주세요","좀 깎아 주세요","할인 있어요?","카드 돼요?"]', 1, '좀 깎아 주세요 = Please reduce the price a bit. The standard bargaining phrase.', 2),
+  (l_id, 'How do you say "I will pay by card"?', '["카드예요","카드로 계산할게요","카드를 써요","카드 줄게요"]', 1, '카드로 = by card; 계산할게요 = I will calculate/pay. → I will pay by card.', 3),
+  (l_id, 'What is 거스름돈?', '["the total price","a discount","change (money returned)","a receipt"]', 2, '거스름돈 = change given back after overpaying.', 4),
+  (l_id, '"모두 얼마예요?" means:', '["How much is this one?","Is there a discount?","How much altogether?","How many do you have?"]', 2, '모두 = all/altogether; 얼마예요? = how much? → How much is it altogether?', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국에서 쇼핑할 때 가격을 묻는 기본 표현은 "얼마예요?"입니다. 한국 화폐 단위는 원(₩)이며, 가격은 한자어 숫자로 표현합니다. 백화점이나 편의점에서는 정가제이므로 가격 흥정이 어렵습니다. 하지만 전통 시장에서는 "좀 깎아 주세요"라고 할인을 요청할 수 있습니다. 결제 방법은 현금 또는 카드가 있으며, "카드로 계산할게요" 또는 "현금으로 드릴게요"라고 합니다. 계산 후에는 영수증을 받는 것이 좋습니다.',
+   'The basic expression for asking prices when shopping in Korea is "얼마예요?" The Korean currency unit is won (₩), and prices are expressed using Sino-Korean numbers. In department stores and convenience stores, prices are fixed, so bargaining is difficult. However, at traditional markets you can request a discount with "좀 깎아 주세요." Payment can be made by cash or card, saying "카드로 계산할게요" or "현금으로 드릴게요." It is a good idea to receive a receipt after payment.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 36: Adjectives (형용사)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=36;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=36 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '크다', 'keuda', 'to be big/large', 1),
+  (l_id, '작다', 'jakda', 'to be small', 2),
+  (l_id, '많다', 'manta', 'to be many/much', 3),
+  (l_id, '적다', 'jeokda', 'to be few/little', 4),
+  (l_id, '좋다', 'jota', 'to be good/nice', 5),
+  (l_id, '나쁘다', 'nappeuda', 'to be bad', 6),
+  (l_id, '빠르다', 'ppareuda', 'to be fast', 7),
+  (l_id, '느리다', 'neurida', 'to be slow', 8),
+  (l_id, '새롭다', 'saeropda', 'to be new', 9),
+  (l_id, '오래되다', 'oraedoeda', 'to be old (of things)', 10),
+  (l_id, '예쁘다', 'yeppeuda', 'to be pretty', 11),
+  (l_id, '못생기다', 'motsaenggida', 'to be ugly (informal)', 12),
+  (l_id, '재미있다', 'jaemissitda', 'to be fun/interesting', 13),
+  (l_id, '재미없다', 'jaemieobsda', 'to be boring/uninteresting', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Korean Adjectives are Descriptive Verbs',
+   '[Adj. stem] + -아요/어요 (predicate) / [Adj. stem] + -(으)ㄴ + Noun (modifier)',
+   'In Korean, adjectives function as verbs. They conjugate for tense and can be used both as predicates and as prenominal modifiers. The modifier form drops the final vowel and adds -(으)ㄴ.',
+   '[{"korean":"이 영화가 재미있어요.","english":"This movie is interesting. (predicate)"},{"korean":"재미있는 영화예요.","english":"It is an interesting movie. (modifier)"},{"korean":"크고 예쁜 꽃이에요.","english":"It is a big and pretty flower."}]',
+   1),
+  (l_id,
+   'ㄹ Irregular Adjectives',
+   '빠르다→빨라요, 모르다→몰라요 (ㄹ adjectives: ㄹ doubles before 아/어)',
+   'Adjectives ending in ㄹ are irregular: before -아/어 endings, the ㄹ doubles and the stem vowel changes. This also applies to ㄹ-stem verbs.',
+   '[{"korean":"빠르다 → 빨라요","english":"to be fast → is fast"},{"korean":"다르다 → 달라요","english":"to be different → is different"},{"korean":"모르다 → 몰라요","english":"to not know → does not know"}]',
+   2),
+  (l_id,
+   'Degree Adverbs: 너무/매우/좀/별로',
+   '너무(too/very), 매우(very), 좀(a bit), 별로(not really, with negative)',
+   'These degree adverbs modify descriptive verbs. 별로 is always used with a negative form.',
+   '[{"korean":"너무 비싸요.","english":"It is too expensive."},{"korean":"매우 예쁘네요.","english":"It is really pretty."},{"korean":"별로 안 좋아요.","english":"I don''t really like it. / It''s not great."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '이 카페 분위기가 정말 좋네요!', 'I kape bunwigi-ga jeongmal jonneyo!', 'This café has such a great atmosphere!', 1),
+  (l_id, '민준', '맞아요. 크고 아늑해요. 커피도 맛있어요.', 'Majayo. Keugeo aneukaeyo. Keopi-do massisseoyo.', 'Right. It is big and cozy. The coffee is delicious too.', 2),
+  (l_id, '수진', '저는 작은 카페가 더 좋아요. 이 카페는 너무 시끄러워요.', 'Jeoneun jageun kape-ga deo joayo. I kape-neun neomu sikkeureowoyo.', 'I prefer small cafés. This café is too noisy.', 3),
+  (l_id, '민준', '그래요? 저는 별로 안 시끄럽다고 생각해요.', 'Geureayo? Jeoneun byeolo an sikkeureopda-go saenggakaeyo.', 'Really? I don''t think it is that noisy.', 4),
+  (l_id, '수진', '사람들이 너무 많아서요. 빠른 것도 좋지만 조용한 게 더 좋아요.', 'Saramdeuri neomu manaseoyo. Ppareun geotdo jojiman joyonghan ge deo joayo.', 'There are too many people. Fast is fine, but I prefer quiet.', 5),
+  (l_id, '민준', '다음에는 조용하고 작은 카페로 가요.', 'Daeume-neun joyongago jageun kape-ro gayo.', 'Next time let''s go to a quiet, small café.', 6),
+  (l_id, '수진', '좋아요!', 'Joayo!', 'Sounds good!', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What is the modifier form of 크다 (to be big)?', '["크은","크는","큰","크아"]', 2, '크다 → modifier: 크 + ㄴ = 큰 (large/big). 크 ends in a vowel, so add ㄴ directly.', 1),
+  (l_id, 'Which is the correct polite form of 빠르다 (to be fast)?', '["빠르아요","빨라요","빠르어요","빠라요"]', 1, 'ㄹ irregular: 빠르다 → ㄹ doubles + 아요 → 빨라요.', 2),
+  (l_id, '"별로 안 좋아요" means:', '["it is very good","it is a bit good","I don''t really like it / it''s not great","it is not good at all"]', 2, '별로 is used with negative: 별로 안 좋아요 = not really good / I don''t think much of it.', 3),
+  (l_id, 'To say "interesting movie" (adjective modifying noun), which form is used?', '["재미있어요 영화","재미있는 영화","재미있은 영화","재미있 영화"]', 1, 'Adjective modifier form: 재미있다 → 재미있는. -는 for 있다/없다 modifier.', 4),
+  (l_id, 'What does 새롭다 mean?', '["to be old","to be different","to be new","to be strange"]', 2, '새롭다 = to be new. Note ㅂ irregular: 새롭다 → 새로워요.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어에서 형용사는 동사처럼 활용됩니다. 즉, 형용사가 직접 문장의 서술어가 될 수 있습니다. 예를 들어 "이 꽃이 예뻐요"는 "예쁘다"라는 형용사가 서술어로 쓰인 것입니다. 형용사를 명사 앞에 쓸 때는 관형형으로 바꿔야 합니다. 예를 들어 "예쁜 꽃"처럼 씁니다. 한국어 형용사 중에는 ㅂ 불규칙(새롭다→새로워요), ㄹ 불규칙(빠르다→빨라요), ㅎ 불규칙(파랗다→파래요) 등 다양한 불규칙 활용이 있습니다.',
+   'In Korean, adjectives conjugate like verbs. That is, adjectives can directly serve as the predicate of a sentence. For example, "이 꽃이 예뻐요" uses the adjective 예쁘다 as the predicate. When an adjective precedes a noun, it must be converted to its modifier form. For example, "예쁜 꽃" (pretty flower). Korean adjectives include various irregular conjugation patterns: ㅂ irregular (새롭다→새로워요), ㄹ irregular (빠르다→빨라요), and ㅎ irregular (파랗다→파래요).',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 37: Action Verbs (동작 동사)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=37;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=37 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '가다', 'gada', 'to go', 1),
+  (l_id, '오다', 'oda', 'to come', 2),
+  (l_id, '만나다', 'mannada', 'to meet', 3),
+  (l_id, '말하다', 'malhada', 'to speak/say', 4),
+  (l_id, '듣다', 'deutda', 'to listen/hear', 5),
+  (l_id, '읽다', 'ikda', 'to read', 6),
+  (l_id, '쓰다', 'sseuda', 'to write; to use', 7),
+  (l_id, '보다', 'boda', 'to see/watch', 8),
+  (l_id, '사다', 'sada', 'to buy', 9),
+  (l_id, '팔다', 'palda', 'to sell', 10),
+  (l_id, '주다', 'juda', 'to give', 11),
+  (l_id, '받다', 'batda', 'to receive', 12),
+  (l_id, '앉다', 'anda', 'to sit down', 13),
+  (l_id, '서다', 'seoda', 'to stand up/stop', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'ㄷ Irregular Verbs',
+   '듣다, 걷다, 묻다 — ㄷ → ㄹ before vowel endings',
+   'A handful of common verbs have ㄷ in the stem that changes to ㄹ before vowel-initial endings: -아/어요, -(으)면, -(으)러 etc.',
+   '[{"korean":"듣다 → 들어요","english":"to listen → listens (듣 + 어 → 들어)"},{"korean":"걷다 → 걸어요","english":"to walk → walks"},{"korean":"묻다 → 물어요","english":"to ask → asks"}]',
+   1),
+  (l_id,
+   'ㄹ Irregular Verbs',
+   '팔다, 알다, 살다 — ㄹ drops before ㄴ/ㅂ/시/-(으)',
+   'Verbs with ㄹ batchim drop the ㄹ before certain endings: -ㄴ/는, -ㅂ니다, -(으)세요, -(으)면 etc.',
+   '[{"korean":"알다 → 알아요","english":"to know → knows (vowel: ㄹ stays)"},{"korean":"알다 → 압니다 (not 알ㅂ니다)","english":"knows (formal: ㄹ drops before ㅂ)"},{"korean":"팔다 → 파세요","english":"to sell → please sell (ㄹ drops before 세)"}]',
+   2),
+  (l_id,
+   'Purpose/Direction: ~(으)러 가다/오다',
+   '[Verb stem] + -(으)러 + 가다/오다',
+   '-(으)러 expresses the purpose for going or coming somewhere. It can only be used with verbs of motion (가다, 오다, 다니다 etc.).',
+   '[{"korean":"밥을 먹으러 식당에 가요.","english":"I go to the restaurant to eat."},{"korean":"책을 빌리러 도서관에 가요.","english":"I go to the library to borrow books."},{"korean":"친구를 만나러 왔어요.","english":"I came to meet a friend."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '주말에 뭐 해요?', 'Jumal-e mwo haeyo?', 'What are you doing on the weekend?', 1),
+  (l_id, '민준', '친구를 만나러 홍대에 가요. 수진 씨도 올래요?', 'Chingu-reul mannaro Hongdae-e gayo. Sujin ssi-do ollaeyo?', 'I am going to Hongdae to meet a friend. Would you like to come too?', 2),
+  (l_id, '수진', '좋아요! 몇 시에 만나요?', 'Joayo! Myeot si-e mannayo?', 'Sounds good! What time are we meeting?', 3),
+  (l_id, '민준', '두 시에 홍대 정문 앞에서 만나요.', 'Du si-e Hongdae jeongmun ape-seo mannayo.', 'Let''s meet at 2 in front of the Hongdae main gate.', 4),
+  (l_id, '수진', '알겠어요. 거기서 뭐 해요?', 'Algesseoyo. Geogiseo mwo haeyo?', 'Got it. What will we do there?', 5),
+  (l_id, '민준', '밥 먹고 카페에서 이야기해요. 친구가 한국어 잘 못 들어요.', 'Bap meokgo kape-eseo iyagiaeyo. Chingu-ga hangugeo jal mot deureoyo.', 'Eat and chat at a café. My friend cannot understand Korean well.', 6),
+  (l_id, '수진', '괜찮아요. 저도 천천히 말할게요.', 'Gwaenchanayo. Jeodo cheoncheonhi malhalgeyo.', 'That is fine. I will also speak slowly.', 7),
+  (l_id, '민준', '고마워요! 내일 봐요!', 'Gomawoyo! Naeil bwayo!', 'Thank you! See you tomorrow!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What is the polite form of 듣다 (to listen)?', '["듣아요","듣어요","들어요","듣요"]', 2, 'ㄷ irregular: 듣다 → ㄷ → ㄹ before vowel: 들 + 어요 = 들어요.', 1),
+  (l_id, '"책을 읽으러 도서관에 가요" means:', '["I go to the library and read books","I go to the library to read books","I read books at the library","The library has books to read"]', 1, '-(으)러 = in order to; 읽으러 = to read. 도서관에 가요 = go to the library. → go to the library to read books.', 2),
+  (l_id, 'Which verb has a ㄷ irregular form?', '["먹다","살다","걷다","하다"]', 2, '걷다 (to walk) is a ㄷ irregular: 걷다 → 걸어요.', 3),
+  (l_id, 'What does the -(으)러 ending express?', '["result","cause","purpose","concession"]', 2, '-(으)러 expresses purpose/goal: "in order to ~." Used only with motion verbs.', 4),
+  (l_id, 'The polite form of 팔다 (formal -ㅂ니다) is:', '["팔ㅂ니다","팔습니다","팝니다","팔습이다"]', 2, 'ㄹ drops before ㅂ: 팔다 → 팝니다 (팔 + ㅂ니다 → ㄹ drops → 팝니다).', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어 동사는 어간에 어미를 붙여 활용합니다. 규칙 동사는 어간 모음의 밝기에 따라 -아요 또는 -어요를 붙입니다. 불규칙 동사는 ㄷ 불규칙, ㄹ 불규칙, ㅂ 불규칙, ㅡ 탈락 등 다양한 종류가 있습니다. 예를 들어 "듣다"는 ㄷ 불규칙으로 "들어요"가 됩니다. 동사에 -(으)러를 붙이면 목적을 나타낼 수 있습니다. "밥 먹으러 식당에 가요"는 "밥을 먹기 위해 식당에 가요"와 같은 의미입니다.',
+   'Korean verbs are conjugated by attaching endings to the verb stem. Regular verbs attach -아요 or -어요 depending on the brightness of the stem vowel. Irregular verbs include various types such as ㄷ irregular, ㄹ irregular, ㅂ irregular, and ㅡ deletion. For example, "듣다" follows the ㄷ irregular and becomes "들어요." Attaching -(으)러 to a verb expresses purpose. "밥 먹으러 식당에 가요" has the same meaning as "밥을 먹기 위해 식당에 가요" (I go to the restaurant in order to eat).',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 38: Particles 은/는/이/가 (주격조사)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=38;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=38 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '은/는', 'eun/neun', 'topic marker (consonant-final/vowel-final)', 1),
+  (l_id, '이/가', 'i/ga', 'subject marker (consonant-final/vowel-final)', 2),
+  (l_id, '주제', 'juje', 'topic', 3),
+  (l_id, '주어', 'jueo', 'grammatical subject', 4),
+  (l_id, '대조', 'daejo', 'contrast', 5),
+  (l_id, '새 정보', 'sae jeongbo', 'new information', 6),
+  (l_id, '구정보', 'gujeongbo', 'given/old information', 7),
+  (l_id, '강조', 'gangjo', 'emphasis', 8),
+  (l_id, '배우', 'baeu', 'actor', 9),
+  (l_id, '한국은', 'hanguk-eun', 'Korea (as for Korea — topic)', 10),
+  (l_id, '한국이', 'hanguk-i', 'Korea (subject — specific)', 11);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Topic Marker 은/는 vs. Subject Marker 이/가',
+   '은/는: topic (known, contrasted) / 이/가: subject (new info, specific focus)',
+   '은/는 marks the topic — what the sentence is about, often previously mentioned or generally known. 이/가 marks the grammatical subject, often introducing new or specific information. This distinction is one of the most fundamental in Korean.',
+   '[{"korean":"저는 학생이에요.","english":"As for me, I am a student. (topic: me)"},{"korean":"누가 왔어요? 수진이 왔어요.","english":"Who came? Sujin came. (이/가: new info)"},{"korean":"고양이는 귀여워요.","english":"As for cats, they are cute. (topic: cats in general)"}]',
+   1),
+  (l_id,
+   'Contrastive 는/은',
+   '[Noun A] + 는/은 + [predicate A]; [Noun B] + 는/은 + [predicate B]',
+   'When 은/는 is used to contrast two items, it emphasizes the difference between them. This contrastive use is distinct from simple topicalization.',
+   '[{"korean":"저는 커피를 좋아하는데 수진 씨는 차를 좋아해요.","english":"I like coffee, but Sujin likes tea. (contrast)"},{"korean":"봄은 따뜻해요. 겨울은 추워요.","english":"Spring is warm. Winter is cold. (contrast)"},{"korean":"사과는 먹었는데 배는 안 먹었어요.","english":"I ate the apple but not the pear."}]',
+   2),
+  (l_id,
+   'Exhaustive Focus with 이/가',
+   '이/가 for specific identification: "It is precisely X"',
+   'In answer to 누가/뭐가 questions, 이/가 identifies the answer as precisely the one. It conveys "X and not anything else."',
+   '[{"korean":"누가 한국어를 잘 해요? 수진이 잘 해요.","english":"Who speaks Korean well? Sujin (specifically) speaks it well."},{"korean":"뭐가 맛있어요? 김치찌개가 맛있어요.","english":"What is delicious? Kimchi jjigae (specifically) is delicious."},{"korean":"이게 제 가방이에요.","english":"This (one) is my bag. (identifying)"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '선생님', '"나는"과 "내가"의 차이를 아세요?', '"Naneun"-gwa "naega"-eui chai-reul aseyo?', 'Do you know the difference between "나는" and "내가"?', 1),
+  (l_id, '학생', '잘 모르겠어요. 둘 다 "나"를 말하지 않아요?', 'Jal moreugesseoyo. Dul da "na"-reul malhaji anayo?', 'I am not sure. Do they not both refer to "I"?', 2),
+  (l_id, '선생님', '맞아요. 하지만 기능이 달라요. "나는"은 주제를 나타내고, "내가"는 주어를 강조해요.', 'Majayo. Hajiman gineung-i dallayo. "Naneun"-eun juje-reul nataenaego, "naega"-neun jueo-reul gangjoaeyo.', 'Correct. But they have different functions. "나는" marks the topic; "내가" emphasizes the subject.', 3),
+  (l_id, '학생', '예를 들어 주세요.', 'Yereul deureo juseyo.', 'Please give an example.', 4),
+  (l_id, '선생님', '"나는 학생이에요"는 나에 대해 말하는 거예요. "내가 했어요"는 바로 내가, 다른 사람이 아니라 내가 했다는 거예요.', '"Naneun haksaeng-i-eyo"-neun na-e daehae malaneun geoyeyo. "Naega haesseoyo"-neun baro naega, dareun saram-i anira naega haessda-neun geoyeyo.', '"나는 학생이에요" is talking about me in general. "내가 했어요" means specifically me — not someone else — did it.', 5),
+  (l_id, '학생', '아, 이해했어요! 은/는은 주제, 이/가는 주어이군요.', 'A, ihaetaesseoyo! Eun/neun-eun juje, i/ga-neun jueo-igunyo.', 'Ah, I understand! 은/는 is topic, 이/가 is subject.', 6),
+  (l_id, '선생님', '네, 맞아요. 그리고 은/는은 대조의 의미도 있어요.', 'Ne, majayo. Geurigo eun/neun-eun daejo-eui uimi-do isseoyo.', 'Yes, correct. And 은/는 also has a contrastive meaning.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which particle marks the topic of a sentence?', '["이/가","을/를","은/는","에서"]', 2, '은/는 is the topic marker. It marks what the sentence is generally about (often known information).', 1),
+  (l_id, 'In "누가 왔어요?" the answer uses:', '["은/는","이/가","에","도"]', 1, 'Answers to 누가/뭐가 questions use 이/가 to identify the specific subject (new information).', 2),
+  (l_id, '"저는 커피를 좋아하는데 수진 씨는 차를 좋아해요" shows:', '["Topic marking","Contrastive use of 은/는","Subject identification with 이/가","Object marking"]', 1, 'Two 는 markers are used contrastively: I like coffee (contrast) Sujin likes tea.', 3),
+  (l_id, 'After a consonant-final noun, which form of the topic marker is used?', '["는","은","가","이"]', 1, '은 is used after consonant-final nouns: 학생은, 한국은. 는 is used after vowel-final nouns.', 4),
+  (l_id, '"고양이는 귀여워요" most likely means:', '["This specific cat is cute","Cats in general are cute","The cat is not cute","Is the cat cute?"]', 1, '고양이는 = as for cats (topic). The topic marker here creates a generic/universal statement.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어 조사 중 은/는과 이/가는 학습자들이 가장 많이 헷갈려하는 부분입니다. 은/는은 문장의 주제를 나타내며, 이미 알려진 정보나 대조를 표현할 때 씁니다. 이/가는 문법적 주어를 나타내며, 새로운 정보나 특정 대상을 강조할 때 씁니다. 예를 들어 "저는 학생이에요"는 화자 자신에 대한 일반적인 정보를 제공하는 반면, "제가 했어요"는 다른 사람이 아니라 바로 자신이 했다는 것을 강조합니다. 이 차이를 이해하면 한국어 능력이 크게 향상됩니다.',
+   'Among Korean particles, 은/는 and 이/가 are the ones learners find most confusing. 은/는 marks the topic of a sentence and is used to express known information or contrast. 이/가 marks the grammatical subject and is used to emphasize new information or a specific referent. For example, "저는 학생이에요" provides general information about the speaker, whereas "제가 했어요" emphasizes that it was precisely the speaker — not anyone else — who did it. Understanding this distinction greatly improves Korean proficiency.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 39: Particles 을/를/에/에서 (목적격·처소 조사)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=39;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=39 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '을/를', 'eul/reul', 'object particle (marks direct object)', 1),
+  (l_id, '에', 'e', 'location/direction/time particle (static, destination, time)', 2),
+  (l_id, '에서', 'eseo', 'location particle (action), from (source)', 3),
+  (l_id, '목적어', 'mokjeogeo', 'direct object (grammar term)', 4),
+  (l_id, '처소', 'cheoso', 'location (grammar term)', 5),
+  (l_id, '방향', 'banghyang', 'direction', 6),
+  (l_id, '출발지', 'chulbaiji', 'departure point', 7),
+  (l_id, '도착지', 'dochaiji', 'destination/arrival point', 8),
+  (l_id, '한국에서', 'hanguk-eseo', 'in Korea (action location) / from Korea (source)', 9),
+  (l_id, '학교에', 'hakgyo-e', 'to school (destination) / at school (static with 있다)', 10);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Object Particle 을/를',
+   'Consonant-final noun + 을 / Vowel-final noun + 를',
+   '을/를 marks the direct object of a transitive verb. In casual speech it is often omitted, but including it is more precise.',
+   '[{"korean":"밥을 먹어요.","english":"I eat rice. (을 marks 밥 as direct object)"},{"korean":"음악을 들어요.","english":"I listen to music."},{"korean":"친구를 만나요.","english":"I meet a friend."}]',
+   1),
+  (l_id,
+   '에 vs 에서: Location Particles',
+   '에: destination (가다/오다), static location (있다/없다), time marker / 에서: action location, source (from)',
+   '에 marks destinations (with motion verbs), static existence (있다/없다), and time. 에서 marks where an action actively takes place, and the starting point of motion (from).',
+   '[{"korean":"학교에 가요. (destination)","english":"I go to school."},{"korean":"학교에 있어요. (static)","english":"I am at school."},{"korean":"학교에서 공부해요. (action)","english":"I study at school."},{"korean":"서울에서 왔어요. (source)","english":"I came from Seoul."}]',
+   2),
+  (l_id,
+   'Time Particle 에',
+   '[Time expression] + 에',
+   '에 marks specific points in time (days, clock times, dates). It is not used with relative time words (오늘, 어제, 내일, 지금 etc.).',
+   '[{"korean":"월요일에 회의가 있어요.","english":"There is a meeting on Monday."},{"korean":"세 시에 만나요.","english":"Let''s meet at 3 o''clock."},{"korean":"(오늘에×) 오늘 가요.","english":"(No 에 with 오늘) I go today."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '선생님', '교실에서와 교실에가 어떻게 달라요?', '"Gyosil-eseo"-wa "gyosil-e"-ga eotteoke dallayo?', 'How are "교실에서" and "교실에" different?', 1),
+  (l_id, '학생', '잘 모르겠어요. 둘 다 교실에 관한 것 아닌가요?', 'Jal moreugesseoyo. Dul da gyosil-e gwanhan geot aniingayo?', 'I am not sure. Do they not both relate to the classroom?', 2),
+  (l_id, '선생님', '"교실에 있어요"는 교실 안에 있다는 뜻이에요. 하지만 "교실에서 공부해요"는 교실 안에서 공부하는 행동을 말해요.', '"Gyosil-e isseoyo"-neun gyosil an-e issda-neun tteus-i-eyo. Hajiman "gyosil-eseo gongbuhaeyo"-neun gyosil an-eseo gongbuhaneun haengdong-eul malhaeyo.', '"교실에 있어요" means being inside the classroom. But "교실에서 공부해요" describes the action of studying inside the classroom.', 3),
+  (l_id, '학생', '아, 에는 위치, 에서는 행동!', 'A, e-neun wichi, eseo-neun haengdong!', 'Ah, 에 for location, 에서 for action!', 4),
+  (l_id, '선생님', '맞아요! 그리고 에서는 출발점을 나타낼 수도 있어요. "서울에서 왔어요"처럼요.', 'Majayo! Geurigo eseo-neun chulbajeom-eul nataenael sudo isseoyo. "Seoul-eseo wasseoyo"-cheoreomyo.', 'Correct! And 에서 can also indicate a starting point, like "서울에서 왔어요."', 5),
+  (l_id, '학생', '"을/를"은 언제 생략해요?', '"Eul/reul"-eun eonje saengnyak-aeyo?', 'When is 을/를 omitted?', 6),
+  (l_id, '선생님', '대화에서는 자주 생략해요. 하지만 공식적인 글에서는 씁니다.', 'Daehwa-eseo-neun jaju saengnyak-aeyo. Hajiman gongsikjeok-in geul-eseo-neun sseumnida.', 'It is often omitted in conversation. But in formal writing it is used.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, '"도서관에서 책을 읽어요" — which particle marks the action location?', '["에","에서","을","은"]', 1, '에서 marks where the action (읽다 = to read) takes place: 도서관에서 = at the library.', 1),
+  (l_id, '"학교에 가요" — what does 에 mark here?', '["Action location","Source","Destination","Time"]', 2, '에 with motion verbs (가다, 오다) marks the destination: 학교에 가요 = go to school.', 2),
+  (l_id, 'Which sentence is CORRECT?', '["오늘에 학교에 가요","내일에 만나요","월요일에 회의가 있어요","지금에 먹어요"]', 2, '월요일에 is correct. 오늘, 내일, 지금 are relative time words that do NOT take 에.', 3),
+  (l_id, '"서울에서 왔어요" — what does 에서 indicate here?', '["Action location","Source (from)","Destination","Time"]', 1, '에서 after a place of origin indicates the source/departure point: 서울에서 = from Seoul.', 4),
+  (l_id, 'Object particle after vowel-final noun 나라 (country):', '["나라을","나라를","나라이","나라가"]', 1, 'Vowel-final noun → 를 (not 을): 나라를.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어 조사 중 에와 에서는 위치를 나타내는 조사입니다. 에는 목적지(가다, 오다), 정적 위치(있다, 없다), 시간을 나타냅니다. 에서는 행동이 이루어지는 장소 또는 출발점을 나타냅니다. 예를 들어 "학교에 가요"는 학교를 향한 이동을, "학교에 있어요"는 학교에 있는 상태를, "학교에서 공부해요"는 학교에서의 행동을 나타냅니다. 을/를은 타동사의 목적어를 표시하는 조사입니다. 대화에서는 생략되는 경우가 많지만 글쓰기에서는 사용하는 것이 일반적입니다.',
+   'Among Korean particles, 에 and 에서 both mark location. 에 marks a destination (with 가다/오다), a static position (with 있다/없다), and time. 에서 marks the location where an action occurs, or the point of departure. For example, "학교에 가요" indicates movement toward school, "학교에 있어요" indicates a state of being at school, and "학교에서 공부해요" indicates the action of studying at school. 을/를 is the particle marking the direct object of a transitive verb. It is frequently omitted in conversation, but is generally used in writing.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 40: Present Tense -아요/어요 (현재형)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=40;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=40 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '현재형', 'hyeunjae-hyeong', 'present tense form', 1),
+  (l_id, '-아요', '-ayo', 'polite present ending (bright vowel stems)', 2),
+  (l_id, '-어요', '-eoyo', 'polite present ending (dark vowel stems)', 3),
+  (l_id, '-해요', '-haeyo', 'polite present ending (하다 verbs)', 4),
+  (l_id, '가요', 'gayo', 'go (가다 → 가요)', 5),
+  (l_id, '와요', 'wayo', 'come (오다 → 와요 — contraction)', 6),
+  (l_id, '해요', 'haeyo', 'do (하다 → 해요)', 7),
+  (l_id, '봐요', 'bwayo', 'see/watch (보다 → 봐요 — contraction)', 8),
+  (l_id, '먹어요', 'meogeoyo', 'eat (먹다 → 먹어요)', 9),
+  (l_id, '마셔요', 'masyeoyo', 'drink (마시다 → 마셔요 — ㅣ contraction)', 10),
+  (l_id, '줘요', 'jwoyo', 'give (주다 → 줘요 — ㅜ contraction)', 11),
+  (l_id, '배워요', 'baeweoyo', 'learn (배우다 → 배워요)', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Bright Stem → -아요 / Dark Stem → -어요',
+   'If last vowel of stem is ㅏ or ㅗ → -아요; otherwise → -어요',
+   'The present tense ending -아요 is used when the last stem vowel is ㅏ or ㅗ (bright vowels). Otherwise -어요 is used. 하다 verbs always take 해요.',
+   '[{"korean":"가다 (stem 가: ㅏ) → 가 + 아요 → 가요","english":"go → goes"},{"korean":"오다 (stem 오: ㅗ) → 오 + 아요 → 와요 (contracted)","english":"come → comes"},{"korean":"먹다 (stem 먹: ㅓ) → 먹 + 어요 → 먹어요","english":"eat → eats"}]',
+   1),
+  (l_id,
+   'Vowel Contractions in Present Tense',
+   'ㅏ+아→아, ㅗ+아→와, ㅜ+어→워, ㅣ+어→여, ㅡ+어→어 (ㅡ drops)',
+   'When the verb stem ends in a vowel and the ending begins with a vowel, they contract. These contractions must be memorized.',
+   '[{"korean":"보다: 보+아 → 봐요","english":"see → 봐요"},{"korean":"주다: 주+어 → 줘요","english":"give → 줘요"},{"korean":"마시다: 마시+어 → 마셔요","english":"drink → 마셔요"}]',
+   2),
+  (l_id,
+   'Present Tense as Habitual or Near-Future',
+   'Present -아/어요 = habitual, near future, or general truth',
+   'Unlike English, Korean present tense covers habitual actions, general truths, and near-future plans (similar to English present progressive for plans).',
+   '[{"korean":"저는 매일 커피를 마셔요.","english":"I drink coffee every day. (habitual)"},{"korean":"내일 친구를 만나요.","english":"I am meeting a friend tomorrow. (near future)"},{"korean":"서울은 한국의 수도예요.","english":"Seoul is the capital of Korea. (general truth)"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '선생님', '"먹다"의 현재형이 뭐예요?', '"Meokda"-eui hyeunjae-hyeong-i mwoyeyo?', 'What is the present form of "먹다"?', 1),
+  (l_id, '학생', '먹어요!', 'Meogeoyo!', 'Meogeoyo!', 2),
+  (l_id, '선생님', '맞아요! 왜 -어요를 써요?', 'Majayo! Wae -eoyo-reul sseoyo?', 'Correct! Why do we use -어요?', 3),
+  (l_id, '학생', '먹다의 어간 마지막 모음이 ㅓ라서요. 어두운 모음이에요.', '"Meokda"-eui eokan majimak moeum-i "eo"-raseoyo. Eodun moeum-i-eyo.', 'Because the last vowel of 먹다''s stem is ㅓ. It is a dark vowel.', 4),
+  (l_id, '선생님', '훌륭해요! "오다"는요?', 'Hullyunghaeyo! "Oda"-neunyo?', 'Excellent! What about "오다"?', 5),
+  (l_id, '학생', '"오"가 ㅗ라서 -아요를 써요. 그런데 오+아→와요!', '"O"-ga "o"-raseo -ayo-reul sseoyo. Geureonde o+a→wayo!', '"오" has ㅗ, so -아요 is used. But o+a → 와요!', 6),
+  (l_id, '선생님', '완벽해요! 모음 축약까지 기억하는군요!', 'Wanbyeokaeyeo! Moeum chukyak-kkaji gieokhaneungunyo!', 'Perfect! You even remember vowel contraction!', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What is the polite present form of 마시다 (to drink)?', '["마시아요","마시어요","마셔요","마시요"]', 2, '마시다: stem 마시 ends in ㅣ. ㅣ+어 → 여 (contraction): 마시 + 어 → 마셔요.', 1),
+  (l_id, 'Which verb takes -아요 in present tense?', '["먹다","배우다","가다","마시다"]', 2, '가다: stem 가 has bright vowel ㅏ → 가 + 아요 → 가요.', 2),
+  (l_id, 'What is the present form of 주다 (to give)?', '["주아요","주어요","줘요","줍니다"]', 2, '주다: 주 + 어요 → ㅜ+어 contracts to 워 → 줘요.', 3),
+  (l_id, '"내일 친구를 만나요" can mean:', '["I met a friend yesterday","I usually meet friends","I will meet a friend tomorrow","I should meet a friend"]', 2, 'Korean present tense covers near-future plans: 내일(tomorrow) 만나요 = I am meeting a friend tomorrow.', 4),
+  (l_id, '하다 verbs always become:', '["하아요","하어요","해요","합이다"]', 2, '하다 → 해요 (always). 하 + 여 contracts to 해: 하다 is unique.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어 동사와 형용사는 어간에 어미를 붙여 활용합니다. 현재형 어미는 -아요 또는 -어요로, 어간의 마지막 모음이 ㅏ나 ㅗ이면 -아요를 붙이고, 그 외에는 -어요를 붙입니다. 하다 동사는 항상 해요가 됩니다. 어간이 모음으로 끝나면 모음 축약이 일어납니다. 예를 들어 오다는 와요, 주다는 줘요, 마시다는 마셔요가 됩니다. 현재형은 습관적 행동, 일반적 사실, 가까운 미래 계획에도 쓰입니다.',
+   'Korean verbs and adjectives are conjugated by attaching endings to the stem. The present-tense ending is -아요 or -어요: if the last vowel of the stem is ㅏ or ㅗ, -아요 is attached; otherwise -어요 is used. 하다 verbs always become 해요. When the stem ends in a vowel, vowel contraction occurs. For example, 오다 becomes 와요, 주다 becomes 줘요, and 마시다 becomes 마셔요. The present tense is also used for habitual actions, general truths, and near-future plans.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 41: Past Tense -았/었어요 (과거형)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=41;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=41 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '-았어요', '-asseoyo', 'past tense ending (bright vowel stems)', 1),
+  (l_id, '-었어요', '-eosseoyo', 'past tense ending (dark vowel stems)', 2),
+  (l_id, '-했어요', '-haesseoyo', 'past tense ending (하다 verbs)', 3),
+  (l_id, '갔어요', 'gasseoyo', 'went (가다 → 갔어요)', 4),
+  (l_id, '왔어요', 'wasseoyo', 'came (오다 → 왔어요)', 5),
+  (l_id, '먹었어요', 'meogeosseoyo', 'ate (먹다 → 먹었어요)', 6),
+  (l_id, '봤어요', 'bwasseoyo', 'saw (보다 → 봤어요)', 7),
+  (l_id, '했어요', 'haesseoyo', 'did (하다 → 했어요)', 8),
+  (l_id, '공부했어요', 'gongbuhaesseoyo', 'studied (공부하다 → 공부했어요)', 9),
+  (l_id, '이었어요/였어요', 'i-eosseoyo/yeosseoyo', 'was/were (이다 past)', 10);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Forming the Past Tense',
+   'Present stem + -았어요 (bright) / -었어요 (dark) / -했어요 (하다)',
+   'The past tense is formed by adding -았/었 to the present tense stem (the same base used for -아/어요). Then add -어요: so bright stems → -았어요, dark stems → -었어요, 하다 → 했어요.',
+   '[{"korean":"가다 → 갔어요","english":"went (가 + 았어 → 갔어요, ㅏ+아 contracts)"},{"korean":"먹다 → 먹었어요","english":"ate (먹 + 었어요)"},{"korean":"공부하다 → 공부했어요","english":"studied"}]',
+   1),
+  (l_id,
+   'Past Tense of Copula 이다',
+   'Noun + 이었어요 (consonant-final) / 였어요 (vowel-final)',
+   'The past form of 이에요/예요 (to be) is 이었어요 or 였어요. In speech 이었어요 often contracts to 이었어요→였어요.',
+   '[{"korean":"학생이었어요.","english":"I was a student."},{"korean":"의사였어요.","english":"(He/She) was a doctor. (vowel-final 의사 → 였어요)"},{"korean":"어제는 월요일이었어요.","english":"Yesterday was Monday."}]',
+   2),
+  (l_id,
+   'Past Tense with Time Expressions',
+   '어제/지난주/작년 + past tense verb',
+   'Past time words (어제=yesterday, 지난주=last week, 작년=last year, 아까=a while ago) naturally co-occur with past tense verbs.',
+   '[{"korean":"어제 뭐 했어요?","english":"What did you do yesterday?"},{"korean":"지난주에 서울에 갔어요.","english":"I went to Seoul last week."},{"korean":"작년에 한국어를 시작했어요.","english":"I started Korean last year."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '민준', '어제 뭐 했어요?', 'Eoje mwo haesseoyo?', 'What did you do yesterday?', 1),
+  (l_id, '수진', '친구랑 영화를 봤어요. 재미있었어요!', 'Chingu-rang yeonghwa-reul bwasseoyo. Jaemisseo-sseoyo!', 'I watched a movie with a friend. It was fun!', 2),
+  (l_id, '민준', '무슨 영화요?', 'Museun yeonghwa-yo?', 'What movie?', 3),
+  (l_id, '수진', '"파묘"요. 무서웠지만 정말 잘 만든 영화였어요.', '"Pamyo"-yo. Museowo-sjiman jeongmal jal mandeun yeonghwa-yeosseoyo.', '"Pamyo." It was scary but a really well-made film.', 4),
+  (l_id, '민준', '저는 아직 못 봤어요. 보고 싶었는데.', 'Jeoneun ajik mot bwasseoyo. Bogo sipeonnunde.', 'I haven''t seen it yet. I wanted to see it.', 5),
+  (l_id, '수진', '같이 한번 더 봐요! 두 번 봐도 좋은 영화예요.', 'Gachi hanbeon deo bwayo! Du beon bwado joeun yeonghwa-yeyo.', 'Let''s watch it together again! It is a film worth seeing twice.', 6),
+  (l_id, '민준', '좋아요! 이번 주에 가요.', 'Joayo! Ibeon ju-e gayo.', 'Sounds good! Let''s go this week.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What is the past form of 마시다 (to drink)?', '["마셨어요","마시았어요","마시었어요","마셔었어요"]', 0, '마시다: 마시 + 었어요 → 마시+었=마셨 (ㅣ+었 contracts to 였): 마셨어요.', 1),
+  (l_id, 'What is the past form of 오다 (to come)?', '["왔어요","오았어요","왔요","오었어요"]', 0, '오다: 오 + 았어요 → ㅗ+았 contracts to 왔: 왔어요.', 2),
+  (l_id, 'How do you say "I was a student" (past copula)?', '["저는 학생이에요","저는 학생이었어요","저는 학생했어요","저는 학생이 았어요"]', 1, '학생이었어요: 학생(consonant-final) + 이었어요 = was a student.', 3),
+  (l_id, '"작년에 서울에 갔어요" means:', '["I go to Seoul every year","I went to Seoul last year","I will go to Seoul next year","I have been to Seoul"]', 1, '작년에 = last year; 갔어요 = went (past of 가다). → I went to Seoul last year.', 4),
+  (l_id, 'How is the past tense formed from 하다 verbs?', '["하+았어요 → 하았어요","하+였어요 → 하였어요","하 → 했어요","하다+었어요"]', 2, '하다 → 했어요 (always). 하+여 contracts to 해, past marker → 했어요.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어 과거형은 어간에 -았어요 또는 -었어요를 붙여 만듭니다. 어간의 마지막 모음이 ㅏ나 ㅗ이면 -았어요, 그 외에는 -었어요를 사용합니다. 하다 동사는 했어요가 됩니다. 현재형처럼 모음으로 끝나는 어간에는 축약이 일어납니다. 예를 들어 가다는 갔어요, 오다는 왔어요가 됩니다. 과거 시제를 나타내는 시간 표현으로는 어제, 지난주, 작년, 아까 등이 있습니다. 과거형을 활용하면 지난 경험이나 사건을 자연스럽게 이야기할 수 있습니다.',
+   'The Korean past tense is formed by attaching -았어요 or -었어요 to the verb stem. If the last vowel of the stem is ㅏ or ㅗ, -았어요 is used; otherwise -었어요 is used. 하다 verbs become 했어요. As with the present tense, vowel contraction occurs with stems ending in a vowel. For example, 가다 becomes 갔어요 and 오다 becomes 왔어요. Time expressions indicating the past include 어제, 지난주, 작년, and 아까. Using the past tense allows natural narration of past experiences and events.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 42: Future/Intention -ㄹ/을 거예요 (미래형)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=42;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=42 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '-(으)ㄹ 거예요', '-(eu)l geoyeyo', 'future/intention: will / am going to', 1),
+  (l_id, '-겠어요', '-gessseoyo', 'volitional/conjecture: I will / it seems', 2),
+  (l_id, '내년', 'naenyeon', 'next year', 3),
+  (l_id, '나중에', 'najunge', 'later / in the future', 4),
+  (l_id, '곧', 'got', 'soon', 5),
+  (l_id, '아마', 'ama', 'probably', 6),
+  (l_id, '할 거예요', 'hal geoyeyo', 'will do (하다 future)', 7),
+  (l_id, '갈 거예요', 'gal geoyeyo', 'will go (가다 future)', 8),
+  (l_id, '먹을 거예요', 'meogeul geoyeyo', 'will eat (먹다 future)', 9),
+  (l_id, '될 거예요', 'dwel geoyeyo', 'will become/it will be (되다 future)', 10);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Future with -(으)ㄹ 거예요',
+   'Consonant-final stem + 을 거예요 / Vowel-final stem + ㄹ 거예요 / ㄹ-final stem + ㄹ 거예요',
+   '-(으)ㄹ 거예요 expresses plans, predictions, or intentions about the future. It is the most common future expression at the A1 level.',
+   '[{"korean":"내일 도서관에 갈 거예요.","english":"I will go to the library tomorrow."},{"korean":"이따가 밥을 먹을 거예요.","english":"I am going to eat later."},{"korean":"내년에 한국에 갈 거예요.","english":"I will go to Korea next year."}]',
+   1),
+  (l_id,
+   'Volition/Promise: -ㄹ/을게요',
+   'Stem + -(으)ㄹ게요 = I will (promise/decision in the moment)',
+   '-(으)ㄹ게요 expresses the speaker''s decision or promise, often made in response to the situation. It carries more personal commitment than -(으)ㄹ 거예요.',
+   '[{"korean":"제가 할게요.","english":"I will do it. (my decision/offer)"},{"korean":"내일 전화할게요.","english":"I will call tomorrow. (promise)"},{"korean":"조심할게요.","english":"I will be careful. (responding to advice)"}]',
+   2),
+  (l_id,
+   'Asking About Future Plans: 뭐 할 거예요?',
+   '언제/어디/뭐/누구 + -(으)ㄹ 거예요?',
+   'Question words combine naturally with -(으)ㄹ 거예요 to ask about plans. This is an essential conversational pattern.',
+   '[{"korean":"주말에 뭐 할 거예요?","english":"What are you going to do on the weekend?"},{"korean":"어디 갈 거예요?","english":"Where are you going to go?"},{"korean":"언제 올 거예요?","english":"When are you going to come?"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '민준', '방학에 뭐 할 거예요?', 'Banghak-e mwo hal geoyeyo?', 'What are you going to do during the vacation?', 1),
+  (l_id, '수진', '유럽 여행을 갈 거예요! 프랑스와 이탈리아에 가고 싶어요.', 'Yurop yeohaeng-eul gal geoyeyo! Peurangseuwa Italia-e gago sipeoyo.', 'I am going to travel to Europe! I want to go to France and Italy.', 2),
+  (l_id, '민준', '와, 부러워요! 얼마나 있을 거예요?', 'Wa, bureowo! Eolmana isseul geoyeyo?', 'Wow, I envy you! How long will you stay?', 3),
+  (l_id, '수진', '이 주일 정도 있을 거예요. 민준 씨는요?', 'I ju-il jeong-do isseul geoyeyo. Minjun ssi-neunyo?', 'About two weeks. What about you?', 4),
+  (l_id, '민준', '저는 집에서 쉬거나 아르바이트를 할 거예요.', 'Jeoneun jib-eseo swigeo-na areubaiteu-reul hal geoyeyo.', 'I will either rest at home or do a part-time job.', 5),
+  (l_id, '수진', '아르바이트 어디서 할 거예요?', 'Areubaiteu eodiseo hal geoyeyo?', 'Where will you work a part-time job?', 6),
+  (l_id, '민준', '아직 모르겠어요. 카페나 편의점에서 할 것 같아요.', 'Ajik moreugesseoyo. Kape-na pyeonuijeom-eseo hal geot gatayo.', 'I don''t know yet. I think I will probably work at a café or convenience store.', 7),
+  (l_id, '수진', '좋겠네요! 돈 많이 모아요!', 'Jokessneyo! Don mani moayo!', 'Sounds nice! Save up lots of money!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What is the future form of 먹다 (to eat)?', '["먹를 거예요","먹을 거예요","먹ㄹ 거예요","먹이 거예요"]', 1, '먹다: consonant-final stem → 을 거예요: 먹을 거예요.', 1),
+  (l_id, 'What is the future form of 가다 (to go)?', '["가을 거예요","갈 거예요","가거예요","갈게요(only)"]', 1, '가다: vowel-final stem → ㄹ 거예요: 갈 거예요.', 2),
+  (l_id, 'Which expresses a personal promise or in-the-moment decision?', '["-(으)ㄹ 거예요","-(으)ㄹ게요","-(으)려고 해요","-(으)ㄹ 수 있어요"]', 1, '-(으)ㄹ게요 = personal commitment/promise. 제가 할게요 = I will do it (my decision).', 3),
+  (l_id, '"내년에 한국에 갈 거예요" means:', '["I went to Korea last year","I go to Korea every year","I am going to go to Korea next year","I want to go to Korea"]', 2, '내년에 = next year; 갈 거예요 = will go. → I am going to go to Korea next year.', 4),
+  (l_id, 'How do you ask "What are you going to do on the weekend?"', '["주말에 뭐 했어요?","주말에 뭐 해요?","주말에 뭐 할 거예요?","주말에 뭐 했을 거예요?"]', 2, '뭐 할 거예요? = what will you do? Future question using -(으)ㄹ 거예요.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어에서 미래를 나타내는 가장 일반적인 표현은 -(으)ㄹ 거예요입니다. 어간이 자음으로 끝나면 -을 거예요, 모음으로 끝나면 -ㄹ 거예요를 붙입니다. 이 표현은 계획, 예측, 의도를 나타낼 때 씁니다. -(으)ㄹ게요는 화자의 결정이나 약속을 나타내며, 상대방의 요청이나 상황에 반응할 때 많이 씁니다. 미래 시간 표현으로는 내일, 다음 주, 내년, 나중에, 곧 등이 있습니다.',
+   'The most common expression for the future in Korean is -(으)ㄹ 거예요. If the stem ends in a consonant, -을 거예요 is attached; if it ends in a vowel, -ㄹ 거예요 is attached. This expression is used to convey plans, predictions, and intentions. -(으)ㄹ게요 expresses the speaker''s decision or promise, and is frequently used when responding to a request or situation. Future time expressions include 내일, 다음 주, 내년, 나중에, and 곧.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 43: Negation 안/못 (부정)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=43;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=43 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '안', 'an', 'negation prefix (volition/choice)', 1),
+  (l_id, '못', 'mot', 'negation prefix (inability)', 2),
+  (l_id, '-지 않다', '-ji anta', 'long negation form (volition/choice)', 3),
+  (l_id, '-지 못하다', '-ji motada', 'long negation form (inability)', 4),
+  (l_id, '안 먹어요', 'an meogeoyo', 'do not eat (choice)', 5),
+  (l_id, '못 먹어요', 'mot meogeoyo', 'cannot eat (inability)', 6),
+  (l_id, '없다', 'eobsda', 'to not exist / to not have', 7),
+  (l_id, '모르다', 'moreuda', 'to not know', 8),
+  (l_id, '아니다', 'anida', 'to not be (copula negation)', 9),
+  (l_id, '아니에요', 'anieyo', 'is not (polite copula negation)', 10);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   '안 Negation (Volitional)',
+   '안 + [Verb/Adjective] = intentionally do not / is not',
+   '안 precedes the verb or adjective to express the speaker''s choice not to do something, or a factual negation of a state. For 하다 verbs: place 안 before 하다 (not before the noun): [Noun] + 안 해요.',
+   '[{"korean":"오늘은 학교에 안 가요.","english":"I am not going to school today. (choice)"},{"korean":"저는 술을 안 마셔요.","english":"I don''t drink alcohol. (habitual choice)"},{"korean":"공부 안 했어요.","english":"I didn''t study. (안 before 하다 verb)"}]',
+   1),
+  (l_id,
+   '못 Negation (Inability)',
+   '못 + [Verb] = cannot / is unable to (due to external circumstances or inability)',
+   '못 expresses inability — you want to do something but cannot due to circumstances or physical inability. It cannot be used with adjectives.',
+   '[{"korean":"바빠서 못 갔어요.","english":"I couldn''t go because I was busy."},{"korean":"한국어를 아직 못 해요.","english":"I can''t speak Korean yet."},{"korean":"눈이 나빠서 잘 못 봐요.","english":"My eyesight is bad so I can''t see well."}]',
+   2),
+  (l_id,
+   'Copula Negation: 아니에요',
+   '[Noun] + 이/가 + 아니에요 = is not [Noun]',
+   'To negate the copula (이다), use 아니다 → 아니에요. The noun takes 이/가 (subject particle).',
+   '[{"korean":"저는 학생이 아니에요.","english":"I am not a student."},{"korean":"이게 제 가방이 아니에요.","english":"This is not my bag."},{"korean":"한국 사람이 아니에요?","english":"Are you not Korean?"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '어제 파티에 왜 안 왔어요?', 'Eoje pati-e wae an wasseoyo?', 'Why didn''t you come to the party yesterday?', 1),
+  (l_id, '민준', '몸이 안 좋아서 못 갔어요.', 'Mom-i an joa-seo mot gasseoyo.', 'I wasn''t feeling well so I couldn''t go.', 2),
+  (l_id, '수진', '아, 그랬군요. 지금은 좀 어때요?', 'A, geuraessgunyo. Jigeum-eun jom eottaeyo?', 'Oh I see. How are you feeling now?', 3),
+  (l_id, '민준', '좀 나아졌어요. 그런데 아직 밥을 잘 못 먹겠어요.', 'Jom naajeosseoyo. Geureonde ajik bab-eul jal mot meokgesseoyo.', 'I am a bit better. But I still cannot eat well.', 4),
+  (l_id, '수진', '약은 먹었어요?', 'Yag-eun meogeosseoyo?', 'Did you take medicine?', 5),
+  (l_id, '민준', '아니요, 아직 안 먹었어요. 그냥 쉬려고요.', 'Aniyo, ajik an meogeosseoyo. Geunyang swiryogoyo.', 'No, I haven''t taken any yet. I am just trying to rest.', 6),
+  (l_id, '수진', '빨리 나아요!', 'Ppalli naayo!', 'Get well soon!', 7),
+  (l_id, '민준', '고마워요!', 'Gomawoyo!', 'Thank you!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which negation expresses inability (external circumstance)?', '["안","못","아니다","없다"]', 1, '못 = cannot (due to circumstances or inability). 안 = do not (choice).', 1),
+  (l_id, '"저는 학생이 아니에요" means:', '["I am not a student","I am not studying","I do not have a student","I cannot be a student"]', 0, '아니에요 = negation of 이다 (to be). 학생이 아니에요 = is not a student.', 2),
+  (l_id, 'For 하다 verbs, 안 is placed:', '["Before the 하다: 안 공부해요","Between noun and 하다: 공부 안 해요","Both positions are correct","After 하다"]', 1, 'For 하다 verbs: [Noun] + 안 + 해요. 공부 안 해요 = I don''t study. (안 공부해요 is less natural)', 3),
+  (l_id, '"바빠서 못 갔어요" expresses:', '["I chose not to go because I was busy","I could not go because I was busy","I did not go even though I was not busy","I went even though I was busy"]', 1, '못 갔어요 = could not go; 바빠서 = because I was busy (reason). → Could not go because busy.', 4),
+  (l_id, '"술을 안 마셔요" vs "술을 못 마셔요" — what is the difference?', '["No difference","안: choice not to drink; 못: unable to drink","안: unable; 못: choice","Both mean not drinking now"]', 1, '안 마셔요 = I don''t drink (by choice). 못 마셔요 = I cannot drink (e.g., due to allergy, medication).', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어의 부정 표현은 크게 세 가지입니다. 첫째, "안"은 의지적 부정으로 화자가 선택적으로 하지 않는 것을 나타냅니다. 예를 들어 "오늘은 학교에 안 가요"는 학교에 가기 싫거나 가지 않기로 결정한 것입니다. 둘째, "못"은 능력 부정으로 상황이나 능력 부족으로 할 수 없음을 나타냅니���. "오늘 학교에 못 가요"는 아프거나 다른 이유로 갈 수 없다는 뜻입니다. 셋째, 이다의 부정은 아니에요를 씁니다. 학습자들은 이 세 가지 부정 표현을 잘 구분해야 합니다.',
+   'There are broadly three types of negation in Korean. First, "안" is volitional negation, indicating that the speaker chooses not to do something. For example, "오늘은 학교에 안 가요" means the speaker does not want to go or has decided not to go to school. Second, "못" is ability negation, indicating inability due to circumstances or lack of ability. "오늘 학교에 못 가요" means the speaker cannot go due to illness or another reason. Third, the negation of 이다 (to be) uses 아니에요. Learners must clearly distinguish these three negation forms.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 44: Connecting sentences -고 (연결어미)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=44;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=44 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '-고', '-go', 'connective ending: and / and then', 1),
+  (l_id, '-아/어서', '-a/eoseo', 'connective ending: and then (sequential/reason)', 2),
+  (l_id, '-지만', '-jiman', 'connective ending: but / although', 3),
+  (l_id, '-는데', '-neunde', 'connective ending: but / while / context', 4),
+  (l_id, '-거나', '-geona', 'connective ending: or (alternative)', 5),
+  (l_id, '그리고', 'geurigo', 'and (sentence-initial connector)', 6),
+  (l_id, '그런데', 'geureonde', 'but / however / by the way', 7),
+  (l_id, '그래서', 'geuraeseo', 'so / therefore', 8),
+  (l_id, '그러면', 'geureomyeon', 'then / in that case', 9),
+  (l_id, '하지만', 'hajiman', 'however / but (sentence-initial)', 10);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   '-고: Sequential or Simultaneous Connection',
+   '[V/Adj stem] + -고 + [next clause]',
+   '-고 connects two clauses meaning "and" or "and then." Crucially, -고 does not change for tense — the whole sentence''s tense is marked only on the final verb. Order implies sequence.',
+   '[{"korean":"일어나고 세수해요.","english":"I wake up and wash my face."},{"korean":"크고 예뻐요.","english":"It is big and pretty. (simultaneous description)"},{"korean":"밥 먹고 커피 마셨어요.","english":"I ate and then drank coffee."}]',
+   1),
+  (l_id,
+   '-아/어서 vs -고: Nuance Difference',
+   '-아/어서: cause→result or tight sequence (cannot change tense independently)',
+   '-아/어서 implies a cause-and-effect or tightly sequential relationship. Tense cannot be marked on the -아/어서 clause (it inherits the final verb''s tense). -고 allows more independence.',
+   '[{"korean":"피곤해서 일찍 잤어요.","english":"I was tired so I slept early. (cause → result)"},{"korean":"밥 먹어서 배불러요.","english":"I ate so I am full."},{"korean":"도서관에 가서 공부했어요.","english":"I went to the library and (there) studied."}]',
+   2),
+  (l_id,
+   '-지만 / 하지만: Contrast',
+   '[Clause 1] + -지만 + [Clause 2] (contrastive connective)',
+   '-지만 connects two clauses in contrast: "although / but." 하지만 is the sentence-initial equivalent. Both are versatile and neutral in formality.',
+   '[{"korean":"비싸지만 맛있어요.","english":"It is expensive but delicious."},{"korean":"한국어는 어렵지만 재미있어요.","english":"Korean is difficult but interesting."},{"korean":"가고 싶었지만 시간이 없었어요.","english":"I wanted to go but I didn''t have time."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '한국어가 어때요? 어렵지 않아요?', 'Hangugeo-ga eottaeyo? Eoryeopji anayo?', 'How is Korean? Is it not difficult?', 1),
+  (l_id, '민준', '어렵지만 재미있어요. 특히 발음이 힘들어요.', 'Eoryeopjiman jaemisseoyo. Teuki bareumi himdeuroyo.', 'It is difficult but fun. The pronunciation is especially hard.', 2),
+  (l_id, '수진', '어떻게 공부해요?', 'Eotteoke gongbuhaeyo?', 'How do you study?', 3),
+  (l_id, '민준', '아침에 유튜브로 듣기 연습을 하고, 저녁에는 교재로 문법을 공부해요.', 'Achim-e yutyubu-ro deutgi yeonseubeul hago, jeonyeog-eneun gyojae-ro munbeob-eul gongbuhaeyo.', 'In the morning I practice listening on YouTube, and in the evening I study grammar with a textbook.', 4),
+  (l_id, '수진', '많이 발전했어요?', 'Mani baljeonhaesseoyo?', 'Have you improved a lot?', 5),
+  (l_id, '민준', '처음보다 나아졌어요. 그런데 아직 말하기가 어려워요.', 'Cheoeumbo-da naajeosseoyo. Geureonde ajik malhagi-ga eoryeowoyo.', 'I have improved from the beginning. But speaking is still difficult.', 6),
+  (l_id, '수진', '그래서 저하고 같이 연습하고 싶어요?', 'Geuraeseo jeo-hago gachi yeonseup-ago sipeoyo?', 'So that is why you want to practice with me?', 7),
+  (l_id, '민준', '맞아요! 도와줄 수 있어요?', 'Majayo! Dowajul su isseoyo?', 'Correct! Can you help me?', 8),
+  (l_id, '수진', '물론이죠! 같이 연습해요.', 'Mullon-ijiyo! Gachi yeonseuphaeyo.', 'Of course! Let''s practice together.', 9);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which connective means "but / although"?', '["-고","이/가","-지만","-아/어서"]', 2, '-지만 = but/although (contrastive connective). -고 = and/then. -아/어서 = because/and then.', 1),
+  (l_id, '"밥 먹고 자요" means:', '["I sleep to eat","I eat because I sleep","I eat and then sleep","I eat but do not sleep"]', 2, '-고 = and then (sequential). 밥 먹고(eat) + 자요(sleep) = eat and then sleep.', 2),
+  (l_id, 'Which sentence uses -아/어서 correctly for cause-effect?', '["피곤해서 잤어요","피곤하고 잤어요","피곤지만 잤어요","피곤하면서 잤어요"]', 0, '피곤해서 잤어요 = I was tired so I slept. -아/어서 correctly expresses cause→result.', 3),
+  (l_id, '"그래서" means:', '["therefore / so","but / however","by the way","and / in addition"]', 0, '그래서 = therefore / so (result/consequence). 그런데 = but/however. 그리고 = and.', 4),
+  (l_id, 'When using -고 with two clauses, tense is marked:', '["On the first verb","On both verbs","Only on the final verb","On neither verb"]', 2, '-고 clauses do not carry their own tense. The tense of the entire sentence is indicated only on the final verb.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '문장을 연결하는 방법은 한국어에서 매우 중요합니다. -고는 두 행동이나 상태를 나열할 때 씁니다. -아/어서는 원인이나 순차적 행동을 나타낼 때 씁니다. -지만은 두 내용을 대조할 때 씁니다. 예를 들어 "한국어는 어렵지만 재미있어요"는 어렵다는 내용과 재미있다는 내용을 대조합니다. 문장 시작에 쓰는 연결어로는 그리고(and), 그런데(but), 그래서(therefore), 그러면(then) 등이 있습니다. 이런 연결어를 잘 활용하면 더 자연스러운 한국어를 구사할 수 있습니다.',
+   'Connecting sentences is very important in Korean. -고 is used to list two actions or states. -아/어서 is used to express a cause or sequential action. -지만 is used to contrast two ideas. For example, "한국어는 어렵지만 재미있어요" contrasts being difficult with being interesting. Sentence-initial connectors include 그리고 (and), 그런데 (but), 그래서 (therefore), and 그러면 (then). Making good use of these connectors enables more natural Korean expression.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 45: Polite requests -아/어 주세요 (부탁)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=45;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=45 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '-아/어 주세요', '-a/eo juseyo', 'please do [verb] for me', 1),
+  (l_id, '-아/어 주시겠어요?', '-a/eo jusigesseoyo?', 'would you please do [verb]? (more polite)', 2),
+  (l_id, '가르쳐 주세요', 'gareucheo juseyo', 'please teach me', 3),
+  (l_id, '도와주세요', 'dowajuseyo', 'please help me', 4),
+  (l_id, '보여 주세요', 'boyeo juseyo', 'please show me', 5),
+  (l_id, '기다려 주세요', 'gidaryeo juseyo', 'please wait', 6),
+  (l_id, '천천히 말해 주세요', 'cheoncheonhi malhae juseyo', 'please speak slowly', 7),
+  (l_id, '다시 해 주세요', 'dasi hae juseyo', 'please do it again', 8),
+  (l_id, '사진 찍어 주세요', 'sajin jjigeo juseyo', 'please take a photo (of me)', 9),
+  (l_id, '전화해 주세요', 'jeonhwahae juseyo', 'please call me', 10),
+  (l_id, '부탁하다', 'butakhada', 'to request / ask a favor', 11);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   '-아/어 주세요: Requesting Something Done for You',
+   '[Verb stem] + -아/어 주세요',
+   '주다 (to give) combined with the connective -아/어 creates a structure meaning "please do [verb] for me." It is the most standard polite request form.',
+   '[{"korean":"물 좀 주세요.","english":"Please give me some water."},{"korean":"한국어로 설명해 주세요.","english":"Please explain in Korean."},{"korean":"창문 좀 닫아 주세요.","english":"Please close the window."}]',
+   1),
+  (l_id,
+   'Softeners: 좀 and 제발',
+   '좀 + [request] = a little / please (soft) / 제발 + [request] = please (urgent)',
+   '좀 softens requests, making them sound less demanding. 제발 adds urgency. In everyday speech 좀 is almost always added to requests.',
+   '[{"korean":"좀 도와주세요.","english":"Please help me (a little)."},{"korean":"좀 더 크게 말해 주세요.","english":"Please speak a little louder."},{"korean":"제발 기다려 주세요.","english":"Please wait (I am begging you)."}]',
+   2),
+  (l_id,
+   'Prohibition: -지 마세요',
+   '[Verb stem] + -지 마세요 = please do not ~',
+   '-지 마세요 is the polite negative imperative. It asks someone not to do something politely.',
+   '[{"korean":"뛰지 마세요.","english":"Please do not run."},{"korean":"걱정하지 마세요.","english":"Please do not worry."},{"korean":"여기서 사진 찍지 마세요.","english":"Please do not take photos here."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '관광객', '실례합니다. 사진 좀 찍어 주세요.', 'Silrye hamnida. Sajin jom jjigeo juseyo.', 'Excuse me. Could you please take a photo?', 1),
+  (l_id, '행인', '네, 물론이죠! 어디를 누르면 돼요?', 'Ne, mullon-ijiyo! Eodireul nureumyeon dwaeyo?', 'Of course! Where do I press?', 2),
+  (l_id, '관광객', '이 버튼이요. 저 경복궁이 배경에 들어오게 찍어 주세요.', 'I beotenyo. Jeo Gyeongbokgung-i baegyeong-e deureo-oge jjigeo juseyo.', 'This button. Please take it so the palace is in the background.', 3),
+  (l_id, '행인', '알겠어요. 좀 왼쪽으로 서 주세요.', 'Algesseoyo. Jom oenjjok-euro seo juseyo.', 'Got it. Please stand a bit to the left.', 4),
+  (l_id, '관광객', '이렇게요?', 'Ireoke-yo?', 'Like this?', 5),
+  (l_id, '행인', '네, 딱 좋아요. 찍을게요. 하나 둘 셋!', 'Ne, ttak joayo. Jjigeulgeyo. Hana dul set!', 'Yes, perfect. I will take it. One two three!', 6),
+  (l_id, '관광객', '감사합니다! 한 장 더 찍어 주시겠어요?', 'Gamsahamnida! Han jang deo jjigeo jusigesseoyo?', 'Thank you! Could you take one more?', 7),
+  (l_id, '행인', '네, 물론이죠!', 'Ne, mullon-ijiyo!', 'Of course!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How do you say "Please explain it" in Korean?', '["설명해요","설명해 주세요","설명 주세요","설��하지 마세요"]', 1, '설명하다 → 설명해 주세요. -아/어 주세요 = please do [verb] for me.', 1),
+  (l_id, '좀 in a request sentence serves to:', '["make the request more urgent","soften the request","add formality","make it negative"]', 1, '좀 softens requests, making them less demanding: 좀 도와주세요 = Please help me (softened).', 2),
+  (l_id, '"걱정하지 마세요" means:', '["Please worry","Please do not worry","You should worry","Do not you worry"]', 1, '-지 마세요 = please do not ~. 걱정하지 마세요 = Please do not worry.', 3),
+  (l_id, 'Which form is more politely deferential?', '["-아/어 주세요","해요","-아/어 주시겠어요?","-(으)ㄹ게요"]', 2, '-아/어 주시겠어요? (Would you please?) is more deferential than -아/어 주세요.', 4),
+  (l_id, '"좀 더 크게 말해 주세요" means:', '["Please speak a lot louder","Please speak a little louder","Please do not speak loudly","Please speak slowly"]', 1, '좀 더 = a little more; 크게 = loudly; 말해 주세요 = please speak. → Please speak a little louder.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어에서 정중하게 부탁하는 방법은 "-아/어 주세요"를 사용하는 것입니다. 이 표현은 상대방에게 무언가를 해 달라고 부탁할 때 씁니다. 더 정중하게 부탁하려면 "-아/어 주시겠어요?"를 사용합니다. 부탁을 부드럽게 하려면 앞에 "좀"을 붙입니다. 반면 하지 말라고 할 때는 "-지 마세요"를 씁니다. 예를 들어 "사진 좀 찍어 주세요"는 사진을 찍어 달라는 부탁이고, "여기서 사진 찍지 마세요"는 사진 찍는 것을 금지하는 표현입니다.',
+   'In Korean, the way to make a polite request is to use "-아/어 주세요." This expression is used when asking someone to do something for you. For a more deferential request, "-아/어 주시겠어요?" is used. To soften a request, "좀" is added before the verb. Conversely, to ask someone not to do something, "-지 마세요" is used. For example, "사진 좀 찍어 주세요" is a request to take a photo, while "여기서 사진 찍지 마세요" is a prohibition against taking photos here.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 46: Animals (동물)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=46;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=46 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '개', 'gae', 'dog', 1),
+  (l_id, '고양이', 'goyang-i', 'cat', 2),
+  (l_id, '새', 'sae', 'bird', 3),
+  (l_id, '물고기', 'mulgogi', 'fish', 4),
+  (l_id, '토끼', 'tokki', 'rabbit', 5),
+  (l_id, '곰', 'gom', 'bear', 6),
+  (l_id, '호랑이', 'horangi', 'tiger', 7),
+  (l_id, '사자', 'saja', 'lion', 8),
+  (l_id, '코끼리', 'kokkiri', 'elephant', 9),
+  (l_id, '원숭이', 'wonsung-i', 'monkey', 10),
+  (l_id, '돼지', 'dwaeji', 'pig', 11),
+  (l_id, '소', 'so', 'cow', 12),
+  (l_id, '마리', 'mari', 'counter for animals', 13),
+  (l_id, '키우다', 'kiuda', 'to raise/keep (a pet)', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Animal Counter: 마리',
+   '[Native Number] + 마리',
+   '마리 is the counter for animals. It always uses native Korean numbers (한, 두, 세, 네...).',
+   '[{"korean":"개 두 마리가 있어요.","english":"There are two dogs."},{"korean":"고양이 한 마리를 키워요.","english":"I raise one cat."},{"korean":"새 세 마리가 날아가요.","english":"Three birds are flying away."}]',
+   1),
+  (l_id,
+   'Describing Animal Actions with -고 있어요',
+   '[Verb stem] + -고 있어요 = is doing [action] (present progressive)',
+   '-고 있어요 expresses an action in progress (present progressive). It is used to describe what animals (and people) are doing right now.',
+   '[{"korean":"개가 자고 있어요.","english":"The dog is sleeping."},{"korean":"고양이가 우유를 마시고 있어요.","english":"The cat is drinking milk."},{"korean":"새가 날고 있어요.","english":"The bird is flying."}]',
+   2),
+  (l_id,
+   'Sound words for animals (의성어)',
+   '개: 멍멍 / 고양이: 야옹 / 새: 짹짹 / 돼지: 꿀꿀',
+   'Korean onomatopoeia (의성어) for animals often differs from English. These are fun vocabulary items that reflect Korean phonaesthetics.',
+   '[{"korean":"개가 멍멍 짖어요.","english":"The dog goes woof-woof."},{"korean":"고양이가 야옹 해요.","english":"The cat goes meow."},{"korean":"아기 돼지가 꿀꿀 해요.","english":"The baby pig goes oink-oink."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '민준 씨, 반려동물 있어요?', 'Minjun ssi, ballyeodongmul isseoyo?', 'Do you have any pets?', 1),
+  (l_id, '민준', '네, 고양이 한 마리 키워요. 이름은 "코코"예요.', 'Ne, goyang-i han mari kiweoyo. Ireum-eun "Koko"-yeyo.', 'Yes, I have one cat. Its name is "Koko."', 2),
+  (l_id, '수진', '귀여운 이름이네요! 어떤 고양이예요?', 'Gwiyeoun ireum-ineyo! Eotteon goyang-i-yeyo?', 'What a cute name! What kind of cat is it?', 3),
+  (l_id, '민준', '흰색이고 눈이 파란 고양이예요. 정말 귀여워요.', 'Huinsaek-igo nun-i paran goyang-i-yeyo. Jeongmal gwiyeowoyo.', 'It is white with blue eyes. Really cute.', 4),
+  (l_id, '수진', '저도 반려동물을 키우고 싶어요. 그런데 개가 좋을지 고양이가 좋을지 모르겠어요.', 'Jeodo ballyeodongmul-eul kiugo sipeoyo. Geureonde gae-ga joeulji goyang-i-ga joeulji moreugesseoyo.', 'I also want to have a pet. But I am not sure whether a dog or a cat would be better.', 5),
+  (l_id, '민준', '개는 활발하고 고양이는 독립적이에요. 어떤 성격을 좋아해요?', 'Gae-neun hwalbalago goyang-i-neun dongnibjeogieo. Eotteon seonggyeog-eul joahaeyo?', 'Dogs are lively and cats are independent. What kind of personality do you like?', 6),
+  (l_id, '수진', '저는 집에 혼자 있는 시간이 많아서 활발한 개가 좋을 것 같아요.', 'Jeoneun jib-e honja inneun sigan-i manaseo hwalbalhan gae-ga joeul geot gatayo.', 'I spend a lot of time alone at home, so I think a lively dog would be better.', 7),
+  (l_id, '민준', '그러면 강아지를 입양해 보세요!', 'Geureomyeon gang-aji-reul ibyang-ae boseyo!', 'Then try adopting a puppy!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which counter is used for animals?', '["개","마리","명","권"]', 1, '마리 is the counter for animals: 고양이 두 마리 = two cats.', 1),
+  (l_id, '"개가 자고 있어요" means:', '["The dog slept","The dog sleeps habitually","The dog is sleeping","The dog will sleep"]', 2, '-고 있어요 = present progressive. 자고 있어요 = is sleeping.', 2),
+  (l_id, 'What is the Korean onomatopoeia for a dog''s bark?', '["야옹","꿀꿀","멍멍","짹짹"]', 2, '개: 멍멍 (woof-woof). 고양이: 야옹 (meow). 돼지: 꿀꿀 (oink). 새: 짹짹 (tweet).', 3),
+  (l_id, 'How do you say "I have two cats"?', '["고양이 두 개 있어요","고양이 이 마리 있어요","고양이 두 마리 있어요","고양이 두 명 있어요"]', 2, '마리 uses native Korean numbers: 두(2) 마리. 고양이 두 마리 있어요 = I have two cats.', 4),
+  (l_id, '키우다 means:', '["to buy","to raise/keep (a pet)","to find","to love"]', 1, '키우다 = to raise / keep (a pet or plant). 강아지를 키워요 = I raise a puppy.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국에서 반려동물을 키우는 사람이 많아졌습니다. 특히 개와 고양이를 많이 키웁니다. 동물을 셀 때는 "마리"라는 단위를 씁니다. 예를 들어 "개 두 마리"처럼 씁니다. 한국어에는 동물 소리를 나타내는 재미있는 의성어가 있습니다. 개는 "멍멍", 고양이는 "야옹", 돼지는 "꿀꿀"이라고 합니다. 한국의 동물 의성어는 영어와 달라서 처음에는 낯설 수 있지만 익숙해지면 재미있습니다.',
+   'The number of people keeping pets in Korea has increased. Dogs and cats are especially popular. When counting animals, the unit 마리 is used — for example, "개 두 마리" (two dogs). Korean has fun onomatopoeia for animal sounds. Dogs go "멍멍," cats go "야옹," and pigs go "꿀꿀." Korean animal sounds differ from English equivalents and may feel unfamiliar at first, but become enjoyable once you get used to them.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 47: Clothes (옷)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=47;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=47 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '옷', 'ot', 'clothes', 1),
+  (l_id, '바지', 'baji', 'pants / trousers', 2),
+  (l_id, '치마', 'chima', 'skirt', 3),
+  (l_id, '셔츠', 'syeocheu', 'shirt', 4),
+  (l_id, '재킷', 'jaekit', 'jacket', 5),
+  (l_id, '코트', 'koteu', 'coat', 6),
+  (l_id, '신발', 'sinbal', 'shoes', 7),
+  (l_id, '양말', 'yangmal', 'socks', 8),
+  (l_id, '모자', 'moja', 'hat / cap', 9),
+  (l_id, '가방', 'gabang', 'bag', 10),
+  (l_id, '입다', 'ipda', 'to wear (clothes)', 11),
+  (l_id, '신다', 'sinda', 'to wear (shoes/socks)', 12),
+  (l_id, '쓰다', 'sseuda', 'to wear (hat/glasses)', 13),
+  (l_id, '어울리다', 'eoullida', 'to suit / look good on', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Verbs for Wearing: 입다/신다/쓰다/하다',
+   '옷: 입다 / 신발·양말: 신다 / 모자·안경: 쓰다 / 액세서리: 하다',
+   'Korean uses different verbs for different types of worn items. Using the wrong verb is a common learner error.',
+   '[{"korean":"치마를 입어요.","english":"I wear a skirt."},{"korean":"신발을 신어요.","english":"I wear shoes."},{"korean":"모자를 써요.","english":"I wear a hat."},{"korean":"목걸이를 해요.","english":"I wear a necklace."}]',
+   1),
+  (l_id,
+   '어울리다: To Suit / To Go Well With',
+   '[Item/color] + 이/가 + [person] + 에게 + 어울려요',
+   '어울리다 expresses that something looks good on someone or goes well with something else. The item takes 이/가 (subject).',
+   '[{"korean":"파란색이 잘 어울려요.","english":"Blue suits you well."},{"korean":"이 재킷이 수진 씨에게 잘 어울려요.","english":"This jacket suits Sujin well."},{"korean":"이 바지랑 셔츠가 잘 어울려요.","english":"These pants and shirt go well together."}]',
+   2),
+  (l_id,
+   'Describing Clothing: -(으)ㄴ + 옷',
+   '[Adjective modifier] + 옷/셔츠/바지 etc.',
+   'Adjectives modify clothing items using their modifier form. Key adjectives for clothing: 예쁜, 귀여운, 멋있는, 편한, 비싼, 따뜻한.',
+   '[{"korean":"편한 신발이 필요해요.","english":"I need comfortable shoes."},{"korean":"따뜻한 코트를 샀어요.","english":"I bought a warm coat."},{"korean":"멋있는 재킷이네요!","english":"What a stylish jacket!"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '오늘 뭐 입을 거예요? 날씨가 좀 쌀쌀해요.', 'Oneul mwo ibeul geoyeyo? Nalssi-ga jom ssalssalhaeyo.', 'What are you going to wear today? The weather is a bit chilly.', 1),
+  (l_id, '민준', '청바지에 따뜻한 니트를 입을 것 같아요. 코트도 입어야겠어요.', 'Cheongbaji-e tatteutan niteu-reul ibeul geot gatayo. Koteudo ibeoyagesseoyo.', 'I think I will wear jeans with a warm knit sweater. I should also put on a coat.', 2),
+  (l_id, '수진', '오늘 어디 가요?', 'Oneul eodi gayo?', 'Where are you going today?', 3),
+  (l_id, '민준', '소개팅이 있어요. 그래서 좀 신경 쓰고 싶어요.', 'Sogaeting-i isseoyo. Geuraeseo jom singyeong sseugo sipeoyo.', 'I have a blind date. So I want to make a bit of an effort.', 4),
+  (l_id, '수진', '와! 이 재킷은 어때요? 잘 어울릴 것 같아요.', 'Wa! I jaekit-eun eottaeyo? Jal eoulril geot gatayo.', 'Wow! What about this jacket? I think it will suit you well.', 5),
+  (l_id, '민준', '멋있긴 한데 좀 비싸요.', 'Meositggin hande jom bissayo.', 'It is stylish but a bit expensive.', 6),
+  (l_id, '수진', '지금 세일 중이에요. 한번 입어 봐요!', 'Jigeum seil junge-yeyo. Hanbeon ibeo bwayo!', 'It is on sale now. Try it on!', 7),
+  (l_id, '민준', '(입어 보고) 어때요?', '(Ibeo bogo) Eottaeyo?', '(After trying it on) How is it?', 8),
+  (l_id, '수진', '정말 잘 어울려요! 꼭 사세요!', 'Jeongmal jal eoullyeoyo! Kkok saseyo!', 'It really suits you! You must buy it!', 9);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which verb is used for wearing shoes?', '["입다","쓰다","신다","하다"]', 2, '신다 is the verb for wearing shoes and socks. 입다 = clothes; 쓰다 = hat/glasses; 하다 = accessories.', 1),
+  (l_id, '"이 재킷이 잘 어울려요" means:', '["I want to buy this jacket","This jacket is too expensive","This jacket suits well","I tried on this jacket"]', 2, '어울리다 = to suit/look good on. 잘 어울려요 = suits well.', 2),
+  (l_id, 'Which modifier form of 따뜻하다 correctly describes clothes?', '["따뜻하는 옷","따뜻해 옷","따뜻한 옷","따뜻했 옷"]', 2, '따뜻하다 → modifier: 따뜻한. 따뜻한 옷 = warm clothes.', 3),
+  (l_id, 'To wear a hat, which verb do you use?', '["입다","쓰다","신다","매다"]', 1, '쓰다 is used for wearing items on the head (hat, glasses, sunglasses).', 4),
+  (l_id, '"편한 신발이 필요해요" means:', '["I need expensive shoes","I need comfortable shoes","I want stylish shoes","I bought comfortable shoes"]', 1, '편한 = comfortable (modifier of 편하다); 신발 = shoes; 필요해요 = need. → I need comfortable shoes.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국어에서 옷을 입는 행위를 표현할 때는 착용 부위에 따라 동사가 달라집니다. 상의나 하의 등 옷을 입을 때는 "입다", 신발이나 양말을 신을 때는 "신다", 모자나 안경을 쓸 때는 "쓰다", 목걸이나 반지 같은 액세서리를 할 때는 "하다"를 씁니다. 옷이 잘 맞는지 표현할 때는 "어울리다"를 씁니다. 예를 들어 "파란색이 잘 어울려요"는 파란색이 잘 맞는다는 뜻입니다. 쇼핑할 때 "입어 봐도 돼요?"라고 피팅룸에서 입어 볼 수 있는지 물어볼 수 있습니다.',
+   'In Korean, different verbs are used depending on which part of the body the clothing goes on. 입다 is used for putting on tops and bottoms; 신다 for shoes and socks; 쓰다 for hats and glasses; and 하다 for accessories like necklaces and rings. To express that something suits someone, 어울리다 is used. For example, "파란색이 잘 어울려요" means blue looks good on you. When shopping, you can ask "입어 봐도 돼요?" to try something on in the fitting room.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 48: Places in the City (도시의 장소)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=48;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=48 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '은행', 'eunhaeng', 'bank', 1),
+  (l_id, '우체국', 'ucheuguk', 'post office', 2),
+  (l_id, '약국', 'yakguk', 'pharmacy', 3),
+  (l_id, '편의점', 'pyeonuijeom', 'convenience store', 4),
+  (l_id, '마트', 'mateu', 'supermarket / mart', 5),
+  (l_id, '공원', 'gongwon', 'park', 6),
+  (l_id, '경찰서', 'gyeongchalseo', 'police station', 7),
+  (l_id, '소방서', 'sobangseo', 'fire station', 8),
+  (l_id, '미용실', 'miyongsil', 'hair salon', 9),
+  (l_id, '세탁소', 'setakso', 'laundry / dry cleaner', 10),
+  (l_id, '영화관', 'yeonghwagwan', 'movie theater', 11),
+  (l_id, '박물관', 'bakmulgwan', 'museum', 12),
+  (l_id, '어디 있어요?', 'eodi isseoyo?', 'where is it?', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Expressing Location: 어디에 있어요?',
+   '[Place] + 이/가 어디에 있어요? = where is [place]?',
+   'The standard location question. The place takes the subject particle 이/가 and 있어요 is the existence verb.',
+   '[{"korean":"가장 가까운 약국이 어디에 있어요?","english":"Where is the nearest pharmacy?"},{"korean":"공원이 어디에 있어요?","english":"Where is the park?"},{"korean":"이 근처에 편의점이 있어요?","english":"Is there a convenience store nearby?"}]',
+   1),
+  (l_id,
+   'Expressing Purpose at a Place: ~에 가다 + purpose',
+   '[Place] + 에 가다 + [-(으)러 + purpose verb]',
+   'Combines the destination particle 에, the motion verb 가다, and the purpose suffix -(으)러 to say "I go to [place] in order to [do something]."',
+   '[{"korean":"돈을 찾으러 은행에 가요.","english":"I go to the bank to withdraw money."},{"korean":"편지를 부치러 우체국에 가요.","english":"I go to the post office to mail a letter."},{"korean":"약을 사러 약국에 가요.","english":"I go to the pharmacy to buy medicine."}]',
+   2),
+  (l_id,
+   'Expressing Proximity: 가깝다/멀다',
+   '[Place] + 이/가 + 가까워요/멀어요 (ㅂ irregular)',
+   '가깝다 (to be near) and 멀다 (to be far) are ㅂ-irregular and ㄹ-irregular respectively.',
+   '[{"korean":"학교에서 집이 가까워요?","english":"Is home close from school?"},{"korean":"병원이 좀 멀어요.","english":"The hospital is a bit far."},{"korean":"걸어서 오 분이에요.","english":"It is five minutes on foot."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '외국인', '실례합니다. 이 근처에 약국이 있어요?', 'Silrye hamnida. I geuncheo-e yakgug-i isseoyo?', 'Excuse me. Is there a pharmacy nearby?', 1),
+  (l_id, '한국인', '네, 있어요. 저 신호등에서 오른쪽으로 돌면 있어요.', 'Ne, isseoyo. Jeo sinhodeng-eseo oreunjjog-euro dolmyeon isseoyo.', 'Yes, there is. Turn right at that traffic light.', 2),
+  (l_id, '외국인', '걸어서 얼마나 걸려요?', 'Georeo-seo eolmana geollyeoyo?', 'How long does it take on foot?', 3),
+  (l_id, '한국인', '오 분 정도요.', 'O bun jeong-doyo.', 'About five minutes.', 4),
+  (l_id, '외국인', '감사합니다! 그런데 근처에 ATM도 있어요?', 'Gamsahamnida! Geureonde geuncheo-e ATM-do isseoyo?', 'Thank you! Is there also an ATM nearby?', 5),
+  (l_id, '한국인', '약국 바로 옆에 편의점이 있어요. 편의점 안에 ATM이 있어요.', 'Yakguk baro yeop-e pyeonuijeom-i isseoyo. Pyeonuijeom an-e ATM-i isseoyo.', 'There is a convenience store right next to the pharmacy. The ATM is inside the convenience store.', 6),
+  (l_id, '외국인', '정말 친절하세요. 감사합니다!', 'Jeongmal chinjeolhaseyo. Gamsahamnida!', 'You are so kind. Thank you!', 7),
+  (l_id, '한국인', '아니에요. 즐거운 시간 보내세요!', 'Anieyo. Jeulgeoun sigan bonaeseyo!', 'Not at all. Have a good time!', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'What is the Korean word for "pharmacy"?', '["병원","약국","우체국","은행"]', 1, '약국 = pharmacy (drug store). 병원 = hospital. 우체국 = post office. 은행 = bank.', 1),
+  (l_id, '"돈을 찾으러 은행에 가요" means:', '["I go to the bank because I found money","I go to the bank to withdraw money","I find money at the bank","I go to the bank and find it"]', 1, '돈을 찾으러 = to withdraw money (purpose -(으)러); 은행에 가요 = go to the bank. → go to bank to withdraw money.', 2),
+  (l_id, 'What is the polite form of 가깝다 (to be near)?', '["가깝아요","가까워요","가깝어요","가까아요"]', 1, 'ㅂ irregular: 가깝다 → ㅂ drops + 워 → 가까워요.', 3),
+  (l_id, '"이 근처에 편의점이 있어요?" asks:', '["Where is the convenience store?","Is there a convenience store nearby?","How far is the convenience store?","What time does the convenience store open?"]', 1, '이 근처에 = in this vicinity/nearby; 편의점이 있어요? = is there a convenience store?', 4),
+  (l_id, 'The verb expressing existence/location in Korean is:', '["가다","있다","되다","이다"]', 1, '있다 (polite: 있어요) = to exist / to be (located somewhere). Used for location: 어디에 있어요?', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '도시에는 다양한 장소가 있습니다. 은행, 우체국, 약국, 편의점, 마트 등은 일상생활에 필요한 장소들입니다. 위치를 물어볼 때는 "[장소]가 어디에 있어요?"라고 합니다. 가는 목적을 말할 때는 "-(으)러 가요"를 씁니다. 예를 들어 "약을 사러 약국에 가요"는 약을 사기 위해 약국에 간다는 뜻입니다. 거리를 표현할 때는 "가까워요" 또는 "멀어요"를 씁니다. 한국의 편의점은 24시간 운영되며 ATM, 택배, 음식 등 다양한 서비스를 제공합니다.',
+   'There are various places in a city: banks, post offices, pharmacies, convenience stores, and supermarkets are all places needed in daily life. To ask the location, you say "[place]가 어디에 있어요?" To state the purpose of going somewhere, "-(으)러 가요" is used. For example, "약을 사러 약국에 가요" means going to the pharmacy to buy medicine. Distance is expressed with "가까워요" (close) or "멀어요" (far). Korean convenience stores operate 24 hours and provide various services including ATMs, parcel delivery, and food.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 49: Sports and Exercise (스포츠와 운동)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=49;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=49 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '운동', 'undong', 'exercise / sport', 1),
+  (l_id, '축구', 'chukgu', 'soccer / football', 2),
+  (l_id, '농구', 'nonggu', 'basketball', 3),
+  (l_id, '야구', 'yagu', 'baseball', 4),
+  (l_id, '테니스', 'teniseu', 'tennis', 5),
+  (l_id, '수영', 'suyeong', 'swimming', 6),
+  (l_id, '태권도', 'taekwondo', 'Taekwondo (Korean martial art)', 7),
+  (l_id, '헬스장', 'helseujang', 'gym / fitness center', 8),
+  (l_id, '조깅하다', 'joginghada', 'to jog', 9),
+  (l_id, '이기다', 'igida', 'to win', 10),
+  (l_id, '지다', 'jida', 'to lose', 11),
+  (l_id, '선수', 'seonsu', 'athlete / player', 12),
+  (l_id, '경기', 'gyeonggi', 'game / match / competition', 13),
+  (l_id, '응원하다', 'eungwonhada', 'to cheer for / support', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Sports Verbs: 하다 vs. 타다 vs. 치다',
+   '팀 스포츠: ~를 하다 / 기구 스포츠(자전거/스키): ~를 타다 / 라켓 스포츠: ~를 치다',
+   'Korean uses different verbs for different sports categories. Team sports and general exercise use 하다; riding sports use 타다; racket/ball-striking sports use 치다.',
+   '[{"korean":"축구를 해요.","english":"I play soccer. (하다)"},{"korean":"스키를 타요.","english":"I ski. (타다)"},{"korean":"테니스를 쳐요.","english":"I play tennis. (치다)"}]',
+   1),
+  (l_id,
+   'Frequency and Duration of Sports',
+   '일주일에 [num]번 / [num] 시간 동안',
+   'Frequency expressions use 일주일에(per week) + number + 번(times). Duration uses number + 시간(hours) + 동안(for/during).',
+   '[{"korean":"일주일에 세 번 헬스장에 가요.","english":"I go to the gym three times a week."},{"korean":"한 시간 동안 조깅해요.","english":"I jog for one hour."},{"korean":"매일 삼십 분 운동해요.","english":"I exercise for 30 minutes every day."}]',
+   2),
+  (l_id,
+   'Expressing Ability in Sports: -(으)ㄹ 수 있어요/없어요',
+   '[Verb stem] + -(으)ㄹ 수 있어요 = can / 없어요 = cannot',
+   '-(으)ㄹ 수 있다/없다 expresses ability or possibility. This is one of the most useful structures for sports conversations.',
+   '[{"korean":"수영할 수 있어요?","english":"Can you swim?"},{"korean":"아직 스키를 탈 수 없어요.","english":"I cannot ski yet."},{"korean":"태권도를 배울 수 있어요.","english":"I can learn Taekwondo."}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '민준', '운동을 자주 해요?', 'Undong-eul jaju haeyo?', 'Do you exercise often?', 1),
+  (l_id, '수진', '네, 일주일에 세 번 헬스장에 가요. 민준 씨는요?', 'Ne, iljuil-e se beon helseujang-e gayo. Minjun ssi-neunyo?', 'Yes, I go to the gym three times a week. What about you?', 2),
+  (l_id, '민준', '저는 주말마다 친구들이랑 축구를 해요.', 'Jeoneun jumal-mada chingudeul-irang chukgu-reul haeyo.', 'I play soccer with friends every weekend.', 3),
+  (l_id, '수진', '축구 잘 해요?', 'Chukgu jal haeyo?', 'Are you good at soccer?', 4),
+  (l_id, '민준', '그냥 재미로 해요. 수진 씨는 무슨 운동 좋아해요?', 'Geunyang jaemiro haeyo. Sujin ssi-neun museun undong joahaeyo?', 'I just do it for fun. What sport do you like?', 5),
+  (l_id, '수진', '저는 수영을 좋아해요. 근데 요즘 배드민턴도 배우고 있어요.', 'Jeoneun suyeong-eul joahaeyo. Geunde yojeum baedeuministeon-do baeugeo isseoyo.', 'I like swimming. But lately I have also been learning badminton.', 6),
+  (l_id, '민준', '배드민턴 잘 쳐요?', 'Baedeuministeon jal chyeoyo?', 'Are you good at badminton?', 7),
+  (l_id, '수진', '아직 잘 못 치지만 재미있어요. 같이 칠래요?', 'Ajik jal mot chijiman jaemisseoyo. Gachi chillaeyo?', 'I cannot play well yet but it is fun. Would you like to play together?', 8),
+  (l_id, '민준', '좋아요! 저도 배워 볼게요.', 'Joayo! Jeodo baewo bolgeyo.', 'Sounds great! I will also try learning it.', 9);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'Which verb is used for "playing tennis"?', '["테니스를 해요","테니스를 타요","테니스를 쳐요","테니스를 놀아요"]', 2, 'Racket sports use 치다: 테니스를 쳐요 = I play tennis.', 1),
+  (l_id, '"일주일에 세 번" means:', '["three weeks a day","three hours a week","three times a week","every three weeks"]', 2, '일주일에 = per week; 세 번 = three times. → three times a week.', 2),
+  (l_id, '"수영할 수 있어요?" means:', '["Do you want to swim?","Can you swim?","Did you swim?","Are you swimming?"]', 1, '-(으)ㄹ 수 있어요? = can you? 수영할 수 있어요? = Can you swim?', 3),
+  (l_id, 'Korea''s traditional martial art is:', '["태권도","유도","가라테","쿵푸"]', 0, '태권도 (Taekwondo) is Korea''s national martial art, known for its emphasis on kicks.', 4),
+  (l_id, '"응원하다" means:', '["to exercise","to compete","to cheer for / support","to train"]', 2, '응원하다 = to cheer for, support (a team/person). 응원 = cheering/support.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국 사람들은 운동을 매우 즐깁니다. 축구, 야구, 농구는 인기 있는 팀 스포츠이고, 태권도는 한국의 전통 무술입니다. 운동을 말할 때 동사 선택이 중요합니다. 축구나 농구 같은 팀 스포츠는 "하다", 자전거나 스키는 "타다", 테니스나 배드민턴 같은 라켓 스포츠는 "치다"를 씁니다. 건강을 위해 운동하는 것이 좋습니다. "일주일에 몇 번 운동해요?"는 운동 빈도를 묻는 일반적인 표현입니다.',
+   'Koreans enjoy sports very much. Soccer, baseball, and basketball are popular team sports, and Taekwondo is Korea''s traditional martial art. When talking about sports, the choice of verb is important. Team sports like soccer and basketball use 하다, riding sports like cycling and skiing use 타다, and racket sports like tennis and badminton use 치다. Exercising for health is beneficial. "일주일에 몇 번 운동해요?" is a common expression for asking how frequently someone exercises.',
+   1);
+END $$;
+
+-- ============================================================
+-- LESSON 50: Travel and Tourism (여행)
+-- ============================================================
+DO $$
+DECLARE l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book='korean-1' AND sort_order=50;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=50 not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_grammar    WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_dialogues  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_exercises  WHERE lesson_id=l_id;
+  DELETE FROM public.lesson_reading    WHERE lesson_id=l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '여행', 'yeohaeng', 'travel / trip', 1),
+  (l_id, '공항', 'gonghang', 'airport', 2),
+  (l_id, '여권', 'yeogwon', 'passport', 3),
+  (l_id, '비자', 'bija', 'visa', 4),
+  (l_id, '호텔', 'hotel', 'hotel', 5),
+  (l_id, '체크인', 'chekeurin', 'check-in', 6),
+  (l_id, '체크아웃', 'chekeuaut', 'check-out', 7),
+  (l_id, '관광지', 'gwangwangji', 'tourist attraction', 8),
+  (l_id, '기념품', 'ginyeompum', 'souvenir', 9),
+  (l_id, '환전하다', 'hwanjeonnhada', 'to exchange currency', 10),
+  (l_id, '예약하다', 'yeyakada', 'to make a reservation', 11),
+  (l_id, '짐', 'jim', 'luggage / baggage', 12),
+  (l_id, '투어', 'tueo', 'tour', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id,
+   'Travel Plans: -(으)려고 하다',
+   '[Verb stem] + -(으)려고 해요 = intend to / plan to',
+   '-(으)려고 하다 expresses an intention or plan. Unlike -(으)ㄹ 거예요 (prediction/plan), -(으)려고 하다 emphasizes the speaker''s deliberate intention.',
+   '[{"korean":"내년에 한국에 여행을 가려고 해요.","english":"I plan to travel to Korea next year."},{"korean":"오늘 일찍 자려고 해요.","english":"I intend to sleep early today."},{"korean":"한국어를 열심히 배우려고 해요.","english":"I intend to study Korean hard."}]',
+   1),
+  (l_id,
+   'Expressing Experience: -(으)ㄴ 적이 있어요/없어요',
+   '[Verb stem] + -(으)ㄴ 적이 있어요/없어요 = have/have never done',
+   '-(으)ㄴ 적이 있다/없다 expresses whether one has or has not had the experience of doing something.',
+   '[{"korean":"한국에 가 본 적이 있어요?","english":"Have you ever been to Korea?"},{"korean":"김치를 먹어 본 적이 없어요.","english":"I have never tried kimchi."},{"korean":"태권도를 배운 적이 있어요.","english":"I have (once) learned Taekwondo."}]',
+   2),
+  (l_id,
+   'Seeking Recommendations: 어디가 좋아요? / 뭐가 유명해요?',
+   '어디가 제일 좋아요? = Where is best? / ~(으)면 꼭 가 보세요',
+   'Useful structures for asking and giving travel recommendations.',
+   '[{"korean":"서울에서 어디가 제일 좋아요?","english":"Where is the best place in Seoul?"},{"korean":"경복궁에 꼭 가 보세요.","english":"You must visit Gyeongbokgung Palace."},{"korean":"거기 뭐가 유명해요?","english":"What is famous there?"}]',
+   3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '여름 방학에 한국 여행을 가려고 해요!', 'Yeoreum banghak-e hanguk yeohaeng-eul garyogo haeyo!', 'I am planning to travel to Korea during summer vacation!', 1),
+  (l_id, '민준', '정말요? 한국에 와 본 적이 있어요?', 'Jeongmal-yo? Hanguk-e wa bon jeogi isseoyo?', 'Really? Have you ever been to Korea?', 2),
+  (l_id, '수진', '아니요, 처음이에요. 어디를 가면 좋아요?', 'Aniyo, cheoeum-i-eyo. Eodireul gamyeon joayo?', 'No, it is my first time. Where should I go?', 3),
+  (l_id, '민준', '서울은 꼭 가 보세요. 경복궁, 명동, 한강을 추천해요.', 'Seoul-eun kkok ga boseyo. Gyeongbokgung, Myeongdong, Hangang-eul chucheonhaeyo.', 'You must go to Seoul. I recommend Gyeongbokgung, Myeongdong, and the Han River.', 4),
+  (l_id, '수진', '부산도 가고 싶어요.', 'Busan-do gago sipeoyo.', 'I also want to go to Busan.', 5),
+  (l_id, '민준', '부산은 해산물이 유명해요. 해운대 해수욕장도 꼭 가 보세요.', 'Busan-eun haesanmuri yumeong-haeyo. Haeundae haesuyokjang-do kkok ga boseyo.', 'Busan is famous for seafood. Also definitely visit Haeundae Beach.', 6),
+  (l_id, '수진', '숙소는 어떻게 예약해요?', 'Sukso-neun eotteoke yeyakaeyo?', 'How do I make accommodation reservations?', 7),
+  (l_id, '민준', '에어비앤비나 호텔 앱으로 예약하면 돼요. 미리 예약하는 게 좋아요.', 'Eeobi-anbina hotel aep-euro yeyakamyeon dwaeyo. Miri yeyakaneun ge joayo.', 'You can book via Airbnb or a hotel app. It is best to book in advance.', 8),
+  (l_id, '수진', '도착하면 연락할게요!', 'Dochakamyeon yeollak-algeyo!', 'I will contact you when I arrive!', 9),
+  (l_id, '민준', '기대할게요! 즐거운 여행 하세요!', 'Gidaehalgeyo! Jeulgeoun yeohaeng haseyo!', 'I look forward to it! Have a great trip!', 10);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, 'How do you say "I plan to go to Korea"?', '["한국에 갈 거예요","한국에 가려고 해요","한국에 갔어요","한국에 가봤어요"]', 1, '-(으)려고 해요 = plan to / intend to. 한국에 가려고 해요 = I plan to go to Korea.', 1),
+  (l_id, '"한국에 가 본 적이 있어요?" asks:', '["Do you plan to go to Korea?","Are you going to Korea?","Have you ever been to Korea?","Do you like Korea?"]', 2, '-(으)ㄴ 적이 있어요? = have you ever ~? 가 본 적이 있어요? = have you ever been (and seen)?', 2),
+  (l_id, '"경복궁에 꼭 가 보세요" is:', '["A question about Gyeongbokgung","A strong recommendation to visit Gyeongbokgung","A prohibition against visiting","A description of Gyeongbokgung"]', 1, '꼭 = definitely/must; 가 보세요 = please try going. Together: You must definitely visit.', 3),
+  (l_id, 'What does 환전하다 mean?', '["to check in","to make a reservation","to exchange currency","to buy a souvenir"]', 2, '환전(換錢)하다 = to exchange currency (money exchange).', 4),
+  (l_id, '"즐거운 여행 하세요" means:', '["Have a safe trip","Have a pleasant trip","Come back soon","Take care"]', 1, '즐거운 = pleasant/enjoyable; 여행 하세요 = have a trip/travel. → Have a pleasant trip.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id,
+   '한국은 아름다운 관광지가 많아 매년 수많은 외국인 관광객이 방문합니다. 서울에는 경복궁, 남산타워, 명동, 홍대, 한강 등 볼거리가 많습니다. 부산에는 해운대 해수욕장과 광안리 해수욕장이 유명합니다. 제주도는 화산섬으로 독특한 자연경관을 자랑합니다. 여행을 계획할 때는 미리 숙소와 교통을 예약하는 것이 좋습니다. 한국어를 조금만 할 수 있어도 현지인들과 소통하는 데 큰 도움이 됩니다. 한국 여행을 통해 한국의 문화, 음식, 언어를 직접 경험해 보세요!',
+   'Korea has many beautiful tourist attractions and is visited by countless foreign tourists every year. Seoul offers many sights: Gyeongbokgung Palace, Namsan Tower, Myeongdong, Hongdae, and the Han River, among others. In Busan, Haeundae Beach and Gwangalli Beach are famous. Jeju Island, a volcanic island, boasts a unique natural landscape. When planning a trip, it is advisable to book accommodation and transportation in advance. Even a little Korean goes a long way in communicating with locals. Experience Korean culture, food, and language directly through travel to Korea!',
+   1);
+END $$;
+
+-- ============================================================
+-- END OF MIGRATION: Korean-1 Lessons 1–50
+-- ============================================================
