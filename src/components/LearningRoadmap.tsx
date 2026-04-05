@@ -47,7 +47,7 @@ const LearningRoadmap = () => {
     setActiveStep((prev) => (prev === index ? null : index));
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-14">

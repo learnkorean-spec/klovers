@@ -164,7 +164,7 @@ const BlogPage = () => {
               ))}
             </div>
           ) : filteredPosts.length === 0 ? (
-            <p className="text-center text-foreground/50 py-16 text-lg">
+            <p className="text-center text-muted-foreground py-16 text-lg">
               {posts.length === 0
                 ? (language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!")
                 : "No articles in this category."}
@@ -213,17 +213,17 @@ const BlogPage = () => {
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-base font-bold text-foreground line-clamp-2 leading-snug mb-2">
+                        <h2 className="text-lg font-bold text-foreground line-clamp-2 leading-snug mb-2">
                           {post.title}
                         </h2>
 
                         {/* Description */}
-                        <p className="text-sm text-foreground/60 line-clamp-3 leading-relaxed flex-1 mb-4">
+                        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1 mb-4">
                           {post.description}
                         </p>
 
                         {/* Footer: author / date / reading time */}
-                        <div className="flex items-center justify-between text-xs text-foreground/50 border-t border-border pt-3 mt-auto flex-wrap gap-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-3 mt-auto flex-wrap gap-1">
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
                             {post.author}
