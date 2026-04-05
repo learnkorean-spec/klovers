@@ -14,8 +14,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { PLACEMENT_QUESTIONS, computePlacementResult, STUDY_ROADMAPS, type PlacementResult } from "@/constants/placementQuestions";
-import { drawPlacementCard } from "@/lib/canvasRenderer";
-import { SITE_URL } from "@/lib/siteConfig";
+import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
+import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,6 +47,22 @@ const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
 };
 
 const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
+
+const JOURNEY_MESSAGES: Record<string, string> = {
+  foundation: "Most Foundation students reach Level 1 in just 8 weeks with Klovers",
+  level_1:    "Most Level 1 students reach Level 2 in 12 weeks with Klovers",
+  level_2:    "Most Level 2 students reach Level 3–4 in 20 weeks with Klovers",
+  level_3:    "Advanced fluency typically takes 6–12 more months of focused practice",
+  level_5:    "You're already advanced — refine your Korean for TOPIK 5–6 certification",
+};
+
+const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
+  foundation: { quote: "Starting from zero was scary, but Klovers made Hangul so easy. Best decision I made!", author: "Yasmine H., Alexandria" },
+  level_1:    { quote: "I could hold basic conversations in Korean after just 8 weeks. The classes are amazing!", author: "Ahmed K., Cairo" },
+  level_2:    { quote: "My pronunciation improved so much — my K-drama friends say I sound like a native now.", author: "Nour M., Cairo" },
+  level_3:    { quote: "I passed TOPIK II after studying with Klovers for 6 months. Highly recommend!", author: "Sara L., Giza" },
+  level_5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
+};
 
 const PlacementTestPage = () => {
   useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
@@ -263,6 +279,29 @@ const PlacementTestPage = () => {
     toast({ title: "Card downloaded!", description: "Share your level on social media." });
   };
 
+  const handleWhatsAppEnroll = (res: PlacementResult) => {
+    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى وحصلت على ${res.score}/30. مستواي: ${res.levelLabel}. هل يمكنني الحجز؟`);
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDownloadCertificate = (res: PlacementResult) => {
+    const meta = LEVEL_META[res.levelKey] ?? { emoji: "🎓", tagline: "Korean Learner" };
+    const canvas = document.createElement("canvas");
+    drawPlacementCertificate(canvas, {
+      levelEmoji: meta.emoji,
+      levelLabel: res.levelLabel,
+      tagline: meta.tagline,
+      score: res.score,
+      total: PLACEMENT_QUESTIONS.length,
+      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+    });
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `klovers-certificate-${res.levelKey}.png`;
+    a.click();
+    toast({ title: "Certificate downloaded!", description: "Share your achievement on LinkedIn or CV." });
+  };
+
   const handleLeadSubmit = async () => {
     if (!leadName.trim() || !leadEmail.trim()) {
       toast({ title: "Please enter your name and email.", variant: "destructive" }); return;
@@ -412,6 +451,12 @@ const PlacementTestPage = () => {
             </div>
             <CardContent className="pt-5 pb-6 space-y-3">
               <p className="text-sm text-muted-foreground leading-relaxed">{meta.description}</p>
+              {JOURNEY_MESSAGES[result.levelKey] && (
+                <p className="text-xs text-primary font-medium flex items-center gap-1.5 justify-center">
+                  <TrendingUp className="h-3 w-3 shrink-0" />
+                  {JOURNEY_MESSAGES[result.levelKey]}
+                </p>
+              )}
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
@@ -455,6 +500,35 @@ const PlacementTestPage = () => {
                   );
                 })}
               </div>
+
+              {/* Weak area action card */}
+              {(() => {
+                const weakest = (["Vocabulary", "Grammar", "Reading", "Speaking"] as const)
+                  .map(sec => ({ sec, pct: result.sectionScores[sec] / sectionTotal[sec] }))
+                  .sort((a, b) => a.pct - b.pct)[0];
+                if (!weakest || weakest.pct >= 0.7) return null;
+                const tips: Record<string, { tip: string; link: string; label: string }> = {
+                  Vocabulary: { tip: "Build your Korean vocabulary with free interactive games.", link: "/games", label: "Play vocab games" },
+                  Grammar:    { tip: "Practise Korean grammar patterns with guided exercises.", link: "/games", label: "Grammar exercises" },
+                  Reading:    { tip: "Improve your reading comprehension with our blog articles.", link: "/blog", label: "Read articles" },
+                  Speaking:   { tip: "Book a conversation class to improve your spoken Korean.", link: "/enroll", label: "Book speaking class" },
+                };
+                const { tip, link, label } = tips[weakest.sec];
+                return (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-1.5">
+                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                      ⚠️ Your weakest area: {weakest.sec} ({result.sectionScores[weakest.sec]}/{sectionTotal[weakest.sec]})
+                    </p>
+                    <p className="text-xs text-muted-foreground">{tip}</p>
+                    <button
+                      onClick={() => navigate(link)}
+                      className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                    >
+                      {label} <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* By TOPIK band */}
               <div className="space-y-3">
@@ -514,10 +588,27 @@ const PlacementTestPage = () => {
           {/* CTA */}
           <Card>
             <CardContent className="pt-5 pb-5 space-y-3">
+              {/* Social proof block */}
+              {SOCIAL_PROOF[result.levelKey] && (
+                <div className="rounded-lg bg-muted/50 px-4 py-3 space-y-1.5 text-xs">
+                  <div className="text-amber-500 tracking-widest text-sm">★★★★★</div>
+                  <p className="text-foreground/80 italic leading-relaxed">"{SOCIAL_PROOF[result.levelKey].quote}"</p>
+                  <p className="text-muted-foreground font-medium">— {SOCIAL_PROOF[result.levelKey].author}</p>
+                  <p className="text-muted-foreground">500+ Egyptian students enrolled in 2025</p>
+                </div>
+              )}
               <p className="text-sm font-semibold text-foreground text-center">Ready to start learning?</p>
-              <Button size="lg" className="w-full" onClick={() => navigate("/enroll")}>
-                📚 Book a {result.levelLabel} Class <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Button size="lg" className="flex-1" onClick={() => navigate("/enroll")}>
+                  📚 Book a Class <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button size="lg" variant="outline" className="flex-1 gap-2" onClick={() => handleWhatsAppEnroll(result)}>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  WhatsApp Us
+                </Button>
+              </div>
               {!userId && (
                 <Button variant="outline" className="w-full" onClick={() => navigate("/signup")}>
                   Save My Result — Sign Up Free
@@ -529,6 +620,9 @@ const PlacementTestPage = () => {
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
                   <Download className="h-3.5 w-3.5" /> Download card
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCertificate(result)}>
+                  <Download className="h-3.5 w-3.5" /> Certificate
                 </Button>
               </div>
               <div className="grid grid-cols-3 gap-2 pt-1">
@@ -606,6 +700,11 @@ const PlacementTestPage = () => {
                       )}
 
                       <p className="ml-7 text-xs text-muted-foreground leading-relaxed">{q.explanation}</p>
+                      {q.arabicTip && (
+                        <p className="mt-1.5 ml-7 text-xs text-muted-foreground border-r-2 border-primary/40 pr-2 text-right leading-relaxed" dir="rtl">
+                          💡 {q.arabicTip}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>

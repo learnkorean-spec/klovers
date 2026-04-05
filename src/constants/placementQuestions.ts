@@ -19,6 +19,8 @@ export interface PlacementQuestion {
   difficulty: 1 | 2 | 3 | 4 | 5;
   /** Korean text passage displayed as a block quote above the question (Reading questions) */
   passage?: string;
+  /** Arabic transfer tip shown RTL below the explanation — hyper-personalised for Arabic speakers */
+  arabicTip?: string;
   question: string;
   options: string[];
   correctIndex: number;
@@ -109,6 +111,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["을/를", "이/가", "에", "도"],
     correctIndex: 1,
     explanation: "이/가 is the subject particle. 을/를 marks the direct object, 에 marks location or time, 도 means 'also/too'.",
+    arabicTip: "في العربية لا توجد جسيمات — تُعرف وظيفة الكلمة من موضعها في الجملة. في الكورية تُضاف لواحق: 이/가 للفاعل، 을/를 للمفعول — بصرف النظر عن ترتيب الكلمات.",
   },
   {
     id: 7,
@@ -119,6 +122,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["입니다", "합니다", "있다", "없다"],
     correctIndex: 0,
     explanation: "입니다 is the formal copula ('to be'). 저는 학생입니다 = I am a student. 합니다 = do, 있다 = exist/have, 없다 = not exist/don't have.",
+    arabicTip: "في العربية الجملة الاسمية لا تحتاج 'هو/يكون' في الحاضر: 'أنا طالب' — جملة تامة. في الكورية يجب دائماً إنهاء الجملة بالفعل الرابط: 입니다 أو 이에요.",
   },
   {
     id: 8,
@@ -129,6 +133,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["Bread", "Rice", "Apple", "Banana"],
     correctIndex: 2,
     explanation: "사과 = apple. 먹습니다 = eat (formal). 를 is the object particle. 빵 = bread, 밥 = rice, 바나나 = banana.",
+    arabicTip: "لاحظ كلمة 사과를: اللاحقة 를 تُشير إلى المفعول به. في العربية نعرف المفعول من الفتحة أو الترتيب، لكن في الكورية الجسيمات تتيح لك تغيير ترتيب الكلمات دون تغيير المعنى.",
   },
   {
     id: 22,
@@ -150,6 +155,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["Inviting you to eat", "Asking if you are hungry", "Using a common casual greeting like 'How are you?'", "Complaining about skipping a meal"],
     correctIndex: 2,
     explanation: "'밥 먹었어요?' (Have you eaten?) acts as a friendly greeting similar to 'How are you?' — it shows care for the other person's wellbeing and is not always a literal question about food.",
+    arabicTip: "في العربية المصرية 'عامل إيه؟/كيف حالك؟' هي التحية المعتادة. في الكورية '밥 먹었어요؟' (أكلت؟) تؤدي نفس الوظيفة الاجتماعية — سؤال لطيف يُعبّر عن الاهتمام.",
   },
 
   // ─── TOPIK 2 / A2 (Q9–Q12) ──────────────────────────────
@@ -172,6 +178,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["고", "면", "지만", "니까"],
     correctIndex: 3,
     explanation: "-니까 gives a reason that motivates a command or suggestion. 비가 오니까 = Because it's raining (so take an umbrella). -면 = if, -지만 = but, -고 = and/then.",
+    arabicTip: "مثل 'لأن/بما أن' في العربية، -니까 تشرح سبباً قبل أمر أو اقتراح. انتبه: -어서 تُشبهها لكن لا تأتي مع الأوامر — هذا فرق مهم جداً لمتعلمي العربية.",
   },
   {
     id: 11,
@@ -203,6 +210,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["To borrow books", "To meet friends", "Because the exam is next week", "Because the library is near their home"],
     correctIndex: 2,
     explanation: "-어서 in '시험이 다음 주에 있어서' = 'because the exam is next week.' -어서 links cause to result. -지만 = however/but (피곤하지만 = although tired).",
+    arabicTip: "حرف -어서 يشبه 'فـ/لذلك' الدالة على السبب. لكن انتبه: -어서 لا يأتي مع الأوامر أو الاقتراحات — في تلك الحالات استخدم -니까 بدلاً منه.",
   },
   {
     id: 28,
@@ -213,6 +221,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["도서관에 가십니다", "도서관에 가겠습니다", "도서관에 가요", "도서관에 가"],
     correctIndex: 3,
     explanation: "반말 (informal speech) like '도서관에 가' is used with close friends of the same age. '가요' is polite (해요체); '가십니다/가겠습니다' are formal and sound stiff in casual peer conversation.",
+    arabicTip: "في العربية المصرية نستخدم نفس الكلمات مع الجميع ونغيّر النبرة فقط. في الكورية يتغير شكل الفعل كله: 반말 مع الأصدقاء، 해요체 مع الغرباء، 합쇼체 في المواقف الرسمية.",
   },
 
   // ─── TOPIK 3–4 / B1–B2 (Q13–Q16) ───────────────────────
@@ -255,6 +264,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["Hearsay", "Personal past observation", "Future intention", "Suggestion"],
     correctIndex: 1,
     explanation: "-더라고요 reports something the speaker directly observed or experienced in the past. It cannot be used for hearsay (use -다고 하더라고요 for that) or about yourself.",
+    arabicTip: "في العربية نقول 'لاحظتُ أن / رأيتُ أن' للتعبير عن ملاحظة شخصية. في الكورية، -더라고요 مخصص فقط لما تشهده بنفسك مباشرة — لا يُستخدم لنقل كلام الآخرين.",
   },
   {
     id: 24,
@@ -276,6 +286,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["~입니다", "~것 같아요", "~어야 합니다", "~면 안 됩니다"],
     correctIndex: 1,
     explanation: "'~것 같아요' ('It seems / I think…') softens an opinion in spoken Korean. '~어야 합니다' = must do, '~면 안 됩니다' = must not — both express obligation and sound too assertive in open discussion.",
+    arabicTip: "في العربية نقول 'في رأيي' أو 'أعتقد أن' للتلطيف في بداية الجملة. في الكورية، إضافة '것 같아요' في نهاية الجملة يؤدي نفس الغرض ويجعل رأيك أقل مباشرة.",
   },
 
   // ─── TOPIK 5–6 / C1–C2 (Q17–Q20) ───────────────────────
@@ -339,6 +350,7 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["반말 — sounds natural and confident", "해요체 — polite and widely used daily", "합쇼체 — formal register for announcements and presentations", "혼잣말 — used when addressing a large audience"],
     correctIndex: 2,
     explanation: "합쇼체 (-습니다/-ㅂ니다 endings) is expected for formal public speaking: conferences, official broadcasts, and presentations. 해요체 is polite but conversational; 반말 would be inappropriate with an unfamiliar professional audience.",
+    arabicTip: "كما في العربية فجوة بين الفصحى والعامية، في الكورية: 합쇼체 للخطابات والتقارير الرسمية، و해요체 للمحادثة اليومية المهذبة — اختيار المستوى الخاطئ يؤثر على انطباعك المهني.",
   },
 ];
 
