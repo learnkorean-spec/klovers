@@ -12,10 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          fetch-depth: 0
+
+      - name: Install Supabase CLI
+        run: |
+          curl -sSL https://github.com/supabase/cli/releases/download/v1.226.4/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /usr/local/bin supabase
 
       - name: Run database migrations
         env:
@@ -32,9 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      - name: Install Supabase CLI
+        run: |
+          curl -sSL https://github.com/supabase/cli/releases/download/v1.226.4/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /usr/local/bin supabase
 
       - name: Deploy all edge functions
         env:
