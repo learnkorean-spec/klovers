@@ -125,6 +125,7 @@ const PlacementTestPage = () => {
         toast({ title: "Test resumed", description: "Your previous progress has been restored." });
       }
     } catch { /* ignore */ }
+    localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist progress to localStorage as user answers
@@ -138,6 +139,7 @@ const PlacementTestPage = () => {
         elapsed: elapsedSeconds,
       }));
     } catch { /* ignore */ }
+    localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
   }, [answers, skipped, page, elapsedSeconds, phase]);
 
   // Tick elapsed timer (starts on first answer)
