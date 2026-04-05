@@ -7,9 +7,5 @@ CREATE POLICY "Users can view own enrollments" ON public.enrollments
   FOR SELECT USING (
     auth.uid() = user_id
     OR user_id IS NULL
-    OR EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE profiles.user_id = auth.uid()
-        AND profiles.role = 'admin'
-    )
+    OR public.has_role(auth.uid(), 'admin'::app_role)
   );
