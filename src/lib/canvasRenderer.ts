@@ -77,6 +77,111 @@ export function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number,
   lines.slice(0, maxLines).forEach((l, i) => ctx.fillText(l, x, y + i * lineH));
 }
 
+// ─── Placement Result Card ────────────────────────────────────────────────────
+
+export interface PlacementCardData {
+  levelEmoji: string;
+  levelLabel: string;
+  tagline: string;
+  score: number;
+  total: number;
+}
+
+/**
+ * Draws a 1080×1080 branded result card onto the provided canvas.
+ * Call canvas.toDataURL('image/png') afterwards to get the download URL.
+ */
+export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCardData): void {
+  const W = 1080, H = 1080;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+
+  // Background
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(0, 0, W, H);
+
+  // Inner white panel
+  ctx.fillStyle = "#ffffff";
+  rRect(ctx, 60, 60, W - 120, H - 120, 40);
+  ctx.fill();
+
+  // Top accent bar
+  ctx.fillStyle = "#EBC82E";
+  rRect(ctx, 60, 60, W - 120, 160, 40);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.fillRect(60, 160, W - 120, 40);
+
+  // "K" logo circle (top-left)
+  ctx.fillStyle = "#1a1a1a";
+  ctx.beginPath();
+  ctx.arc(160, 140, 56, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.font = "bold 64px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("K", 160, 144);
+
+  // Brand name (top-right area)
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 38px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  ctx.fillText("KLOVERS", W - 100, 120);
+  ctx.font = "24px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#333333";
+  ctx.fillText("Korean Academy", W - 100, 162);
+
+  // Emoji (large, centered)
+  ctx.font = "160px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.levelEmoji, W / 2, 380);
+
+  // Level label pill
+  ctx.fillStyle = "#1a1a1a";
+  rRect(ctx, 180, 490, W - 360, 90, 45);
+  ctx.fill();
+  ctx.fillStyle = "#EBC82E";
+  ctx.font = "bold 38px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(data.levelLabel, W / 2, 535);
+
+  // Tagline
+  ctx.fillStyle = "#444444";
+  ctx.font = "32px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText(data.tagline, W / 2, 610);
+
+  // Score badge
+  ctx.fillStyle = "#f5f5f5";
+  rRect(ctx, W / 2 - 140, 680, 280, 90, 20);
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = "bold 52px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.fillText(`${data.score} / ${data.total}`, W / 2, 725);
+  ctx.font = "26px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#888";
+  ctx.fillText("TOPIK-aligned score", W / 2, 800);
+
+  // Divider
+  ctx.strokeStyle = "#e5e5e5";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(160, 860);
+  ctx.lineTo(W - 160, 860);
+  ctx.stroke();
+
+  // URL footer
+  ctx.fillStyle = "#888888";
+  ctx.font = "28px system-ui, -apple-system, sans-serif";
+  ctx.fillText("kloversegy.com/placement-test", W / 2, 920);
+}
+
 // ─── KLOVERS BRAND DESIGNS ───────────────────────────────────────────────────
 // All use fixed zone fractions so preview (270px CSS / 1080px canvas) = download (1080px canvas)
 
@@ -263,26 +368,19 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     ctx.moveTo(splitX + slant + 8 * S, 0); ctx.lineTo(splitX + 8 * S, h);
     ctx.stroke();
 
-    // LEFT: faint 한 watermark
+    // LEFT: Large K (centered)
     const lCx = splitX * 0.5;
-    ctx.save();
-    ctx.font = `900 ${splitX * 0.9}px serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.06)";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("한", lCx, h * 0.5);
-    ctx.restore();
-
-    // LEFT: Large K
-    ctx.font = `900 ${splitX * 0.52}px 'Inter', sans-serif`;
+    ctx.font = `900 ${Math.round(splitX * 0.48)}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("K", lCx, h * 0.43);
+    ctx.fillText("K", lCx, h * 0.40);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
 
-    // LEFT: KLOVERS label
-    ctx.font = `700 ${18 * S}px 'Inter', sans-serif`;
+    // LEFT: KLOVERS label (well below K, no overlap)
+    ctx.font = `700 ${Math.round(18 * S)}px 'Inter', sans-serif`;
     ctx.fillStyle = "#111111";
-    ctx.textBaseline = "alphabetic"; ctx.textAlign = "center";
-    ctx.fillText("KLOVERS", lCx, h * 0.73);
+    ctx.textAlign = "center";
+    ctx.fillText("KLOVERS", lCx, h * 0.70);
     ctx.textAlign = "left";
 
     // RIGHT: eyebrow
@@ -613,36 +711,37 @@ export function renderPost(
       ctx.fillText("Register Now →", pad + ctaW / 2, ctaY + ctaH * 0.67);
       ctx.textAlign = "left";
     } else {
-      // Fallback without mascot
+      // Fallback without mascot — use fixed safe zones
       ctx.save();
-      ctx.font = `900 ${h * 0.55}px serif`;
-      ctx.fillStyle = "rgba(0,0,0,0.07)";
+      ctx.font = `900 ${Math.round(h * 0.55)}px serif`;
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("한", w / 2, h * 0.5);
+      ctx.fillText("K", w / 2, h * 0.5);
+      ctx.textBaseline = "alphabetic";
       ctx.restore();
 
-      const pad = 54 * scale;
-      ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
+      const pad = 44 * scale;
+      ctx.font = `700 ${Math.round(18 * scale)}px 'Inter', sans-serif`;
       ctx.fillStyle = "#111111";
-      ctx.fillText("KLOVERS ACADEMY", pad, h * 0.18);
+      ctx.fillText("KLOVERS ACADEMY", pad, h * 0.155);
 
-      const hlSize = Math.min(80 * scale, (w - pad * 2) / 6);
-      ctx.font = `900 ${hlSize}px 'Inter', sans-serif`;
+      const hlSize = Math.min(88 * scale, (w - pad * 2) / 6);
+      ctx.font = `900 ${Math.round(hlSize)}px 'Inter', sans-serif`;
       ctx.fillStyle = "#111111";
-      wrapText(ctx, post.mainText, pad, h * 0.28, w - pad * 2, hlSize * 1.08, 2);
+      wrapText(ctx, post.mainText, pad, h * 0.27, w - pad * 2, Math.round(hlSize * 1.08), 2);
 
       if (post.subtitle) {
-        ctx.font = `400 ${15 * scale}px 'Inter', sans-serif`;
+        ctx.font = `400 ${Math.round(hlSize * 0.42)}px 'Inter', sans-serif`;
         ctx.fillStyle = "#333";
-        wrapText(ctx, post.subtitle, pad, h * 0.58, w - pad * 2, 22 * scale, 3);
+        wrapText(ctx, post.subtitle, pad, h * 0.60, w - pad * 2, Math.round(hlSize * 0.42 * 1.45), 3);
       }
 
-      const ctaH = 42 * scale, ctaW = 180 * scale;
-      const ctaY = h * 0.76;
+      const ctaH = Math.round(52 * scale), ctaW = Math.round(220 * scale);
+      const ctaY = h * 0.75;
       ctx.fillStyle = "#111111";
       rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
       ctx.fill();
-      ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
+      ctx.font = `700 ${Math.round(18 * scale)}px 'Inter', sans-serif`;
       ctx.fillStyle = "#FFFF00";
       ctx.textAlign = "center";
       ctx.fillText("Register Now →", pad + ctaW / 2, ctaY + ctaH * 0.67);
@@ -677,14 +776,14 @@ export function renderPost(
     ctx.restore();
   }
 
-  // 한 watermark
+  // Decorative K watermark (Latin — always renders, no overlap)
   if (isBrand) {
     ctx.save();
-    ctx.font = `bold ${h * 0.58}px serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.065)";
-    ctx.textAlign = "right";
-    ctx.fillText("한", w - 18 * scale, h * 0.82);
-    ctx.textAlign = "start";
+    ctx.font = `900 ${Math.round(h * 0.60)}px 'Inter', 'Segoe UI Black', sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.045)";
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("K", w + 10 * scale, h * 0.86);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
     ctx.restore();
   }
 
@@ -706,56 +805,58 @@ export function renderPost(
 
   if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 24 * scale; }
 
-  // Text layout — all positions FIXED as fractions of h
-  const pad    = 54 * scale;
-  const tLeft  = template === "editorial" ? w * 0.12 : pad;
-  const tW     = w - tLeft - pad;
+  // Text layout — all positions FIXED as fractions of h with proper safe zones
+  const pad    = 44 * scale;  // Standard 44px safe margin (4% of 1080px)
+  const tLeft  = template === "editorial" ? pad * 2 : pad;
+  const tW     = w - tLeft - pad;  // Ensure text never extends beyond right margin
   const eyeColor = isDark ? (template === "neon" ? c.accent : "#aaa") : "#1a1a1a";
 
-  // Eyebrow at FIXED h*0.18
+  // Eyebrow at FIXED h*0.155 (upper eyebrow zone)
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
   ctx.fillStyle = eyeColor;
-  ctx.font = `700 ${20 * scale}px 'Inter', sans-serif`;
-  ctx.fillText("KOREAN COURSE", tLeft, h * 0.18);
+  ctx.font = `700 ${Math.round(20 * scale)}px 'Inter', sans-serif`;
+  ctx.fillText("KOREAN COURSE", tLeft, h * 0.155);
   ctx.fillStyle = eyeColor;
-  ctx.fillRect(tLeft, h * 0.18 + 10 * scale, 56 * scale, 3 * scale);
+  ctx.fillRect(tLeft, h * 0.155 + 8 * scale, 44 * scale, 3 * scale);
 
   if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 18 * scale; }
 
-  // Headline at FIXED h*0.26 (max 2 lines)
-  const mSize = Math.min(isPortrait ? 88 * scale : 76 * scale, tW * (isPortrait ? 0.16 : 0.13));
-  ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
+  // Headline at FIXED h*0.27 (well-separated from eyebrow, max 2 lines)
+  const mSize = Math.min(isPortrait ? 96 * scale : 80 * scale, tW * 0.15);
+  ctx.font = `900 ${Math.round(mSize)}px 'Inter', 'Segoe UI', sans-serif`;
   ctx.fillStyle = isDark ? "#fff" : "#1a1a1a";
-  wrapText(ctx, post.mainText, tLeft, h * 0.26, tW, mSize * 1.12, 2);
+  wrapText(ctx, post.mainText, tLeft, h * 0.27, tW, Math.round(mSize * 1.12), 2);
 
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
 
-  // Subtitle at FIXED h*0.58 — position never depends on headline
+  // Subtitle at FIXED h*0.60 — position never depends on headline
   if (post.subtitle) {
-    const sSize = mSize * 0.44;
+    const sSize = Math.round(mSize * 0.42);
     ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
     ctx.fillStyle = isDark ? "#bbb" : "#333";
-    wrapText(ctx, post.subtitle, tLeft, h * 0.58, tW, sSize * 1.45, 3);
+    wrapText(ctx, post.subtitle, tLeft, h * 0.60, tW, Math.round(sSize * 1.45), 3);
   }
 
-  // CTA pill at FIXED position
-  const ctaY  = h * (isPortrait ? 0.76 : 0.72);
+  // CTA pill at FIXED position (h*0.75)
+  const ctaH  = Math.round(52 * scale);
+  const ctaW  = Math.round(220 * scale);
+  const ctaY  = h * 0.75;
   const ctaBg = isDark ? c.accent : "#1a1a1a";
   ctx.fillStyle = ctaBg;
-  rRect(ctx, tLeft, ctaY, 182 * scale, 44 * scale, 22 * scale);
+  rRect(ctx, tLeft, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = `bold ${18 * scale}px 'Inter', sans-serif`;
+  ctx.font = `bold ${Math.round(18 * scale)}px 'Inter', sans-serif`;
   ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText("Register Now →", tLeft + 91 * scale, ctaY + 30 * scale);
-  ctx.textAlign = "start";
+  ctx.fillText("Register Now →", tLeft + ctaW / 2, ctaY + ctaH * 0.67);
+  ctx.textAlign = "left";
 
-  // Footer strip with hashtags
+  // Footer strip with hashtags (h*0.88–h*1.0)
   ctx.fillStyle = isDark ? "#111" : "#1a1a1a";
-  ctx.fillRect(0, h - 54 * scale, w, 54 * scale);
-  ctx.font = `bold ${16 * scale}px 'Inter', sans-serif`;
+  ctx.fillRect(0, h * 0.88, w, h * 0.12);
+  ctx.font = `bold ${Math.round(16 * scale)}px 'Inter', sans-serif`;
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h - 20 * scale);
-  ctx.textAlign = "start";
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", w / 2, h * 0.94);
+  ctx.textAlign = "left";
 }

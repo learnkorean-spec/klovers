@@ -62,10 +62,10 @@ const TextbookHubPage = () => {
             <Sparkles className="h-4 w-4" />
             {isAr ? "مكتبة الكتب" : "Book Library"}
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {isAr ? "اختر كتابك" : "Choose Your Book"}
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
             {isAr
               ? "اختر كتاباً تعليمياً وابدأ رحلتك في تعلم الكورية"
               : "Pick a learning book and start your Korean journey"}

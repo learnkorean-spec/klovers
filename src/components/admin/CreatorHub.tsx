@@ -98,7 +98,20 @@ const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; 
   invite_student: { templateName: "klovers_split",   themeName: "yellow" },
 };
 
-const BALANCE_CYCLE: TemplateName[] = ["klovers_bold", "klovers_varsity", "klovers_split"];
+// All 10 templates — balanced cycle for 30-post generator
+const ALL_TEMPLATES: TemplateName[] = [
+  "klovers_bold",
+  "klovers_varsity",
+  "klovers_split",
+  "classic",
+  "character",
+  "minimal",
+  "gradient",
+  "neon",
+  "dark",
+  "editorial",
+];
+const BALANCE_CYCLE: TemplateName[] = ALL_TEMPLATES;  // Use all 10 for variety
 const BALANCE_THEME: Record<TemplateName, ColorTheme> = {
   klovers_bold: "yellow", klovers_varsity: "midnight", klovers_split: "yellow",
   classic: "yellow", character: "yellow", minimal: "yellow",
@@ -111,9 +124,11 @@ const PostPreview = memo(function PostPreview({ post, template, theme, size = 27
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
-    c.width = 1080; c.height = 1080;
+    // Render at display size so scale = 1.0, making fonts readable at any size
+    c.width = size;
+    c.height = size;
     renderPost(c, post, template, theme, "instagram");
-  }, [post.mainText, post.subtitle, post.extraText, template, theme]);
+  }, [post.mainText, post.subtitle, post.extraText, template, theme, size]);
   return <canvas ref={ref} style={{ width: size, height: size, display: "block" }} className="rounded-lg" />;
 });
 
@@ -298,25 +313,36 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }
   );
 }
 
-// ─── Klovers Brand Design Preview Cards ───
-const KLOVERS_TEMPLATES: TemplateName[] = ["klovers_bold", "klovers_varsity", "klovers_split"];
-const KLOVERS_LABELS: Record<string, { label: string; desc: string }> = {
-  klovers_bold:    { label: "⚡ Bold",    desc: "Yellow frame + K badge" },
-  klovers_varsity: { label: "🏆 Varsity", desc: "Dark championship ring" },
-  klovers_split:   { label: "◧ Split",   desc: "Yellow / black diagonal" },
+// ─── All Templates Preview ───
+// Show all 10 templates as a selectable gallery
+const TEMPLATE_CARDS: TemplateName[] = [
+  "klovers_bold", "klovers_varsity", "klovers_split",
+  "classic", "character", "minimal", "gradient", "neon", "dark", "editorial",
+];
+const TEMPLATE_LABELS: Record<TemplateName, { label: string; desc: string }> = {
+  klovers_bold:    { label: "⚡ Bold",    desc: "Attention — Yellow frame" },
+  klovers_varsity: { label: "🏆 Varsity", desc: "Interest — Dark ring" },
+  klovers_split:   { label: "✂ Split",   desc: "Action — Diagonal CTA" },
+  classic:         { label: "🟨 Classic", desc: "Bold yellow background" },
+  character:       { label: "🎨 Character", desc: "Illustrated overlay" },
+  minimal:         { label: "□ Minimal",   desc: "Clean border inset" },
+  gradient:        { label: "🌈 Gradient", desc: "Smooth color blend" },
+  neon:            { label: "✨ Neon",     desc: "Dark with glow" },
+  dark:            { label: "🌙 Dark",     desc: "Elegant dark theme" },
+  editorial:       { label: "📄 Editorial", desc: "Magazine style" },
 };
 
-function KloversBrandCards({ post, theme, format, active, onSelect }: {
+function AllTemplateCards({ post, theme, format, active, onSelect }: {
   post: PostData;
   theme: ColorTheme;
   format: FormatKey;
   active: TemplateName;
   onSelect: (t: TemplateName) => void;
 }) {
-  const refs = useRef<(HTMLCanvasElement | null)[]>([null, null, null]);
+  const refs = useRef<(HTMLCanvasElement | null)[]>([]);
 
   useEffect(() => {
-    KLOVERS_TEMPLATES.forEach((tpl, i) => {
+    TEMPLATE_CARDS.forEach((tpl, i) => {
       const c = refs.current[i];
       if (!c) return;
       c.width = 300; c.height = 300;
@@ -326,10 +352,10 @@ function KloversBrandCards({ post, theme, format, active, onSelect }: {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">Klovers Brand</h3>
-      <div className="grid grid-cols-3 gap-2">
-        {KLOVERS_TEMPLATES.map((tpl, i) => {
-          const meta = KLOVERS_LABELS[tpl];
+      <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">All Templates (10)</h3>
+      <div className="grid grid-cols-5 gap-2">
+        {TEMPLATE_CARDS.map((tpl, i) => {
+          const meta = TEMPLATE_LABELS[tpl];
           const isActive = active === tpl;
           return (
             <button
@@ -602,7 +628,7 @@ export default function CreatorHub() {
         <div className="space-y-5 overflow-y-auto max-h-[80vh] pr-1">
           {/* Template */}
           <div className="space-y-3">
-            <KloversBrandCards
+            <AllTemplateCards
               post={activePost}
               theme={theme}
               format={format}

@@ -29,6 +29,9 @@ export function useGamification() {
     streak: { current_streak: 0, longest_streak: 0, last_activity_date: null },
   });
   const [loading, setLoading] = useState(true);
+  const [leaguePromotion, setLeaguePromotion] = useState<{ fromLeague: string; toLeague: string } | null>(null);
+  const [newBadges, setNewBadges] = useState<string[]>([]);
+  const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,8 +43,8 @@ export function useGamification() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProgress = useCallback(async () => {
-    if (!userId) { setLoading(false); return; }
+  const fetchProgress = useCallback(async (): Promise<UserProgress | null> => {
+    if (!userId) { setLoading(false); return null; }
 
     const [xpRes, progressRes, badgesRes, streakRes] = await Promise.all([
       supabase.from("student_xp").select("xp_earned").eq("user_id", userId),
@@ -64,94 +67,125 @@ export function useGamification() {
       };
     });
 
-    setProgress({
+    const newProgress: UserProgress = {
       totalXp,
       lessonProgress,
       badges: (badgesRes.data || []).map((b: any) => b.badge_key),
       streak: streakRes.data || { current_streak: 0, longest_streak: 0, last_activity_date: null },
-    });
+    };
+
+    setProgress(newProgress);
     setLoading(false);
+    return newProgress;
   }, [userId]);
 
   useEffect(() => { fetchProgress(); }, [fetchProgress]);
 
-  const awardXp = useCallback(async (lessonId: number, activityType: keyof typeof XP_VALUES) => {
-    if (!userId) return 0;
-
-    const xp = XP_VALUES[activityType];
-
-    await supabase.from("student_xp").insert({
-      user_id: userId,
-      lesson_id: lessonId,
-      activity_type: activityType,
-      xp_earned: xp,
-    });
-
-    // Update streak
+  const updateStreak = useCallback(async (uid: string) => {
     const today = new Date().toISOString().split("T")[0];
     const { data: existing } = await supabase
       .from("student_streaks")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", uid)
       .maybeSingle();
 
     if (!existing) {
       await supabase.from("student_streaks").insert({
-        user_id: userId,
+        user_id: uid,
         current_streak: 1,
         longest_streak: 1,
         last_activity_date: today,
       });
-    } else if (existing.last_activity_date !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const wasYesterday = existing.last_activity_date === yesterday.toISOString().split("T")[0];
-
-      const newStreak = wasYesterday ? existing.current_streak + 1 : 1;
-      const longestStreak = Math.max(newStreak, existing.longest_streak);
-
-      const updates: any = {
-        current_streak: newStreak,
-        longest_streak: longestStreak,
-        last_activity_date: today,
-      };
-
-      if (newStreak >= 3) updates.streak_3_earned = true;
-      if (newStreak >= 7) updates.streak_7_earned = true;
-      if (newStreak >= 14) updates.streak_14_earned = true;
-      if (newStreak >= 30) updates.streak_30_earned = true;
-
-      // Award streak badges
-      const streakBadges = [
-        { threshold: 3, key: "streak_3" },
-        { threshold: 7, key: "streak_7" },
-        { threshold: 14, key: "streak_14" },
-        { threshold: 30, key: "streak_30" },
-      ];
-
-      for (const sb of streakBadges) {
-        if (newStreak >= sb.threshold) {
-          await supabase.from("student_badges").upsert(
-            { user_id: userId, badge_key: sb.key },
-            { onConflict: "user_id,badge_key" }
-          );
-        }
-      }
-
-      await supabase.from("student_streaks").update(updates).eq("user_id", userId);
+      return;
     }
 
-    await fetchProgress();
+    if (existing.last_activity_date === today) return;
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const wasYesterday = existing.last_activity_date === yesterday.toISOString().split("T")[0];
+    const newStreak = wasYesterday ? existing.current_streak + 1 : 1;
+    const longestStreak = Math.max(newStreak, existing.longest_streak);
+
+    const updates: any = {
+      current_streak: newStreak,
+      longest_streak: longestStreak,
+      last_activity_date: today,
+    };
+
+    // Award streak_bonus XP when streak continues (not reset)
+    if (wasYesterday) {
+      await supabase.from("student_xp").insert({
+        user_id: uid,
+        lesson_id: null,
+        activity_type: "streak_bonus",
+        xp_earned: XP_VALUES.streak_bonus,
+      });
+    }
+
+    const milestones = [
+      { threshold: 3, key: "streak_3", flag: "streak_3_earned" },
+      { threshold: 7, key: "streak_7", flag: "streak_7_earned" },
+      { threshold: 14, key: "streak_14", flag: "streak_14_earned" },
+      { threshold: 30, key: "streak_30", flag: "streak_30_earned" },
+    ] as const;
+
+    let newMilestone = false;
+    for (const m of milestones) {
+      if (newStreak >= m.threshold) {
+        updates[m.flag] = true;
+        await supabase.from("student_badges").upsert(
+          { user_id: uid, badge_key: m.key },
+          { onConflict: "user_id,badge_key" }
+        );
+        // Trigger celebration only when this milestone is first crossed
+        if (!existing[m.flag] && !newMilestone) {
+          newMilestone = true;
+          setStreakCelebration(newStreak);
+        }
+      }
+    }
+
+    await supabase.from("student_streaks").update(updates).eq("user_id", uid);
+  }, []);
+
+  const awardXp = useCallback(async (lessonId: number | null, activityType: keyof typeof XP_VALUES) => {
+    if (!userId) return 0;
+
+    const xp = XP_VALUES[activityType];
+    const oldLeague = getLeague(progress.totalXp);
+    const oldBadges = new Set(progress.badges);
+
+    await supabase.from("student_xp").insert({
+      user_id: userId,
+      lesson_id: lessonId || null,
+      activity_type: activityType,
+      xp_earned: xp,
+    });
+
+    await updateStreak(userId);
+
+    const newProgress = await fetchProgress();
+    if (newProgress) {
+      const newLeague = getLeague(newProgress.totalXp);
+      if (newLeague.key !== oldLeague.key) {
+        setLeaguePromotion({ fromLeague: oldLeague.key, toLeague: newLeague.key });
+      }
+      const newlyEarned = newProgress.badges.filter(b => !oldBadges.has(b));
+      if (newlyEarned.length > 0) {
+        setNewBadges(prev => [...prev, ...newlyEarned]);
+      }
+    }
+
     return xp;
-  }, [userId, fetchProgress]);
+  }, [userId, progress.totalXp, progress.badges, updateStreak, fetchProgress]);
 
   const markSectionDone = useCallback(async (
     lessonId: number,
-    section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done"
+    section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" | "writing_done"
   ) => {
     if (!userId) return;
 
-    // Upsert progress
     const { data: existing } = await supabase
       .from("student_lesson_progress")
       .select("*")
@@ -160,10 +194,9 @@ export function useGamification() {
       .maybeSingle();
 
     if (existing) {
-      if (existing[section]) return; // Already done
+      if (existing[section]) return;
       const updates: any = { [section]: true };
 
-      // Check if all sections are now done
       const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done"]
         .every(s => s === section ? true : existing[s as keyof typeof existing]);
 
@@ -175,13 +208,21 @@ export function useGamification() {
       await supabase.from("student_lesson_progress").update(updates)
         .eq("user_id", userId).eq("lesson_id", lessonId);
 
-      // Award chapter completion XP + badge
       if (allDone) {
         await awardXp(lessonId, "chapter");
         await supabase.from("student_badges").upsert(
           { user_id: userId, badge_key: "first_chapter" },
           { onConflict: "user_id,badge_key" }
         );
+        // Seoul Explorer — completing any K-Drama lesson
+        const { data: lessonMeta } = await supabase
+          .from("textbook_lessons")
+          .select("book")
+          .eq("id", lessonId)
+          .maybeSingle();
+        if (lessonMeta?.book === "kdrama") {
+          await awardBadge("seoul_explorer");
+        }
       }
     } else {
       await supabase.from("student_lesson_progress").insert({
@@ -191,17 +232,16 @@ export function useGamification() {
       });
     }
 
-    // Award section XP
     const activityMap: Record<string, keyof typeof XP_VALUES> = {
       vocab_done: "vocab",
       grammar_done: "grammar",
       dialogue_done: "dialogue",
       exercises_done: "exercise",
       reading_done: "reading",
+      writing_done: "writing",
     };
     await awardXp(lessonId, activityMap[section]);
 
-    // Check for special badges
     await checkBadges();
     await fetchProgress();
   }, [userId, awardXp, fetchProgress]);
@@ -209,7 +249,6 @@ export function useGamification() {
   const checkBadges = useCallback(async () => {
     if (!userId) return;
 
-    // Count completed sections
     const { data: allProgress } = await supabase
       .from("student_lesson_progress")
       .select("*")
@@ -222,13 +261,12 @@ export function useGamification() {
     const dialogueCount = allProgress.filter((p: any) => p.dialogue_done).length;
     const chapterCount = allProgress.filter((p: any) => p.chapter_completed).length;
 
-    // Hangul Master: lesson 1 completed
     const lesson1 = allProgress.find((p: any) => p.lesson_id === 1);
     if (lesson1?.chapter_completed) {
       await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "hangul_master" }, { onConflict: "user_id,badge_key" });
     }
 
-    if (vocabCount >= 10) {
+    if (vocabCount >= 100) {
       await supabase.from("student_badges").upsert({ user_id: userId, badge_key: "first_100_words" }, { onConflict: "user_id,badge_key" });
     }
     if (grammarCount >= 5) {
@@ -250,8 +288,9 @@ export function useGamification() {
 
     const xpPerCorrect = XP_VALUES.game_complete;
     const totalXpEarned = score * xpPerCorrect;
+    const oldLeague = getLeague(progress.totalXp);
+    const oldBadges = new Set(progress.badges);
 
-    // Insert XP record (lesson_id = null for games)
     await supabase.from("student_xp").insert({
       user_id: userId,
       lesson_id: null,
@@ -259,35 +298,8 @@ export function useGamification() {
       xp_earned: totalXpEarned,
     });
 
-    // Update streak (same logic as awardXp)
-    const today = new Date().toISOString().split("T")[0];
-    const { data: existing } = await supabase
-      .from("student_streaks")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+    await updateStreak(userId);
 
-    if (!existing) {
-      await supabase.from("student_streaks").insert({
-        user_id: userId,
-        current_streak: 1,
-        longest_streak: 1,
-        last_activity_date: today,
-      });
-    } else if (existing.last_activity_date !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const wasYesterday = existing.last_activity_date === yesterday.toISOString().split("T")[0];
-      const newStreak = wasYesterday ? existing.current_streak + 1 : 1;
-      const longestStreak = Math.max(newStreak, existing.longest_streak);
-      await supabase.from("student_streaks").update({
-        current_streak: newStreak,
-        longest_streak: longestStreak,
-        last_activity_date: today,
-      }).eq("user_id", userId);
-    }
-
-    // Award game badges
     await supabase.from("student_badges").upsert(
       { user_id: userId, badge_key: "game_starter" },
       { onConflict: "user_id,badge_key" }
@@ -300,7 +312,6 @@ export function useGamification() {
       );
     }
 
-    // Check total games played for game_master badge
     const { count } = await supabase
       .from("student_xp")
       .select("*", { count: "exact", head: true })
@@ -314,9 +325,34 @@ export function useGamification() {
       );
     }
 
-    await fetchProgress();
+    const newProgress = await fetchProgress();
+    if (newProgress) {
+      const newLeague = getLeague(newProgress.totalXp);
+      if (newLeague.key !== oldLeague.key) {
+        setLeaguePromotion({ fromLeague: oldLeague.key, toLeague: newLeague.key });
+      }
+      const newlyEarned = newProgress.badges.filter(b => !oldBadges.has(b));
+      if (newlyEarned.length > 0) {
+        setNewBadges(prev => [...prev, ...newlyEarned]);
+      }
+    }
+
     return totalXpEarned;
-  }, [userId, fetchProgress]);
+  }, [userId, progress.totalXp, progress.badges, updateStreak, fetchProgress]);
+
+  const awardBadge = useCallback(async (badgeKey: string) => {
+    if (!userId || progress.badges.includes(badgeKey)) return;
+    await supabase.from("student_badges").upsert(
+      { user_id: userId, badge_key: badgeKey },
+      { onConflict: "user_id,badge_key" }
+    );
+    setNewBadges(prev => [...prev, badgeKey]);
+    setProgress(prev => ({ ...prev, badges: [...prev.badges, badgeKey] }));
+  }, [userId, progress.badges]);
+
+  const clearLeaguePromotion = useCallback(() => setLeaguePromotion(null), []);
+  const clearNewBadges = useCallback(() => setNewBadges([]), []);
+  const clearStreakCelebration = useCallback(() => setStreakCelebration(null), []);
 
   const league = getLeague(progress.totalXp);
 
@@ -325,6 +361,13 @@ export function useGamification() {
     progress,
     league,
     loading,
+    leaguePromotion,
+    newBadges,
+    streakCelebration,
+    awardBadge,
+    clearLeaguePromotion,
+    clearNewBadges,
+    clearStreakCelebration,
     awardXp,
     awardGameXp,
     markSectionDone,

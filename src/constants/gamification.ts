@@ -22,6 +22,9 @@ export const XP_VALUES = {
   streak_bonus: 5,
   game_complete: 5,  // per correct answer in games
   review: 5,         // spaced repetition review
+  class_attendance_present: 25,
+  class_attendance_late: 10,
+  referral_conversion: 150,
 } as const;
 
 export const BADGES = [

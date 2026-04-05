@@ -3,9 +3,12 @@ import { useSEO } from "@/hooks/useSEO";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
+import { XP_VALUES } from "@/constants/gamification";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
+import { BADGES } from "@/constants/gamification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -42,8 +45,24 @@ const DailyQuizPage = () => {
 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { awardXp } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
+  const [xpFloat, setXpFloat] = useState<number | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          toast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const [exercises, setExercises] = useState<ExerciseItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +93,7 @@ const DailyQuizPage = () => {
       .from("student_xp")
       .select("id")
       .eq("user_id", user.id)
-      .eq("activity_type", "daily_quiz")
+      .eq("activity_type", "challenge")
       .gte("created_at", today.toISOString())
       .limit(1)
       .maybeSingle();
@@ -174,28 +193,10 @@ const DailyQuizPage = () => {
 
     const percentage = Math.round((correctCount / exercises.length) * 100);
     const passed = percentage >= 70;
-    const xpEarned = 30; // Base XP for daily quiz
+    const xpEarned = XP_VALUES.challenge;
 
-    // Save quiz result to student_xp
-    const { error } = await supabase.from("student_xp").insert({
-      user_id: user!.id,
-      lesson_id: null,
-      activity_type: "daily_quiz",
-      xp_earned: xpEarned,
-    });
-
-    if (error) {
-      toast({
-        title: "Error saving quiz",
-        description: error.message,
-        variant: "destructive",
-      });
-      setSubmitting(false);
-      return;
-    }
-
-    // Award XP through gamification system
     await awardXp(0, "challenge");
+    setXpFloat(xpEarned);
 
     setResult({
       score: correctCount,
@@ -300,7 +301,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary">{exercises.length}</p>
+                <p className="text-4xl font-bold text-primary text-outlined">{exercises.length}</p>
                 <p className="text-muted-foreground mt-1">Questions from your completed lessons</p>
               </div>
               <div className="pt-4 border-t">
@@ -333,7 +334,7 @@ const DailyQuizPage = () => {
               <div
                 className={cn(
                   "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full",
-                  result.passed ? "bg-green-100" : "bg-orange-100"
+                  result.passed ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"
                 )}
               >
                 <CheckCircle
@@ -347,7 +348,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary">
+                <p className="text-4xl font-bold text-primary text-outlined">
                   {result.score}/{result.total}
                 </p>
                 <p className="text-muted-foreground mt-1">
@@ -397,6 +398,15 @@ const DailyQuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
       <main id="main-content" className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Progress */}
@@ -437,8 +447,8 @@ const DailyQuizPage = () => {
                         key={idx}
                         className={cn(
                           "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all",
-                          showAnswer && isCorrect && "bg-green-50 border-green-500",
-                          showAnswer && selected && !isCorrect && "bg-red-50 border-red-500",
+                          showAnswer && isCorrect && "bg-green-50 dark:bg-green-900/20 border-green-500",
+                          showAnswer && selected && !isCorrect && "bg-red-50 dark:bg-red-900/20 border-red-500",
                           !showAnswer && "hover:border-primary/40 hover:bg-accent"
                         )}
                       >
@@ -472,8 +482,8 @@ const DailyQuizPage = () => {
                       "mt-4 p-3 rounded-lg",
                       answers[currentExercise.id] ===
                         currentExercise.correct_index
-                        ? "bg-green-50 text-green-700"
-                        : "bg-red-50 text-red-700"
+                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                        : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
                     )}
                   >
                     <p className="text-sm">

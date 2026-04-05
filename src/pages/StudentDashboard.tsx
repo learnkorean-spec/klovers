@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { useSEO } from "@/hooks/useSEO";
@@ -16,7 +16,9 @@ import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration } from "@/components/XpAnimation";
 import { useGamification } from "@/hooks/useGamification";
+import { BADGES } from "@/constants/gamification";
 // Below-fold components — lazy loaded to keep initial paint fast
 const AnalyticsSection = lazy(() =>
   import("@/components/AnalyticsSection").then(m => ({ default: m.AnalyticsSection }))
@@ -38,10 +40,11 @@ const DailyBonusCard = lazy(() =>
 );
 import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
 import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface EnrollmentRecord {
   id: string;
@@ -56,6 +59,7 @@ interface EnrollmentRecord {
   level: string | null;
   preferred_days: string[] | null;
   timezone: string | null;
+  negative_since: string | null;
 }
 
 interface ChecklistItem {
@@ -154,7 +158,7 @@ const ProfileCard = ({
             {editingName ? (
               <div className="flex items-center gap-2">
                 <Input
-                  className="h-8 w-[180px] text-sm"
+                  className="h-8 flex-1 max-w-[200px] text-sm"
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
                   autoFocus
@@ -187,7 +191,7 @@ const ProfileCard = ({
 const StudentDashboard = () => {
   useSEO({ title: "My Dashboard", description: "Track your Korean learning progress, schedule, and achievements on Klovers.", canonical: "https://kloversegy.com/dashboard" });
   const { loading: gateLoading, resetBlocked } = useResetGate();
-  const { progress: gamification, league, loading: gamLoading, awardGameXp } = useGamification();
+  const { progress: gamification, league, loading: gamLoading, awardGameXp, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -201,6 +205,7 @@ const StudentDashboard = () => {
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
   const [groupName, setGroupName] = useState<string | null>(null);
+  const [pendingEnrollments, setPendingEnrollments] = useState<{ id: string; plan_type: string; approval_status: string }[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
@@ -208,6 +213,22 @@ const StudentDashboard = () => {
   const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { toast: uiToast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          uiToast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const FIELD_MAP: Record<string, string> = {
     name: "Full name",
@@ -240,43 +261,30 @@ const StudentDashboard = () => {
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
       monday.setHours(0, 0, 0, 0);
-      const { data: weeklyXpData } = await supabase
-        .from("student_xp")
-        .select("xp_earned")
-        .eq("user_id", session.user.id)
-        .gte("created_at", monday.toISOString());
-      setWeeklyXp((weeklyXpData || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0));
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("avatar_url, name, level, country")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+      // Run all independent queries in parallel
+      const [weeklyXpRes, profileRes, ptRes, pendingRes, enrollmentRes] = await Promise.all([
+        supabase.from("student_xp").select("xp_earned").eq("user_id", session.user.id).gte("created_at", monday.toISOString()),
+        supabase.from("profiles").select("avatar_url, name, level, country").eq("user_id", session.user.id).maybeSingle(),
+        supabase.from("placement_tests").select("score, level, created_at").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("enrollments").select("id, plan_type, approval_status").eq("user_id", session.user.id).in("approval_status", ["PENDING", "UNDER_REVIEW", "PENDING_PAYMENT"]).order("created_at", { ascending: false }),
+        supabase.from("enrollments").select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level, negative_since").eq("user_id", session.user.id).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }),
+      ]);
+
+      const weeklyXpData = weeklyXpRes.data;
+      const profile = profileRes.data;
+      const ptData = ptRes.data;
+      const pendingData = pendingRes.data;
+      const enrollmentData = enrollmentRes.data;
+
+      setWeeklyXp((weeklyXpData || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0));
       if (profile) {
         setAvatarUrl(profile.avatar_url || "");
         setUserName(profile.name || "");
         setProfileLevel(profile.level || "");
       }
-
-      // Fetch latest placement test result
-      const { data: ptData } = await supabase
-        .from("placement_tests")
-        .select("score, level, created_at")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (ptData) {
-        setPlacementTest(ptData as PlacementTestResult);
-      }
-
-      const { data: enrollmentData } = await supabase
-        .from("enrollments")
-        .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level")
-        .eq("user_id", session.user.id)
-        .eq("approval_status", "APPROVED")
-        .eq("payment_status", "PAID")
-        .order("created_at", { ascending: false });
+      if (ptData) setPlacementTest(ptData as PlacementTestResult);
+      if (pendingData) setPendingEnrollments(pendingData as any[]);
 
       if (enrollmentData && enrollmentData.length > 0) {
         setEnrollments(enrollmentData as EnrollmentRecord[]);
@@ -328,26 +336,14 @@ const StudentDashboard = () => {
             .eq("status", "APPROVED"),
         ]);
 
-        const dates: AttendanceDate[] = [];
-        if (adminRes.data) {
-          for (const r of adminRes.data) {
-            dates.push({ date: r.session_date, source: "Admin" });
-          }
-        }
-        if (pkgRes.data) {
-          for (const r of pkgRes.data) {
+        const dates: AttendanceDate[] = [
+          ...(adminRes.data || []).map(r => ({ date: r.session_date, source: "Admin" as const })),
+          ...(pkgRes.data || []).flatMap(r => {
             const sessions = r.pkg_group_sessions as { session_date: string } | null;
-            if (sessions?.session_date) {
-              dates.push({ date: sessions.session_date, source: "Group" });
-            }
-          }
-        }
-        if (selfRes.data) {
-          for (const r of selfRes.data) {
-            dates.push({ date: r.request_date, source: "Self" });
-          }
-        }
-        dates.sort((a, b) => a.date.localeCompare(b.date));
+            return sessions?.session_date ? [{ date: sessions.session_date, source: "Group" as const }] : [];
+          }),
+          ...(selfRes.data || []).map(r => ({ date: r.request_date, source: "Self" as const })),
+        ].sort((a, b) => a.date.localeCompare(b.date));
         setAttendanceDates(dates);
 
         // Fetch group membership
@@ -389,7 +385,7 @@ const StudentDashboard = () => {
         <main id="main-content" className="pt-24 pb-16 px-4">
           <div className="max-w-5xl mx-auto space-y-6">
             <Skeleton className="h-8 w-48" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
             </div>
             <Skeleton className="h-16 rounded-xl" />
@@ -441,19 +437,37 @@ const StudentDashboard = () => {
 
   const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
 
-  const quickStats = [
-    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100" },
-    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100" },
-    { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100" },
-    { label: "League", value: league?.emoji ? `${league.emoji} ${league.name.split(" ")[0]}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100" },
-  ];
+  // Level-up flash: detect league change since last session
+  const [showLevelUpFlash, setShowLevelUpFlash] = useState(false);
+  const levelUpChecked = useRef(false);
+  useEffect(() => {
+    if (levelUpChecked.current || !league) return;
+    levelUpChecked.current = true;
+    const prevLeague = sessionStorage.getItem("kl_last_league");
+    if (prevLeague && prevLeague !== league.key) {
+      setShowLevelUpFlash(true);
+      setTimeout(() => setShowLevelUpFlash(false), 2200);
+    }
+    sessionStorage.setItem("kl_last_league", league.key);
+  }, [league]);
 
-  const quickActions = [
-    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50" },
-    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50" },
-    { label: "Games", desc: "13 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50" },
-    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50" },
-  ];
+  // Animated count-up for numeric stats
+  const xpCountUp = useCountUp(gamification.totalXp, 1200);
+  const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
+
+  const quickStats = useMemo(() => [
+    { label: "Total XP", rawValue: gamification.totalXp, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Day Streak", rawValue: gamification.streak.current_streak, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
+    { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+  ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league]);
+
+  const quickActions = useMemo(() => [
+    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
+    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
+    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
+    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
+  ], []);
 
   const handleExportProgress = () => {
     const lines: string[] = [
@@ -491,6 +505,15 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-muted/20">
+      {showLevelUpFlash && (
+        <div className="fixed inset-0 z-50 pointer-events-none animate-level-up-flash flex items-center justify-center bg-primary/30">
+          <div className="animate-scale-in text-center">
+            <p className="text-5xl mb-2">{league?.emoji}</p>
+            <p className="text-2xl font-black text-foreground text-outlined-lg">Level Up!</p>
+            <p className="text-lg font-bold text-foreground">{league?.name}</p>
+          </div>
+        </div>
+      )}
       <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
       <main id="main-content" className="pt-24 pb-16 px-4">
@@ -515,13 +538,13 @@ const StudentDashboard = () => {
             const lastActive = gamification.streak.last_activity_date?.slice(0, 10);
             if (lastActive === today) return null;
             return (
-              <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm">
-                <span className="text-2xl">🔥</span>
+              <div className="flex items-center gap-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3 text-sm">
+                <span className="text-2xl animate-bounce">🔥</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-orange-800">Keep your {streak}-day streak alive!</p>
-                  <p className="text-orange-700 text-xs">Play a game or complete a lesson today before midnight.</p>
+                  <p className="font-semibold text-orange-800 dark:text-orange-300">Keep your {streak}-day streak alive!</p>
+                  <p className="text-orange-700 dark:text-orange-400 text-xs">Play a game or complete a lesson today before midnight.</p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 text-orange-800 hover:bg-orange-100" onClick={() => navigate("/games")}>
+                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30" onClick={() => navigate("/games")}>
                   Play now
                 </Button>
               </div>
@@ -550,23 +573,50 @@ const StudentDashboard = () => {
             );
           })()}
 
+          {/* ── Pending enrollment banners ── */}
+          {pendingEnrollments.map(pe => {
+            const statusLabel = pe.approval_status === "PENDING_PAYMENT" ? "Awaiting payment" : pe.approval_status === "UNDER_REVIEW" ? "Under review" : "Pending approval";
+            const statusColor = pe.approval_status === "PENDING_PAYMENT" ? "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800 text-amber-800 dark:text-amber-300" : "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800 text-blue-800 dark:text-blue-300";
+            return (
+              <div key={pe.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${statusColor}`}>
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold capitalize">{pe.plan_type} class enrollment — {statusLabel}</p>
+                  <p className="text-xs opacity-80">Our team will contact you once your enrollment is confirmed.</p>
+                </div>
+              </div>
+            );
+          })}
+
           {/* ── Quick Stats (always visible) ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickStats.map(({ label, value, icon: Icon, color }) => (
-              <Card key={label} className="border-border">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-                      <Icon className="h-4 w-4" />
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {quickStats.map(({ label, rawValue, sub, icon: Icon, color }, idx) => {
+              let displayValue: string;
+              if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
+              else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
+              else if (label === "Lessons Done") displayValue = `${rawValue}/45`;
+              else displayValue = league?.emoji ? `${league.emoji} ${league.name}` : "Beginner";
+              return (
+                <Card
+                  key={label}
+                  className="border-border hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 animate-fade-up"
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                >
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                        <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
+                        {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                      <p className="font-bold text-foreground text-sm leading-tight truncate">{value}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
@@ -575,14 +625,16 @@ const StudentDashboard = () => {
           </Suspense>
 
           {/* ── Quick Actions (always visible) ── */}
-          <div>
+          <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {quickActions.map(({ label, desc, emoji, path, color }) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              {quickActions.map(({ label, desc, emoji, path, color }, idx) => (
                 <button
                   key={label}
                   onClick={() => navigate(path)}
-                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-all ${color}`}
+                  aria-label={`${label}: ${desc}`}
+                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all ${color} animate-fade-up`}
+                  style={{ animationDelay: `${180 + idx * 60}ms` }}
                 >
                   <div className="text-2xl mb-2">{emoji}</div>
                   <p className="font-semibold text-foreground text-sm">{label}</p>
@@ -606,8 +658,8 @@ const StudentDashboard = () => {
                   </div>
                   <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 animate-bar-grow"
+                      style={{ "--bar-target": `${pct}%` } as React.CSSProperties}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">{msg}</p>
@@ -692,7 +744,7 @@ const StudentDashboard = () => {
             if (done === total) return null;
             const pct = Math.round((done / total) * 100);
             return (
-              <div className="flex items-center gap-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl px-4 py-3">
                 <div className="relative w-10 h-10 shrink-0">
                   <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#fde68a" strokeWidth="3" />
@@ -702,10 +754,10 @@ const StudentDashboard = () => {
                   <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">{pct}%</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-amber-800 text-sm">Profile {pct}% complete</p>
-                  <p className="text-amber-700 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
+                  <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Complete your registration ({done}/{total} items)</p>
+                  <p className="text-amber-700 dark:text-amber-400 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 text-amber-800 hover:bg-amber-100" onClick={() => navigate("/dashboard?complete=name")}>
+                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30" onClick={() => navigate("/dashboard?complete=name")}>
                   Complete
                 </Button>
               </div>
@@ -715,14 +767,49 @@ const StudentDashboard = () => {
           {hasNoData ? (
             /* ── No-enrollment state: show learning features + enroll CTA ── */
             <div className="space-y-6">
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="pt-6 text-center space-y-3">
-                  <AlertCircle className="h-10 w-10 mx-auto text-primary" />
-                  <h2 className="text-xl font-semibold text-foreground">No Active Plan Yet</h2>
-                  <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enroll to get live classes, personalized coaching, and track your attendance.</p>
-                  <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardContent className="pt-6 pb-6 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <GraduationCap className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Start Your Korean Journey</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Join live classes with expert teachers, track your progress, and connect with other K-drama fans learning Korean.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                    {[
+                      { emoji: "🎓", text: "Live group & private classes" },
+                      { emoji: "📊", text: "Progress tracking & analytics" },
+                      { emoji: "🏆", text: "XP, badges & leaderboards" },
+                    ].map(({ emoji, text }) => (
+                      <div key={text} className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 border border-border">
+                        <span>{emoji}</span>
+                        <span className="text-muted-foreground">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">Enroll Now</Button>
+                    <Button variant="outline" size="lg" onClick={() => navigate("/free-trial")} className="flex-1">Book a Free Trial</Button>
+                  </div>
                 </CardContent>
               </Card>
+
+              {/* Show pending enrollments if any */}
+              {pendingEnrollments.length > 0 && pendingEnrollments.map(pe => {
+                const statusLabel = pe.approval_status === "PENDING_PAYMENT" ? "Awaiting payment" : pe.approval_status === "UNDER_REVIEW" ? "Under review" : "Pending approval";
+                return (
+                  <div key={pe.id} className="flex items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold capitalize">{pe.plan_type} enrollment — {statusLabel}</p>
+                      <p className="text-xs opacity-80">Our team will confirm your class soon. Check back here for updates.</p>
+                    </div>
+                  </div>
+                );
+              })}
 
               {/* Still show level test for unenrolled */}
               <Card>
@@ -764,7 +851,9 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamification.badges.length > 0 ? (
+                    {gamLoading ? (
+                      <BadgeGrid earnedBadges={[]} loading />
+                    ) : gamification.badges.length > 0 ? (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />
@@ -804,7 +893,9 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamification.badges.length > 0 ? (
+                    {gamLoading ? (
+                      <BadgeGrid earnedBadges={[]} loading />
+                    ) : gamification.badges.length > 0 ? (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />
@@ -889,10 +980,33 @@ const StudentDashboard = () => {
                             <span><strong>{extra}</strong> extra sessions — Due: <strong>{curr}{due.toLocaleString()}</strong></span>
                           </div>
                         )}
+                        {enrollment.negative_since && (() => {
+                          const days = Math.max(0, Math.floor((Date.now() - new Date(enrollment.negative_since).getTime()) / 86400000));
+                          return (
+                            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-lg p-2">
+                              <AlertCircle className="h-4 w-4 shrink-0" />
+                              <span>Balance overdue for <strong>{days} day{days !== 1 ? "s" : ""}</strong> — please settle to continue classes.</span>
+                            </div>
+                          );
+                        })()}
                         {groupName && (
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Users className="h-3.5 w-3.5" />
-                            <span>Group: <strong className="text-foreground">{groupName}</strong></span>
+                          <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
+                            <Users className="h-4 w-4 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Your Class</p>
+                              <p className="text-sm font-semibold text-foreground truncate">{groupName}</p>
+                            </div>
+                            {enrollment.preferred_days && enrollment.preferred_days.length > 0 && (
+                              <Badge variant="outline" className="ml-auto shrink-0 text-xs">
+                                {enrollment.preferred_days.slice(0, 3).map(d => d.slice(0, 3)).join(" · ")}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {!groupName && (
+                          <div className="flex items-center gap-2 rounded-lg bg-muted/40 border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                            <Users className="h-4 w-4 shrink-0" />
+                            <span>Class assignment in progress — we'll notify you shortly.</span>
                           </div>
                         )}
                       </CardContent>
@@ -905,22 +1019,30 @@ const StudentDashboard = () => {
               <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
 
               {/* ── Achievements + Goals (two-col) ── */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <AchievementMilestoneCard />
-                <LearningGoalsCard />
-              </div>
+              <Suspense fallback={<div className="grid md:grid-cols-2 gap-4"><div className="h-40 bg-muted/30 rounded-2xl animate-pulse" /><div className="h-40 bg-muted/30 rounded-2xl animate-pulse" /></div>}>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <AchievementMilestoneCard />
+                  <LearningGoalsCard />
+                </div>
+              </Suspense>
 
               {/* ── Analytics (full width) ── */}
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
-                <AnalyticsSection />
-              </div>
+              <Suspense fallback={<div className="h-64 bg-muted/30 rounded-2xl animate-pulse" />}>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground mb-4">Your Learning Analytics</h3>
+                  <AnalyticsSection />
+                </div>
+              </Suspense>
 
               {/* ── Streak Calendar (full width) ── */}
-              <StreakCalendar />
+              <Suspense fallback={<div className="h-48 bg-muted/30 rounded-2xl animate-pulse" />}>
+                <StreakCalendar />
+              </Suspense>
 
               {/* ── Leaderboard (full width) ── */}
-              <LeaderboardCard />
+              <Suspense fallback={<div className="h-64 bg-muted/30 rounded-2xl animate-pulse" />}>
+                <LeaderboardCard />
+              </Suspense>
 
               {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />
@@ -970,7 +1092,7 @@ const StudentDashboard = () => {
               <StudentGroupAttendance />
 
               {/* ── Progress Report + Certificate ── */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank')}
                   className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-primary/40 hover:bg-primary/5 transition-all text-center"
@@ -997,6 +1119,14 @@ const StudentDashboard = () => {
         </div>
       </main>
       <Footer />
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
     </div>
   );
 };

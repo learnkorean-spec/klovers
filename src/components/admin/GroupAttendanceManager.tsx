@@ -22,6 +22,8 @@ import { Plus, CheckCheck, RefreshCw, UserCheck, UserX, Pencil, Users, Trash2, U
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminAttendancePanel from "@/components/admin/AdminAttendancePanel";
+import type { AttendanceRow, AttendanceReq, GroupMember, OverviewRow } from "@/types/admin";
+import { formatTime, getAttendanceStatusColor as statusColor } from "@/lib/admin-utils";
 
 interface GroupPackageInfo {
   package_id: string | null;
@@ -48,31 +50,12 @@ interface Session {
   created_at: string;
 }
 
-interface AttendanceRow {
-  id: string; // composite key: session_id + user_id
-  session_id: string;
-  user_id: string;
-  status: string;
-  source: string;
-  admin_approved: boolean;
-  student_name?: string;
-  student_email?: string;
-  student_avatar?: string;
-}
-
 interface StudentProfile {
   user_id: string;
   name: string;
   email: string;
   avatar_url?: string;
   level?: string;
-}
-
-interface GroupMember {
-  student_id: string;
-  full_name: string;
-  email: string;
-  group_name: string | null;
 }
 
 const STATUS_OPTIONS = ["present", "absent", "late", "excused"] as const;
@@ -89,38 +72,7 @@ function nextOccurrenceOf(dayOfWeek: number): Date {
 
 function formatStartTime(t: string | null): string {
   if (!t) return "";
-  const [h, m] = t.split(":").map(Number);
-  const suffix = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
-}
-
-const statusColor = (status: string) => {
-  switch (status) {
-    case "present": return "ring-green-500 bg-green-500/20";
-    case "absent": return "ring-destructive bg-destructive/20";
-    case "late": return "ring-yellow-500 bg-yellow-500/20";
-    case "excused": return "ring-blue-500 bg-blue-500/20";
-    default: return "ring-muted";
-  }
-};
-
-interface OverviewRow {
-  user_id: string;
-  name: string;
-  email: string;
-  enrollment_id: string | null;
-  sessions_remaining: number;
-  negative_sessions: number;
-  amount_due: number;
-  currency: string | null;
-  derived_status: string;
-  [key: string]: any;
-}
-
-interface AttendanceReq {
-  id: string; user_id: string; request_date: string; status: string; created_at: string;
-  profiles?: { name: string; email: string; credits: number } | null;
+  return formatTime(t);
 }
 
 interface GroupAttendanceManagerProps {
@@ -223,7 +175,7 @@ const GroupAttendanceManager = ({
         supabase.from("pkg_group_members").select("group_id, user_id, member_status").in("group_id", groupIds).eq("member_status", "active"),
         packageIds.length > 0
           ? supabase.from("schedule_packages").select("id, level, day_of_week, start_time, timezone").in("id", packageIds)
-          : Promise.resolve({ data: [] as any[] }),
+          : Promise.resolve({ data: [] as Array<{ id: string; level: string; day_of_week: number; start_time: string; timezone: string }> }),
       ]);
 
       const members = membersRes.data || [];
@@ -236,10 +188,10 @@ const GroupAttendanceManager = ({
 
       const { data: profiles } = await supabase.from("profiles").select("user_id, email, name").in("user_id", userIds);
       const profileMap: Record<string, { email: string; name: string }> = {};
-      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { email: p.email, name: p.name }; });
+      (profiles || []).forEach((p) => { profileMap[p.user_id] = { email: p.email, name: p.name }; });
 
-      const pkgMap: Record<string, any> = {};
-      ((pkgsRes as any).data || []).forEach((p: any) => { pkgMap[p.id] = p; });
+      const pkgMap: Record<string, { id: string; level: string; day_of_week: number; start_time: string; timezone: string }> = {};
+      (pkgsRes.data || []).forEach((p) => { pkgMap[p.id] = p; });
 
       const membersByGroup: Record<string, string[]> = {};
       const usersByGroup: Record<string, string[]> = {};
@@ -289,8 +241,8 @@ const GroupAttendanceManager = ({
       toast({ title: `Notifications sent`, description: `✅ ${sent} sent${failed > 0 ? ` · ❌ ${failed} failed` : ""}` });
       setNotifyDialog(false);
       setBroadcastMessage("");
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : String(err), variant: "destructive" });
     } finally {
       setNotifying(false);
     }
@@ -341,11 +293,11 @@ const GroupAttendanceManager = ({
     ]);
 
     const profileMap: Record<string, { name: string; email: string }> = {};
-    ((profilesRes as any).data || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
+    (profilesRes.data || []).forEach((p) => { profileMap[p.user_id] = { name: p.name, email: p.email }; });
 
     // Latest enrollment per user (already sorted by created_at desc)
     const enrollmentMap: Record<string, { sessions_total: number; sessions_remaining: number; amount: number; currency: string }> = {};
-    ((enrollmentsRes as any).data || []).forEach((e: any) => {
+    (enrollmentsRes.data || []).forEach((e) => {
       if (!enrollmentMap[e.user_id]) {
         enrollmentMap[e.user_id] = { sessions_total: e.sessions_total, sessions_remaining: e.sessions_remaining, amount: e.amount, currency: e.currency };
       }
@@ -353,11 +305,11 @@ const GroupAttendanceManager = ({
 
     // Count attendance per user
     const attendanceCountMap: Record<string, number> = {};
-    ((attendanceRes as any).data || []).forEach((a: any) => {
+    (attendanceRes.data || []).forEach((a) => {
       attendanceCountMap[a.user_id] = (attendanceCountMap[a.user_id] || 0) + 1;
     });
 
-    const result: EnrichedGroup[] = pkgGroups.map((g: any) => {
+    const result: EnrichedGroup[] = pkgGroups.map((g) => {
       const pkg = g.schedule_packages || {};
       const grpMembers: EnrichedMember[] = (members || [])
         .filter(m => m.group_id === g.id)
@@ -408,7 +360,7 @@ const GroupAttendanceManager = ({
 
     if (pkgGroups) {
       const DAY_NAMES_MAP = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      const mapped: Group[] = pkgGroups.map((g: any) => {
+      const mapped: Group[] = pkgGroups.map((g) => {
         const pkg = g.schedule_packages || {};
         return {
           id: g.id,
@@ -428,23 +380,23 @@ const GroupAttendanceManager = ({
   // Fetch available days from schedule_packages + time windows from schedule_options
   useEffect(() => {
     supabase
-      .from("schedule_packages" as any)
+      .from("schedule_packages")
       .select("day_of_week")
       .eq("is_active", true)
       .then(({ data }) => {
-        const rows = (data as any[]) ?? [];
-        const uniqueDays = [...new Set(rows.map((r: any) => r.day_of_week as number))].sort();
+        const rows = data ?? [];
+        const uniqueDays = [...new Set(rows.map((r) => r.day_of_week))].sort();
         setAdminWeekdays(uniqueDays.map(n => DAY_NAMES[n]));
       });
     supabase
-      .from("schedule_options" as any)
+      .from("schedule_options")
       .select("label, sort_order")
       .eq("is_active", true)
       .eq("category", "time_window")
       .order("sort_order")
       .then(({ data }) => {
-        const rows = (data as any[]) ?? [];
-        setAdminTimes(rows.map(r => r.label as string));
+        const rows = data ?? [];
+        setAdminTimes(rows.map(r => r.label));
       });
   }, []);
 
@@ -464,10 +416,10 @@ const GroupAttendanceManager = ({
       .eq("id", selectedGroup)
       .maybeSingle()
       .then(({ data }) => {
-        if (data && (data as any).schedule_packages) {
-          const pkg = (data as any).schedule_packages;
+        if (data && data.schedule_packages) {
+          const pkg = data.schedule_packages;
           setGroupPackageInfo({
-            package_id: (data as any).package_id,
+            package_id: data.package_id,
             day_of_week: pkg.day_of_week,
             start_time: pkg.start_time,
             timezone: pkg.timezone,
@@ -528,17 +480,17 @@ const GroupAttendanceManager = ({
       return;
     }
 
-    const userIds = rows.map((r: any) => r.user_id);
+    const userIds = rows.map((r) => r.user_id);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, name, email, avatar_url")
       .in("user_id", userIds);
 
     const profileMap: Record<string, { name: string; email: string; avatar_url: string }> = {};
-    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = { name: p.name, email: p.email, avatar_url: p.avatar_url || "" }; });
+    (profiles || []).forEach((p) => { profileMap[p.user_id] = { name: p.name, email: p.email, avatar_url: p.avatar_url || "" }; });
 
     setAttendanceRows(
-      (rows as any[]).map((r) => ({
+      rows.map((r) => ({
         ...r,
         id: `${r.session_id}__${r.user_id}`, // composite key
         source: "system",
@@ -571,7 +523,7 @@ const GroupAttendanceManager = ({
 
     const { data: session, error: sessionErr } = await supabase
       .from("pkg_group_sessions")
-      .insert({ group_id: selectedGroup, session_date: sessionDate } as any)
+      .insert({ group_id: selectedGroup, session_date: sessionDate })
       .select()
       .single();
 
@@ -595,13 +547,13 @@ const GroupAttendanceManager = ({
       .eq("member_status", "active");
 
     if (members && members.length > 0) {
-      const rows = members.map((m: any) => ({
-        session_id: (session as any).id,
+      const rows = members.map((m) => ({
+        session_id: session.id,
         user_id: m.user_id,
         status: "absent",
         admin_approved: false,
       }));
-      await supabase.from("pkg_attendance").insert(rows as any);
+      await supabase.from("pkg_attendance").insert(rows);
     }
 
     toast({ title: "Session created" });
@@ -611,7 +563,7 @@ const GroupAttendanceManager = ({
       .eq("group_id", selectedGroup)
       .order("session_date", { ascending: false });
     if (updatedSessions) setSessions(updatedSessions as Session[]);
-    setSelectedSession((session as any).id);
+    setSelectedSession(session.id);
     setCreating(false);
   };
 
@@ -621,7 +573,7 @@ const GroupAttendanceManager = ({
     const isPresent = newStatus === "present";
     const { error } = await supabase
       .from("pkg_attendance")
-      .update({ status: newStatus, admin_approved: isPresent } as any)
+      .update({ status: newStatus, admin_approved: isPresent })
       .eq("session_id", row.session_id)
       .eq("user_id", row.user_id);
     if (error) {
@@ -643,7 +595,7 @@ const GroupAttendanceManager = ({
     for (const row of toMark) {
       await supabase
         .from("pkg_attendance")
-        .update({ status: "present", admin_approved: true } as any)
+        .update({ status: "present", admin_approved: true })
         .eq("session_id", row.session_id)
         .eq("user_id", row.user_id);
     }
@@ -681,7 +633,7 @@ const GroupAttendanceManager = ({
         schedule_day: editDay || null,
         schedule_time: editTime || null,
         capacity: editCapacity ? parseInt(editCapacity) : null,
-      } as any)
+      })
       .eq("id", editingGroup.id);
 
     if (error) {
@@ -693,7 +645,7 @@ const GroupAttendanceManager = ({
     if (oldName !== editName.trim()) {
       await supabase
         .from("students")
-        .update({ group_name: editName.trim() } as any)
+        .update({ group_name: editName.trim() })
         .eq("group_name", oldName);
     }
 
@@ -701,13 +653,13 @@ const GroupAttendanceManager = ({
     const newCap = editCapacity ? parseInt(editCapacity) : null;
     const matchingPkg = enrichedGroups.find(pg => pg.name === oldName);
     if (matchingPkg) {
-      const pkgUpdate: any = { name: editName.trim() };
+      const pkgUpdate: { name: string; capacity?: number } = { name: editName.trim() };
       if (newCap != null) pkgUpdate.capacity = newCap;
       await supabase.from("pkg_groups").update(pkgUpdate).eq("id", matchingPkg.id);
 
       // Also sync capacity to schedule_packages
       if (newCap != null && matchingPkg.package_id) {
-        await supabase.from("schedule_packages").update({ capacity: newCap } as any).eq("id", matchingPkg.package_id);
+        await supabase.from("schedule_packages").update({ capacity: newCap }).eq("id", matchingPkg.package_id);
       }
     }
 
@@ -739,7 +691,7 @@ const GroupAttendanceManager = ({
       .eq("group_name", group.name)
       .order("full_name");
 
-    setGroupMembers((members || []).map((m: any) => ({
+    setGroupMembers((members || []).map((m) => ({
       student_id: m.id,
       full_name: m.full_name,
       email: m.email,
@@ -753,7 +705,7 @@ const GroupAttendanceManager = ({
       .or(`group_name.is.null,group_name.eq.,group_name.neq.${group.name}`)
       .order("full_name");
 
-    setAvailableStudents((allStudents || []).map((s: any) => ({
+    setAvailableStudents((allStudents || []).map((s) => ({
       student_id: s.id,
       full_name: s.full_name,
       email: s.email,
@@ -767,7 +719,7 @@ const GroupAttendanceManager = ({
     if (!managingGroup) return;
     const { error } = await supabase
       .from("students")
-      .update({ group_name: managingGroup.name } as any)
+      .update({ group_name: managingGroup.name })
       .eq("id", student.student_id);
 
     if (error) {
@@ -784,7 +736,7 @@ const GroupAttendanceManager = ({
     if (!managingGroup) return;
     const { error } = await supabase
       .from("students")
-      .update({ group_name: "" } as any)
+      .update({ group_name: "" })
       .eq("id", student.student_id);
 
     if (error) {
@@ -1091,8 +1043,8 @@ const GroupAttendanceManager = ({
                   const key = a.user_id;
                   if (!byUser[key]) {
                     byUser[key] = {
-                      name: (a as any).profiles?.name || "Unknown",
-                      email: (a as any).profiles?.email || "",
+                      name: a.profiles?.name || "Unknown",
+                      email: a.profiles?.email || "",
                       requests: [],
                     };
                   }

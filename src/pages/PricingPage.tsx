@@ -40,7 +40,7 @@ const faqs = [
 const FAQ = () => {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <section className="py-16 bg-muted/40">
+    <section className="py-20 md:py-28 bg-muted/40">
       <div className="container mx-auto px-4 max-w-2xl">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-2">
           Common Questions

@@ -117,11 +117,11 @@ export function StreakCalendar() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-orange-500" />
+            <Flame className="h-5 w-5 text-orange-500 dark:text-orange-400" />
             Activity Calendar
           </span>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="gap-1 text-orange-600 border-orange-300">
+            <Badge variant="outline" className="gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600">
               🔥 {currentStreak} day streak
             </Badge>
             {longestStreak > 0 && (
@@ -170,16 +170,18 @@ export function StreakCalendar() {
                     const dateStr = day.toISOString().split("T")[0];
                     const isToday = dateStr === today;
                     const isActive = activeDates.has(dateStr);
+                    const cellDelay = (wi * 7 + di) * 8;
                     return (
                       <div
                         key={di}
                         title={`${dateStr}${isActive ? " ✓ Active" : ""}`}
                         className={cn(
-                          "h-3.5 rounded-sm transition-all",
+                          "h-3.5 rounded-sm transition-all animate-cell-pop",
                           getColor(dateStr),
                           isToday && "ring-1 ring-primary ring-offset-1",
                           isActive && "opacity-100",
                         )}
+                        style={{ animationDelay: `${cellDelay}ms` }}
                       />
                     );
                   })}

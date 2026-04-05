@@ -236,7 +236,7 @@ serve(async (req) => {
         .eq("user_id", userId);
 
       const enrollmentId = newEnrollment?.id;
-      console.log(`Enrollment created for user ${userId}: ${plan.classesIncluded} classes, $${actualAmount}, id: ${enrollmentId}`);
+      console.log(`Enrollment created: ${plan.classesIncluded} classes, $${actualAmount}, id: ${enrollmentId}`);
 
       // Auto-assign to slot/group
       if (enrollmentId) {
@@ -248,7 +248,7 @@ serve(async (req) => {
               _user_id: userId,
               _enrollment_id: enrollmentId,
             });
-            console.log(`Auto-assigned user ${userId} to slot ${slotId}`);
+            console.log(`Auto-assigned enrollment ${enrollmentId} to slot ${slotId}`);
           } else {
             // No slot available — create admin reminder
             await supabaseAdmin.from("admin_notifications").insert({
@@ -256,7 +256,7 @@ serve(async (req) => {
               type: "unassigned_paid_student",
               related_user_id: userId,
             });
-            console.log(`No slot match for user ${userId}, admin notification created`);
+            console.log(`No slot match for enrollment ${enrollmentId}, admin notification created`);
           }
         } catch (assignErr) {
           console.error("Auto-assign error:", assignErr);

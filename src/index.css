@@ -25,9 +25,9 @@ All colors MUST be HSL.
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 40%;
+    --muted-foreground: 0 0% 35%;
 
-    --accent: 60 100% 90%;
+    --accent: 60 60% 88%;
     --accent-foreground: 0 0% 0%;
 
     --destructive: 0 72% 50%;
@@ -43,7 +43,7 @@ All colors MUST be HSL.
     --sidebar-foreground: 0 0% 0%;
     --sidebar-primary: 60 100% 50%;
     --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 60 100% 90%;
+    --sidebar-accent: 60 60% 88%;
     --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 0 0% 85%;
     --sidebar-ring: 60 100% 50%;
@@ -56,11 +56,11 @@ All colors MUST be HSL.
 
     --sidebar: 0 0% 100%;
 
-    --font-sans: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
 
-    --font-serif: 'Source Serif Pro', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
-    --font-mono: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
 
@@ -94,7 +94,7 @@ All colors MUST be HSL.
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 60 100% 50%;
+    --primary: 50 100% 50%;
     --primary-foreground: 0 0% 0%;
 
     --secondary: 0 0% 90%;
@@ -111,18 +111,18 @@ All colors MUST be HSL.
 
     --border: 0 0% 25%;
     --input: 0 0% 25%;
-    --ring: 60 100% 50%;
+    --ring: 50 100% 50%;
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 60 100% 50%;
+    --sidebar-primary: 50 100% 50%;
     --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 60 100% 20%;
-    --sidebar-accent-foreground: 60 100% 50%;
+    --sidebar-accent: 50 100% 20%;
+    --sidebar-accent-foreground: 50 100% 50%;
     --sidebar-border: 0 0% 25%;
-    --sidebar-ring: 60 100% 50%;
-    --chart-1: 60 100% 50%;
-    --chart-2: 60 100% 60%;
-    --chart-3: 60 100% 40%;
+    --sidebar-ring: 50 100% 50%;
+    --chart-1: 50 100% 50%;
+    --chart-2: 50 100% 60%;
+    --chart-3: 50 100% 40%;
     --chart-4: 0 0% 80%;
     --chart-5: 0 0% 50%;
     --sidebar: 0 0% 10%;
@@ -265,4 +265,86 @@ All colors MUST be HSL.
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
   background: radial-gradient(circle, hsl(var(--primary) / 0.4), transparent 70%);
+}
+
+/* ── New animation keyframes ─────────────────────────────────────────── */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px) rotate(-3deg); }
+  30%       { transform: translateX(6px) rotate(3deg); }
+  45%       { transform: translateX(-4px) rotate(-2deg); }
+  60%       { transform: translateX(4px) rotate(2deg); }
+  75%       { transform: translateX(-2px); }
+}
+
+@keyframes slide-up {
+  0%   { opacity: 0; transform: translateY(100%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes level-up-flash {
+  0%   { opacity: 0; }
+  10%  { opacity: 0.85; }
+  80%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+@keyframes flash-bg {
+  0%   { background-color: hsl(var(--primary) / 0.25); }
+  100% { background-color: transparent; }
+}
+
+@keyframes cell-pop {
+  0%   { opacity: 0; transform: scale(0.4); }
+  70%  { transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bar-grow {
+  0%   { width: 0%; }
+  100% { width: var(--bar-target, 100%); }
+}
+
+@keyframes badge-burst {
+  0%   { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.6); }
+  50%  { box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
+
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s ease-out both;
+}
+
+.animate-level-up-flash {
+  animation: level-up-flash 2s ease-in-out forwards;
+}
+
+.animate-flash-bg {
+  animation: flash-bg 0.8s ease-out forwards;
+}
+
+.animate-cell-pop {
+  animation: cell-pop 0.3s ease-out both;
+}
+
+.animate-bar-grow {
+  animation: bar-grow 1s ease-out forwards;
+}
+
+.animate-badge-burst {
+  animation: badge-burst 0.6s ease-out forwards;
 }

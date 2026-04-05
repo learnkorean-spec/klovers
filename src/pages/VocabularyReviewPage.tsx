@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VocabularyReview } from "@/components/VocabularyReview";
@@ -9,7 +9,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { BookOpen, ArrowLeft, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
+import { useToast } from "@/hooks/use-toast";
+import { BADGES } from "@/constants/gamification";
 
 export function VocabularyReviewPage() {
   useSEO({
@@ -19,10 +23,28 @@ export function VocabularyReviewPage() {
   });
 
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const isAr = language === "ar";
   const { dueCards, loading: srsLoading, recordReview } = useSRS();
-  const { awardXp } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, clearLeaguePromotion, clearNewBadges } = useGamification();
+  const { toast: uiToast } = useToast();
   const [sessionStarted, setSessionStarted] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          uiToast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const handleReviewComplete = async (vocabId: number, quality: number) => {
     try {
@@ -43,22 +65,22 @@ export function VocabularyReviewPage() {
           <div className="mb-8">
             <Button variant="ghost" onClick={() => navigate("/textbook")} className="mb-4 -ml-2">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Textbook
+              {isAr ? "العودة للكتاب" : "Back to Textbook"}
             </Button>
             <div className="flex items-center gap-3 mb-2">
               <BookOpen className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground">Vocabulary Review</h1>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">{isAr ? "مراجعة المفردات" : "Vocabulary Review"}</h1>
             </div>
-            <p className="text-muted-foreground">Master your vocabulary with spaced repetition</p>
+            <p className="text-muted-foreground">{isAr ? "أتقن مفرداتك بالتكرار المتباعد" : "Master your vocabulary with spaced repetition"}</p>
           </div>
 
           {/* Stats cards */}
           {!sessionStarted && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[
-                { label: "Due Today", value: dueCards.length, sub: "cards ready to review" },
-                { label: "Time Needed", value: Math.max(1, Math.ceil(dueCards.length / 20)), sub: "minutes (~20 cards/min)" },
-                { label: "XP Available", value: `${dueCards.length * 5}`, sub: "5 XP per card" },
+                { label: isAr ? "مطلوب اليوم" : "Due Today", value: dueCards.length, sub: isAr ? "بطاقات جاهزة للمراجعة" : "cards ready to review" },
+                { label: isAr ? "الوقت المطلوب" : "Time Needed", value: Math.max(1, Math.ceil(dueCards.length / 20)), sub: isAr ? "دقائق (~20 بطاقة/دقيقة)" : "minutes (~20 cards/min)" },
+                { label: isAr ? "XP متاحة" : "XP Available", value: `${dueCards.length * 5}`, sub: isAr ? "5 XP لكل بطاقة" : "5 XP per card" },
               ].map(({ label, value, sub }) => (
                 <Card key={label}>
                   <CardHeader className="pb-3">
@@ -135,6 +157,13 @@ export function VocabularyReviewPage() {
         </div>
       </main>
       <Footer />
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
     </div>
   );
 }

@@ -37,11 +37,11 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-700 border-blue-200",
-  listicle: "bg-green-100 text-green-700 border-green-200",
-  longform: "bg-purple-100 text-purple-700 border-purple-200",
-  news: "bg-red-100 text-red-700 border-red-200",
-  review: "bg-orange-100 text-orange-700 border-orange-200",
+  howto: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
+  listicle: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
+  longform: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
+  news: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
+  review: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
 };
 
 const BlogPage = () => {
@@ -111,10 +111,10 @@ const BlogPage = () => {
             <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
               {language === "ar" ? "📝 المدونة" : "📝 Blog"}
             </Badge>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
               {language === "ar" ? "مدونة K-Lovers" : "K-Lovers Blog"}
             </h1>
-            <p className="text-foreground/60 max-w-xl mx-auto text-lg leading-relaxed">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
               {language === "ar"
                 ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية."
                 : "Tips, guides, and insights for your Korean learning journey."}
@@ -244,7 +244,7 @@ const BlogPage = () => {
                         </div>
 
                         {/* Read more */}
-                        <div className="flex items-center gap-1 text-primary text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
+                        <div className="flex items-center gap-1 text-primary text-outlined text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
                           {language === "ar" ? "اقرأ المزيد" : "Read article"}
                           <ArrowRight className="h-4 w-4" />
                         </div>

@@ -47,11 +47,7 @@ interface RosterRow {
   admin_approved: boolean;
 }
 
-function formatTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ampm}`;
-}
+import { formatTime } from "@/lib/admin-utils";
 
 function formatDate(d: string) {
   const date = new Date(d + "T12:00:00");

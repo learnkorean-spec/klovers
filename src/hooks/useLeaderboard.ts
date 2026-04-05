@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,17 +27,15 @@ export function useLeaderboard(): LeaderboardData {
   const [currentUserStreakRank, setCurrentUserStreakRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [user?.id]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch all XP totals grouped by user
-      const { data: xpData } = await supabase
-        .from("student_xp")
-        .select("user_id, xp_earned");
+      // Use the xp_leaderboard view — already aggregated, sorted desc, limited to 50
+      const { data: xpViewData } = await supabase
+        .from("xp_leaderboard")
+        .select("user_id, name, avatar_url, total_xp");
 
       // Fetch top streaks
       const { data: streakData } = await supabase
@@ -47,66 +45,60 @@ export function useLeaderboard(): LeaderboardData {
         .order("current_streak", { ascending: false })
         .limit(20);
 
-      if (!xpData) { setLoading(false); return; }
+      // Build XP leaderboard from the view (already sorted, already has name/avatar)
+      const topXpRows = (xpViewData || []).slice(0, 10);
 
-      // Aggregate XP by user
-      const xpByUser: Record<string, number> = {};
-      xpData.forEach((r: any) => {
-        xpByUser[r.user_id] = (xpByUser[r.user_id] || 0) + (r.xp_earned || 0);
-      });
-
-      // Sort by XP descending, take top 10
-      const topXpUsers = Object.entries(xpByUser)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-        .map(([uid, xp]) => ({ user_id: uid, value: xp }));
-
-      // Get all unique user IDs needed
-      const streakUserIds = (streakData || []).slice(0, 10).map((r: any) => r.user_id);
-      const allUserIds = [...new Set([...topXpUsers.map(u => u.user_id), ...streakUserIds])];
-
-      // Fetch profiles for all those users
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, name, avatar_url")
-        .in("user_id", allUserIds);
-
-      const profileMap: Record<string, { name: string; avatar_url: string | null }> = {};
-      (profiles || []).forEach((p: any) => {
-        profileMap[p.user_id] = { name: p.name || "Anonymous", avatar_url: p.avatar_url };
-      });
-
-      // Build XP leaderboard
-      const xpBoard: LeaderboardEntry[] = topXpUsers.map((u, idx) => ({
-        user_id: u.user_id,
-        name: profileMap[u.user_id]?.name || "Anonymous",
-        avatar_url: profileMap[u.user_id]?.avatar_url || null,
-        value: u.value,
+      const xpBoard: LeaderboardEntry[] = topXpRows.map((r: any, idx: number) => ({
+        user_id: r.user_id,
+        name: r.name || "Anonymous",
+        avatar_url: r.avatar_url ?? null,
+        value: r.total_xp ?? 0,
         rank: idx + 1,
-        isCurrentUser: u.user_id === user?.id,
+        isCurrentUser: r.user_id === user?.id,
       }));
 
       setXpLeaderboard(xpBoard);
 
-      // Find current user's XP rank (among all users, not just top 10)
+      // Determine current user's XP rank within the full view result
       if (user?.id) {
-        const allSorted = Object.entries(xpByUser).sort(([, a], [, b]) => b - a);
-        const userXpRank = allSorted.findIndex(([uid]) => uid === user.id);
-        setCurrentUserXpRank(userXpRank >= 0 ? userXpRank + 1 : null);
+        const userXpIndex = (xpViewData || []).findIndex((r: any) => r.user_id === user.id);
+        setCurrentUserXpRank(userXpIndex >= 0 ? userXpIndex + 1 : null);
       }
 
-      // Build streak leaderboard
+      // Build streak leaderboard — fetch profiles for streak users not already in the XP view
       if (streakData) {
+        // Build a profile map from the XP view data we already have
+        const profileMap: Record<string, { name: string; avatar_url: string | null }> = {};
+        (xpViewData || []).forEach((r: any) => {
+          profileMap[r.user_id] = { name: r.name || "Anonymous", avatar_url: r.avatar_url ?? null };
+        });
+
+        // Find streak user IDs whose profiles aren't already in the XP view
+        const streakUserIds = streakData.slice(0, 10).map((r: any) => r.user_id);
+        const missingIds = streakUserIds.filter((id: string) => !profileMap[id]);
+
+        if (missingIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, name, avatar_url")
+            .in("user_id", missingIds);
+
+          (profiles || []).forEach((p: any) => {
+            profileMap[p.user_id] = { name: p.name || "Anonymous", avatar_url: p.avatar_url ?? null };
+          });
+        }
+
         const streakBoard: LeaderboardEntry[] = streakData
           .slice(0, 10)
           .map((r: any, idx: number) => ({
             user_id: r.user_id,
             name: profileMap[r.user_id]?.name || "Anonymous",
-            avatar_url: profileMap[r.user_id]?.avatar_url || null,
+            avatar_url: profileMap[r.user_id]?.avatar_url ?? null,
             value: r.current_streak,
             rank: idx + 1,
             isCurrentUser: r.user_id === user?.id,
           }));
+
         setStreakLeaderboard(streakBoard);
 
         if (user?.id) {
@@ -119,7 +111,34 @@ export function useLeaderboard(): LeaderboardData {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  const debouncedFetch = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { fetchLeaderboard(); }, 2000);
+  }, [fetchLeaderboard]);
+
+  // Initial fetch and re-fetch when the current user changes
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  // Realtime subscription: re-fetch (debounced) on any INSERT into student_xp
+  useEffect(() => {
+    const channel = supabase
+      .channel("leaderboard-student-xp")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "student_xp" },
+        () => { debouncedFetch(); }
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [debouncedFetch]);
 
   return {
     xpLeaderboard,

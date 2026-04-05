@@ -14,12 +14,7 @@ import { useSEO } from "@/hooks/useSEO";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-function formatTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
-}
+import { formatTime } from "@/lib/admin-utils";
 
 interface PackageDetails {
   id: string;

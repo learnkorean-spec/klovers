@@ -36,7 +36,7 @@ const WhyKLovers = () => {
                 className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/50"
               >
                 <CardContent className="p-6 flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-black/25 shadow-sm">
                     <Icon className="h-6 w-6 text-primary-foreground transition-colors" />
                   </div>
                   <div>

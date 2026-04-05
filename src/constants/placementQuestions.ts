@@ -1,102 +1,332 @@
 /**
- * 40 multiple-choice placement test questions.
+ * 20 multiple-choice placement test questions.
  * Gradual difficulty: Foundation → TOPIK 6.
  * Sections: Vocabulary, Grammar, Reading.
+ * 4 questions per level band × 5 bands = 20 questions.
+ *
+ * TOPIK alignment:
+ *  Q1–Q4   Foundation (Hangul / A0)
+ *  Q5–Q8   TOPIK 1    (A1)
+ *  Q9–Q12  TOPIK 2    (A2)
+ *  Q13–Q16 TOPIK 3–4  (B1–B2)
+ *  Q17–Q20 TOPIK 5–6  (C1–C2)
  */
 
 export interface PlacementQuestion {
   id: number;
   section: "Vocabulary" | "Grammar" | "Reading";
+  level: string;
+  difficulty: 1 | 2 | 3 | 4 | 5;
   question: string;
   options: string[];
   correctIndex: number;
+  explanation: string;
 }
 
 export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
-  // ─── Foundation (Q1–Q6) ─────────────────────────────────
-  { id: 1, section: "Vocabulary", question: "What is the Korean writing system called?", options: ["Kanji", "Hangul", "Hiragana", "Pinyin"], correctIndex: 1 },
-  { id: 2, section: "Vocabulary", question: "Which of these is the Korean vowel ㅏ romanized as?", options: ["o", "u", "a", "e"], correctIndex: 2 },
-  { id: 3, section: "Grammar", question: "How many basic vowels does Hangul have?", options: ["10", "14", "21", "8"], correctIndex: 0 },
-  { id: 4, section: "Vocabulary", question: "What does 안녕하세요 mean?", options: ["Thank you", "Goodbye", "Hello", "Sorry"], correctIndex: 2 },
-  { id: 5, section: "Reading", question: "Which syllable block reads 'ka'?", options: ["가", "나", "다", "라"], correctIndex: 0 },
-  { id: 6, section: "Vocabulary", question: "What does 감사합니다 mean?", options: ["I'm sorry", "Thank you", "Goodbye", "Please"], correctIndex: 1 },
+  // ─── Foundation / A0 (Q1–Q4) ────────────────────────────
+  {
+    id: 1,
+    section: "Vocabulary",
+    level: "Foundation",
+    difficulty: 1,
+    question: "What does 안녕하세요 mean?",
+    options: ["Thank you", "Goodbye", "Hello", "Sorry"],
+    correctIndex: 2,
+    explanation: "안녕하세요 is the standard formal greeting used any time of day. The casual form is 안녕, and goodbye is 안녕히 가세요.",
+  },
+  {
+    id: 2,
+    section: "Vocabulary",
+    level: "Foundation",
+    difficulty: 1,
+    question: "What does 감사합니다 mean?",
+    options: ["I'm sorry", "Thank you", "Goodbye", "Please"],
+    correctIndex: 1,
+    explanation: "감사합니다 is the formal 'thank you'. The more casual form is 고마워요. 미안합니다 = I'm sorry.",
+  },
+  {
+    id: 3,
+    section: "Grammar",
+    level: "Foundation",
+    difficulty: 1,
+    question: "How many basic vowels does Hangul have?",
+    options: ["10", "14", "21", "8"],
+    correctIndex: 0,
+    explanation: "Hangul has 10 basic vowels (ㅏ ㅑ ㅓ ㅕ ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ) and 14 basic consonants, which combine to form syllable blocks.",
+  },
+  {
+    id: 4,
+    section: "Reading",
+    level: "Foundation",
+    difficulty: 1,
+    question: "Which syllable block reads 'ka'?",
+    options: ["가", "나", "다", "라"],
+    correctIndex: 0,
+    explanation: "가 = ㄱ (g/k) + ㅏ (a). 나 = na, 다 = da, 라 = ra/la. ㄱ sounds like 'k' at the start of a syllable.",
+  },
 
-  // ─── Level 1 / TOPIK 1 / A1 (Q7–Q13) ──────────────────
-  { id: 7, section: "Vocabulary", question: "What is 물 in English?", options: ["Fire", "Water", "Earth", "Air"], correctIndex: 1 },
-  { id: 8, section: "Grammar", question: "Which particle marks the subject of a sentence?", options: ["을/를", "이/가", "에", "도"], correctIndex: 1 },
-  { id: 9, section: "Vocabulary", question: "What does 학생 mean?", options: ["Teacher", "Student", "Doctor", "Friend"], correctIndex: 1 },
-  { id: 10, section: "Grammar", question: "Complete: 저는 학생___.", options: ["입니다", "합니다", "있다", "없다"], correctIndex: 0 },
-  { id: 11, section: "Reading", question: "'나는 사과를 먹습니다' — What is being eaten?", options: ["Bread", "Rice", "Apple", "Banana"], correctIndex: 2 },
-  { id: 12, section: "Vocabulary", question: "What does 집 mean?", options: ["School", "House", "Office", "Park"], correctIndex: 1 },
-  { id: 13, section: "Grammar", question: "Which is the correct way to say 'I go'?", options: ["저는 갑니다", "저는 옵니다", "저는 먹습니다", "저는 합니다"], correctIndex: 0 },
+  // ─── TOPIK 1 / A1 (Q5–Q8) ───────────────────────────────
+  {
+    id: 5,
+    section: "Vocabulary",
+    level: "TOPIK 1",
+    difficulty: 2,
+    question: "What does 학생 mean?",
+    options: ["Teacher", "Student", "Doctor", "Friend"],
+    correctIndex: 1,
+    explanation: "학생 (學生) = study (학) + person (생). Teacher is 선생님, doctor is 의사, friend is 친구.",
+  },
+  {
+    id: 6,
+    section: "Grammar",
+    level: "TOPIK 1",
+    difficulty: 2,
+    question: "Which particle marks the subject of a sentence?",
+    options: ["을/를", "이/가", "에", "도"],
+    correctIndex: 1,
+    explanation: "이/가 is the subject particle. 을/를 marks the direct object, 에 marks location or time, 도 means 'also/too'.",
+  },
+  {
+    id: 7,
+    section: "Grammar",
+    level: "TOPIK 1",
+    difficulty: 2,
+    question: "Complete: 저는 학생___.",
+    options: ["입니다", "합니다", "있다", "없다"],
+    correctIndex: 0,
+    explanation: "입니다 is the formal copula ('to be'). 저는 학생입니다 = I am a student. 합니다 = do, 있다 = exist/have, 없다 = not exist/don't have.",
+  },
+  {
+    id: 8,
+    section: "Reading",
+    level: "TOPIK 1",
+    difficulty: 2,
+    question: "'나는 사과를 먹습니다' — What is being eaten?",
+    options: ["Bread", "Rice", "Apple", "Banana"],
+    correctIndex: 2,
+    explanation: "사과 = apple. 먹습니다 = eat (formal). 를 is the object particle. 빵 = bread, 밥 = rice, 바나나 = banana.",
+  },
 
-  // ─── Level 2 / TOPIK 2 / A2 (Q14–Q20) ──────────────────
-  { id: 14, section: "Grammar", question: "What does the ending -고 싶다 express?", options: ["Obligation", "Want/desire", "Ability", "Permission"], correctIndex: 1 },
-  { id: 15, section: "Vocabulary", question: "What does 병원 mean?", options: ["Bank", "School", "Hospital", "Library"], correctIndex: 2 },
-  { id: 16, section: "Grammar", question: "Choose the correct connector: 비가 오___ 우산을 가져가세요.", options: ["고", "면", "지만", "니까"], correctIndex: 3 },
-  { id: 17, section: "Reading", question: "'어제 친구를 만났습니다' — When did the meeting happen?", options: ["Today", "Tomorrow", "Yesterday", "Last week"], correctIndex: 2 },
-  { id: 18, section: "Vocabulary", question: "What is the meaning of 날씨?", options: ["Weather", "News", "Time", "Place"], correctIndex: 0 },
-  { id: 19, section: "Grammar", question: "Which ending makes a polite request?", options: ["-ㅂ시다", "-아/어 주세요", "-겠습니다", "-습니다"], correctIndex: 1 },
-  { id: 20, section: "Reading", question: "'주말에 뭐 할 거예요?' — What is this question asking about?", options: ["Past event", "Weekend plans", "Daily routine", "Current activity"], correctIndex: 1 },
+  // ─── TOPIK 2 / A2 (Q9–Q12) ──────────────────────────────
+  {
+    id: 9,
+    section: "Grammar",
+    level: "TOPIK 2",
+    difficulty: 3,
+    question: "What does the ending -고 싶다 express?",
+    options: ["Obligation", "Want / desire", "Ability", "Permission"],
+    correctIndex: 1,
+    explanation: "Verb stem + -고 싶다 = want to do X. 가고 싶다 = I want to go. Obligation = -아야/어야 하다, ability = -(으)ㄹ 수 있다.",
+  },
+  {
+    id: 10,
+    section: "Grammar",
+    level: "TOPIK 2",
+    difficulty: 3,
+    question: "Choose the correct connector: 비가 오___ 우산을 가져가세요.",
+    options: ["고", "면", "지만", "니까"],
+    correctIndex: 3,
+    explanation: "-니까 gives a reason that motivates a command or suggestion. 비가 오니까 = Because it's raining (so take an umbrella). -면 = if, -지만 = but, -고 = and/then.",
+  },
+  {
+    id: 11,
+    section: "Reading",
+    level: "TOPIK 2",
+    difficulty: 3,
+    question: "'어제 친구를 만났습니다' — When did the meeting happen?",
+    options: ["Today", "Tomorrow", "Yesterday", "Last week"],
+    correctIndex: 2,
+    explanation: "어제 = yesterday. 오늘 = today, 내일 = tomorrow, 지난주 = last week. 만났습니다 is the past tense of 만나다 (to meet).",
+  },
+  {
+    id: 12,
+    section: "Grammar",
+    level: "TOPIK 2",
+    difficulty: 3,
+    question: "Which ending makes a polite request?",
+    options: ["-ㅂ시다", "-아/어 주세요", "-겠습니다", "-습니다"],
+    correctIndex: 1,
+    explanation: "-아/어 주세요 politely asks someone to do something for you. -ㅂ시다 proposes a joint action ('let's'). -겠습니다 expresses intention.",
+  },
 
-  // ─── Level 3 / TOPIK 3 / B1 (Q21–Q26) ──────────────────
-  { id: 21, section: "Grammar", question: "What does -(으)ㄹ 수 있다 express?", options: ["Must", "Should", "Can / is able to", "Want to"], correctIndex: 2 },
-  { id: 22, section: "Vocabulary", question: "What does 경험 mean?", options: ["Experiment", "Experience", "Competition", "Education"], correctIndex: 1 },
-  { id: 23, section: "Grammar", question: "Which grammar connects a reason to result? '배가 아프___ 약을 먹었어요.'", options: ["-아서/-어서", "-지만", "-고", "-면서"], correctIndex: 0 },
-  { id: 24, section: "Reading", question: "'환경을 보호하기 위해 노력해야 합니다' — The sentence is about:", options: ["Health care", "Environmental protection", "Economic growth", "Education reform"], correctIndex: 1 },
-  { id: 25, section: "Vocabulary", question: "What does 약속 mean?", options: ["Medicine", "Promise / appointment", "Weakness", "Key"], correctIndex: 1 },
-  { id: 26, section: "Grammar", question: "What does -는 동안 mean?", options: ["After", "Before", "During / while", "Because"], correctIndex: 2 },
+  // ─── TOPIK 3–4 / B1–B2 (Q13–Q16) ───────────────────────
+  {
+    id: 13,
+    section: "Grammar",
+    level: "TOPIK 3–4",
+    difficulty: 4,
+    question: "What does -(으)ㄹ 수 있다 express?",
+    options: ["Must", "Should", "Can / is able to", "Want to"],
+    correctIndex: 2,
+    explanation: "-(으)ㄹ 수 있다 = can / to be able to. Negate with 없다: -(으)ㄹ 수 없다 = cannot. Must = -아야/어야 하다.",
+  },
+  {
+    id: 14,
+    section: "Vocabulary",
+    level: "TOPIK 3–4",
+    difficulty: 4,
+    question: "What does 경험 mean?",
+    options: ["Experiment", "Experience", "Competition", "Education"],
+    correctIndex: 1,
+    explanation: "경험 (經驗) = experience. 실험 = experiment, 경쟁 = competition, 교육 = education. A common TOPIK vocabulary target.",
+  },
+  {
+    id: 15,
+    section: "Reading",
+    level: "TOPIK 3–4",
+    difficulty: 4,
+    question: "'환경을 보호하기 위해 노력해야 합니다' — The sentence is about:",
+    options: ["Health care", "Environmental protection", "Economic growth", "Education reform"],
+    correctIndex: 1,
+    explanation: "환경 = environment, 보호하다 = to protect, -기 위해 = in order to. The sentence means: 'We must make efforts to protect the environment.'",
+  },
+  {
+    id: 16,
+    section: "Grammar",
+    level: "TOPIK 3–4",
+    difficulty: 4,
+    question: "What nuance does -더라고요 convey?",
+    options: ["Hearsay", "Personal past observation", "Future intention", "Suggestion"],
+    correctIndex: 1,
+    explanation: "-더라고요 reports something the speaker directly observed or experienced in the past. It cannot be used for hearsay (use -다고 하더라고요 for that) or about yourself.",
+  },
 
-  // ─── Level 4 / TOPIK 4 / B2 (Q27–Q33) ──────────────────
-  { id: 27, section: "Grammar", question: "What nuance does -더라고요 convey?", options: ["Hearsay", "Personal past observation", "Future intention", "Suggestion"], correctIndex: 1 },
-  { id: 28, section: "Reading", question: "'그 문제에 대해 깊이 생각해 볼 필요가 있습니다' — What is suggested?", options: ["Ignoring the problem", "Thinking deeply about the issue", "Asking someone else", "Writing a report"], correctIndex: 1 },
-  { id: 29, section: "Vocabulary", question: "What does 영향 mean?", options: ["Nutrition", "Influence", "Shadow", "Reflection"], correctIndex: 1 },
-  { id: 30, section: "Grammar", question: "What does -(으)ㄹ 뻔했다 mean?", options: ["Definitely did", "Almost did", "Never did", "Will do"], correctIndex: 1 },
-  { id: 31, section: "Vocabulary", question: "What does 논쟁 mean?", options: ["Agreement", "Debate / controversy", "Negotiation", "Decision"], correctIndex: 1 },
-  { id: 32, section: "Grammar", question: "Which is correct? '시간이 없는 ___에 일을 다 끝냈어요.'", options: ["데", "것", "때", "중"], correctIndex: 0 },
-  { id: 33, section: "Reading", question: "'사회적 불평등을 해소하기 위한 정책이 필요하다' — The topic is:", options: ["Technology innovation", "Social inequality", "Climate change", "Cultural exchange"], correctIndex: 1 },
-
-  // ─── Level 5–6 / TOPIK 5–6 / C1–C2 (Q34–Q40) ──────────
-  { id: 34, section: "Grammar", question: "What does -는 바람에 express?", options: ["Despite", "Unintended negative cause", "Purpose", "Condition"], correctIndex: 1 },
-  { id: 35, section: "Vocabulary", question: "What does 모순 mean?", options: ["Harmony", "Contradiction", "Tradition", "Evolution"], correctIndex: 1 },
-  { id: 36, section: "Reading", question: "'인공지능의 발전이 인간의 노동 시장에 미치는 영향은 다각적으로 분석되어야 한다' — The sentence discusses:", options: ["AI ethics only", "Multi-faceted analysis of AI's impact on labor", "Robot manufacturing", "Internet security"], correctIndex: 1 },
-  { id: 37, section: "Grammar", question: "What is the function of -(으)ㄴ/는 셈이다?", options: ["Expressing regret", "It amounts to / practically speaking", "Making a promise", "Showing surprise"], correctIndex: 1 },
-  { id: 38, section: "Vocabulary", question: "What does 통찰력 mean?", options: ["Patience", "Insight", "Creativity", "Courage"], correctIndex: 1 },
-  { id: 39, section: "Grammar", question: "What does -기는커녕 express?", options: ["Not only… but also", "Far from (doing something), let alone", "In order to", "As long as"], correctIndex: 1 },
-  { id: 40, section: "Reading", question: "'문화적 다양성을 존중하는 사회는 창의적 혁신을 이끌어낼 가능성이 높다' — The passage argues that:", options: ["Uniformity drives innovation", "Cultural diversity fosters creative innovation", "Innovation requires isolation", "Tradition opposes creativity"], correctIndex: 1 },
+  // ─── TOPIK 5–6 / C1–C2 (Q17–Q20) ───────────────────────
+  {
+    id: 17,
+    section: "Grammar",
+    level: "TOPIK 5–6",
+    difficulty: 5,
+    question: "What does -는 바람에 express?",
+    options: ["Despite", "Unintended negative cause", "Purpose", "Condition"],
+    correctIndex: 1,
+    explanation: "-는 바람에 describes an unintended negative cause that led to a bad result. It always pairs with an unfavourable outcome and cannot be used for positive situations.",
+  },
+  {
+    id: 18,
+    section: "Vocabulary",
+    level: "TOPIK 5–6",
+    difficulty: 5,
+    question: "What does 모순 mean?",
+    options: ["Harmony", "Contradiction", "Tradition", "Evolution"],
+    correctIndex: 1,
+    explanation: "모순 (矛盾) originates from a Chinese fable about a perfectly sharp spear (矛) and a perfectly impenetrable shield (盾) — an impossible contradiction.",
+  },
+  {
+    id: 19,
+    section: "Reading",
+    level: "TOPIK 5–6",
+    difficulty: 5,
+    question: "'인공지능의 발전이 인간의 노동 시장에 미치는 영향은 다각적으로 분석되어야 한다' — The sentence discusses:",
+    options: ["AI ethics only", "Multi-faceted analysis of AI's impact on labor", "Robot manufacturing", "Internet security"],
+    correctIndex: 1,
+    explanation: "다각적으로 = from multiple angles / multi-faceted. 노동 시장 = labour market. 미치는 영향 = the influence exerted. The sentence calls for comprehensive analysis.",
+  },
+  {
+    id: 20,
+    section: "Grammar",
+    level: "TOPIK 5–6",
+    difficulty: 5,
+    question: "What does -기는커녕 express?",
+    options: ["Not only… but also", "Far from (doing something), let alone", "In order to", "As long as"],
+    correctIndex: 1,
+    explanation: "-기는커녕 = far from X, not even Y. Stronger and more dismissive than -뿐만 아니라. Example: 돕기는커녕 방해했다 = Far from helping, he got in the way.",
+  },
 ];
 
 export interface PlacementResult {
   score: number;
   levelKey: string;
   levelLabel: string;
+  /** How close the score is to the band boundary */
+  confidence: "solid" | "borderline-up" | "borderline-down";
+  sectionScores: { Vocabulary: number; Grammar: number; Reading: number };
 }
 
+/**
+ * Score brackets (out of 20 — 4 questions × 5 TOPIK bands):
+ *  0–4   → Foundation (A0)
+ *  5–8   → Level 1    (A1 / TOPIK 1)
+ *  9–12  → Level 2    (A2 / TOPIK 2)
+ *  13–16 → Level 3–4  (B1–B2 / TOPIK 3–4)
+ *  17–20 → Level 5–6  (C1–C2 / TOPIK 5–6)
+ */
 export function computePlacementResult(answers: Record<number, number>): PlacementResult {
   let score = 0;
+  const sectionScores = { Vocabulary: 0, Grammar: 0, Reading: 0 };
+
   for (const q of PLACEMENT_QUESTIONS) {
-    if (answers[q.id] === q.correctIndex) score++;
+    if (answers[q.id] === q.correctIndex) {
+      score++;
+      sectionScores[q.section]++;
+    }
   }
 
   let levelKey: string;
   let levelLabel: string;
+  let bandMin: number;
+  let bandMax: number;
 
-  if (score <= 10) {
-    levelKey = "foundation";
-    levelLabel = "Hangul Foundation";
-  } else if (score <= 18) {
-    levelKey = "level_1";
-    levelLabel = "Level 1 (A1 / TOPIK 1)";
-  } else if (score <= 25) {
-    levelKey = "level_2";
-    levelLabel = "Level 2 (A2 / TOPIK 2)";
-  } else if (score <= 33) {
-    levelKey = "level_3";
-    levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)";
+  if (score <= 4) {
+    levelKey = "foundation"; levelLabel = "Hangul Foundation"; bandMin = 0; bandMax = 4;
+  } else if (score <= 8) {
+    levelKey = "level_1"; levelLabel = "Level 1 (A1 / TOPIK 1)"; bandMin = 5; bandMax = 8;
+  } else if (score <= 12) {
+    levelKey = "level_2"; levelLabel = "Level 2 (A2 / TOPIK 2)"; bandMin = 9; bandMax = 12;
+  } else if (score <= 16) {
+    levelKey = "level_3"; levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)"; bandMin = 13; bandMax = 16;
   } else {
-    levelKey = "level_5";
-    levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)";
+    levelKey = "level_5"; levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)"; bandMin = 17; bandMax = 20;
   }
 
-  return { score, levelKey, levelLabel };
+  // Within 1 of the upper boundary → close to the next level
+  // Within 1 of the lower boundary → on the edge of the previous level
+  const confidence: PlacementResult["confidence"] =
+    score >= bandMax - 1 && bandMax < 20 ? "borderline-up"
+    : score <= bandMin + 1 && bandMin > 0  ? "borderline-down"
+    : "solid";
+
+  return { score, levelKey, levelLabel, confidence, sectionScores };
 }
+
+// ─── Study Roadmaps ────────────────────────────────────────────────────────
+
+export interface RoadmapWeek {
+  week: number;
+  title: string;
+  tasks: string[];
+}
+
+export const STUDY_ROADMAPS: Record<string, RoadmapWeek[]> = {
+  foundation: [
+    { week: 1, title: "Master the Korean alphabet", tasks: ["Learn 14 basic consonants (ㄱ ㄴ ㄷ ㄹ …)", "Learn 10 basic vowels (ㅏ ㅑ ㅓ ㅕ …)", "Practice reading syllable blocks aloud"] },
+    { week: 2, title: "Pronunciation & syllable rules", tasks: ["Understand batchim (final consonants)", "Practice liaison & nasalisation rules", "Read simple syllables at speed (가나다라…)"] },
+    { week: 3, title: "Core greetings & self-introduction", tasks: ["안녕하세요 · 감사합니다 · 미안합니다", "Introduce yourself: 저는 [name]입니다", "Numbers 1–10 in both counting systems"] },
+    { week: 4, title: "Everyday basics", tasks: ["Days of the week & months", "Common classroom phrases", "Start Klovers Foundation class"] },
+  ],
+  level_1: [
+    { week: 1, title: "Sentence structure & particles", tasks: ["Subject particle 이/가, object particle 을/를", "Topic particle 은/는 vs subject particle", "Build 5 simple Subject–Verb sentences daily"] },
+    { week: 2, title: "Core verbs & adjectives", tasks: ["가다·오다·먹다·마시다·보다", "좋다·싫다·크다·작다 (descriptive verbs)", "Conjugate into formal polite -ㅂ니다/습니다"] },
+    { week: 3, title: "Present, past & future tense", tasks: ["Present: -아요/어요", "Past: -았어요/었어요", "Future: -(으)ㄹ 거예요"] },
+    { week: 4, title: "Daily conversation practice", tasks: ["Ordering food at a café", "Asking for prices & locations", "Start Klovers Level 1 class"] },
+  ],
+  level_2: [
+    { week: 1, title: "Connectors & reasons", tasks: ["Reason: -아서/어서 and -니까", "Sequence: -고 (and then)", "Practice writing 5 linked sentences per day"] },
+    { week: 2, title: "Expressing desire & ability", tasks: ["-고 싶다 (want to)", "-(으)ㄹ 수 있다/없다 (can/cannot)", "Polite requests: -아/어 주세요"] },
+    { week: 3, title: "Conditionals & time", tasks: ["If/when: -(으)면", "While: -는 동안", "Duration: -동안 vs -후에"] },
+    { week: 4, title: "Reading short Korean texts", tasks: ["Read one Korean children's book passage weekly", "Expand vocabulary to 500+ words", "Start Klovers Level 2 class"] },
+  ],
+  level_3: [
+    { week: 1, title: "Advanced grammar patterns", tasks: ["-더라고요 (past personal observation)", "-는 바람에 (unintended negative cause)", "-(으)ㄹ 뻔했다 (almost did)"] },
+    { week: 2, title: "Indirect speech & nuance", tasks: ["Indirect speech: -다고 하다 / -라고 하다", "Quoted commands: -(으)라고 하다", "Distinguish formal & informal registers"] },
+    { week: 3, title: "Intermediate reading comprehension", tasks: ["Read Korean news headlines daily", "Summarise articles in Korean (3–5 sentences)", "Learn 20 new TOPIK 3 vocabulary words per week"] },
+    { week: 4, title: "Natural speech & idioms", tasks: ["Watch 1 Korean drama episode with Korean subtitles", "Shadow native speakers for pronunciation", "Start Klovers Level 3–4 class"] },
+  ],
+  level_5: [
+    { week: 1, title: "Advanced grammar nuance", tasks: ["-(으)ㄴ/는 셈이다 (amounts to / practically)", "-기는커녕 (far from, let alone)", "모순·영향·논쟁 — C1 vocabulary lists"] },
+    { week: 2, title: "Academic & professional Korean", tasks: ["Write a 200-word opinion paragraph in Korean", "Learn formal writing endings (-ㄴ바, -인즉)", "Study Korean business email patterns"] },
+    { week: 3, title: "TOPIK II writing practice", tasks: ["Practice 200-word descriptive essays (설명문)", "Practice 700-word argumentative essays (논설문)", "Review past TOPIK II writing prompts"] },
+    { week: 4, title: "Mastery & refinement", tasks: ["Read Korean newspaper editorials & opinion columns", "Maintain a Korean journal (한국어 일기)", "Start Klovers Level 5–6 advanced class"] },
+  ],
+};

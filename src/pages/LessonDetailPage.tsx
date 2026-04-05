@@ -18,7 +18,7 @@ import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } f
 import { getWorldForLesson } from "@/constants/worlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MissionCompleteOverlay, XpFloatAnimation } from "@/components/XpAnimation";
+import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
 import { Progress } from "@/components/ui/progress";
 
 interface Lesson {
@@ -45,7 +45,7 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userId, progress, league, markSectionDone } = useGamification();
+  const { userId, progress, league, markSectionDone, awardXp, awardBadge, streakCelebration, clearStreakCelebration } = useGamification();
   const { speakKorean, isSpeaking } = useSpeech();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
@@ -125,7 +125,7 @@ const LessonDetailPage = () => {
     }
   };
 
-  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done") => {
+  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" | "writing_done") => {
     if (!lesson || !userId) {
       toast({ title: t("textbook.signInRequired"), description: t("textbook.signInRequiredDesc"), variant: "destructive" });
       return;
@@ -148,12 +148,21 @@ const LessonDetailPage = () => {
     setXpFloat(xpMap[section]);
     setTimeout(() => setXpFloat(null), 1600);
 
+    // Award perfect_exercise badge if all exercise answers were correct
+    if (section === "exercises_done" && exercises.length > 0 && correctCount === exercises.length) {
+      await awardBadge("perfect_exercise");
+    }
+
     // Check if chapter just completed
-    const updatedLp = { ...lp, [section]: true };
     const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
       .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
 
     if (allDone) {
+      // Boss challenge: award badge + 25 XP bonus
+      if (isBossChallenge(lesson.sort_order)) {
+        await awardBadge("boss_slayer");
+        await awardXp(lesson.id, "bonus");
+      }
       setTimeout(() => setShowMissionComplete(true), 800);
     }
 
@@ -161,7 +170,7 @@ const LessonDetailPage = () => {
       title: `+${xpMap[section]} XP earned! ⚡`,
       description: getRandomMotivation(),
     });
-  }, [lesson, userId, progress, markSectionDone, toast, t]);
+  }, [lesson, userId, progress, markSectionDone, awardXp, awardBadge, exercises, correctCount, toast, t]);
 
   const toggleFlip = (id: string) => {
     setFlippedCards((prev) => {
@@ -204,7 +213,7 @@ const LessonDetailPage = () => {
         <Header />
         <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-primary text-outlined underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -229,7 +238,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary text-outlined underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -259,6 +268,7 @@ const LessonDetailPage = () => {
 
       {/* XP Float Animation */}
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
 
       {/* Mission Complete Overlay */}
       {showMissionComplete && (
@@ -528,7 +538,7 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold border border-black/25">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
@@ -754,7 +764,7 @@ const LessonDetailPage = () => {
               lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
               onComplete={(score, total) => {
                 if (score > 0) {
-                  handleMarkDone("writing_done" as any);
+                  handleMarkDone("writing_done");
                 }
               }}
             />

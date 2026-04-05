@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Search, Download } from "lucide-react";
 import { getLevelByKey } from "@/constants/levels";
+import { exportCSV as exportCSVUtil } from "@/lib/admin-utils";
 
 interface PlacementTestRow {
   id: string;
@@ -41,12 +42,12 @@ const PlacementTestsManager = () => {
 
     const profileMap: Record<string, { name: string; email: string }> = {};
     if (profilesRes.data) {
-      (profilesRes.data as any[]).forEach((p) => {
+      profilesRes.data.forEach((p) => {
         profileMap[p.user_id] = { name: p.name, email: p.email };
       });
     }
 
-    const enriched = ((testsRes.data as any[]) || []).map((t) => ({
+    const enriched = (testsRes.data || []).map((t) => ({
       ...t,
       profile_name: profileMap[t.user_id]?.name || "",
       profile_email: profileMap[t.user_id]?.email || "",
@@ -75,14 +76,7 @@ const PlacementTestsManager = () => {
       getLevelByKey(t.level)?.shortLabel || t.level,
       new Date(t.created_at).toLocaleDateString(),
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c || ""}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `placement-tests-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportCSVUtil(headers, rows, "placement-tests");
   };
 
   return (
@@ -114,7 +108,7 @@ const PlacementTestsManager = () => {
           <p className="text-muted-foreground text-center py-8">No placement tests found.</p>
         ) : (
           <div className="overflow-x-auto">
-            <Table>
+            <Table aria-label="Placement test results">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>

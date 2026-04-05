@@ -28,6 +28,8 @@ const STATS = [
   { icon: Star,     value: "4.9★", label: "Rated"     },
 ];
 
+const HOMEPAGE_GAMES = GAMES.slice(0, 6);
+
 const HomeGamesSection = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -57,7 +59,7 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <div className="inline-flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-full text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-black/25 shadow-sm">
             <Gamepad2 className="h-4 w-4" />
             {t("games.learnPlay")}
           </div>
@@ -90,7 +92,7 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          {GAMES.map((game) => (
+          {HOMEPAGE_GAMES.map((game) => (
             <button
               key={game.title}
               onClick={() => navigate("/games")}
@@ -119,7 +121,7 @@ const HomeGamesSection = () => {
               All Free
             </Badge>
             <div>
-              <p className="font-bold text-primary-foreground text-sm leading-tight">Play All Games</p>
+              <p className="font-bold text-primary-foreground text-sm leading-tight">See All 13 Games</p>
               <div className="flex items-center gap-1 mt-1.5">
                 <span className="text-xs text-primary-foreground/80">Start now</span>
                 <ArrowRight className="h-3 w-3 text-primary-foreground/80 group-hover:translate-x-0.5 transition-transform" />

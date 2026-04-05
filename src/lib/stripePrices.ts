@@ -56,4 +56,36 @@ export function getStripePrice(tier: TierKey, classType: ClassType, duration: Du
   return priceMap[tier]?.[classType]?.[duration] ?? null;
 }
 
+/** USD tier prices (amount only) derived from the canonical priceMap */
+export const tierPrices: Record<TierKey, Record<ClassType, Record<Duration, number>>> = Object.fromEntries(
+  (Object.keys(priceMap) as TierKey[]).map((tier) => [
+    tier,
+    Object.fromEntries(
+      (Object.keys(priceMap[tier]) as ClassType[]).map((ct) => [
+        ct,
+        Object.fromEntries(
+          (Object.keys(priceMap[tier][ct]).map(Number) as Duration[]).map((d) => [d, priceMap[tier][ct][d].amount])
+        ),
+      ])
+    ),
+  ])
+) as Record<TierKey, Record<ClassType, Record<Duration, number>>>;
+
+/** Tier-to-country mapping — single source of truth */
+export const tierCountries: Record<TierKey, string[]> = {
+  local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
+  regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
+  global: ["UAE", "Saudi Arabia", "Qatar", "Bahrain", "Oman", "Kuwait", "United States", "United Kingdom", "Germany", "France", "Canada", "Australia", "Japan", "South Korea", "China"],
+};
+
+/** Resolve country name → pricing tier */
+export function getTierForCountry(country: string): TierKey | null {
+  for (const [tier, countries] of Object.entries(tierCountries)) {
+    if (countries.includes(country)) return tier as TierKey;
+  }
+  return null;
+}
+
+export { DURATION_CLASSES };
+
 export type { TierKey, ClassType, Duration, PriceInfo };

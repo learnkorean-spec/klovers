@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
+import { Component, ReactNode, lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { getLeadStatusBadgeClass, getDerivedStatusBadgeVariant } from "@/lib/badge-styles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,12 +22,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2 } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2, Image } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 // Lazy-load heavy tab components — each loads only when its tab is first opened
@@ -48,6 +50,8 @@ const SalesAnalytics = lazy(() => import("@/components/admin/SalesAnalytics"));
 const SessionAttendanceManager = lazy(() => import("@/components/admin/SessionAttendanceManager"));
 const StudentHealthPanel = lazy(() => import("@/components/admin/StudentHealthPanel"));
 const PromoCodesManager = lazy(() => import("@/components/admin/PromoCodesManager"));
+const SeoOrchestrationPanel = lazy(() => import("@/components/admin/SeoOrchestrationPanel"));
+const ImageAuditPanel = lazy(() => import("@/components/admin/ImageAuditPanel"));
 
 const TabLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -55,57 +59,38 @@ const TabLoader = () => (
   </div>
 );
 
-interface Lead {
-  id: string; name: string; email: string; country: string; level: string; goal: string; status: string; created_at: string;
-  plan_type: string; duration: string; schedule: string; timezone: string; source: string; user_id: string | null;
-}
-
-interface Enrollment {
-  id: string; user_id: string; plan_type: string; duration: number; classes_included: number;
-  amount: number; unit_price: number; tx_ref: string; receipt_url: string; status: string;
-  payment_status: string; approval_status: string; payment_provider: string | null;
-  admin_review_required: boolean; sessions_remaining: number;
-  created_at: string; profiles?: { name: string; email: string; level?: string } | null;
-  currency?: string; due_at?: string | null; payment_date?: string | null; payment_method?: string | null;
-  preferred_days?: string[] | null; preferred_day?: string | null; preferred_time?: string | null; timezone?: string | null;
-  level?: string | null; package_id?: string | null;
-}
-
-interface AttendanceReq {
-  id: string; user_id: string; request_date: string; status: string; created_at: string;
-  profiles?: { name: string; email: string; credits: number } | null;
-}
-
-interface OverviewRow {
-  user_id: string;
-  name: string;
-  email: string;
-  country: string;
-  level: string;
-  joined_at: string;
-  enrollment_id: string | null;
-  payment_status: string | null;
-  approval_status: string | null;
-  payment_method: string | null;
-  payment_provider: string | null;
-  sessions_total: number;
-  sessions_remaining: number;
-  enrollment_created_at: string | null;
-  plan_type: string | null;
-  duration: number | null;
-  amount: number | null;
-  currency: string | null;
-  derived_status: string;
-  source_label: string;
-  unit_price: number | null;
-  negative_sessions: number;
-  amount_due: number;
-}
+// Lead, Enrollment, AttendanceReq, OverviewRow — imported from @/types/admin
 
 const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
 const PAGE_SIZE = 25;
 
+// Error boundary for lazy-loaded tab components
+class TabErrorBoundary extends Component<
+  { name: string; children: ReactNode },
+  { error: boolean }
+> {
+  state = { error: false };
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <Card className="rounded-2xl">
+          <CardContent className="py-12 text-center space-y-3">
+            <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
+            <p className="text-sm text-muted-foreground">
+              Failed to load <strong>{this.props.name}</strong>. Try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
+import type { Lead, Enrollment, AttendanceReq, OverviewRow } from "@/types/admin";
+import { formatTime, exportCSV as exportCSVUtil } from "@/lib/admin-utils";
 
 const AdminDashboard = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -117,7 +102,11 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("confirmed");
   const [planFilter, setPlanFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [adminTab, setAdminTab] = useState("students");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const adminTab = searchParams.get("tab") ?? "students";
+  const setAdminTab = useCallback((tab: string) => {
+    setSearchParams({ tab }, { replace: true });
+  }, [setSearchParams]);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [sendingReminder, setSendingReminder] = useState<Set<string>>(new Set());
   const [sendingNameEmails, setSendingNameEmails] = useState(false);
@@ -131,6 +120,8 @@ const AdminDashboard = () => {
   const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "", dir: "asc" });
   const [leadsSort, setLeadsSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "created_at", dir: "desc" });
   const [leadsError, setLeadsError] = useState<string | null>(null);
+  const [leadsPage, setLeadsPage] = useState(0);
+  const [quickStatusLeadId, setQuickStatusLeadId] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
@@ -138,7 +129,15 @@ const AdminDashboard = () => {
   const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
   const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
   const [enrollmentSearch, setEnrollmentSearch] = useState("");
+  const [enrollmentPage, setEnrollmentPage] = useState(0);
+  const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(new Set());
+  const [bulkApproving, setBulkApproving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [copiedLeadId, setCopiedLeadId] = useState<string | null>(null);
+  const [contactedLeadIds, setContactedLeadIds] = useState<Set<string>>(new Set());
+  const [leadsSourceFilter, setLeadsSourceFilter] = useState("");
+  const [showOverdueOnly, setShowOverdueOnly] = useState(false);
+  const [referralStats, setReferralStats] = useState({ total: 0, thisMonth: 0 });
   const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -230,7 +229,7 @@ const AdminDashboard = () => {
 
   const fetchAll = async () => {
     setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes] = await Promise.all([
+    const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes, referralRes] = await Promise.all([
       supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("enrollments").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }).limit(200),
@@ -239,20 +238,21 @@ const AdminDashboard = () => {
       Promise.resolve({ data: [] }), // legacy student_groups — no longer used
       supabase.from("schedule_options").select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
       supabase.from("profiles").select("user_id, name, email, level, country"),
+      supabase.from("referral_conversions").select("converted_at"),
     ]);
 
-    if (weekdaysRes.data && (weekdaysRes.data as any[]).length > 0) {
-      setScheduleWeekdays((weekdaysRes.data as any[]).map((r: any) => r.label));
+    if (weekdaysRes.data && weekdaysRes.data.length > 0) {
+      setScheduleWeekdays(weekdaysRes.data.map((r) => r.label));
     }
 
     // Build profile map: first from direct profiles table, then enrich with overview
     const profileMap: Record<string, { name: string; email: string; level?: string }> = {};
-    const overviewByEmail: Record<string, any> = {};
-    const leadsByEmail: Record<string, any> = {};
+    const overviewByEmail: Record<string, Record<string, unknown>> = {};
+    const leadsByEmail: Record<string, Lead> = {};
 
     // Index leads by email for level fallback
     if (leadsRes.data) {
-      (leadsRes.data as any[]).forEach((l: any) => {
+      (leadsRes.data as Lead[]).forEach((l) => {
         if (l.email) leadsByEmail[l.email.toLowerCase()] = l;
       });
       setLeadsByEmail(leadsByEmail);
@@ -260,7 +260,7 @@ const AdminDashboard = () => {
 
     // Index direct profiles (always available for admin)
     if (profilesRes.data) {
-      (profilesRes.data as any[]).forEach((p: any) => {
+      profilesRes.data.forEach((p) => {
         const leadLevel = leadsByEmail[p.email?.toLowerCase()]?.level;
         profileMap[p.user_id] = {
           name: p.name,
@@ -273,14 +273,14 @@ const AdminDashboard = () => {
 
     // Enrich/override with admin_student_overview data
     if (overviewRes.data) {
-      (overviewRes.data as any[]).forEach((r: any) => {
+      (overviewRes.data as OverviewRow[]).forEach((r) => {
         const existingLevel = profileMap[r.user_id]?.level;
         profileMap[r.user_id] = {
           name: r.name || profileMap[r.user_id]?.name,
           email: r.email || profileMap[r.user_id]?.email,
           level: (r.level && r.level.trim() !== "") ? r.level : (existingLevel || ""),
         };
-        overviewByEmail[r.email?.toLowerCase()] = r;
+        overviewByEmail[r.email?.toLowerCase()] = r as unknown as Record<string, unknown>;
       });
     }
 
@@ -310,20 +310,20 @@ const AdminDashboard = () => {
     }
 
     if (enrollRes.data) {
-      const enrichedEnrollments = (enrollRes.data as any[]).map((e) => ({
+      const enrichedEnrollments = enrollRes.data.map((e) => ({
         ...e,
         profiles: profileMap[e.user_id] || null,
-      }));
+      })) as Enrollment[];
       setEnrollments(enrichedEnrollments);
 
       // Enrollment level/days are read-only — no admin editing needed
     }
     if (attendRes.data) {
-      const overviewMap: Record<string, any> = {};
+      const overviewMap: Record<string, OverviewRow> = {};
       if (overviewRes.data) {
-        (overviewRes.data as any[]).forEach((r: any) => { overviewMap[r.user_id] = r; });
+        (overviewRes.data as OverviewRow[]).forEach((r) => { overviewMap[r.user_id] = r; });
       }
-      setAttendanceReqs((attendRes.data as any[]).map((a) => {
+      setAttendanceReqs(attendRes.data.map((a) => {
         const ov = overviewMap[a.user_id];
         return {
           ...a,
@@ -331,9 +331,18 @@ const AdminDashboard = () => {
             ? { ...profileMap[a.user_id], credits: ov?.sessions_remaining ?? 0 }
             : null,
         };
-      }));
+      }) as AttendanceReq[]);
     }
-    if (overviewRes.data) setOverviewRows(overviewRes.data as any[]);
+    if (overviewRes.data) setOverviewRows(overviewRes.data as OverviewRow[]);
+    if (referralRes.data) {
+      const firstOfMonth = new Date();
+      firstOfMonth.setDate(1);
+      firstOfMonth.setHours(0, 0, 0, 0);
+      setReferralStats({
+        total: referralRes.data.length,
+        thisMonth: referralRes.data.filter(r => new Date(r.converted_at) >= firstOfMonth).length,
+      });
+    }
     setUserGroupMap(_userGroupMap);
     setLoading(false);
   };
@@ -459,7 +468,7 @@ const AdminDashboard = () => {
     const { data: profiles } = await supabase.from("profiles").select("user_id, email");
     if (!profiles) return;
     const profileByEmail: Record<string, string> = {};
-    for (const p of profiles as any[]) {
+    for (const p of (profiles ?? []) as { user_id: string; email: string }[]) {
       if (p.email) profileByEmail[p.email.toLowerCase().trim()] = p.user_id;
     }
     for (const lead of unlinked) {
@@ -482,16 +491,22 @@ const AdminDashboard = () => {
     return emails;
   }, [overviewRows]);
 
+  const uniqueSources = useMemo(() =>
+    [...new Set(leads.map(l => l.source).filter(Boolean))] as string[],
+    [leads]
+  );
+
   const filtered = useMemo(() => {
     return leads.filter((l) => {
       const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
       const isConfirmed = l.status === "enrolled" || confirmedEmails.has(l.email.toLowerCase());
       const matchesPlan = planFilter === "all" || l.plan_type === planFilter;
-      if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan;
-      if (statusFilter === "all") return matchesSearch && matchesPlan;
-      return matchesSearch && l.status === statusFilter && matchesPlan;
+      const matchesSource = !leadsSourceFilter || l.source === leadsSourceFilter;
+      if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan && matchesSource;
+      if (statusFilter === "all") return matchesSearch && matchesPlan && matchesSource;
+      return matchesSearch && l.status === statusFilter && matchesPlan && matchesSource;
     });
-  }, [leads, search, statusFilter, planFilter, confirmedEmails]);
+  }, [leads, search, statusFilter, planFilter, confirmedEmails, leadsSourceFilter]);
 
   const statusCounts = useMemo(() =>
     leads.reduce((acc, l) => { acc[l.status] = (acc[l.status] || 0) + 1; return acc; }, {} as Record<string, number>),
@@ -514,14 +529,13 @@ const AdminDashboard = () => {
     });
   }, [filtered, leadsSort]);
 
+  const leadsPageCount = Math.ceil(sortedLeads.length / PAGE_SIZE);
+  const pagedLeads = sortedLeads.slice(leadsPage * PAGE_SIZE, (leadsPage + 1) * PAGE_SIZE);
+
   const exportCSV = () => {
     const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
     const rows = sortedLeads.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, l.goal, new Date(l.created_at).toLocaleDateString()]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c || ""}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    exportCSVUtil(headers, rows, "leads");
   };
 
   const handleConfirmReject = async () => {
@@ -531,7 +545,7 @@ const AdminDashboard = () => {
       let resubmitLink: string | undefined;
       if (rejectReason === "time_slots_unavailable") {
         const token = crypto.randomUUID().replace(/-/g, "");
-        await (supabase as any).from("schedule_resubmission_requests").insert({
+        await supabase.from("schedule_resubmission_requests").insert({
           enrollment_id: rejectTarget.id,
           user_id: rejectTarget.user_id,
           email: rejectTarget.profiles?.email || "",
@@ -584,7 +598,7 @@ const AdminDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const updates: any = {
+    const updates: Record<string, unknown> = {
       status: action,
       approval_status: action,
       reviewed_at: new Date().toISOString(),
@@ -639,10 +653,41 @@ const AdminDashboard = () => {
     fetchAll();
   };
 
+  const handleBulkApprove = async () => {
+    if (selectedEnrollmentIds.size === 0) return;
+    setBulkApproving(true);
+    const ids = Array.from(selectedEnrollmentIds);
+    let succeeded = 0;
+    let failed = 0;
+    for (const id of ids) {
+      const enrollment = enrollments.find(e => e.id === id);
+      if (!enrollment) continue;
+      try {
+        const { error } = await supabase.from("enrollments").update({
+          status: "APPROVED", approval_status: "APPROVED", reviewed_at: new Date().toISOString(),
+        }).eq("id", id);
+        if (error) { failed++; continue; }
+        const { error: creditError } = await supabase.rpc("add_credits", {
+          _user_id: enrollment.user_id, _amount: enrollment.classes_included,
+        });
+        if (creditError) { failed++; continue; }
+        succeeded++;
+      } catch { failed++; }
+    }
+    setBulkApproving(false);
+    setSelectedEnrollmentIds(new Set());
+    toast({
+      title: `Bulk approve complete`,
+      description: `${succeeded} approved${failed > 0 ? `, ${failed} failed` : ""}`,
+      variant: failed > 0 ? "destructive" : "default",
+    });
+    fetchAll();
+  };
+
   const handleRevertEnrollment = async (enrollment: Enrollment) => {
     const { error } = await supabase.rpc("revert_enrollment", {
       _enrollment_id: enrollment.id,
-    } as any);
+    });
     if (error) {
       toast({ title: "Error", description: error.message || "Failed to revert enrollment.", variant: "destructive" });
       return;
@@ -665,7 +710,7 @@ const AdminDashboard = () => {
     if (action === "APPROVED") {
       const { data, error } = await supabase.rpc("approve_attendance_request", {
         _request_id: req.id,
-      } as any);
+      });
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to approve.", variant: "destructive" });
         return;
@@ -674,7 +719,7 @@ const AdminDashboard = () => {
     } else {
       const { error } = await supabase.rpc("reject_attendance_request", {
         _request_id: req.id,
-      } as any);
+      });
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to reject.", variant: "destructive" });
         return;
@@ -685,7 +730,7 @@ const AdminDashboard = () => {
   };
 
   const handleRevertAttendance = async (req: AttendanceReq) => {
-    const { error } = await supabase.rpc("revert_attendance_request" as any, {
+    const { error } = await supabase.rpc("revert_attendance_request", {
       _request_id: req.id,
     });
     if (error) {
@@ -751,8 +796,9 @@ const AdminDashboard = () => {
   const totalPages = Math.max(1, Math.ceil(sortedUsers.length / PAGE_SIZE));
   const pagedUsers = sortedUsers.slice(studentPage * PAGE_SIZE, (studentPage + 1) * PAGE_SIZE);
 
-  // Reset page when filters change
+  // Reset pages when filters change
   useEffect(() => { setStudentPage(0); }, [studentSearch, studentFilter, levelFilter]);
+  useEffect(() => { setEnrollmentPage(0); }, [enrollmentSearch]);
 
   const overdueCount = overviewRows.filter(u => u.amount_due > 0).length;
   const studentFilterOptions = [
@@ -761,7 +807,7 @@ const AdminDashboard = () => {
     { value: "leads", label: `Leads (${leadsProfileCount})` },
     { value: "stripe", label: `Stripe (${stripeCount})` },
     { value: "egypt", label: `Egypt Manual (${egyptCount})` },
-    { value: "overdue", label: `Overdue (${overdueCount})` },
+    { value: "overdue", label: `Outstanding Balance (${overdueCount})` },
   ];
 
   const legacyEnrollmentCount = useMemo(() =>
@@ -827,6 +873,22 @@ const AdminDashboard = () => {
 
           <StudentHealthPanel overviewRows={overviewRows} />
 
+          {/* Referral program stats */}
+          {referralStats.total > 0 && (
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-pink-100 dark:bg-pink-900/30 shrink-0">
+                <Tag className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Referral Program</p>
+                <p className="font-semibold text-sm text-foreground">
+                  {referralStats.total} total conversion{referralStats.total !== 1 ? "s" : ""}
+                  {referralStats.thisMonth > 0 && <span className="text-emerald-600 dark:text-emerald-400 ml-2">· +{referralStats.thisMonth} this month</span>}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Pending enrollments alert */}
           {actionableEnrollments > 0 && (
             <div
@@ -857,7 +919,10 @@ const AdminDashboard = () => {
                 <TabsTrigger value="enrollments" className={TAB_CLS}>
                   <FileCheck className="h-3.5 w-3.5" /> Enrollments
                   {actionableEnrollments > 0 && (
-                    <Badge variant="destructive" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{actionableEnrollments}</Badge>
+                    <span className="relative inline-flex">
+                      <Badge variant="destructive" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{actionableEnrollments}</Badge>
+                      <span className="absolute inset-0 rounded-full bg-destructive/60 animate-ping" />
+                    </span>
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="leads" className={TAB_CLS}>
@@ -899,6 +964,12 @@ const AdminDashboard = () => {
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className={TAB_GROUP_LABEL}>Content</span>
                 <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
+                <TabsTrigger value="seo-orchestration" className={TAB_CLS}>
+                  <Sparkles className="h-3.5 w-3.5" /> SEO AI
+                </TabsTrigger>
+                <TabsTrigger value="image-audit" className={TAB_CLS}>
+                  <Image className="h-3.5 w-3.5" /> Images
+                </TabsTrigger>
                 <TabsTrigger value="campaigns" className={TAB_CLS}>
                   <Mail className="h-3.5 w-3.5" /> Campaigns
                 </TabsTrigger>
@@ -993,7 +1064,16 @@ const AdminDashboard = () => {
                   ))}
                 </div>
               ) : sortedUsers.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No students found.</p>
+                <div className="text-center py-8 space-y-3">
+                  <p className="text-muted-foreground">No students match your filters.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setStudentFilter("all"); setLevelFilter("all"); setStudentSearch(""); }}
+                  >
+                    <Eraser className="h-4 w-4 mr-1.5" /> Clear all filters
+                  </Button>
+                </div>
               ) : (
                 <>
                   <div className="border rounded-xl overflow-auto">
@@ -1069,19 +1149,49 @@ const AdminDashboard = () => {
                               {u.sessions_total > 0 ? (() => {
                                 const pct = Math.round(((u.sessions_total - u.sessions_remaining) / u.sessions_total) * 100);
                                 return (
-                                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${pct >= 80 ? "bg-green-100 text-green-700" : pct >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${pct >= 80 ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : pct >= 50 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"}`} aria-label={`${pct}% attendance`}>
                                     {pct}%
                                   </span>
                                 );
                               })() : <span className="text-muted-foreground">—</span>}
                             </TableCell>
                             <TableCell className="py-3 px-3 text-center font-mono">{u.negative_sessions > 0 ? <span className="text-destructive">{u.negative_sessions}</span> : "—"}</TableCell>
-                            <TableCell className="py-3 px-3 text-right font-mono">{u.amount_due > 0 ? <span className="text-destructive">{u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}</span> : "—"}</TableCell>
-                            <TableCell className="py-3 px-3">
-                              <Badge variant={u.derived_status === "ACTIVE" ? "default" : u.derived_status === "LOCKED" ? "destructive" : "secondary"} className="text-xs">{u.derived_status}</Badge>
+                            <TableCell className="py-3 px-3 text-right font-mono" onClick={(e) => e.stopPropagation()}>
+                              {u.amount_due > 0 ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <a
+                                        href={`mailto:${u.email}?subject=Outstanding Balance - Klovers&body=Hi ${(u.name || "").split(" ")[0]},%0A%0AYou have an outstanding balance of ${u.currency === "EGP" ? "LE" : "$"}${Math.round(u.amount_due).toLocaleString()}. Please arrange payment at your earliest convenience.%0A%0ABest,%0AKlovers Team`}
+                                        className="inline-flex items-center gap-1 text-destructive hover:text-destructive/80 transition-colors text-xs font-semibold"
+                                        aria-label={`Send payment request to ${u.name}`}
+                                      >
+                                        {u.currency === "EGP" ? "LE" : "$"}{Math.round(u.amount_due).toLocaleString()}
+                                        <Mail className="h-3 w-3 flex-shrink-0" />
+                                      </a>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Send payment request email</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : "—"}
                             </TableCell>
-                            <TableCell className="py-3 px-3 hidden md:table-cell">
-                              <Badge variant="outline" className="text-xs">{u.source_label}</Badge>
+                            <TableCell className="py-3 px-3">
+                              <Badge variant={getDerivedStatusBadgeVariant(u.derived_status)} className="text-xs">{u.derived_status}</Badge>
+                            </TableCell>
+                            <TableCell className="py-3 px-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
+                              <Badge
+                                variant="outline"
+                                className="text-xs cursor-pointer hover:bg-accent transition-colors"
+                                onClick={() => {
+                                  const f = u.source_label === "Stripe" ? "stripe" : u.source_label === "Egypt" ? "egypt" : null;
+                                  if (f) { setStudentFilter(f); setStudentPage(0); }
+                                }}
+                                title={`Filter by ${u.source_label}`}
+                                role="button"
+                                aria-label={`Filter students by source: ${u.source_label}`}
+                              >
+                                {u.source_label}
+                              </Badge>
                             </TableCell>
                             <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(u.joined_at).toLocaleDateString()}</TableCell>
                             <TableCell className="py-3 px-3 w-10" onClick={(e) => e.stopPropagation()}>
@@ -1170,11 +1280,11 @@ const AdminDashboard = () => {
                         size="sm"
                         className="h-7 text-xs"
                         onClick={async () => {
-                          const { data, error } = await supabase.rpc("backfill_missing_enrollments" as any);
+                          const { data, error } = await supabase.rpc("backfill_missing_enrollments");
                           if (error) {
                             toast({ title: "Backfill failed", description: error.message, variant: "destructive" });
                           } else {
-                            const result = data as any;
+                            const result = data as Record<string, number> | null;
                             toast({ title: "Backfill complete", description: `Fixed: ${result?.fixed ?? 0}, Remaining: ${result?.remaining ?? 0}` });
                             fetchAll();
                           }
@@ -1193,10 +1303,21 @@ const AdminDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <Tabs defaultValue="under_review">
-                  <div className="relative mb-3">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search by name, email or plan…" value={enrollmentSearch} onChange={(e) => setEnrollmentSearch(e.target.value)} className="pl-9" />
+                <Tabs defaultValue="under_review" onValueChange={() => setEnrollmentPage(0)}>
+                  <div className="flex gap-2 mb-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Search by name, email or plan…" value={enrollmentSearch} onChange={(e) => setEnrollmentSearch(e.target.value)} className="pl-9" />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={showOverdueOnly ? "default" : "outline"}
+                      onClick={() => setShowOverdueOnly(v => !v)}
+                      className="shrink-0 gap-1.5"
+                    >
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {!isMobile && "Overdue only"}
+                    </Button>
                   </div>
                   {(() => {
                     const missing = enrollments.filter(e => e.currency === "EGP" && !e.payment_method && (e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW"));
@@ -1244,6 +1365,7 @@ const AdminDashboard = () => {
                       if (!matchesTab) return false;
                       const isActionable = e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW";
                       if (!showLegacyEnrollments && isLegacy(e) && !isActionable) return false;
+                      if (showOverdueOnly && !e.negative_since) return false;
                       if (enrollmentSearch) {
                         const q = enrollmentSearch.toLowerCase();
                         const name = e.profiles?.name?.toLowerCase() ?? "";
@@ -1253,16 +1375,63 @@ const AdminDashboard = () => {
                       }
                       return true;
                     });
+                    const isActionableTab = tab === "under_review" || tab === "pending_payment";
+                    const enrollPageCount = Math.ceil(filtered.length / PAGE_SIZE);
+                    const pagedEnrollments = filtered.slice(enrollmentPage * PAGE_SIZE, (enrollmentPage + 1) * PAGE_SIZE);
+                    const allPageSelected = pagedEnrollments.length > 0 && pagedEnrollments.every(e => selectedEnrollmentIds.has(e.id));
                     return (
                       <TabsContent key={tab} value={tab} className="space-y-4">
+                        {isActionableTab && filtered.length > 1 && (
+                          <div className="flex items-center gap-2 px-1 pb-1 border-b border-border">
+                            <Checkbox
+                              id={`select-all-${tab}`}
+                              checked={allPageSelected}
+                              onCheckedChange={(checked) => {
+                                setSelectedEnrollmentIds(prev => {
+                                  const next = new Set(prev);
+                                  pagedEnrollments.forEach(e => checked ? next.add(e.id) : next.delete(e.id));
+                                  return next;
+                                });
+                              }}
+                            />
+                            <label htmlFor={`select-all-${tab}`} className="text-xs text-muted-foreground cursor-pointer select-none">
+                              {allPageSelected ? "Deselect all on page" : `Select all on page (${pagedEnrollments.length})`}
+                            </label>
+                          </div>
+                        )}
                         {filtered.length === 0 ? (
-                          <p className="text-muted-foreground text-center py-8">No {tab} enrollments.</p>
-                        ) : filtered.map((e) => (
-                          <Card key={e.id}>
+                          <p className="text-muted-foreground text-center py-8">No {tab.replace(/_/g, " ")} enrollments.</p>
+                        ) : pagedEnrollments.map((e) => (
+                          <Card key={e.id} className={selectedEnrollmentIds.has(e.id) ? "ring-2 ring-primary/50 animate-flash-bg" : ""}>
                             <CardContent className="pt-6">
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="space-y-1">
-                                  <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
+                                <div className="flex items-start gap-3">
+                                  {isActionableTab && (
+                                    <Checkbox
+                                      checked={selectedEnrollmentIds.has(e.id)}
+                                      onCheckedChange={(checked) => {
+                                        setSelectedEnrollmentIds(prev => {
+                                          const next = new Set(prev);
+                                          checked ? next.add(e.id) : next.delete(e.id);
+                                          return next;
+                                        });
+                                      }}
+                                      className="mt-1 shrink-0"
+                                      aria-label={`Select enrollment for ${e.profiles?.name || e.profiles?.email}`}
+                                    />
+                                  )}
+                                <div className="space-y-1 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-semibold text-foreground">{e.profiles?.name || "Unknown"} — {e.profiles?.email}</p>
+                                    {e.negative_since && (() => {
+                                      const days = Math.max(0, Math.floor((Date.now() - new Date(e.negative_since).getTime()) / 86400000));
+                                      return (
+                                        <Badge variant="destructive" className="text-[10px] h-5 px-1.5 shrink-0">
+                                          Overdue {days}d
+                                        </Badge>
+                                      );
+                                    })()}
+                                  </div>
                                   <p className="text-sm text-muted-foreground">
                                     {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {e.currency === 'EGP' ? `${Math.round(e.amount).toLocaleString()} EGP` : `$${Math.round(e.amount)}`} · Ref: {e.tx_ref || '—'}
                                     {e.payment_method && <> · <span className="font-medium">{e.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : e.payment_method === 'instapay' ? 'InstaPay' : e.payment_method === 'bank_transfer' ? 'Bank Transfer' : e.payment_method}</span></>}
@@ -1352,7 +1521,7 @@ const AdminDashboard = () => {
                                             className="h-6 text-xs"
                                             onClick={async () => {
                                               const token = crypto.randomUUID().replace(/-/g, "");
-                                              const { error: insertErr } = await (supabase as any)
+                                              const { error: insertErr } = await supabase
                                                 .from("schedule_resubmission_requests")
                                                 .insert({
                                                   enrollment_id: e.id,
@@ -1485,10 +1654,26 @@ const AdminDashboard = () => {
                                     </AlertDialogContent>
                                   </AlertDialog>
                                 </div>
-                              </div>
+                              </div>{/* close flex items-start gap-3 */}
+                              </div>{/* close flex flex-col md:flex-row */}
                             </CardContent>
                           </Card>
                         ))}
+                        {enrollPageCount > 1 && (
+                          <div className="flex items-center justify-between pt-2">
+                            <p className="text-xs text-muted-foreground">
+                              Page {enrollmentPage + 1} of {enrollPageCount} · {filtered.length} enrollments
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <Button variant="outline" size="icon" className="h-8 w-8" disabled={enrollmentPage === 0} onClick={() => setEnrollmentPage(p => p - 1)} aria-label="Previous page">
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+                              <Button variant="outline" size="icon" className="h-8 w-8" disabled={enrollmentPage >= enrollPageCount - 1} onClick={() => setEnrollmentPage(p => p + 1)} aria-label="Next page">
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </TabsContent>
                     );
                   })}
@@ -1498,6 +1683,20 @@ const AdminDashboard = () => {
               </Card>
             </TabsContent>
 
+            {/* Sticky bulk action bar — floats above bottom when enrollments are selected */}
+            {selectedEnrollmentIds.size > 0 && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background/95 backdrop-blur border border-border shadow-xl rounded-2xl px-5 py-3 animate-slide-up">
+                <p className="text-sm font-semibold text-foreground">
+                  {selectedEnrollmentIds.size} enrollment{selectedEnrollmentIds.size > 1 ? "s" : ""} selected
+                </p>
+                <Button size="sm" onClick={handleBulkApprove} disabled={bulkApproving}>
+                  {bulkApproving ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Approving…</> : <><Check className="h-4 w-4 mr-1.5" /> Approve All</>}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setSelectedEnrollmentIds(new Set())}>
+                  <X className="h-4 w-4 mr-1.5" /> Clear
+                </Button>
+              </div>
+            )}
 
             {/* LEADS TAB */}
             <TabsContent value="leads">
@@ -1510,9 +1709,9 @@ const AdminDashboard = () => {
                   <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+                      <Input placeholder="Search by name or email..." value={search} onChange={(e) => { setSearch(e.target.value); setLeadsPage(0); }} className="pl-9" />
                     </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setLeadsPage(0); }}>
                       <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Filter status" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="confirmed">Confirmed (Paid) ({confirmedEmails.size})</SelectItem>
@@ -1520,7 +1719,7 @@ const AdminDashboard = () => {
                         {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s} ({statusCounts[s] ?? 0})</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Select value={planFilter} onValueChange={setPlanFilter}>
+                    <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setLeadsPage(0); }}>
                       <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Plan type" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Plans</SelectItem>
@@ -1528,6 +1727,15 @@ const AdminDashboard = () => {
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
+                    {uniqueSources.length > 0 && (
+                      <Select value={leadsSourceFilter} onValueChange={(v) => { setLeadsSourceFilter(v); setLeadsPage(0); }}>
+                        <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="All sources" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All sources</SelectItem>
+                          {uniqueSources.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )}
                     <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleDeduplicateLeads}>
                       <Eraser className="h-4 w-4" />
                       {!isMobile && <span className="ml-1">Deduplicate</span>}
@@ -1583,9 +1791,19 @@ const AdminDashboard = () => {
                               <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeLabel}</span>
                             </div>
                             <div className="flex gap-1.5 shrink-0">
-                              <Button size="sm" variant="outline" className="h-7 px-2 text-xs"
-                                onClick={() => { navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`); toast({ title: "Copied!", description: "Follow-up message copied to clipboard" }); }}>
-                                <Copy className="h-3 w-3 mr-1" />Copy
+                              <Button size="sm" variant="outline" className={`h-7 px-2 text-xs ${contactedLeadIds.has(l.id) && copiedLeadId !== l.id ? "border-green-400 text-green-700 dark:text-green-400" : ""}`}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
+                                  toast({ title: "Copied!", description: "Follow-up message copied to clipboard" });
+                                  setContactedLeadIds(prev => new Set(prev).add(l.id));
+                                  setCopiedLeadId(l.id);
+                                  setTimeout(() => setCopiedLeadId(id => id === l.id ? null : id), 1500);
+                                }}>
+                                {copiedLeadId === l.id
+                                  ? <><Check className="h-3 w-3 mr-1 text-green-600" />Copied!</>
+                                  : contactedLeadIds.has(l.id)
+                                    ? <><Check className="h-3 w-3 mr-1 text-green-600" />Sent ✓</>
+                                    : <><Copy className="h-3 w-3 mr-1" />Copy</>}
                               </Button>
                               <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
                                 <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${l.name.split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
@@ -1706,7 +1924,7 @@ const AdminDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedLeads.map((lead) => (
+                      {pagedLeads.map((lead) => (
                         <TableRow key={lead.id} className="group odd:bg-muted/30 hover:bg-muted/50 transition">
                           <TableCell className="py-3 px-3 font-medium">
                             {editingLeadId === lead.id ? (
@@ -1721,9 +1939,10 @@ const AdminDashboard = () => {
                                 <span className="truncate flex-1 text-sm">{lead.email}</span>
                                 <button
                                   className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
-                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); }}
+                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
+                                  aria-label="Copy email address"
                                 >
-                                  <Copy className="h-3 w-3 text-muted-foreground" />
+                                  {copiedLeadId === lead.id + "_email" ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
                                 </button>
                               </div>
                             )}
@@ -1784,14 +2003,32 @@ const AdminDashboard = () => {
                                   {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                 </SelectContent>
                               </Select>
+                            ) : quickStatusLeadId === lead.id ? (
+                              <Select
+                                value={lead.status}
+                                onValueChange={async (v) => {
+                                  const { error } = await supabase.from("crm_leads").update({ status: v }).eq("id", lead.id);
+                                  if (!error) {
+                                    setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: v } : l));
+                                    toast({ title: "Status updated" });
+                                  }
+                                  setQuickStatusLeadId(null);
+                                }}
+                                open
+                                onOpenChange={(open) => { if (!open) setQuickStatusLeadId(null); }}
+                              >
+                                <SelectTrigger className="h-8 text-sm w-32"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
                             ) : (
-                              <Badge className={`text-xs border ${
-                                lead.status === "enrolled" ? "bg-green-100 text-green-700 border-green-200"
-                                : lead.status === "trial_booked" ? "bg-violet-100 text-violet-700 border-violet-200"
-                                : lead.status === "rejected" || lead.status === "lost" ? "bg-red-100 text-red-700 border-red-200"
-                                : lead.status === "contacted" ? "bg-blue-100 text-blue-700 border-blue-200"
-                                : "bg-muted text-muted-foreground border-border"
-                              }`}>
+                              <Badge
+                                className={`text-xs border cursor-pointer hover:opacity-80 transition-opacity ${getLeadStatusBadgeClass(lead.status)}`}
+                                onClick={() => setQuickStatusLeadId(lead.id)}
+                                title="Click to change status"
+                                aria-label={`Lead status: ${lead.status}. Click to change.`}
+                              >
                                 {lead.status === "trial_booked" ? "🎁 Trial Booked" : lead.status}
                               </Badge>
                             )}
@@ -1817,12 +2054,12 @@ const AdminDashboard = () => {
                                 </>
                               ) : (
                                 <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)} aria-label="Edit lead">
                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                   </Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete lead"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                       <AlertDialogHeader>
@@ -1843,6 +2080,21 @@ const AdminDashboard = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  {leadsPageCount > 1 && (
+                    <div className="flex items-center justify-between p-3 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        Page {leadsPage + 1} of {leadsPageCount} · {sortedLeads.length} leads
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={leadsPage === 0} onClick={() => setLeadsPage(p => p - 1)} aria-label="Previous page">
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={leadsPage >= leadsPageCount - 1} onClick={() => setLeadsPage(p => p + 1)} aria-label="Next page">
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : null}
                 </CardContent>
@@ -1853,7 +2105,11 @@ const AdminDashboard = () => {
             <TabsContent value="manage">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Manage Students</CardTitle></CardHeader>
-                <CardContent className="pt-0"><StudentManager /></CardContent>
+                <CardContent className="pt-0">
+                  <TabErrorBoundary name="Student Manager">
+                    <StudentManager />
+                  </TabErrorBoundary>
+                </CardContent>
               </Card>
             </TabsContent>
 
@@ -1862,9 +2118,11 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Promo Codes</CardTitle></CardHeader>
                 <CardContent className="pt-0">
-                  <Suspense fallback={<TabLoader />}>
-                    <PromoCodesManager />
-                  </Suspense>
+                  <TabErrorBoundary name="Promo Codes">
+                    <Suspense fallback={<TabLoader />}>
+                      <PromoCodesManager />
+                    </Suspense>
+                  </TabErrorBoundary>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1874,30 +2132,38 @@ const AdminDashboard = () => {
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Group Attendance</CardTitle></CardHeader>
                 <CardContent className="pt-0">
-                  <GroupAttendanceManager
-                    overviewRows={overviewRows}
-                    selectedStudentId={selectedStudentId}
-                    onStudentSelect={setSelectedStudentId}
-                    attendanceReqs={attendanceReqs}
-                    onAttendanceAction={handleAttendanceAction}
-                    onRevertAttendance={handleRevertAttendance}
-                    userGroupMap={userGroupMap}
-                    onUpdated={fetchAll}
-                  />
+                  <TabErrorBoundary name="Group Attendance">
+                    <GroupAttendanceManager
+                      overviewRows={overviewRows}
+                      selectedStudentId={selectedStudentId}
+                      onStudentSelect={setSelectedStudentId}
+                      attendanceReqs={attendanceReqs}
+                      onAttendanceAction={handleAttendanceAction}
+                      onRevertAttendance={handleRevertAttendance}
+                      userGroupMap={userGroupMap}
+                      onUpdated={fetchAll}
+                    />
+                  </TabErrorBoundary>
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* GROUP MATCHER TAB */}
             <TabsContent value="group-matcher">
-              <GroupMatcher />
+              <TabErrorBoundary name="Group Matcher">
+                <GroupMatcher />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* NOTIFICATIONS TAB */}
             <TabsContent value="notifications">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Notifications</CardTitle></CardHeader>
-                <CardContent className="pt-0"><AdminNotifications /></CardContent>
+                <CardContent className="pt-0">
+                  <TabErrorBoundary name="Notifications">
+                    <AdminNotifications />
+                  </TabErrorBoundary>
+                </CardContent>
               </Card>
             </TabsContent>
 
@@ -1905,14 +2171,30 @@ const AdminDashboard = () => {
             <TabsContent value="blog">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-4"><CardTitle className="text-base">Blog Manager</CardTitle></CardHeader>
-                <CardContent className="pt-0"><BlogManager /></CardContent>
+                <CardContent className="pt-0">
+                  <TabErrorBoundary name="Blog Manager">
+                    <BlogManager />
+                  </TabErrorBoundary>
+                </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* SEO ORCHESTRATION TAB */}
+            <TabsContent value="seo-orchestration">
+              <SeoOrchestrationPanel />
+            </TabsContent>
+
+            {/* IMAGE AUDIT TAB */}
+            <TabsContent value="image-audit">
+              <ImageAuditPanel />
             </TabsContent>
 
             {/* CAMPAIGNS TAB */}
             <TabsContent value="campaigns">
               <div className="space-y-6">
-                <BulkEmailManager />
+                <TabErrorBoundary name="Email Campaigns">
+                  <BulkEmailManager />
+                </TabErrorBoundary>
                 <Card className="rounded-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -1951,56 +2233,80 @@ const AdminDashboard = () => {
                     <CardTitle className="text-base">Scheduling Operations</CardTitle>
                     <p className="text-sm text-muted-foreground">Manage packages, groups, waitlists, and notifications.</p>
                   </CardHeader>
-                  <CardContent><SchedulingManager /></CardContent>
+                  <CardContent>
+                    <TabErrorBoundary name="Scheduling Manager">
+                      <SchedulingManager />
+                    </TabErrorBoundary>
+                  </CardContent>
                 </Card>
                 <Card className="rounded-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base">Schedule Preference Options</CardTitle>
                     <p className="text-sm text-muted-foreground">Edit the weekdays, time windows, and start date options shown to students during enrollment.</p>
                   </CardHeader>
-                  <CardContent><ScheduleOptionsManager /></CardContent>
+                  <CardContent>
+                    <TabErrorBoundary name="Schedule Options">
+                      <ScheduleOptionsManager />
+                    </TabErrorBoundary>
+                  </CardContent>
                 </Card>
               </div>
             </TabsContent>
 
             {/* PLACEMENT TESTS TAB */}
             <TabsContent value="placement-tests">
-              <PlacementTestsManager />
+              <TabErrorBoundary name="Placement Tests">
+                <PlacementTestsManager />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* TEACHER AVAILABILITY TAB */}
             <TabsContent value="availability">
-              <TeacherAvailabilityManager />
+              <TabErrorBoundary name="Teacher Availability">
+                <TeacherAvailabilityManager />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* STUDENT PREFERENCES TAB */}
             <TabsContent value="preferences">
-              <StudentPreferenceDashboard />
+              <TabErrorBoundary name="Student Preferences">
+                <StudentPreferenceDashboard />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* SALES ANALYTICS TAB */}
             <TabsContent value="sales">
-              <SalesAnalytics />
+              <TabErrorBoundary name="Sales Analytics">
+                <SalesAnalytics />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* SETTINGS TAB */}
             <TabsContent value="session-attendance">
-              <SessionAttendanceManager />
+              <TabErrorBoundary name="Session Attendance">
+                <SessionAttendanceManager />
+              </TabErrorBoundary>
             </TabsContent>
             <TabsContent value="settings">
-              <AdminSettings />
+              <TabErrorBoundary name="Settings">
+                <AdminSettings />
+              </TabErrorBoundary>
             </TabsContent>
           </Tabs>
           </Suspense>
         </div>
       </div>
-      {/* Rejection reason dialog */}
-      {rejectTarget && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Reject Enrollment</h3>
-            <p className="text-sm text-muted-foreground">{rejectTarget.profiles?.name || "Unknown"} — {rejectTarget.profiles?.email}</p>
+      {/* Rejection reason dialog — uses proper Dialog for focus trap + Escape handling */}
+      <Dialog open={!!rejectTarget} onOpenChange={(open) => { if (!open) setRejectTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Enrollment</DialogTitle>
+            <DialogDescription>
+              {rejectTarget?.profiles?.name || "Unknown"} — {rejectTarget?.profiles?.email}
+            </DialogDescription>
+          </DialogHeader>
 
+          <div className="space-y-4">
             <div className="space-y-2">
               <p className="text-sm font-medium">Reason *</p>
               <div className="space-y-2">
@@ -2024,24 +2330,24 @@ const AdminDashboard = () => {
 
             <div className="space-y-1">
               <p className="text-sm font-medium">Additional note (optional)</p>
-              <textarea
-                className="w-full border border-border rounded-lg p-2 text-sm resize-none h-20 bg-background text-foreground"
+              <Textarea
                 placeholder="e.g. Please re-enroll with a clearer receipt."
                 value={rejectNote}
                 onChange={ev => setRejectNote(ev.target.value)}
                 maxLength={300}
+                className="h-20 resize-none"
               />
             </div>
-
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setRejectTarget(null)} disabled={rejecting}>Cancel</Button>
-              <Button variant="destructive" onClick={handleConfirmReject} disabled={rejecting}>
-                {rejecting ? "Rejecting…" : "Confirm Reject & Notify"}
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectTarget(null)} disabled={rejecting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmReject} disabled={rejecting}>
+              {rejecting ? "Rejecting…" : "Confirm Reject & Notify"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Manual Enroll Dialog */}
       <Dialog open={manualEnrollOpen} onOpenChange={setManualEnrollOpen}>
         <DialogContent className="max-w-md">
