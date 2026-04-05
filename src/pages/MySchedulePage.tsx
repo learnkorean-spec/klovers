@@ -68,9 +68,11 @@ const MySchedulePage = () => {
   const [selectedCourseType, setSelectedCourseType] = useState<"group" | "private" | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [selectedPackageLabel, setSelectedPackageLabel] = useState<string>("");
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
+      try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
@@ -162,6 +164,10 @@ const MySchedulePage = () => {
         url.searchParams.delete("autoOpen");
         window.history.replaceState({}, "", url.pathname);
       }
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : "Failed to load your schedule.");
+        setLoading(false);
+      }
     };
     load();
   }, [navigate]);
@@ -239,6 +245,22 @@ const MySchedulePage = () => {
     setAssigning(false);
     window.location.reload();
   };
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <main id="main-content" className="pt-24 flex items-center justify-center px-4">
+          <div className="text-center space-y-3 max-w-sm">
+            <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
+            <h2 className="font-semibold text-foreground">Couldn't load your schedule</h2>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <Button onClick={() => window.location.reload()}>Refresh</Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

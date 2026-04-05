@@ -9,7 +9,7 @@ import FinalCTA from "@/components/FinalCTA";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, User, ArrowRight, Clock } from "lucide-react";
+import { CalendarDays, User, ArrowRight, Clock, AlertTriangle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPost {
@@ -53,6 +53,7 @@ const BlogPage = () => {
 
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<string | null>(null);
   const { language } = useLanguage();
 
@@ -76,7 +77,11 @@ const BlogPage = () => {
         .order("seo_score", { ascending: false, nullsFirst: false })
         .order("published_at", { ascending: false })
         .limit(60);
-      if (error) console.error("BlogPage fetch error:", error.message);
+      if (error) {
+        setFetchError(error.message);
+        setLoading(false);
+        return;
+      }
       setPosts((data as BlogPost[]) || []);
       setLoading(false);
     };
@@ -148,8 +153,22 @@ const BlogPage = () => {
             </div>
           )}
 
+          {/* Error state */}
+          {fetchError && (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
+              <AlertTriangle className="h-10 w-10 text-destructive" />
+              <h2 className="font-semibold text-foreground">
+                {language === "ar" ? "تعذّر تحميل المقالات" : "Couldn't load articles"}
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-xs">{fetchError}</p>
+              <Button onClick={() => window.location.reload()} variant="outline">
+                {language === "ar" ? "حاول مرة أخرى" : "Try again"}
+              </Button>
+            </div>
+          )}
+
           {/* Card grid */}
-          {loading ? (
+          {!fetchError && loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="rounded-2xl border border-border overflow-hidden">
@@ -164,7 +183,7 @@ const BlogPage = () => {
               ))}
             </div>
           ) : filteredPosts.length === 0 ? (
-            <p className="text-center text-foreground/50 py-16 text-lg">
+            <p className="text-center text-muted-foreground py-16 text-lg">
               {posts.length === 0
                 ? (language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!")
                 : "No articles in this category."}
@@ -213,17 +232,17 @@ const BlogPage = () => {
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-base font-bold text-foreground line-clamp-2 leading-snug mb-2">
+                        <h2 className="text-lg font-bold text-foreground line-clamp-2 leading-snug mb-2">
                           {post.title}
                         </h2>
 
                         {/* Description */}
-                        <p className="text-sm text-foreground/60 line-clamp-3 leading-relaxed flex-1 mb-4">
+                        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1 mb-4">
                           {post.description}
                         </p>
 
                         {/* Footer: author / date / reading time */}
-                        <div className="flex items-center justify-between text-xs text-foreground/50 border-t border-border pt-3 mt-auto flex-wrap gap-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-3 mt-auto flex-wrap gap-1">
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
                             {post.author}

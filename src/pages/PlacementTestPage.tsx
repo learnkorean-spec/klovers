@@ -19,9 +19,9 @@ import { SITE_URL } from "@/lib/siteConfig";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const QUESTIONS_PER_PAGE = 5;
+const QUESTIONS_PER_PAGE = 6;
 const TOTAL_PAGES = Math.ceil(PLACEMENT_QUESTIONS.length / QUESTIONS_PER_PAGE);
-const STORAGE_KEY = "klovers_placement_draft";
+const STORAGE_KEY = "klovers_placement_draft_v2"; // v2: 30 questions (6 per band)
 
 const formatTime = (s: number) => {
   const m = Math.floor(s / 60);
@@ -39,11 +39,11 @@ const LEVEL_META: Record<string, { emoji: string; tagline: string; description: 
 };
 
 const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
-  0: { label: "Foundation", hint: "Hangul recognition & core vocabulary" },
-  1: { label: "TOPIK 1 — A1 Beginner", hint: "Basic grammar particles & simple sentences" },
-  2: { label: "TOPIK 2 — A2 Elementary", hint: "Connectors, tense & polite expressions" },
-  3: { label: "TOPIK 3–4 — B1/B2 Intermediate", hint: "Complex grammar patterns & reading passages" },
-  4: { label: "TOPIK 5–6 — C1/C2 Advanced", hint: "Advanced grammar nuance & academic reading" },
+  0: { label: "Foundation", hint: "Hangul, core vocabulary, reading passages & speaking basics" },
+  1: { label: "TOPIK 1 — A1 Beginner", hint: "Grammar particles, reading sentences & spoken expressions" },
+  2: { label: "TOPIK 2 — A2 Elementary", hint: "Connectors, reading passages & spoken grammar forms" },
+  3: { label: "TOPIK 3–4 — B1/B2 Intermediate", hint: "Advanced grammar, reading comprehension & natural speech" },
+  4: { label: "TOPIK 5–6 — C1/C2 Advanced", hint: "Nuanced grammar, academic reading & formal speech" },
 };
 
 const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
@@ -125,6 +125,7 @@ const PlacementTestPage = () => {
         toast({ title: "Test resumed", description: "Your previous progress has been restored." });
       }
     } catch { /* ignore */ }
+    localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist progress to localStorage as user answers
@@ -138,6 +139,7 @@ const PlacementTestPage = () => {
         elapsed: elapsedSeconds,
       }));
     } catch { /* ignore */ }
+    localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
   }, [answers, skipped, page, elapsedSeconds, phase]);
 
   // Tick elapsed timer (starts on first answer)
@@ -233,14 +235,14 @@ const PlacementTestPage = () => {
   };
 
   const handleShare = (res: PlacementResult) => {
-    const text = `I scored ${res.score}/20 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
+    const text = `I scored ${res.score}/30 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
       .then(() => toast({ title: "Copied to clipboard!", description: "Share your level with friends." }))
       .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: "Copy the link to share your result." }));
   };
 
   const handleWhatsApp = (res: PlacementResult) => {
-    const text = encodeURIComponent(`I scored ${res.score}/20 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
+    const text = encodeURIComponent(`I scored ${res.score}/30 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
@@ -320,17 +322,17 @@ const PlacementTestPage = () => {
           <Card className="mb-6">
             <CardContent className="pt-5 pb-5">
               {BAND_LABELS.map((band, bi) => {
-                const bandQs = PLACEMENT_QUESTIONS.slice(bi * 4, bi * 4 + 4);
+                const bandQs = PLACEMENT_QUESTIONS.slice(bi * 6, bi * 6 + 6);
                 return (
                   <div key={band} className="mb-4 last:mb-0">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{band}</p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-6 gap-2">
                       {bandQs.map(q => {
                         const st = statusOf(q.id);
                         return (
                           <button
                             key={q.id}
-                            onClick={() => { setPage(Math.floor((q.id - 1) / QUESTIONS_PER_PAGE)); setPhase("test"); }}
+                            onClick={() => { setPage(Math.floor(PLACEMENT_QUESTIONS.findIndex(pq => pq.id === q.id) / QUESTIONS_PER_PAGE)); setPhase("test"); }}
                             className={[
                               "rounded-lg border text-sm font-semibold py-2.5 transition-colors",
                               st === "answered"   ? "bg-green-500/15 border-green-500/30 text-green-800 dark:text-green-300 hover:bg-green-500/25" : "",
@@ -373,14 +375,14 @@ const PlacementTestPage = () => {
       ? { label: `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" }
       : { label: `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" };
 
-    // Section breakdown (5 Vocab, 10 Grammar, 5 Reading)
-    const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 5 };
+    // Section breakdown (5 Vocab, 10 Grammar, 10 Reading, 5 Speaking)
+    const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 10, Speaking: 5 };
 
-    // Band breakdown (4 per band)
+    // Band breakdown (6 per band)
     const bandBreakdown = BAND_LABELS.map((band, bi) => {
-      const qs = PLACEMENT_QUESTIONS.slice(bi * 4, bi * 4 + 4);
+      const qs = PLACEMENT_QUESTIONS.slice(bi * 6, bi * 6 + 6);
       const correct = qs.filter(q => answers[q.id] === q.correctIndex).length;
-      return { band, correct, total: 4 };
+      return { band, correct, total: 6 };
     });
 
     // Per-question results for explanations
@@ -436,7 +438,7 @@ const PlacementTestPage = () => {
               {/* By section */}
               <div className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">By skill</p>
-                {(["Vocabulary", "Grammar", "Reading"] as const).map(sec => {
+                {(["Vocabulary", "Grammar", "Reading", "Speaking"] as const).map(sec => {
                   const correct = result.sectionScores[sec];
                   const total = sectionTotal[sec];
                   const pct = Math.round((correct / total) * 100);
@@ -689,8 +691,8 @@ const PlacementTestPage = () => {
 
         {/* Question map — click any dot to jump to that page */}
         <div className="mb-5 flex flex-wrap gap-1.5">
-          {PLACEMENT_QUESTIONS.map(q => {
-            const qPage = Math.floor((q.id - 1) / QUESTIONS_PER_PAGE);
+          {PLACEMENT_QUESTIONS.map((q, qi) => {
+            const qPage = Math.floor(qi / QUESTIONS_PER_PAGE);
             const st = skipped.has(q.id) ? "skipped" : answers[q.id] !== undefined ? "answered" : "unanswered";
             return (
               <button
@@ -752,6 +754,12 @@ const PlacementTestPage = () => {
                       {q.question}
                     </p>
                   </div>
+
+                  {q.passage && (
+                    <div className="bg-muted/50 border-l-4 border-primary/40 rounded-r-lg px-4 py-3 mb-4 text-sm leading-relaxed text-foreground font-medium">
+                      {q.passage}
+                    </div>
+                  )}
 
                   {isSkipped ? (
                     <div className="flex items-center justify-between ml-1">

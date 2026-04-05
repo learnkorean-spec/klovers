@@ -1,22 +1,24 @@
 /**
- * 20 multiple-choice placement test questions.
+ * 30 multiple-choice placement test questions.
  * Gradual difficulty: Foundation → TOPIK 6.
- * Sections: Vocabulary, Grammar, Reading.
- * 4 questions per level band × 5 bands = 20 questions.
+ * Sections: Vocabulary, Grammar, Reading, Speaking.
+ * 6 questions per level band × 5 bands = 30 questions.
  *
  * TOPIK alignment:
- *  Q1–Q4   Foundation (Hangul / A0)
- *  Q5–Q8   TOPIK 1    (A1)
- *  Q9–Q12  TOPIK 2    (A2)
- *  Q13–Q16 TOPIK 3–4  (B1–B2)
- *  Q17–Q20 TOPIK 5–6  (C1–C2)
+ *  Q1–Q4, Q21, Q26   Foundation (Hangul / A0)
+ *  Q5–Q8, Q22, Q27   TOPIK 1    (A1)
+ *  Q9–Q12, Q23, Q28  TOPIK 2    (A2)
+ *  Q13–Q16, Q24, Q29 TOPIK 3–4  (B1–B2)
+ *  Q17–Q20, Q25, Q30 TOPIK 5–6  (C1–C2)
  */
 
 export interface PlacementQuestion {
   id: number;
-  section: "Vocabulary" | "Grammar" | "Reading";
+  section: "Vocabulary" | "Grammar" | "Reading" | "Speaking";
   level: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
+  /** Korean text passage displayed as a block quote above the question (Reading questions) */
+  passage?: string;
   question: string;
   options: string[];
   correctIndex: number;
@@ -65,6 +67,27 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     correctIndex: 0,
     explanation: "가 = ㄱ (g/k) + ㅏ (a). 나 = na, 다 = da, 라 = ra/la. ㄱ sounds like 'k' at the start of a syllable.",
   },
+  {
+    id: 21,
+    section: "Reading",
+    level: "Foundation",
+    difficulty: 1,
+    passage: "저는 학생이에요. 학교에 가요. 친구가 있어요.",
+    question: "Who is the person in the passage?",
+    options: ["A teacher", "A student", "A doctor", "An office worker"],
+    correctIndex: 1,
+    explanation: "저는 학생이에요 = 'I am a student.' 학교에 가요 = goes to school. 학생 is one of the first nouns learners of Korean encounter.",
+  },
+  {
+    id: 26,
+    section: "Speaking",
+    level: "Foundation",
+    difficulty: 1,
+    question: "When meeting someone for the first time in Korean, you say:",
+    options: ["잘 가요", "반갑습니다", "감사합니다", "괜찮아요"],
+    correctIndex: 1,
+    explanation: "반갑습니다 = 'Nice/glad to meet you' — the standard first-meeting greeting. 잘 가요 = goodbye (to someone leaving), 감사합니다 = thank you, 괜찮아요 = it's okay.",
+  },
 
   // ─── TOPIK 1 / A1 (Q5–Q8) ───────────────────────────────
   {
@@ -106,6 +129,27 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["Bread", "Rice", "Apple", "Banana"],
     correctIndex: 2,
     explanation: "사과 = apple. 먹습니다 = eat (formal). 를 is the object particle. 빵 = bread, 밥 = rice, 바나나 = banana.",
+  },
+  {
+    id: 22,
+    section: "Reading",
+    level: "TOPIK 1",
+    difficulty: 2,
+    passage: "오늘 날씨가 많이 추웠어요. 그래서 집에서 따뜻한 국을 먹었어요. 오후에는 친구와 커피숍에 갔어요.",
+    question: "What was the weather like today?",
+    options: ["Hot and humid", "Cloudy and rainy", "Very cold", "Warm and sunny"],
+    correctIndex: 2,
+    explanation: "날씨가 많이 추웠어요 = the weather was very cold. 많이 = very/a lot, 춥다 → 추웠어요 = was cold (past tense). 그래서 = so/therefore.",
+  },
+  {
+    id: 27,
+    section: "Speaking",
+    level: "TOPIK 1",
+    difficulty: 2,
+    question: "A Korean friend greets you: '밥 먹었어요?' What are they most likely doing?",
+    options: ["Inviting you to eat", "Asking if you are hungry", "Using a common casual greeting like 'How are you?'", "Complaining about skipping a meal"],
+    correctIndex: 2,
+    explanation: "'밥 먹었어요?' (Have you eaten?) acts as a friendly greeting similar to 'How are you?' — it shows care for the other person's wellbeing and is not always a literal question about food.",
   },
 
   // ─── TOPIK 2 / A2 (Q9–Q12) ──────────────────────────────
@@ -149,6 +193,27 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     correctIndex: 1,
     explanation: "-아/어 주세요 politely asks someone to do something for you. -ㅂ시다 proposes a joint action ('let's'). -겠습니다 expresses intention.",
   },
+  {
+    id: 23,
+    section: "Reading",
+    level: "TOPIK 2",
+    difficulty: 3,
+    passage: "시험이 다음 주에 있어서 매일 도서관에서 공부해요. 피곤하지만 좋은 점수를 받고 싶어요.",
+    question: "Why does this person go to the library every day?",
+    options: ["To borrow books", "To meet friends", "Because the exam is next week", "Because the library is near their home"],
+    correctIndex: 2,
+    explanation: "-어서 in '시험이 다음 주에 있어서' = 'because the exam is next week.' -어서 links cause to result. -지만 = however/but (피곤하지만 = although tired).",
+  },
+  {
+    id: 28,
+    section: "Speaking",
+    level: "TOPIK 2",
+    difficulty: 3,
+    question: "Talking casually to a close friend your own age — 'I'm going to the library.' Which form is most appropriate?",
+    options: ["도서관에 가십니다", "도서관에 가겠습니다", "도서관에 가요", "도서관에 가"],
+    correctIndex: 3,
+    explanation: "반말 (informal speech) like '도서관에 가' is used with close friends of the same age. '가요' is polite (해요체); '가십니다/가겠습니다' are formal and sound stiff in casual peer conversation.",
+  },
 
   // ─── TOPIK 3–4 / B1–B2 (Q13–Q16) ───────────────────────
   {
@@ -190,6 +255,27 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     options: ["Hearsay", "Personal past observation", "Future intention", "Suggestion"],
     correctIndex: 1,
     explanation: "-더라고요 reports something the speaker directly observed or experienced in the past. It cannot be used for hearsay (use -다고 하더라고요 for that) or about yourself.",
+  },
+  {
+    id: 24,
+    section: "Reading",
+    level: "TOPIK 3–4",
+    difficulty: 4,
+    passage: "현대인들은 스마트폰을 지나치게 사용하는 경향이 있다. 이로 인해 수면 부족과 집중력 저하 문제가 심각해지고 있다는 우려가 높아지고 있다.",
+    question: "What is the main concern expressed in this passage?",
+    options: ["Smartphones are becoming too expensive", "Excessive smartphone use is causing health and focus problems", "Sleep disorders have many different causes", "A new app was developed to improve concentration"],
+    correctIndex: 1,
+    explanation: "지나치게 사용 = excessive use. 이로 인해 = as a result of this. 수면 부족 = sleep deprivation, 집중력 저하 = decreased concentration. 우려 = concern/worry — a key TOPIK 3–4 vocabulary target.",
+  },
+  {
+    id: 29,
+    section: "Speaking",
+    level: "TOPIK 3–4",
+    difficulty: 4,
+    question: "You want to share your opinion in a group discussion without sounding too forceful. Which sentence ending is best?",
+    options: ["~입니다", "~것 같아요", "~어야 합니다", "~면 안 됩니다"],
+    correctIndex: 1,
+    explanation: "'~것 같아요' ('It seems / I think…') softens an opinion in spoken Korean. '~어야 합니다' = must do, '~면 안 됩니다' = must not — both express obligation and sound too assertive in open discussion.",
   },
 
   // ─── TOPIK 5–6 / C1–C2 (Q17–Q20) ───────────────────────
@@ -233,6 +319,27 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
     correctIndex: 1,
     explanation: "-기는커녕 = far from X, not even Y. Stronger and more dismissive than -뿐만 아니라. Example: 돕기는커녕 방해했다 = Far from helping, he got in the way.",
   },
+  {
+    id: 25,
+    section: "Reading",
+    level: "TOPIK 5–6",
+    difficulty: 5,
+    passage: "글로벌 공급망 불안정으로 인해 원자재 가격이 급등하면서 국내 소비자 물가에도 상당한 압력이 가해지고 있다. 정부는 물가 안정을 위한 긴급 재정 정책을 검토 중인 것으로 알려졌다.",
+    question: "What is the government currently reviewing, according to this passage?",
+    options: ["Trade agreements to diversify supply chains", "Expanding raw material exports", "Emergency fiscal policy to stabilise prices", "Abolishing price caps to protect consumers"],
+    correctIndex: 2,
+    explanation: "'물가 안정을 위한 긴급 재정 정책을 검토 중' = reviewing emergency fiscal policy for price stabilisation. 것으로 알려졌다 = it is understood that (formal reported-speech marker in academic/news writing).",
+  },
+  {
+    id: 30,
+    section: "Speaking",
+    level: "TOPIK 5–6",
+    difficulty: 5,
+    question: "You are giving a formal presentation at a business conference. Which speech level should you use throughout?",
+    options: ["반말 — sounds natural and confident", "해요체 — polite and widely used daily", "합쇼체 — formal register for announcements and presentations", "혼잣말 — used when addressing a large audience"],
+    correctIndex: 2,
+    explanation: "합쇼체 (-습니다/-ㅂ니다 endings) is expected for formal public speaking: conferences, official broadcasts, and presentations. 해요체 is polite but conversational; 반말 would be inappropriate with an unfamiliar professional audience.",
+  },
 ];
 
 export interface PlacementResult {
@@ -241,20 +348,20 @@ export interface PlacementResult {
   levelLabel: string;
   /** How close the score is to the band boundary */
   confidence: "solid" | "borderline-up" | "borderline-down";
-  sectionScores: { Vocabulary: number; Grammar: number; Reading: number };
+  sectionScores: { Vocabulary: number; Grammar: number; Reading: number; Speaking: number };
 }
 
 /**
- * Score brackets (out of 20 — 4 questions × 5 TOPIK bands):
- *  0–4   → Foundation (A0)
- *  5–8   → Level 1    (A1 / TOPIK 1)
- *  9–12  → Level 2    (A2 / TOPIK 2)
- *  13–16 → Level 3–4  (B1–B2 / TOPIK 3–4)
- *  17–20 → Level 5–6  (C1–C2 / TOPIK 5–6)
+ * Score brackets (out of 30 — 6 questions × 5 TOPIK bands):
+ *  0–6   → Foundation (A0)
+ *  7–12  → Level 1    (A1 / TOPIK 1)
+ *  13–18 → Level 2    (A2 / TOPIK 2)
+ *  19–24 → Level 3–4  (B1–B2 / TOPIK 3–4)
+ *  25–30 → Level 5–6  (C1–C2 / TOPIK 5–6)
  */
 export function computePlacementResult(answers: Record<number, number>): PlacementResult {
   let score = 0;
-  const sectionScores = { Vocabulary: 0, Grammar: 0, Reading: 0 };
+  const sectionScores = { Vocabulary: 0, Grammar: 0, Reading: 0, Speaking: 0 };
 
   for (const q of PLACEMENT_QUESTIONS) {
     if (answers[q.id] === q.correctIndex) {
@@ -268,22 +375,22 @@ export function computePlacementResult(answers: Record<number, number>): Placeme
   let bandMin: number;
   let bandMax: number;
 
-  if (score <= 4) {
-    levelKey = "foundation"; levelLabel = "Hangul Foundation"; bandMin = 0; bandMax = 4;
-  } else if (score <= 8) {
-    levelKey = "level_1"; levelLabel = "Level 1 (A1 / TOPIK 1)"; bandMin = 5; bandMax = 8;
+  if (score <= 6) {
+    levelKey = "foundation"; levelLabel = "Hangul Foundation"; bandMin = 0; bandMax = 6;
   } else if (score <= 12) {
-    levelKey = "level_2"; levelLabel = "Level 2 (A2 / TOPIK 2)"; bandMin = 9; bandMax = 12;
-  } else if (score <= 16) {
-    levelKey = "level_3"; levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)"; bandMin = 13; bandMax = 16;
+    levelKey = "level_1"; levelLabel = "Level 1 (A1 / TOPIK 1)"; bandMin = 7; bandMax = 12;
+  } else if (score <= 18) {
+    levelKey = "level_2"; levelLabel = "Level 2 (A2 / TOPIK 2)"; bandMin = 13; bandMax = 18;
+  } else if (score <= 24) {
+    levelKey = "level_3"; levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)"; bandMin = 19; bandMax = 24;
   } else {
-    levelKey = "level_5"; levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)"; bandMin = 17; bandMax = 20;
+    levelKey = "level_5"; levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)"; bandMin = 25; bandMax = 30;
   }
 
   // Within 1 of the upper boundary → close to the next level
   // Within 1 of the lower boundary → on the edge of the previous level
   const confidence: PlacementResult["confidence"] =
-    score >= bandMax - 1 && bandMax < 20 ? "borderline-up"
+    score >= bandMax - 1 && bandMax < 30 ? "borderline-up"
     : score <= bandMin + 1 && bandMin > 0  ? "borderline-down"
     : "solid";
 

@@ -38,6 +38,7 @@ const MySchedulePage = lazy(() => import("./pages/MySchedulePage"));
 const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
 const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage"));
+const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
 const PlacementTestPage = lazy(() => import("./pages/PlacementTestPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
@@ -135,6 +136,7 @@ const App = () => (
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
+                <Route path="/admin/korean-orchestra" element={<ProtectedRoute><KoreanOrchestratorPage /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

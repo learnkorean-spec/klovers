@@ -165,7 +165,7 @@ const ScrollRow = ({
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-20 bg-background overflow-hidden">
+    <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4 mb-10 text-center">
         {/* Badge */}
         <a

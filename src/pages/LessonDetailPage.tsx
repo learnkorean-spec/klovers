@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw, AlertTriangle } from "lucide-react";
 import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
@@ -16,6 +16,7 @@ import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { getWorldForLesson } from "@/constants/worlds";
+import { getGrammarMasteryWorldForLesson } from "@/constants/grammarMasteryWorlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
@@ -59,6 +60,7 @@ const LessonDetailPage = () => {
   });
   const [totalLessons, setTotalLessons] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [vocab, setVocab] = useState<VocabItem[]>([]);
   const [grammar, setGrammar] = useState<GrammarItem[]>([]);
@@ -80,38 +82,46 @@ const LessonDetailPage = () => {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
+      setFetchError(null);
       setSelectedAnswers({});
       setShowResults({});
       setFlippedCards(new Set());
       setStudiedCards(new Set());
       setCorrectCount(0);
 
-      const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
-      const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
-      const [lessonRes, countRes] = await Promise.all([
-        (baseQuery as any).eq("book", bookSlug).maybeSingle(),
-        (countQuery as any).eq("book", bookSlug),
-      ]);
-
-      const l = lessonRes.data as unknown as Lesson | null;
-      setLesson(l);
-      setTotalLessons(countRes.count || 0);
-
-      if (l) {
-        const [vRes, gRes, dRes, eRes, rRes] = await Promise.all([
-          supabase.from("lesson_vocabulary").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_grammar").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_dialogues").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_exercises").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_reading").select("*").eq("lesson_id", l.id).order("sort_order"),
+      try {
+        const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
+        const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
+        const [lessonRes, countRes] = await Promise.all([
+          (baseQuery as any).eq("book", bookSlug).maybeSingle(),
+          (countQuery as any).eq("book", bookSlug),
         ]);
-        setVocab((vRes.data as unknown as VocabItem[]) || []);
-        setGrammar((gRes.data as unknown as GrammarItem[]) || []);
-        setDialogue((dRes.data as unknown as DialogueLine[]) || []);
-        setExercises((eRes.data as unknown as ExerciseItem[]) || []);
-        setReading((rRes.data as unknown as ReadingItem[]) || []);
+
+        if (lessonRes.error) throw lessonRes.error;
+
+        const l = lessonRes.data as unknown as Lesson | null;
+        setLesson(l);
+        setTotalLessons(countRes.count || 0);
+
+        if (l) {
+          const [vRes, gRes, dRes, eRes, rRes] = await Promise.all([
+            supabase.from("lesson_vocabulary").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_grammar").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_dialogues").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_exercises").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_reading").select("*").eq("lesson_id", l.id).order("sort_order"),
+          ]);
+          setVocab((vRes.data as unknown as VocabItem[]) || []);
+          setGrammar((gRes.data as unknown as GrammarItem[]) || []);
+          setDialogue((dRes.data as unknown as DialogueLine[]) || []);
+          setExercises((eRes.data as unknown as ExerciseItem[]) || []);
+          setReading((rRes.data as unknown as ReadingItem[]) || []);
+        }
+        setLoading(false);
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : "Failed to load lesson");
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchAll();
   }, [lessonNum, bookSlug]);
@@ -190,6 +200,23 @@ const LessonDetailPage = () => {
     : 0;
   const sectionProgress = (sectionsDone / 6) * 100;
 
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
+          <div className="text-center space-y-4 max-w-sm">
+            <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
+            <h1 className="font-semibold text-foreground">Couldn't load this lesson</h1>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">Refresh</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -222,7 +249,9 @@ const LessonDetailPage = () => {
 
   const boss = isBossChallenge(lesson.sort_order);
   const checkpoint = isCheckpointLesson(lesson.sort_order);
-  const world = getWorldForLesson(lesson.sort_order);
+  const world = bookSlug === "grammar-mastery"
+    ? (() => { const gw = getGrammarMasteryWorldForLesson(lesson.sort_order); return { name: gw.name, nameAr: gw.name, emoji: gw.emoji }; })()
+    : getWorldForLesson(lesson.sort_order);
 
   const sectionLabels: Record<string, string> = {
     vocab_done: t("textbook.vocabulary"),

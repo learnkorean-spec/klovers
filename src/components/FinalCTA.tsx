@@ -49,6 +49,9 @@ const FinalCTA = () => {
       ref={sectionRef}
       className="py-20 md:py-28 relative overflow-hidden bg-primary"
     >
+      {/* Top edge gradient for depth */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
+
       {/* Background texture */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
         {KR_CHARS.map((char, i) => (

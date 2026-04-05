@@ -11,7 +11,7 @@ const MeetTeacher = () => {
   const highlights = tArray("teacher", "highlights") as { label: string; description: string }[];
 
   return (
-    <section className="py-28 bg-background overflow-hidden">
+    <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
 
         {/* Section header */}
