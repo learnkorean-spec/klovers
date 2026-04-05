@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LEVEL_SELECT_OPTIONS_WITH_SPECIAL } from "@/constants/levels";
 import { Button } from "@/components/ui/button";
@@ -1173,4 +1173,4 @@ const StudentManager = () => {
   );
 };
 
-export default StudentManager;
+export default memo(StudentManager);

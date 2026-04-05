@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { NextStepCard } from "@/components/NextStepCard";
 
 interface ExerciseItem {
   id: string;
@@ -265,6 +266,19 @@ const DailyQuizPage = () => {
               <p className="text-muted-foreground">
                 You've already completed your daily quiz. Come back tomorrow for a fresh challenge!
               </p>
+              {/* Countdown to next quiz */}
+              {(() => {
+                const now = new Date();
+                const midnight = new Date();
+                midnight.setHours(24, 0, 0, 0);
+                const hoursLeft = Math.floor((midnight.getTime() - now.getTime()) / 3600000);
+                const minutesLeft = Math.floor(((midnight.getTime() - now.getTime()) % 3600000) / 60000);
+                return (
+                  <p className="text-xs text-muted-foreground text-center">
+                    ⏰ Next quiz available in {hoursLeft}h {minutesLeft}m
+                  </p>
+                );
+              })()}
               <div className="pt-4 border-t">
                 <p className="text-sm text-muted-foreground mb-4">
                   💪 Keep up your learning streak by reviewing vocabulary instead!
@@ -391,17 +405,8 @@ const DailyQuizPage = () => {
                   : "Review the lessons and come back for more. Every attempt makes you stronger!"}
               </p>
 
-              <div className="pt-4 border-t flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Dashboard
-                </Button>
-                <Button className="flex-1" onClick={() => navigate("/review")}>
-                  Review Vocabulary
-                </Button>
+              <div className="pt-4 border-t">
+                <NextStepCard completedType="quiz" />
               </div>
             </CardContent>
           </Card>
@@ -497,28 +502,13 @@ const DailyQuizPage = () => {
                 </div>
               </RadioGroup>
 
-              {showResults[currentExercise.id] &&
-                currentExercise.explanation && (
-                  <div
-                    className={cn(
-                      "mt-4 p-3 rounded-lg",
-                      answers[currentExercise.id] ===
-                        currentExercise.correct_index
-                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                        : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                    )}
-                  >
-                    <p className="text-sm">
-                      <strong>
-                        {answers[currentExercise.id] ===
-                        currentExercise.correct_index
-                          ? "✅ Correct: "
-                          : "❌ Explanation: "}
-                      </strong>
-                      {currentExercise.explanation}
-                    </p>
-                  </div>
-                )}
+              {/* Explanation shown immediately after a wrong answer */}
+              {showResults[currentExercise.id] && answers[currentExercise.id] !== currentExercise.correct_index && currentExercise.explanation && (
+                <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">💡 Explanation</p>
+                  <p className="text-sm text-amber-800 dark:text-amber-300">{currentExercise.explanation}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

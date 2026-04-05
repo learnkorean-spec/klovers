@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -594,7 +594,7 @@ export function ChecklistBadge({ data, onClick }: { data: ChecklistData; onClick
 }
 
 /* ─── Main component ─── */
-export default function EnrollmentChecklistManager({ onAction, setAdminTab }: {
+function EnrollmentChecklistManager({ onAction, setAdminTab }: {
   onAction: (enrollmentId: string, action: string) => void;
   setAdminTab?: (tab: string) => void;
 }) {
@@ -776,3 +776,5 @@ export default function EnrollmentChecklistManager({ onAction, setAdminTab }: {
     </div>
   );
 }
+
+export default memo(EnrollmentChecklistManager);

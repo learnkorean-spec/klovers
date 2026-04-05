@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1441,4 +1441,4 @@ const GroupAttendanceManager = ({
   );
 };
 
-export default GroupAttendanceManager;
+export default memo(GroupAttendanceManager);

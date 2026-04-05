@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { LeaguePromotionModal, BadgeUnlockToast } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { BADGES } from "@/constants/gamification";
+import { supabase } from "@/integrations/supabase/client";
 
 export function VocabularyReviewPage() {
   useSEO({
@@ -30,6 +31,9 @@ export function VocabularyReviewPage() {
   const { toast: uiToast } = useToast();
   const [sessionStarted, setSessionStarted] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const [masteredCount, setMasteredCount] = useState(0);
+  const [reviewedCount, setReviewedCount] = useState(0);
 
   useEffect(() => {
     if (newBadges.length > 0) {
@@ -50,11 +54,35 @@ export function VocabularyReviewPage() {
     try {
       await recordReview(vocabId, quality);
       setXpEarned((prev) => prev + 5);
+      setReviewedCount((prev) => prev + 1);
+      if (quality >= 4) setMasteredCount((prev) => prev + 1);
       await awardXp(0, "review");
+
+      // Check review_rookie badge — award after 10 review sessions
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { count } = await supabase
+          .from("student_xp")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", session.user.id)
+          .eq("activity_type", "review");
+        if ((count || 0) >= 10) {
+          await supabase.from("student_badges").upsert(
+            { user_id: session.user.id, badge_key: "review_rookie" },
+            { onConflict: "user_id,badge_key" }
+          );
+        }
+      }
     } catch {
       toast.error("Could not save review. Please try again.");
     }
   };
+
+  useEffect(() => {
+    if (reviewedCount > 0 && reviewedCount >= dueCards.length && !sessionComplete) {
+      setSessionComplete(true);
+    }
+  }, [reviewedCount, dueCards.length, sessionComplete]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -140,19 +168,53 @@ export function VocabularyReviewPage() {
               </CardContent>
             </Card>
           ) : (
-            <div>
-              <VocabularyReview cards={dueCards} onComplete={handleReviewComplete} isLoading={srsLoading} />
-              {xpEarned > 0 && (
-                <div className="mt-8 text-center">
-                  <Card className="border-primary/20 bg-primary/5">
-                    <CardContent className="pt-6 pb-5">
-                      <p className="text-sm text-muted-foreground mb-1">XP Earned This Session</p>
-                      <p className="text-3xl font-bold text-primary">+{xpEarned} XP</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
+            sessionComplete ? (
+              <Card className="border-2">
+                <CardContent className="py-12 text-center space-y-5">
+                  <div className="text-6xl">🎉</div>
+                  <h2 className="text-2xl font-bold text-foreground">Session Complete!</h2>
+                  <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-foreground">{reviewedCount}</p>
+                      <p className="text-xs text-muted-foreground">Reviewed</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">{masteredCount}</p>
+                      <p className="text-xs text-muted-foreground">Mastered</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-primary">+{xpEarned}</p>
+                      <p className="text-xs text-muted-foreground">XP Earned</p>
+                    </div>
+                  </div>
+                  {masteredCount === reviewedCount && (
+                    <p className="text-sm font-medium text-green-600">🌟 Perfect session — you knew every card!</p>
+                  )}
+                  <div className="flex gap-3 justify-center pt-2">
+                    <Button variant="outline" onClick={() => { setSessionComplete(false); setSessionStarted(false); setReviewedCount(0); setMasteredCount(0); setXpEarned(0); }}>
+                      Review Again
+                    </Button>
+                    <Button onClick={() => navigate("/dashboard")}>
+                      Back to Dashboard
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div>
+                <VocabularyReview cards={dueCards} onComplete={handleReviewComplete} isLoading={srsLoading} />
+                {xpEarned > 0 && (
+                  <div className="mt-8 text-center">
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardContent className="pt-6 pb-5">
+                        <p className="text-sm text-muted-foreground mb-1">XP Earned This Session</p>
+                        <p className="text-3xl font-bold text-primary">+{xpEarned} XP</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            )
           )}
         </div>
       </main>

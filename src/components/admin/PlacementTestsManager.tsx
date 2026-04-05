@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
@@ -144,4 +144,4 @@ const PlacementTestsManager = () => {
   );
 };
 
-export default PlacementTestsManager;
+export default memo(PlacementTestsManager);

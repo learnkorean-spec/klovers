@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -435,7 +435,7 @@ function TopicGapPanel({
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export default function SeoOrchestrationPanel() {
+function SeoOrchestrationPanel() {
   const [loading, setLoading] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [result, setResult] = useState<OrchestrationResponse | null>(null);
@@ -604,3 +604,5 @@ export default function SeoOrchestrationPanel() {
     </div>
   );
 }
+
+export default memo(SeoOrchestrationPanel);
