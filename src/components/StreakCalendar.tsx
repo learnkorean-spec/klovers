@@ -134,7 +134,7 @@ export function StreakCalendar() {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <div className="min-w-[500px]">
+          <div className="min-w-[400px]">
             {/* Month labels */}
             <div className="flex mb-1 pl-8">
               {weeks.map((week, wi) => {

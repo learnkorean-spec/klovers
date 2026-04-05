@@ -430,11 +430,11 @@ const StudentDashboard = () => {
   const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
 
   const quickStats = useMemo(() => [
-    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
-    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Total XP", value: gamification.totalXp.toLocaleString(), sub: weeklyXp > 0 ? `+${weeklyXp} this week` : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
     { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
     { label: "League", value: league?.emoji ? `${league.emoji} ${league.name}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
-  ], [gamification.totalXp, gamification.streak.current_streak, lessonsCompleted, league]);
+  ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league, weeklyXp]);
 
   const quickActions = useMemo(() => [
     { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
@@ -484,12 +484,21 @@ const StudentDashboard = () => {
       <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{todayStr}</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+          <div className="flex items-center gap-4 bg-gradient-to-r from-primary/5 to-transparent rounded-2xl px-5 py-4 border border-primary/10">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-base shrink-0 select-none">
+              {displayName?.[0]?.toUpperCase() ?? "K"}
             </div>
-            <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0 mt-1">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
+              <h1 className="text-lg md:text-2xl font-bold text-foreground leading-tight">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+            </div>
+            {league && (
+              <div className="hidden sm:flex items-center gap-1.5 bg-background rounded-xl px-3 py-1.5 border border-border text-sm font-semibold shrink-0">
+                <span>{league.emoji}</span>
+                <span className="text-foreground">{league.name}</span>
+              </div>
+            )}
+            <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0">
               <Download className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Export Progress</span>
             </Button>
@@ -540,7 +549,7 @@ const StudentDashboard = () => {
 
           {/* ── Quick Stats (always visible) ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickStats.map(({ label, value, icon: Icon, color }) => (
+            {quickStats.map(({ label, value, sub, icon: Icon, color }) => (
               <Card key={label} className="border-border">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center gap-3">
@@ -550,6 +559,7 @@ const StudentDashboard = () => {
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">{label}</p>
                       <p className="font-bold text-foreground text-sm leading-tight truncate">{value}</p>
+                      {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
                     </div>
                   </div>
                 </CardContent>
@@ -590,7 +600,10 @@ const StudentDashboard = () => {
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="bg-card border border-border rounded-2xl px-5 py-4 space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-foreground">Weekly XP Goal</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">Weekly XP Goal</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>{pct}%</span>
+                    </div>
                     <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
                   </div>
                   <div className="h-2.5 bg-muted rounded-full overflow-hidden">
@@ -641,7 +654,7 @@ const StudentDashboard = () => {
                 <div className="text-3xl">{today.emoji}</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Word of the day</p>
-                  <p className="text-xl font-bold text-foreground leading-tight">{today.ko}</p>
+                  <p className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">{today.ko}</p>
                   <p className="text-sm text-muted-foreground">{today.rom} · {today.en}</p>
                 </div>
                 <Button size="sm" variant={vocabClaimed ? "ghost" : "default"} disabled={vocabClaimed} onClick={handleVocabClaim} className="shrink-0">
@@ -709,6 +722,14 @@ const StudentDashboard = () => {
                   <AlertCircle className="h-10 w-10 mx-auto text-primary" />
                   <h2 className="text-xl font-semibold text-foreground">No Active Plan Yet</h2>
                   <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enroll to get live classes, personalized coaching, and track your attendance.</p>
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex -space-x-1">
+                      {["🇪🇬","🇸🇦","🇦🇪","🇯🇴"].map((flag, i) => (
+                        <span key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">{flag}</span>
+                      ))}
+                    </div>
+                    <span>Join <strong className="text-foreground">1,000+</strong> students from Egypt &amp; the Arab world</span>
+                  </div>
                   <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
                 </CardContent>
               </Card>
@@ -863,7 +884,7 @@ const StudentDashboard = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {[
                             { label: "Package", val: enrollment.sessions_total, red: false },
                             { label: "Used", val: totalUsed, red: false },
@@ -875,6 +896,18 @@ const StudentDashboard = () => {
                               <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
                             </div>
                           ))}
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                            <span>Sessions used</span>
+                            <span>{Math.min(totalUsed, enrollment.sessions_total)}/{enrollment.sessions_total}</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-primary"}`}
+                              style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
+                            />
+                          </div>
                         </div>
                         {due > 0 && (
                           <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
@@ -940,7 +973,7 @@ const StudentDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
                           { label: "Package", val: enrollment.sessions_total },
                           { label: "Used", val: totalUsed },
