@@ -398,6 +398,42 @@ const StudentDashboard = () => {
     if (key === "Full name") setUserName(_value);
   };
 
+  // ── Hooks that must live before any early return ──────────────────────────
+  const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
+
+  // Level-up flash: detect league change since last session
+  const [showLevelUpFlash, setShowLevelUpFlash] = useState(false);
+  const levelUpChecked = useRef(false);
+  useEffect(() => {
+    if (levelUpChecked.current || !league) return;
+    levelUpChecked.current = true;
+    const prevLeague = sessionStorage.getItem("kl_last_league");
+    if (prevLeague && prevLeague !== league.key) {
+      setShowLevelUpFlash(true);
+      setTimeout(() => setShowLevelUpFlash(false), 2200);
+    }
+    sessionStorage.setItem("kl_last_league", league.key);
+  }, [league]);
+
+  // Animated count-up for numeric stats
+  const xpCountUp = useCountUp(gamification.totalXp, 1200);
+  const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
+
+  const quickStats = useMemo(() => [
+    { label: "Total XP", rawValue: gamification.totalXp, sub: weeklyXp > 0 ? `+${weeklyXp} this week` : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Day Streak", rawValue: gamification.streak.current_streak, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
+    { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+  ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league, weeklyXp]);
+
+  const quickActions = useMemo(() => [
+    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
+    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
+    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
+    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
+  ], []);
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (gateLoading || resetBlocked || loading) {
     return (
       <div className="min-h-screen bg-muted/20">
@@ -454,40 +490,6 @@ const StudentDashboard = () => {
   })();
 
   const todayStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-
-  const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
-
-  // Level-up flash: detect league change since last session
-  const [showLevelUpFlash, setShowLevelUpFlash] = useState(false);
-  const levelUpChecked = useRef(false);
-  useEffect(() => {
-    if (levelUpChecked.current || !league) return;
-    levelUpChecked.current = true;
-    const prevLeague = sessionStorage.getItem("kl_last_league");
-    if (prevLeague && prevLeague !== league.key) {
-      setShowLevelUpFlash(true);
-      setTimeout(() => setShowLevelUpFlash(false), 2200);
-    }
-    sessionStorage.setItem("kl_last_league", league.key);
-  }, [league]);
-
-  // Animated count-up for numeric stats
-  const xpCountUp = useCountUp(gamification.totalXp, 1200);
-  const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
-
-  const quickStats = useMemo(() => [
-    { label: "Total XP", rawValue: gamification.totalXp, sub: weeklyXp > 0 ? `+${weeklyXp} this week` : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
-    { label: "Day Streak", rawValue: gamification.streak.current_streak, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
-    { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
-    { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
-  ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league, weeklyXp]);
-
-  const quickActions = useMemo(() => [
-    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
-    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
-    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
-    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
-  ], []);
 
   const handleExportProgress = () => {
     const lines: string[] = [
