@@ -64,7 +64,8 @@ const EnrollNowPage = () => {
         "name": "Klovers Korean Academy",
         "url": "https://kloversegy.com"
       },
-      "inLanguage": "ko",
+      "inLanguage": "en",
+      "courseMode": "online",
       "url": "https://kloversegy.com/enroll-now",
       "breadcrumb": {
         "@type": "BreadcrumbList",
@@ -78,6 +79,8 @@ const EnrollNowPage = () => {
     document.head.appendChild(el);
     return () => { el.remove(); };
   }, []);
+
+  useEffect(() => { track.pageView(); }, []);
 
   const [searchParams] = useSearchParams();
   const { t, tArray } = useLanguage();

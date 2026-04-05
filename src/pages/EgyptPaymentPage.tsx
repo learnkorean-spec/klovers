@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle, Sparkles, ArrowRight } from "lucide-react";
+import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { track } from "@/lib/tracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 const METHOD_DETAILS: Record<string, { label: string; value: string }> = {
@@ -227,12 +229,15 @@ const PaymentForm = ({
       <CardContent className="space-y-5">
         {/* Payment Method */}
         <div className="space-y-2">
-          <Label>Payment Method *</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <Label id="payment-method-label">Payment Method *</Label>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="payment-method-label">
             {METHODS.map((m) => (
               <button
                 key={m.value}
                 type="button"
+                role="radio"
+                aria-checked={paymentMethod === m.value}
+                aria-label={m.label}
                 onClick={() => setPaymentMethod(m.value)}
                 className={`p-3 rounded-lg border-2 text-center transition-all ${
                   paymentMethod === m.value
@@ -240,7 +245,7 @@ const PaymentForm = ({
                     : "border-border hover:border-primary/50"
                 }`}
               >
-                <span className="text-xl block">{m.icon}</span>
+                <span className="text-xl block" aria-hidden="true">{m.icon}</span>
                 <span className="text-xs font-medium text-foreground">{m.label}</span>
               </button>
             ))}
@@ -329,7 +334,7 @@ const PaymentForm = ({
 
 /* ── Main Page ── */
 const EgyptPaymentPage = () => {
-  useSEO({ title: "Complete Payment | Klovers Korean Academy", description: "Complete your enrollment payment to activate your Klovers Korean course." });
+  useSEO({ title: "Complete Payment | Klovers Korean Academy", description: "Complete your enrollment payment to activate your Klovers Korean course.", noindex: true });
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
   const navigate = useNavigate();
   const [enrollment, setEnrollment] = useState<EnrollmentData | null>(null);
@@ -337,6 +342,7 @@ const EgyptPaymentPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [replacing, setReplacing] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [lastFileName, setLastFileName] = useState("");
 
   useEffect(() => {
@@ -378,6 +384,7 @@ const EgyptPaymentPage = () => {
       setLoading(false);
     };
     load();
+    track.pageView();
   }, [enrollmentId, navigate]);
 
   const uploadReceipt = useCallback(async (file: File, enrollId: string): Promise<string> => {
@@ -398,8 +405,10 @@ const EgyptPaymentPage = () => {
   const handleSubmit = async (method: string, date: string, file: File, txRef: string) => {
     if (!enrollment) return;
     setSubmitting(true);
+    setUploadProgress(10);
     try {
       const path = await uploadReceipt(file, enrollment.id);
+      setUploadProgress(70);
 
       const { error: rpcError } = await supabase.rpc("submit_egypt_payment", {
         _enrollment_id: enrollment.id,
@@ -425,15 +434,18 @@ const EgyptPaymentPage = () => {
         throw rpcError;
       }
 
+      setUploadProgress(100);
       setLastFileName(file.name);
       setEnrollment((prev) =>
         prev ? { ...prev, approval_status: "UNDER_REVIEW", payment_method: method, payment_date: date, receipt_url: path } : null
       );
+      track.purchase({ value: enrollment.amount, currency: enrollment.currency || "EGP" });
       toast({ title: "Payment submitted!", description: "Your payment is now under review." });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
+      setUploadProgress(null);
     }
   };
 
@@ -493,7 +505,17 @@ const EgyptPaymentPage = () => {
         <OrderSummary enrollment={enrollment} />
 
         {enrollment.approval_status === "PENDING_PAYMENT" && (
-          <PaymentForm enrollment={enrollment} onSubmit={handleSubmit} submitting={submitting} />
+          <>
+            {uploadProgress !== null && (
+              <div className="mb-4 space-y-1">
+                <Progress value={uploadProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center">
+                  {uploadProgress < 70 ? "Uploading receipt..." : uploadProgress < 100 ? "Submitting payment..." : "Done!"}
+                </p>
+              </div>
+            )}
+            <PaymentForm enrollment={enrollment} onSubmit={handleSubmit} submitting={submitting} />
+          </>
         )}
 
         {enrollment.approval_status === "UNDER_REVIEW" && (

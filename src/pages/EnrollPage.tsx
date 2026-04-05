@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { type TierKey, type ClassType, type Duration, tierPrices, getTierForCountry, DURATION_CLASSES } from "@/lib/stripePrices";
+import { track } from "@/lib/tracking";
 
 const EnrollPage = () => {
   useSEO({ title: "Enroll Now", description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.", canonical: "https://kloversegy.com/enroll" });
@@ -24,11 +25,13 @@ const EnrollPage = () => {
   const [userCountry, setUserCountry] = useState<string>("");
   const navigate = useNavigate();
 
+  useEffect(() => { track.pageView(); }, []);
+
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/login");
+        navigate(`/login?redirect=${encodeURIComponent("/enroll")}`);
         return;
       }
       setUserId(session.user.id);
@@ -55,7 +58,20 @@ const EnrollPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!receiptFile || !userId || !planType || !duration || !paymentMethod || price === null) return;
+
+    // Client-side file validation
+    if (receiptFile.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Receipt must be under 5MB.", variant: "destructive" });
+      return;
+    }
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!allowedTypes.includes(receiptFile.type)) {
+      toast({ title: "Invalid file type", description: "Only JPG, PNG, or PDF files are accepted.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
+    track.initiateCheckout({ value: price, currency: "USD" });
 
     try {
       // 1. Create enrollment FIRST (so we have an ID before uploading)
@@ -145,16 +161,16 @@ const EnrollPage = () => {
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Select value={planType} onValueChange={(v) => setPlanType(v as ClassType)}>
-                  <SelectTrigger><SelectValue placeholder="Plan type" /></SelectTrigger>
+                <Select value={planType} onValueChange={(v) => setPlanType(v as ClassType)} required>
+                  <SelectTrigger aria-label="Plan type"><SelectValue placeholder="Plan type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="group">👥 Group Classes</SelectItem>
                     <SelectItem value="private">👤 Private Classes</SelectItem>
                   </SelectContent>
                 </Select>
 
-                <Select value={duration} onValueChange={setDuration}>
-                  <SelectTrigger><SelectValue placeholder="Duration" /></SelectTrigger>
+                <Select value={duration} onValueChange={setDuration} required>
+                  <SelectTrigger aria-label="Duration"><SelectValue placeholder="Duration" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1 Month — 4 classes</SelectItem>
                     <SelectItem value="3">3 Months — 12 classes</SelectItem>
@@ -175,8 +191,8 @@ const EnrollPage = () => {
                   </div>
                 )}
 
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
+                  <SelectTrigger aria-label="Payment method"><SelectValue placeholder="Payment method" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="vodafone_cash">📱 Vodafone Cash</SelectItem>
                     <SelectItem value="instapay">💳 InstaPay</SelectItem>

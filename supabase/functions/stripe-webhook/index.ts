@@ -88,6 +88,82 @@ serve(async (req) => {
 
     const event: Stripe.Event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
 
+    // ── Handle charge refunds ──
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+
+      if (paymentIntentId) {
+        const { data: enrollment } = await supabaseAdmin
+          .from("enrollments")
+          .select("id, user_id, sessions_remaining")
+          .eq("stripe_payment_intent_id", paymentIntentId)
+          .maybeSingle();
+
+        if (enrollment) {
+          await supabaseAdmin.from("enrollments").update({
+            payment_status: "REFUNDED",
+            enrollment_status: "cancelled",
+          }).eq("id", enrollment.id);
+
+          // Deduct credits from profile
+          if (enrollment.user_id && enrollment.sessions_remaining > 0) {
+            const { data: profile } = await supabaseAdmin
+              .from("profiles")
+              .select("credits")
+              .eq("user_id", enrollment.user_id)
+              .single();
+
+            if (profile) {
+              await supabaseAdmin.from("profiles").update({
+                credits: Math.max(0, (profile.credits || 0) - enrollment.sessions_remaining),
+              }).eq("user_id", enrollment.user_id);
+            }
+          }
+
+          await supabaseAdmin.from("admin_notifications").insert({
+            message: `Stripe charge refunded for enrollment ${enrollment.id}. Enrollment cancelled and credits deducted.`,
+            type: "payment_refunded",
+            related_user_id: enrollment.user_id,
+          });
+          console.log(`Refund processed for enrollment ${enrollment.id}`);
+        }
+      }
+
+      return new Response(JSON.stringify({ received: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Handle payment failures ──
+    if (event.type === "payment_intent.payment_failed") {
+      const pi = event.data.object as Stripe.PaymentIntent;
+
+      const { data: enrollment } = await supabaseAdmin
+        .from("enrollments")
+        .select("id, user_id")
+        .eq("stripe_payment_intent_id", pi.id)
+        .maybeSingle();
+
+      if (enrollment) {
+        await supabaseAdmin.from("enrollments").update({
+          payment_status: "FAILED",
+        }).eq("id", enrollment.id);
+
+        await supabaseAdmin.from("admin_notifications").insert({
+          message: `Stripe payment failed for enrollment ${enrollment.id}. Reason: ${pi.last_payment_error?.message || "unknown"}.`,
+          type: "payment_failed",
+          related_user_id: enrollment.user_id,
+        });
+        console.log(`Payment failed for enrollment ${enrollment.id}`);
+      }
+
+      return new Response(JSON.stringify({ received: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Handle successful checkout ──
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const meta = session.metadata;
@@ -209,6 +285,7 @@ serve(async (req) => {
         preferred_start: preferredStart,
         level: level || null,
         package_id: packageId || null,
+        currency: session.currency?.toUpperCase() || "USD",
       }).select("id").single();
 
       // Save level to profile if provided

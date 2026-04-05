@@ -327,6 +327,72 @@ function PaymentMethodEditor({ enrollmentId, currentMethod, onSaved }: { enrollm
 }
 
 /* ─── Side panel for one student ─── */
+function AdminNotesEditor({ enrollmentId, initialNotes }: { enrollmentId: string; initialNotes: string }) {
+  const [notes, setNotes] = useState(initialNotes);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("enrollments").update({ admin_notes: notes.trim() } as any).eq("id", enrollmentId);
+    setSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else toast({ title: "Notes saved" });
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">Admin Notes</label>
+      <textarea
+        className="w-full text-xs border border-border rounded-md p-2 bg-background text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+        rows={2}
+        placeholder="Internal notes (not visible to student)..."
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+      />
+      <Button size="sm" variant="outline" onClick={save} disabled={saving} className="h-7 text-xs">
+        {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save Notes
+      </Button>
+    </div>
+  );
+}
+
+function CancelEnrollmentButton({ enrollmentId, onCancelled }: { enrollmentId: string; onCancelled: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    const { error } = await supabase.rpc("cancel_enrollment" as any, { _enrollment_id: enrollmentId });
+    setCancelling(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setConfirming(false);
+      return;
+    }
+    toast({ title: "Enrollment cancelled", description: "Credits deducted and student removed from groups." });
+    setConfirming(false);
+    onCancelled();
+  };
+
+  if (!confirming) {
+    return (
+      <Button size="sm" variant="destructive" onClick={() => setConfirming(true)} className="h-7 text-xs gap-1">
+        <XCircle className="h-3 w-3" /> Cancel Enrollment
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-2 bg-destructive/10 border border-destructive/20 rounded-md">
+      <p className="text-xs text-destructive flex-1">This will deduct credits and remove from groups. Confirm?</p>
+      <Button size="sm" variant="destructive" onClick={handleCancel} disabled={cancelling} className="h-7 text-xs">
+        {cancelling ? <Loader2 className="h-3 w-3 animate-spin" /> : "Yes, Cancel"}
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => setConfirming(false)} className="h-7 text-xs">No</Button>
+    </div>
+  );
+}
+
 function ChecklistPanel({ data, open, onClose, onRefresh, slots, setAdminTab }: {
   data: ChecklistData | null;
   open: boolean;
@@ -457,6 +523,14 @@ function ChecklistPanel({ data, open, onClose, onRefresh, slots, setAdminTab }: 
             <Badge variant="outline" className="text-[10px] capitalize">{data.plan_type}</Badge>
             {data.level && <Badge variant="outline" className="text-[10px]">{data.level}</Badge>}
           </div>
+        </div>
+
+        {/* Admin Notes + Cancel */}
+        <div className="mt-4 space-y-3 border-t border-border pt-4">
+          <AdminNotesEditor enrollmentId={data.enrollment_id} initialNotes={(data as any).admin_notes || ""} />
+          {data.overall_state !== "SUCCESS" && (
+            <CancelEnrollmentButton enrollmentId={data.enrollment_id} onCancelled={() => { onClose(); onRefresh(); }} />
+          )}
         </div>
 
         <div className="mt-6 space-y-5">
