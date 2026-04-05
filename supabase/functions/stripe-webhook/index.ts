@@ -86,8 +86,7 @@ serve(async (req) => {
       );
     }
 
-    let event: Stripe.Event;
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    const event: Stripe.Event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;

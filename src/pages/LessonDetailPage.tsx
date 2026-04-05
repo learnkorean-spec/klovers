@@ -16,6 +16,7 @@ import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { getWorldForLesson } from "@/constants/worlds";
+import { getGrammarMasteryWorldForLesson } from "@/constants/grammarMasteryWorlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
@@ -222,7 +223,9 @@ const LessonDetailPage = () => {
 
   const boss = isBossChallenge(lesson.sort_order);
   const checkpoint = isCheckpointLesson(lesson.sort_order);
-  const world = getWorldForLesson(lesson.sort_order);
+  const world = bookSlug === "grammar-mastery"
+    ? (() => { const gw = getGrammarMasteryWorldForLesson(lesson.sort_order); return { name: gw.name, nameAr: gw.name, emoji: gw.emoji }; })()
+    : getWorldForLesson(lesson.sort_order);
 
   const sectionLabels: Record<string, string> = {
     vocab_done: t("textbook.vocabulary"),
