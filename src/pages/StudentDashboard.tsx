@@ -38,7 +38,7 @@ const StreakCalendar = lazy(() =>
 const DailyBonusCard = lazy(() =>
   import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
 );
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -209,6 +209,10 @@ const StudentDashboard = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [weeklyXpData, setWeeklyXpData] = useState<{day: string; xp: number}[]>([]);
+  const [skillBreakdown, setSkillBreakdown] = useState<{name: string; value: number; color: string}[]>([]);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [quizDoneToday, setQuizDoneToday] = useState<boolean | null>(null);
   const vocabStorageKey = `vocab_xp_${new Date().toISOString().split("T")[0]}`;
   const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
@@ -370,6 +374,65 @@ const StudentDashboard = () => {
     };
     load();
   }, [navigate, gateLoading, resetBlocked, retryCount]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchAnalytics = async () => {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const { data } = await supabase
+        .from("student_xp")
+        .select("xp_earned, activity_type, created_at")
+        .eq("user_id", userId)
+        .gte("created_at", sevenDaysAgo.toISOString());
+
+      if (!data) return;
+
+      // Build last 7 days array
+      const days = Array.from({length: 7}, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d;
+      });
+      const xpByDay = days.map(d => {
+        const dayStr = d.toISOString().split("T")[0];
+        const xp = data.filter(r => r.created_at.startsWith(dayStr)).reduce((s, r) => s + (r.xp_earned || 0), 0);
+        return { day: d.toLocaleDateString("en-GB", {weekday: "short"}), xp };
+      });
+      setWeeklyXpData(xpByDay);
+
+      // Skill breakdown
+      const skillMap: Record<string, {label: string; color: string}> = {
+        vocab: {label: "Vocabulary", color: "#3b82f6"},
+        grammar: {label: "Grammar", color: "#8b5cf6"},
+        dialogue: {label: "Dialogue", color: "#10b981"},
+        exercise: {label: "Exercises", color: "#f59e0b"},
+        reading: {label: "Reading", color: "#ef4444"},
+      };
+      const skillCounts: Record<string, number> = {};
+      data.forEach(r => {
+        const key = r.activity_type?.split("_")[0] || "other";
+        if (skillMap[key]) skillCounts[key] = (skillCounts[key] || 0) + (r.xp_earned || 0);
+      });
+      const breakdown = Object.entries(skillMap)
+        .filter(([k]) => (skillCounts[k] || 0) > 0)
+        .map(([k, v]) => ({name: v.label, value: skillCounts[k] || 0, color: v.color}))
+        .sort((a, b) => b.value - a.value);
+      setSkillBreakdown(breakdown);
+    };
+    fetchAnalytics();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    supabase.from("student_xp")
+      .select("id").eq("user_id", userId).eq("activity_type", "challenge")
+      .gte("created_at", today.toISOString()).limit(1).maybeSingle()
+      .then(({data}) => setQuizDoneToday(!!data));
+  }, [userId]);
 
   const handleItemCompleted = (key: string, _value: string) => {
     setChecklistItems((prev) =>
@@ -624,6 +687,21 @@ const StudentDashboard = () => {
             <DailyBonusCard />
           </Suspense>
 
+          {/* ── Daily Quiz Nudge ── */}
+          {quizDoneToday === false && (
+            <button
+              onClick={() => navigate("/daily-quiz")}
+              className="w-full flex items-center gap-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800/50 rounded-2xl px-5 py-3.5 hover:bg-yellow-100 dark:hover:bg-yellow-950/50 transition-colors text-left group"
+            >
+              <span className="text-2xl">⚡</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm">Daily quiz available!</p>
+                <p className="text-yellow-700/70 dark:text-yellow-300/70 text-xs">Earn +30 XP · Protect your streak · Takes 5 minutes</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-yellow-600 dark:text-yellow-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </button>
+          )}
+
           {/* ── Quick Actions (always visible) ── */}
           <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
@@ -679,6 +757,91 @@ const StudentDashboard = () => {
               </div>
             );
           })()}
+
+          {/* ── My Learning Stats ── */}
+          <Collapsible open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between bg-card border border-border rounded-2xl px-5 py-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📊</span>
+                  <span className="font-semibold text-sm text-foreground">My Learning Stats</span>
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${analyticsOpen ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="bg-card border border-border border-t-0 rounded-b-2xl px-5 pb-5 space-y-5">
+                {/* Weekly XP bar chart — manual bars, no recharts import needed */}
+                <div className="pt-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">XP this week</p>
+                  <div className="flex items-end gap-1.5 h-20">
+                    {weeklyXpData.map(({day, xp}) => {
+                      const maxXp = Math.max(...weeklyXpData.map(d => d.xp), 1);
+                      const heightPct = Math.max(4, (xp / maxXp) * 100);
+                      const isToday = day === new Date().toLocaleDateString("en-GB", {weekday: "short"});
+                      return (
+                        <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                          <div className="w-full relative group" style={{height: "64px"}}>
+                            <div
+                              className={`absolute bottom-0 w-full rounded-t-md transition-all duration-700 ${isToday ? "bg-primary" : "bg-primary/30"}`}
+                              style={{height: `${heightPct}%`}}
+                            />
+                            {xp > 0 && (
+                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                +{xp}
+                              </div>
+                            )}
+                          </div>
+                          <p className={`text-[10px] ${isToday ? "text-primary font-bold" : "text-muted-foreground"}`}>{day}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Skill breakdown */}
+                {skillBreakdown.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Strongest skills</p>
+                    <div className="space-y-2">
+                      {skillBreakdown.slice(0, 4).map(({name, value, color}) => {
+                        const maxVal = skillBreakdown[0].value;
+                        return (
+                          <div key={name} className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground w-20 shrink-0">{name}</p>
+                            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-700" style={{width: `${(value/maxVal)*100}%`, backgroundColor: color}} />
+                            </div>
+                            <p className="text-xs text-muted-foreground w-10 text-right">{value} XP</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lesson mastery */}
+                {(() => {
+                  const total = Object.keys(gamification.lessonProgress).length;
+                  const mastered = Object.values(gamification.lessonProgress).filter(p => p.chapter_completed).length;
+                  const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+                  if (total === 0) return null;
+                  return (
+                    <div>
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="font-semibold text-muted-foreground uppercase tracking-wider">Lesson mastery</span>
+                        <span className="text-foreground font-medium">{mastered}/{total} chapters</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-green-500 rounded-full transition-all duration-700" style={{width: `${pct}%`}} />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{pct}% of started lessons fully completed</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* ── Vocabulary of the Day ── */}
           {(() => {
