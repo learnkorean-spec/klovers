@@ -73,6 +73,7 @@ const DailyQuizPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [quizAlreadyDone, setQuizAlreadyDone] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return; // Wait for auth to resolve before acting
@@ -82,8 +83,9 @@ const DailyQuizPage = () => {
 
   const fetchDailyQuiz = async () => {
     if (!user) return;
-
+    setFetchError(null);
     setLoading(true);
+    try {
 
     // Check if quiz already done today (use maybeSingle to avoid error on no rows)
     const today = new Date();
@@ -151,6 +153,10 @@ const DailyQuizPage = () => {
 
     setExercises(shuffled as ExerciseItem[]);
     setLoading(false);
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Failed to load quiz.");
+      setLoading(false);
+    }
   };
 
   const currentExercise = exercises[currentIndex];
@@ -226,6 +232,22 @@ const DailyQuizPage = () => {
   }
 
   if (!user) return null;
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
+          <div className="text-center space-y-3 max-w-sm">
+            <p className="text-4xl">😕</p>
+            <h2 className="font-semibold text-foreground">Couldn't load today's quiz</h2>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <button onClick={() => fetchDailyQuiz()} className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80">Try again</button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (quizAlreadyDone) {
     return (

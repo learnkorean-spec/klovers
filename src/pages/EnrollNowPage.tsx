@@ -522,6 +522,7 @@ const EnrollNowPage = () => {
       }
     } catch (err) {
       console.error("Lead submit error:", err);
+      toast({ title: "Couldn't save your info", description: "Please message us on WhatsApp to complete your enrollment.", variant: "destructive" });
     }
   };
 

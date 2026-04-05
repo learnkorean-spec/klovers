@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -392,7 +393,9 @@ const GamesPage = () => {
 
         {/* Active game */}
         <div id="active-game-area" className="border-t border-border scroll-mt-20">
-          {renderGame()}
+          <PageErrorBoundary context="this game" onRetry={() => {/* game re-renders on state change */}}>
+            {renderGame()}
+          </PageErrorBoundary>
         </div>
         <FinalCTA />
       </main>
