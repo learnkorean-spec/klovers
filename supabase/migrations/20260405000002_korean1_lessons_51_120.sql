@@ -2313,3 +2313,1553 @@ BEGIN
     (l_id, '설득력 있는 논증을 구성하려면 명확한 주장과 충분한 근거가 필요합니다. 효과적인 논증은 사실에 근거하고 논리적으로 전개됩니다. 한국어에서 ''뿐만 아니라''는 논거를 추가할 때, ''반면에''는 대조적인 관점을 제시할 때 사용합니다. ''-다는 점에서''는 특정 측면에서의 주장을 전개할 때 유용합니다. 반론을 인정하면서도 자신의 주장을 유지하는 것이 성숙한 논쟁의 방식입니다. TOPIK 쓰기에서도 이러한 논증 기술이 요구됩니다.', 'To construct a persuasive argument, a clear claim and sufficient evidence are needed. An effective argument is based on facts and proceeds logically. In Korean, ''ppunman anira'' is used to add arguments, and ''banmyeon-e'' is used to present contrasting viewpoints. -다는 점에서 is useful when developing an argument from a specific angle. Acknowledging counterarguments while maintaining your own claim is the approach of mature argumentation. These argumentation skills are also required in TOPIK writing.', 1);
 END $$;
 
+
+-- ============================================================
+-- Lesson 93: News and Media Language (뉴스 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 93;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=93 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '보도하다', 'bodohada', 'to report (news)', 1),
+    (l_id, '기사', 'gisa', 'article, news story', 2),
+    (l_id, '헤드라인', 'hedeurain', 'headline', 3),
+    (l_id, '취재하다', 'chwiaehada', 'to gather news, to cover', 4),
+    (l_id, '발표되다', 'balpyodoeda', 'to be announced', 5),
+    (l_id, '밝혀지다', 'balkyeojida', 'to be revealed, come to light', 6),
+    (l_id, '따르면', 'ttareumyeon', 'according to', 7),
+    (l_id, '관계자', 'gwangyeja', 'related person, official', 8),
+    (l_id, '전했다', 'jeonhaessda', 'reported (quote)', 9),
+    (l_id, '논란', 'nollan', 'controversy', 10),
+    (l_id, '여론', 'yeollon', 'public opinion', 11),
+    (l_id, '공식 입장', 'gongsik ipjang', 'official stance', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'N에 따르면 (에 의하면)', 'N + 에 따르면 / N + 에 의하면', 'Formal expression meaning "according to N," used in news and reports.', '[{"korean":"정부 발표에 따르면 올해 GDP가 3% 성장했다.","english":"According to the government announcement, GDP grew 3% this year."},{"korean":"연구 결과에 의하면 이 물질은 안전하다.","english":"According to research results, this substance is safe."}]', 1),
+    (l_id, 'V/A-다고 전했다/밝혔다', 'V/A clause + 다고 전했다 / 밝혔다', 'Formal indirect speech for news: "reported that..." or "revealed that..."', '[{"korean":"관계자는 이 문제를 조속히 해결하겠다고 밝혔다.","english":"An official revealed that they would resolve this issue promptly."},{"korean":"대변인은 회의가 성공적이었다고 전했다.","english":"The spokesperson reported that the meeting was successful."}]', 2),
+    (l_id, 'V-(으)ㄴ 것으로 알려졌다', 'V stem + (으)ㄴ 것으로 알려졌다', 'Formal expression for reporting: "it became known that V" or "reportedly V."', '[{"korean":"사고 원인은 기계 결함인 것으로 알려졌다.","english":"The cause of the accident was reportedly a mechanical defect."},{"korean":"협상이 타결된 것으로 알려졌다.","english":"It became known that the negotiations were concluded."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '앵커', '오늘의 주요 뉴스입니다. 정부에 따르면 올해 경제성장률이 2.5%를 기록했다고 발표됐습니다.', 'Oneul-ui juyo nyuseu-imnida. Jeongbu-e ttareumyeon olhae gyeongje seongjang-nyul-i 2.5%-reul girokhaessgo balpyodoessseumnida.', 'Here is today''s major news. According to the government, it was announced that this year''s economic growth rate recorded 2.5%.', 1),
+    (l_id, '기자', '네, 기획재정부 관계자는 수출 증가가 주요 원인이었다고 밝혔습니다.', 'Ne, gihoek-jaejeongbu gwangyeja-neun suchul jeunggaga juyo won-in-ieossda-go balkyeossseumnida.', 'Yes, an official from the Ministry of Economy and Finance revealed that the increase in exports was the main cause.', 2),
+    (l_id, '앵커', '한편 이번 협상은 성공적으로 타결된 것으로 알려졌습니다. 자세한 내용은 기자 연결로 알아보겠습니다.', 'Hanpyeon ibeon hyeopsang-eun seonggongjeog-euro taegyeoldoen geosro allyeojeotsseumnida. Jasehan naeyong-eun gija yeongyelro arabogessseumnida.', 'Meanwhile, it has become known that the negotiations were successfully concluded. For more details, we will connect to the reporter.', 3),
+    (l_id, '현장 기자', '네, 현장에서 보도해 드립니다. 양측 대표들은 오후 늦게까지 협상을 진행한 것으로 알려졌습니다.', 'Ne, hyeonjang-eseo bodohae deurimnida. Yangtcheuk daepyodeul-eun ohu neutgekkaji hyeopsang-eul jinhaenghan geosro allyeojeotsseumnida.', 'Yes, I''m reporting from the scene. It became known that representatives from both sides continued negotiations until late in the afternoon.', 4),
+    (l_id, '앵커', '감사합니다. 다음 소식은 사회부 기자가 전해드리겠습니다.', 'Gamsahamnida. Daeum sosig-eun sahoeb gija-ga jeonhaedeurigesseumnida.', 'Thank you. The next story will be delivered by our society reporter.', 5);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '정부 발표___ 따르면 GDP가 성장했다.', '["이","에","을","의"]', 1, 'N에 따르면 = according to N.', 1),
+    (l_id, '관계자는 해결하겠다___ 밝혔다.', '["고","라고","다고","면서"]', 2, 'V-다고 밝혔다 = revealed/stated that V (indirect speech).', 2),
+    (l_id, '협상이 타결된 것___ 알려졌다.', '["이","으로","을","에서"]', 1, 'V-(으)ㄴ 것으로 알려졌다 = it became known that/reportedly.', 3),
+    (l_id, '''여론''의 의미는?', '["official stance","controversy","public opinion","headline"]', 2, '여론 = public opinion.', 4),
+    (l_id, '뉴스에서 ''따르면''의 역할은?', '["결과를 나타낸다","출처를 나타낸다","대조를 나타낸다","조건을 나타낸다"]', 1, '따르면 (according to) indicates the source of information.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '뉴스 언어는 일상 언어와 다른 특징이 있습니다. 한국 뉴스에서는 ''에 따르면'', ''에 의하면'' 등으로 정보의 출처를 밝힙니다. 간접화법을 통해 발언을 전달할 때는 ''-다고 전했다'', ''-다고 밝혔다'' 등을 사용합니다. 뉴스 제목은 간결하고 임팩트 있게 작성되며 종종 주어를 생략합니다. 뉴스를 읽는 것은 어휘력과 시사 지식을 동시에 향상시키는 좋은 방법입니다. 한국어 학습자에게는 한국 뉴스를 꾸준히 읽거나 듣는 것을 권장합니다.', 'News language has different characteristics from everyday language. Korean news uses expressions like ''에 따르면'' and ''에 의하면'' (according to) to indicate the source of information. When conveying statements through indirect speech, expressions like ''-다고 전했다'' and ''-다고 밝혔다'' are used. News headlines are written concisely and impactfully, often omitting the subject. Reading news is a good way to simultaneously improve vocabulary and current affairs knowledge. For Korean language learners, it is recommended to consistently read or listen to Korean news.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 94: Academic Writing (학술 글쓰기)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 94;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=94 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '학술', 'hakseul', 'academic, scholarly', 1),
+    (l_id, '서론', 'seollon', 'introduction (of an essay)', 2),
+    (l_id, '본론', 'bollon', 'body (of an essay)', 3),
+    (l_id, '결론', 'gyeollon', 'conclusion', 4),
+    (l_id, '논문', 'nonmun', 'academic paper, thesis', 5),
+    (l_id, '인용하다', 'inyonghada', 'to cite, to quote', 6),
+    (l_id, '참고문헌', 'chamgomunheon', 'bibliography, references', 7),
+    (l_id, '주제문', 'jujeomun', 'thesis statement', 8),
+    (l_id, '객관적', 'gaekgwanjeok', 'objective', 9),
+    (l_id, '주관적', 'jugwanjeok', 'subjective', 10),
+    (l_id, '분석하다', 'bunseokada', 'to analyze', 11),
+    (l_id, '통계', 'tongye', 'statistics', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, '학술문 종결 어미: -다/-이다', 'V/A stem + 다 / N + 이다', 'Academic writing uses the plain form ending -다 instead of polite -아요/어요 or formal -습니다.', '[{"korean":"본 연구는 기후 변화의 원인을 분석한다.","english":"This study analyzes the causes of climate change."},{"korean":"결론은 다음과 같다.","english":"The conclusion is as follows."}]', 1),
+    (l_id, 'A/V-다고 볼 수 있다', 'A/V clause + 다고 볼 수 있다', 'Academic expression meaning "it can be seen that" or "one can observe that."', '[{"korean":"이 결과를 통해 가설이 증명됐다고 볼 수 있다.","english":"Through these results, it can be seen that the hypothesis was proven."},{"korean":"교육 투자가 경제 성장에 기여한다고 볼 수 있다.","english":"It can be observed that investment in education contributes to economic growth."}]', 2),
+    (l_id, 'N을/를 중심으로', 'N + 을/를 중심으로', 'Means "centered on N" or "focusing on N." Common in academic writing.', '[{"korean":"이 논문은 청소년 교육을 중심으로 논의한다.","english":"This paper discusses the issue centered on adolescent education."},{"korean":"서울을 중심으로 조사가 이루어졌다.","english":"The survey was conducted centered on Seoul."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '교수', '학술 논문 쓸 때 가장 중요한 것이 뭔지 알아요?', 'Hakseul nonmun sseul ttae gajang jungyohan geosi mweonji arayo?', 'Do you know what is most important when writing an academic paper?', 1),
+    (l_id, '학생', '객관성과 논리적 구성이 중요하다고 생각해요.', 'Gaekgwanseong-gwa nonlijeok guseong-i jungyohada-go saenggakaeyo.', 'I think objectivity and logical structure are important.', 2),
+    (l_id, '교수', '맞아요. 학술 글쓰기는 개인적 의견보다 증거와 통계에 근거해야 해요. 서론, 본론, 결론 구조도 중요하고요.', 'Majayo. Hakseul geulsseuki-neun gaeinjeok uigyeonboda jeunggeo-wa tonggye-e geungeo-haeya haeyo. Seollon, bollon, gyeollon gujo-do jungyoago-yo.', 'Right. Academic writing must be based on evidence and statistics rather than personal opinions. The introduction-body-conclusion structure is also important.', 3),
+    (l_id, '학생', '학술문에서는 종결 어미도 다르죠?', 'Hakseulmun-eseo-neun jonggyeol eomi-do darejyo?', 'The sentence-ending forms are also different in academic writing, right?', 4),
+    (l_id, '교수', '네, 학술 문체는 ''-다'' 형태를 써요. ''분석한다'', ''볼 수 있다'' 같은 표현을 사용해요.', 'Ne, hakseul muncheae-neun ''-da'' hyeongtae-reul sseoyo. ''Bunseok-anda'', ''bol su itda'' gateun pyohyeon-eul sayong-haeyo.', 'Yes, academic style uses the -다 form. Expressions like ''analyzes'' and ''can be seen'' are used.', 5),
+    (l_id, '학생', '참고문헌 표기도 중요하죠?', 'Chamgomunheon pyogi-do jungyohajyo?', 'Citing references is also important, right?', 6),
+    (l_id, '교수', '매우 중요해요. 인용 없이 다른 사람의 생각을 사용하면 표절이 돼요.', 'Maeu jungyohaeyo. Inyong eobsi dareun saram-ui saenggak-eul sayong-amyeon pyojeol-i dwaeyo.', 'Very important. Using someone else''s ideas without citation becomes plagiarism.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '학술 논문의 구조로 올바른 것은?', '["결론-본론-서론","본론-서론-결론","서론-본론-결론","서론-결론-본론"]', 2, 'Academic essays follow: Introduction (서론) - Body (본론) - Conclusion (결론).', 1),
+    (l_id, '학술 글쓰기의 종결 어미는?', '["-아요/어요","-다","-ㅂ니다/습니다","-지요"]', 1, 'Academic writing uses the plain -다 ending.', 2),
+    (l_id, '이 결과를 통해 가설이 증명됐다___ 볼 수 있다.', '["고","라고","에","이라"]', 0, 'A/V-다고 볼 수 있다 = it can be seen that A/V.', 3),
+    (l_id, '''인용하다''의 의미는?', '["to analyze","to cite/quote","to hypothesize","to conclude"]', 1, '인용하다 = to cite or quote.', 4),
+    (l_id, '학술 글쓰기에서 피해야 하는 것은?', '["통계 사용","증거 제시","인용","주관적 의견만 나열"]', 3, 'Academic writing should be objective; listing only subjective opinions should be avoided.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '학술 글쓰기는 일상 글쓰기와 다른 규칙을 따릅니다. 가장 큰 차이점은 객관성입니다. 학술 논문에서는 개인적인 감정이나 주관적 의견보다 데이터와 증거를 중심으로 논지를 펼쳐야 합니다. 문체는 ''-다'' 형태의 평어체를 사용합니다. 서론에서는 연구 목적을, 본론에서는 분석과 논거를, 결론에서는 요약과 시사점을 제시합니다. 인용한 자료는 반드시 참고문헌에 표기해야 표절을 피할 수 있습니다.', 'Academic writing follows different rules from everyday writing. The biggest difference is objectivity. In academic papers, arguments should be developed centered on data and evidence rather than personal emotions or subjective opinions. The style uses the plain -다 form. The introduction presents the research purpose, the body presents analysis and arguments, and the conclusion presents a summary and implications. Cited materials must always be listed in the bibliography to avoid plagiarism.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 95: Business Korean (비즈니스 한국어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 95;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=95 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '비즈니스', 'bijeuniiseu', 'business', 1),
+    (l_id, '거래처', 'georaecheo', 'client, business partner', 2),
+    (l_id, '계약', 'gyeyak', 'contract', 3),
+    (l_id, '협상', 'hyeopsang', 'negotiation', 4),
+    (l_id, '명함', 'myeongham', 'business card', 5),
+    (l_id, '프레젠테이션', 'peureejentei-syeon', 'presentation', 6),
+    (l_id, '출장', 'chuljang', 'business trip', 7),
+    (l_id, '납기', 'napgi', 'delivery deadline', 8),
+    (l_id, '예산', 'yesan', 'budget', 9),
+    (l_id, '회계', 'hoegye', 'accounting', 10),
+    (l_id, '마감일', 'magamil', 'deadline', 11),
+    (l_id, '상담하다', 'sangdamhada', 'to consult, to advise', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'V-(으)시겠습니까? (비즈니스 요청)', 'V + (으)시겠습니까?', 'Very polite formal request or invitation used in business contexts.', '[{"korean":"회의 자료를 검토해 주시겠습니까?","english":"Would you kindly review the meeting materials?"},{"korean":"이쪽으로 앉으시겠습니까?","english":"Would you please take a seat this way?"}]', 1),
+    (l_id, 'V-겠습니다 (비즈니스 약속)', 'V stem + 겠습니다', 'Formal promise or commitment: "I will" in business context.', '[{"korean":"최선을 다하겠습니다.","english":"I will do my best."},{"korean":"3일 안에 보내 드리겠습니다.","english":"I will send it to you within 3 days."}]', 2),
+    (l_id, 'N에 관련하여 / N과 관련하여', 'N + 에 관련하여 / N + 과/와 관련하여', 'Formal expression meaning "regarding N" or "in relation to N." Used in emails and business documents.', '[{"korean":"계약 건에 관련하여 연락드립니다.","english":"I am contacting you regarding the contract matter."},{"korean":"납기일과 관련하여 문의드립니다.","english":"I am inquiring in relation to the delivery deadline."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '박 과장', '안녕하세요, 이번 계약 건에 관련하여 연락드렸습니다.', 'Annyeonghaseyo, ibeon gyeyak geon-e gwanlyeonhayeo yeollakdeuryeotsseumnida.', 'Hello, I am contacting you regarding this contract matter.', 1),
+    (l_id, '김 대리', '아, 네. 잘 받았습니다. 계약 조건을 검토해 주시겠습니까?', 'A, ne. Jal badassseumnida. Gyeyak jogeon-eul geomtohae jusigessseumnikka?', 'Ah, yes. I received it well. Would you kindly review the contract conditions?', 2),
+    (l_id, '박 과장', '네, 검토 후 의견을 드리겠습니다. 납기일이 언제입니까?', 'Ne, geomto hu uigyeon-eul deurigesseumnida. Napgiil-i eonje-imnikka?', 'Yes, I will give you my opinion after reviewing. When is the delivery deadline?', 3),
+    (l_id, '김 대리', '이번 달 말까지입니다. 혹시 예산 관련해서도 논의할 수 있을까요?', 'Ibeon dal malkkaji-imnida. Hoksi yesan gwanlyeon-haeseo-do nonuihal su isseulkkayo?', 'It is by the end of this month. Could we also discuss budget-related matters?', 4),
+    (l_id, '박 과장', '물론입니다. 내일 오전 10시에 회의실에서 만나 뵙겠습니다.', 'Mullon-imnida. Naeil ojeon yeol si-e hoeui-sil-eseo manna boipgesseumnida.', 'Of course. I will meet you tomorrow at 10 AM in the conference room.', 5),
+    (l_id, '김 대리', '감사합니다. 내일 뵙겠습니다.', 'Gamsahamnida. Naeil boipgesseumnida.', 'Thank you. See you tomorrow.', 6);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '계약 건___ 관련하여 문의드립니다.', '["을","에","이","의"]', 1, 'N에 관련하여 = regarding N.', 1),
+    (l_id, '비즈니스 약속 표현으로 맞는 것은?', '["할게요","하겠습니다","할 거예요","해요"]', 1, '-겠습니다 is the formal commitment form used in business.', 2),
+    (l_id, '''명함''의 의미는?', '["resume","business card","contract","negotiation"]', 1, '명함 = business card.', 3),
+    (l_id, '회의 자료를 검토해 주___ 겠습니까?', '["시","는","기","고"]', 0, '-시겠습니까? is the very polite formal request form.', 4),
+    (l_id, '비즈니스 상황에서 적절하지 않은 언어는?', '["격식체","존댓말","야 해요 (informal)","공식적 표현"]', 2, '야 해요 is too informal for business settings.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '비즈니스 한국어는 일반 한국어보다 더 격식적인 표현을 사용합니다. 특히 이메일이나 공식 문서에서는 ''에 관련하여'', ''에 대하여'' 등의 표현을 자주 사용합니다. 처음 만나는 비즈니스 파트너에게는 명함을 두 손으로 정중히 전달합니다. 회의에서는 발언 순서를 지키고 상대방의 의견을 경청하는 것이 중요합니다. 약속을 지키는 것은 비즈니스 신뢰의 기본입니다. 마감일을 넘기지 않도록 일정 관리를 철저히 해야 합니다.', 'Business Korean uses more formal expressions than everyday Korean. Especially in emails and official documents, expressions like ''에 관련하여'' (regarding) and ''에 대하여'' (concerning) are frequently used. Business cards should be presented politely with both hands to business partners you are meeting for the first time. In meetings, it is important to observe speaking turns and listen attentively to the other person''s opinions. Keeping promises is the foundation of business trust. Schedule management must be thorough to avoid missing deadlines.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 96: Job Interview Korean (면접 한국어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 96;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=96 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '면접', 'myeonjeop', 'job interview', 1),
+    (l_id, '지원하다', 'jiwon-hada', 'to apply for', 2),
+    (l_id, '이력서', 'iryeokseo', 'resume, CV', 3),
+    (l_id, '자기소개서', 'jagi sokaeseo', 'self-introduction letter', 4),
+    (l_id, '지원 동기', 'jiwon donggi', 'motivation for applying', 5),
+    (l_id, '강점', 'gangjeom', 'strength', 6),
+    (l_id, '약점', 'yakjeom', 'weakness', 7),
+    (l_id, '입사하다', 'ipsahada', 'to join a company', 8),
+    (l_id, '연봉', 'yeonbong', 'annual salary', 9),
+    (l_id, '경력', 'gyeongnyeok', 'work experience/career', 10),
+    (l_id, '역량', 'yeongnyyang', 'competency, capability', 11),
+    (l_id, '포부', 'pobu', 'aspiration, ambition', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'V/A-(으)ㄹ 자신이 있습니다', 'V/A + (으)ㄹ 자신이 있습니다', 'Formal expression of confidence: "I am confident that I can V."', '[{"korean":"팀에 기여할 자신이 있습니다.","english":"I am confident that I can contribute to the team."},{"korean":"목표를 달성할 자신이 있습니다.","english":"I am confident I can achieve the goals."}]', 1),
+    (l_id, 'V-아/어 왔습니다 (경력 표현)', 'V + 아/어 왔습니다', 'Expresses a continuous action from the past to the present: "I have been V-ing."', '[{"korean":"5년간 마케팅 분야에서 일해 왔습니다.","english":"I have been working in the marketing field for 5 years."},{"korean":"꾸준히 노력해 왔습니다.","english":"I have been making consistent efforts."}]', 2),
+    (l_id, 'V/A-(으)ㄹ 것이라고 생각합니다', 'V/A + (으)ㄹ 것이라고 생각합니다', 'Formal expression of opinion or prediction in interview context.', '[{"korean":"이 역할에 잘 맞을 것이라고 생각합니다.","english":"I think I would be a good fit for this role."},{"korean":"충분히 기여할 수 있을 것이라고 생각합니다.","english":"I think I will be able to contribute sufficiently."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '면접관', '자기소개를 해 주시겠습니까?', 'Jagi sokaereul hae jusigessseumnikka?', 'Could you please introduce yourself?', 1),
+    (l_id, '지원자', '안녕하십니까, 저는 이수진이라고 합니다. 마케팅 분야에서 3년간 일해 왔습니다.', 'Annyeonghashimnikka, jeoneun Lee Su-jin-irago hamnida. Makeuting bunyaeseo sam-nyeongan ilhae watsseumnida.', 'Good day, my name is Lee Su-jin. I have been working in the marketing field for 3 years.', 2),
+    (l_id, '면접관', '이 직책에 지원한 동기가 무엇입니까?', 'I jikchaekg-e jiwonhan donggi-ga mueosimnikka?', 'What is your motivation for applying for this position?', 3),
+    (l_id, '지원자', '귀사의 글로벌 마케팅 전략에 깊이 공감하며, 제 역량을 최대한 발휘할 수 있는 환경이라고 생각하여 지원하였습니다.', 'Gwisa-ui geullobal makeuting jeollak-e gipi gonggam-amyeo, je yeongnyyang-eul choedaehan balhwi-hal su inneun hwangyeong-irago saengakhayeo jiwon-hayeo-sseumnida.', 'I deeply resonate with your company''s global marketing strategy, and I applied because I believe it is an environment where I can demonstrate my capabilities to the fullest.', 4),
+    (l_id, '면접관', '본인의 강점과 약점을 말씀해 주시겠습니까?', 'Bonin-ui gangjeom-gwa yakjeom-eul malsseum-hae jusigessseumnikka?', 'Could you tell us about your strengths and weaknesses?', 5),
+    (l_id, '지원자', '제 강점은 분석력과 소통 능력입니다. 약점은 완벽주의 성향이 있다는 점인데, 이를 보완하기 위해 노력하고 있습니다.', 'Je gangjeom-eun bunseongnyeok-gwa sotong neungnyeok-imnida. Yakjeom-eun wanbyeokjuui seonghyang-i itdaneun jeominde, ireul bowanagi wihae noryeok-ago isseumnida.', 'My strengths are analytical ability and communication skills. My weakness is that I have a perfectionist tendency, and I am making efforts to address this.', 6),
+    (l_id, '면접관', '입사 후 포부를 말씀해 주십시오.', 'Ipsa hu pobu-reul malsseum-hae jusimu-ipsio.', 'Please tell us about your aspirations after joining the company.', 7),
+    (l_id, '지원자', '입사 후 빠르게 팀에 적응하고 3년 안에 팀에 중요한 기여를 할 수 있을 것이라고 생각합니다.', 'Ipsa hu pparuge tim-e jeogeuenghago sam-nyeon an-e tim-e jungyohan giyeo-reul hal su isseul geosirago saenggaghamnida.', 'I think I will adapt quickly to the team after joining and be able to make an important contribution to the team within 3 years.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '팀에 기여할 ___ 있습니다. (confident)', '["수가","자신이","적이","수"]', 1, '-(으)ㄹ 자신이 있습니다 = I am confident I can.', 1),
+    (l_id, '5년간 마케팅에서 일해 ___. (continuous past)', '["있어요","왔습니다","갔습니다","왔어요"]', 1, 'V-아/어 왔습니다 = have been V-ing (up to now).', 2),
+    (l_id, '면접에서 ''지원 동기''는 무엇입니까?', '["job title","work experience","motivation for applying","annual salary"]', 2, '지원 동기 = motivation for applying.', 3),
+    (l_id, '''강점''의 반대말은?', '["이력서","경력","약점","역량"]', 2, '강점 (strength) is the opposite of 약점 (weakness).', 4),
+    (l_id, '면접에서 적절하지 않은 태도는?', '["격식체 사용","눈 맞춤","자신감 있는 태도","핸드폰 보기"]', 3, 'Looking at your phone during an interview is inappropriate.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국에서 면접은 취업의 중요한 관문입니다. 면접에서는 격식체를 사용하고 단정한 복장을 착용해야 합니다. 자기소개, 지원 동기, 강점과 약점, 입사 후 포부는 면접의 기본 질문입니다. 답변을 할 때는 구체적인 경험과 수치를 활용하면 더욱 설득력이 있습니다. 꾸준히 노력해 왔다는 것을 ''V-아/어 왔습니다''를 사용하여 표현하면 자연스럽습니다. 면접관의 질문을 잘 듣고 침착하게 답변하는 것이 중요합니다.', 'In Korea, job interviews are an important gateway to employment. In interviews, formal speech must be used and neat attire should be worn. Self-introduction, motivation for applying, strengths and weaknesses, and post-employment aspirations are standard interview questions. When answering, using specific experiences and numbers makes the answer more persuasive. Expressing that you have been making consistent efforts using ''V-아/어 왔습니다'' sounds natural. It is important to listen carefully to the interviewer''s questions and answer calmly.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 97: Complex Sentence Patterns (복잡한 문장 구조)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 97;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=97 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '복문', 'bongmun', 'complex sentence', 1),
+    (l_id, '내포절', 'naepojeon', 'embedded clause', 2),
+    (l_id, '관계절', 'gwangyejeon', 'relative clause', 3),
+    (l_id, '수식하다', 'usikhada', 'to modify, to qualify', 4),
+    (l_id, '선행절', 'seonhaengjeon', 'preceding clause', 5),
+    (l_id, '후행절', 'huhaengjeon', 'following clause', 6),
+    (l_id, '연결어미', 'yeongyeol-eomi', 'connective ending', 7),
+    (l_id, '전환하다', 'jeonhwanada', 'to switch, to transition', 8),
+    (l_id, '동시에', 'dongsie', 'at the same time', 9),
+    (l_id, '순차적', 'sunchajseon', 'sequential', 10),
+    (l_id, '병렬', 'byeongnyeol', 'parallel, side-by-side', 11),
+    (l_id, '함축하다', 'hamchukhada', 'to imply, to connote', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'V-면서 (simultaneous)', 'V stem + 면서', 'Connects two simultaneous actions: "while V-ing." Both subjects must be the same.', '[{"korean":"음악을 들으면서 공부해요.","english":"I study while listening to music."},{"korean":"웃으면서 말했어요.","english":"She spoke while smiling."}]', 1),
+    (l_id, 'V-(으)ㄹ 뿐만 아니라 V', 'V1 + (으)ㄹ 뿐만 아니라 + V2', 'Complex additive: "not only V1 but also V2." Formal and common in B1+ writing.', '[{"korean":"그는 한국어를 잘 할 뿐만 아니라 일본어도 유창해요.","english":"He is not only good at Korean but also fluent in Japanese."},{"korean":"건강에 좋을 뿐만 아니라 맛도 있어요.","english":"It is not only good for health but also delicious."}]', 2),
+    (l_id, 'N에도 불구하고', 'N + 에도 불구하고 / V/A + 음에도 불구하고', 'Means "despite N" or "in spite of V/A." Formal concessive expression.', '[{"korean":"어려움에도 불구하고 포기하지 않았어요.","english":"Despite the difficulties, I didn''t give up."},{"korean":"비가 오는 것에도 불구하고 행사가 진행됐어요.","english":"Despite the rain, the event proceeded."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '교사', '복잡한 문장 구조를 연습해 봅시다. ''면서''를 이용해서 문장을 만들어 보세요.', 'Bokjaphan munjang gujo-reul yeonseup hae bopsida. ''Myeonseo''-reul iyonghaeseo munjang-eul mandeureoboseyo.', 'Let''s practice complex sentence structures. Please make a sentence using ''myeonseo''.', 1),
+    (l_id, '학생', '저는 밥을 먹으면서 TV를 봐요.', 'Jeoneun bab-eul meogeumyeonseo TV-reul bwayo.', 'I watch TV while eating.', 2),
+    (l_id, '교사', '잘했어요. 이번에는 ''뿐만 아니라''를 써 보세요.', 'Jalhaesseoyo. Ibeone-neun ''ppunman anira''-reul sseo boseyo.', 'Well done. This time use ''not only...but also.''', 3),
+    (l_id, '학생', '한국어는 어려울 뿐만 아니라 재미있기도 해요.', 'Hangugeo-neun eoryeoul ppunman anira jaemi-itgido haeyo.', 'Korean is not only difficult but also interesting.', 4),
+    (l_id, '교사', '아주 좋아요. 그럼 ''에도 불구하고''는요?', 'Aju joayo. Geureum ''eedong bulguhago''-neunyo?', 'Very good. What about ''despite''?', 5),
+    (l_id, '학생', '피곤함에도 불구하고 끝까지 공부했어요.', 'Pigonham-edo bulguhago kkeutkkaji gongbu-haesseoyo.', 'Despite the fatigue, I studied until the end.', 6),
+    (l_id, '교사', '완벽해요. 이런 복잡한 패턴들이 고급 한국어 구사의 핵심이에요.', 'Wanbyeokhaeyo. Ireon bokjaphan paeteondeul-i gogeup Hangugeo gusa-ui haeksim-ieyo.', 'Perfect. These complex patterns are the core of advanced Korean expression.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '음악을 들으___ 공부해요.', '["아서","면서","지만","고"]', 1, '-면서 connects simultaneous actions.', 1),
+    (l_id, '건강에 좋을 ___ 아니라 맛도 있어요.', '["뿐","뿐만","것만","이것만"]', 1, '-(으)ㄹ 뿐만 아니라 = not only...but also.', 2),
+    (l_id, '어려움___ 불구하고 포기하지 않았어요.', '["에도","에서","이","으로"]', 0, 'N에도 불구하고 = despite N.', 3),
+    (l_id, '-면서의 제약 조건은?', '["주어가 달라야 한다","주어가 같아야 한다","과거 시제만 쓴다","명사만 연결한다"]', 1, '-면서 requires the subjects of both clauses to be the same.', 4),
+    (l_id, '복문에서 두 동작이 동시에 일어남을 나타내는 표현은?', '["-고 나서","-기 전에","-면서","-(으)ㄴ 후에"]', 2, '-면서 expresses simultaneous actions.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '복잡한 문장 구조는 고급 한국어 표현의 핵심입니다. ''-면서''는 두 행동이 동시에 일어날 때 사용합니다. ''뿐만 아니라''는 추가 정보를 덧붙일 때 쓰는 강조 표현입니다. ''에도 불구하고''는 예상과 반대되는 결과를 말할 때 사용하는 양보 표현입니다. 이러한 복합 연결 표현들을 능숙하게 활용하면 더 풍부하고 자연스러운 한국어 표현이 가능합니다. TOPIK 3 수준에서는 이런 복잡한 문장 구조의 이해와 활용이 필수적입니다.', 'Complex sentence structures are the core of advanced Korean expression. -면서 is used when two actions happen simultaneously. 뿐만 아니라 is an emphatic expression used to add additional information. 에도 불구하고 is a concessive expression used when the result is contrary to expectation. Skillfully using these complex connective expressions enables richer and more natural Korean expression. At the TOPIK 3 level, understanding and applying these complex sentence structures is essential.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 98: Indirect Speech (간접화법)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 98;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=98 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '간접화법', 'ganjeop-hwabeop', 'indirect speech', 1),
+    (l_id, '직접화법', 'jikjeop-hwabeop', 'direct speech', 2),
+    (l_id, '인용', 'inyong', 'quotation, citation', 3),
+    (l_id, '전달하다', 'jeondalhada', 'to convey, to deliver', 4),
+    (l_id, '주장하다', 'jujang-hada', 'to claim, to argue', 5),
+    (l_id, '묻다', 'mutda', 'to ask', 6),
+    (l_id, '명령하다', 'myeongnyeong-hada', 'to order, to command', 7),
+    (l_id, '제안하다', 'jeanahada', 'to suggest', 8),
+    (l_id, '대답하다', 'daedapada', 'to answer', 9),
+    (l_id, '부탁하다', 'butakhada', 'to request', 10),
+    (l_id, '보고하다', 'bogohada', 'to report', 11),
+    (l_id, '언급하다', 'eon-geuphada', 'to mention', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, '간접화법: 평서문 (statement)', 'V/A + 다고 했어요/하다', 'Reports what someone said (statement). Verb/adj in plain form + 다고 했다.', '[{"korean":"그는 내일 온다고 했어요.","english":"He said he would come tomorrow."},{"korean":"선생님이 시험이 어렵다고 하셨어요.","english":"The teacher said the exam was difficult."}]', 1),
+    (l_id, '간접화법: 의문문 (question)', 'V + (으)냐고 했어요 / A + (으)냐고 했어요', 'Reports a question someone asked. Verb/adj in plain form + (으)냐고 했다.', '[{"korean":"친구가 어디 가냐고 물었어요.","english":"My friend asked where I was going."},{"korean":"왜 늦었냐고 물어봤어요.","english":"They asked why I was late."}]', 2),
+    (l_id, '간접화법: 명령문 (command)', 'V + (으)라고 했어요', 'Reports a command someone gave. Imperative form + 라고 했다.', '[{"korean":"어머니가 일찍 자라고 하셨어요.","english":"My mother told me to go to bed early."},{"korean":"선생님이 숙제를 제출하라고 하셨어요.","english":"The teacher told us to submit the homework."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '지나', '어제 선생님이 뭐라고 하셨어요?', 'Eoje seonsaengnim-i mworago hasyeosseoyo?', 'What did the teacher say yesterday?', 1),
+    (l_id, '현민', '다음 주에 시험이 있다고 하셨어요. 그리고 꼭 교재를 읽으라고 하셨어요.', 'Daeum ju-e siheom-i itdago hasyeosseoyo. Geurigo kkok gyojae-reul ilgeuraogo hasyeosseoyo.', 'She said there would be an exam next week. And she told us to definitely read the textbook.', 2),
+    (l_id, '지나', '시험 범위는요?', 'Siheom beomwi-neunyo?', 'What about the exam scope?', 3),
+    (l_id, '현민', '5장부터 8장까지라고 하셨어요.', 'Ojangi-buto paljang-kkajirago hasyeosseoyo.', 'She said from chapter 5 to chapter 8.', 4),
+    (l_id, '지나', '그리고 민수가 어디 가냐고 물어봤다고?', 'Geurigo Minsu-ga eodi ganyago mureobwatdago?', 'And did Minsu ask where you were going?', 5),
+    (l_id, '현민', '네, 도서관에 가냐고 물어봤어요. 같이 공부하자고 했는데 저는 약속이 있어서 못 갔어요.', 'Ne, doseogwan-e ganyago mureobwasseoyo. Gachi gongbu-haja-go haenneunde jeoneun yakso-gi isseo-seo mot gasseoyo.', 'Yes, he asked if I was going to the library. He suggested studying together, but I had plans so I couldn''t go.', 6),
+    (l_id, '지나', '민수가 같이 공부하''자고'' 했다고요? -자고는 제안 표현이죠?', 'Minsu-ga gachi gongbu-ha''jago'' haetda-goyo? -Jago-neun jean pyohyeon-ijyo?', 'Minsu said ''let''s study together?'' -jago is the suggestion form, right?', 7),
+    (l_id, '현민', '맞아요. 제안을 전달할 때는 -자고 했다, 명령은 -라고 했다를 써요.', 'Majayo. Jean-eul jeondal-hal ttae-neun -jago haetda, myeongnyeong-eun -rago haetda-reul sseoyo.', 'That''s right. When conveying a suggestion you use -자고 했다, and for a command you use -라고 했다.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '그는 내일 온___ 했어요. (statement)', '["다고","라고","냐고","자고"]', 0, 'Statement: V-다고 했다.', 1),
+    (l_id, '친구가 어디 가___ 물었어요. (question)', '["다고","라고","냐고","자고"]', 2, 'Question: V-(으)냐고 했다/물었다.', 2),
+    (l_id, '선생님이 공부하___ 하셨어요. (command)', '["다고","라고","냐고","자고"]', 1, 'Command: V-(으)라고 했다.', 3),
+    (l_id, '제안 간접화법은?', '["다고 했다","라고 했다","자고 했다","냐고 했다"]', 2, 'V-자고 했다 is the indirect speech form for suggestions.', 4),
+    (l_id, '직접화법 vs 간접화법 중 맞는 설명은?', '["직접화법이 더 격식적이다","간접화법은 인용 부호를 사용한다","직접화법은 따옴표를 쓴다","간접화법은 시제가 없다"]', 2, 'Direct speech uses quotation marks (따옴표); indirect speech uses reporting verbs.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '간접화법은 다른 사람의 말이나 생각을 전달하는 방법입니다. 한국어에서는 문장 유형에 따라 간접화법 형태가 달라집니다. 평서문은 ''-다고 했다'', 의문문은 ''-(으)냐고 했다'', 명령문은 ''-(으)라고 했다'', 청유문은 ''-자고 했다''를 사용합니다. 뉴스나 보고서에서는 간접화법을 자주 사용합니다. 예를 들어 ''대변인은 협상이 성공적이었다고 밝혔다''와 같이 씁니다. 간접화법을 잘 활용하면 더 자연스럽고 정확하게 정보를 전달할 수 있습니다.', 'Indirect speech is a way of conveying what someone else said or thought. In Korean, the indirect speech form varies depending on the sentence type. Declarative sentences use -다고 했다, questions use -(으)냐고 했다, commands use -(으)라고 했다, and suggestions use -자고 했다. Indirect speech is frequently used in news and reports. For example, it is written as "the spokesperson revealed that the negotiations were successful." Using indirect speech well allows for more natural and accurate information delivery.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 99: Korean Proverbs (한국 속담)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 99;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=99 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '속담', 'sokdam', 'proverb, saying', 1),
+    (l_id, '교훈', 'gyohun', 'lesson, moral', 2),
+    (l_id, '지혜', 'jihye', 'wisdom', 3),
+    (l_id, '비유', 'biyu', 'metaphor, analogy', 4),
+    (l_id, '의미하다', 'uimihada', 'to mean, to signify', 5),
+    (l_id, '가르침', 'gareichim', 'teaching', 6),
+    (l_id, '서당 개 삼 년이면 풍월을 읊는다', 'Seodang gae sam nyeon-imyeon pungwol-eul eumneunda', 'Even a dog in a school learns to recite poetry after 3 years', 7),
+    (l_id, '호랑이도 제 말 하면 온다', 'Horang-ido je mal hamyeon onda', 'If you talk about a tiger, it comes', 8),
+    (l_id, '콩 심은 데 콩 나고 팥 심은 데 팥 난다', 'Kong simeun de kong nago pat simeun de pat nanda', 'You reap what you sow', 9),
+    (l_id, '시작이 반이다', 'Sijai-gi ban-ida', 'Well begun is half done', 10),
+    (l_id, '천리 길도 한 걸음부터', 'Cheolri gildo han georeumbuto', 'A journey of a thousand miles begins with a single step', 11),
+    (l_id, '웃는 얼굴에 침 못 뱉는다', 'Unneun eolgul-e chim mot baetneunda', 'You can''t spit on a smiling face', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'N은/는 N을/를 의미한다', 'N1 + 은/는 + N2 + 를 의미합니다', 'Formal way to explain the meaning of a proverb or idiom.', '[{"korean":"''시작이 반이다''는 무슨 일이든 시작하는 것이 중요하다는 것을 의미합니다.","english":"''Well begun is half done'' means that it is important to start any task."},{"korean":"이 속담은 노력의 중요성을 가르쳐 줍니다.","english":"This proverb teaches the importance of effort."}]', 1),
+    (l_id, 'N에 해당하는 한국어 표현', 'N + 에 해당하는 + 한국어 표현', 'Used to find equivalent expressions: "the Korean expression corresponding to N."', '[{"korean":"''You reap what you sow''에 해당하는 한국 속담은 ''콩 심은 데 콩 난다''예요.","english":"The Korean proverb corresponding to ''You reap what you sow'' is ''Beans grow where beans are planted.''"}]', 2),
+    (l_id, 'V/A-다는 교훈을 준다', 'V/A + 다는 교훈을 준다', 'Explains the moral/lesson of a proverb.', '[{"korean":"이 속담은 꾸준한 노력이 중요하다는 교훈을 줍니다.","english":"This proverb gives the lesson that consistent effort is important."},{"korean":"작은 일도 소홀히 하지 말라는 교훈을 줍니다.","english":"It gives the lesson not to neglect small things."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '미카', '한국 속담에 대해 가르쳐 주실 수 있어요?', 'Hanguk sokdam-e daehae galeuchyeo jusil su isseoyo?', 'Can you teach me about Korean proverbs?', 1),
+    (l_id, '유선', '물론이죠! ''시작이 반이다''라는 속담을 아세요?', 'Mullonjyo! ''Sijai-gi ban-ida''-raneun sokdam-eul aseyo?', 'Of course! Do you know the proverb ''Starting is half the battle''?', 2),
+    (l_id, '미카', '아니요, 어떤 의미예요?', 'Aniyo, eotteon uimi-yeyo?', 'No, what does it mean?', 3),
+    (l_id, '유선', '어떤 일을 시작하는 것 자체가 이미 절반을 이룬 것과 같다는 의미예요. 망설이지 말고 시작하라는 교훈을 줘요.', 'Eotteon il-eul sijak-aneun geot jachega imi jeolbaneul irun geosgwa gatdaneun uimi-yeyo. Mangseoliji malgo sijakara-neun gyohun-eul jwoyo.', 'It means that starting something itself is already like achieving half of it. It gives the lesson not to hesitate and to just start.', 4),
+    (l_id, '미카', '한국에도 ''You reap what you sow''에 해당하는 속담이 있나요?', 'Hanguk-edo ''You reap what you sow''-e haedanghaneun sokdam-i innayo?', 'Is there a Korean proverb corresponding to ''You reap what you sow''?', 5),
+    (l_id, '유선', '네! ''콩 심은 데 콩 나고 팥 심은 데 팥 난다''예요. 직역하면 ''콩을 심으면 콩이 나고 팥을 심으면 팥이 난다''는 뜻이에요.', 'Ne! ''Kong simeun de kong nago pat simeun de pat nanda''-yeyo. Jigyeok-amyeon ''Kong-eul simeumyeon kong-i nago pat-eul simeumyeon pat-i nanda''-neun tteut-ieyo.', 'Yes! It''s "Beans grow where beans are planted, and red beans grow where red beans are planted." Literally it means what you plant is what grows.', 6),
+    (l_id, '미카', '정말 재미있는 표현이네요. 더 배우고 싶어요!', 'Jeongmal jaemi-inneun pyohyeon-ineyo. Deo baeugo sipeoyo!', 'That''s such an interesting expression. I want to learn more!', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '''시작이 반이다''의 교훈은?', '["결과가 중요하다","시작하는 것이 중요하다","끝이 중요하다","포기하지 마라"]', 1, '''시작이 반이다'' teaches that starting is the most important step.', 1),
+    (l_id, '''콩 심은 데 콩 난다''와 의미가 가장 비슷한 영어 표현은?', '["Actions speak louder than words","You reap what you sow","Better late than never","The early bird catches the worm"]', 1, '콩 심은 데 콩 난다 = You reap what you sow.', 2),
+    (l_id, '''호랑이도 제 말 하면 온다''는 어떤 상황에 쓰나요?', '["누군가가 갑자기 나타날 때","공부를 시작할 때","밥을 먹을 때","잠자리에 들 때"]', 0, 'This proverb is used when someone you were just talking about suddenly appears.', 3),
+    (l_id, '''천리 길도 한 걸음부터''의 의미는?', '["큰 성과는 하루에 이룰 수 있다","모든 큰 일은 작은 시작에서 비롯된다","빠를수록 좋다","끝이 좋으면 다 좋다"]', 1, '''천리 길도 한 걸음부터'' means even a great journey begins with a single step.', 4),
+    (l_id, '속담의 역할이 아닌 것은?', '["조상의 지혜 전달","교훈 제공","문화 반영","단순한 문법 연습"]', 3, 'Proverbs convey wisdom, provide lessons, and reflect culture — not grammar practice.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '속담은 오랜 세월에 걸쳐 형성된 민중의 지혜를 담은 짧은 표현입니다. 한국 속담은 한국인의 가치관과 문화를 반영합니다. ''시작이 반이다''는 시작의 중요성을, ''콩 심은 데 콩 난다''는 인과응보를 가르칩니다. ''천리 길도 한 걸음부터''는 작은 시작의 중요성을 강조합니다. 속담을 알면 한국어를 더 자연스럽게 사용할 수 있으며, 한국 문화와 사고방식도 더 잘 이해할 수 있습니다. 한국 드라마나 일상 대화에서도 속담이 자주 등장합니다.', 'Proverbs are short expressions containing the wisdom of the people, formed over many years. Korean proverbs reflect Korean values and culture. ''Sijai-gi ban-ida'' (well begun is half done) teaches the importance of starting, and ''Kong simeun de kong nanda'' teaches the principle of cause and effect. ''Cheolri gildo han georeumbuto'' (a journey of a thousand miles begins with a single step) emphasizes the importance of small beginnings. Knowing proverbs allows for more natural Korean use, and also helps understand Korean culture and ways of thinking better. Proverbs also frequently appear in Korean dramas and everyday conversations.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 100: Idioms and Fixed Expressions (관용 표현)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 100;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=100 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '관용 표현', 'gwanyong pyohyeon', 'idiom, fixed expression', 1),
+    (l_id, '발이 넓다', 'bari neopda', 'to have a wide network (lit: wide feet)', 2),
+    (l_id, '눈이 높다', 'nuni nopda', 'to have high standards (lit: high eyes)', 3),
+    (l_id, '손이 크다', 'soni keuda', 'to be generous (lit: big hands)', 4),
+    (l_id, '귀가 얇다', 'gwiga yalda', 'to be easily influenced (lit: thin ears)', 5),
+    (l_id, '입이 무겁다', 'ibi mugeopda', 'to be tight-lipped (lit: heavy mouth)', 6),
+    (l_id, '머리를 굴리다', 'meorireul gullida', 'to think hard, to scheme', 7),
+    (l_id, '발등에 불이 떨어지다', 'badeunge buri tteoreojida', 'to be in urgent trouble (lit: fire falls on foot)', 8),
+    (l_id, '바가지를 긁다', 'bagajireul geukda', 'to nag (lit: scratch gourd)', 9),
+    (l_id, '찬물을 끼얹다', 'chanmureul kkiyeonjda', 'to put a damper on things (lit: pour cold water)', 10),
+    (l_id, '국물도 없다', 'gungmuldo eopda', 'nothing left, no benefit', 11),
+    (l_id, '비유적 표현', 'biyujeok pyohyeon', 'figurative expression', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'N이/가 A-다 (관용 표현 구조)', 'Body part/N + 이/가 + A + 다', 'Most Korean body part idioms follow this structure: [body part] + [adjective] = figurative meaning.', '[{"korean":"그 사람은 발이 넓어서 모르는 사람이 없어요.","english":"That person has a wide network, so there''s no one they don''t know."},{"korean":"저 사람은 눈이 높아서 아무하고나 안 사귀어요.","english":"That person has high standards, so they don''t date just anyone."}]', 1),
+    (l_id, 'V-다는 말이 있다', 'V/A + 다는 말이 있다', 'Used to explain the meaning of an idiom or proverb: "There is a saying that..."', '[{"korean":"한국어에는 ''발이 넓다''는 말이 있어요.","english":"In Korean, there is the expression ''to have wide feet.''"},{"korean":"이걸 두고 ''찬물을 끼얹다''는 말을 씁니다.","english":"For this, the expression ''to pour cold water'' is used."}]', 2),
+    (l_id, 'N이/가 V-는 상황에 쓰인다', 'N + 이/가 V-는 상황에 쓰인다', 'Explains in which situation an idiom/expression is used.', '[{"korean":"마감이 급박할 때 ''발등에 불이 떨어졌다''고 해요.","english":"When a deadline is urgent, they say ''fire has fallen on my foot.''"},{"korean":"흥을 깨는 상황에서 ''찬물을 끼얹는다''고 합니다.","english":"When someone dampens the mood, they say ''they poured cold water.''"}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '찬호', '''발이 넓다''는 표현 들어봤어요?', 'Bari neopda-neun pyohyeon deureobwasseoyo?', 'Have you heard the expression ''bali neopda'' (wide feet)?', 1),
+    (l_id, '소피', '처음 들어봐요. 무슨 의미예요?', 'Cheoeum deureo-bwayo. Musun uimi-yeyo?', 'I''m hearing it for the first time. What does it mean?', 2),
+    (l_id, '찬호', '아는 사람이 많다는 뜻이에요. 인맥이 넓은 사람을 두고 하는 말이죠.', 'Aneun saram-i manhdaneun tteut-ieyo. Inmae-gi neolbeun saram-eul deugo haneun maljyo.', 'It means knowing many people. It''s a phrase used for someone with a wide network.', 3),
+    (l_id, '소피', '그럼 ''눈이 높다''는요?', 'Geureum ''nuni nopda''-neunyo?', 'Then what about ''high eyes''?', 4),
+    (l_id, '찬호', '기준이 높다는 말이에요. 특히 이상형이 까다로운 사람한테 써요.', 'Gijun-i nopnaneun mal-ieyo. Teukhi isangnyeong-i kkadaro-un sarammhante sseoyo.', 'It means having high standards. It''s especially used for someone with a very picky ideal type.', 5),
+    (l_id, '소피', '재미있네요! 한국어 관용 표현은 정말 다양하군요.', 'Jaemiinneyo! Hangugeo gwanyong pyohyeon-eun jeongmal dayangagunyo.', 'That''s interesting! Korean idiomatic expressions are really diverse.', 6),
+    (l_id, '찬호', '맞아요. 관용 표현을 알면 한국인처럼 자연스럽게 말할 수 있어요.', 'Majayo. Gwanyong pyohyeon-eul almyeon Hanguginjcheoreom jayeonseureobge malhal su isseoyo.', 'That''s right. Knowing idiomatic expressions lets you speak naturally like a Korean.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '''발이 넓다''의 의미는?', '["to be a fast runner","to have a wide social network","to have big feet","to travel often"]', 1, '발이 넓다 (lit: wide feet) means having a wide social network.', 1),
+    (l_id, '''눈이 높다''는 어떤 상황에 씁니까?', '["시력이 좋을 때","기준이 까다로울 때","눈물이 날 때","잠이 많을 때"]', 1, '눈이 높다 (lit: high eyes) means having high/demanding standards.', 2),
+    (l_id, '''입이 무겁다''의 의미는?', '["to eat a lot","to be talkative","to be tight-lipped/secretive","to speak slowly"]', 2, '입이 무겁다 (lit: heavy mouth) means being discreet or tight-lipped.', 3),
+    (l_id, '흥을 깨는 사람을 두고 뭐라고 합니까?', '["손이 크다","찬물을 끼얹는다","귀가 얇다","머리를 굴린다"]', 1, '찬물을 끼얹다 (pour cold water) means to dampen the mood.', 4),
+    (l_id, '관용 표현의 특징은?', '["단어의 뜻을 직역하면 된다","비유적 의미가 있다","문법 규칙에 예외가 없다","공식적 상황에서만 쓴다"]', 1, 'Idioms have figurative meanings that cannot be understood by literal translation.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '관용 표현은 단어의 뜻을 직역해서는 이해할 수 없는 표현입니다. 한국어에는 신체 부위를 활용한 관용 표현이 많습니다. ''발이 넓다'', ''눈이 높다'', ''손이 크다'', ''입이 무겁다'' 등이 대표적입니다. 이러한 표현들은 상황과 맥락에 따라 적절하게 사용해야 합니다. 관용 표현을 알면 한국인의 대화에서 더 자연스럽게 참여할 수 있습니다. 드라마나 영화에서도 관용 표현이 자주 등장하므로, 미디어를 통해 자연스럽게 익히는 것도 좋은 방법입니다.', 'Idiomatic expressions cannot be understood by literally translating the words. There are many idioms in Korean that use body parts. ''Bali neopda'' (wide feet), ''nuni nopda'' (high eyes), ''soni keuda'' (big hands), and ''ibi mugeopda'' (heavy mouth) are representative examples. These expressions should be used appropriately according to the situation and context. Knowing idioms allows for more natural participation in conversations with Koreans. Since idioms also frequently appear in dramas and films, learning them naturally through media is also a good method.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 101: Formal Writing Conventions (공문서 작성)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 101;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=101 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '공문서', 'gongmunseo', 'official document', 1),
+    (l_id, '신청서', 'sincheongseo', 'application form', 2),
+    (l_id, '지원서', 'jiwonseo', 'application letter', 3),
+    (l_id, '첨부하다', 'cheombu-hada', 'to attach', 4),
+    (l_id, '수신', 'susin', 'recipient (in document)', 5),
+    (l_id, '발신', 'balsin', 'sender (in document)', 6),
+    (l_id, '제목', 'jemok', 'subject, title', 7),
+    (l_id, '기안자', 'gian-ja', 'drafter (of a document)', 8),
+    (l_id, '결재', 'gyeoljae', 'approval, authorization', 9),
+    (l_id, '시행일', 'sihaengil', 'date of implementation', 10),
+    (l_id, '붙임', 'buchim', 'attachment (in documents)', 11),
+    (l_id, '아래와 같이', 'araewa gati', 'as follows below', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'V/A-음을 알려드립니다', 'V/A + 음을 알려드립니다', 'Formal announcement: "I hereby inform you that V/A." Used in official correspondence.', '[{"korean":"접수 기간이 마감됨을 알려드립니다.","english":"I hereby inform you that the application period has ended."},{"korean":"신청이 승인됐음을 알려드립니다.","english":"I hereby inform you that the application has been approved."}]', 1),
+    (l_id, 'V-(으)시기 바랍니다', 'V + (으)시기 바랍니다', 'Very formal request: "Please do V." Used in official notices and documents.', '[{"korean":"서류를 첨부하시기 바랍니다.","english":"Please attach the documents."},{"korean":"기한 내에 제출하시기 바랍니다.","english":"Please submit within the deadline."}]', 2),
+    (l_id, 'N에 관한 N', 'N1 + 에 관한 + N2', 'Formal expression: "N2 regarding/about N1." Common in document titles and formal writing.', '[{"korean":"장학금 신청에 관한 공고입니다.","english":"This is an announcement regarding scholarship applications."},{"korean":"업무 변경에 관한 안내입니다.","english":"This is a notice regarding work changes."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '직원', '이 신청서 작성 방법을 알려 드릴게요.', 'I sincheongseo jaksseong bangbeop-eul allyeo deurilgeyo.', 'I will tell you how to fill out this application form.', 1),
+    (l_id, '신청자', '감사합니다. 어떻게 작성해야 해요?', 'Gamsahamnida. Eotteoke jaksseong-haeya haeyo?', 'Thank you. How should I fill it out?', 2),
+    (l_id, '직원', '먼저 수신자와 발신자를 기입하시기 바랍니다. 제목란에는 신청 내용을 간략히 적어 주세요.', 'Meonjeo susinja-wa balsiinja-reul giip-asigi baraamnida. Jemok-ran-eneun sinceong naeyong-eul gallyakhi jeogeo juseyo.', 'First, please fill in the recipient and sender. In the subject field, please briefly write the application content.', 3),
+    (l_id, '신청자', '서류 첨부는 어떻게 해요?', 'Seolyucheoambu-neun eotteoke haeyo?', 'How do I attach documents?', 4),
+    (l_id, '직원', '문서 하단의 ''붙임'' 란에 첨부 서류 목록을 기재하시기 바랍니다.', 'Munseo hadan-ui ''buchim'' ran-e cheoambu seoryu moktok-eul gijae-asigi baraamnida.', 'Please list the attached documents in the ''Attachment'' section at the bottom of the document.', 5),
+    (l_id, '신청자', '제출 기한이 언제예요?', 'Jechul gihan-i eonje-yeyo?', 'When is the submission deadline?', 6),
+    (l_id, '직원', '이번 달 말일까지 제출하시기 바랍니다. 기한 내에 제출되지 않은 서류는 처리가 되지 않음을 알려드립니다.', 'Ibeon dal mal-il-kkaji jechul-asigi baraamnida. Gihan nae-e jechul-doedi anhaneun seoryu-neun cheolli-ga doedi anheumeu allyeo-deurimnida.', 'Please submit by the last day of this month. We hereby inform you that documents not submitted within the deadline will not be processed.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '서류를 첨부하___ 바랍니다. (formal request)', '["기를","시기","기도","면"]', 1, 'V-(으)시기 바랍니다 = formal "please do."', 1),
+    (l_id, '접수가 마감됐___ 알려드립니다.', '["는 것을","음을","다고","라고"]', 1, 'V-음을 알려드립니다 = formal notification.', 2),
+    (l_id, '장학금 신청___ 관한 공고입니다.', '["이","에","을","의"]', 1, 'N에 관한 N = N2 regarding N1.', 3),
+    (l_id, '''붙임''은 공문서에서 무엇을 의미합니까?', '["subject","sender","attachment","date"]', 2, '붙임 means attachment in formal documents.', 4),
+    (l_id, '공문서에서 적절한 어미는?', '["-아요/어요","-야","-다/습니다","-지요"]', 2, 'Formal documents use the plain -다 or formal -습니다 style.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '공문서는 공식적인 업무 처리를 위해 작성하는 문서입니다. 수신자, 발신자, 제목, 내용, 첨부 서류 등으로 구성됩니다. 공문서에서는 ''~하시기 바랍니다'', ''~을 알려드립니다'' 같은 격식 표현을 사용합니다. 내용은 간결하고 명확하게 작성해야 하며 불필요한 내용은 제외합니다. 한국 직장인이라면 공문서 작성 능력이 필수적입니다. 공문서는 법적 효력을 가지는 경우도 있으므로 정확하게 작성해야 합니다.', 'Official documents are written for the purpose of formal business processing. They consist of recipient, sender, subject, content, and attached documents. In official documents, formal expressions like ''~하시기 바랍니다'' and ''~을 알려드립니다'' are used. The content should be concise and clear, excluding unnecessary content. Document writing ability is essential for Korean working professionals. Since official documents sometimes have legal effect, they must be written accurately.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 102: Debate Skills (토론 기술)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 102;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=102 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '토론', 'toron', 'debate, discussion', 1),
+    (l_id, '찬성측', 'chanseong-cheuk', 'affirmative side', 2),
+    (l_id, '반대측', 'bandae-cheuk', 'opposing side', 3),
+    (l_id, '입론', 'immon', 'opening argument', 4),
+    (l_id, '반론', 'ballon', 'rebuttal, counterargument', 5),
+    (l_id, '청중', 'cheongjeung', 'audience', 6),
+    (l_id, '논점', 'nonjeom', 'point of argument, issue', 7),
+    (l_id, '합리적', 'hamnjeok', 'rational, reasonable', 8),
+    (l_id, '이의를 제기하다', 'euirireul jegihada', 'to raise an objection', 9),
+    (l_id, '동의하다', 'dong-uihada', 'to agree', 10),
+    (l_id, '절충하다', 'jeolchunghada', 'to compromise', 11),
+    (l_id, '결론을 도출하다', 'gyeollon-eul dochulhada', 'to derive a conclusion', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'V/A-다고 주장합니다', 'V/A clause + 다고 주장합니다', 'Formal assertion: "I assert/argue that V/A." Used in debates.', '[{"korean":"이 정책이 효과적이라고 주장합니다.","english":"I argue that this policy is effective."},{"korean":"재생에너지 확대가 필요하다고 주장합니다.","english":"I assert that expanding renewable energy is necessary."}]', 1),
+    (l_id, 'V/A-다는 것은 사실이지만', 'V/A + 다는 것은 사실이지만', 'Acknowledges a point while introducing a counterargument: "It is true that V/A, but..."', '[{"korean":"비용이 높다는 것은 사실이지만 장기적으로는 이익이 됩니다.","english":"It is true that costs are high, but in the long term it becomes beneficial."},{"korean":"어렵다는 것은 사실이지만 불가능하지는 않습니다.","english":"It is true that it is difficult, but it is not impossible."}]', 2),
+    (l_id, 'A/V-음에 비추어 볼 때', 'A/V + 음에 비추어 볼 때', 'Formal expression: "In light of V/A" or "Considering V/A." Used in formal debate.', '[{"korean":"현 상황에 비추어 볼 때 즉각적 조치가 필요합니다.","english":"In light of the current situation, immediate action is necessary."},{"korean":"통계에 비추어 볼 때 이 주장은 타당합니다.","english":"In light of statistics, this argument is valid."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '사회자', '오늘의 토론 주제는 ''인터넷 실명제 도입''에 찬성하는지 반대하는지입니다. 먼저 찬성측 입론 부탁드립니다.', 'Oneul-ui toron jujeoneun ''inteonet sillyeongje doib''-e chanseong-aneun-ji bandae-aneun-ji-imnida. Meonjeo chanseong-cheuk immon butakdeurimnida.', 'Today''s debate topic is whether you agree or disagree with ''internet real-name system implementation.'' Please begin with the affirmative opening argument.', 1),
+    (l_id, '찬성측', '저희는 인터넷 실명제 도입에 찬성합니다. 익명성으로 인한 사이버 폭력과 허위 정보 확산을 막을 수 있다고 주장합니다.', 'Jeohui-neun inteonet sillyeongje doib-e chanseong-hamnida. Ingmyeongseong-euro inhan saibeo pokyeok-gwa hoeui jeongbo hwaksan-eul mageul su itdago jujang-hamnida.', 'We are in favor of the real-name system implementation. We assert that it can prevent cyberbullying and the spread of false information caused by anonymity.', 2),
+    (l_id, '반대측', '이의를 제기합니다. 비용이 높다는 것은 사실이지만, 개인 표현의 자유를 침해할 수 있다는 점을 간과해서는 안 됩니다.', 'Euirireul jegihamnida. Biyong-i nopnaneun geoseun sasisijiman, gaein pyohyeon-ui jayureul chimhaehal su itdaneun jeomeul gangwahae-seo-neun an doeamnida.', 'I raise an objection. While the costs being high is a fact, the point that it may infringe on individual freedom of expression must not be overlooked.', 3),
+    (l_id, '찬성측', '현 상황에 비추어 볼 때 온라인 폭력의 심각성은 개인 자유 침해 우려를 앞섭니다.', 'Hyeon sanghwang-e bichuweo bol ttae onrein pokyeok-ui simgakseong-eun gaein jaeyu chimhae uryo-reul apseumnida.', 'In light of the current situation, the seriousness of online violence outweighs concerns about infringing personal freedom.', 4),
+    (l_id, '사회자', '양측 모두 논리적인 주장을 해 주셨습니다. 결론 도출을 위해 청중 의견을 들어볼까요?', 'Yangtcheuk modu nonlijeok-in jujang-eul hae jusyeotsseumnida. Gyeollon dochul-eul wihae cheongjeung uigyeon-eul deureobolkkayo?', 'Both sides have made logical arguments. Shall we hear the audience''s opinions to derive a conclusion?', 5);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '이 정책이 효과적이___ 주장합니다.', '["다고","라고","면서","지만"]', 0, 'V/A-다고 주장합니다 = I argue that.', 1),
+    (l_id, '비용이 높다는 것은 사실이___, 장기적으로는 이익이 됩니다.', '["서","지만","고","면서"]', 1, '-다는 것은 사실이지만 = it''s true that..., but.', 2),
+    (l_id, '현 상황___ 비추어 볼 때 조치가 필요합니다.', '["을","에","이","을로"]', 1, 'N에 비추어 볼 때 = in light of N.', 3),
+    (l_id, '''이의를 제기하다''의 의미는?', '["to agree","to conclude","to raise an objection","to compromise"]', 2, '이의를 제기하다 = to raise an objection.', 4),
+    (l_id, '토론에서 반론의 역할은?', '["자신의 주장만 강조","상대방 주장의 약점을 지적","청중을 무시","결론을 피함"]', 1, 'A rebuttal (반론) points out weaknesses in the opponent''s argument.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '토론은 어떤 주제에 대해 찬성과 반대 입장에서 논리적으로 의견을 나누는 활동입니다. 효과적인 토론을 위해서는 명확한 주장, 충분한 근거, 그리고 상대방의 논점에 대한 적절한 반론이 필요합니다. 한국어 토론에서는 ''다고 주장합니다'', ''다는 것은 사실이지만'' 같은 격식 표현을 사용합니다. 상대방의 주장을 인정하면서도 자신의 입장을 유지하는 능력이 중요합니다. 토론은 비판적 사고력과 의사소통 능력을 향상시키는 중요한 활동입니다.', 'Debate is an activity of logically exchanging opinions from affirmative and opposing positions on a given topic. For effective debate, a clear claim, sufficient evidence, and an appropriate rebuttal to the opponent''s points are needed. In Korean debates, formal expressions like ''다고 주장합니다'' and ''다는 것은 사실이지만'' are used. The ability to acknowledge the opponent''s argument while maintaining your own position is important. Debate is an important activity that improves critical thinking and communication skills.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 103: Korean History Language (역사 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 103;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=103 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '역사', 'yeoksa', 'history', 1),
+    (l_id, '왕조', 'wangjo', 'dynasty', 2),
+    (l_id, '고려', 'Goryeo', 'Goryeo dynasty (918-1392)', 3),
+    (l_id, '조선', 'Joseon', 'Joseon dynasty (1392-1910)', 4),
+    (l_id, '일제강점기', 'ilje gangjeongi', 'Japanese colonial period', 5),
+    (l_id, '광복', 'gwangbok', 'liberation (August 15, 1945)', 6),
+    (l_id, '전쟁', 'jeonjaeng', 'war', 7),
+    (l_id, '문화재', 'munhwajae', 'cultural heritage asset', 8),
+    (l_id, '유물', 'yumul', 'artifact, relic', 9),
+    (l_id, '건국하다', 'geonguk-ada', 'to found a nation', 10),
+    (l_id, '독립', 'dongip', 'independence', 11),
+    (l_id, '민주주의', 'minjujuui', 'democracy', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'N에 의해 V-(으)었/았다', 'N + 에 의해 + V (passive past)', 'Formal passive expression used in historical writing: "was done by N."', '[{"korean":"한글은 세종대왕에 의해 창제되었다.","english":"Hangul was created by King Sejong."},{"korean":"조선은 이성계에 의해 건국되었다.","english":"Joseon was founded by Yi Seonggye."}]', 1),
+    (l_id, 'N이/가 V-(으)ㄴ 지 N년이 지났다', 'N + 이/가 + V + 지 + N년이 지났다', 'Expresses time elapsed since an event: "N years have passed since N V-ed."', '[{"korean":"광복이 된 지 80여 년이 지났다.","english":"About 80 years have passed since liberation."},{"korean":"한국 전쟁이 끝난 지 70년이 넘었다.","english":"More than 70 years have passed since the Korean War ended."}]', 2),
+    (l_id, 'V/A-(으)ㄴ 것으로 추정된다', 'V/A + (으)ㄴ 것으로 추정된다', 'Formal expression: "It is estimated/assumed that V/A." Used in historical and academic contexts.', '[{"korean":"이 유물은 고려 시대의 것으로 추정된다.","english":"This artifact is estimated to be from the Goryeo period."},{"korean":"당시 인구는 100만 명 이상인 것으로 추정된다.","english":"The population at the time is estimated to have been over one million."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '학생', '한국 역사에서 가장 중요한 사건이 무엇이에요?', 'Hanguk yeoksa-eseo gajang jungyohan sageon-i mueosi-eyo?', 'What is the most important event in Korean history?', 1),
+    (l_id, '교수', '여러 가지가 있지만, 한글 창제와 일제강점기로부터의 광복을 꼽을 수 있어요.', 'Yeoreo gaji-ga itjiman, hangeul changjae-wa ilje gangjeongi-robuto-ui gwangbog-eul kkobeul su isseoyo.', 'There are various events, but we can mention the creation of Hangul and liberation from the Japanese colonial period.', 2),
+    (l_id, '학생', '한글은 누가 만들었어요?', 'Hangeul-eun nuga mandeuleosseoyo?', 'Who made Hangul?', 3),
+    (l_id, '교수', '한글은 15세기에 세종대왕에 의해 창제되었어요. 세종대왕은 백성들이 쉽게 글을 읽고 쓸 수 있도록 훈민정음을 만들었어요.', 'Hangeul-eun 15-segi-e Sejong daewang-e uihae changjae-doe-eosseoyo. Sejong daewang-eun baekseongdeul-i swipge geul-eul ikgo sseul su itdorok hunminjeongeum-eul mandeuleosseoyo.', 'Hangul was created by King Sejong in the 15th century. King Sejong created Hunminjeongeum so that the people could easily read and write.', 4),
+    (l_id, '학생', '조선 시대는 언제까지였어요?', 'Joseon sidae-neun eonje-kkaji-yeosseoyo?', 'Until when was the Joseon dynasty?', 5),
+    (l_id, '교수', '조선은 1392년에 이성계에 의해 건국되어 1910년 일제 강점기가 시작될 때까지 약 500년간 지속되었어요.', 'Joseon-eun 1392-nyeon-e Yi Seong-gye-e uihae geonguk-doeyeo 1910-nyeon ilje gangjeongi-ga sijakdoel ttekkaji yak 500-nyeongan jisok-doeeoosseoyo.', 'Joseon was founded by Yi Seonggye in 1392 and lasted about 500 years until the Japanese colonial period began in 1910.', 6),
+    (l_id, '학생', '1945년에 광복이 됐고, 그 이후 대한민국이 수립되었군요.', '1945-nyeon-e gwangbogi dwaeotgo, geu ihu Daehan-minguk-i suripdoe-eossgunyo.', 'Korea was liberated in 1945, and after that the Republic of Korea was established.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '한글은 세종대왕___ 창제되었다.', '["이","에 의해","에서","에게"]', 1, 'N에 의해 + passive V = was done by N.', 1),
+    (l_id, '이 유물은 고려 시대의 것___ 추정된다.', '["으로","이라고","이기","다고"]', 0, 'V-(으)ㄴ 것으로 추정된다 = it is estimated to be.', 2),
+    (l_id, '조선은 이성계에 의해 ___ 되었다.', '["건국","발견","붕괴","탄생"]', 0, '건국하다 = to found a nation.', 3),
+    (l_id, '광복은 언제입니까?', '["1910년 8월 15일","1919년 3월 1일","1945년 8월 15일","1950년 6월 25일"]', 2, '광복 (liberation from Japanese rule) was on August 15, 1945.', 4),
+    (l_id, '조선 시대가 시작된 연도는?', '["918년","1392년","1910년","1945년"]', 1, 'The Joseon dynasty was founded in 1392.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국은 수천 년의 역사를 가진 나라입니다. 고구려, 백제, 신라 삼국 시대를 거쳐 고려와 조선 왕조가 이어졌습니다. 15세기 세종대왕은 한글을 창제하여 한국 문화 발전에 크게 기여했습니다. 1910년 일본의 강제 병합으로 일제강점기가 시작되었고, 1945년 8월 15일 광복을 맞이했습니다. 6·25 전쟁(한국전쟁) 후 한국은 빠른 경제 발전을 이루어 ''한강의 기적''이라 불리게 됩니다. 현재 한국은 세계적인 경제 대국이자 문화 강국으로 자리 잡았습니다.', 'Korea is a country with thousands of years of history. Following the Three Kingdoms period of Goguryeo, Baekje, and Silla, the Goryeo and Joseon dynasties followed. In the 15th century, King Sejong created Hangul, greatly contributing to the development of Korean culture. In 1910, Japan forcibly annexed Korea, starting the Japanese colonial period, and liberation came on August 15, 1945. After the Korean War (6.25 War), Korea achieved rapid economic development and came to be called the ''Miracle of the Han River.'' Today, Korea has established itself as a global economic power and cultural powerhouse.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 104: Newspaper Korean (신문 한국어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 104;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=104 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '사설', 'sasel', 'editorial', 1),
+    (l_id, '칼럼', 'kalleom', 'column (opinion piece)', 2),
+    (l_id, '취재원', 'chwiaewon', 'source (news)', 3),
+    (l_id, '특종', 'teukjong', 'scoop (exclusive news)', 4),
+    (l_id, '특파원', 'teukpawon', 'correspondent', 5),
+    (l_id, '논평하다', 'nonpyeonghada', 'to comment, to review', 6),
+    (l_id, '요약하다', 'yoyakhada', 'to summarize', 7),
+    (l_id, '인용구', 'inyonggu', 'quotation', 8),
+    (l_id, '리드', 'rideu', 'lead paragraph (news)', 9),
+    (l_id, '객관성', 'gaekgwanseong', 'objectivity', 10),
+    (l_id, '편견', 'pyeongyeon', 'bias', 11),
+    (l_id, '검증하다', 'geomjeunghada', 'to verify, to validate', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'N에 따르면 ~ 인 것으로 전해졌다', 'N에 따르면 + clause + 인 것으로 전해졌다', 'Combined news reporting structure: "According to N, it was reported that..."', '[{"korean":"경찰에 따르면 용의자가 검거된 것으로 전해졌다.","english":"According to police, it was reported that the suspect was arrested."},{"korean":"관계자에 따르면 협의가 진행 중인 것으로 전해졌다.","english":"According to officials, it was reported that consultations are ongoing."}]', 1),
+    (l_id, 'V-(으)ㄴ 것으로 나타났다', 'V + (으)ㄴ 것으로 나타났다', 'News expression: "it appeared/was found that V." Used when citing research or surveys.', '[{"korean":"조사 결과 20대 취업률이 감소한 것으로 나타났다.","english":"Survey results showed that employment rates for those in their 20s decreased."},{"korean":"응답자의 70%가 찬성한 것으로 나타났다.","english":"It was found that 70% of respondents were in favor."}]', 2),
+    (l_id, 'A/V-다며 논란이 되다', 'A/V + 다며 논란이 되다', 'Expresses a controversy: "there is controversy claiming that A/V."', '[{"korean":"이 발언이 차별적이라며 논란이 됐다.","english":"There was controversy claiming this remark was discriminatory."},{"korean":"그 정책이 부적절하다며 논란이 일었다.","english":"A controversy arose claiming the policy was inappropriate."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '기자1', '오늘 헤드라인 기사 어떻게 쓸 거예요?', 'Oneul hedeurain gisa eotteoke sseul geoyeyo?', 'How will you write today''s headline article?', 1),
+    (l_id, '기자2', '정부 발표에 따르면 경제성장률이 예상을 웃도는 것으로 나타났는데, 이 내용으로 리드를 잡을 거예요.', 'Jeongbu balpyo-e ttareumyeon gyeongje-seongjang-nyul-i yeang-eul udtoneun geosro natanannneunde, i naeyong-euro rideu-reul jabeul geoyeyo.', 'According to the government announcement, it appeared that the economic growth rate exceeded expectations, so I''ll lead with that.', 2),
+    (l_id, '기자1', '인용은 어떻게 처리할 거예요?', 'Inyong-eun eotteoke cheolli-hal geoyeyo?', 'How will you handle quotations?', 3),
+    (l_id, '기자2', '기획재정부 장관의 발언을 직접 인용하고 전문가 논평도 추가할 거예요.', 'Gihoek-jaejeongbu jangwang-ui baleon-eul jikjeop inyong-ago jeonmungas nonpyeong-do chuga-hal geoyeyo.', 'I''ll directly quote the Minister of Economy and Finance''s remarks and add expert commentary too.', 4),
+    (l_id, '기자1', '반론도 다뤄야 하지 않나요? 객관성이 중요하니까요.', 'Ballon-do dalwooya haji annayo? Gaekgwanseong-i jungyohanikayo.', 'Shouldn''t we cover counterarguments too? Objectivity is important.', 5),
+    (l_id, '기자2', '맞아요. 일부 경제학자들은 성장이 지속가능하지 않다며 논란이 있다는 것도 언급할게요.', 'Majayo. Ilbu gyeongjehakjadeul-eun seongjang-i jisokganeunghaji ant-amyeo nollan-i itdaneun geotdo eon-geuphalgeyo.', 'Right. I''ll also mention that some economists are raising controversy claiming the growth is not sustainable.', 6);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '조사 결과 취업률이 감소한 것___ 나타났다.', '["에","으로","이","을"]', 1, 'V-(으)ㄴ 것으로 나타났다 = it was found/appeared that.', 1),
+    (l_id, '경찰에 따르면 용의자가 검거된 것으로 ___. (news form)', '["나타났다","알려졌다","전해졌다","보였다"]', 2, '전해졌다 = was reported/conveyed (news reporting form).', 2),
+    (l_id, '그 발언이 차별적이___ 논란이 됐다.', '["다며","다고","라며","면서"]', 0, 'A/V-다며 논란이 되다 = controversy arose claiming that.', 3),
+    (l_id, '''사설''의 의미는?', '["news scoop","editorial","correspondent","quotation"]', 1, '사설 = editorial (opinion piece in a newspaper).', 4),
+    (l_id, '좋은 신문 기사의 조건이 아닌 것은?', '["객관성","사실 검증","다양한 관점","기자의 주관적 의견만 반영"]', 3, 'Reflecting only the journalist''s subjective opinion goes against the principles of good journalism.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '신문 한국어는 일상 언어와 구별되는 특별한 문체를 사용합니다. 신문 기사의 제목은 짧고 강렬하며 핵심 정보를 전달합니다. 기사 본문에서는 ''에 따르면'', ''것으로 전해졌다'', ''것으로 나타났다'' 등의 표현을 자주 사용합니다. 좋은 신문 기사는 사실에 근거하고 객관적이어야 합니다. 다양한 관점과 전문가 의견을 포함하는 것이 균형 잡힌 보도의 기본입니다. 한국어 신문을 꾸준히 읽으면 어휘력과 사회 현안에 대한 이해도를 높일 수 있습니다.', 'Newspaper Korean uses a special style that is distinguished from everyday language. Newspaper article titles are short, impactful, and convey key information. In article bodies, expressions like ''에 따르면'' (according to), ''것으로 전해졌다'' (was reported that), and ''것으로 나타났다'' (was found that) are frequently used. Good newspaper articles must be based on facts and be objective. Including various perspectives and expert opinions is fundamental to balanced reporting. Consistently reading Korean newspapers can improve vocabulary and understanding of current social issues.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 105: Complex Grammar Revision (복잡한 문법 복습)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 105;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=105 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '복습', 'bokseup', 'review', 1),
+    (l_id, '정리하다', 'jeonglihada', 'to organize, to summarize', 2),
+    (l_id, '확인하다', 'hwagin-hada', 'to confirm, to check', 3),
+    (l_id, '혼동하다', 'hondong-hada', 'to confuse, to mix up', 4),
+    (l_id, '구별하다', 'gubyeolhada', 'to distinguish', 5),
+    (l_id, '쓰임새', 'sseumssae', 'usage', 6),
+    (l_id, '차이점', 'chaijeom', 'difference, distinction', 7),
+    (l_id, '공통점', 'gongtongjeom', 'commonality', 8),
+    (l_id, '응용하다', 'eung-yonghada', 'to apply', 9),
+    (l_id, '핵심', 'haeksim', 'core, key point', 10),
+    (l_id, '오류', 'oryu', 'error, mistake', 11),
+    (l_id, '교정하다', 'gyojeonghada', 'to correct', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, '-는 바람에 (unexpected cause)', 'V + 는 바람에', 'Expresses an unexpected or undesirable cause: "because of unexpectedly V-ing." More emphatic than -아서/어서.', '[{"korean":"버스를 놓치는 바람에 지각했어요.","english":"Because I missed the bus, I was late."},{"korean":"갑자기 비가 오는 바람에 옷이 다 젖었어요.","english":"Because it suddenly rained, my clothes got completely wet."}]', 1),
+    (l_id, '-(으)ㄹ 텐데 (expectation/concern)', 'V/A + (으)ㄹ 텐데', 'Expresses an expected situation with some concern or implication: "must be..., I expect."', '[{"korean":"지금 바쁠 텐데 괜찮아요?","english":"You must be busy now — are you okay?"},{"korean":"많이 피곤할 텐데 쉬세요.","english":"You must be very tired — please rest."}]', 2),
+    (l_id, 'V-(으)ㄹ 수밖에 없다', 'V stem + (으)ㄹ 수밖에 없다', 'Means "have no choice but to V" or "can''t help but V."', '[{"korean":"그 상황에서는 포기할 수밖에 없었어요.","english":"In that situation, I had no choice but to give up."},{"korean":"이 음식이 너무 맛있어서 먹을 수밖에 없어요.","english":"This food is so delicious I can''t help but eat it."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '학생', '오늘 복잡한 문법 패턴을 복습하고 싶어요.', 'Oneul bokjaphan munbeop paeteon-eul bokseup ago sipeoyo.', 'I want to review complex grammar patterns today.', 1),
+    (l_id, '교사', '좋아요. 오늘은 ''는 바람에'', ''ㄹ 텐데'', ''ㄹ 수밖에 없다''를 정리해 봐요.', 'Joayo. Oneul-eun ''neun barame'', ''l tende'', ''l subakke eopda''-reul jeonglihae bwayo.', 'Good. Today let''s organize ''because of unexpectedly,'' ''must be,'' and ''have no choice but.''', 2),
+    (l_id, '학생', '''는 바람에''는 어떻게 써요?', '''Neun barame''-neun eotteoke sseoyo?', 'How do you use ''because of unexpectedly''?', 3),
+    (l_id, '교사', '예기치 않은 원인으로 나쁜 결과가 생겼을 때 써요. ''버스를 놓치는 바람에 늦었어요''처럼요.', 'Yegijianhneun wonin-euro nabbeun gyeolgwa-ga saenggyeosseul ttae sseoyo. ''Beoseu-reul nochineun barame neujeosseoyo''-cheoreomyo.', 'It''s used when an unexpected cause leads to a bad result. Like ''I was late because I unexpectedly missed the bus.''', 4),
+    (l_id, '학생', '그럼 ''ㄹ 수밖에 없다''는요?', 'Geureum ''l subakke eopda''-neunyo?', 'Then what about ''have no choice but''?', 5),
+    (l_id, '교사', '다른 선택이 없어서 그것만 할 수 있는 상황을 표현해요. ''선택의 여지가 없다''는 의미죠.', 'Dareun seon-taek-i eobseoseo geugeotman hal su inneun sanghwang-eul pyohyeonhaeyo. ''Seon-taek-ui yeoji-ga eopda''neun uimijyo.', 'It expresses a situation where there are no other choices and you can only do that. It means ''there is no room for choice.''', 6),
+    (l_id, '학생', '정말 유용한 패턴들이네요. 잘 정리됐어요!', 'Jeongmal yuyonghan paeteondeul-ineyo. Jal jeonglidwaesseoyo!', 'These are really useful patterns. Well organized!', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '버스를 놓치___ 지각했어요. (unexpected cause)', '["아서","는 바람에","면","지만"]', 1, '-는 바람에 = because of unexpectedly doing (negative result).', 1),
+    (l_id, '지금 많이 피곤할 ___, 쉬세요.', '["텐데","수 있어요","것 같아요","줄 알아요"]', 0, '-(으)ㄹ 텐데 = must be (expressing expectation/concern).', 2),
+    (l_id, '그 상황에서는 포기할 수___ 없었어요.', '["밖에","뿐","밖은","만"]', 0, '-(으)ㄹ 수밖에 없다 = have no choice but to.', 3),
+    (l_id, '''-는 바람에''는 주로 어떤 결과와 함께 쓰입니까?', '["긍정적 결과","부정적/예상치 못한 결과","중립적 결과","미래 결과"]', 1, '-는 바람에 typically precedes an unexpected negative result.', 4),
+    (l_id, '''선택의 여지가 없다''와 의미가 같은 표현은?', '["할 수 있다","해야 할 것 같다","할 수밖에 없다","하고 싶다"]', 2, '할 수밖에 없다 = have no choice but to (no alternative).', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '복잡한 문법 패턴을 정확하게 사용하려면 각 패턴의 뉘앙스를 이해해야 합니다. ''-는 바람에''는 예상치 못한 나쁜 원인을 나타내므로 긍정적 결과에는 쓰지 않습니다. ''-(으)ㄹ 텐데''는 화자의 추측과 배려를 동시에 표현합니다. ''-(으)ㄹ 수밖에 없다''는 강한 불가피성을 나타냅니다. 이러한 고급 문법 패턴들을 자연스럽게 구사할 수 있다면 한국어 수준이 한 단계 높아졌다고 할 수 있습니다. 꾸준한 연습과 다양한 예문을 통해 자신의 것으로 만드는 것이 중요합니다.', 'To use complex grammar patterns accurately, you must understand the nuance of each pattern. -는 바람에 indicates an unexpected bad cause, so it is not used with positive results. -(으)ㄹ 텐데 simultaneously expresses the speaker''s conjecture and consideration. -(으)ㄹ 수밖에 없다 indicates strong inevitability. If you can use these advanced grammar patterns naturally, you can say your Korean level has risen by one step. It is important to make them your own through consistent practice and exposure to various example sentences.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 106: Literature Appreciation (문학 감상)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 106;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=106 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '문학', 'munhak', 'literature', 1),
+    (l_id, '소설', 'soseol', 'novel', 2),
+    (l_id, '시', 'si', 'poem, poetry', 3),
+    (l_id, '수필', 'supil', 'essay (literary)', 4),
+    (l_id, '주인공', 'juingong', 'main character', 5),
+    (l_id, '배경', 'baegyeong', 'setting, background', 6),
+    (l_id, '주제', 'juje', 'theme', 7),
+    (l_id, '상징', 'sangjing', 'symbol', 8),
+    (l_id, '서사', 'seosa', 'narrative', 9),
+    (l_id, '묘사하다', 'myosahada', 'to describe, to depict', 10),
+    (l_id, '함축적', 'hamchukjeok', 'implicit, connotative', 11),
+    (l_id, '감동받다', 'gamdong-batda', 'to be moved/touched', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'N은/는 N을/를 상징한다', 'N1 + 은/는 + N2 + 를 상징한다', 'Formal expression of literary symbolism: "N1 symbolizes N2."', '[{"korean":"이 소설에서 비는 슬픔을 상징한다.","english":"In this novel, rain symbolizes sorrow."},{"korean":"흰 비둘기는 평화를 상징한다.","english":"A white dove symbolizes peace."}]', 1),
+    (l_id, 'V/A-다고 할 수 있다 (문학 분석)', 'V/A + 다고 할 수 있다', 'Used in literary analysis: "it can be said that V/A."', '[{"korean":"이 작품은 인간의 욕망을 탐구한다고 할 수 있다.","english":"It can be said that this work explores human desire."},{"korean":"이 시는 자연과 인간의 관계를 노래한다고 할 수 있다.","english":"It can be said that this poem sings of the relationship between nature and humans."}]', 2),
+    (l_id, 'N에 나타난 N', 'N1 + 에 나타난 + N2', 'Expresses what appears or is manifested in a literary work: "N2 as manifested in N1."', '[{"korean":"이 소설에 나타난 사회 비판은 강렬하다.","english":"The social criticism manifested in this novel is intense."},{"korean":"시에 나타난 감정의 깊이가 인상적이다.","english":"The depth of emotion manifested in the poem is impressive."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '독서 모임', '이번 달 읽은 소설 어떠셨어요?', 'Ibeon dal ilgeun soseol eotteosey-eosseoyo?', 'How was the novel you read this month?', 1),
+    (l_id, '회원1', '정말 감동적이었어요. 주인공의 성장 과정이 인상적이었어요.', 'Jeongmal gamdongjeog-ieosseoyo. Juingong-ui seongjang gwajeon-i insangjeog-ieosseoyo.', 'It was really moving. The main character''s growth process was impressive.', 2),
+    (l_id, '회원2', '이 소설에 나타난 사회적 메시지도 강렬했어요. 계층 갈등을 잘 표현했다고 생각해요.', 'I soseol-e natanan sahoejeok mesiji-do gangnyeolhaesseoyo. Gyecheung galdeung-eul jal pyohyeonhaessdago saenggakaeyo.', 'The social message manifested in this novel was also intense. I think it expressed class conflict well.', 3),
+    (l_id, '회원1', '맞아요. 비가 자주 등장하는데, 이 소설에서 비는 변화를 상징한다고 할 수 있어요.', 'Majayo. Biga jaju deungjang-aneunde, i soseol-eseo bi-neun byeonhwa-reul sangjiinganda-go hal su isseoyo.', 'Right. Rain appears frequently, and in this novel, rain can be said to symbolize change.', 4),
+    (l_id, '회원2', '문학 작품을 읽으면 한국어 어휘도 늘고 표현력도 좋아지는 것 같아요.', 'Munhak jakpum-eul ilgeumyeon Hangugeo eohwi-do neulgo pyohyeonnyeok-do joajineun geot gatayo.', 'Reading literary works seems to expand Korean vocabulary and improve expressive ability too.', 5),
+    (l_id, '회원1', '맞아요. 문학을 통해 언어와 문화를 동시에 배울 수 있어요.', 'Majayo. Munhak-eul tonghae eoneo-wa munhwa-reul dongsi-e baeul su isseoyo.', 'Right. Through literature, you can learn both language and culture simultaneously.', 6);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '이 소설에서 비는 슬픔을 ___. (symbolizes)', '["상징한다","의미한다","묘사한다","나타낸다"]', 0, '상징하다 = to symbolize.', 1),
+    (l_id, '이 작품은 인간의 욕망을 탐구한다___ 할 수 있다.', '["고","라고","다고","면서"]', 2, 'A/V-다고 할 수 있다 = it can be said that.', 2),
+    (l_id, '이 소설___ 나타난 사회 비판이 강렬하다.', '["에서","에","으로","이"]', 1, 'N에 나타난 N = N as manifested in N.', 3),
+    (l_id, '''주인공''의 의미는?', '["setting","theme","main character","symbol"]', 2, '주인공 = main character.', 4),
+    (l_id, '문학 감상의 요소가 아닌 것은?', '["주제 분석","상징 이해","등장인물 파악","문법 오류 세기"]', 3, 'Counting grammar errors is not part of literary appreciation.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국 문학은 삼국 시대부터 현대까지 다양하게 발전해 왔습니다. 이광수, 김소월, 윤동주, 박경리 등이 한국 문학의 대표적인 작가와 시인입니다. 문학 작품은 시대와 사회를 반영하며 인간의 보편적 감정을 표현합니다. 소설을 읽으면 자연스럽게 어휘력이 향상되고 문화적 이해도 깊어집니다. 시는 함축적인 언어를 사용하여 감정과 사상을 표현합니다. 한국어 학습자에게 한국 현대 소설이나 시를 읽는 것을 강력히 추천합니다.', 'Korean literature has developed diversely from the Three Kingdoms period to the present. Yi Gwangsu, Kim Sowol, Yoon Dong-ju, and Park Kyongni are representative authors and poets of Korean literature. Literary works reflect the era and society and express universal human emotions. Reading novels naturally improves vocabulary and deepens cultural understanding. Poetry uses implicit language to express emotions and ideas. It is strongly recommended for Korean language learners to read modern Korean novels or poetry.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 107: Speech Patterns and Rhetoric (수사법)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 107;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=107 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '수사법', 'susabeop', 'rhetoric, rhetorical device', 1),
+    (l_id, '은유', 'eunyu', 'metaphor', 2),
+    (l_id, '직유', 'jigu', 'simile', 3),
+    (l_id, '의인법', 'uiinbeop', 'personification', 4),
+    (l_id, '반복', 'banbog', 'repetition', 5),
+    (l_id, '과장', 'gwajang', 'exaggeration, hyperbole', 6),
+    (l_id, '역설', 'yeokseol', 'paradox', 7),
+    (l_id, '반어법', 'baneo-beop', 'irony', 8),
+    (l_id, '강조하다', 'gangjohada', 'to emphasize', 9),
+    (l_id, '생동감', 'saengdonggam', 'vividness, life', 10),
+    (l_id, '설득력', 'seoldeungyeok', 'persuasiveness', 11),
+    (l_id, '문체', 'muncheae', 'writing/speaking style', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, '직유: N처럼/같이 A', 'N + 처럼 / 같이 + A', 'Simile: comparison using ''like'' or ''as.'' N처럼/같이 introduces the comparison.', '[{"korean":"그는 사자처럼 용감하다.","english":"He is as brave as a lion."},{"korean":"시간이 화살같이 빠르다.","english":"Time is fast like an arrow."}]', 1),
+    (l_id, '은유: N이/가 N이다', 'N1 + 이/가 + N2 + 이다', 'Metaphor: directly states that N1 is N2 without using ''like.''', '[{"korean":"인생은 여행이다.","english":"Life is a journey."},{"korean":"그녀의 목소리는 음악이었다.","english":"Her voice was music."}]', 2),
+    (l_id, '의인법: 사물이 V/A (인간처럼)', 'Inanimate N + V/A (as if human)', 'Personification: giving human qualities or actions to non-human things.', '[{"korean":"꽃들이 미소 짓고 있었다.","english":"The flowers were smiling."},{"korean":"바람이 속삭였다.","english":"The wind whispered."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '교수', '오늘은 한국 문학에서 자주 쓰이는 수사법에 대해 배워 봅시다.', 'Oneul-eun Hanguk munhak-eseo jaju sseuineun susabeop-e daehae baewo bopsida.', 'Today let''s learn about rhetorical devices frequently used in Korean literature.', 1),
+    (l_id, '학생', '은유와 직유의 차이가 뭐예요?', 'Eunyu-wa jigu-ui chai-ga mwoyeyo?', 'What is the difference between metaphor and simile?', 2),
+    (l_id, '교수', '직유는 ''처럼''이나 ''같이''를 사용해서 두 사물을 비교해요. ''그는 사자처럼 용감하다''처럼요. 은유는 비교 표현 없이 직접 ''A는 B다''라고 해요.', 'Jigu-neun ''cheoreom''ina ''gachi''-reul sayong-haeseo du samul-eul bigyohaeyo. ''Geuneun sajacheoreom yongamaada''cheoreomyo. Eunyu-neun bigyo pyohyeon eobsi jikjeop ''A-neun B-da''-rago haeyo.', 'Simile uses ''cheoreom'' or ''gachi'' to compare two things, like ''He is as brave as a lion.'' Metaphor directly says ''A is B'' without comparative words.', 3),
+    (l_id, '학생', '의인법은요?', 'Uiinbeop-eunyo?', 'What about personification?', 4),
+    (l_id, '교수', '사물에 인간의 행동이나 감정을 부여하는 거예요. ''꽃들이 미소 짓는다''처럼 꽃이 인간처럼 행동하는 것으로 표현하는 거죠.', 'Samul-e ingan-ui haengdong-ina gamjeong-eul bunyeo-haneun geoyeyo. ''Kkotdeuli miso jitneunda''cheoreom kkoti ingancheoreom haengdong-aneun geosro pyohyeon-aneun geojyo.', 'It''s giving human actions or emotions to objects. Like ''the flowers are smiling'' — expressing flowers as if they act like humans.', 5),
+    (l_id, '학생', '수사법을 쓰면 왜 더 좋아요?', 'Susabeop-eul sseumyeon wae deo joayo?', 'Why is it better to use rhetorical devices?', 6),
+    (l_id, '교수', '표현이 더 생동감 있고 독자에게 강한 인상을 남길 수 있어요. 설득력도 높아지고요.', 'Pyohyeon-i deo saengdonggam itgo dokja-ege ganghan insang-eul namgil su isseoyo. Seoldeungyeok-do nopajigo-yo.', 'The expression becomes more vivid and can leave a strong impression on the reader. Persuasiveness also increases.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '그는 사자___ 용감하다. (simile)', '["이","처럼","같은","의"]', 1, '처럼 = like, as (simile marker).', 1),
+    (l_id, '인생은 여행___. (metaphor)', '["처럼 좋다","이다","같이 빠르다","처럼 보인다"]', 1, 'N이/가 N이다 = metaphor structure.', 2),
+    (l_id, '꽃들이 미소 ___. (personification)', '["처럼","을 닮았다","짓고 있었다","를 피웠다"]', 2, 'Giving flowers the human action of smiling = personification.', 3),
+    (l_id, '''은유''의 의미는?', '["simile","metaphor","personification","repetition"]', 1, '은유 = metaphor.', 4),
+    (l_id, '수사법의 효과가 아닌 것은?', '["생동감","설득력","강조","문법 오류 감소"]', 3, 'Rhetorical devices increase vividness, persuasiveness, and emphasis — not grammar correctness.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '수사법은 언어를 더 풍부하고 효과적으로 만드는 기술입니다. 한국 문학과 연설에서 다양한 수사법이 사용됩니다. 직유는 ''처럼''이나 ''같이''를 사용하여 두 사물을 비교하는 방법입니다. 은유는 비교 표현 없이 직접 동일시하는 강렬한 표현입니다. 의인법은 무생물에 인간의 특성을 부여하여 생동감을 줍니다. 과장법은 사실을 크게 부풀려 강조하는 기법입니다. 이러한 수사법들을 익히면 더 풍부하고 설득력 있는 한국어 표현이 가능합니다.', 'Rhetoric is a technique that makes language richer and more effective. Various rhetorical devices are used in Korean literature and speeches. Simile is a method of comparing two things using ''like'' (cheoreom) or ''as'' (gachi). Metaphor is an intense expression that directly equates without comparative words. Personification gives vitality by attributing human characteristics to inanimate objects. Hyperbole is a technique that greatly exaggerates facts for emphasis. Mastering these rhetorical devices enables richer and more persuasive Korean expression.', 1);
+END $$;
+
+
+-- ============================================================
+-- Lesson 108: Korean Legal Language (법률 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 108;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=108 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '법률', 'beomnyul', 'law, legislation', 1),
+    (l_id, '계약', 'gyeyak', 'contract', 2),
+    (l_id, '권리', 'gwonni', 'right, entitlement', 3),
+    (l_id, '의무', 'uimu', 'obligation, duty', 4),
+    (l_id, '위반', 'wiban', 'violation', 5),
+    (l_id, '처벌', 'cheobel', 'punishment, penalty', 6),
+    (l_id, '소송', 'sosong', 'lawsuit, litigation', 7),
+    (l_id, '판결', 'pangyeol', 'verdict, ruling', 8),
+    (l_id, '증거', 'jeunggeo', 'evidence', 9),
+    (l_id, '피고', 'pigo', 'defendant', 10),
+    (l_id, '원고', 'wongo', 'plaintiff', 11),
+    (l_id, '변호사', 'byeonhosa', 'lawyer, attorney', 12),
+    (l_id, '법원', 'beobwon', 'court (of law)', 13),
+    (l_id, '헌법', 'heonbeop', 'constitution', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Legal obligation: -야 한다 / -어야 한다', 'V-아야/어야 하다', 'Expresses legal or moral obligation: "must do". Common in legal texts and formal rules.', '[{"korean":"계약서에 서명해야 합니다.","english":"You must sign the contract."},{"korean":"법을 준수해야 합니다.","english":"You must comply with the law."},{"korean":"세금을 납부해야 합니다.","english":"You must pay taxes."}]', 1),
+    (l_id, 'Prohibition: -면 안 된다', 'V-(으)면 안 되다', 'Expresses prohibition: "must not". Used in laws, rules, and regulations.', '[{"korean":"계약을 무단으로 변경하면 안 됩니다.","english":"You must not alter the contract without authorization."},{"korean":"타인의 권리를 침해하면 안 됩니다.","english":"You must not infringe on others'' rights."}]', 2),
+    (l_id, 'Formal passive: -되다', 'N이/가 V-되다', 'Expresses formal passive voice, common in legal and official documents.', '[{"korean":"계약이 체결되었습니다.","english":"The contract was concluded."},{"korean":"판결이 선고되었습니다.","english":"The verdict was announced."},{"korean":"법률이 시행되었습니다.","english":"The law was enacted/implemented."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '의뢰인', '변호사님, 계약 위반으로 소송을 제기할 수 있을까요?', 'Byeonhosanim, gyeyak wiban-euro sosong-eul jegi hal su isseulkkayo?', 'Attorney, can I file a lawsuit for breach of contract?', 1),
+    (l_id, '변호사', '네, 충분한 증거가 있다면 소송이 가능합니다.', 'Ne, chungbunhan jeunggeo-ga itdamyeon sosong-i ganeunghabnida.', 'Yes, if there is sufficient evidence, a lawsuit is possible.', 2),
+    (l_id, '의뢰인', '어떤 증거가 필요한가요?', 'Eotteon jeunggeo-ga piryohangayo?', 'What kind of evidence is needed?', 3),
+    (l_id, '변호사', '계약서, 이메일, 거래 내역 등이 중요한 증거입니다.', 'Gyeyakseo, imeil, geoae naeyeok deung-i jungyohan jeunggeo-imnida.', 'The contract, emails, and transaction records are important evidence.', 4),
+    (l_id, '의뢰인', '소송 기간은 얼마나 걸리나요?', 'Sosong gigan-eun eolmana geollinayo?', 'How long does the lawsuit take?', 5),
+    (l_id, '변호사', '사건에 따라 다르지만 보통 6개월에서 2년 정도 걸립니다.', 'Sageon-e ttara dareu-jiman botong yuk-gaewol-eseo i-nyeon jeongdo geollimnida.', 'It varies by case, but usually takes 6 months to 2 years.', 6),
+    (l_id, '의뢰인', '승소할 가능성은 얼마나 될까요?', 'Seungsso-hal ganeungseong-eun eolmana doelkkayo?', 'What are the chances of winning?', 7),
+    (l_id, '변호사', '증거가 명확하면 승소 가능성이 높습니다.', 'Jeunggeo-ga myeongwak-hamyeon seungsso ganeungseong-i nopeumnida.', 'If the evidence is clear, the chances of winning are high.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '법정에서 사실을 증명하는 자료를 무엇이라고 합니까?', '["판결","증거","소송","계약"]', 1, '증거 (jeunggeo) means evidence — the material used to prove facts in court.', 1),
+    (l_id, '법을 어기는 행위를 한국어로 무엇이라고 합니까?', '["권리","의무","위반","처벌"]', 2, '위반 (wiban) means violation — the act of breaking a rule or law.', 2),
+    (l_id, '다음 중 법적 의무를 나타내는 표현은?', '["가도 됩니다","해도 좋습니다","해야 합니다","할 수 있습니다"]', 2, '-아야/어야 합니다 expresses legal or moral obligation: "must do".', 3),
+    (l_id, '소송에서 고소를 당한 사람을 무엇이라고 합니까?', '["원고","변호사","판사","피고"]', 3, '피고 (pigo) is the defendant — the person being sued or prosecuted.', 4),
+    (l_id, '법원에서 내리는 최종 결정을 무엇이라고 합니까?', '["계약","증거","판결","소송"]', 2, '판결 (pangyeol) is the verdict or ruling issued by a court.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국의 법률 체계는 성문법에 기반하고 있습니다. 헌법은 모든 법률의 최상위에 위치하며 국민의 기본권을 보장합니다. 계약은 당사자 간의 법적 구속력 있는 합의로, 서면으로 작성하는 것이 일반적입니다. 계약을 위반하면 손해배상 책임이 발생할 수 있습니다. 법적 분쟁이 발생했을 때는 변호사의 조언을 구하는 것이 중요합니다. 소송 절차는 복잡하므로 전문가의 도움이 필요합니다. 법률 지식을 갖추면 일상생활에서 자신의 권리를 보호할 수 있습니다.', 'Korea''s legal system is based on written law (statutory law). The constitution is at the top of all laws and guarantees the fundamental rights of citizens. A contract is a legally binding agreement between parties, and it is common to put it in writing. Violating a contract can result in liability for damages. When a legal dispute arises, it is important to seek advice from a lawyer. Since legal procedures are complex, professional help is needed. Having legal knowledge allows you to protect your rights in daily life.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 109: Medical Korean (의학 한국어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 109;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=109 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '증상', 'jeungsang', 'symptom', 1),
+    (l_id, '진단', 'jindan', 'diagnosis', 2),
+    (l_id, '처방', 'cheobeang', 'prescription', 3),
+    (l_id, '수술', 'susul', 'surgery, operation', 4),
+    (l_id, '입원', 'ibwon', 'hospitalization', 5),
+    (l_id, '퇴원', 'toewon', 'discharge from hospital', 6),
+    (l_id, '만성', 'manseong', 'chronic (illness)', 7),
+    (l_id, '급성', 'geupseong', 'acute (illness)', 8),
+    (l_id, '부작용', 'bujagyong', 'side effect', 9),
+    (l_id, '투약', 'tuyak', 'medication administration', 10),
+    (l_id, '혈압', 'hyeorap', 'blood pressure', 11),
+    (l_id, '혈당', 'hyeoldang', 'blood sugar', 12),
+    (l_id, '면역', 'myeon-yeo', 'immunity', 13),
+    (l_id, '염증', 'yeomjeung', 'inflammation', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Describing symptoms: -이/가 나다', 'N이/가 나다', 'Used to describe physical symptoms or sensations. Common in medical contexts.', '[{"korean":"열이 납니다.","english":"I have a fever."},{"korean":"두통이 납니다.","english":"I have a headache."},{"korean":"구역질이 납니다.","english":"I feel nauseous."}]', 1),
+    (l_id, 'Duration of illness: -은 지 N이/가 되다', 'V-은/ㄴ 지 N이/가 되다', 'Expresses how long ago something started. Used to describe when symptoms began.', '[{"korean":"아픈 지 3일이 됐습니다.","english":"It''s been 3 days since I got sick."},{"korean":"입원한 지 일주일이 됐습니다.","english":"It''s been a week since I was hospitalized."}]', 2),
+    (l_id, 'Medical advice: -도록 하세요', 'V-도록 하세요', 'Gives medical instructions or recommendations in a formal way. "Please make sure to V."', '[{"korean":"충분히 쉬도록 하세요.","english":"Please make sure to get enough rest."},{"korean":"약을 꼭 드시도록 하세요.","english":"Please make sure to take your medication."},{"korean":"물을 많이 마시도록 하세요.","english":"Please make sure to drink a lot of water."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '환자', '의사 선생님, 며칠째 열이 나고 기침이 심합니다.', 'Uisa seonsaengnim, myeochiljjae yeori nago gichim-i simnida.', 'Doctor, I have had a fever for several days and a severe cough.', 1),
+    (l_id, '의사', '언제부터 증상이 시작됐나요?', 'Eonjebuteo jeungsang-i sijakdwaennayo?', 'When did the symptoms start?', 2),
+    (l_id, '환자', '3일 전부터 시작됐습니다.', 'Sam-il jeonbuteo sijakdwaeseumnida.', 'They started 3 days ago.', 3),
+    (l_id, '의사', '다른 증상은 없나요? 두통이나 근육통은요?', 'Dareun jeungsang-eun eomnayo? Dutong-ina geun-yukttong-eunyo?', 'Are there any other symptoms? How about headache or muscle pain?', 4),
+    (l_id, '환자', '네, 온몸이 아프고 목도 따갑습니다.', 'Ne, onmom-i apeuge mok-do ttagapseumnida.', 'Yes, my whole body aches and my throat also feels sore.', 5),
+    (l_id, '의사', '독감으로 보입니다. 처방전을 드릴게요.', 'Dokgam-euro boibnida. Cheobangjeun-eul deurilgeyo.', 'It appears to be the flu. I will give you a prescription.', 6),
+    (l_id, '환자', '부작용은 없나요?', 'Bujagyong-eun eomnayo?', 'Are there any side effects?', 7),
+    (l_id, '의사', '졸릴 수 있으니 운전은 삼가도록 하세요.', 'Jollil su isseuni unjeon-eun samgadorok haseyo.', 'You may feel drowsy, so please refrain from driving.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '병원에서 의사가 환자에게 약을 적어 주는 것을 무엇이라고 합니까?', '["진단","증상","처방","투약"]', 2, '처방 (cheobeang) is a prescription — the written order for medication from a doctor.', 1),
+    (l_id, '약을 먹은 후 나타나는 원하지 않는 반응을 무엇이라고 합니까?', '["진단","면역","부작용","염증"]', 2, '부작용 (bujagyong) means side effect — an unintended reaction to medication.', 2),
+    (l_id, '"열이 납니다"에서 "나다"의 의미는?', '["to go","to come out/occur","to eat","to sleep"]', 1, '나다 here means to occur or to have (a symptom). 열이 나다 means "to have a fever".', 3),
+    (l_id, '오랫동안 지속되는 병을 무엇이라고 합니까?', '["급성","만성","염증","수술"]', 1, '만성 (manseong) means chronic — a condition that persists for a long time.', 4),
+    (l_id, '다음 중 의사의 지시를 나타내는 가장 적절한 표현은?', '["쉬도록 하세요","쉬면 됩니다","쉬는 편이에요","쉬고 싶어요"]', 0, '-도록 하세요 is used to give formal medical instructions or recommendations.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국의 의료 시스템은 전국민 건강보험 제도를 기반으로 합니다. 환자는 가까운 의원이나 병원에서 1차 진료를 받을 수 있습니다. 심각한 질환의 경우 상급 종합병원으로 의뢰됩니다. 의사는 환자의 증상을 듣고 진단을 내린 후 처방전을 발행합니다. 처방약은 약국에서 구입할 수 있습니다. 수술이 필요한 경우 입원 절차를 밟게 됩니다. 퇴원 후에도 정기적인 추적 검사가 필요할 수 있습니다. 만성 질환 환자는 꾸준한 관리와 투약이 중요합니다.', 'Korea''s healthcare system is based on universal health insurance. Patients can receive primary care at nearby clinics or hospitals. For serious conditions, referrals are made to tertiary hospitals. The doctor listens to the patient''s symptoms, makes a diagnosis, and issues a prescription. Prescription medications can be purchased at a pharmacy. If surgery is needed, hospitalization procedures follow. Even after discharge, regular follow-up examinations may be necessary. For patients with chronic conditions, consistent management and medication are important.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 110: Science Korean (과학 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 110;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=110 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '실험', 'silheom', 'experiment', 1),
+    (l_id, '가설', 'gaseol', 'hypothesis', 2),
+    (l_id, '분석', 'bunseok', 'analysis', 3),
+    (l_id, '결과', 'gyeolgwa', 'result, outcome', 4),
+    (l_id, '관찰', 'gwanchal', 'observation', 5),
+    (l_id, '측정', 'cheukjeong', 'measurement', 6),
+    (l_id, '원소', 'wonso', 'element (chemical)', 7),
+    (l_id, '분자', 'bunja', 'molecule', 8),
+    (l_id, '원자', 'wonja', 'atom', 9),
+    (l_id, '에너지', 'eneoji', 'energy', 10),
+    (l_id, '중력', 'jungnyeok', 'gravity', 11),
+    (l_id, '진화', 'jinhwa', 'evolution', 12),
+    (l_id, '연구', 'yeong-gu', 'research, study', 13),
+    (l_id, '발견', 'balggyeon', 'discovery', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Stating cause-effect in science: -으므로', 'V/A-(으)므로', 'A formal connective meaning "because/since". Common in scientific writing and academic papers.', '[{"korean":"온도가 높으므로 반응 속도가 빨라집니다.","english":"Because the temperature is high, the reaction rate increases."},{"korean":"중력이 존재하므로 물체가 떨어집니다.","english":"Since gravity exists, objects fall."}]', 1),
+    (l_id, 'Experimental results: -음이 밝혀졌다', 'V/A-음/ㅁ이 밝혀지다', 'Used in academic and scientific contexts to report findings: "It has been revealed that..."', '[{"korean":"이 물질이 유해함이 밝혀졌습니다.","english":"It has been revealed that this substance is harmful."},{"korean":"새로운 원소가 존재함이 밝혀졌습니다.","english":"It has been revealed that a new element exists."}]', 2),
+    (l_id, 'Describing process: -게 되다', 'V-게 되다', 'Describes a process or change that occurs, often used in scientific explanation of phenomena.', '[{"korean":"가스가 냉각되면 액체가 되게 됩니다.","english":"When gas cools, it becomes liquid."},{"korean":"세포가 분열하게 됩니다.","english":"The cells come to divide."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '교수', '오늘은 가설을 세우고 실험을 설계하는 방법을 배울 것입니다.', 'Oneul-eun gaseol-eul sewugo silheom-eul seolgye-haneun bangbeop-eul baeul geosimnida.', 'Today we will learn how to formulate a hypothesis and design an experiment.', 1),
+    (l_id, '학생', '가설은 어떻게 세워야 합니까?', 'Gaseol-eun eotteoke sewoya hapnikka?', 'How should a hypothesis be formulated?', 2),
+    (l_id, '교수', '관찰된 현상을 바탕으로 검증 가능한 예측을 만들어야 합니다.', 'Gwanchaldoen hyeonsang-eul batang-euro geomjeung ganeunghan yecheuk-eul mandeureoaya habnida.', 'You must create a testable prediction based on observed phenomena.', 3),
+    (l_id, '학생', '실험 결과가 가설과 다르면 어떻게 됩니까?', 'Silheom gyeolgwa-ga gaseol-gwa dareumyeon eotteoke dwaebnigga?', 'What happens if the experimental results differ from the hypothesis?', 4),
+    (l_id, '교수', '가설을 수정하거나 새로운 가설을 세워야 합니다.', 'Gaseol-eul sujeong-hagona saeroun gaseol-eul sewoya habnida.', 'You must revise the hypothesis or formulate a new one.', 5),
+    (l_id, '학생', '측정값의 오차는 어떻게 처리합니까?', 'Cheukjeonggab-ui ocha-neun eotteoke cheoirihapnikka?', 'How are measurement errors handled?', 6),
+    (l_id, '교수', '반복 측정으로 오차를 줄이고 평균값을 사용합니다.', 'Banbok cheukjeong-euro ocha-reul juligo pyeong-gyungab-eul sayonghabnida.', 'Repeat measurements are used to reduce errors and average values are used.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '과학적 탐구에서 결과를 예측하는 잠정적 설명을 무엇이라고 합니까?', '["결과","분석","가설","관찰"]', 2, '가설 (gaseol) is a hypothesis — a tentative explanation or prediction made before an experiment.', 1),
+    (l_id, '물질의 기본 단위로 양성자, 중성자, 전자로 이루어진 것은?', '["분자","원소","원자","에너지"]', 2, '원자 (wonja) is an atom — the basic unit of matter consisting of protons, neutrons, and electrons.', 2),
+    (l_id, '학술 문체에서 인과 관계를 나타내는 격식 표현은?', '["그래서","때문에","-(으)므로","이어서"]', 2, '-(으)므로 is a formal connective meaning "because/since", common in academic and scientific writing.', 3),
+    (l_id, '"이 사실이 밝혀졌다"를 격식 문어체로 표현하면?', '["이 사실임이 밝혀졌다","이 사실음이 밝혀졌다","이 사실이 밝혀졌음","이 사실임 밝혀짐"]', 0, '-음이 밝혀지다 is the formal academic structure for reporting findings.', 4),
+    (l_id, '실험에서 직접 눈으로 보고 기록하는 행위를 무엇이라고 합니까?', '["실험","측정","결과","관찰"]', 3, '관찰 (gwanchal) is observation — directly seeing and recording phenomena in an experiment.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '과학적 방법은 자연 현상을 이해하기 위한 체계적인 접근법입니다. 첫 번째 단계는 현상을 주의 깊게 관찰하는 것입니다. 관찰을 바탕으로 가설을 세우고 실험을 통해 검증합니다. 실험 결과를 분석하여 가설의 타당성을 평가합니다. 결과가 가설을 지지하면 이론으로 발전할 수 있습니다. 과학은 끊임없는 질문과 검증을 통해 발전해 왔습니다. 아인슈타인의 상대성 이론처럼 획기적인 발견이 과학의 역사를 바꿉니다. 과학적 사고는 일상생활의 문제 해결에도 도움이 됩니다.', 'The scientific method is a systematic approach to understanding natural phenomena. The first step is to carefully observe phenomena. Based on observations, a hypothesis is formed and tested through experiments. The experimental results are analyzed to evaluate the validity of the hypothesis. If the results support the hypothesis, it can develop into a theory. Science has advanced through endless questioning and verification. Groundbreaking discoveries like Einstein''s theory of relativity change the history of science. Scientific thinking is also helpful in solving problems in everyday life.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 111: Philosophical Korean (철학 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 111;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=111 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '존재', 'jonjae', 'existence, being', 1),
+    (l_id, '본질', 'bonjil', 'essence, nature', 2),
+    (l_id, '인식', 'insik', 'cognition, recognition', 3),
+    (l_id, '진리', 'jilli', 'truth', 4),
+    (l_id, '윤리', 'yulli', 'ethics', 5),
+    (l_id, '도덕', 'dodeok', 'morality, morals', 6),
+    (l_id, '의식', 'uisik', 'consciousness', 7),
+    (l_id, '이성', 'iseong', 'reason, rationality', 8),
+    (l_id, '감성', 'gamseong', 'emotion, sensibility', 9),
+    (l_id, '자유의지', 'jayu-uiji', 'free will', 10),
+    (l_id, '가치', 'gachi', 'value', 11),
+    (l_id, '형이상학', 'hyeong-isanghak', 'metaphysics', 12),
+    (l_id, '인류', 'inlyu', 'humanity, humankind', 13),
+    (l_id, '개념', 'gaenyeom', 'concept, notion', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Philosophical assertion: -이란 N이다', 'N이란 N이다', 'Defines or characterizes a concept philosophically. "What is N is N."', '[{"korean":"존재란 무엇인가?","english":"What is existence?"},{"korean":"진리란 변하지 않는 사실이다.","english":"Truth is a fact that does not change."},{"korean":"행복이란 주관적인 경험이다.","english":"Happiness is a subjective experience."}]', 1),
+    (l_id, 'Concession in argument: -다고 하더라도', 'V/A-다고 하더라도', 'Expresses "even if it is said that..." — used in philosophical arguments to acknowledge and counter a position.', '[{"korean":"이성적이라고 하더라도 감정을 무시할 수 없다.","english":"Even if one is rational, emotions cannot be ignored."},{"korean":"법이 있다고 하더라도 윤리가 더 중요하다.","english":"Even if there is a law, ethics is more important."}]', 2),
+    (l_id, 'Questioning existence: -는 것이 가능한가', 'V-는 것이 가능한가/불가능한가', 'A formal philosophical question form: "Is it possible to V?"', '[{"korean":"완전한 자유의지가 존재하는 것이 가능한가?","english":"Is it possible for complete free will to exist?"},{"korean":"객관적 진리를 인식하는 것이 가능한가?","english":"Is it possible to perceive objective truth?"}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '학생A', '인간은 자유의지를 가지고 있다고 생각하십니까?', 'Ingan-eun jayu-uiji-reul gajigo itdago saenggak-hasimnikka?', 'Do you think humans have free will?', 1),
+    (l_id, '교수', '그것은 철학의 가장 오래된 질문 중 하나입니다.', 'Geugeos-eun cheolhak-ui gajang oraedoen jilmun-jung hana-imnida.', 'That is one of the oldest questions in philosophy.', 2),
+    (l_id, '학생A', '결정론에서는 모든 것이 인과관계로 결정된다고 합니다.', 'Gyeoljeongnon-eseo-neun modeun geos-i ingwagwangye-ro gyeoljeongtdoendago habnida.', 'In determinism, it is said that everything is determined by cause and effect.', 3),
+    (l_id, '교수', '맞습니다. 하지만 우리가 선택한다는 느낌은 어떻게 설명합니까?', 'Majeumnida. Hajiman uri-ga seonteaktandaneun neukkeum-eun eotteoke seolmyeonghapnikka?', 'That is correct. But how do you explain the feeling that we make choices?', 4),
+    (l_id, '학생B', '의식 자체가 결정론적이라고 하더라도 자유의지를 느낄 수 있습니다.', 'Uisik jache-ga gyeoljeongnon-jeogiradago hadorado jayu-uiji-reul neukkil su itseumnida.', 'Even if consciousness itself is deterministic, we can still feel free will.', 5),
+    (l_id, '교수', '그것이 철학에서 양립불가론과 양립가능론의 핵심 차이입니다.', 'Geugeos-i cheolhak-eseo yangnip-bulgaron-gwa yangnip-ganeungnon-ui haeksim chaimnida.', 'That is the core difference between incompatibilism and compatibilism in philosophy.', 6),
+    (l_id, '학생A', '철학적 사고는 삶에 어떤 도움이 됩니까?', 'Cheolhakjeok sagoneun salm-e eotteon doum-i doemnikka?', 'How does philosophical thinking help in life?', 7),
+    (l_id, '교수', '비판적 사고와 윤리적 판단력을 키워 줍니다.', 'Bipanjeok sago-wa yulli-jeok pandannyeok-eul kiwo jumnida.', 'It develops critical thinking and ethical judgment.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '모든 현상이 원인에 의해 결정된다는 철학적 입장은?', '["자유의지론","결정론","허무주의","실존주의"]', 1, '결정론 (determinism) holds that all events are caused and determined by prior events.', 1),
+    (l_id, '"진리란 변하지 않는 사실이다"에서 사용된 문법 구조는?', '["이란/은는","이어서","더라도","-(으)므로"]', 0, 'N이란 N이다 is used for philosophical definitions: "What is N is N."', 2),
+    (l_id, '행동의 옳고 그름을 연구하는 철학 분야는?', '["형이상학","인식론","윤리학","존재론"]', 2, '윤리학 (ethics) is the branch of philosophy studying the rightness and wrongness of actions.', 3),
+    (l_id, '다음 중 "설령 그렇다 해도"의 뜻을 가진 표현은?', '["-(으)므로","-더라도","-아서","-지만"]', 1, '-다고 하더라도 means "even if it is said that", used to acknowledge and counter philosophical positions.', 4),
+    (l_id, '인간의 경험과 지식의 근원을 연구하는 철학 분야는?', '["형이상학","윤리학","인식론","논리학"]', 2, '인식론 (epistemology) is the branch of philosophy studying the nature of knowledge and cognition.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '철학은 존재, 지식, 가치, 이성, 언어 등의 근본적인 문제를 탐구하는 학문입니다. 고대 그리스의 소크라테스, 플라톤, 아리스토텔레스로부터 철학적 전통이 시작되었습니다. 동양 철학에서는 공자, 노자, 불타의 사상이 큰 영향을 미쳤습니다. 철학적 사고는 우리가 세상을 이해하고 옳고 그름을 판단하는 방식에 영향을 줍니다. 윤리학은 인간의 행동 원칙을 연구하며, 형이상학은 실재의 본질을 탐구합니다. 현대 철학은 과학, 언어, 정치, 예술 등 다양한 분야와 접목되고 있습니다. 철학을 배우면 비판적 사고와 논리적 추론 능력이 향상됩니다.', 'Philosophy is a discipline that explores fundamental questions about existence, knowledge, values, reason, and language. The philosophical tradition began with Socrates, Plato, and Aristotle in ancient Greece. In Eastern philosophy, the thoughts of Confucius, Laozi, and the Buddha had a great influence. Philosophical thinking influences how we understand the world and judge right from wrong. Ethics studies the principles of human behavior, while metaphysics explores the nature of reality. Modern philosophy is being integrated with various fields such as science, language, politics, and art. Studying philosophy improves critical thinking and logical reasoning skills.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 112: Economic Korean (경제 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 112;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=112 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '경제', 'gyeongje', 'economy, economics', 1),
+    (l_id, '시장', 'sijang', 'market', 2),
+    (l_id, '공급', 'gonggeuseup', 'supply', 3),
+    (l_id, '수요', 'suyo', 'demand', 4),
+    (l_id, '인플레이션', 'inpeulleiisyeon', 'inflation', 5),
+    (l_id, '금리', 'geumni', 'interest rate', 6),
+    (l_id, '환율', 'hwanyul', 'exchange rate', 7),
+    (l_id, '투자', 'tuja', 'investment', 8),
+    (l_id, '무역', 'muryo', 'trade', 9),
+    (l_id, 'GDP', 'jidipii', 'GDP (Gross Domestic Product)', 10),
+    (l_id, '경기', 'gyeonggi', 'business cycle, economic conditions', 11),
+    (l_id, '불황', 'bulhwang', 'recession, depression', 12),
+    (l_id, '호황', 'hohwang', 'boom, prosperity', 13),
+    (l_id, '재정', 'jaejeong', 'finance, fiscal affairs', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Economic trend: -는 추세이다', 'V-는 추세이다', 'Describes an ongoing economic trend or tendency. "There is a trend of V-ing."', '[{"korean":"물가가 오르는 추세입니다.","english":"Prices are on a rising trend."},{"korean":"수출이 감소하는 추세입니다.","english":"Exports are on a declining trend."},{"korean":"외국인 투자가 늘어나는 추세입니다.","english":"Foreign investment is on an increasing trend."}]', 1),
+    (l_id, 'Consequence in economics: -에 따라', 'N에 따라 / V-(으)ㅁ에 따라', 'Expresses that something varies or results "according to" / "following" a condition.', '[{"korean":"금리 변화에 따라 환율이 변동됩니다.","english":"The exchange rate fluctuates according to interest rate changes."},{"korean":"수요가 증가함에 따라 가격이 올랐습니다.","english":"As demand increased, prices rose."}]', 2),
+    (l_id, 'Formal comparison: -에 비해', 'N에 비해 (서)', 'Formal comparative expression meaning "compared to N". Common in economic analysis.', '[{"korean":"작년에 비해 GDP가 증가했습니다.","english":"GDP increased compared to last year."},{"korean":"미국에 비해 한국의 금리가 낮습니다.","english":"Compared to the US, Korea''s interest rate is low."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '기자', '최근 경제 상황을 어떻게 보십니까?', 'Choegeun gyeongje sanghwang-eul eotteoke bosimnikka?', 'How do you view the current economic situation?', 1),
+    (l_id, '전문가', '인플레이션으로 인해 소비자들의 부담이 커지는 추세입니다.', 'Inpeulleiisyeon-euro inhae sobijadeul-ui budam-i keojineun chuseimnida.', 'Due to inflation, the burden on consumers is on an increasing trend.', 2),
+    (l_id, '기자', '정부는 어떤 대책을 마련하고 있습니까?', 'Jeongbu-neun eotteon daechaek-eul mallyeonhago itseumnikka?', 'What measures is the government preparing?', 3),
+    (l_id, '전문가', '금리 인상을 통해 인플레이션을 억제하려 하고 있습니다.', 'Geumni insang-eul tonghae inpeulleiisyeon-eul eokje-haryeo hago itseumnida.', 'They are trying to suppress inflation through interest rate hikes.', 4),
+    (l_id, '기자', '금리 인상이 경제에 미치는 영향은 무엇입니까?', 'Geumni insang-i gyeongje-e michineun yeonghyang-eun mueosimnikka?', 'What impact does the interest rate hike have on the economy?', 5),
+    (l_id, '전문가', '대출 비용이 증가함에 따라 소비와 투자가 줄어들 수 있습니다.', 'Daechul bigyong-i jeunggahame ttara sobi-wa tuja-ga jureodeul su itseumnida.', 'As borrowing costs increase, consumption and investment may decrease.', 6),
+    (l_id, '기자', '무역 수지는 어떻습니까?', 'Muryo suji-neun eotteoseumnikka?', 'How is the trade balance?', 7),
+    (l_id, '전문가', '작년에 비해 수출이 감소하여 무역 수지가 악화되고 있습니다.', 'Jangnyeon-e bihae suchul-i gamso-hayeo muryo suji-ga akwadoego itseumnida.', 'Compared to last year, exports have decreased, worsening the trade balance.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '상품이나 서비스에 대한 소비자의 구매 욕구를 무엇이라고 합니까?', '["공급","투자","수요","시장"]', 2, '수요 (suyo) is demand — the consumer desire or need for a product or service.', 1),
+    (l_id, '물가가 지속적으로 상승하는 현상을 무엇이라고 합니까?', '["불황","호황","인플레이션","환율"]', 2, '인플레이션 (inflation) is the sustained increase in the general price level.', 2),
+    (l_id, '"수출이 감소하는 추세입니다"에서 이 표현이 의미하는 것은?', '["수출이 갑자기 감소했다","수출이 점점 감소하고 있다","수출이 증가했다가 감소했다","수출 감소가 끝났다"]', 1, '-는 추세이다 describes an ongoing trend. "수출이 감소하는 추세" = exports are on a declining trend.', 3),
+    (l_id, '경제 분석에서 "지난해에 비해 성장했다"와 같은 의미의 격식 표현은?', '["지난해보다","지난해에 따라","지난해에 비해","지난해처럼"]', 2, 'N에 비해 is the formal comparative expression meaning "compared to N", common in economic reports.', 4),
+    (l_id, '국가의 경제 활동 총량을 나타내는 지표는?', '["인플레이션","GDP","금리","환율"]', 1, 'GDP (Gross Domestic Product) measures the total economic output of a country.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '경제는 한 사회의 자원 생산, 분배, 소비를 다루는 복잡한 시스템입니다. 시장에서는 수요와 공급의 법칙에 따라 가격이 결정됩니다. 인플레이션은 화폐의 구매력이 하락하는 현상으로, 일상 소비에 직접적인 영향을 줍니다. 정부와 중앙은행은 금리 조정, 재정 정책 등을 통해 경제를 안정시키려 합니다. 국제 무역은 각국의 비교 우위를 활용하여 서로 이득을 얻는 과정입니다. 한국은 수출 주도형 경제로 반도체, 자동차, 화학 제품이 주요 수출품입니다. 경제 지식을 갖추면 개인 재테크와 사회 현상 이해에 도움이 됩니다.', 'The economy is a complex system dealing with the production, distribution, and consumption of resources in a society. In the market, prices are determined by the law of supply and demand. Inflation is a phenomenon in which the purchasing power of money decreases, directly affecting everyday consumption. Governments and central banks try to stabilize the economy through interest rate adjustments and fiscal policies. International trade is the process of mutual benefit by utilizing each country''s comparative advantage. Korea has an export-driven economy, with semiconductors, automobiles, and chemical products being major exports. Having economic knowledge helps with personal financial planning and understanding social phenomena.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 113: Political Korean (정치 언어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 113;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=113 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '민주주의', 'minjujuui', 'democracy', 1),
+    (l_id, '선거', 'seongeo', 'election', 2),
+    (l_id, '투표', 'tupyo', 'vote, ballot', 3),
+    (l_id, '의회', 'uihoe', 'parliament, congress', 4),
+    (l_id, '정당', 'jeongdang', 'political party', 5),
+    (l_id, '정책', 'jeongchaek', 'policy', 6),
+    (l_id, '대통령', 'daetongnyeong', 'president', 7),
+    (l_id, '국회의원', 'gukwoe-uiwon', 'member of parliament', 8),
+    (l_id, '여당', 'yeodang', 'ruling party', 9),
+    (l_id, '야당', 'yadang', 'opposition party', 10),
+    (l_id, '법안', 'beoban', 'bill, legislation', 11),
+    (l_id, '비준', 'bijun', 'ratification', 12),
+    (l_id, '외교', 'waeyo', 'diplomacy, foreign affairs', 13),
+    (l_id, '주권', 'jugwon', 'sovereignty', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Political reporting: -에 따르면', 'N에 따르면', 'Cites a source in political reporting: "According to N..."', '[{"korean":"정부 발표에 따르면 새 정책이 시행될 예정입니다.","english":"According to the government announcement, a new policy is scheduled to be implemented."},{"korean":"여론 조사에 따르면 지지율이 상승했습니다.","english":"According to the poll, approval ratings have risen."}]', 1),
+    (l_id, 'Political stance: -(으)ㄹ 것을 주장하다', 'V-(으)ㄹ 것을 주장하다', 'Used to report political demands or arguments: "to argue/claim that [something] should be done."', '[{"korean":"야당은 법안을 철회할 것을 주장했습니다.","english":"The opposition party argued for the withdrawal of the bill."},{"korean":"시민단체는 정책을 재검토할 것을 촉구했습니다.","english":"Civic groups urged that the policy be reconsidered."}]', 2),
+    (l_id, 'Formal purpose: -을/를 위하여', 'N을/를 위하여', 'Formal version of -을/를 위해. Common in political speeches and official documents.', '[{"korean":"국민을 위하여 최선을 다하겠습니다.","english":"I will do my best for the citizens."},{"korean":"평화를 위하여 외교적 노력이 필요합니다.","english":"Diplomatic efforts are needed for the sake of peace."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '기자', '이번 선거 결과에 대해 어떻게 생각하십니까?', 'Ibeon seongeo gyeolgwa-e daehae eotteoke saenggak-hasimnikka?', 'What do you think about the election results?', 1),
+    (l_id, '정치인', '국민의 뜻을 겸허히 받아들이겠습니다.', 'Gungmin-ui tteut-eul gyeomhyeohi badadeuligesseumnida.', 'I will humbly accept the will of the people.', 2),
+    (l_id, '기자', '야당은 법안 통과에 반대하고 있습니다.', 'Yadang-eun beoban tonggwa-e bandaehago itseumnida.', 'The opposition party is against the passage of the bill.', 3),
+    (l_id, '정치인', '야당에 따르면 이 법안에 문제가 있다고 합니다.', 'Yadang-e ttareumyeon i beoban-e munje-ga itdago habnida.', 'According to the opposition party, there are problems with this bill.', 4),
+    (l_id, '기자', '여당은 어떤 입장입니까?', 'Yeodang-eun eotteon ipjang-imnikka?', 'What is the ruling party''s position?', 5),
+    (l_id, '정치인', '국민을 위하여 이 법안이 반드시 통과되어야 한다고 봅니다.', 'Gungmin-eul wihayeo i beoban-i bandusi tonggwadoeyeoya handago bomnida.', 'I believe this bill must be passed for the sake of the citizens.', 6),
+    (l_id, '기자', '향후 외교 정책 방향은 어떻습니까?', 'Hyanghu waeyo jeongchaek banghyang-eun eotteoseumnikka?', 'What is the direction of future foreign policy?', 7),
+    (l_id, '정치인', '평화와 번영을 위하여 적극적인 외교 활동을 전개하겠습니다.', 'Pyeonghwa-wa beonyeong-eul wihayeo jeokgeukjeokin waeyo hwaldong-eul jeonggaehagesseumnida.', 'We will engage in active diplomatic activities for peace and prosperity.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '국가의 최고 통치 기관으로 법률을 만드는 곳은?', '["법원","행정부","의회","정당"]', 2, '의회 (parliament/congress) is the legislative body that creates laws.', 1),
+    (l_id, '선거에서 현재 정권을 잡고 있는 정당을 무엇이라고 합니까?', '["야당","정당","여당","의회"]', 2, '여당 (yeodang) is the ruling party — the party currently in power.', 2),
+    (l_id, '"정부 발표에 따르면"이 사용된 이유는?', '["추측을 나타내기 위해","출처를 인용하기 위해","반대 의견을 나타내기 위해","조건을 나타내기 위해"]', 1, '에 따르면 is used to cite a source in reporting: "According to [source]..."', 3),
+    (l_id, '격식적인 연설에서 "~을/를 위해"의 격식체 표현은?', '["위하여","위해서","위하면","위하기"]', 0, '-을/를 위하여 is the formal version of -을/를 위해, used in political speeches and official documents.', 4),
+    (l_id, '여러 나라 사이의 관계와 협상을 다루는 활동을 무엇이라고 합니까?', '["투표","법안","정책","외교"]', 3, '외교 (diplomacy) deals with relations and negotiations between countries.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국은 대통령 중심제를 채택한 민주주의 국가입니다. 대통령은 국민의 직접 투표로 선출되며 임기는 5년입니다. 국회는 300명의 국회의원으로 구성되며 법률을 제정하고 정부를 감시합니다. 여당과 야당 사이의 정치적 토론은 민주주의의 건강한 작동을 보여 줍니다. 선거는 국민이 정치에 참여하는 가장 기본적인 방법입니다. 정책 결정 과정에서 다양한 이해관계자의 의견이 반영되어야 합니다. 외교 정책은 국가의 이익과 국제 평화를 동시에 고려해야 합니다. 민주주의의 발전을 위해서는 시민의 적극적인 정치 참여가 필수적입니다.', 'Korea is a democratic country with a presidential system. The president is elected by direct popular vote and serves a five-year term. The National Assembly consists of 300 members and enacts laws while overseeing the government. The political debate between the ruling party and the opposition demonstrates the healthy functioning of democracy. Elections are the most fundamental way for citizens to participate in politics. In the policy-making process, the opinions of various stakeholders must be reflected. Foreign policy must simultaneously consider the national interest and international peace. For the development of democracy, active political participation by citizens is essential.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 114: Cultural Analysis (문화 분석)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 114;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=114 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '문화', 'munhwa', 'culture', 1),
+    (l_id, '전통', 'jeontong', 'tradition', 2),
+    (l_id, '관습', 'gwanseup', 'custom, practice', 3),
+    (l_id, '의례', 'uire', 'ritual, ceremony', 4),
+    (l_id, '정체성', 'jeongcheseong', 'identity', 5),
+    (l_id, '다양성', 'dayangseong', 'diversity', 6),
+    (l_id, '융합', 'yunghap', 'fusion, convergence', 7),
+    (l_id, '세계화', 'segyehwa', 'globalization', 8),
+    (l_id, '문화재', 'munhwajae', 'cultural heritage, artifact', 9),
+    (l_id, '계승', 'gyeseung', 'succession, inheritance (of culture)', 10),
+    (l_id, '변용', 'byeon-yong', 'transformation, adaptation', 11),
+    (l_id, '상징', 'sangjing', 'symbol', 12),
+    (l_id, '의미', 'uimi', 'meaning, significance', 13),
+    (l_id, '맥락', 'maengnak', 'context', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Cultural background: -을/를 배경으로', 'N을/를 배경으로', 'Expresses the cultural or historical background of something: "with N as the background/context."', '[{"korean":"유교를 배경으로 한국의 예절 문화가 형성되었습니다.","english":"Korean etiquette culture was formed with Confucianism as the background."},{"korean":"이 소설은 조선 시대를 배경으로 합니다.","english":"This novel is set against the backdrop of the Joseon Dynasty."}]', 1),
+    (l_id, 'Reflecting characteristics: -을/를 반영하다', 'N이/가 N을/를 반영하다', 'Expresses that something reflects or embodies cultural values or characteristics.', '[{"korean":"한복은 한국의 미적 가치를 반영합니다.","english":"Hanbok reflects Korean aesthetic values."},{"korean":"이 관습은 조상 숭배 사상을 반영합니다.","english":"This custom reflects the idea of ancestor veneration."}]', 2),
+    (l_id, 'Cultural continuity: -어/아 내려오다', 'V-아/어 내려오다', 'Expresses a tradition or practice that has been passed down over generations.', '[{"korean":"이 풍습은 수백 년 동안 전해 내려왔습니다.","english":"This custom has been passed down for hundreds of years."},{"korean":"이 기술은 대대로 전해 내려오고 있습니다.","english":"This skill has been passed down from generation to generation."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '교수', '한국 문화에서 집단주의와 개인주의는 어떻게 공존합니까?', 'Hanguk munhwa-eseo jipdan-juuiwa gaein-juui-neun eotteoke gongjonsimnikka?', 'How do collectivism and individualism coexist in Korean culture?', 1),
+    (l_id, '학생', '전통적으로 집단의 화합을 중시하지만 현대에는 개인주의도 강해졌습니다.', 'Jeontongjeok-euro jipdan-ui hwahap-eul jungsihajiman hyeondae-eneun gaein-juui-do ganghaejeotseumnida.', 'Traditionally, group harmony is emphasized, but in modern times individualism has also become stronger.', 2),
+    (l_id, '교수', '세계화가 한국 문화에 미친 영향은 무엇이라고 생각합니까?', 'Segyehwa-ga Hanguk munhwa-e michin yeonghyang-eun mueosirago saenggakhamnikka?', 'What do you think is the impact of globalization on Korean culture?', 3),
+    (l_id, '학생', '외래 문화가 유입되면서 전통 문화가 변용되고 있습니다.', 'Oelae munhwa-ga yuibdoemyeonseo jeontong munhwa-ga byeon-yongdoego itseumnida.', 'As foreign cultures have entered, traditional culture is being transformed.', 4),
+    (l_id, '교수', '한국의 문화 정체성은 어떻게 유지될 수 있을까요?', 'Hanguk-ui munhwa jeongcheseong-eun eotteoke yujidoel su isseulkkayo?', 'How can Korea''s cultural identity be maintained?', 5),
+    (l_id, '학생', '전통을 배경으로 현대적 감각을 융합하는 것이 중요하다고 생각합니다.', 'Jeontong-eul baekyeong-euro hyeondaejeok gamsak-eul yunghapaneun geos-i jungyohadago saenggakhabnida.', 'I think it is important to fuse modern sensibility with tradition as the background.', 6),
+    (l_id, '교수', '한류가 세계에 미친 영향에 대해 어떻게 생각합니까?', 'Hallyu-ga segye-e michin yeonghyang-e daehae eotteoke saenggakhamnikka?', 'What do you think about the impact of the Korean Wave on the world?', 7),
+    (l_id, '학생', '한국의 현대 문화가 전 세계 사람들의 관심을 받고 있다는 것이 자랑스럽습니다.', 'Hanguk-ui hyeondae munhwa-ga jeon segye saramdeul-ui gwanshim-eul badgo itdaneun geos-i jarangseureomnida.', 'I am proud that Korean modern culture is receiving attention from people all over the world.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '"이 관습은 조상 숭배를 반영한다"에서 "반영하다"의 의미는?', '["to reflect","to change","to preserve","to create"]', 0, '반영하다 means "to reflect" — to embody or represent a cultural value or idea.', 1),
+    (l_id, '문화유산이 세대를 넘어 이어지는 것을 무엇이라고 합니까?', '["변용","융합","계승","세계화"]', 2, '계승 (gyeseung) means succession or inheritance — passing culture from one generation to the next.', 2),
+    (l_id, '"조선 시대를 배경으로 한 소설"에서 "배경으로"의 역할은?', '["목적을 나타낸다","배경이나 맥락을 나타낸다","조건을 나타낸다","시간을 나타낸다"]', 1, 'N을/를 배경으로 expresses the cultural or historical setting/background of something.', 3),
+    (l_id, '오랜 세월 동안 전해 내려온 행동 방식을 무엇이라고 합니까?', '["정체성","문화재","관습","상징"]', 2, '관습 (gwanseup) is a custom or practice — a behavior pattern passed down over time.', 4),
+    (l_id, '"이 기술이 전해 내려오고 있다"에서 "전해 내려오다"의 의미는?', '["to be lost","to be created","to be passed down","to be changed"]', 2, '-아/어 내려오다 expresses that something has been passed down through generations.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '문화는 한 사회의 구성원들이 공유하는 가치, 믿음, 관습, 예술, 언어 등의 총체입니다. 한국 문화는 유교, 불교, 무속 등 다양한 철학적·종교적 전통을 배경으로 형성되었습니다. 세계화의 흐름 속에서 한국 전통 문화는 변용을 겪으면서도 정체성을 유지해 왔습니다. 한류는 한국의 대중음악, 드라마, 영화, 음식 등이 세계적으로 인기를 얻는 현상입니다. 이는 한국 문화가 세계 무대에서 경쟁력을 갖추게 되었음을 보여 줍니다. 문화 다양성은 서로 다른 문화 간의 교류와 이해를 통해 인류를 풍요롭게 합니다. 문화 분석을 통해 우리는 자신의 문화를 더 깊이 이해하고 타 문화를 존중할 수 있습니다.', 'Culture is the totality of values, beliefs, customs, art, and language shared by members of a society. Korean culture was formed against the backdrop of various philosophical and religious traditions, including Confucianism, Buddhism, and shamanism. In the tide of globalization, Korean traditional culture has maintained its identity while undergoing transformation. The Korean Wave (Hallyu) is the phenomenon in which Korean pop music, dramas, films, and food have gained worldwide popularity. This shows that Korean culture has become competitive on the world stage. Cultural diversity enriches humanity through exchange and understanding between different cultures. Through cultural analysis, we can understand our own culture more deeply and respect other cultures.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 115: Korean Classical Language Intro (고전 한국어)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 115;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=115 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '훈민정음', 'Hunmin-jeongeum', 'Hunminjeongeum (original Korean alphabet)', 1),
+    (l_id, '세종대왕', 'Sejong Daewang', 'King Sejong the Great', 2),
+    (l_id, '고어', 'go-eo', 'archaic language, old Korean', 3),
+    (l_id, '현대어', 'hyeondae-eo', 'modern language', 4),
+    (l_id, '어원', 'eowon', 'etymology', 5),
+    (l_id, '문헌', 'munheon', 'document, text, literature', 6),
+    (l_id, '음운', 'eumun', 'phoneme, phonology', 7),
+    (l_id, '어미', 'eomi', 'verb ending, suffix', 8),
+    (l_id, '어간', 'eogan', 'verb stem', 9),
+    (l_id, '방언', 'bangeon', 'dialect', 10),
+    (l_id, '차용어', 'chayong-eo', 'loanword', 11),
+    (l_id, '순우리말', 'sun-urimal', 'pure Korean word (native Korean)', 12),
+    (l_id, '한자어', 'hanjeo-eo', 'Sino-Korean word', 13),
+    (l_id, '변천', 'byeoncheon', 'change, evolution (of language)', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Historical source citation: -에 기록되어 있다', 'N에 기록되어 있다', 'Used to cite what is recorded in a historical text or document.', '[{"korean":"훈민정음 해례본에 자음과 모음의 원리가 기록되어 있습니다.","english":"The principles of consonants and vowels are recorded in the Hunminjeongeum Haeryebon."},{"korean":"조선왕조실록에 많은 역사적 사실이 기록되어 있습니다.","english":"Many historical facts are recorded in the Annals of the Joseon Dynasty."}]', 1),
+    (l_id, 'Etymology: -에서 유래하다', 'N에서 유래하다', 'Expresses the origin or derivation of a word or expression.', '[{"korean":"''아리랑''은 고어에서 유래한 단어입니다.","english":"Arirang is a word derived from archaic Korean."},{"korean":"이 단어는 한자에서 유래했습니다.","english":"This word is derived from Chinese characters."}]', 2),
+    (l_id, 'Language change: -이/가 -으로 변하다', 'N이/가 N(으)로 변하다', 'Describes how language has changed over time from one form to another.', '[{"korean":"중세 국어의 ''이다''가 현대어 ''이다''로 변했습니다.","english":"The Middle Korean form of ''to be'' changed to the modern form."},{"korean":"고어의 ''블''이 현대어 ''불''로 변했습니다.","english":"The archaic ''bul'' changed to the modern ''bul'' (fire)."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '학생', '훈민정음은 언제 만들어졌나요?', 'Hunmin-jeongeum-eun eonje mandeureo-jeonnayo?', 'When was Hunminjeongeum created?', 1),
+    (l_id, '교수', '1443년에 세종대왕이 창제하였습니다.', 'Cheonsa-baek-sa-sip-samnyeon-e Sejong Daewang-i changjehayeotseumnida.', 'It was created by King Sejong the Great in 1443.', 2),
+    (l_id, '학생', '훈민정음의 원리는 무엇입니까?', 'Hunmin-jeongeum-ui wolli-neun mueosimnikka?', 'What is the principle of Hunminjeongeum?', 3),
+    (l_id, '교수', '해례본에 기록되어 있듯이 자음은 발음 기관을 본뜬 것입니다.', 'Haeryebon-e girokdoeeo itdeusi jaeum-eun bareum gigwan-eul bonttuen geosimnida.', 'As recorded in the Haeryebon, consonants were modeled after the speech organs.', 4),
+    (l_id, '학생', '고어와 현대어는 많이 다릅니까?', 'Go-eo-wa hyeondae-eo-neun mani darimnikka?', 'Are archaic Korean and modern Korean very different?', 5),
+    (l_id, '교수', '네, 음운, 어휘, 문법 면에서 상당한 변화가 있었습니다.', 'Ne, eumun, eohwi, munbeom myeon-eseo sangdanghan byeonhwa-ga isseotsseumnida.', 'Yes, there have been significant changes in terms of phonology, vocabulary, and grammar.', 6),
+    (l_id, '학생', '고전 한국어를 배우면 어떤 도움이 됩니까?', 'Gojeon hangug-eo-reul baeumyeon eotteon doum-i doemnikka?', 'How does learning classical Korean help?', 7),
+    (l_id, '교수', '한국어의 뿌리와 단어의 어원을 이해하는 데 도움이 됩니다.', 'Hangug-eo-ui ppuri-wa daneo-ui eowon-eul ihae-haneun de doum-i doemnikka.', 'It helps in understanding the roots of Korean and the etymology of words.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '1443년 세종대왕이 창제한 한국의 문자 체계는?', '["한자","훈민정음","이두","향찰"]', 1, '훈민정음 (Hunminjeongeum) was created by King Sejong in 1443 and is the original name of the Korean alphabet.', 1),
+    (l_id, '단어의 기원이나 역사적 형성 과정을 연구하는 것을 무엇이라고 합니까?', '["음운론","어원","방언","어미"]', 1, '어원 (etymology) is the study of the origin and historical development of words.', 2),
+    (l_id, '"이 단어는 한자에서 유래했다"에서 "유래하다"의 의미는?', '["to change","to be recorded","to originate from","to disappear"]', 2, '유래하다 means "to originate from" or "to be derived from."', 3),
+    (l_id, '순수한 우리말로, 한자어나 외래어가 아닌 고유 한국어를 무엇이라고 합니까?', '["한자어","차용어","방언","순우리말"]', 3, '순우리말 (pure Korean) refers to native Korean words that are neither Sino-Korean nor loanwords.', 4),
+    (l_id, '역사적 문서에 기록된 내용을 인용할 때 사용하는 표현은?', '["~에서 유래하다","~에 기록되어 있다","~으로 변하다","~와 관련이 있다"]', 1, 'N에 기록되어 있다 is used to cite what is recorded in a historical document.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국어는 약 5000년의 역사를 가진 언어로, 오랜 세월 동안 많은 변화를 겪어 왔습니다. 세종대왕이 1443년에 창제한 훈민정음은 한국어의 역사에서 가장 중요한 사건 중 하나입니다. 그 이전에는 한자를 빌려 한국어를 표기하는 이두와 향찰이 사용되었습니다. 고전 한국어와 현대 한국어는 발음, 어휘, 문법에서 상당한 차이가 있습니다. 훈민정음 해례본에는 자음과 모음의 제자 원리가 상세히 기록되어 있습니다. 현대 한국어는 한자어, 순우리말, 외래어가 섞여 있는 복합적인 언어입니다. 고전 한국어를 공부하면 현대 한국어의 어원과 변천사를 이해하는 데 도움이 됩니다.', 'Korean is a language with a history of about 5,000 years, having undergone many changes over the long years. Hunminjeongeum, created by King Sejong the Great in 1443, is one of the most important events in the history of Korean. Before that, Idu and Hyangchal, which borrowed Chinese characters to transcribe Korean, were used. Classical Korean and modern Korean have significant differences in pronunciation, vocabulary, and grammar. The principles of creating consonants and vowels are recorded in detail in the Hunminjeongeum Haeryebon. Modern Korean is a complex language mixing Sino-Korean words, pure Korean words, and loanwords. Studying classical Korean helps in understanding the etymology and historical changes of modern Korean.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 116: Hanja Basics (한자 기초)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 116;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=116 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '한자', 'hanja', 'Chinese characters (used in Korean)', 1),
+    (l_id, '획', 'hoek', 'stroke (of a character)', 2),
+    (l_id, '부수', 'busu', 'radical (of a Chinese character)', 3),
+    (l_id, '음독', 'eumdok', 'phonetic reading (of hanja)', 4),
+    (l_id, '훈독', 'hundok', 'semantic reading (of hanja)', 5),
+    (l_id, '한자어', 'hanja-eo', 'Sino-Korean word', 6),
+    (l_id, '人 (인)', 'in', 'person (hanja)', 7),
+    (l_id, '山 (산)', 'san', 'mountain (hanja)', 8),
+    (l_id, '水 (수)', 'su', 'water (hanja)', 9),
+    (l_id, '火 (화)', 'hwa', 'fire (hanja)', 10),
+    (l_id, '木 (목)', 'mok', 'tree, wood (hanja)', 11),
+    (l_id, '國 (국)', 'guk', 'country (hanja)', 12),
+    (l_id, '學 (학)', 'hak', 'study, learning (hanja)', 13),
+    (l_id, '語 (어)', 'eo', 'language, word (hanja)', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Compound hanja words', 'Hanja + Hanja = meaning', 'Many Korean words are formed by combining hanja characters. Understanding the components helps with vocabulary.', '[{"korean":"國語 (국어) = 國(나라 국) + 語(말 어) = national language","english":"국어: composed of 國 (country) + 語 (language) = national language"},{"korean":"學校 (학교) = 學(배울 학) + 校(학교 교) = school","english":"학교: composed of 學 (study) + 校 (school building) = school"},{"korean":"山水 (산수) = 山(뫼 산) + 水(물 수) = landscape/arithmetic","english":"산수: composed of 山 (mountain) + 水 (water) = natural scenery or elementary math"}]', 1),
+    (l_id, 'Hanja-based word families', 'Hanja root + endings', 'One hanja can appear in many related Korean words, forming word families.', '[{"korean":"學: 학교(school), 학생(student), 학문(scholarship), 학습(learning)","english":"The hanja 學 (learning) appears in: school, student, scholarship, learning"},{"korean":"國: 국가(nation), 국민(citizen), 외국(foreign country), 국어(national language)","english":"The hanja 國 (country) appears in: nation, citizen, foreign country, national language"}]', 2),
+    (l_id, 'Recognizing hanja components in vocabulary', 'Context + hanja knowledge', 'When you encounter an unfamiliar word, hanja knowledge helps you infer the meaning.', '[{"korean":"水道 (수도) = 水(물) + 道(길) = waterway → capital city or water pipe","english":"수도: 水 (water) + 道 (way/road) → water pipe OR capital (main road)"},{"korean":"人口 (인구) = 人(사람) + 口(입) = people + mouth → population","english":"인구: 人 (person) + 口 (mouth) → population (number of people)"}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '학생', '한자를 꼭 배워야 하나요?', 'Hanja-reul kkok baewoaya hanayo?', 'Do I really have to learn hanja?', 1),
+    (l_id, '선생님', '꼭 필수는 아니지만 한자어 뜻 이해에 많은 도움이 됩니다.', 'Kkok pilsun-eun anijiman hanja-eo tteut ihae-e manheun doum-i doemnikka.', 'It''s not absolutely required, but it helps a lot in understanding the meaning of Sino-Korean words.', 2),
+    (l_id, '학생', '한국어 단어 중 한자어는 얼마나 됩니까?', 'Hangug-eo daneo-jung hanja-eo-neun eolmana doemnikka?', 'How many Korean words are Sino-Korean?', 3),
+    (l_id, '선생님', '전체 어휘의 약 60퍼센트 이상이 한자어에서 비롯되었습니다.', 'Jeonche eohwi-ui yak yuksip-peossenteu isang-i hanja-eo-eseo birotdwaeseumnida.', 'More than about 60% of the total vocabulary originates from Sino-Korean.', 4),
+    (l_id, '학생', '한자를 어떻게 공부하는 것이 효과적입니까?', 'Hanja-reul eotteoke gongbu-haneun geos-i hyogwajeogimnigga?', 'What is the most effective way to study hanja?', 5),
+    (l_id, '선생님', '자주 쓰이는 한자어와 그 구성 한자를 함께 배우는 것이 좋습니다.', 'Jaju sseuineun hanja-eo-wa geu guseong hanja-reul hamkke baeumyeon geos-i joseumnida.', 'It is good to learn commonly used Sino-Korean words and their component hanja together.', 6),
+    (l_id, '학생', '부수는 무엇입니까?', 'Busu-neun mueosimnikka?', 'What is a radical?', 7),
+    (l_id, '선생님', '부수는 한자를 분류하는 기준이 되는 기본 구성 요소입니다.', 'Busu-neun hanja-reul bullyu-haneun gibjun-i doeneun gibon guseong yoso-imnida.', 'A radical is the basic component used to classify Chinese characters.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '한자 "學"의 의미는?', '["language","country","learning/study","mountain"]', 2, '學 (학) means learning or study. It appears in words like 학교 (school) and 학생 (student).', 1),
+    (l_id, '"人口"를 한자 의미로 풀면?', '["mountain + water","person + mouth","country + language","fire + wood"]', 1, '人口 (인구) = 人 (person) + 口 (mouth) = population.', 2),
+    (l_id, '한자어 "국어"에서 "國"의 의미는?', '["study","language","country","person"]', 2, '國 (국) means country. 국어 = 國(country) + 語(language) = national language.', 3),
+    (l_id, '한자를 분류하는 기본 구성 요소를 무엇이라고 합니까?', '["획","부수","음독","훈독"]', 1, '부수 (radical) is the basic component used to classify Chinese characters in dictionaries.', 4),
+    (l_id, '"수도"(水道)를 한자 성분으로 풀면?', '["fire + wood","person + mouth","water + way/road","mountain + water"]', 2, '水道 (수도) = 水 (water) + 道 (way/road) → can mean water pipe or capital city.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한자는 중국에서 기원한 문자로, 한국어 어휘의 약 60% 이상이 한자에서 유래한 한자어입니다. 한자를 이해하면 한국어 어휘를 더 쉽게 익힐 수 있습니다. 예를 들어, ''學''(학)은 ''배움''을 의미하며 학교, 학생, 학문, 학습 등 수많은 단어에 포함됩니다. ''國''(국)은 ''나라''를 의미하며 국가, 국민, 외국, 국어 등에 쓰입니다. 각 한자는 고유한 뜻과 음을 가지며, 다른 한자와 결합하여 복합어를 만듭니다. 부수는 한자를 분류하는 기준으로, 사전에서 한자를 찾을 때 유용합니다. 한자 학습은 어휘력을 키우고 한국어 이해를 깊게 하는 데 도움이 됩니다.', 'Hanja are characters originating in China, and more than about 60% of Korean vocabulary comes from Sino-Korean (hanja-derived) words. Understanding hanja makes it easier to learn Korean vocabulary. For example, 學 (hak) means "learning" and is found in countless words such as school, student, scholarship, and learning. 國 (guk) means "country" and is used in words like nation, citizen, foreign country, and national language. Each hanja has its own meaning and pronunciation and combines with other hanja to form compound words. Radicals are the basis for classifying hanja and are useful when looking up characters in a dictionary. Learning hanja helps build vocabulary and deepen understanding of Korean.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 117: Advanced Negation (심화 부정)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 117;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=117 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '부정', 'bujeong', 'negation, denial', 1),
+    (l_id, '거부하다', 'geobu-hada', 'to refuse, reject', 2),
+    (l_id, '반박하다', 'banbak-hada', 'to refute, rebut', 3),
+    (l_id, '부인하다', 'buin-hada', 'to deny', 4),
+    (l_id, '결코', 'gyeolko', 'never, by no means (emphatic)', 5),
+    (l_id, '전혀', 'jeonhyeo', 'not at all', 6),
+    (l_id, '도저히', 'dojeohi', 'simply cannot (impossibility)', 7),
+    (l_id, '아무리', 'amuri', 'no matter how', 8),
+    (l_id, '절대로', 'jeoldaero', 'absolutely not, never', 9),
+    (l_id, '도무지', 'domuji', 'simply not (bewilderment)', 10),
+    (l_id, '부정어', 'bujeong-eo', 'negative word', 11),
+    (l_id, '이중부정', 'ijung-bujeong', 'double negation', 12),
+    (l_id, '반어', 'baneo', 'irony, sarcasm', 13);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Emphatic negation: 결코/절대로 -지 않다', '결코/절대로 V-지 않다', 'Adds strong emphasis to a negative statement: "never / absolutely not". Used in formal and strong refusals.', '[{"korean":"저는 결코 포기하지 않겠습니다.","english":"I will never give up."},{"korean":"그것은 절대로 사실이 아닙니다.","english":"That is absolutely not true."},{"korean":"이 비밀은 결코 밝혀지지 않을 것입니다.","english":"This secret will never be revealed."}]', 1),
+    (l_id, 'Impossibility negation: 도저히 -지 못하다', '도저히 V-지 못하다', 'Expresses that something is simply impossible to do, despite wanting to or trying.', '[{"korean":"도저히 이 문제를 혼자 해결하지 못하겠습니다.","english":"I simply cannot solve this problem alone."},{"korean":"도저히 이해가 되지 않습니다.","english":"I simply cannot understand it."},{"korean":"도저히 그 고통을 참지 못했습니다.","english":"I simply could not endure that pain."}]', 2),
+    (l_id, 'Concessive negation: 아무리 -아도/어도 -지 않다', '아무리 V/A-아도/어도 -지 않다', 'Expresses "no matter how... still not". Combines concession with negation.', '[{"korean":"아무리 노력해도 소용이 없었습니다.","english":"No matter how hard I tried, it was no use."},{"korean":"아무리 비싸도 사지 않을 겁니다.","english":"No matter how expensive, I won''t buy it."},{"korean":"아무리 설득해도 생각을 바꾸지 않았습니다.","english":"No matter how much I persuaded, they didn''t change their mind."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '친구A', '너 그 소문 들었어? 민수가 회사 돈을 횡령했다고 하던데.', 'Neo geu somun deureoeo? Minsu-ga hoesa don-eul hoengnyeong-haetdago hadonde.', 'Did you hear that rumor? They say Minsu embezzled company money.', 1),
+    (l_id, '친구B', '전혀 믿을 수 없어. 민수는 절대로 그런 짓을 할 사람이 아니야.', 'Jeonhyeo mideul su eopseo. Minsu-neun jeoldaero geureon jit-eul hal saram-i aniya.', 'I can''t believe it at all. Minsu is absolutely not the kind of person to do such a thing.', 2),
+    (l_id, '친구A', '그럼 왜 그런 소문이 도는 걸까?', 'Geureom wae geureon somun-i doneun geolkka?', 'Then why is such a rumor going around?', 3),
+    (l_id, '친구B', '도무지 이해가 되지 않아. 누군가가 일부러 퍼트리는 거 아닐까?', 'Domuji ihae-ga doeji ana. Nugungga-ga ilburo peoteurineun geo anilkka?', 'I simply don''t understand. Isn''t someone spreading it on purpose?', 4),
+    (l_id, '친구A', '아무리 소문이 돌아도 증거가 없으면 사실이 아닐 수도 있잖아.', 'Amuri somun-i doraborado jeunggeo-ga eopseumyeon sasil-i anil sudo itjana.', 'No matter how the rumor spreads, without evidence it may not be true.', 5),
+    (l_id, '친구B', '맞아. 결코 사실 확인 없이 소문을 퍼트려서는 안 돼.', 'Maja. Gyeolko sasil hwakin eopsi somun-eul peotteuryeoseoneun an dwae.', 'Right. We should never spread rumors without verifying the facts.', 6),
+    (l_id, '친구A', '나도 그냥 들은 이야기라서 도저히 사실인지 아닌지 판단이 안 돼.', 'Nado geunyang deureon iyagiraso dojeohi sasil-inji aninjipadani an dwae.', 'I also just heard it, so I simply cannot judge whether it''s true or not.', 7);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '"저는 결코 포기하지 않겠습니다"에서 "결코"의 기능은?', '["완전 부정 강조","가능성 표현","조건 표현","추측 표현"]', 0, '결코 is an emphatic adverb used with negation to mean "never / absolutely not."', 1),
+    (l_id, '"아무리 비싸도 사지 않을 겁니다"의 의미는?', '["가격이 비싸므로 사지 않겠다","가격이 얼마이든 상관없이 사지 않겠다","가격이 비싸지 않으면 사겠다","가격이 적당하면 사겠다"]', 1, '아무리 -아도/어도 expresses "no matter how... still (negative result)."', 2),
+    (l_id, '불가능을 강조하는 부정 부사로 "도저히"와 같은 의미를 가진 단어는?', '["전혀","결코","절대로","도무지"]', 3, '도무지 also expresses impossibility or bewilderment — very similar to 도저히. Both can precede 못하다.', 3),
+    (l_id, '이중 부정 "~지 않을 수 없다"의 의미는?', '["완전한 부정","강한 긍정","모름","불가능"]', 1, 'Double negation -지 않을 수 없다 = "cannot not do" = strong affirmation, "must/have to."', 4),
+    (l_id, '"전혀 모르다"에서 "전혀"의 역할은?', '["동사 수식","완전한 부정 강조","시간 표현","추측 표현"]', 1, '전혀 is a negation adverb meaning "not at all" — it emphasizes complete negation.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국어의 부정 표현은 단순한 "안"과 "못"을 넘어 다양한 방식으로 표현됩니다. 결코, 절대로, 전혀, 도저히, 도무지 같은 부정 부사들은 부정의 강도나 성격을 달리합니다. 결코와 절대로는 강한 의지나 단호한 부정을 나타내며, 전혀는 완전한 부재를 강조합니다. 도저히는 아무리 노력해도 불가능한 상황을, 도무지는 이해할 수 없는 당혹감을 표현합니다. 아무리 -아도 구조는 어떤 조건에서도 달라지지 않는 사실을 부정할 때 사용됩니다. 이중 부정은 -지 않을 수 없다처럼 부정을 두 번 써서 오히려 강한 긍정을 만들어 냅니다. 이러한 다양한 부정 표현을 익히면 더욱 정확하고 표현력 있는 한국어를 구사할 수 있습니다.', 'Korean negation goes far beyond simple "an" (not) and "mot" (cannot) to express various nuances. Negative adverbs like gyeolko (never), jeoldaero (absolutely not), jeonhyeo (not at all), dojeohi (simply cannot), and domuji (simply bewildered) differ in the degree and nature of negation. 결코 and 절대로 express strong will or firm denial, while 전혀 emphasizes complete absence. 도저히 expresses an impossible situation no matter how hard one tries, and 도무지 conveys bewilderment at something incomprehensible. The structure 아무리 -아도/어도 is used when negating something that stays the same under any condition. Double negation, as in -지 않을 수 없다, uses two negatives to actually create a strong affirmative. Mastering these various negative expressions enables more precise and expressive Korean.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 118: Aspectual Expressions (상 표현)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 118;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=118 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '상', 'sang', 'aspect (grammatical)', 1),
+    (l_id, '완료', 'wamryo', 'completion, perfective aspect', 2),
+    (l_id, '진행', 'jinhaeng', 'progress, progressive aspect', 3),
+    (l_id, '지속', 'jisok', 'continuation, continuative aspect', 4),
+    (l_id, '반복', 'banbok', 'repetition, habitual aspect', 5),
+    (l_id, '시작', 'sijak', 'beginning, inceptive aspect', 6),
+    (l_id, '종결', 'jonggyeol', 'end, terminative aspect', 7),
+    (l_id, '결과', 'gyeolgwa', 'result, resultant state', 8),
+    (l_id, '순간', 'sungan', 'momentary, punctual', 9),
+    (l_id, '유지', 'yuji', 'maintenance, sustaining state', 10),
+    (l_id, '동작', 'dongjak', 'action, movement', 11),
+    (l_id, '상태', 'sangtae', 'state, condition', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Resultant state: -아/어 있다', 'V-아/어 있다', 'Expresses a state resulting from a completed action (resultant state aspect). Used with achievement/change-of-state verbs.', '[{"korean":"문이 열려 있습니다.","english":"The door is open (as a result of having been opened)."},{"korean":"그림이 벽에 걸려 있습니다.","english":"The painting is hanging on the wall."},{"korean":"꽃이 피어 있습니다.","english":"The flower is in bloom (has bloomed and remains so)."}]', 1),
+    (l_id, 'Ongoing action vs resultant state: -고 있다 vs -아/어 있다', 'V-고 있다 (ongoing) / V-아/어 있다 (resultant state)', 'Contrasts progressive aspect (action in progress) with resultant state (maintained result of completed action).', '[{"korean":"앉고 있다 (앉는 동작 중) vs 앉아 있다 (앉은 상태)","english":"Sitting down (in the process of sitting) vs. seated (the state of having sat down)"},{"korean":"입고 있다 (입는 동작 중) vs 입어 있다 (입은 상태)","english":"Putting on (in the process of dressing) vs. wearing (the state of being dressed)"}]', 2),
+    (l_id, 'Completion with result: -아/어 버리다', 'V-아/어 버리다', 'Expresses complete and final completion of an action, often with a sense of relief or regret.', '[{"korean":"숙제를 다 해 버렸습니다.","english":"I''ve completely finished my homework (relief)."},{"korean":"지갑을 잃어 버렸습니다.","english":"I''ve lost my wallet (regret)."},{"korean":"음식을 다 먹어 버렸습니다.","english":"I''ve eaten up all the food."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '친구A', '아직 준비 중이야?', 'Ajik junbi jung-iya?', 'Are you still getting ready?', 1),
+    (l_id, '친구B', '아니, 이미 다 준비해 버렸어.', 'Ani, imi da junbi-hae beoryeosseo.', 'No, I''ve already completely finished getting ready.', 2),
+    (l_id, '친구A', '옷도 다 입어 있어?', 'Otdo da ibeo isseo?', 'Are you already dressed too?', 3),
+    (l_id, '친구B', '응, 입어 있어. 신발도 신고 있어.', 'Eung, ibeo isseo. Sinbaldo sinneun jung-iya.', 'Yes, I''m dressed. I''m putting my shoes on too.', 4),
+    (l_id, '친구A', '빨리 나와. 버스가 와 있어.', 'Ppalli naowa. Beoseuga wa isseo.', 'Come out quickly. The bus is already here (parked and waiting).', 5),
+    (l_id, '친구B', '알았어. 문 잠가 버릴게.', 'Araseo. Mun jamga beorillge.', 'Got it. I''ll go ahead and lock the door (and be done with it).', 6),
+    (l_id, '친구A', '가방은?', 'Gabang-eun?', 'What about the bag?', 7),
+    (l_id, '친구B', '어제 다 챙겨 놓았어. 가방 안에 다 들어 있어.', 'Eoje da chaenggyeo noaseo. Gabang ane da deureo isseo.', 'I packed it all yesterday. Everything is already inside the bag.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '"문이 열려 있다"에서 "-아/어 있다"가 나타내는 의미는?', '["동작이 진행 중","완료된 동작의 결과 상태","곧 일어날 일","반복되는 행동"]', 1, '-아/어 있다 expresses a resultant state — the maintained result of a completed action.', 1),
+    (l_id, '"앉고 있다"와 "앉아 있다"의 차이는?', '["차이가 없다","앉고 있다는 앉는 동작 중, 앉아 있다는 앉은 상태","앉고 있다는 앉은 상태, 앉아 있다는 앉는 동작 중","둘 다 진행형이다"]', 1, '-고 있다 = action in progress; -아/어 있다 = resultant state of being seated.', 2),
+    (l_id, '"숙제를 다 해 버렸다"에서 "-아/어 버리다"의 뉘앙스는?', '["행동이 아직 진행 중","행동이 완전히 완료됨(후련함 혹은 아쉬움)","행동을 하려고 함","행동이 반복됨"]', 1, '-아/어 버리다 expresses complete and final completion, with connotations of relief or regret.', 3),
+    (l_id, '"지갑을 잃어 버렸다"에서 "-아/어 버리다"가 나타내는 감정은?', '["후련함","아쉬움/후회","기쁨","놀람"]', 1, 'When -아/어 버리다 is used with an undesirable outcome, it expresses regret or dismay.', 4),
+    (l_id, '상태 동사와 함께 쓰여 현재 유지 중인 상태를 나타내는 표현은?', '["-고 있다","-아/어 있다","-아/어 버리다","-아/어 놓다"]', 1, '-아/어 있다 is used with achievement/change-of-state verbs to express a maintained resultant state.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국어의 상(aspect)은 동작이나 사건의 시간적 내적 구조를 나타냅니다. "-고 있다"는 동작이 현재 진행 중임을 나타내는 진행상입니다. "-아/어 있다"는 동작이 완료된 후 그 결과 상태가 유지되고 있음을 나타내는 결과상입니다. 예를 들어, "앉고 있다"는 앉는 행위가 진행 중임을 의미하고, "앉아 있다"는 이미 앉아 있는 상태를 의미합니다. "-아/어 버리다"는 행위의 완전한 완료를 나타내며, 후련함이나 아쉬움의 감정을 동반하기도 합니다. "-아/어 놓다"는 미래를 대비한 준비 완료를, "-아/어 두다"는 상태의 의도적 유지를 나타냅니다. 이러한 다양한 상 표현을 정확히 사용하면 더 세밀하고 풍부한 한국어 표현이 가능합니다.', 'Korean aspect expresses the internal temporal structure of actions or events. "-고 있다" is the progressive aspect, indicating that an action is currently in progress. "-아/어 있다" is the resultant aspect, expressing that the result of a completed action is being maintained. For example, "앉고 있다" means the act of sitting is in progress, while "앉아 있다" means one is already in the seated state. "-아/어 버리다" indicates complete and final completion of an action, sometimes accompanied by feelings of relief or regret. "-아/어 놓다" expresses preparation for the future, while "-아/어 두다" indicates the intentional maintenance of a state. Using these various aspectual expressions accurately allows for more nuanced and rich Korean expression.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 119: Modal Expressions (양태 표현)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 119;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=119 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '양태', 'yangtae', 'modality (grammatical)', 1),
+    (l_id, '추측', 'chusuk', 'inference, conjecture', 2),
+    (l_id, '가능성', 'ganeungseong', 'possibility', 3),
+    (l_id, '필연성', 'piryeonseong', 'necessity, inevitability', 4),
+    (l_id, '허가', 'heoga', 'permission', 5),
+    (l_id, '의무', 'uimu', 'obligation, duty', 6),
+    (l_id, '의도', 'uido', 'intention', 7),
+    (l_id, '바람', 'baram', 'wish, desire', 8),
+    (l_id, '확신', 'hwaksin', 'conviction, certainty', 9),
+    (l_id, '불확실', 'bulhwakssil', 'uncertainty', 10),
+    (l_id, '추정', 'chujeong', 'estimation, inference', 11),
+    (l_id, '당위', 'dangwi', 'what ought to be, normativity', 12);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'Epistemic modality: -(으)ㄹ 것이다 vs -(으)ㄹ 텐데', 'V-(으)ㄹ 것이다 / V-(으)ㄹ 텐데', 'Two ways to express inference about the future or current situation. -(으)ㄹ 것이다 = neutral inference; -(으)ㄹ 텐데 = inference with concern or background information.', '[{"korean":"오늘 비가 올 것입니다. (중립적 추측)","english":"It will rain today. (neutral inference)"},{"korean":"지금쯤 도착했을 텐데 왜 연락이 없지? (배경 정보 포함)","english":"They should have arrived by now, but why no contact? (inference with concern)"}]', 1),
+    (l_id, 'Deontic modality: -아야/어야 하다 vs -(으)면 되다', 'V-아야/어야 하다 (obligation) / V-(으)면 되다 (sufficiency)', 'Contrasts strong obligation ("must do") with sufficiency ("it''s enough to do").', '[{"korean":"반드시 신분증을 가져와야 합니다. (의무)","english":"You must bring your ID. (obligation)"},{"korean":"신분증만 가져오면 됩니다. (충분 조건)","english":"All you need is to bring your ID. (sufficiency)"},{"korean":"일찍 도착해야 합니다 vs 일찍만 오면 됩니다.","english":"You must arrive early vs. You just need to come early (that''s enough)."}]', 2),
+    (l_id, 'Volitive modality: -(으)려고 하다 vs -(으)ㄹ까 하다', 'V-(으)려고 하다 / V-(으)ㄹ까 하다', '-(으)려고 하다 expresses firm intention; -(으)ㄹ까 하다 expresses tentative consideration.', '[{"korean":"내년에 유학을 가려고 합니다. (확실한 의도)","english":"I intend to study abroad next year. (firm intention)"},{"korean":"내년에 유학을 갈까 합니다. (막연한 고려)","english":"I''m thinking of maybe going to study abroad next year. (tentative consideration)"}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '직원', '이 서류를 내일까지 제출해야 합니까?', 'I seoryu-reul naeil-kkaji jechulhaeya hapnikka?', 'Do I have to submit these documents by tomorrow?', 1),
+    (l_id, '상사', '네, 반드시 내일까지 제출해야 합니다.', 'Ne, bandusi naeil-kkaji jechulhaeya habnida.', 'Yes, you must submit them by tomorrow without fail.', 2),
+    (l_id, '직원', '어디에 제출하면 됩니까?', 'Eodie jechulhameyon doemnikka?', 'Where do I just need to submit them?', 3),
+    (l_id, '상사', '인사과에 제출하면 됩니다.', 'Insagwa-e jechulhameyon doemnikka.', 'You just need to submit them to the HR department.', 4),
+    (l_id, '직원', '이 양식을 모두 작성해야 합니까?', 'I yangsik-eul modu jakseong-haeya hapnikka?', 'Do I have to fill out all of this form?', 5),
+    (l_id, '상사', '앞 두 페이지만 작성하면 됩니다.', 'Ap du peiji-man jakseong-hameyon doemnikka.', 'You just need to fill out the first two pages.', 6),
+    (l_id, '직원', '팀장님은 언제쯤 돌아오실까요?', 'Timjangnim-eun eonjejjeum doraosilkkayo?', 'When do you think the team leader will be back?', 7),
+    (l_id, '상사', '회의가 세 시에 끝날 텐데 그 이후에 오실 겁니다.', 'Hoeui-ga se si-e kkeutnal tende geu ihu-e osigeosseo.', 'The meeting should end at 3, so they will come after that.', 8);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '"오늘 비가 올 것입니다"와 "오늘 비가 올 텐데"의 차이는?', '["차이가 없다","올 것이다는 중립적 추측, 올 텐데는 배경 정보나 걱정이 담긴 추측","올 텐데가 더 확실하다","올 것이다는 과거, 올 텐데는 미래"]', 1, '-(으)ㄹ 것이다 = neutral inference; -(으)ㄹ 텐데 = inference with background info or concern.', 1),
+    (l_id, '"인사과에 제출하면 됩니다"에서 "-면 되다"의 의미는?', '["반드시 해야 한다","그렇게 하면 충분하다","해서는 안 된다","해도 되고 안 해도 된다"]', 1, '-(으)면 되다 expresses sufficiency: "it is enough to do X / all you need to do is X."', 2),
+    (l_id, '"내년에 유학을 가려고 합니다"와 "갈까 합니다"의 차이는?', '["차이 없음","가려고 하다는 확실한 의도, 갈까 하다는 막연한 고려","갈까 하다가 더 확실함","가려고 하다는 과거 계획"]', 1, '-(으)려고 하다 = firm intention; -(으)ㄹ까 하다 = tentative consideration.', 3),
+    (l_id, '다음 중 의무(반드시 해야 함)를 나타내는 표현은?', '["-면 됩니다","-아도 됩니다","-아야 합니다","-도록 됩니다"]', 2, '-아야/어야 합니다 expresses obligation: "you must do."', 4),
+    (l_id, '"지금쯤 도착했을 텐데"에서 "-을 텐데"가 나타내는 것은?', '["확실한 사실","허가","배경 정보를 바탕으로 한 추측","의무"]', 2, '-(으)ㄹ 텐데 expresses inference based on background information, often with implied concern.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '양태(modality)는 화자가 사건이나 상황에 대해 가지는 태도를 표현하는 문법 범주입니다. 한국어의 양태 표현은 인식 양태와 의무 양태로 크게 나눌 수 있습니다. 인식 양태는 가능성, 추측, 확신의 정도를 나타내며, -(으)ㄹ 것이다, -(으)ㄹ 텐데, -(으)ㄹ까, -겠- 등이 사용됩니다. 의무 양태는 의무, 허가, 금지 등을 나타내며, -아야/어야 하다, -(으)면 되다, -(으)면 안 되다 등이 사용됩니다. 의지 양태는 화자의 의도나 바람을 나타내며, -(으)려고 하다, -(으)ㄹ까 하다 등이 있습니다. 이러한 양태 표현들을 정확히 구분하여 사용하면 더 세련되고 정확한 한국어 의사소통이 가능합니다.', 'Modality is a grammatical category expressing the speaker''s attitude toward an event or situation. Korean modal expressions can be broadly divided into epistemic modality and deontic modality. Epistemic modality expresses degrees of possibility, inference, and certainty, using forms such as -(으)ㄹ 것이다, -(으)ㄹ 텐데, -(으)ㄹ까, and -겠-. Deontic modality expresses obligation, permission, and prohibition, using forms such as -아야/어야 하다, -(으)면 되다, and -(으)면 안 되다. Volitive modality expresses the speaker''s intention or wish, using forms like -(으)려고 하다 and -(으)ㄹ까 하다. Accurately distinguishing and using these modal expressions enables more sophisticated and precise Korean communication.', 1);
+END $$;
+
+-- ============================================================
+-- Lesson 120: TOPIK 3 Review (토픽 3 복습)
+-- ============================================================
+DO $$
+DECLARE
+  l_id integer;
+BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'korean-1' AND sort_order = 120;
+  IF l_id IS NULL THEN RAISE NOTICE 'sort_order=120 not found — skipping'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary  WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar     WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises   WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading     WHERE lesson_id = l_id;
+
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+    (l_id, '총정리', 'chongjeongni', 'overall review, comprehensive summary', 1),
+    (l_id, '숙달', 'sukdal', 'proficiency, mastery', 2),
+    (l_id, '자연스럽다', 'jayeonseureobda', 'to be natural, fluent', 3),
+    (l_id, '표현력', 'pyohyeonnyeok', 'expressive ability', 4),
+    (l_id, '정확성', 'jeong-hwakseong', 'accuracy, precision', 5),
+    (l_id, '유창성', 'yuchang-seong', 'fluency', 6),
+    (l_id, '어휘력', 'eohwiryeok', 'vocabulary ability', 7),
+    (l_id, '독해력', 'dokhaelyeok', 'reading comprehension ability', 8),
+    (l_id, '작문', 'jamun', 'composition, writing', 9),
+    (l_id, '맥락', 'maengnak', 'context', 10),
+    (l_id, '뉘앙스', 'nyuiangseu', 'nuance', 11),
+    (l_id, '격식체', 'gyeoksikche', 'formal register/style', 12),
+    (l_id, '비격식체', 'bigyeoksikche', 'informal register/style', 13),
+    (l_id, '언어 능력', 'eoneo neungnyeok', 'language proficiency', 14);
+
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+    (l_id, 'B1 grammar review: discourse connectives', 'Review of key B1/TOPIK 3 connectives', 'Comprehensive review of key discourse connectives at the B1/TOPIK 3 level including concession, causation, and contrast.', '[{"korean":"뿐만 아니라 — 그녀는 영어뿐만 아니라 한국어도 잘합니다.","english":"Not only that — She is good not only at English but also at Korean."},{"korean":"에도 불구하고 — 어려움에도 불구하고 목표를 달성했습니다.","english":"Despite — Despite difficulties, I achieved my goal."},{"korean":"는 바람에 — 늦게 일어나는 바람에 지각했습니다.","english":"Because of (unexpected) — Because I woke up late, I was late."}]', 1),
+    (l_id, 'B1 grammar review: complex sentence endings', 'Review of key B1/TOPIK 3 sentence endings', 'Review of advanced sentence endings that express modality, aspect, and register at B1/TOPIK 3 level.', '[{"korean":"-(으)ㄹ 텐데 — 지금쯤 도착했을 텐데 걱정되네요.","english":"Should (inference with concern) — They should have arrived by now, I''m worried."},{"korean":"-(으)ㄹ 뿐이다 — 저는 도움이 되고 싶을 뿐입니다.","english":"Only/nothing but — I only want to be of help."},{"korean":"-아/어 버리다 — 비밀을 다 말해 버렸습니다.","english":"Completely done (relief/regret) — I went ahead and told all the secrets."}]', 2),
+    (l_id, 'Formal writing review: academic style markers', 'Formal academic writing style', 'Key features of formal/academic Korean writing style used in TOPIK 3 writing tasks.', '[{"korean":"-(으)므로 — 시간이 촉박하므로 신속히 결정해야 합니다.","english":"Therefore/since (formal) — Since time is short, we must decide quickly."},{"korean":"-음/ㅁ이 밝혀지다 — 이 물질이 유해함이 밝혀졌습니다.","english":"It has been revealed that — It has been revealed that this substance is harmful."},{"korean":"-에 따르면 — 연구 결과에 따르면 운동이 건강에 좋습니다.","english":"According to — According to research results, exercise is good for health."}]', 3);
+
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+    (l_id, '선생님', 'TOPIK 3 수준에 도달했군요. 어떤 부분이 가장 어려웠습니까?', 'TOPIK sam sujeun-e dodalhaetgunyo. Eotteon bubun-i gajang eoryeowotsseumnikka?', 'You have reached TOPIK 3 level. What part was most difficult for you?', 1),
+    (l_id, '학생', '격식체와 비격식체를 구분하고 적절하게 사용하는 것이 어려웠습니다.', 'Gyeoksikche-wa bigyeoksikche-reul gubunhago jeokjeolhage sayonganeun geos-i eoryeowotsseumnida.', 'Distinguishing and appropriately using formal and informal registers was difficult.', 2),
+    (l_id, '선생님', '글쓰기에서 가장 중요한 것은 뉘앙스와 맥락을 파악하는 것입니다.', 'Geulsseuge-eseo gajang jungyohan geos-eun nyuiangseu-wa maengnak-eul pa-ak-aneun geosimnida.', 'The most important thing in writing is understanding nuance and context.', 3),
+    (l_id, '학생', '말하기와 쓰기에서 표현력을 높이려면 어떻게 해야 합니까?', 'Malhagi-wa sseugi-eseo pyohyeonnyeok-eul nopireuryeon eotteoke haeya hapnikka?', 'What should I do to improve my expressive ability in speaking and writing?', 4),
+    (l_id, '선생님', '다양한 텍스트를 많이 읽고 핵심 표현들을 직접 사용해 보는 것이 중요합니다.', 'Dayanghan tekseoteu-reul mani ikgo haeksim pyohyeondeul-eul jikjeop sayongahae boneun geos-i jungyohabnida.', 'It is important to read many diverse texts and directly use key expressions.', 5),
+    (l_id, '학생', '어휘력을 늘리는 가장 좋은 방법은 무엇입니까?', 'Eohwiryeok-eul neullrineun gajang joeun bangbeom-eun mueosimnikka?', 'What is the best way to expand vocabulary?', 6),
+    (l_id, '선생님', '맥락 속에서 단어를 익히고 어원과 한자를 함께 공부하면 효과적입니다.', 'Maengnak sog-eseo daneo-reul ikigo eowon-gwa hanja-reul hamkke gongbu-hameyon hyogwajeogimnida.', 'It is effective to learn words in context and study etymology and hanja together.', 7),
+    (l_id, '학생', '이 과정을 마치고 나니 한국어 실력이 많이 늘었음을 느낍니다.', 'I gwajeong-eul machigo nani hangug-eo sillye-ogi mani neureosseumeuol neukkibnida.', 'Having completed this course, I feel that my Korean proficiency has improved a lot.', 8),
+    (l_id, '선생님', '잘 하셨습니다! 꾸준히 연습하면 TOPIK 4 수준도 곧 달성하실 수 있을 겁니다.', 'Jal hasyeotsseumnida! Kkujunhi yeonseub-hameyon TOPIK sa sujeundo got dalseonghasyeol su isseul geomnida.', 'Well done! If you keep practicing consistently, you will soon be able to reach TOPIK 4 level as well.', 9),
+    (l_id, '학생', '감사합니다. 앞으로도 열심히 하겠습니다.', 'Gamsahabnida. Apeurodo yeolsimhi hagesseumnida.', 'Thank you. I will continue to work hard.', 10);
+
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+    (l_id, '"뿐만 아니라"의 의미로 가장 적절한 것은?', '["그러나","왜냐하면","not only...but also","비록...지만"]', 2, '뿐만 아니라 means "not only...but also" — adds an additional item to what was already mentioned.', 1),
+    (l_id, '"어려움에도 불구하고 성공했다"에서 "에도 불구하고"의 의미는?', '["because of","despite","as a result of","instead of"]', 1, '에도 불구하고 means "despite/in spite of" — a concessive connector at the B1 level.', 2),
+    (l_id, '"늦게 일어나는 바람에 지각했다"에서 "-는 바람에"의 의미는?', '["because of a positive event","because of an unexpected negative cause","despite","in order to"]', 1, '-는 바람에 expresses an unexpected negative cause that led to a bad result.', 3),
+    (l_id, '격식적 글쓰기에서 인과 관계를 나타내는 가장 격식적인 표현은?', '["그래서","때문에","-(으)므로","이어서"]', 2, '-(으)므로 is the most formal connective for cause-and-effect, used in academic and official writing.', 4),
+    (l_id, '"지금쯤 도착했을 텐데"에서 "-을 텐데"가 나타내는 것은?', '["확실한 미래","금지","배경 정보에 근거한 추측","허가"]', 2, '-(으)ㄹ 텐데 expresses inference based on background knowledge, often with concern or expectation.', 5);
+
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+    (l_id, '한국어 학습의 여정을 돌아보면, 기초적인 발음과 문자 학습에서 시작하여 복잡한 문법 구조와 고급 표현에 이르기까지 긴 여정을 걸어 왔습니다. TOPIK 3 수준은 일상적인 의사소통뿐만 아니라 다양한 주제에 대해 비교적 자연스럽게 표현할 수 있는 단계입니다. 이 수준에서는 맥락에 맞는 격식체와 비격식체 사용, 뉘앙스 파악, 그리고 복잡한 연결 표현 사용이 중요합니다. 어려움에도 불구하고 꾸준히 노력한 것이 지금의 실력을 만들었습니다. 언어 학습은 끊임없는 과정이므로, 앞으로도 독서, 말하기 연습, 쓰기 훈련을 통해 지속적으로 발전해 나가시기 바랍니다. 한국어를 통해 한국의 문화, 역사, 사람들을 더 깊이 이해하는 여정이 계속되기를 바랍니다. 수고 많으셨습니다!', 'Looking back on the journey of learning Korean, we have traveled a long road from basic pronunciation and character learning to complex grammatical structures and advanced expressions. TOPIK 3 level is a stage where one can express oneself relatively naturally not only in everyday communication but also on various topics. At this level, it is important to use formal and informal registers appropriately in context, understand nuances, and use complex connective expressions. Persevering through difficulties is what has built your current proficiency. Since language learning is a continuous process, we hope you will continue to develop through reading, speaking practice, and writing training. May the journey of understanding Korean culture, history, and people more deeply through Korean continue. Well done — you have worked hard!', 1);
+END $$;
