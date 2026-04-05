@@ -141,7 +141,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Create a free account to unlock all 20 games, save your XP, and build your daily streak.
+              Create a free account to unlock all 30 games, save your XP, and build your daily streak.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -218,7 +218,7 @@ const GamesPage = () => {
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 20</a>
+                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 30 games</a>
               </div>
             )}
 
@@ -404,13 +404,13 @@ const GamesPage = () => {
             <div className="text-center space-y-2">
               <div className="text-4xl">🎉</div>
               <h2 className="text-xl font-bold text-foreground">Nice work!</h2>
-              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 13 games.</p>
+              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 30 games.</p>
             </div>
 
             <div className="space-y-2">
               {[
                 { icon: "⭐", text: "Save your XP and streak" },
-                { icon: "🔓", text: "Unlock all 20 Korean games" },
+                { icon: "🔓", text: "Unlock all 30 Korean games" },
                 { icon: "📊", text: "Track your learning progress" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">

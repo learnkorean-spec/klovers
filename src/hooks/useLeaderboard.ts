@@ -14,6 +14,7 @@ export interface LeaderboardEntry {
 export interface LeaderboardData {
   xpLeaderboard: LeaderboardEntry[];
   streakLeaderboard: LeaderboardEntry[];
+  weeklyLeaderboard: LeaderboardEntry[];
   currentUserXpRank: number | null;
   currentUserStreakRank: number | null;
   loading: boolean;
@@ -23,6 +24,7 @@ export function useLeaderboard(): LeaderboardData {
   const { user } = useAuth();
   const [xpLeaderboard, setXpLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [streakLeaderboard, setStreakLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [weeklyLeaderboard, setWeeklyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentUserXpRank, setCurrentUserXpRank] = useState<number | null>(null);
   const [currentUserStreakRank, setCurrentUserStreakRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,6 +108,58 @@ export function useLeaderboard(): LeaderboardData {
           setCurrentUserStreakRank(userStreakRank >= 0 ? userStreakRank + 1 : null);
         }
       }
+
+      // Weekly leaderboard: query student_xp for this week, group by user, sum xp
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + (startOfWeek.getDay() === 0 ? -6 : 1)); // Monday
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const { data: weeklyXpData } = await supabase
+        .from("student_xp")
+        .select("user_id, xp_amount")
+        .gte("created_at", startOfWeek.toISOString());
+
+      if (weeklyXpData) {
+        // Aggregate by user
+        const weeklyTotals: Record<string, number> = {};
+        (weeklyXpData as any[]).forEach((row) => {
+          weeklyTotals[row.user_id] = (weeklyTotals[row.user_id] || 0) + (row.xp_amount || 0);
+        });
+
+        // Sort descending, take top 10
+        const sorted = Object.entries(weeklyTotals)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 10);
+
+        // Build profile map from existing xpViewData
+        const profileMap: Record<string, { name: string; avatar_url: string | null }> = {};
+        (xpViewData || []).forEach((r: any) => {
+          profileMap[r.user_id] = { name: r.name || "Anonymous", avatar_url: r.avatar_url ?? null };
+        });
+
+        // Fetch missing profiles
+        const missingIds = sorted.map(([id]) => id).filter(id => !profileMap[id]);
+        if (missingIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, name, avatar_url")
+            .in("user_id", missingIds);
+          (profiles || []).forEach((p: any) => {
+            profileMap[p.user_id] = { name: p.name || "Anonymous", avatar_url: p.avatar_url ?? null };
+          });
+        }
+
+        const weeklyBoard: LeaderboardEntry[] = sorted.map(([userId, total], idx) => ({
+          user_id: userId,
+          name: profileMap[userId]?.name || "Anonymous",
+          avatar_url: profileMap[userId]?.avatar_url ?? null,
+          value: total,
+          rank: idx + 1,
+          isCurrentUser: userId === user?.id,
+        }));
+
+        setWeeklyLeaderboard(weeklyBoard);
+      }
     } catch (err) {
       console.error("Leaderboard fetch error:", err);
     } finally {
@@ -143,6 +197,7 @@ export function useLeaderboard(): LeaderboardData {
   return {
     xpLeaderboard,
     streakLeaderboard,
+    weeklyLeaderboard,
     currentUserXpRank,
     currentUserStreakRank,
     loading,
