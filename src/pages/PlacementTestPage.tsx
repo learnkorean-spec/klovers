@@ -125,6 +125,7 @@ const PlacementTestPage = () => {
         toast({ title: "Test resumed", description: "Your previous progress has been restored." });
       }
     } catch { /* ignore */ }
+    localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist progress to localStorage as user answers
@@ -138,6 +139,7 @@ const PlacementTestPage = () => {
         elapsed: elapsedSeconds,
       }));
     } catch { /* ignore */ }
+    localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
   }, [answers, skipped, page, elapsedSeconds, phase]);
 
   // Tick elapsed timer (starts on first answer)
@@ -233,14 +235,14 @@ const PlacementTestPage = () => {
   };
 
   const handleShare = (res: PlacementResult) => {
-    const text = `I scored ${res.score}/20 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
+    const text = `I scored ${res.score}/30 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
       .then(() => toast({ title: "Copied to clipboard!", description: "Share your level with friends." }))
       .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: "Copy the link to share your result." }));
   };
 
   const handleWhatsApp = (res: PlacementResult) => {
-    const text = encodeURIComponent(`I scored ${res.score}/20 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
+    const text = encodeURIComponent(`I scored ${res.score}/30 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
