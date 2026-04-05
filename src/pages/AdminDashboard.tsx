@@ -1,5 +1,6 @@
 import { Component, ReactNode, lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { getLeadStatusBadgeClass, getDerivedStatusBadgeVariant } from "@/lib/badge-styles";
 import { Button } from "@/components/ui/button";
@@ -91,17 +92,40 @@ class TabErrorBoundary extends Component<
 import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import type { Lead, Enrollment, AttendanceReq, OverviewRow } from "@/types/admin";
 import { formatTime, exportCSV as exportCSVUtil } from "@/lib/admin-utils";
+import { useProfiles } from "@/hooks/admin/useProfiles";
+import { useStudentOverview, buildOverviewByEmail } from "@/hooks/admin/useStudentOverview";
+import { useLeads } from "@/hooks/admin/useLeads";
+import { useEnrollments } from "@/hooks/admin/useEnrollments";
+import { useAttendanceRequests } from "@/hooks/admin/useAttendanceRequests";
+import { useReferralStats } from "@/hooks/admin/useReferralStats";
+import { useScheduleWeekdays } from "@/hooks/admin/useScheduleWeekdays";
 
 const AdminDashboard = () => {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [attendanceReqs, setAttendanceReqs] = useState<AttendanceReq[]>([]);
-  const [overviewRows, setOverviewRows] = useState<OverviewRow[]>([]);
+  const queryClient = useQueryClient();
+
+  // ── React Query: shared data (cached, deduplicated) ───────────────────────
+  const { data: profileMap } = useProfiles();
+  const { data: overviewRows = [], isLoading: overviewLoading } = useStudentOverview();
+  const overviewByEmail = useMemo(() => buildOverviewByEmail(overviewRows), [overviewRows]);
+  const { data: leads = [], isLoading: leadsLoading, error: leadsQueryError } = useLeads({ overviewByEmail });
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useEnrollments({ profileMap });
+  const { data: attendanceReqs = [], isLoading: attendanceLoading } = useAttendanceRequests({ profileMap, overviewRows });
+  const { data: referralStats = { total: 0, thisMonth: 0 } } = useReferralStats();
+  const { data: scheduleWeekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] } = useScheduleWeekdays();
+
+  const loading = leadsLoading || enrollmentsLoading || overviewLoading || attendanceLoading;
+  const leadsError = leadsQueryError?.message ?? null;
+
+  /** Targeted refetch — replaces the old monolithic invalidateAll(). */
+  const invalidateAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin"] });
+  }, [queryClient]);
+
+  // ── Local UI state ────────────────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("confirmed");
   const [planFilter, setPlanFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const adminTab = searchParams.get("tab") ?? "students";
   const setAdminTab = useCallback((tab: string) => {
@@ -114,19 +138,16 @@ const AdminDashboard = () => {
   const [rejectReason, setRejectReason] = useState<"payment_not_received" | "time_slots_unavailable" | "other">("payment_not_received");
   const [rejectNote, setRejectNote] = useState("");
   const [rejecting, setRejecting] = useState(false);
-  const [userGroupMap, setUserGroupMap] = useState<Record<string, string>>({});
   const [studentFilter, setStudentFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "", dir: "asc" });
   const [leadsSort, setLeadsSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "created_at", dir: "desc" });
-  const [leadsError, setLeadsError] = useState<string | null>(null);
   const [leadsPage, setLeadsPage] = useState(0);
   const [quickStatusLeadId, setQuickStatusLeadId] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
-  const [leadsByEmail, setLeadsByEmail] = useState<Record<string, any>>({});
   const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
   const [enrollmentSearch, setEnrollmentSearch] = useState("");
   const [enrollmentPage, setEnrollmentPage] = useState(0);
@@ -137,10 +158,15 @@ const AdminDashboard = () => {
   const [contactedLeadIds, setContactedLeadIds] = useState<Set<string>>(new Set());
   const [leadsSourceFilter, setLeadsSourceFilter] = useState("");
   const [showOverdueOnly, setShowOverdueOnly] = useState(false);
-  const [referralStats, setReferralStats] = useState({ total: 0, thisMonth: 0 });
-  const [scheduleWeekdays, setScheduleWeekdays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // Derived leadsByEmail map for level fallback
+  const leadsByEmail = useMemo(() => {
+    const map: Record<string, Lead> = {};
+    for (const l of leads) if (l.email) map[l.email.toLowerCase()] = l;
+    return map;
+  }, [leads]);
 
   // ── Manual Enroll ────────────────────────────────────────────────────────
   const SESSIONS_BY_DURATION: Record<string, string> = { "1": "4", "3": "12", "6": "24" };
@@ -219,7 +245,7 @@ const AdminDashboard = () => {
         : `${enrollTarget.name} added to group with ${sessions} sessions.`;
       toast({ title: "Enrolled!", description: desc });
       setManualEnrollOpen(false);
-      fetchAll();
+      invalidateAll();
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally {
@@ -227,129 +253,8 @@ const AdminDashboard = () => {
     }
   }
 
-  const fetchAll = async () => {
-    setLeadsError(null);
-    const [leadsRes, enrollRes, attendRes, overviewRes, _batchSkip, _groupsSkip, weekdaysRes, profilesRes, referralRes] = await Promise.all([
-      supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(200),
-      supabase.from("enrollments").select("*").order("created_at", { ascending: false }).limit(200),
-      supabase.from("attendance_requests").select("*").order("created_at", { ascending: false }).limit(200),
-      supabase.from("admin_student_overview").select("*"),
-      Promise.resolve({ data: [] }), // legacy batch_members — no longer used
-      Promise.resolve({ data: [] }), // legacy student_groups — no longer used
-      supabase.from("schedule_options").select("label, sort_order").eq("category", "weekday").eq("is_active", true).order("sort_order"),
-      supabase.from("profiles").select("user_id, name, email, level, country"),
-      supabase.from("referral_conversions").select("converted_at"),
-    ]);
-
-    if (weekdaysRes.data && weekdaysRes.data.length > 0) {
-      setScheduleWeekdays(weekdaysRes.data.map((r) => r.label));
-    }
-
-    // Build profile map: first from direct profiles table, then enrich with overview
-    const profileMap: Record<string, { name: string; email: string; level?: string }> = {};
-    const overviewByEmail: Record<string, Record<string, unknown>> = {};
-    const leadsByEmail: Record<string, Lead> = {};
-
-    // Index leads by email for level fallback
-    if (leadsRes.data) {
-      (leadsRes.data as Lead[]).forEach((l) => {
-        if (l.email) leadsByEmail[l.email.toLowerCase()] = l;
-      });
-      setLeadsByEmail(leadsByEmail);
-    }
-
-    // Index direct profiles (always available for admin)
-    if (profilesRes.data) {
-      profilesRes.data.forEach((p) => {
-        const leadLevel = leadsByEmail[p.email?.toLowerCase()]?.level;
-        profileMap[p.user_id] = {
-          name: p.name,
-          email: p.email,
-          // Use profile level if set, otherwise fall back to lead level
-          level: (p.level && p.level.trim() !== "") ? p.level : (leadLevel || ""),
-        };
-      });
-    }
-
-    // Enrich/override with admin_student_overview data
-    if (overviewRes.data) {
-      (overviewRes.data as OverviewRow[]).forEach((r) => {
-        const existingLevel = profileMap[r.user_id]?.level;
-        profileMap[r.user_id] = {
-          name: r.name || profileMap[r.user_id]?.name,
-          email: r.email || profileMap[r.user_id]?.email,
-          level: (r.level && r.level.trim() !== "") ? r.level : (existingLevel || ""),
-        };
-        overviewByEmail[r.email?.toLowerCase()] = r as unknown as Record<string, unknown>;
-      });
-    }
-
-    // Legacy group mapping removed — groups now managed via pkg_groups
-    const _userGroupMap: Record<string, string> = {};
-
-    if (leadsRes.error) {
-      const msg = `Leads query failed: ${leadsRes.error.message} (code: ${leadsRes.error.code})`;
-      console.error(msg, leadsRes.error);
-      setLeadsError(msg);
-      toast({ title: "Leads query failed", description: leadsRes.error.message, variant: "destructive" });
-    } else {
-      // Derive lead status from overview (single source of truth)
-      const enrichedLeads = (leadsRes.data as Lead[]).map((lead) => {
-        const ov = overviewByEmail[lead.email.toLowerCase()];
-        let autoStatus = lead.status;
-        if (ov) {
-          if (["ACTIVE", "COMPLETED", "LOCKED"].includes(ov.derived_status)) {
-            autoStatus = "enrolled";
-          } else if (ov.enrollment_id) {
-            autoStatus = "contacted";
-          }
-        }
-        return { ...lead, status: autoStatus };
-      });
-      setLeads(enrichedLeads);
-    }
-
-    if (enrollRes.data) {
-      const enrichedEnrollments = enrollRes.data.map((e) => ({
-        ...e,
-        profiles: profileMap[e.user_id] || null,
-      })) as Enrollment[];
-      setEnrollments(enrichedEnrollments);
-
-      // Enrollment level/days are read-only — no admin editing needed
-    }
-    if (attendRes.data) {
-      const overviewMap: Record<string, OverviewRow> = {};
-      if (overviewRes.data) {
-        (overviewRes.data as OverviewRow[]).forEach((r) => { overviewMap[r.user_id] = r; });
-      }
-      setAttendanceReqs(attendRes.data.map((a) => {
-        const ov = overviewMap[a.user_id];
-        return {
-          ...a,
-          profiles: profileMap[a.user_id]
-            ? { ...profileMap[a.user_id], credits: ov?.sessions_remaining ?? 0 }
-            : null,
-        };
-      }) as AttendanceReq[]);
-    }
-    if (overviewRes.data) setOverviewRows(overviewRes.data as OverviewRow[]);
-    if (referralRes.data) {
-      const firstOfMonth = new Date();
-      firstOfMonth.setDate(1);
-      firstOfMonth.setHours(0, 0, 0, 0);
-      setReferralStats({
-        total: referralRes.data.length,
-        thisMonth: referralRes.data.filter(r => new Date(r.converted_at) >= firstOfMonth).length,
-      });
-    }
-    setUserGroupMap(_userGroupMap);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchAll(); }, []);
-
-  // Level-related state removed — enrollment.level is read-only source of truth
+  // fetchAll replaced by React Query hooks — see useLeads, useEnrollments, etc.
+  // invalidateAll() triggers targeted cache refresh instead of re-fetching everything.
 
   // Helper: update a lead via admin-update-lead edge function (bypasses broken RLS policy)
   const updateLeadViaFn = async (id: string, fields: Record<string, unknown>) => {
@@ -363,7 +268,7 @@ const AdminDashboard = () => {
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
       await updateLeadViaFn(id, { status: newStatus });
-      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to update status.", variant: "destructive" });
     }
@@ -372,13 +277,13 @@ const AdminDashboard = () => {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("leads").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }); }
-    else { setLeads((prev) => prev.filter((l) => l.id !== id)); toast({ title: "Deleted" }); }
+    else { queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }); toast({ title: "Deleted" }); }
   };
 
   const handleDeleteStudent = async (userId: string) => {
     const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
     if (error) { toast({ title: "Error", description: "Failed to delete student.", variant: "destructive" }); return; }
-    setOverviewRows((prev) => prev.filter((r) => r.user_id !== userId));
+    queryClient.invalidateQueries({ queryKey: ["admin", "student-overview"] });
     toast({ title: "Deleted", description: "Student record removed." });
   };
 
@@ -406,7 +311,7 @@ const AdminDashboard = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setLeads((prev) => prev.filter((l) => !dupeIds.includes(l.id)));
+      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
       toast({ title: "Duplicates removed", description: `Deleted ${dupeIds.length} duplicate lead(s).` });
     }
   };
@@ -424,7 +329,7 @@ const AdminDashboard = () => {
         timezone: editForm.timezone || "",
         status: editForm.status || "new",
       });
-      setLeads((prev) => prev.map((l) => l.id === editingLeadId ? { ...l, ...editForm } : l));
+      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
       setEditingLeadId(null);
       setEditForm({});
       toast({ title: "Lead updated" });
@@ -478,7 +383,7 @@ const AdminDashboard = () => {
       }
     }
     toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });
-    fetchAll();
+    invalidateAll();
   };
 
   const confirmedEmails = useMemo(() => {
@@ -650,7 +555,7 @@ const AdminDashboard = () => {
     }
 
     toast({ title: `Enrollment ${action.toLowerCase()}` });
-    fetchAll();
+    invalidateAll();
   };
 
   const handleBulkApprove = async () => {
@@ -681,7 +586,7 @@ const AdminDashboard = () => {
       description: `${succeeded} approved${failed > 0 ? `, ${failed} failed` : ""}`,
       variant: failed > 0 ? "destructive" : "default",
     });
-    fetchAll();
+    invalidateAll();
   };
 
   const handleRevertEnrollment = async (enrollment: Enrollment) => {
@@ -693,7 +598,7 @@ const AdminDashboard = () => {
       return;
     }
     toast({ title: "Enrollment reverted to pending, credits deducted." });
-    fetchAll();
+    invalidateAll();
   };
 
   const handleDeleteEnrollment = async (enrollmentId: string) => {
@@ -703,7 +608,7 @@ const AdminDashboard = () => {
       return;
     }
     toast({ title: "Enrollment deleted" });
-    fetchAll();
+    invalidateAll();
   };
 
   const handleAttendanceAction = async (req: AttendanceReq, action: "APPROVED" | "REJECTED") => {
@@ -726,7 +631,7 @@ const AdminDashboard = () => {
       }
       toast({ title: "Attendance rejected" });
     }
-    fetchAll();
+    invalidateAll();
   };
 
   const handleRevertAttendance = async (req: AttendanceReq) => {
@@ -738,7 +643,7 @@ const AdminDashboard = () => {
       return;
     }
     toast({ title: "Reverted to pending", description: req.status === "APPROVED" ? "Session restored." : "Request is pending again." });
-    fetchAll();
+    invalidateAll();
   };
 
   const handleLogout = async () => { await supabase.auth.signOut(); navigate("/admin/login"); };
@@ -817,7 +722,7 @@ const AdminDashboard = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchAll();
+    await invalidateAll();
     setRefreshing(false);
   };
 
@@ -854,7 +759,7 @@ const AdminDashboard = () => {
                 <p className="text-xs mt-0.5 opacity-80">{leadsError}</p>
               </div>
               <button
-                onClick={() => { setLeadsError(null); fetchAll(); }}
+                onClick={() => invalidateAll()}
                 className="shrink-0 text-xs underline underline-offset-2 hover:no-underline"
               >
                 Retry
@@ -1254,7 +1159,7 @@ const AdminDashboard = () => {
                     currency={student.currency}
                     derivedStatus={student.derived_status}
                     onClose={() => setSelectedStudentId(null)}
-                    onUpdated={fetchAll}
+                    onUpdated={invalidateAll}
                   />
                 );
               })()}
@@ -1286,7 +1191,7 @@ const AdminDashboard = () => {
                           } else {
                             const result = data as Record<string, number> | null;
                             toast({ title: "Backfill complete", description: `Fixed: ${result?.fixed ?? 0}, Remaining: ${result?.remaining ?? 0}` });
-                            fetchAll();
+                            invalidateAll();
                           }
                         }}
                       >
@@ -2009,7 +1914,7 @@ const AdminDashboard = () => {
                                 onValueChange={async (v) => {
                                   const { error } = await supabase.from("crm_leads").update({ status: v }).eq("id", lead.id);
                                   if (!error) {
-                                    setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: v } : l));
+                                    queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
                                     toast({ title: "Status updated" });
                                   }
                                   setQuickStatusLeadId(null);
@@ -2141,7 +2046,7 @@ const AdminDashboard = () => {
                       onAttendanceAction={handleAttendanceAction}
                       onRevertAttendance={handleRevertAttendance}
                       userGroupMap={userGroupMap}
-                      onUpdated={fetchAll}
+                      onUpdated={invalidateAll}
                     />
                   </TabErrorBoundary>
                 </CardContent>
