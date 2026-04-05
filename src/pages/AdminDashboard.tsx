@@ -2,7 +2,7 @@ import { Component, ReactNode, lazy, Suspense, useEffect, useState, useMemo, use
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { getLeadStatusBadgeClass, getDerivedStatusBadgeVariant } from "@/lib/badge-styles";
+import { getDerivedStatusBadgeVariant } from "@/lib/badge-styles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,6 +53,7 @@ const StudentHealthPanel = lazy(() => import("@/components/admin/StudentHealthPa
 const PromoCodesManager = lazy(() => import("@/components/admin/PromoCodesManager"));
 const SeoOrchestrationPanel = lazy(() => import("@/components/admin/SeoOrchestrationPanel"));
 const ImageAuditPanel = lazy(() => import("@/components/admin/ImageAuditPanel"));
+const LeadsPanel = lazy(() => import("@/components/admin/LeadsPanel"));
 
 const TabLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -91,14 +92,13 @@ class TabErrorBoundary extends Component<
 
 import { normalizeLevel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import type { Lead, Enrollment, AttendanceReq, OverviewRow } from "@/types/admin";
-import { formatTime, exportCSV as exportCSVUtil } from "@/lib/admin-utils";
+import { formatTime } from "@/lib/admin-utils";
 import { useProfiles } from "@/hooks/admin/useProfiles";
 import { useStudentOverview, buildOverviewByEmail } from "@/hooks/admin/useStudentOverview";
 import { useLeads } from "@/hooks/admin/useLeads";
 import { useEnrollments } from "@/hooks/admin/useEnrollments";
 import { useAttendanceRequests } from "@/hooks/admin/useAttendanceRequests";
 import { useReferralStats } from "@/hooks/admin/useReferralStats";
-import { useScheduleWeekdays } from "@/hooks/admin/useScheduleWeekdays";
 
 const AdminDashboard = () => {
   const queryClient = useQueryClient();
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
   const { data: enrollments = [], isLoading: enrollmentsLoading } = useEnrollments({ profileMap });
   const { data: attendanceReqs = [], isLoading: attendanceLoading } = useAttendanceRequests({ profileMap, overviewRows });
   const { data: referralStats = { total: 0, thisMonth: 0 } } = useReferralStats();
-  const { data: scheduleWeekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] } = useScheduleWeekdays();
+
 
   const loading = leadsLoading || enrollmentsLoading || overviewLoading || attendanceLoading;
   const leadsError = leadsQueryError?.message ?? null;
@@ -122,10 +122,7 @@ const AdminDashboard = () => {
   }, [queryClient]);
 
   // ── Local UI state ────────────────────────────────────────────────────────
-  const [search, setSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("confirmed");
-  const [planFilter, setPlanFilter] = useState("all");
   const [searchParams, setSearchParams] = useSearchParams();
   const adminTab = searchParams.get("tab") ?? "students";
   const setAdminTab = useCallback((tab: string) => {
@@ -133,7 +130,6 @@ const AdminDashboard = () => {
   }, [setSearchParams]);
   const [editingUnitPrice, setEditingUnitPrice] = useState<Record<string, string>>({});
   const [sendingReminder, setSendingReminder] = useState<Set<string>>(new Set());
-  const [sendingNameEmails, setSendingNameEmails] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<Enrollment | null>(null);
   const [rejectReason, setRejectReason] = useState<"payment_not_received" | "time_slots_unavailable" | "other">("payment_not_received");
   const [rejectNote, setRejectNote] = useState("");
@@ -141,22 +137,14 @@ const AdminDashboard = () => {
   const [studentFilter, setStudentFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "", dir: "asc" });
-  const [leadsSort, setLeadsSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "created_at", dir: "desc" });
-  const [leadsPage, setLeadsPage] = useState(0);
-  const [quickStatusLeadId, setQuickStatusLeadId] = useState<string | null>(null);
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
   const [enrollmentSearch, setEnrollmentSearch] = useState("");
   const [enrollmentPage, setEnrollmentPage] = useState(0);
   const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(new Set());
   const [bulkApproving, setBulkApproving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [copiedLeadId, setCopiedLeadId] = useState<string | null>(null);
-  const [contactedLeadIds, setContactedLeadIds] = useState<Set<string>>(new Set());
-  const [leadsSourceFilter, setLeadsSourceFilter] = useState("");
   const [showOverdueOnly, setShowOverdueOnly] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -256,191 +244,11 @@ const AdminDashboard = () => {
   // fetchAll replaced by React Query hooks — see useLeads, useEnrollments, etc.
   // invalidateAll() triggers targeted cache refresh instead of re-fetching everything.
 
-  // Helper: update a lead via admin-update-lead edge function (bypasses broken RLS policy)
-  const updateLeadViaFn = async (id: string, fields: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke("admin-update-lead", {
-      body: { id, ...fields },
-    });
-    if (error) throw new Error(error.message);
-    if (data?.error) throw new Error(data.error);
-  };
-
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    try {
-      await updateLeadViaFn(id, { status: newStatus });
-      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to update status.", variant: "destructive" });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("leads").delete().eq("id", id);
-    if (error) { toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }); }
-    else { queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }); toast({ title: "Deleted" }); }
-  };
-
   const handleDeleteStudent = async (userId: string) => {
     const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
     if (error) { toast({ title: "Error", description: "Failed to delete student.", variant: "destructive" }); return; }
     queryClient.invalidateQueries({ queryKey: ["admin", "student-overview"] });
     toast({ title: "Deleted", description: "Student record removed." });
-  };
-
-  const handleDeduplicateLeads = async () => {
-    // Group leads by lowercase email, keep the newest (first in array since sorted desc)
-    const emailMap: Record<string, typeof leads> = {};
-    for (const l of leads) {
-      const key = l.email.toLowerCase().trim();
-      if (!emailMap[key]) emailMap[key] = [];
-      emailMap[key].push(l);
-    }
-    const dupeIds: string[] = [];
-    for (const [, group] of Object.entries(emailMap)) {
-      if (group.length <= 1) continue;
-      // Keep the first (newest by created_at desc), delete rest
-      for (let i = 1; i < group.length; i++) {
-        dupeIds.push(group[i].id);
-      }
-    }
-    if (dupeIds.length === 0) {
-      toast({ title: "No duplicates", description: "All leads are unique." });
-      return;
-    }
-    const { error } = await supabase.from("leads").delete().in("id", dupeIds);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
-      toast({ title: "Duplicates removed", description: `Deleted ${dupeIds.length} duplicate lead(s).` });
-    }
-  };
-
-  const handleEditLead = async () => {
-    if (!editingLeadId) return;
-    try {
-      await updateLeadViaFn(editingLeadId, {
-        name: editForm.name,
-        email: editForm.email,
-        country: editForm.country || "",
-        plan_type: editForm.plan_type || "",
-        duration: editForm.duration || "",
-        schedule: editForm.schedule || "",
-        timezone: editForm.timezone || "",
-        status: editForm.status || "new",
-      });
-      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
-      setEditingLeadId(null);
-      setEditForm({});
-      toast({ title: "Lead updated" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to update lead.", variant: "destructive" });
-    }
-  };
-
-  const startEditLead = (lead: Lead) => {
-    setEditingLeadId(lead.id);
-    setEditForm({ ...lead });
-  };
-
-  const cancelEditLead = () => {
-    setEditingLeadId(null);
-    setEditForm({});
-  };
-
-  const handleSendNameCollectionEmails = async () => {
-    setSendingNameEmails(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-name-collection-email");
-      if (error) throw error;
-      toast({ title: "Done!", description: `Name request emails sent: ${data?.sent ?? 0} · Skipped: ${data?.skipped ?? 0}` });
-    } catch (err: any) {
-      toast({ title: "Error sending name emails", description: err.message, variant: "destructive" });
-    } finally {
-      setSendingNameEmails(false);
-    }
-  };
-
-  const handleLinkLeadsByEmail = async () => {
-    // Find unlinked leads and match them to profiles by email
-    const unlinked = leads.filter(l => !l.user_id);
-    if (unlinked.length === 0) {
-      toast({ title: "All leads already linked" });
-      return;
-    }
-    let linked = 0;
-    // Get all profiles for matching
-    const { data: profiles } = await supabase.from("profiles").select("user_id, email");
-    if (!profiles) return;
-    const profileByEmail: Record<string, string> = {};
-    for (const p of (profiles ?? []) as { user_id: string; email: string }[]) {
-      if (p.email) profileByEmail[p.email.toLowerCase().trim()] = p.user_id;
-    }
-    for (const lead of unlinked) {
-      const userId = profileByEmail[lead.email.toLowerCase().trim()];
-      if (userId) {
-        try { await updateLeadViaFn(lead.id, { user_id: userId }); linked++; } catch { /* skip */ }
-      }
-    }
-    toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });
-    invalidateAll();
-  };
-
-  const confirmedEmails = useMemo(() => {
-    const emails = new Set<string>();
-    overviewRows.forEach((r) => {
-      if (r.payment_status === "PAID" && r.approval_status === "APPROVED" && r.email) {
-        emails.add(r.email.toLowerCase());
-      }
-    });
-    return emails;
-  }, [overviewRows]);
-
-  const uniqueSources = useMemo(() =>
-    [...new Set(leads.map(l => l.source).filter(Boolean))] as string[],
-    [leads]
-  );
-
-  const filtered = useMemo(() => {
-    return leads.filter((l) => {
-      const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
-      const isConfirmed = l.status === "enrolled" || confirmedEmails.has(l.email.toLowerCase());
-      const matchesPlan = planFilter === "all" || l.plan_type === planFilter;
-      const matchesSource = !leadsSourceFilter || l.source === leadsSourceFilter;
-      if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan && matchesSource;
-      if (statusFilter === "all") return matchesSearch && matchesPlan && matchesSource;
-      return matchesSearch && l.status === statusFilter && matchesPlan && matchesSource;
-    });
-  }, [leads, search, statusFilter, planFilter, confirmedEmails, leadsSourceFilter]);
-
-  const statusCounts = useMemo(() =>
-    leads.reduce((acc, l) => { acc[l.status] = (acc[l.status] || 0) + 1; return acc; }, {} as Record<string, number>),
-    [leads]
-  );
-
-  const sortedLeads = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      if (leadsSort.col === "name") {
-        const cmp = (a.name || "").localeCompare(b.name || "");
-        return leadsSort.dir === "asc" ? cmp : -cmp;
-      }
-      if (leadsSort.col === "country") {
-        const cmp = (a.country || "").localeCompare(b.country || "");
-        return leadsSort.dir === "asc" ? cmp : -cmp;
-      }
-      // default: created_at
-      const cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      return leadsSort.dir === "asc" ? cmp : -cmp;
-    });
-  }, [filtered, leadsSort]);
-
-  const leadsPageCount = Math.ceil(sortedLeads.length / PAGE_SIZE);
-  const pagedLeads = sortedLeads.slice(leadsPage * PAGE_SIZE, (leadsPage + 1) * PAGE_SIZE);
-
-  const exportCSV = () => {
-    const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
-    const rows = sortedLeads.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, l.goal, new Date(l.created_at).toLocaleDateString()]);
-    exportCSVUtil(headers, rows, "leads");
   };
 
   const handleConfirmReject = async () => {
@@ -1605,405 +1413,11 @@ const AdminDashboard = () => {
 
             {/* LEADS TAB */}
             <TabsContent value="leads">
-              <Card className="rounded-2xl">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Our Students</CardTitle>
-                    <p className="text-xs text-muted-foreground">{filtered.length} lead{filtered.length !== 1 ? "s" : ""}</p>
-                  </div>
-                  <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search by name or email..." value={search} onChange={(e) => { setSearch(e.target.value); setLeadsPage(0); }} className="pl-9" />
-                    </div>
-                    <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setLeadsPage(0); }}>
-                      <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Filter status" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="confirmed">Confirmed (Paid) ({confirmedEmails.size})</SelectItem>
-                        <SelectItem value="all">All ({leads.length})</SelectItem>
-                        {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s} ({statusCounts[s] ?? 0})</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setLeadsPage(0); }}>
-                      <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Plan type" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Plans</SelectItem>
-                        <SelectItem value="group">Group</SelectItem>
-                        <SelectItem value="private">Private</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {uniqueSources.length > 0 && (
-                      <Select value={leadsSourceFilter} onValueChange={(v) => { setLeadsSourceFilter(v); setLeadsPage(0); }}>
-                        <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="All sources" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All sources</SelectItem>
-                          {uniqueSources.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleDeduplicateLeads}>
-                      <Eraser className="h-4 w-4" />
-                      {!isMobile && <span className="ml-1">Deduplicate</span>}
-                    </Button>
-                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleLinkLeadsByEmail}>
-                      <Sparkles className="h-4 w-4" />
-                      {!isMobile && <span className="ml-1">Link All</span>}
-                    </Button>
-                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleSendNameCollectionEmails} disabled={sendingNameEmails}>
-                      <Mail className="h-4 w-4" />
-                      {!isMobile && <span className="ml-1">{sendingNameEmails ? "Sending…" : "Request Names"}</span>}
-                    </Button>
-                    <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
-                      <Download className="h-4 w-4" />
-                      {!isMobile && <span className="ml-1">Export CSV</span>}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-4">
-
-              {/* Abandoned Checkouts — reached step 4 but didn't pay */}
-              {(() => {
-                const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-                const abandoned = leads.filter(l =>
-                  l.plan_type &&
-                  l.user_id &&
-                  !confirmedEmails.has(l.email.toLowerCase()) &&
-                  l.status !== "enrolled" &&
-                  new Date(l.created_at) > cutoff
-                ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
-                if (abandoned.length === 0) return null;
-                return (
-                  <div className="rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">{abandoned.length} Abandoned Checkout{abandoned.length > 1 ? "s" : ""}</span>
-                      <span className="text-xs text-amber-600 dark:text-amber-400 ml-1">— reached checkout but didn't pay</span>
-                    </div>
-                    <div className="space-y-2">
-                      {abandoned.map(l => {
-                        const hoursAgo = Math.round((Date.now() - new Date(l.created_at).getTime()) / 3600000);
-                        const timeLabel = hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.round(hoursAgo / 24)}d ago`;
-                        const waMsg = encodeURIComponent(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling in Klovers Korean. Your spot is still available — would you like to complete your ${l.plan_type} class enrollment? 🇰🇷`);
-                        const waLink = `https://wa.me/?text=${waMsg}`;
-                        return (
-                          <div key={l.id} className="flex items-center justify-between bg-white dark:bg-background border border-amber-100 dark:border-amber-900/40 rounded-lg px-3 py-2 gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{l.email}</p>
-                            </div>
-                            <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground shrink-0">
-                              <span className="capitalize">{l.plan_type} · {l.duration}</span>
-                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeLabel}</span>
-                            </div>
-                            <div className="flex gap-1.5 shrink-0">
-                              <Button size="sm" variant="outline" className={`h-7 px-2 text-xs ${contactedLeadIds.has(l.id) && copiedLeadId !== l.id ? "border-green-400 text-green-700 dark:text-green-400" : ""}`}
-                                onClick={() => {
-                                  navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! 👋 We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
-                                  toast({ title: "Copied!", description: "Follow-up message copied to clipboard" });
-                                  setContactedLeadIds(prev => new Set(prev).add(l.id));
-                                  setCopiedLeadId(l.id);
-                                  setTimeout(() => setCopiedLeadId(id => id === l.id ? null : id), 1500);
-                                }}>
-                                {copiedLeadId === l.id
-                                  ? <><Check className="h-3 w-3 mr-1 text-green-600" />Copied!</>
-                                  : contactedLeadIds.has(l.id)
-                                    ? <><Check className="h-3 w-3 mr-1 text-green-600" />Sent ✓</>
-                                    : <><Copy className="h-3 w-3 mr-1" />Copy</>}
-                              </Button>
-                              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
-                                <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${l.name.split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
-                                  <Mail className="h-3 w-3 mr-1" />Email
-                                </a>
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Lead Conversion Summary */}
-              {leads.length > 0 && (() => {
-                const sourceMap: Record<string, { total: number; converted: number }> = {};
-                leads.forEach(l => {
-                  const src = l.source || "unknown";
-                  if (!sourceMap[src]) sourceMap[src] = { total: 0, converted: 0 };
-                  sourceMap[src].total++;
-                  if (l.user_id || l.status === "enrolled") sourceMap[src].converted++;
-                });
-                const totalNew = leads.filter(l => l.status === "new").length;
-                const staleNew = leads.filter(l => l.status === "new" && new Date(l.created_at) < new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)).length;
-                const funnelNew = leads.filter(l => l.status === "new").length;
-                const funnelContacted = leads.filter(l => l.status === "contacted").length;
-                const funnelEnrolled = leads.filter(l => l.status === "enrolled" || confirmedEmails.has(l.email?.toLowerCase())).length;
-                const funnelMax = Math.max(funnelNew, 1);
-                return (
-                  <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-                    {/* Source pills */}
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(sourceMap).sort((a, b) => b[1].total - a[1].total).slice(0, 6).map(([src, { total, converted }]) => (
-                        <span key={src} className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-background border border-border rounded-full px-2.5 py-1">
-                          <span className="text-foreground capitalize">{src}</span>
-                          <span className="text-muted-foreground">{total}</span>
-                          <span className="text-emerald-600 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
-                        </span>
-                      ))}
-                    </div>
-                    {/* Follow-up alert */}
-                    {staleNew > 0 && (
-                      <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg px-3 py-1.5">
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                        <span><strong>{staleNew}</strong> new lead{staleNew > 1 ? "s" : ""} older than 3 days with no follow-up</span>
-                      </div>
-                    )}
-                    {/* Mini funnel */}
-                    <div className="flex items-center gap-3 text-xs">
-                      {[
-                        { label: "New", count: funnelNew, color: "bg-blue-500" },
-                        { label: "Contacted", count: funnelContacted, color: "bg-amber-500" },
-                        { label: "Enrolled", count: funnelEnrolled, color: "bg-emerald-500" },
-                      ].map(({ label, count, color }) => (
-                        <div key={label} className="flex-1">
-                          <div className="flex justify-between mb-1">
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className="font-semibold text-foreground">{count}</span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.round((count / leads.length) * 100)}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {leadsError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Query Error</AlertTitle>
-                  <AlertDescription>{leadsError}</AlertDescription>
-                </Alert>
-              )}
-
-              {loading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="flex gap-4 items-center">
-                      <Skeleton className="h-5 w-32" />
-                      <Skeleton className="h-5 w-48" />
-                      <Skeleton className="h-5 w-24 hidden md:block" />
-                      <Skeleton className="h-5 w-20" />
-                    </div>
-                  ))}
-                </div>
-              ) : filtered.length === 0 && !leadsError ? (
-                <p className="text-muted-foreground text-center py-12">No leads found.</p>
-              ) : !leadsError ? (
-                <div className="border rounded-xl max-h-[600px] overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
-                        <TableHead
-                          className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary"
-                          onClick={() => setLeadsSort(s => ({ col: "name", dir: s.col === "name" && s.dir === "asc" ? "desc" : "asc" }))}
-                        >Name {leadsSort.col === "name" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
-                        <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
-                        <TableHead
-                          className="py-3 px-3 hidden md:table-cell font-semibold cursor-pointer select-none hover:text-primary"
-                          onClick={() => setLeadsSort(s => ({ col: "country", dir: s.col === "country" && s.dir === "asc" ? "desc" : "asc" }))}
-                        >Country {leadsSort.col === "country" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
-                        <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Plan</TableHead>
-                        <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Duration</TableHead>
-                        <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Schedule</TableHead>
-                        <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Goal</TableHead>
-                        <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
-                        <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Linked</TableHead>
-                        <TableHead
-                          className="py-3 px-3 hidden sm:table-cell font-semibold cursor-pointer select-none hover:text-primary"
-                          onClick={() => setLeadsSort(s => ({ col: "created_at", dir: s.col === "created_at" && s.dir === "asc" ? "desc" : "asc" }))}
-                        >Date {leadsSort.col === "created_at" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
-                        <TableHead className="py-3 px-3 w-10"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pagedLeads.map((lead) => (
-                        <TableRow key={lead.id} className="group odd:bg-muted/30 hover:bg-muted/50 transition">
-                          <TableCell className="py-3 px-3 font-medium">
-                            {editingLeadId === lead.id ? (
-                              <Input value={editForm.name || ""} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-sm" />
-                            ) : lead.name}
-                          </TableCell>
-                          <TableCell className="py-3 px-3">
-                            {editingLeadId === lead.id ? (
-                              <Input value={editForm.email || ""} onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} className="h-8 text-sm" />
-                            ) : (
-                              <div className="flex items-center gap-1 max-w-[220px]">
-                                <span className="truncate flex-1 text-sm">{lead.email}</span>
-                                <button
-                                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
-                                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
-                                  aria-label="Copy email address"
-                                >
-                                  {copiedLeadId === lead.id + "_email" ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                                </button>
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
-                            {editingLeadId === lead.id ? (
-                              <Input value={editForm.country || ""} onChange={(e) => setEditForm(f => ({ ...f, country: e.target.value }))} className="h-8 text-sm" />
-                            ) : lead.country || "—"}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden md:table-cell">
-                            {editingLeadId === lead.id ? (
-                              <Select value={editForm.plan_type || ""} onValueChange={(v) => setEditForm(f => ({ ...f, plan_type: v }))}>
-                                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="group">group</SelectItem>
-                                  <SelectItem value="private">private</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : lead.plan_type ? <Badge variant={lead.plan_type === "private" ? "default" : "secondary"} className="text-xs capitalize">{lead.plan_type}</Badge> : "—"}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
-                            {editingLeadId === lead.id ? (
-                              <Input value={editForm.duration || ""} onChange={(e) => setEditForm(f => ({ ...f, duration: e.target.value }))} className="h-8 text-sm w-20" />
-                            ) : lead.duration || "—"}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
-                            {editingLeadId === lead.id ? (
-                              <div className="flex flex-wrap gap-1 min-w-[160px]">
-                                {scheduleWeekdays.map((day) => {
-                                  const currentDays = (editForm.schedule || "").split("/").map(s => s.trim()).filter(Boolean);
-                                  const selected = currentDays.includes(day);
-                                  return (
-                                    <button
-                                      key={day}
-                                      type="button"
-                                      onClick={() => {
-                                        const days = (editForm.schedule || "").split("/").map(s => s.trim()).filter(Boolean);
-                                        const next = selected ? days.filter(d => d !== day) : [...days, day];
-                                        setEditForm(f => ({ ...f, schedule: next.join("/") }));
-                                      }}
-                                      className={`px-2 py-0.5 rounded text-xs border transition-all ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                                    >
-                                      {day.slice(0, 3)}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            ) : lead.schedule || "—"}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
-                            {lead.goal || "—"}
-                          </TableCell>
-                          <TableCell className="py-3 px-3">
-                            {editingLeadId === lead.id ? (
-                              <Select value={editForm.status || "new"} onValueChange={(v) => setEditForm(f => ({ ...f, status: v }))}>
-                                <SelectTrigger className="h-8 text-sm w-28"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                            ) : quickStatusLeadId === lead.id ? (
-                              <Select
-                                value={lead.status}
-                                onValueChange={async (v) => {
-                                  const { error } = await supabase.from("crm_leads").update({ status: v }).eq("id", lead.id);
-                                  if (!error) {
-                                    queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
-                                    toast({ title: "Status updated" });
-                                  }
-                                  setQuickStatusLeadId(null);
-                                }}
-                                open
-                                onOpenChange={(open) => { if (!open) setQuickStatusLeadId(null); }}
-                              >
-                                <SelectTrigger className="h-8 text-sm w-32"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Badge
-                                className={`text-xs border cursor-pointer hover:opacity-80 transition-opacity ${getLeadStatusBadgeClass(lead.status)}`}
-                                onClick={() => setQuickStatusLeadId(lead.id)}
-                                title="Click to change status"
-                                aria-label={`Lead status: ${lead.status}. Click to change.`}
-                              >
-                                {lead.status === "trial_booked" ? "🎁 Trial Booked" : lead.status}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden sm:table-cell">
-                            {lead.user_id ? (
-                              <Badge variant="default" className="text-xs">Linked</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">Unlinked</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-3 hidden sm:table-cell text-muted-foreground text-xs">{new Date(lead.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="py-3 px-3">
-                            <div className="flex items-center gap-1">
-                              {editingLeadId === lead.id ? (
-                                <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditLead}>
-                                    <Check className="h-4 w-4 text-primary" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEditLead}>
-                                    <X className="h-4 w-4 text-muted-foreground" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)} aria-label="Edit lead">
-                                    <Pencil className="h-4 w-4 text-muted-foreground" />
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete lead"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete lead?</AlertDialogTitle>
-                                        <AlertDialogDescription>This will permanently delete {lead.name}'s record.</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(lead.id)}>Delete</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {leadsPageCount > 1 && (
-                    <div className="flex items-center justify-between p-3 border-t">
-                      <p className="text-xs text-muted-foreground">
-                        Page {leadsPage + 1} of {leadsPageCount} · {sortedLeads.length} leads
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={leadsPage === 0} onClick={() => setLeadsPage(p => p - 1)} aria-label="Previous page">
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8" disabled={leadsPage >= leadsPageCount - 1} onClick={() => setLeadsPage(p => p + 1)} aria-label="Next page">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-                </CardContent>
-              </Card>
+              <TabErrorBoundary name="Leads">
+                <Suspense fallback={<TabLoader />}>
+                  <LeadsPanel />
+                </Suspense>
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* MANAGE STUDENTS TAB */}
