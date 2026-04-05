@@ -473,12 +473,12 @@ export default function CreatorHub() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: pkgGroups } = await supabase.from("pkg_groups").select("id, name, capacity, package_id, is_active").eq("is_active", true);
+        const { data: pkgGroups } = await supabase.from("pkg_groups").select("id, name, capacity, package_id, is_active").eq("is_active", true).limit(500);
         if (!pkgGroups?.length) { setGroupsLoading(false); return; }
         const packageIds = [...new Set(pkgGroups.map(g => g.package_id))];
         const { data: packages } = await supabase.from("schedule_packages").select("id, level, day_of_week, start_time, duration_min, capacity, is_active").in("id", packageIds).eq("is_active", true);
         const pkgMap = new Map((packages || []).map(p => [p.id, p]));
-        const { data: members } = await supabase.from("pkg_group_members").select("group_id, user_id, member_status").eq("member_status", "active");
+        const { data: members } = await supabase.from("pkg_group_members").select("group_id, user_id, member_status").eq("member_status", "active").limit(5000);
         const memberCounts = new Map<string, number>();
         (members || []).forEach(m => { memberCounts.set(m.group_id, (memberCounts.get(m.group_id) || 0) + 1); });
         const DAY_NAMES: Record<number, string> = { 0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday" };

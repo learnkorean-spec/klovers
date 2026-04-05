@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -325,4 +325,4 @@ const PromoCodesManager = () => {
   );
 };
 
-export default PromoCodesManager;
+export default memo(PromoCodesManager);

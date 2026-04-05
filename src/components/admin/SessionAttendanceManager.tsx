@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -414,4 +414,4 @@ const SessionAttendanceManager = () => {
   );
 };
 
-export default SessionAttendanceManager;
+export default memo(SessionAttendanceManager);

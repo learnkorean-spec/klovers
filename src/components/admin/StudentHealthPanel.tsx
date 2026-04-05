@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, DollarSign, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
@@ -147,4 +147,4 @@ const StudentHealthPanel = ({ overviewRows }: Props) => {
   );
 };
 
-export default StudentHealthPanel;
+export default memo(StudentHealthPanel);

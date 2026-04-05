@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -687,4 +687,4 @@ const AdminAttendancePanel = ({
   );
 };
 
-export default AdminAttendancePanel;
+export default memo(AdminAttendancePanel);

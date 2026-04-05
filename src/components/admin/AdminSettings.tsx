@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,4 +199,4 @@ const AdminSettings = () => {
   );
 };
 
-export default AdminSettings;
+export default memo(AdminSettings);
