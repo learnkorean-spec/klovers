@@ -125,7 +125,7 @@ const PlacementTestsManager = () => {
                     <TableRow key={t.id}>
                       <TableCell className="font-medium">{t.profile_name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{t.profile_email || "—"}</TableCell>
-                      <TableCell className="text-center font-semibold">{t.score}/40</TableCell>
+                      <TableCell className="text-center font-semibold">{t.score}/30</TableCell>
                       <TableCell>
                         <Badge variant="outline">{levelObj?.shortLabel || t.level}</Badge>
                       </TableCell>

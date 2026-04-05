@@ -390,7 +390,7 @@ export function computePlacementResult(answers: Record<number, number>): Placeme
   // Within 1 of the upper boundary → close to the next level
   // Within 1 of the lower boundary → on the edge of the previous level
   const confidence: PlacementResult["confidence"] =
-    score >= bandMax - 1 && bandMax < 20 ? "borderline-up"
+    score >= bandMax - 1 && bandMax < 30 ? "borderline-up"
     : score <= bandMin + 1 && bandMin > 0  ? "borderline-down"
     : "solid";
 
