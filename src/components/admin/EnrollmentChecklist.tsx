@@ -92,7 +92,7 @@ function PreferredDaysEditor({ enrollmentId, currentDays, currentTimezone, stude
     const { error } = await supabase.rpc("update_student_preferences" as any, {
       _enrollment_id: enrollmentId,
       _preferred_days: days,
-      _timezone: currentTimezone || "Africa/Cairo",
+      _timezone: currentTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     setSaving(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }

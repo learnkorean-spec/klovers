@@ -81,35 +81,42 @@ const EnrollPage = () => {
     if (!receiptFile || !userId || !planType || !duration || !paymentMethod || price === null) return;
     setLoading(true);
 
-    const filePath = `${userId}/${Date.now()}-${receiptFile.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from("receipts")
-      .upload(filePath, receiptFile);
+    try {
+      // 1. Create enrollment FIRST (so we have an ID before uploading)
+      const { data: enrollmentId, error: insertError } = await supabase.rpc("submit_manual_enrollment", {
+        _plan_type: planType,
+        _duration: Number(duration),
+        _amount: price,
+        _tx_ref: txRef,
+        _receipt_url: "",
+        _payment_method: paymentMethod,
+      } as any);
 
-    if (uploadError) {
-      toast({ title: "Upload failed", description: "Could not upload receipt.", variant: "destructive" });
+      if (insertError || !enrollmentId) {
+        throw new Error(insertError?.message || "Failed to submit enrollment.");
+      }
+
+      // 2. Upload receipt using enrollment ID in path
+      const ext = receiptFile.name.split(".").pop();
+      const filePath = `${userId}/${enrollmentId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("receipts")
+        .upload(filePath, receiptFile);
+
+      if (uploadError) {
+        throw new Error("Could not upload receipt. Your enrollment was created — please contact support.");
+      }
+
+      // 3. Update enrollment with receipt path
+      await supabase.from("enrollments").update({ receipt_url: filePath } as any).eq("id", enrollmentId);
+
+      toast({ title: "Enrollment submitted!", description: "We'll review your payment shortly." });
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data: enrollmentId, error: insertError } = await supabase.rpc("submit_manual_enrollment", {
-      _plan_type: planType,
-      _duration: Number(duration),
-      _amount: price,
-      _tx_ref: txRef,
-      _receipt_url: filePath,
-      _payment_method: paymentMethod,
-    } as any);
-
-    if (insertError || !enrollmentId) {
-      toast({ title: "Error", description: "Failed to submit enrollment.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    toast({ title: "Enrollment submitted!", description: "We'll review your payment shortly." });
-    setLoading(false);
-    navigate("/dashboard");
   };
 
   return (
@@ -197,6 +204,7 @@ const EnrollPage = () => {
                   <SelectContent>
                     <SelectItem value="vodafone_cash">📱 Vodafone Cash</SelectItem>
                     <SelectItem value="instapay">💳 InstaPay</SelectItem>
+                    <SelectItem value="bank_transfer">🏦 Bank Transfer</SelectItem>
                   </SelectContent>
                 </Select>
 

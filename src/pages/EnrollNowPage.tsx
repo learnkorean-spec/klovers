@@ -600,6 +600,7 @@ const EnrollNowPage = () => {
       return;
     }
 
+    if (loading) return; // Prevent double-click race condition
     setLoading(true);
     try {
       // Submit lead async (don't block checkout)
@@ -682,9 +683,9 @@ const EnrollNowPage = () => {
           await supabase.from("enrollments").update(schedFields as any).eq("id", postRows[0].id);
         }
 
-        // Clear draft now that payment is initiated
+        // Clear draft BEFORE opening Stripe (so user can't lose state on back-nav)
         localStorage.removeItem("enroll_draft");
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       }
     } catch (err: any) {
       toast({ title: "Checkout error", description: err.message, variant: "destructive" });

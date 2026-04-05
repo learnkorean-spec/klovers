@@ -17,7 +17,7 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setStatus("unauthenticated"); return; }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("enrollments")
         .select("id")
         .eq("user_id", session.user.id)
@@ -26,6 +26,11 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
         .limit(1)
         .maybeSingle();
 
+      if (error) {
+        console.error("Enrollment check failed:", error.message);
+        setStatus("not_enrolled");
+        return;
+      }
       setStatus(data ? "enrolled" : "not_enrolled");
     };
     check();
