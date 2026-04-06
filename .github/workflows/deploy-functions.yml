@@ -48,12 +48,11 @@ jobs:
             supabase/migrations/20260404000002_seed_all_textbook_lessons.sql \
             supabase/migrations/20260319000001_kdrama_lesson_1_content.sql \
             supabase/migrations/20260319000002_kdrama_lessons_2_to_5_content.sql \
-            supabase/migrations/20260405000001_korean1_lessons_1_50.sql \
             supabase/migrations/20260405000004_grammar_mastery_1_57.sql \
             supabase/migrations/20260405000005_daily_routine_lessons_21_32.sql \
             supabase/migrations/20260405000006_kdrama_lessons_6_30.sql \
             supabase/migrations/20260406000002_daily_routine_lessons_1_20.sql \
-            supabase/migrations/20260407000002_trim_korean1_to_10.sql; do
+            supabase/migrations/20260407000003_erase_korean1.sql; do
             if [ -f "$f" ]; then
               echo "Applying $f..."
               psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f had errors"
@@ -61,12 +60,17 @@ jobs:
           done
           echo "=== VERIFICATION ==="
           psql "$DB_URL" -c "
-            SELECT 'korean-1 lessons' as check, count(*) FROM textbook_lessons WHERE book='korean-1'
-            UNION ALL SELECT 'vocab rows', count(*) FROM lesson_vocabulary
-            UNION ALL SELECT 'grammar rows', count(*) FROM lesson_grammar
-            UNION ALL SELECT 'dialogue rows', count(*) FROM lesson_dialogues
-            UNION ALL SELECT 'exercise rows', count(*) FROM lesson_exercises
-            UNION ALL SELECT 'reading rows', count(*) FROM lesson_reading;
+            SELECT book, count(*) as lessons
+            FROM textbook_lessons
+            GROUP BY book
+            ORDER BY book;
+          "
+          psql "$DB_URL" -c "
+            SELECT 'vocab' as tbl, count(*) FROM lesson_vocabulary
+            UNION ALL SELECT 'grammar', count(*) FROM lesson_grammar
+            UNION ALL SELECT 'dialogues', count(*) FROM lesson_dialogues
+            UNION ALL SELECT 'exercises', count(*) FROM lesson_exercises
+            UNION ALL SELECT 'reading', count(*) FROM lesson_reading;
           "
 
   deploy-functions:
