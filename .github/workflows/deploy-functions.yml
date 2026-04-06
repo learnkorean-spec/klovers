@@ -27,7 +27,7 @@ jobs:
           echo "=== Applying schema migrations ==="
           for f in \
             supabase/migrations/20260405000007_fix_manual_enrollment_validation.sql \
-            supabase/migrations/20260405100000_enrollment_integrity.sql \
+            supabase/migrations/20260407000001_enrollment_integrity_v2.sql \
             supabase/migrations/20260405100001_fix_slot_matching_lock.sql \
             supabase/migrations/20260405100002_cancel_enrollment_and_admin_notes.sql \
             supabase/migrations/20260406000001_add_lesson_fk_indexes.sql; do
