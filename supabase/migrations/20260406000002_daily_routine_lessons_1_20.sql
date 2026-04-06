@@ -756,3 +756,87 @@ DO $$ DECLARE l_id integer; BEGIN
   INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
   (l_id, '한국 사람들은 드라마 보는 것을 매우 좋아한다. 저녁 식사 후에 리모컨으로 텔레비전을 켜고 좋아하는 채널을 찾는다. 드라마, 예능, 뉴스 등 다양한 프로그램이 있다. 외국 드라마를 볼 때는 자막이 도움이 된다. 볼륨을 적당히 조절하는 것도 중요하다. 너무 늦게까지 텔레비전을 보면 잠을 못 자서 피곤하다. 적당히 보는 것이 좋다.', 'Korean people love watching dramas. After dinner they turn on the TV with the remote and find their favourite channel. There are various programmes such as dramas, variety shows, and the news. When watching foreign dramas subtitles are helpful. Adjusting the volume appropriately is also important. Watching TV until too late at night makes you unable to sleep and tired. It is best to watch in moderation.', 1);
 END $$;
+
+DO $$ DECLARE l_id integer; BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 19;
+  IF l_id IS NULL THEN RAISE NOTICE 'not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading WHERE lesson_id = l_id;
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '소셜 미디어', 'sosyeol midieo', 'social media', 1),
+  (l_id, '게시물', 'gesimul', 'post / publication', 2),
+  (l_id, '댓글', 'daetgeul', 'comment', 3),
+  (l_id, '좋아요', 'joayo', 'like (social media)', 4),
+  (l_id, '팔로우', 'pallou', 'follow (social media)', 5),
+  (l_id, '공유하다', 'gongyuhada', 'to share', 6),
+  (l_id, '업로드하다', 'eomlloduhada', 'to upload', 7),
+  (l_id, '해시태그', 'haesitaegeu', 'hashtag', 8),
+  (l_id, '인플루언서', 'inpeulluenseo', 'influencer', 9),
+  (l_id, '라이브', 'raibu', 'live (streaming)', 10);
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id, '~에 올리다 — to upload/post to', '[플랫폼] + 에 + 올리다/업로드하다', '에 marks the platform or place where content is posted. 올리다 means to post or upload.', '[{"korean": "사진을 인스타그램에 올려요.", "english": "I post a photo on Instagram."}, {"korean": "영상을 유튜브에 업로드해요.", "english": "I upload a video to YouTube."}, {"korean": "게시물을 SNS에 올렸어요.", "english": "I posted on SNS."}]', 1),
+  (l_id, '~을/를 팔로우하다 — to follow someone', '[사람/계정] + 을/를 + 팔로우하다', '팔로우하다 is a loanword verb meaning to follow an account on social media.', '[{"korean": "그 가수를 팔로우해요.", "english": "I follow that singer."}, {"korean": "인플루언서를 팔로우했어요.", "english": "I followed the influencer."}, {"korean": "새 계정을 팔로우할 거예요.", "english": "I am going to follow the new account."}]', 2),
+  (l_id, '~에 댓글을 달다 — to leave a comment on', '[게시물/영상] + 에 + 댓글을 달다', '에 marks where the comment is left. 달다 in this context means to attach/leave.', '[{"korean": "사진에 댓글을 달았어요.", "english": "I left a comment on the photo."}, {"korean": "영상에 댓글을 달아요.", "english": "I leave a comment on the video."}, {"korean": "친구 게시물에 댓글을 달았어요.", "english": "I commented on my friend''s post."}]', 3);
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '소셜 미디어 자주 써요?', 'Sosyeol midieo jaju sseoyo?', 'Do you use social media often?', 1),
+  (l_id, '민호', '네, 인스타그램이랑 유튜브를 매일 봐요.', 'Ne, inseutagramilang yuchyubeureul maeil bwayo.', 'Yes, I check Instagram and YouTube every day.', 2),
+  (l_id, '수진', '직접 게시물을 올려요?', 'Jikjeop gesimureul ollyeoyo?', 'Do you upload posts yourself?', 3),
+  (l_id, '민호', '가끔 음식 사진을 올려요. 해시태그도 달아요.', 'Gakkeum eumsik sajineul ollyeoyo. Haesitaegeuedo darayo.', 'Sometimes I upload food photos. I also add hashtags.', 4),
+  (l_id, '수진', '팔로워가 많아요?', 'Pallowoga manayo?', 'Do you have many followers?', 5),
+  (l_id, '민호', '아직 많지 않아요. 저는 그냥 취미로 해요.', 'Ajik manchi anayo. Jeoneun geunyang chwimiro haeyo.', 'Not yet many. I just do it as a hobby.', 6),
+  (l_id, '수진', '인플루언서 팔로우해요?', 'Inpeulluenseol pallou-haeyo?', 'Do you follow any influencers?', 7),
+  (l_id, '민호', '네, 요리 인플루언서를 몇 명 팔로우해요. 레시피를 많이 배워요.', 'Ne, yori inpeulluenseoreul myeot myeong pallou-haeyo. Resipireul mani baeweoyo.', 'Yes, I follow a few cooking influencers. I learn a lot of recipes.', 8);
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, '''댓글'' means:', '["like", "post", "comment", "hashtag"]', 2, '댓글 means comment on social media.', 1),
+  (l_id, 'How do you say ''I post a photo on Instagram''?', '["사진을 인스타그램으로 올려요", "사진을 인스타그램에 올려요", "사진이 인스타그램에 올려요", "사진을 인스타그램가 올려요"]', 1, '에 marks the platform: 사진을 인스타그램에 올려요.', 2),
+  (l_id, 'Which word means ''to share''?', '["업로드하다", "팔로우하다", "공유하다", "댓글 달다"]', 2, '공유하다 means to share.', 3),
+  (l_id, 'How do you say ''I followed the influencer''?', '["인플루언서를 팔로우해요", "인플루언서가 팔로우했어요", "인플루언서를 팔로우했어요", "인플루언서에 팔로우했어요"]', 2, 'Object particle 를 is used: 인플루언서를 팔로우했어요.', 4),
+  (l_id, '''해시태그'' means:', '["live stream", "hashtag", "follower", "like"]', 1, '해시태그 means hashtag.', 5);
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id, '요즘 많은 사람들이 소셜 미디어를 이용한다. 인스타그램, 유튜브, 틱톡 등 다양한 플랫폼이 있다. 사람들은 사진과 영상을 찍어서 소셜 미디어에 업로드한다. 해시태그를 달면 더 많은 사람들이 게시물을 볼 수 있다. 좋아요를 누르고 댓글을 달면서 소통한다. 인플루언서들은 수백만 명의 팔로워를 가지고 있다. 소셜 미디어를 잘 활용하면 새로운 사람들을 만나고 정보를 나눌 수 있다.', 'These days many people use social media. There are various platforms such as Instagram, YouTube, and TikTok. People take photos and videos and upload them to social media. Adding hashtags lets more people see a post. People interact by pressing like and leaving comments. Influencers have millions of followers. Using social media well lets you meet new people and share information.', 1);
+END $$;
+
+DO $$ DECLARE l_id integer; BEGIN
+  SELECT id INTO l_id FROM public.textbook_lessons WHERE book = 'daily-routine' AND sort_order = 20;
+  IF l_id IS NULL THEN RAISE NOTICE 'not found'; RETURN; END IF;
+  DELETE FROM public.lesson_vocabulary WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_grammar WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_dialogues WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_exercises WHERE lesson_id = l_id;
+  DELETE FROM public.lesson_reading WHERE lesson_id = l_id;
+  INSERT INTO public.lesson_vocabulary (lesson_id, korean, romanization, meaning, sort_order) VALUES
+  (l_id, '공부하다', 'gongbuhada', 'to study', 1),
+  (l_id, '책', 'chaek', 'book', 2),
+  (l_id, '노트', 'noteu', 'notebook', 3),
+  (l_id, '필기하다', 'pilgihada', 'to take notes', 4),
+  (l_id, '집중하다', 'jipjunghada', 'to concentrate / to focus', 5),
+  (l_id, '복습하다', 'bokseupada', 'to review', 6),
+  (l_id, '문제', 'munje', 'problem / question', 7),
+  (l_id, '답', 'dap', 'answer', 8),
+  (l_id, '이해하다', 'ihaehada', 'to understand', 9),
+  (l_id, '시험', 'siheom', 'exam / test', 10);
+  INSERT INTO public.lesson_grammar (lesson_id, title, structure, explanation, examples, sort_order) VALUES
+  (l_id, '~을/를 공부하다 — to study something', '[과목/내용] + 을/를 + 공부하다', '공부하다 means to study. The subject being studied takes the object particle 을/를.', '[{"korean": "한국어를 공부해요.", "english": "I study Korean."}, {"korean": "수학을 공부했어요.", "english": "I studied maths."}, {"korean": "시험을 위해 열심히 공부할 거예요.", "english": "I am going to study hard for the exam."}]', 1),
+  (l_id, '~기가 어렵다/쉽다 — it is difficult/easy to', '[동사 어간] + 기가 + 어렵다/쉽다', '기 nominalises a verb. Combined with 어렵다 or 쉽다 it expresses how easy or hard something is to do.', '[{"korean": "이 문제는 이해하기가 어려워요.", "english": "This problem is hard to understand."}, {"korean": "노트 필기하기가 쉬워요.", "english": "Taking notes is easy."}, {"korean": "혼자 공부하기가 힘들어요.", "english": "Studying alone is hard."}]', 2),
+  (l_id, '~(으)면 좋겠다 — I wish / it would be good if', '[동사 어간] + (으)면 좋겠다', '(으)면 좋겠다 expresses a wish or hope about a situation.', '[{"korean": "시험에서 좋은 점수를 받으면 좋겠어요.", "english": "I hope to get a good score on the exam."}, {"korean": "오늘 공부를 다 끝내면 좋겠어요.", "english": "I wish I could finish studying today."}, {"korean": "이 내용을 이해하면 좋겠어요.", "english": "I hope to understand this content."}]', 3);
+  INSERT INTO public.lesson_dialogues (lesson_id, speaker, korean, romanization, english, sort_order) VALUES
+  (l_id, '수진', '요즘 뭘 공부해요?', 'Yojeum mwol gongbuhaeyo?', 'What are you studying these days?', 1),
+  (l_id, '민호', '한국어를 공부해요. 매일 단어를 외우고 있어요.', 'Hangugeo-reul gongbuhaeyo. Maeil daneoreul oeugeo isseoyo.', 'I am studying Korean. I am memorising vocabulary every day.', 2),
+  (l_id, '수진', '한국어 공부하기 어때요?', 'Hangugeo gongbuhagi eottaeyo?', 'How is studying Korean?', 3),
+  (l_id, '민호', '문법은 이해하기가 조금 어려워요. 하지만 재미있어요.', 'Munbeobeun ihaehagi ga jogeum eoryeowoyo. Hajiman jaemiisseoyo.', 'Grammar is a bit hard to understand. But it is interesting.', 4),
+  (l_id, '수진', '노트에 필기해요?', 'Noteue pilgihaeyo?', 'Do you take notes in a notebook?', 5),
+  (l_id, '민호', '네, 수업 때 중요한 내용을 다 적어요. 그리고 나중에 복습해요.', 'Ne, sueop ttae jungyohan naeyongeul da jeogeyo. Geurigo najunge bokseupahaeyo.', 'Yes, I write down all the important content during class. And I review it later.', 6),
+  (l_id, '수진', '시험이 있어요?', 'Siheomi isseoyo?', 'Do you have an exam?', 7),
+  (l_id, '민호', '다음 주에 시험이 있어요. 열심히 공부해서 좋은 점수를 받으면 좋겠어요.', 'Daeum jue siheomi isseoyo. Yeolsimhi gongbuhae-seo joeun jeomsureul badeumyeon jokgeseoyo.', 'I have an exam next week. I hope to study hard and get a good score.', 8);
+  INSERT INTO public.lesson_exercises (lesson_id, question, options, correct_index, explanation, sort_order) VALUES
+  (l_id, '''복습하다'' means:', '["to preview", "to study", "to review", "to memorise"]', 2, '복습하다 means to review previously studied material.', 1),
+  (l_id, 'How do you say ''I study Korean''?', '["한국어가 공부해요", "한국어에 공부해요", "한국어를 공부해요", "한국어로 공부해요"]', 2, 'Object particle 를 is used: 한국어를 공부해요.', 2),
+  (l_id, 'Which word means ''exam''?', '["문제", "답", "노트", "시험"]', 3, '시험 means exam or test.', 3),
+  (l_id, 'What does ~기가 어렵다 mean?', '["it is good to do", "it is important to do", "it is difficult to do", "it is easy to do"]', 2, '~기가 어렵다 means it is difficult to do something.', 4),
+  (l_id, 'How do you express ''I hope to get a good score''?', '["좋은 점수를 받았어요", "좋은 점수를 받을 거예요", "좋은 점수를 받으면 좋겠어요", "좋은 점수를 받고 싶지 않아요"]', 2, '(으)면 좋겠다 expresses a hope or wish.', 5);
+  INSERT INTO public.lesson_reading (lesson_id, korean_text, english_text, sort_order) VALUES
+  (l_id, '나는 매일 한 시간씩 공부한다. 책을 읽고 중요한 내용은 노트에 필기한다. 처음에 이해하기 어려운 내용은 여러 번 읽으면 이해가 된다. 문제를 풀고 나서 답을 확인하면 실력이 는다. 공부한 내용은 그날 복습해야 오래 기억에 남는다. 시험이 가까워지면 더 열심히 집중해서 공부한다. 꾸준히 공부하면 반드시 좋은 결과가 온다.', 'Every day I study for one hour. I read books and take notes on important content. Content that is hard to understand at first becomes clear when you read it multiple times. Solving problems and then checking the answers improves your ability. You remember what you studied for longer if you review it the same day. As an exam approaches I concentrate and study harder. If you study consistently good results will surely come.', 1);
+END $$;
