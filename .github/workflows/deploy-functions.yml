@@ -13,31 +13,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Link Supabase project
-        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
-      - name: Push schema migrations
-        run: supabase db push
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
       - name: Install postgresql-client
         run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
 
-      - name: Re-seed lesson content via psql
+      - name: Apply pending schema migrations
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -e
           DB_URL="postgresql://postgres@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres?sslmode=require"
-          psql "$DB_URL" -c "SELECT 1" && echo "Connected OK"
+          echo "Testing connection..."
+          psql "$DB_URL" -c "SELECT current_database();" || { echo "ERROR: Cannot connect"; exit 1; }
+          echo "=== Applying schema migrations ==="
+          for f in \
+            supabase/migrations/20260405000007_fix_manual_enrollment_validation.sql \
+            supabase/migrations/20260405100000_enrollment_integrity.sql \
+            supabase/migrations/20260405100001_fix_slot_matching_lock.sql \
+            supabase/migrations/20260405100002_cancel_enrollment_and_admin_notes.sql \
+            supabase/migrations/20260406000001_add_lesson_fk_indexes.sql; do
+            if [ -f "$f" ]; then
+              echo "Applying $f..."
+              psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f (may already exist)"
+            fi
+          done
+
+      - name: Seed lesson content
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -e
+          DB_URL="postgresql://postgres@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres?sslmode=require"
+          echo "=== Seeding lesson content ==="
           for f in \
             supabase/migrations/20260404000002_seed_all_textbook_lessons.sql \
             supabase/migrations/20260319000001_kdrama_lesson_1_content.sql \
@@ -50,11 +56,8 @@ jobs:
             supabase/migrations/20260405000006_kdrama_lessons_6_30.sql \
             supabase/migrations/20260406000002_daily_routine_lessons_1_20.sql; do
             if [ -f "$f" ]; then
-              echo "Applying $f..."
-              psql "$DB_URL" -f "$f" || echo "WARN: $f had errors"
-              echo "OK: $f"
-            else
-              echo "SKIP: $f not found"
+              echo "Seeding $f..."
+              psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f had errors"
             fi
           done
           echo "=== VERIFICATION ==="
