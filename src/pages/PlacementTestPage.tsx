@@ -377,21 +377,6 @@ const PlacementTestPage = () => {
     localStorage.setItem("klovers_autoadvance", String(val));
   };
 
-  const handleRetake = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setAnswers({}); setSkipped(new Set()); setPage(0);
-    setFocusedQId(null); setResult(null); setShowExplanations(false);
-    setElapsedSeconds(0); startTimeRef.current = null; finalTimeRef.current = 0;
-    setPhase("test");
-  };
-
-  const handleShare = (res: PlacementResult) => {
-    const text = `I scored ${res.score}/20 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → kloversegy.com/placement-test`;
-    navigator.clipboard.writeText(text)
-      .then(() => toast({ title: "Copied to clipboard!", description: "Share your level with friends." }))
-      .catch(() => toast({ title: "kloversegy.com/placement-test", description: "Copy the link to share your result." }));
-  };
-
   // ── Review screen ──────────────────────────────────────────
   if (phase === "review") {
     const statusOf = (id: number) =>
