@@ -19,12 +19,17 @@ jobs:
         run: |
           DB_URL="postgresql://postgres@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres"
           for f in \
-            supabase/migrations/20260405000010_korean1_lessons_1_50.sql \
+            supabase/migrations/20260319000001_kdrama_lesson_1_content.sql \
+            supabase/migrations/20260319000002_kdrama_lessons_2_to_5_content.sql \
+            supabase/migrations/20260404000002_seed_all_textbook_lessons.sql \
+            supabase/migrations/20260405000001_korean1_lessons_1_50.sql \
             supabase/migrations/20260405000002_korean1_lessons_51_120.sql \
             supabase/migrations/20260405000003_korean1_lessons_121_180.sql \
             supabase/migrations/20260405000004_grammar_mastery_1_57.sql \
             supabase/migrations/20260405000005_daily_routine_lessons_21_32.sql \
-            supabase/migrations/20260405000006_kdrama_lessons_6_30.sql; do
+            supabase/migrations/20260405000006_kdrama_lessons_6_30.sql \
+            supabase/migrations/20260406000001_add_lesson_fk_indexes.sql \
+            supabase/migrations/20260406000002_daily_routine_lessons_1_20.sql; do
             if [ -f "$f" ]; then
               echo "Applying $f..."
               psql "$DB_URL" -f "$f" && echo "OK: $f" || echo "WARN: $f had errors (may be already applied)"
