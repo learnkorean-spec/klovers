@@ -11,12 +11,12 @@ const MeetTeacher = () => {
   const highlights = tArray("teacher", "highlights") as { label: string; description: string }[];
 
   return (
-    <section className="py-28 bg-background overflow-hidden">
+    <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
 
         {/* Section header */}
         <div className="text-center mb-16">
-          <span className="inline-block bg-primary text-black text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5">
+          <span className="inline-block bg-primary text-black text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5 border border-black/25 shadow-sm">
             Our Educators
           </span>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight">

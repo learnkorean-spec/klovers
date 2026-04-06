@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -330,4 +330,4 @@ const TeacherAvailabilityManager = () => {
   );
 };
 
-export default TeacherAvailabilityManager;
+export default memo(TeacherAvailabilityManager);

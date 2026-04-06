@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,27 +10,7 @@ import { Button } from "@/components/ui/button";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
-
-interface Enrollment {
-  id: string;
-  user_id: string;
-  plan_type: string;
-  duration: number;
-  classes_included: number;
-  amount: number;
-  currency: string;
-  payment_status: string;
-  approval_status: string;
-  payment_provider: string | null;
-  created_at: string;
-  level: string | null;
-  enrollment_status: string;
-  sessions_remaining: number;
-  sessions_total?: number;
-  unit_price?: number | null;
-  payment_date?: string | null;
-  profiles?: { name: string; email: string } | null;
-}
+import type { Enrollment } from "@/types/admin";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -541,4 +521,4 @@ const SalesAnalytics = () => {
   );
 };
 
-export default SalesAnalytics;
+export default memo(SalesAnalytics);

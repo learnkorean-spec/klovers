@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw, AlertTriangle } from "lucide-react";
 import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
@@ -16,10 +16,12 @@ import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { getWorldForLesson } from "@/constants/worlds";
+import { getGrammarMasteryWorldForLesson } from "@/constants/grammarMasteryWorlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MissionCompleteOverlay, XpFloatAnimation } from "@/components/XpAnimation";
+import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
 import { Progress } from "@/components/ui/progress";
+import { NextStepCard } from "@/components/NextStepCard";
 
 interface Lesson {
   id: number;
@@ -45,7 +47,7 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userId, progress, league, markSectionDone } = useGamification();
+  const { userId, progress, league, markSectionDone, awardXp, awardBadge, streakCelebration, clearStreakCelebration } = useGamification();
   const { speakKorean, isSpeaking } = useSpeech();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
@@ -59,6 +61,7 @@ const LessonDetailPage = () => {
   });
   const [totalLessons, setTotalLessons] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [vocab, setVocab] = useState<VocabItem[]>([]);
   const [grammar, setGrammar] = useState<GrammarItem[]>([]);
@@ -80,38 +83,46 @@ const LessonDetailPage = () => {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
+      setFetchError(null);
       setSelectedAnswers({});
       setShowResults({});
       setFlippedCards(new Set());
       setStudiedCards(new Set());
       setCorrectCount(0);
 
-      const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
-      const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
-      const [lessonRes, countRes] = await Promise.all([
-        (baseQuery as any).eq("book", bookSlug).maybeSingle(),
-        (countQuery as any).eq("book", bookSlug),
-      ]);
-
-      const l = lessonRes.data as unknown as Lesson | null;
-      setLesson(l);
-      setTotalLessons(countRes.count || 0);
-
-      if (l) {
-        const [vRes, gRes, dRes, eRes, rRes] = await Promise.all([
-          supabase.from("lesson_vocabulary").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_grammar").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_dialogues").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_exercises").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_reading").select("*").eq("lesson_id", l.id).order("sort_order"),
+      try {
+        const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
+        const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
+        const [lessonRes, countRes] = await Promise.all([
+          (baseQuery as any).eq("book", bookSlug).maybeSingle(),
+          (countQuery as any).eq("book", bookSlug),
         ]);
-        setVocab((vRes.data as unknown as VocabItem[]) || []);
-        setGrammar((gRes.data as unknown as GrammarItem[]) || []);
-        setDialogue((dRes.data as unknown as DialogueLine[]) || []);
-        setExercises((eRes.data as unknown as ExerciseItem[]) || []);
-        setReading((rRes.data as unknown as ReadingItem[]) || []);
+
+        if (lessonRes.error) throw lessonRes.error;
+
+        const l = lessonRes.data as unknown as Lesson | null;
+        setLesson(l);
+        setTotalLessons(countRes.count || 0);
+
+        if (l) {
+          const [vRes, gRes, dRes, eRes, rRes] = await Promise.all([
+            supabase.from("lesson_vocabulary").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_grammar").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_dialogues").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_exercises").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_reading").select("*").eq("lesson_id", l.id).order("sort_order"),
+          ]);
+          setVocab((vRes.data as unknown as VocabItem[]) || []);
+          setGrammar((gRes.data as unknown as GrammarItem[]) || []);
+          setDialogue((dRes.data as unknown as DialogueLine[]) || []);
+          setExercises((eRes.data as unknown as ExerciseItem[]) || []);
+          setReading((rRes.data as unknown as ReadingItem[]) || []);
+        }
+        setLoading(false);
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : "Failed to load lesson");
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchAll();
   }, [lessonNum, bookSlug]);
@@ -125,7 +136,7 @@ const LessonDetailPage = () => {
     }
   };
 
-  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done") => {
+  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" | "writing_done") => {
     if (!lesson || !userId) {
       toast({ title: t("textbook.signInRequired"), description: t("textbook.signInRequiredDesc"), variant: "destructive" });
       return;
@@ -148,12 +159,21 @@ const LessonDetailPage = () => {
     setXpFloat(xpMap[section]);
     setTimeout(() => setXpFloat(null), 1600);
 
+    // Award perfect_exercise badge if all exercise answers were correct
+    if (section === "exercises_done" && exercises.length > 0 && correctCount === exercises.length) {
+      await awardBadge("perfect_exercise");
+    }
+
     // Check if chapter just completed
-    const updatedLp = { ...lp, [section]: true };
     const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
       .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
 
     if (allDone) {
+      // Boss challenge: award badge + 25 XP bonus
+      if (isBossChallenge(lesson.sort_order)) {
+        await awardBadge("boss_slayer");
+        await awardXp(lesson.id, "bonus");
+      }
       setTimeout(() => setShowMissionComplete(true), 800);
     }
 
@@ -161,7 +181,7 @@ const LessonDetailPage = () => {
       title: `+${xpMap[section]} XP earned! ⚡`,
       description: getRandomMotivation(),
     });
-  }, [lesson, userId, progress, markSectionDone, toast, t]);
+  }, [lesson, userId, progress, markSectionDone, awardXp, awardBadge, exercises, correctCount, toast, t]);
 
   const toggleFlip = (id: string) => {
     setFlippedCards((prev) => {
@@ -180,6 +200,23 @@ const LessonDetailPage = () => {
     ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done, (lp as any).writing_done].filter(Boolean).length
     : 0;
   const sectionProgress = (sectionsDone / 6) * 100;
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
+          <div className="text-center space-y-4 max-w-sm">
+            <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
+            <h1 className="font-semibold text-foreground">Couldn't load this lesson</h1>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">Refresh</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -204,7 +241,7 @@ const LessonDetailPage = () => {
         <Header />
         <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-primary text-outlined underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -213,7 +250,9 @@ const LessonDetailPage = () => {
 
   const boss = isBossChallenge(lesson.sort_order);
   const checkpoint = isCheckpointLesson(lesson.sort_order);
-  const world = getWorldForLesson(lesson.sort_order);
+  const world = bookSlug === "grammar-mastery"
+    ? (() => { const gw = getGrammarMasteryWorldForLesson(lesson.sort_order); return { name: gw.name, nameAr: gw.name, emoji: gw.emoji }; })()
+    : getWorldForLesson(lesson.sort_order);
 
   const sectionLabels: Record<string, string> = {
     vocab_done: t("textbook.vocabulary"),
@@ -229,7 +268,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary text-outlined underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -259,6 +298,7 @@ const LessonDetailPage = () => {
 
       {/* XP Float Animation */}
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
 
       {/* Mission Complete Overlay */}
       {showMissionComplete && (
@@ -325,6 +365,11 @@ const LessonDetailPage = () => {
             <span className="text-2xl">⭐</span>
             <p className="font-bold text-foreground">{t("textbook.missionComplete")}</p>
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
+          </div>
+        )}
+        {lp?.chapter_completed && (
+          <div className="mb-6">
+            <NextStepCard completedType="lesson" lessonSection={activeTab} />
           </div>
         )}
 
@@ -528,7 +573,7 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold border border-black/25">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
@@ -754,7 +799,7 @@ const LessonDetailPage = () => {
               lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
               onComplete={(score, total) => {
                 if (score > 0) {
-                  handleMarkDone("writing_done" as any);
+                  handleMarkDone("writing_done");
                 }
               }}
             />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,14 +24,9 @@ import { useAuth } from "@/hooks/useAuth";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 import { LEVEL_KEYS, mapLegacyLevel } from "@/constants/levels";
+import { formatTime } from "@/lib/admin-utils";
+import type { PkgGroup } from "@/types/admin";
 const LEVELS = LEVEL_KEYS;
-
-function formatTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
-}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,15 +44,6 @@ interface Package {
   waitlist_count?: number;
   total_capacity?: number;
   seats_left?: number;
-}
-
-interface PkgGroup {
-  id: string;
-  package_id: string;
-  name: string;
-  capacity: number;
-  active_count?: number;
-  waitlist_count?: number;
 }
 
 interface GroupMember {
@@ -105,33 +91,33 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
 
   const fetchPackages = async () => {
     setLoading(true);
-    const { data: pkgs } = await (supabase as any).from("schedule_packages").select("*").order("level").order("day_of_week");
+    const { data: pkgs } = await supabase.from("schedule_packages").select("*").order("level").order("day_of_week");
     const list: Package[] = pkgs || [];
 
     // Count members per package via groups
     const pkgIds = list.map((p) => p.id);
     if (pkgIds.length > 0) {
-      const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id, capacity").in("package_id", pkgIds).eq("is_active", true);
-      const groupIds = (groups || []).map((g: any) => g.id);
+      const { data: groups } = await supabase.from("pkg_groups").select("id, package_id, capacity").in("package_id", pkgIds).eq("is_active", true);
+      const groupIds = (groups || []).map((g) => g.id);
 
       // Track which packages have active groups
       const hasGroupMap: Record<string, boolean> = {};
-      (groups || []).forEach((g: any) => { hasGroupMap[g.package_id] = true; });
+      (groups || []).forEach((g) => { hasGroupMap[g.package_id] = true; });
       setPkgHasGroup(hasGroupMap);
 
       // Calculate total capacity per package (sum of group capacities)
       const pkgTotalCapacity: Record<string, number> = {};
-      (groups || []).forEach((g: any) => {
+      (groups || []).forEach((g) => {
         pkgTotalCapacity[g.package_id] = (pkgTotalCapacity[g.package_id] || 0) + (g.capacity || 0);
       });
 
       if (groupIds.length > 0) {
-        const { data: members } = await (supabase as any).from("pkg_group_members").select("group_id, member_status").in("group_id", groupIds);
+        const { data: members } = await supabase.from("pkg_group_members").select("group_id, member_status").in("group_id", groupIds);
         const pkgCount: Record<string, number> = {};
         const pkgWaitlist: Record<string, number> = {};
         const groupPkg: Record<string, string> = {};
-        (groups || []).forEach((g: any) => { groupPkg[g.id] = g.package_id; });
-        (members || []).forEach((m: any) => {
+        (groups || []).forEach((g) => { groupPkg[g.id] = g.package_id; });
+        (members || []).forEach((m) => {
           const pid = groupPkg[m.group_id];
           if (pid) {
             if (m.member_status === "active") pkgCount[pid] = (pkgCount[pid] || 0) + 1;
@@ -177,13 +163,13 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   const handleSave = async () => {
     if (fCourseType === "private") {
       // PRIVATE: Block if the selected day has ANY active group slot
-      const { data: groupSlots } = await (supabase as any)
+      const { data: groupSlots } = await supabase
         .from("schedule_packages")
         .select("day_of_week")
         .eq("is_active", true)
         .neq("course_type", "private");
 
-      const courseDayIndices = new Set((groupSlots || []).map((s: any) => s.day_of_week));
+      const courseDayIndices = new Set((groupSlots || []).map((s) => s.day_of_week));
 
       if (courseDayIndices.has(fDay)) {
         const availableDays = DAY_NAMES
@@ -204,7 +190,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
       }
 
       // Also check exact time conflict with other private slots at the SAME level
-      const { data: existingPrivate } = await (supabase as any)
+      const { data: existingPrivate } = await supabase
         .from("schedule_packages")
         .select("id")
         .eq("level", fLevel)
@@ -214,7 +200,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
         .eq("is_active", true);
 
       const isDupe = (existingPrivate || []).some(
-        (s: any) => !editing || s.id !== editing.id
+        (s) => !editing || s.id !== editing.id
       );
 
       if (isDupe) {
@@ -227,7 +213,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
       }
     } else {
       // GROUP: Check for duplicate level + day + time (skip if editing the same slot)
-      const { data: existing } = await (supabase as any)
+      const { data: existing } = await supabase
         .from("schedule_packages")
         .select("id, day_of_week, course_type")
         .eq("level", fLevel)
@@ -236,18 +222,18 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
         .neq("course_type", "private");
 
       const isDuplicate = (existing || []).some(
-        (s: any) => !editing || s.id !== editing.id
+        (s) => !editing || s.id !== editing.id
       );
 
       if (isDuplicate) {
         // Find which days already have this level+time (excluding private)
-        const { data: allSlots } = await (supabase as any)
+        const { data: allSlots } = await supabase
           .from("schedule_packages")
           .select("day_of_week")
           .eq("level", fLevel)
           .eq("start_time", fTime)
           .neq("course_type", "private");
-        const takenDays = new Set((allSlots || []).map((s: any) => s.day_of_week));
+        const takenDays = new Set((allSlots || []).map((s) => s.day_of_week));
         const availableDays = DAY_NAMES
           .map((name, i) => ({ name, i }))
           .filter(({ i }) => !takenDays.has(i))
@@ -266,17 +252,17 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
       }
     }
 
-    const payload: any = {
+    const payload = {
       level: fLevel, day_of_week: fDay, start_time: fTime, duration_min: fDuration,
       timezone: fTimezone, capacity: fCapacity, is_active: fActive, course_type: fCourseType,
     };
     const { error } = editing
-      ? await (supabase as any).from("schedule_packages").update(payload).eq("id", editing.id)
-      : await (supabase as any).from("schedule_packages").insert(payload);
+      ? await supabase.from("schedule_packages").update(payload).eq("id", editing.id)
+      : await supabase.from("schedule_packages").insert(payload);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     // Sync capacity to linked groups
     if (editing) {
-      await (supabase as any).from("pkg_groups").update({ capacity: fCapacity }).eq("package_id", editing.id).eq("is_active", true);
+      await supabase.from("pkg_groups").update({ capacity: fCapacity }).eq("package_id", editing.id).eq("is_active", true);
     }
     toast({ title: editing ? "Package updated" : "Package created" });
     setShowForm(false);
@@ -284,19 +270,19 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   };
 
   const handleToggleActive = async (p: Package) => {
-    await (supabase as any).from("schedule_packages").update({ is_active: !p.is_active }).eq("id", p.id);
+    await supabase.from("schedule_packages").update({ is_active: !p.is_active }).eq("id", p.id);
     fetchPackages();
   };
 
   const handleAddGroup = async (p: Package) => {
     // Check if an active group already exists for this package
-    const { data: existing } = await (supabase as any).from("pkg_groups").select("id").eq("package_id", p.id).eq("is_active", true).limit(1);
+    const { data: existing } = await supabase.from("pkg_groups").select("id").eq("package_id", p.id).eq("is_active", true).limit(1);
     if (existing && existing.length > 0) {
       toast({ title: "Group already exists", description: "This package already has an active group.", variant: "destructive" });
       return;
     }
     const defaultName = `${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)}`;
-    const { error } = await (supabase as any).from("pkg_groups").insert({
+    const { error } = await supabase.from("pkg_groups").insert({
       package_id: p.id,
       name: defaultName,
       capacity: p.capacity,
@@ -312,8 +298,8 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   const handleDeletePackage = async (p: Package) => {
     if (!confirm(`Delete this slot? (${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)})\n\nThis will also deactivate any groups linked to it.`)) return;
     // Deactivate linked groups first
-    await (supabase as any).from("pkg_groups").update({ is_active: false }).eq("package_id", p.id);
-    const { error } = await (supabase as any).from("schedule_packages").delete().eq("id", p.id);
+    await supabase.from("pkg_groups").update({ is_active: false }).eq("package_id", p.id);
+    const { error } = await supabase.from("schedule_packages").delete().eq("id", p.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
@@ -349,7 +335,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   const handleQuickAddPackage = async (suggestion: SuggestedPackage) => {
     const dayName = DAY_NAMES[suggestion.day_of_week];
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("schedule_packages")
         .insert({
           level: suggestion.level,
@@ -709,11 +695,11 @@ const GroupsManager = () => {
 
     // 1. Fetch all active groups with package info
     const [grpRes, pkgRes] = await Promise.all([
-      (supabase as any).from("pkg_groups").select("*").eq("is_active", true),
-      (supabase as any).from("schedule_packages").select("*").order("level").order("day_of_week"),
+      supabase.from("pkg_groups").select("*").eq("is_active", true),
+      supabase.from("schedule_packages").select("*").order("level").order("day_of_week"),
     ]);
 
-    const rawGroups: any[] = grpRes.data || [];
+    const rawGroups = grpRes.data || [];
     const pkgs: Package[] = pkgRes.data || [];
     setPackages(pkgs);
     const pkgMap: Record<string, Package> = {};
@@ -727,25 +713,25 @@ const GroupsManager = () => {
 
     // 2. Fetch all members for those groups
     const groupIds = rawGroups.map((g) => g.id);
-    const { data: allMembers } = await (supabase as any)
+    const { data: allMembers } = await supabase
       .from("pkg_group_members")
       .select("group_id, user_id, member_status")
       .in("group_id", groupIds);
 
     // 3. Fetch profiles for all member user_ids
-    const userIds = [...new Set((allMembers || []).map((m: any) => m.user_id))];
+    const userIds = [...new Set((allMembers || []).map((m) => m.user_id))];
     const profMap: Record<string, { name: string; email: string }> = {};
     if (userIds.length > 0) {
-      const { data: profiles } = await (supabase as any)
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, name, email")
         .in("user_id", userIds);
-      (profiles || []).forEach((p: any) => { profMap[p.user_id] = p; });
+      (profiles || []).forEach((p) => { profMap[p.user_id] = { name: p.name, email: p.email }; });
     }
 
     // 4. Combine into enriched groups
     const membersByGroup: Record<string, GroupMember[]> = {};
-    (allMembers || []).forEach((m: any) => {
+    (allMembers || []).forEach((m) => {
       if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
       membersByGroup[m.group_id].push({
         ...m,
@@ -786,9 +772,9 @@ const GroupsManager = () => {
   const handleSyncAndClean = async () => {
     setSyncing(true);
     try {
-      const { data: cleanResult, error: cleanErr } = await (supabase as any).rpc("cleanup_pkg_groups");
+      const { data: cleanResult, error: cleanErr } = await supabase.rpc("cleanup_pkg_groups");
       if (cleanErr) throw cleanErr;
-      const { data: created, error: syncErr } = await (supabase as any).rpc("ensure_pkg_groups_for_packages");
+      const { data: created, error: syncErr } = await supabase.rpc("ensure_pkg_groups_for_packages");
       if (syncErr) throw syncErr;
       const result = cleanResult as { disabled: number; deleted: number; merged: number } | null;
       toast({
@@ -811,7 +797,7 @@ const GroupsManager = () => {
 
   const saveEditName = async (groupId: string) => {
     if (!editNameValue.trim()) return;
-    const { error } = await (supabase as any).from("pkg_groups").update({ name: editNameValue.trim() }).eq("id", groupId);
+    const { error } = await supabase.from("pkg_groups").update({ name: editNameValue.trim() }).eq("id", groupId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -834,7 +820,7 @@ const GroupsManager = () => {
 
   // Remove member
   const handleRemoveMember = async (groupId: string, userId: string) => {
-    await (supabase as any).from("pkg_group_members").delete().eq("group_id", groupId).eq("user_id", userId);
+    await supabase.from("pkg_group_members").delete().eq("group_id", groupId).eq("user_id", userId);
     toast({ title: "Member removed" });
     fetchAll();
   };
@@ -843,9 +829,9 @@ const GroupsManager = () => {
   const handleDeleteGroup = async (g: EnrichedGroup) => {
     if (!confirm(`Delete group "${g.name}"?\n\nThis will remove all ${g.members.length} member(s) from this group.`)) return;
     // Delete members first
-    await (supabase as any).from("pkg_group_members").delete().eq("group_id", g.id);
+    await supabase.from("pkg_group_members").delete().eq("group_id", g.id);
     // Deactivate (soft-delete) the group
-    const { error } = await (supabase as any).from("pkg_groups").update({ is_active: false }).eq("id", g.id);
+    const { error } = await supabase.from("pkg_groups").update({ is_active: false }).eq("id", g.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -865,14 +851,14 @@ const GroupsManager = () => {
   const handleAddGroup = async () => {
     if (!addPkgId) return;
     // Check if an active group already exists for this package
-    const { data: existing } = await (supabase as any).from("pkg_groups").select("id").eq("package_id", addPkgId).eq("is_active", true).limit(1);
+    const { data: existing } = await supabase.from("pkg_groups").select("id").eq("package_id", addPkgId).eq("is_active", true).limit(1);
     if (existing && existing.length > 0) {
       toast({ title: "Group already exists", description: "This package already has an active group. Each package can only have one group.", variant: "destructive" });
       return;
     }
     const pkg = packages.find((p) => p.id === addPkgId);
     const name = addName.trim() || (pkg ? `${pkg.level.replace("_", " ")} – ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}` : "New Group");
-    const { error } = await (supabase as any).from("pkg_groups").insert({
+    const { error } = await supabase.from("pkg_groups").insert({
       package_id: addPkgId,
       name,
       capacity: addCapacity,
@@ -904,15 +890,15 @@ const GroupsManager = () => {
 
     // Search profiles and leads in parallel
     const [profRes, leadRes] = await Promise.all([
-      (supabase as any).from("profiles").select("user_id, name, email").or(`name.ilike.${term},email.ilike.${term}`).limit(20),
-      (supabase as any).from("leads").select("id, name, email").or(`name.ilike.${term},email.ilike.${term}`).limit(20),
+      supabase.from("profiles").select("user_id, name, email").or(`name.ilike.${term},email.ilike.${term}`).limit(20),
+      supabase.from("leads").select("id, name, email").or(`name.ilike.${term},email.ilike.${term}`).limit(20),
     ]);
 
     const results: SearchResult[] = [];
     const profileEmails = new Set<string>();
 
     // Registered users
-    (profRes.data || []).forEach((p: any) => {
+    (profRes.data || []).forEach((p) => {
       profileEmails.add(p.email?.toLowerCase());
       results.push({
         id: p.user_id,
@@ -931,7 +917,7 @@ const GroupsManager = () => {
       if (profileEmails.has(emailLower)) continue;
 
       // Check if this lead has a matching profile (registered but not found by name/email search above)
-      const { data: matchedProfiles } = await (supabase as any)
+      const { data: matchedProfiles } = await supabase
         .from("profiles")
         .select("user_id, name, email")
         .eq("email", l.email)
@@ -970,7 +956,7 @@ const GroupsManager = () => {
     if (!group) return;
 
     // Use unified RPC to assign student to group via package
-    const { data: assignResult, error } = await (supabase as any)
+    const { data: assignResult, error } = await supabase
       .rpc("assign_student_to_group", {
         _package_id: group.package_id,
         _user_id: result.user_id,
@@ -981,7 +967,7 @@ const GroupsManager = () => {
       return;
     }
 
-    const r = assignResult as any;
+    const r = assignResult as Record<string, unknown> | null;
     if (r?.status === "assigned" || r?.status === "already_assigned") {
       toast({ title: "Student added", description: `${result.name} assigned to "${r.group_name}".` });
     } else if (r?.status === "waitlisted") {
@@ -1242,7 +1228,7 @@ const WaitlistManager = () => {
 
   const fetchWaitlist = async () => {
     setLoading(true);
-    const { data: waitlist } = await (supabase as any)
+    const { data: waitlist } = await supabase
       .from("pkg_group_members")
       .select("group_id, user_id, member_status")
       .eq("member_status", "waitlist");
@@ -1252,30 +1238,30 @@ const WaitlistManager = () => {
 
     const userIds = wl.map((r) => r.user_id);
     const [profilesRes, prefsRes] = await Promise.all([
-      (supabase as any).from("profiles").select("user_id, name, email, level").in("user_id", userIds),
-      (supabase as any).from("student_package_preferences").select("user_id, package_id, level").in("user_id", userIds),
+      supabase.from("profiles").select("user_id, name, email, level").in("user_id", userIds),
+      supabase.from("student_package_preferences").select("user_id, package_id, level").in("user_id", userIds),
     ]);
 
-    const profMap: Record<string, any> = {};
-    (profilesRes.data || []).forEach((p: any) => { profMap[p.user_id] = p; });
-    const prefMap: Record<string, any> = {};
-    (prefsRes.data || []).forEach((p: any) => { prefMap[p.user_id] = p; });
+    const profMap: Record<string, { user_id: string; name: string; email: string; level: string }> = {};
+    (profilesRes.data || []).forEach((p) => { profMap[p.user_id] = p; });
+    const prefMap: Record<string, { user_id: string; package_id: string | null; level: string }> = {};
+    (prefsRes.data || []).forEach((p) => { prefMap[p.user_id] = p; });
 
     // Fetch all active packages for alternatives
-    const { data: allPkgs } = await (supabase as any).from("schedule_packages").select("*").eq("is_active", true);
+    const { data: allPkgs } = await supabase.from("schedule_packages").select("*").eq("is_active", true);
     const pkgs: Package[] = allPkgs || [];
 
     // Count members per package
     const pkgIds = pkgs.map((p: Package) => p.id);
     const pkgCount: Record<string, number> = {};
     if (pkgIds.length > 0) {
-      const { data: groups } = await (supabase as any).from("pkg_groups").select("id, package_id").in("package_id", pkgIds);
-      const gIds = (groups || []).map((g: any) => g.id);
+      const { data: groups } = await supabase.from("pkg_groups").select("id, package_id").in("package_id", pkgIds);
+      const gIds = (groups || []).map((g) => g.id);
       const gPkg: Record<string, string> = {};
-      (groups || []).forEach((g: any) => { gPkg[g.id] = g.package_id; });
+      (groups || []).forEach((g) => { gPkg[g.id] = g.package_id; });
       if (gIds.length > 0) {
-        const { data: mems } = await (supabase as any).from("pkg_group_members").select("group_id, member_status").in("group_id", gIds).eq("member_status", "active");
-        (mems || []).forEach((m: any) => {
+        const { data: mems } = await supabase.from("pkg_group_members").select("group_id, member_status").in("group_id", gIds).eq("member_status", "active");
+        (mems || []).forEach((m) => {
           const pid = gPkg[m.group_id];
           if (pid) pkgCount[pid] = (pkgCount[pid] || 0) + 1;
         });
@@ -1306,19 +1292,19 @@ const WaitlistManager = () => {
     // Remove from old waitlist group
     const row = rows.find((r) => r.user_id === userId);
     if (row) {
-      await (supabase as any).from("pkg_group_members").delete().eq("group_id", row.group_id).eq("user_id", userId);
+      await supabase.from("pkg_group_members").delete().eq("group_id", row.group_id).eq("user_id", userId);
     }
     // Use unified RPC
     const { data: enr } = await supabase.from("enrollments").select("id").eq("user_id", userId).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }).limit(1).maybeSingle();
-    const { data: result, error } = await (supabase as any).rpc("assign_student_to_group", {
+    const { data: result, error } = await supabase.rpc("assign_student_to_group", {
       _package_id: packageId,
       _user_id: userId,
-      _enrollment_id: enr ? (enr as any).id : null,
+      _enrollment_id: enr ? enr.id : null,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      const r = result as any;
+      const r = result as Record<string, unknown> | null;
       if (r?.status === "assigned") {
         toast({ title: "Assigned!", description: `Student moved to "${r.group_name}".` });
       } else if (r?.status === "waitlisted") {
@@ -1403,17 +1389,17 @@ const PrivateTimeConfig = () => {
   useEffect(() => {
     const load = async () => {
       const [timeRes, daysRes, pkgRes] = await Promise.all([
-        (supabase as any)
+        supabase
           .from("app_settings")
           .select("value")
           .eq("key", "private_time_options")
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("app_settings")
           .select("value")
           .eq("key", "private_class_days")
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("schedule_packages")
           .select("day_of_week")
           .eq("is_active", true)
@@ -1428,7 +1414,7 @@ const PrivateTimeConfig = () => {
       }
 
       // Group days (blocked for private)
-      const gDays = [...new Set((pkgRes.data as any[] || []).map((r: any) => r.day_of_week as number))];
+      const gDays = [...new Set((pkgRes.data || []).map((r) => r.day_of_week))];
       setGroupDays(gDays);
 
       // Private days
@@ -1445,7 +1431,7 @@ const PrivateTimeConfig = () => {
 
   const saveTimeOptions = async (updated: string[]) => {
     setSaving(true);
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("app_settings")
       .upsert({ key: "private_time_options", value: JSON.stringify(updated), updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) {
@@ -1459,7 +1445,7 @@ const PrivateTimeConfig = () => {
 
   const savePrivateDays = async (updated: string[]) => {
     setSavingDays(true);
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("app_settings")
       .upsert({ key: "private_class_days", value: JSON.stringify(updated), updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) {
@@ -1603,4 +1589,4 @@ const SchedulingManager = () => {
   );
 };
 
-export default SchedulingManager;
+export default memo(SchedulingManager);

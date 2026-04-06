@@ -47,10 +47,10 @@ const AboutPage = () => {
       <main id="main-content" className="pt-16">
         <section className="py-20 bg-background">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground text-center mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground text-center mb-4">
               {t("aboutPage", "title")}
             </h1>
-            <p className="text-center text-muted-foreground mb-10 max-w-xl mx-auto">
+            <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto text-base md:text-lg">
               Certified Korean teacher, born from a love of the language and a mission to make it accessible worldwide.
             </p>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -283,4 +283,4 @@ const StudentPreferenceDashboard = () => {
   );
 };
 
-export default StudentPreferenceDashboard;
+export default memo(StudentPreferenceDashboard);

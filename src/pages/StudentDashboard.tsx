@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useResetGate } from "@/hooks/useResetGate";
 import { useSEO } from "@/hooks/useSEO";
@@ -16,7 +16,9 @@ import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration } from "@/components/XpAnimation";
 import { useGamification } from "@/hooks/useGamification";
+import { BADGES } from "@/constants/gamification";
 // Below-fold components — lazy loaded to keep initial paint fast
 const AnalyticsSection = lazy(() =>
   import("@/components/AnalyticsSection").then(m => ({ default: m.AnalyticsSection }))
@@ -38,10 +40,11 @@ const DailyBonusCard = lazy(() =>
 );
 import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelByKey } from "@/constants/levels";
 import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface EnrollmentRecord {
   id: string;
@@ -187,13 +190,14 @@ const ProfileCard = ({
 const StudentDashboard = () => {
   useSEO({ title: "My Dashboard", description: "Track your Korean learning progress, schedule, and achievements on Klovers.", canonical: "https://kloversegy.com/dashboard" });
   const { loading: gateLoading, resetBlocked } = useResetGate();
-  const { progress: gamification, league, loading: gamLoading, awardGameXp } = useGamification();
+  const { progress: gamification, league, loading: gamLoading, awardGameXp, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("");
+  const [referralCount, setReferralCount] = useState(0);
   const [profileLevel, setProfileLevel] = useState("");
   const [placementTest, setPlacementTest] = useState<PlacementTestResult | null>(null);
   const [hasNoData, setHasNoData] = useState(false);
@@ -208,6 +212,22 @@ const StudentDashboard = () => {
   const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { toast: uiToast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          uiToast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const FIELD_MAP: Record<string, string> = {
     name: "Full name",
@@ -234,6 +254,14 @@ const StudentDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
+
+      // Referral count
+      const { count: refCount } = await supabase
+        .from("referral_conversions")
+        .select("*", { count: "exact", head: true })
+        .eq("referrer_user_id", session.user.id)
+        .eq("xp_awarded", true);
+      setReferralCount(refCount || 0);
 
       // Weekly XP: from Monday 00:00 local time
       const now = new Date();
@@ -328,26 +356,14 @@ const StudentDashboard = () => {
             .eq("status", "APPROVED"),
         ]);
 
-        const dates: AttendanceDate[] = [];
-        if (adminRes.data) {
-          for (const r of adminRes.data) {
-            dates.push({ date: r.session_date, source: "Admin" });
-          }
-        }
-        if (pkgRes.data) {
-          for (const r of pkgRes.data) {
+        const dates: AttendanceDate[] = [
+          ...(adminRes.data || []).map(r => ({ date: r.session_date, source: "Admin" as const })),
+          ...(pkgRes.data || []).flatMap(r => {
             const sessions = r.pkg_group_sessions as { session_date: string } | null;
-            if (sessions?.session_date) {
-              dates.push({ date: sessions.session_date, source: "Group" });
-            }
-          }
-        }
-        if (selfRes.data) {
-          for (const r of selfRes.data) {
-            dates.push({ date: r.request_date, source: "Self" });
-          }
-        }
-        dates.sort((a, b) => a.date.localeCompare(b.date));
+            return sessions?.session_date ? [{ date: sessions.session_date, source: "Group" as const }] : [];
+          }),
+          ...(selfRes.data || []).map(r => ({ date: r.request_date, source: "Self" as const })),
+        ].sort((a, b) => a.date.localeCompare(b.date));
         setAttendanceDates(dates);
 
         // Fetch group membership
@@ -381,6 +397,42 @@ const StudentDashboard = () => {
     );
     if (key === "Full name") setUserName(_value);
   };
+
+  // ── Hooks that must live before any early return ──────────────────────────
+  const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
+
+  // Level-up flash: detect league change since last session
+  const [showLevelUpFlash, setShowLevelUpFlash] = useState(false);
+  const levelUpChecked = useRef(false);
+  useEffect(() => {
+    if (levelUpChecked.current || !league) return;
+    levelUpChecked.current = true;
+    const prevLeague = sessionStorage.getItem("kl_last_league");
+    if (prevLeague && prevLeague !== league.key) {
+      setShowLevelUpFlash(true);
+      setTimeout(() => setShowLevelUpFlash(false), 2200);
+    }
+    sessionStorage.setItem("kl_last_league", league.key);
+  }, [league]);
+
+  // Animated count-up for numeric stats
+  const xpCountUp = useCountUp(gamification.totalXp, 1200);
+  const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
+
+  const quickStats = useMemo(() => [
+    { label: "Total XP", rawValue: gamification.totalXp, sub: weeklyXp > 0 ? `+${weeklyXp} this week` : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Day Streak", rawValue: gamification.streak.current_streak, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
+    { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+  ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league, weeklyXp]);
+
+  const quickActions = useMemo(() => [
+    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
+    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
+    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
+    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
+  ], []);
+  // ─────────────────────────────────────────────────────────────────────────
 
   if (gateLoading || resetBlocked || loading) {
     return (
@@ -439,22 +491,6 @@ const StudentDashboard = () => {
 
   const todayStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
-  const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
-
-  const quickStats = [
-    { label: "Total XP", value: gamification.totalXp.toLocaleString(), icon: Zap, color: "text-yellow-600 bg-yellow-100" },
-    { label: "Day Streak", value: `${gamification.streak.current_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100" },
-    { label: "Lessons Done", value: `${lessonsCompleted}/45`, icon: BookOpen, color: "text-green-600 bg-green-100" },
-    { label: "League", value: league?.emoji ? `${league.emoji} ${league.name.split(" ")[0]}` : "Beginner", icon: Trophy, color: "text-blue-600 bg-blue-100" },
-  ];
-
-  const quickActions = [
-    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50" },
-    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50" },
-    { label: "Games", desc: "13 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50" },
-    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50" },
-  ];
-
   const handleExportProgress = () => {
     const lines: string[] = [
       "KLOVERS KOREAN ACADEMY — STUDENT PROGRESS REPORT",
@@ -491,17 +527,35 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-muted/20">
+      {showLevelUpFlash && (
+        <div className="fixed inset-0 z-50 pointer-events-none animate-level-up-flash flex items-center justify-center bg-primary/30">
+          <div className="animate-scale-in text-center">
+            <p className="text-5xl mb-2">{league?.emoji}</p>
+            <p className="text-2xl font-black text-foreground text-outlined-lg">Level Up!</p>
+            <p className="text-lg font-bold text-foreground">{league?.name}</p>
+          </div>
+        </div>
+      )}
       <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
       <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{todayStr}</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+          <div className="flex items-center gap-4 bg-gradient-to-r from-primary/5 to-transparent rounded-2xl px-5 py-4 border border-primary/10">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-base shrink-0 select-none">
+              {displayName?.[0]?.toUpperCase() ?? "K"}
             </div>
-            <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0 mt-1">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
+              <h1 className="text-lg md:text-2xl font-bold text-foreground leading-tight">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+            </div>
+            {league && (
+              <div className="hidden sm:flex items-center gap-1.5 bg-background rounded-xl px-3 py-1.5 border border-border text-sm font-semibold shrink-0">
+                <span>{league.emoji}</span>
+                <span className="text-foreground">{league.name}</span>
+              </div>
+            )}
+            <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0">
               <Download className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Export Progress</span>
             </Button>
@@ -515,13 +569,13 @@ const StudentDashboard = () => {
             const lastActive = gamification.streak.last_activity_date?.slice(0, 10);
             if (lastActive === today) return null;
             return (
-              <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm">
-                <span className="text-2xl">🔥</span>
+              <div className="flex items-center gap-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3 text-sm">
+                <span className="text-2xl animate-bounce">🔥</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-orange-800">Keep your {streak}-day streak alive!</p>
-                  <p className="text-orange-700 text-xs">Play a game or complete a lesson today before midnight.</p>
+                  <p className="font-semibold text-orange-800 dark:text-orange-300">Keep your {streak}-day streak alive!</p>
+                  <p className="text-orange-700 dark:text-orange-400 text-xs">Play a game or complete a lesson today before midnight.</p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 text-orange-800 hover:bg-orange-100" onClick={() => navigate("/games")}>
+                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30" onClick={() => navigate("/games")}>
                   Play now
                 </Button>
               </div>
@@ -552,21 +606,33 @@ const StudentDashboard = () => {
 
           {/* ── Quick Stats (always visible) ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickStats.map(({ label, value, icon: Icon, color }) => (
-              <Card key={label} className="border-border">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-                      <Icon className="h-4 w-4" />
+            {quickStats.map(({ label, rawValue, sub, icon: Icon, color }, idx) => {
+              let displayValue: string;
+              if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
+              else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
+              else if (label === "Lessons Done") displayValue = `${rawValue}/45`;
+              else displayValue = league?.emoji ? `${league.emoji} ${league.name}` : "Beginner";
+              return (
+                <Card
+                  key={label}
+                  className="border-border hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 animate-fade-up"
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                >
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                        <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
+                        {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                      <p className="font-bold text-foreground text-sm leading-tight truncate">{value}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
@@ -575,14 +641,16 @@ const StudentDashboard = () => {
           </Suspense>
 
           {/* ── Quick Actions (always visible) ── */}
-          <div>
+          <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {quickActions.map(({ label, desc, emoji, path, color }) => (
+              {quickActions.map(({ label, desc, emoji, path, color }, idx) => (
                 <button
                   key={label}
                   onClick={() => navigate(path)}
-                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-all ${color}`}
+                  aria-label={`${label}: ${desc}`}
+                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all ${color} animate-fade-up`}
+                  style={{ animationDelay: `${180 + idx * 60}ms` }}
                 >
                   <div className="text-2xl mb-2">{emoji}</div>
                   <p className="font-semibold text-foreground text-sm">{label}</p>
@@ -602,12 +670,15 @@ const StudentDashboard = () => {
                 <div className="bg-card border border-border rounded-2xl px-5 py-4 space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-semibold text-foreground">Weekly XP Goal</span>
-                    <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>{pct}%</span>
+                    </div>
                   </div>
                   <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 animate-bar-grow"
+                      style={{ "--bar-target": `${pct}%` } as React.CSSProperties}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">{msg}</p>
@@ -652,7 +723,7 @@ const StudentDashboard = () => {
                 <div className="text-3xl">{today.emoji}</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Word of the day</p>
-                  <p className="text-xl font-bold text-foreground leading-tight">{today.ko}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-foreground leading-tight tracking-tight">{today.ko}</p>
                   <p className="text-sm text-muted-foreground">{today.rom} · {today.en}</p>
                 </div>
                 <Button size="sm" variant={vocabClaimed ? "ghost" : "default"} disabled={vocabClaimed} onClick={handleVocabClaim} className="shrink-0">
@@ -675,8 +746,13 @@ const StudentDashboard = () => {
                   <Gift className="h-5 w-5 text-violet-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">Refer a Friend → Earn 1 Free Session</p>
+                  <p className="text-sm font-bold text-foreground">Refer a Friend → Earn 150 XP</p>
                   <p className="text-xs text-muted-foreground truncate">{refLink}</p>
+                  {referralCount > 0 && (
+                    <p className="text-xs text-violet-600 font-medium mt-0.5">
+                      🎁 {referralCount} friend{referralCount !== 1 ? "s" : ""} joined · +{referralCount * 150} XP earned
+                    </p>
+                  )}
                 </div>
                 <Button size="sm" variant="outline" onClick={copyRef} className="shrink-0 gap-1.5 border-violet-300 text-violet-700 hover:bg-violet-100">
                   <Copy className="h-3.5 w-3.5" /> Copy
@@ -692,7 +768,7 @@ const StudentDashboard = () => {
             if (done === total) return null;
             const pct = Math.round((done / total) * 100);
             return (
-              <div className="flex items-center gap-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl px-4 py-3">
                 <div className="relative w-10 h-10 shrink-0">
                   <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#fde68a" strokeWidth="3" />
@@ -702,10 +778,10 @@ const StudentDashboard = () => {
                   <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">{pct}%</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-amber-800 text-sm">Profile {pct}% complete</p>
-                  <p className="text-amber-700 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
+                  <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Complete your registration ({done}/{total} items)</p>
+                  <p className="text-amber-700 dark:text-amber-400 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 text-amber-800 hover:bg-amber-100" onClick={() => navigate("/dashboard?complete=name")}>
+                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30" onClick={() => navigate("/dashboard?complete=name")}>
                   Complete
                 </Button>
               </div>
@@ -715,12 +791,41 @@ const StudentDashboard = () => {
           {hasNoData ? (
             /* ── No-enrollment state: show learning features + enroll CTA ── */
             <div className="space-y-6">
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="pt-6 text-center space-y-3">
-                  <AlertCircle className="h-10 w-10 mx-auto text-primary" />
-                  <h2 className="text-xl font-semibold text-foreground">No Active Plan Yet</h2>
-                  <p className="text-muted-foreground text-sm max-w-xs mx-auto">Enroll to get live classes, personalized coaching, and track your attendance.</p>
-                  <Button onClick={() => navigate("/enroll-now")} size="lg">Enroll Now</Button>
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardContent className="pt-6 pb-6 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <GraduationCap className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Start Your Korean Journey</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Join live classes with expert teachers, track your progress, and connect with other K-drama fans learning Korean.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex -space-x-1">
+                      {["🇪🇬","🇸🇦","🇦🇪","🇯🇴"].map((flag, i) => (
+                        <span key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">{flag}</span>
+                      ))}
+                    </div>
+                    <span>Join <strong className="text-foreground">1,000+</strong> students from Egypt &amp; the Arab world</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                    {[
+                      { emoji: "🎓", text: "Live group & private classes" },
+                      { emoji: "📊", text: "Progress tracking & analytics" },
+                      { emoji: "🏆", text: "XP, badges & leaderboards" },
+                    ].map(({ emoji, text }) => (
+                      <div key={text} className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 border border-border">
+                        <span>{emoji}</span>
+                        <span className="text-muted-foreground">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">Enroll Now</Button>
+                    <Button variant="outline" size="lg" onClick={() => navigate("/free-trial")} className="flex-1">Book a Free Trial</Button>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -764,7 +869,9 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamification.badges.length > 0 ? (
+                    {gamLoading ? (
+                      <BadgeGrid earnedBadges={[]} loading />
+                    ) : gamification.badges.length > 0 ? (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />
@@ -804,7 +911,9 @@ const StudentDashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamification.badges.length > 0 ? (
+                    {gamLoading ? (
+                      <BadgeGrid earnedBadges={[]} loading />
+                    ) : gamification.badges.length > 0 ? (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Earned Badges ({gamification.badges.length})</p>
                         <BadgeGrid earnedBadges={gamification.badges} />
@@ -870,7 +979,7 @@ const StudentDashboard = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {[
                             { label: "Package", val: enrollment.sessions_total, red: false },
                             { label: "Used", val: totalUsed, red: false },
@@ -882,6 +991,18 @@ const StudentDashboard = () => {
                               <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
                             </div>
                           ))}
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                            <span>Sessions used</span>
+                            <span>{Math.min(totalUsed, enrollment.sessions_total)}/{enrollment.sessions_total}</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-primary"}`}
+                              style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
+                            />
+                          </div>
                         </div>
                         {due > 0 && (
                           <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
@@ -947,7 +1068,7 @@ const StudentDashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
                           { label: "Package", val: enrollment.sessions_total },
                           { label: "Used", val: totalUsed },
@@ -997,6 +1118,14 @@ const StudentDashboard = () => {
         </div>
       </main>
       <Footer />
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
     </div>
   );
 };

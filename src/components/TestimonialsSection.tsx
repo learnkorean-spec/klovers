@@ -114,7 +114,7 @@ const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => {
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary text-outlined font-bold text-sm flex-shrink-0">
             {initials}
           </div>
           <div className="min-w-0">
@@ -165,7 +165,7 @@ const ScrollRow = ({
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-20 bg-background overflow-hidden">
+    <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4 mb-10 text-center">
         {/* Badge */}
         <a
@@ -180,7 +180,7 @@ const TestimonialsSection = () => {
           </span>
         </a>
 
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-3">
           What Our Students Say
         </h2>
         <p className="text-muted-foreground max-w-xl mx-auto text-base">

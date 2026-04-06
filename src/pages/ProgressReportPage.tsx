@@ -75,22 +75,22 @@ const ProgressReportPage = () => {
         </Button>
       </div>
 
-      {/* Report card */}
+      {/* Report card — uses inline styles for print/PDF compatibility */}
       <div ref={reportRef} className="max-w-2xl mx-auto bg-white shadow-xl print:shadow-none print:max-w-none"
-        style={{ fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+        style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" }}>
 
         {/* Header */}
         <div style={{ background: "#000", padding: "32px 40px", textAlign: "center" }}>
           <div style={{ display: "inline-block", width: 60, height: 60, borderRadius: "50%", background: "#FFFF00", lineHeight: "60px", fontSize: 28, fontWeight: 900, color: "#000", marginBottom: 12 }}>K</div>
           <h1 style={{ color: "#FFFF00", margin: "0 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: 1 }}>KLovers Korean Academy</h1>
-          <p style={{ color: "#aaa", margin: 0, fontSize: 13 }}>Student Progress Report · {month}</p>
+          <p style={{ color: "#bbb", margin: 0, fontSize: 13 }}>Student Progress Report · {month}</p>
         </div>
 
         {/* Student info */}
         <div style={{ background: "#f8f9fa", padding: "24px 40px", borderBottom: "1px solid #e5e7eb" }}>
           <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700, color: "#111" }}>{data.name}</h2>
-          <p style={{ margin: "0 0 2px", color: "#666", fontSize: 13 }}>{data.email}</p>
-          <p style={{ margin: 0, color: "#666", fontSize: 13 }}>Student since {joinedDate}{data.country ? ` · ${data.country}` : ""}</p>
+          <p style={{ margin: "0 0 2px", color: "#555", fontSize: 13 }}>{data.email}</p>
+          <p style={{ margin: 0, color: "#555", fontSize: 13 }}>Student since {joinedDate}{data.country ? ` · ${data.country}` : ""}</p>
         </div>
 
         {/* Stats grid */}
@@ -104,7 +104,7 @@ const ProgressReportPage = () => {
               <div key={label} style={{ background: "#f8f9fa", borderRadius: 10, padding: "16px 12px", textAlign: "center", border: "1px solid #e5e7eb" }}>
                 <div style={{ fontSize: 24, marginBottom: 6 }}>{emoji}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: "#111" }}>{value}</div>
-                <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{label}</div>
+                <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -113,22 +113,22 @@ const ProgressReportPage = () => {
           <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "16px 20px", marginBottom: 24 }}>
             <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "#92400e" }}>Current Level</p>
             <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#111" }}>{data.level}</p>
-            {data.placementScore && <p style={{ margin: "4px 0 0", color: "#666", fontSize: 13 }}>Placement test: {data.placementScore}/100 · {data.placementLevel}</p>}
+            {data.placementScore && <p style={{ margin: "4px 0 0", color: "#555", fontSize: 13 }}>Placement test: {data.placementScore}/100 · {data.placementLevel}</p>}
           </div>
 
           {/* Message */}
           <div style={{ borderLeft: "3px solid #FFFF00", paddingLeft: 16, marginBottom: 32 }}>
-            <p style={{ margin: "0 0 8px", color: "#333", lineHeight: 1.6 }}>
+            <p style={{ margin: "0 0 8px", color: "#222", lineHeight: 1.6 }}>
               Keep up the great work, <strong>{data.name.split(" ")[0]}</strong>! Consistency is the key to mastering Korean.
               Even 10 minutes of daily practice compounds into fluency over time.
             </p>
-            <p style={{ margin: 0, color: "#666", fontSize: 13 }}>화이팅! 💪 — Reham &amp; the K-Lovers team</p>
+            <p style={{ margin: 0, color: "#555", fontSize: 13 }}>화이팅! 💪 — Reham &amp; the K-Lovers team</p>
           </div>
 
           {/* Footer */}
           <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ margin: 0, color: "#999", fontSize: 12 }}>kloversegy.com · koreanlovers.net@gmail.com</p>
-            <p style={{ margin: 0, color: "#999", fontSize: 12 }}>Generated {new Date().toLocaleDateString("en-US")}</p>
+            <p style={{ margin: 0, color: "#777", fontSize: 12 }}>kloversegy.com · koreanlovers.net@gmail.com</p>
+            <p style={{ margin: 0, color: "#777", fontSize: 12 }}>Generated {new Date().toLocaleDateString("en-US")}</p>
           </div>
         </div>
       </div>

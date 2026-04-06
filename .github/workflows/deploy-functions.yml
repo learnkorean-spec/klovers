@@ -1,16 +1,42 @@
-name: Deploy Supabase Functions
+name: Deploy Supabase
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'supabase/functions/**'
-      - 'supabase/config.toml'
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  migrate:
+    name: Run DB Migrations
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply content migrations via psql
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          DB_URL="postgresql://postgres@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres"
+          for f in \
+            supabase/migrations/20260405000010_korean1_lessons_1_50.sql \
+            supabase/migrations/20260405000002_korean1_lessons_51_120.sql \
+            supabase/migrations/20260405000003_korean1_lessons_121_180.sql \
+            supabase/migrations/20260405000004_grammar_mastery_1_57.sql \
+            supabase/migrations/20260405000005_daily_routine_lessons_21_32.sql \
+            supabase/migrations/20260405000006_kdrama_lessons_6_30.sql; do
+            if [ -f "$f" ]; then
+              echo "Applying $f..."
+              psql "$DB_URL" -f "$f" && echo "OK: $f" || echo "WARN: $f had errors (may be already applied)"
+            else
+              echo "SKIP: $f not found"
+            fi
+          done
+
+  deploy-functions:
+    name: Deploy Edge Functions
+    runs-on: ubuntu-latest
+    needs: migrate
     steps:
       - uses: actions/checkout@v4
 
@@ -19,7 +45,6 @@ jobs:
           version: latest
 
       - name: Deploy all edge functions
-        run: |
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}

@@ -11,7 +11,7 @@ export interface World {
   descriptionAr: string;
   color: string;
   lessonRange: [number, number]; // [startSortOrder, endSortOrder]
-  topikLevel: 1 | 2;
+  topikLevel: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export const WORLDS: World[] = [
@@ -186,6 +186,66 @@ export const WORLDS: World[] = [
     color: "hsl(45 93% 47%)",
     lessonRange: [116, 120],
     topikLevel: 2,
+  },
+
+  // ===== TOPIK 3 / B1 — Intermediate-High =====
+  {
+    id: 14,
+    key: "real_life_stage",
+    name: "Real Life Stage",
+    nameAr: "مسرح الحياة الواقعية",
+    emoji: "🎭",
+    icon: "🌍",
+    description: "Handle complex real-life topics, debates & formal registers (TOPIK 3/B1)",
+    descriptionAr: "التعامل مع مواضيع الحياة المعقدة والنقاشات والأساليب الرسمية (TOPIK 3/B1)",
+    color: "hsl(168 75% 40%)",
+    lessonRange: [121, 140],
+    topikLevel: 3,
+  },
+
+  // ===== TOPIK 4 / B2 — Upper-Intermediate =====
+  {
+    id: 15,
+    key: "professional_plaza",
+    name: "Professional Plaza",
+    nameAr: "ساحة المحترفين",
+    emoji: "💼",
+    icon: "🏢",
+    description: "Business Korean, presentations, negotiations & professional writing (TOPIK 4/B2)",
+    descriptionAr: "الكورية في الأعمال والعروض والتفاوض والكتابة المهنية (TOPIK 4/B2)",
+    color: "hsl(240 65% 50%)",
+    lessonRange: [141, 158],
+    topikLevel: 4,
+  },
+
+  // ===== TOPIK 5 / C1 — Advanced =====
+  {
+    id: 16,
+    key: "academic_heights",
+    name: "Academic Heights",
+    nameAr: "قمم الأكاديميا",
+    emoji: "🎓",
+    icon: "📚",
+    description: "Academic discourse, literary analysis & advanced nuance (TOPIK 5/C1)",
+    descriptionAr: "الخطاب الأكاديمي والتحليل الأدبي والدقة المتقدمة (TOPIK 5/C1)",
+    color: "hsl(290 70% 48%)",
+    lessonRange: [159, 172],
+    topikLevel: 5,
+  },
+
+  // ===== TOPIK 6 / C2 — Near-Native Mastery =====
+  {
+    id: 17,
+    key: "master_hall",
+    name: "Master Hall",
+    nameAr: "قاعة الأساتذة",
+    emoji: "🌟",
+    icon: "🏆",
+    description: "Near-native mastery — idioms, classical styles & professional broadcasting (TOPIK 6/C2)",
+    descriptionAr: "إتقان شبه أصلي — اصطلاحات وأساليب كلاسيكية وبث مهني (TOPIK 6/C2)",
+    color: "hsl(15 90% 50%)",
+    lessonRange: [173, 180],
+    topikLevel: 6,
   },
 ];
 

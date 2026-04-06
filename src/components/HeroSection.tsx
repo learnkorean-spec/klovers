@@ -119,7 +119,7 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
           {/* Live badge — split pill design */}
-          <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-primary/40 backdrop-blur-md">
+          <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-black/30 backdrop-blur-md">
             <div className="bg-primary px-4 py-2 flex items-center gap-2">
               <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 K-LOVERS</span>
             </div>
@@ -210,7 +210,7 @@ const HeroSection = () => {
                     {display}
                   </span>
                 </div>
-                <span className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">
+                <span className="text-white/75 text-xs sm:text-sm font-medium tracking-wide">
                   {label}
                 </span>
               </div>

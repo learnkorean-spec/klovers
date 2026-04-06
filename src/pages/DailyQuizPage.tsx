@@ -3,9 +3,12 @@ import { useSEO } from "@/hooks/useSEO";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
+import { XP_VALUES } from "@/constants/gamification";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation } from "@/components/XpAnimation";
+import { BADGES } from "@/constants/gamification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { NextStepCard } from "@/components/NextStepCard";
 
 interface ExerciseItem {
   id: string;
@@ -42,8 +46,24 @@ const DailyQuizPage = () => {
 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { awardXp } = useGamification();
+  const { awardXp, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
+  const [xpFloat, setXpFloat] = useState<number | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          toast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   const [exercises, setExercises] = useState<ExerciseItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +74,7 @@ const DailyQuizPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [quizAlreadyDone, setQuizAlreadyDone] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return; // Wait for auth to resolve before acting
@@ -63,8 +84,9 @@ const DailyQuizPage = () => {
 
   const fetchDailyQuiz = async () => {
     if (!user) return;
-
+    setFetchError(null);
     setLoading(true);
+    try {
 
     // Check if quiz already done today (use maybeSingle to avoid error on no rows)
     const today = new Date();
@@ -74,7 +96,7 @@ const DailyQuizPage = () => {
       .from("student_xp")
       .select("id")
       .eq("user_id", user.id)
-      .eq("activity_type", "daily_quiz")
+      .eq("activity_type", "challenge")
       .gte("created_at", today.toISOString())
       .limit(1)
       .maybeSingle();
@@ -132,6 +154,10 @@ const DailyQuizPage = () => {
 
     setExercises(shuffled as ExerciseItem[]);
     setLoading(false);
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Failed to load quiz.");
+      setLoading(false);
+    }
   };
 
   const currentExercise = exercises[currentIndex];
@@ -174,28 +200,10 @@ const DailyQuizPage = () => {
 
     const percentage = Math.round((correctCount / exercises.length) * 100);
     const passed = percentage >= 70;
-    const xpEarned = 30; // Base XP for daily quiz
+    const xpEarned = XP_VALUES.challenge;
 
-    // Save quiz result to student_xp
-    const { error } = await supabase.from("student_xp").insert({
-      user_id: user!.id,
-      lesson_id: null,
-      activity_type: "daily_quiz",
-      xp_earned: xpEarned,
-    });
-
-    if (error) {
-      toast({
-        title: "Error saving quiz",
-        description: error.message,
-        variant: "destructive",
-      });
-      setSubmitting(false);
-      return;
-    }
-
-    // Award XP through gamification system
     await awardXp(0, "challenge");
+    setXpFloat(xpEarned);
 
     setResult({
       score: correctCount,
@@ -226,6 +234,22 @@ const DailyQuizPage = () => {
 
   if (!user) return null;
 
+  if (fetchError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
+          <div className="text-center space-y-3 max-w-sm">
+            <p className="text-4xl">😕</p>
+            <h2 className="font-semibold text-foreground">Couldn't load today's quiz</h2>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <button onClick={() => fetchDailyQuiz()} className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80">Try again</button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (quizAlreadyDone) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -242,6 +266,19 @@ const DailyQuizPage = () => {
               <p className="text-muted-foreground">
                 You've already completed your daily quiz. Come back tomorrow for a fresh challenge!
               </p>
+              {/* Countdown to next quiz */}
+              {(() => {
+                const now = new Date();
+                const midnight = new Date();
+                midnight.setHours(24, 0, 0, 0);
+                const hoursLeft = Math.floor((midnight.getTime() - now.getTime()) / 3600000);
+                const minutesLeft = Math.floor(((midnight.getTime() - now.getTime()) % 3600000) / 60000);
+                return (
+                  <p className="text-xs text-muted-foreground text-center">
+                    ⏰ Next quiz available in {hoursLeft}h {minutesLeft}m
+                  </p>
+                );
+              })()}
               <div className="pt-4 border-t">
                 <p className="text-sm text-muted-foreground mb-4">
                   💪 Keep up your learning streak by reviewing vocabulary instead!
@@ -300,7 +337,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary">{exercises.length}</p>
+                <p className="text-4xl font-bold text-primary text-outlined">{exercises.length}</p>
                 <p className="text-muted-foreground mt-1">Questions from your completed lessons</p>
               </div>
               <div className="pt-4 border-t">
@@ -333,7 +370,7 @@ const DailyQuizPage = () => {
               <div
                 className={cn(
                   "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full",
-                  result.passed ? "bg-green-100" : "bg-orange-100"
+                  result.passed ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"
                 )}
               >
                 <CheckCircle
@@ -347,7 +384,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary">
+                <p className="text-4xl font-bold text-primary text-outlined">
                   {result.score}/{result.total}
                 </p>
                 <p className="text-muted-foreground mt-1">
@@ -368,17 +405,8 @@ const DailyQuizPage = () => {
                   : "Review the lessons and come back for more. Every attempt makes you stronger!"}
               </p>
 
-              <div className="pt-4 border-t flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Dashboard
-                </Button>
-                <Button className="flex-1" onClick={() => navigate("/review")}>
-                  Review Vocabulary
-                </Button>
+              <div className="pt-4 border-t">
+                <NextStepCard completedType="quiz" />
               </div>
             </CardContent>
           </Card>
@@ -397,6 +425,15 @@ const DailyQuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
       <main id="main-content" className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Progress */}
@@ -437,8 +474,8 @@ const DailyQuizPage = () => {
                         key={idx}
                         className={cn(
                           "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all",
-                          showAnswer && isCorrect && "bg-green-50 border-green-500",
-                          showAnswer && selected && !isCorrect && "bg-red-50 border-red-500",
+                          showAnswer && isCorrect && "bg-green-50 dark:bg-green-900/20 border-green-500",
+                          showAnswer && selected && !isCorrect && "bg-red-50 dark:bg-red-900/20 border-red-500",
                           !showAnswer && "hover:border-primary/40 hover:bg-accent"
                         )}
                       >
@@ -465,28 +502,13 @@ const DailyQuizPage = () => {
                 </div>
               </RadioGroup>
 
-              {showResults[currentExercise.id] &&
-                currentExercise.explanation && (
-                  <div
-                    className={cn(
-                      "mt-4 p-3 rounded-lg",
-                      answers[currentExercise.id] ===
-                        currentExercise.correct_index
-                        ? "bg-green-50 text-green-700"
-                        : "bg-red-50 text-red-700"
-                    )}
-                  >
-                    <p className="text-sm">
-                      <strong>
-                        {answers[currentExercise.id] ===
-                        currentExercise.correct_index
-                          ? "✅ Correct: "
-                          : "❌ Explanation: "}
-                      </strong>
-                      {currentExercise.explanation}
-                    </p>
-                  </div>
-                )}
+              {/* Explanation shown immediately after a wrong answer */}
+              {showResults[currentExercise.id] && answers[currentExercise.id] !== currentExercise.correct_index && currentExercise.explanation && (
+                <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">💡 Explanation</p>
+                  <p className="text-sm text-amber-800 dark:text-amber-300">{currentExercise.explanation}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
 
   // Process limited batch — stop on first rate limit
   const toProcess = unpopulated.slice(0, Math.min(limitCount, unpopulated.length));
-  let rateLimited = false;
+  const rateLimited = false;
 
   for (const lesson of toProcess) {
     if (rateLimited) break;

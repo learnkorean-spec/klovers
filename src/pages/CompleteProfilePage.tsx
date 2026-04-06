@@ -132,7 +132,7 @@ const CompleteProfilePage = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
-              <span className="text-primary text-sm font-semibold">🇰🇷 Complete Your Profile</span>
+              <span className="text-primary text-outlined text-sm font-semibold">🇰🇷 Complete Your Profile</span>
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">One step closer to Korean!</h1>
             <p className="text-muted-foreground">

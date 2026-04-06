@@ -7,7 +7,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight, Share2, Copy, Check } from "lucide-react";
+import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight, Share2, Copy, Check, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -44,17 +44,18 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-700 border-blue-200",
-  listicle: "bg-green-100 text-green-700 border-green-200",
-  longform: "bg-purple-100 text-purple-700 border-purple-200",
-  news: "bg-red-100 text-red-700 border-red-200",
-  review: "bg-orange-100 text-orange-700 border-orange-200",
+  howto: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
+  listicle: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
+  longform: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
+  news: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
+  review: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
 };
 
 const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [relatedPosts, setRelatedPosts] = useState<Pick<BlogPost, "id"|"title"|"slug"|"description"|"hero_image"|"hero_alt"|"article_type"|"author"|"published_at"|"created_at">[]>([]);
   const { language } = useLanguage();
@@ -85,12 +86,16 @@ const BlogPostPage = () => {
     const fetchPost = async () => {
       if (!slug) return;
       setLoading(true);
-      const { data } = await supabase
+      setFetchError(null);
+      try {
+      const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
         .eq("slug", slug)
         .eq("published", true)
         .maybeSingle();
+
+      if (error) throw error;
 
       if (data) {
         setPost(data as BlogPost);
@@ -134,6 +139,10 @@ const BlogPostPage = () => {
         setPost(null);
       }
       setLoading(false);
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : "Failed to load article");
+        setLoading(false);
+      }
     };
     fetchPost();
   }, [slug, language]);
@@ -267,6 +276,28 @@ const BlogPostPage = () => {
 
   const readingTime = post?.content ? Math.max(1, Math.ceil(post.content.split(/\s+/).length / 200)) : null;
   const isRtl = post?.lang === "ar";
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
+          <div className="text-center space-y-4 max-w-sm">
+            <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
+            <h1 className="font-semibold text-foreground">Couldn't load this article</h1>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button onClick={() => window.location.reload()} variant="outline">Try again</Button>
+              <Button asChild variant="ghost">
+                <Link to="/blog"><ArrowLeft className="h-4 w-4 mr-2" />Back to Blog</Link>
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -432,7 +463,7 @@ const BlogPostPage = () => {
 
           {/* CTA block — custom if set, default otherwise */}
           <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
-            <p className="text-xs font-semibold text-primary uppercase tracking-widest">
+            <p className="text-xs font-semibold text-primary text-outlined uppercase tracking-widest">
               {post.cta_text ? "Ready to start?" : "Start learning Korean today"}
             </p>
             <h3 className="text-xl font-bold text-foreground">

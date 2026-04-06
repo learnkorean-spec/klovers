@@ -31,6 +31,7 @@ interface WorldPathMapProps {
   lessons: Lesson[];
   lessonProgress: Record<number, LessonProgress>;
   userId: string | null;
+  bookSlug: string;
 }
 
 function WorldHeader({ world, progress, isAr }: { world: World; progress: { completed: number; total: number; percent: number }; isAr: boolean }) {
@@ -72,12 +73,14 @@ function LessonNode({
   index,
   worldColor,
   isAr,
+  bookSlug,
 }: {
   lesson: Lesson;
   lp?: LessonProgress;
   index: number;
   worldColor: string;
   isAr: boolean;
+  bookSlug: string;
 }) {
   const completed = lp?.chapter_completed;
   const boss = isBossChallenge(lesson.sort_order);
@@ -96,7 +99,8 @@ function LessonNode({
       )}
 
       <Link
-        to={`/textbook/korean-1/${lesson.sort_order}`}
+        to={`/textbook/${bookSlug}/${lesson.sort_order}`}
+        aria-label={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
         className={cn(
           "group relative flex flex-col items-center transition-all hover:scale-105",
         )}
@@ -145,7 +149,7 @@ function LessonNode({
   );
 }
 
-export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldPathMapProps) {
+export default function WorldPathMap({ lessons, lessonProgress, userId, bookSlug }: WorldPathMapProps) {
   const { language } = useLanguage();
   const isAr = language === "ar";
 
@@ -174,6 +178,7 @@ export default function WorldPathMap({ lessons, lessonProgress, userId }: WorldP
                   index={i}
                   worldColor={world.color}
                   isAr={isAr}
+                  bookSlug={bookSlug}
                 />
               ))}
             </div>
