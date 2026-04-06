@@ -14,27 +14,49 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install postgresql-client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+          psql --version
 
-      - name: Apply pending schema migrations
+      - name: Test DB connection
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          echo "Project ref length: ${#SUPABASE_PROJECT_REF}"
+          echo "Password set: $([[ -n $PGPASSWORD ]] && echo YES || echo NO)"
+          # Try direct connection (port 5432)
+          DIRECT="postgresql://postgres@db.${SUPABASE_PROJECT_REF}.supabase.co:5432/postgres?sslmode=require"
+          echo "Testing direct connection (port 5432)..."
+          if psql "$DIRECT" -c "SELECT current_database();" 2>&1; then
+            echo "DB_URL=$DIRECT" >> $GITHUB_ENV
+            echo "Direct connection works!"
+          else
+            echo "Direct connection failed, trying session pooler (port 5432)..."
+            POOLER="postgresql://postgres.${SUPABASE_PROJECT_REF}@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require"
+            if psql "$POOLER" -c "SELECT current_database();" 2>&1; then
+              echo "DB_URL=$POOLER" >> $GITHUB_ENV
+              echo "Pooler connection works!"
+            else
+              echo "ERROR: Both connection methods failed"
+              exit 1
+            fi
+          fi
+
+      - name: Apply schema migrations
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -e
-          DB_URL="postgresql://postgres@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres?sslmode=require"
-          echo "Testing connection..."
-          psql "$DB_URL" -c "SELECT current_database();" || { echo "ERROR: Cannot connect"; exit 1; }
-          echo "=== Applying schema migrations ==="
+          echo "Using DB_URL: ${DB_URL:0:50}..."
           for f in \
             supabase/migrations/20260405000007_fix_manual_enrollment_validation.sql \
             supabase/migrations/20260407000001_enrollment_integrity_v2.sql \
             supabase/migrations/20260405100001_fix_slot_matching_lock.sql \
             supabase/migrations/20260405100002_cancel_enrollment_and_admin_notes.sql \
             supabase/migrations/20260406000001_add_lesson_fk_indexes.sql; do
-            if [ -f "$f" ]; then
-              echo "Applying $f..."
-              psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f (may already exist)"
-            fi
+            [ -f "$f" ] && { echo "Applying $f..."; psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f"; }
           done
 
       - name: Seed lesson content
@@ -42,8 +64,6 @@ jobs:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -e
-          DB_URL="postgresql://postgres@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres?sslmode=require"
-          echo "=== Seeding lesson content ==="
           for f in \
             supabase/migrations/20260404000002_seed_all_textbook_lessons.sql \
             supabase/migrations/20260319000001_kdrama_lesson_1_content.sql \
@@ -53,25 +73,11 @@ jobs:
             supabase/migrations/20260405000006_kdrama_lessons_6_30.sql \
             supabase/migrations/20260406000002_daily_routine_lessons_1_20.sql \
             supabase/migrations/20260407000003_erase_korean1.sql; do
-            if [ -f "$f" ]; then
-              echo "Applying $f..."
-              psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f had errors"
-            fi
+            [ -f "$f" ] && { echo "Seeding $f..."; psql "$DB_URL" -f "$f" && echo "OK" || echo "WARN: $f"; }
           done
           echo "=== VERIFICATION ==="
-          psql "$DB_URL" -c "
-            SELECT book, count(*) as lessons
-            FROM textbook_lessons
-            GROUP BY book
-            ORDER BY book;
-          "
-          psql "$DB_URL" -c "
-            SELECT 'vocab' as tbl, count(*) FROM lesson_vocabulary
-            UNION ALL SELECT 'grammar', count(*) FROM lesson_grammar
-            UNION ALL SELECT 'dialogues', count(*) FROM lesson_dialogues
-            UNION ALL SELECT 'exercises', count(*) FROM lesson_exercises
-            UNION ALL SELECT 'reading', count(*) FROM lesson_reading;
-          "
+          psql "$DB_URL" -c "SELECT book, count(*) FROM textbook_lessons GROUP BY book ORDER BY book;"
+          psql "$DB_URL" -c "SELECT 'vocab' as t, count(*) FROM lesson_vocabulary UNION ALL SELECT 'grammar', count(*) FROM lesson_grammar UNION ALL SELECT 'dialogues', count(*) FROM lesson_dialogues UNION ALL SELECT 'exercises', count(*) FROM lesson_exercises UNION ALL SELECT 'reading', count(*) FROM lesson_reading;"
 
   deploy-functions:
     name: Deploy Edge Functions
