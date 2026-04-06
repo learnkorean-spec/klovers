@@ -6,9 +6,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollment_tx_ref_unique
   ON public.enrollments (tx_ref)
   WHERE tx_ref IS NOT NULL AND tx_ref != '';
 
--- 2. Prevent same-day duplicate paid enrollments for same user+plan
+-- 2. Prevent duplicate paid enrollments for same user+plan
+-- Note: removed (created_at::date) expression — timestamptz::date is not
+-- IMMUTABLE and PostgreSQL rejects it in index expressions.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollment_no_duplicate_paid
-  ON public.enrollments (user_id, plan_type, duration, (created_at::date))
+  ON public.enrollments (user_id, plan_type, duration)
   WHERE payment_status = 'PAID';
 
 -- 3. Performance indexes
