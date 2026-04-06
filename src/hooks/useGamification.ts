@@ -10,6 +10,7 @@ interface UserProgress {
     dialogue_done: boolean;
     exercises_done: boolean;
     reading_done: boolean;
+    writing_done: boolean;
     chapter_completed: boolean;
   }>;
   badges: string[];
@@ -48,7 +49,7 @@ export function useGamification() {
 
     const [xpRes, progressRes, badgesRes, streakRes] = await Promise.all([
       supabase.from("student_xp").select("xp_earned").eq("user_id", userId),
-      supabase.from("student_lesson_progress").select("lesson_id, vocab_done, grammar_done, dialogue_done, exercises_done, reading_done, chapter_completed").eq("user_id", userId),
+      supabase.from("student_lesson_progress").select("lesson_id, vocab_done, grammar_done, dialogue_done, exercises_done, reading_done, writing_done, chapter_completed").eq("user_id", userId),
       supabase.from("student_badges").select("badge_key").eq("user_id", userId),
       supabase.from("student_streaks").select("current_streak, longest_streak, last_activity_date").eq("user_id", userId).maybeSingle(),
     ]);
@@ -63,6 +64,7 @@ export function useGamification() {
         dialogue_done: r.dialogue_done,
         exercises_done: r.exercises_done,
         reading_done: r.reading_done,
+        writing_done: r.writing_done,
         chapter_completed: r.chapter_completed,
       };
     });
@@ -197,7 +199,7 @@ export function useGamification() {
       if (existing[section]) return;
       const updates: any = { [section]: true };
 
-      const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done"]
+      const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
         .every(s => s === section ? true : existing[s as keyof typeof existing]);
 
       if (allDone) {

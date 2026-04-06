@@ -225,6 +225,7 @@ const TextbookPage = () => {
                 lessons={lessons}
                 lessonProgress={progress.lessonProgress}
                 userId={userId}
+                bookSlug={book}
               />
             )
           ) : (
