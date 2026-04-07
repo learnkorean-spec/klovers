@@ -17,8 +17,11 @@ const BOOKS = [
     descAr: "أتقن الكورية من الهانغول إلى القواعد المتقدمة عبر العوالم والمهام.",
     emoji: "📘",
     icon: BookOpen,
-    gradient: "from-primary/20 to-primary/5",
-    border: "border-primary/30 hover:border-primary/60",
+    gradient: "from-amber-100 to-yellow-50",
+    border: "border-amber-200 hover:border-amber-400 ring-1 ring-black/10",
+    iconColor: "text-amber-600",
+    subtitleColor: "text-amber-700",
+    badgeBg: "bg-amber-100 text-amber-800 border border-black/10",
   },
   {
     key: "daily-routine",
@@ -30,8 +33,11 @@ const BOOKS = [
     descAr: "تعلم الكورية من خلال الأفعال اليومية — النوم، الطبخ، التنظيف والمزيد.",
     emoji: "☀️",
     icon: Sun,
-    gradient: "from-accent/20 to-accent/5",
-    border: "border-accent/30 hover:border-accent/60",
+    gradient: "from-orange-100 to-amber-50",
+    border: "border-orange-200 hover:border-orange-400 ring-1 ring-black/10",
+    iconColor: "text-orange-500",
+    subtitleColor: "text-orange-700",
+    badgeBg: "bg-orange-100 text-orange-800 border border-black/10",
   },
   {
     key: "kdrama",
@@ -43,8 +49,11 @@ const BOOKS = [
     descAr: "تعلم الكورية من خلال حوارات الدراما الأيقونية والعامية والسياق الثقافي.",
     emoji: "🎬",
     icon: Clapperboard,
-    gradient: "from-rose-500/20 to-rose-500/5",
-    border: "border-rose-500/30 hover:border-rose-500/60",
+    gradient: "from-rose-100 to-pink-50",
+    border: "border-rose-200 hover:border-rose-400 ring-1 ring-black/10",
+    iconColor: "text-rose-500",
+    subtitleColor: "text-rose-700",
+    badgeBg: "bg-rose-100 text-rose-800 border border-black/10",
   },
   {
     key: "grammar-mastery",
@@ -56,8 +65,11 @@ const BOOKS = [
     descAr: "ادرس كل نمط قواعدي كوري بعمق — من الجسيمات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
     emoji: "🧠",
     icon: Brain,
-    gradient: "from-violet-500/20 to-violet-500/5",
-    border: "border-violet-500/30 hover:border-violet-500/60",
+    gradient: "from-violet-100 to-purple-50",
+    border: "border-violet-200 hover:border-violet-400 ring-1 ring-black/10",
+    iconColor: "text-violet-500",
+    subtitleColor: "text-violet-700",
+    badgeBg: "bg-violet-100 text-violet-800 border border-black/10",
     badge: "NEW",
   },
   {
@@ -70,8 +82,11 @@ const BOOKS = [
     descAr: "تعلم مفردات الكورية من خلال مشاهد مصوّرة جميلة — غرفة النوم، الكافيه، الحديقة والمزيد.",
     emoji: "🖼️",
     icon: ImageIcon,
-    gradient: "from-emerald-500/20 to-emerald-500/5",
-    border: "border-emerald-500/30 hover:border-emerald-500/60",
+    gradient: "from-emerald-100 to-green-50",
+    border: "border-emerald-200 hover:border-emerald-400 ring-1 ring-black/10",
+    iconColor: "text-emerald-500",
+    subtitleColor: "text-emerald-700",
+    badgeBg: "bg-emerald-100 text-emerald-800 border border-black/10",
     badge: "NEW",
   },
 ];
@@ -86,7 +101,7 @@ const TextbookHubPage = () => {
       <Header />
       <main id="main-content" className="pt-24 pb-16">
         <section className="text-center mb-12 px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-sm font-medium mb-6 border border-black/10">
             <Sparkles className="h-4 w-4" />
             {isAr ? "مكتبة الكتب" : "Book Library"}
           </div>
@@ -122,12 +137,12 @@ const TextbookHubPage = () => {
                   )}
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-5xl">{book.emoji}</span>
-                    <Icon className="h-6 w-6 text-primary opacity-50" />
+                    <Icon className={cn("h-6 w-6 opacity-50", book.iconColor)} />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-1">
                     {isAr ? book.titleAr : book.titleEn}
                   </h2>
-                  <p className="text-sm font-medium text-primary mb-2">
+                  <p className={cn("text-sm font-medium mb-2", book.subtitleColor)}>
                     {isAr ? book.subtitleAr : book.subtitleEn}
                   </p>
                   <p className="text-sm text-muted-foreground">
