@@ -395,7 +395,6 @@ export const SPEAKING_PROMPTS: Record<string, { korean: string; romanisation: st
 };
 
 // ─── Dedicated Listening Exam
-─────────────────────────────────────────────────
 // 5 level-matched questions per band. Audio (TTS) → MCQ comprehension.
 
 export interface SubTestQuestion {
