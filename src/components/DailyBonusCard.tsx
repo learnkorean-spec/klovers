@@ -103,14 +103,14 @@ export function DailyBonusCard() {
       "border-2 transition-all",
       claimed
         ? "border-green-500/30 bg-green-500/5 dark:border-green-500/20 dark:bg-green-500/10"
-        : "border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50"
+        : "border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 ring-1 ring-black/10"
     )}>
       <CardContent className="pt-4 pb-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className={cn(
               "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0",
-              claimed ? "bg-green-100 dark:bg-green-900/30" : "bg-amber-100"
+              claimed ? "bg-green-100 dark:bg-green-900/30" : "bg-amber-100 border border-black/10"
             )}>
               {claimed
                 ? <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -122,11 +122,11 @@ export function DailyBonusCard() {
                 {claimed ? "Daily Bonus Claimed!" : "Daily Login Bonus"}
               </p>
               <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                <Badge variant="outline" className="text-xs gap-1 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-600">
+                <Badge variant="outline" className="text-xs gap-1 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-600 ring-1 ring-black/10">
                   <Zap className="h-3 w-3" /> +{bonusXp} XP base
                 </Badge>
                 {streakBonus > 0 && (
-                  <Badge variant="outline" className="text-xs gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600">
+                  <Badge variant="outline" className="text-xs gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 ring-1 ring-black/10">
                     🔥 +{streakBonus} XP ({streakBonusLabel})
                   </Badge>
                 )}

@@ -303,7 +303,7 @@ const DailyQuizPage = () => {
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 border border-black/10">
                 <Zap className="h-8 w-8 text-yellow-600" />
               </div>
               <CardTitle className="text-2xl">Start Learning First!</CardTitle>
@@ -330,7 +330,7 @@ const DailyQuizPage = () => {
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 border border-black/10">
                 <Zap className="h-8 w-8 text-yellow-600" />
               </div>
               <CardTitle className="text-2xl">Daily Quiz Challenge</CardTitle>
@@ -504,7 +504,7 @@ const DailyQuizPage = () => {
 
               {/* Explanation shown immediately after a wrong answer */}
               {showResults[currentExercise.id] && answers[currentExercise.id] !== currentExercise.correct_index && currentExercise.explanation && (
-                <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 ring-1 ring-black/10">
                   <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">💡 Explanation</p>
                   <p className="text-sm text-amber-800 dark:text-amber-300">{currentExercise.explanation}</p>
                 </div>

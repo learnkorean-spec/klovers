@@ -438,7 +438,7 @@ const StudentDashboard = () => {
   const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
 
   const quickStats = useMemo(() => [
-    { label: "Total XP", rawValue: gamification.totalXp, sub: weeklyXp > 0 ? `+${weeklyXp} this week` : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30" },
+    { label: "Total XP", rawValue: gamification.totalXp, sub: weeklyXp > 0 ? `+${weeklyXp} this week` : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30 border border-black/10 ring-1 ring-black/5" },
     { label: "Day Streak", rawValue: gamification.streak.current_streak, sub: `Best: ${gamification.streak.longest_streak}d`, icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
     { label: "Lessons Done", rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
     { label: "League", rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
@@ -559,8 +559,8 @@ const StudentDashboard = () => {
       <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-transparent rounded-2xl px-5 py-4 border border-amber-200/60">
-            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-base shrink-0 select-none">
+          <div className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-transparent rounded-2xl px-5 py-4 border border-amber-200/60 ring-1 ring-black/10">
+            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-base shrink-0 select-none border border-black/10">
               {displayName?.[0]?.toUpperCase() ?? "K"}
             </div>
             <div className="flex-1 min-w-0">
@@ -690,7 +690,7 @@ const StudentDashboard = () => {
                     <span className="font-semibold text-foreground">Weekly XP Goal</span>
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"}`}>{pct}%</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full border border-black/10 ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"}`}>{pct}%</span>
                     </div>
                   </div>
                   <div className="h-2.5 bg-muted rounded-full overflow-hidden">
@@ -846,7 +846,7 @@ const StudentDashboard = () => {
             if (done === total) return null;
             const pct = Math.round((done / total) * 100);
             return (
-              <div className="flex items-center gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl px-4 py-3 ring-1 ring-black/10">
                 <div className="relative w-10 h-10 shrink-0">
                   <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#fde68a" strokeWidth="3" />
@@ -869,10 +869,10 @@ const StudentDashboard = () => {
           {hasNoData ? (
             /* ── No-enrollment state: show learning features + enroll CTA ── */
             <div className="space-y-6">
-              <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent">
+              <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
                 <CardContent className="pt-6 pb-6 space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+                    <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 border border-black/10">
                       <GraduationCap className="h-6 w-6 text-amber-600" />
                     </div>
                     <div>
@@ -1174,7 +1174,7 @@ const StudentDashboard = () => {
                   onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank')}
                   className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center border border-black/10">
                     <FileText className="h-5 w-5 text-amber-600" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Progress Report</span>
@@ -1184,7 +1184,7 @@ const StudentDashboard = () => {
                   onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank')}
                   className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center border border-black/10">
                     <Award className="h-5 w-5 text-amber-600" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Certificate</span>

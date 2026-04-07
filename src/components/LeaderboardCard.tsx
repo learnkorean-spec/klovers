@@ -7,9 +7,9 @@ import { Trophy, Flame, Crown, Medal, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RANK_STYLES: Record<number, string> = {
-  1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700",
+  1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700 ring-1 ring-black/10",
   2: "bg-muted border-muted-foreground/30",
-  3: "bg-amber-100 border-amber-400 dark:bg-amber-900/30 dark:border-amber-700",
+  3: "bg-amber-100 border-amber-400 dark:bg-amber-900/30 dark:border-amber-700 ring-1 ring-black/10",
 };
 
 const RANK_ICONS: Record<number, React.ReactNode> = {
@@ -33,7 +33,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       className={cn(
         "flex items-center gap-3 p-3 rounded-lg border transition-all",
         RANK_STYLES[rank] || "border-border bg-card",
-        isCurrentUser && "ring-2 ring-amber-400 ring-offset-1"
+        isCurrentUser && "ring-2 ring-amber-400 ring-offset-1 shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
       )}
     >
       {/* Rank */}
@@ -46,7 +46,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       {/* Avatar */}
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarImage src={avatarUrl || undefined} />
-        <AvatarFallback className="text-xs bg-amber-100 text-foreground font-semibold">
+        <AvatarFallback className="text-xs bg-amber-100 text-foreground font-semibold border border-black/10">
           {name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>

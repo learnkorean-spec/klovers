@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 // --- XP Badge (small inline) ---
 export function XpBadge({ xp, className }: { xp: number; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400 text-amber-950 text-xs font-bold shadow-sm", className)}>
+    <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400 text-amber-950 text-xs font-bold shadow-sm border border-black/15", className)}>
       <Zap className="h-3 w-3" /> {xp} XP
     </span>
   );
@@ -74,7 +74,7 @@ export function LeagueCard({ leagueKey, totalXp }: { leagueKey: string; totalXp:
             key={l.key}
             className={cn(
               "rounded-xl border p-4 text-center transition-all",
-              isCurrent && "border-amber-400 bg-amber-50 shadow-md",
+              isCurrent && "border-amber-400 bg-amber-50 shadow-md ring-1 ring-black/10",
               unlocked && !isCurrent && "border-border bg-card",
               !unlocked && "border-border/50 bg-muted/30 opacity-60"
             )}
@@ -162,7 +162,7 @@ export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: str
             key={b.key}
             className={cn(
               "rounded-xl border p-3 text-center transition-all",
-              earned ? "border-amber-300 bg-amber-50 animate-badge-burst" : "border-border/50 bg-muted/30 opacity-50"
+              earned ? "border-amber-300 bg-amber-50 animate-badge-burst ring-1 ring-black/10" : "border-border/50 bg-muted/30 opacity-50"
             )}
           >
             <span className="text-2xl block mb-1">{b.emoji}</span>
@@ -197,7 +197,7 @@ export function LessonProgressDots({ progress }: {
           className={cn(
             "h-5 w-5 rounded-full text-[9px] font-bold flex items-center justify-center",
             progress[s.key as keyof typeof progress]
-              ? "bg-amber-500 text-white"
+              ? "bg-amber-500 text-white border border-black/15"
               : "bg-muted text-muted-foreground"
           )}
         >
@@ -220,7 +220,7 @@ export function MissionStartBanner({ lessonNum, title, description, isBoss, isCh
   return (
     <div className={cn(
       "rounded-xl border p-5 mb-6",
-      isBoss ? "border-destructive/40 bg-destructive/5" : isCheckpoint ? "border-amber-300 bg-amber-50" : "border-border bg-card"
+      isBoss ? "border-destructive/40 bg-destructive/5" : isCheckpoint ? "border-amber-300 bg-amber-50 ring-1 ring-black/10" : "border-border bg-card"
     )}>
       <div className="flex items-center gap-2 mb-2">
         {isBoss && <span className="text-lg">🐉</span>}

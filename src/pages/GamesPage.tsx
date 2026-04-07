@@ -229,7 +229,7 @@ const GamesPage = () => {
                   <span>{league.emoji}</span>
                   <span>{league.name}</span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-200">
+                <div className="inline-flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-200 ring-1 ring-black/10">
                   <Zap className="h-3.5 w-3.5" />
                   <span>{progress.totalXp.toLocaleString()} XP</span>
                 </div>
@@ -323,7 +323,7 @@ const GamesPage = () => {
                           <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-amber-700 font-bold" : "text-foreground"}`}>
                             {p.name}{p.isCurrentUser ? " (you)" : ""}
                           </span>
-                          <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full">
+                          <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full ring-1 ring-black/10">
                             {p.value.toLocaleString()} XP
                           </span>
                         </div>
@@ -354,7 +354,7 @@ const GamesPage = () => {
                   <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3">
                     <a
                       href="/signup"
-                      className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md"
+                      className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md border border-black/15"
                     >
                       🏆 Sign up to see your rank
                     </a>

@@ -293,7 +293,7 @@ export function PerfectScoreOverlay({ score, total, onContinue }: {
         <p className="text-muted-foreground mb-2">
           {score}/{total} — Flawless! 화이팅! 🔥
         </p>
-        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-bold text-lg mb-6">
+        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-bold text-lg mb-6 border border-black/10">
           ⭐ You got them all!
         </div>
         <button

@@ -34,7 +34,7 @@ interface Lesson {
 }
 
 const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: string; icon: typeof BookOpen; accent: string; accentBg: string; accentText: string }> = {
-  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen, accent: "text-amber-700", accentBg: "bg-amber-100 border border-amber-200", accentText: "text-amber-700" },
+  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen, accent: "text-amber-700", accentBg: "bg-amber-100 border border-amber-200 ring-1 ring-black/10", accentText: "text-amber-700" },
   "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun, accent: "text-orange-600", accentBg: "bg-orange-100 border border-orange-200", accentText: "text-orange-700" },
   "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", emoji: "🎬", icon: Clapperboard, accent: "text-rose-600", accentBg: "bg-rose-100 border border-rose-200", accentText: "text-rose-700" },
   "grammar-mastery": { titleEn: "Grammar Mastery", titleAr: "إتقان القواعد", emoji: "🧠", icon: Brain, accent: "text-violet-600", accentBg: "bg-violet-100 border border-violet-200", accentText: "text-violet-700" },
@@ -243,7 +243,7 @@ const TextbookPage = () => {
                     to={`/textbook/${book}/${lesson.sort_order}`}
                     className={cn(
                       "group block rounded-xl border p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
-                      completed ? "border-amber-300 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30" : "border-border bg-card hover:border-amber-300/50"
+                      completed ? "border-amber-300 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30 ring-1 ring-black/10" : "border-border bg-card hover:border-amber-300/50"
                     )}
                   >
                     <div className="flex items-center justify-between mb-2">
