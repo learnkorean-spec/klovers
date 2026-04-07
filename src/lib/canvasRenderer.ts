@@ -397,13 +397,13 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, 0, w, h);
 
-  // ── Decorative faint "K" watermark (latin — always renders) ──
+  // ── Decorative faint "K" watermark (subtle, bottom-right corner) ──
   ctx.save();
-  ctx.font = `900 ${Math.round(h * 0.60)}px 'Inter', 'Segoe UI Black', sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.045)";
+  ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', 'Segoe UI Black', sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.035)";
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
-  ctx.fillText("K", w + 10 * S, h * 0.86);
+  ctx.fillText("K", w - 8 * S, h * 0.76);
   ctx.textBaseline = "alphabetic";
   ctx.restore();
 
@@ -946,10 +946,10 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
 
   // ── Faint K watermark ──
   ctx.save();
-  ctx.font = `900 ${Math.round(h * 0.5)}px 'Inter', sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.03)";
+  ctx.font = `900 ${Math.round(h * 0.25)}px 'Inter', sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.025)";
   ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-  ctx.fillText("K", w + 10 * S, h * 0.75);
+  ctx.fillText("K", w - 8 * S, h * 0.78);
   ctx.restore();
 
   // ── "Did you know?" / "هل تعلم؟" eyebrow ──
@@ -1231,10 +1231,10 @@ export function renderPost(
     } else {
       // Fallback without mascot — use fixed safe zones
       ctx.save();
-      ctx.font = `900 ${Math.round(h * 0.55)}px serif`;
-      ctx.fillStyle = "rgba(0,0,0,0.06)";
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("K", w / 2, h * 0.5);
+      ctx.font = `900 ${Math.round(h * 0.28)}px serif`;
+      ctx.fillStyle = "rgba(0,0,0,0.035)";
+      ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+      ctx.fillText("K", w - 20 * scale, h * 0.78);
       ctx.textBaseline = "alphabetic";
       ctx.restore();
 
@@ -1285,29 +1285,29 @@ export function renderPost(
   }
   ctx.fillRect(0, 0, w, h);
 
-  // Diagonal triangle accent (bottom-right) — brand only
+  // Diagonal triangle accent (bottom-right corner only) — brand only
   if (isBrand) {
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(w * 0.52, h); ctx.lineTo(w, h * 0.42); ctx.lineTo(w, h);
-    ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
+    ctx.moveTo(w * 0.78, h); ctx.lineTo(w, h * 0.78); ctx.lineTo(w, h);
+    ctx.closePath(); ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fill();
     ctx.restore();
   }
 
-  // Decorative K watermark (Latin — always renders, no overlap)
+  // Decorative K watermark (subtle, tucked in corner)
   if (isBrand) {
     ctx.save();
-    ctx.font = `900 ${Math.round(h * 0.60)}px 'Inter', 'Segoe UI Black', sans-serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.045)";
+    ctx.font = `900 ${Math.round(h * 0.30)}px 'Inter', 'Segoe UI Black', sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.03)";
     ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-    ctx.fillText("K", w + 10 * scale, h * 0.86);
+    ctx.fillText("K", w - 8 * scale, h * 0.86);
     ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
     ctx.restore();
   }
 
   // Left accent bar
   ctx.fillStyle = isDark ? c.accent : "#1a1a1a";
-  ctx.fillRect(38 * scale, 38 * scale, 5 * scale, h * 0.2);
+  ctx.fillRect(28 * scale, 28 * scale, 4 * scale, h * 0.14);
 
   if (template === "minimal") {
     ctx.strokeStyle = c.text; ctx.lineWidth = 3 * scale;
