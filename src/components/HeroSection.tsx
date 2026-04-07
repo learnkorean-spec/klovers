@@ -58,7 +58,7 @@ const HeroSection = () => {
     <section
       id="home"
       className="relative min-h-[100svh] flex flex-col items-center justify-center pt-16 overflow-hidden"
-      style={{ backgroundColor: "#3d2a10" }}
+      style={{ backgroundColor: "#1a1a1a" }}
     >
       {/* ── Background layer ─────────────────────────────────── */}
       <img
