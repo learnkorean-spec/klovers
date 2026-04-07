@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -335,7 +335,8 @@ const BulkEmailManager = () => {
       const { data: members } = await supabase
         .from("pkg_group_members")
         .select("group_id, member_status")
-        .eq("member_status", "active");
+        .eq("member_status", "active")
+        .limit(5000);
 
       if (groups && groups.length > 0 && packages) {
         const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -471,7 +472,7 @@ const BulkEmailManager = () => {
 
       // 2. Get target users
       let users: { user_id: string; email: string; name: string }[] = [];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, email, name");
+      const { data: profiles } = await supabase.from("profiles").select("user_id, email, name").limit(5000);
       if (!profiles) throw new Error("Failed to fetch users");
 
       if (audience === "new") {
@@ -780,4 +781,4 @@ const BulkEmailManager = () => {
   );
 };
 
-export default BulkEmailManager;
+export default memo(BulkEmailManager);

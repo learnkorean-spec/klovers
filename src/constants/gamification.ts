@@ -22,6 +22,9 @@ export const XP_VALUES = {
   streak_bonus: 5,
   game_complete: 5,  // per correct answer in games
   review: 5,         // spaced repetition review
+  class_attendance_present: 25,
+  class_attendance_late: 10,
+  referral_conversion: 150,
 } as const;
 
 export const BADGES = [
@@ -42,6 +45,9 @@ export const BADGES = [
   { key: "game_starter", name: "Game Starter", emoji: "🎮", description: "Complete your first game" },
   { key: "game_master", name: "Game Master", emoji: "🏆", description: "Complete 10 games" },
   { key: "perfect_game", name: "Perfect Game", emoji: "💯", description: "Get a perfect score in any game" },
+  { key: "review_rookie", name: "Review Rookie", emoji: "🔁", description: "Complete 10 vocabulary review sessions" },
+  { key: "early_bird", name: "Early Bird", emoji: "🌅", description: "Study before 8 AM" },
+  { key: "bilingual_explorer", name: "Bilingual Explorer", emoji: "🌍", description: "Complete lessons in 2 different textbooks" },
 ] as const;
 
 export const STREAK_MILESTONES = [3, 7, 14, 30] as const;

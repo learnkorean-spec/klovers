@@ -18,7 +18,7 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 
 const SectionFallback = () => (
   <div className="py-20 flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -75,29 +75,39 @@ const Index = () => {
     <div className="min-h-screen">
       <Header />
       <main id="main-content">
+        {/* Attention — strong hook, CTA, social proof stats */}
         <HeroSection />
-        <WhyLearnKorean />
-        <Suspense fallback={<SectionFallback />}>
-          <MeetTeacher />
-        </Suspense>
+        {/* Interest — immediately answer "how does this work?" */}
         <Suspense fallback={<SectionFallback />}>
           <HowItWorks />
         </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <LearningRoadmap />
-        </Suspense>
+        {/* Desire — social proof builds trust early */}
         <Suspense fallback={<SectionFallback />}>
           <TestimonialsSection />
         </Suspense>
+        {/* Desire — reinforces motivation after seeing proof */}
+        <WhyLearnKorean />
+        {/* Desire — humanize the brand, build connection */}
+        <Suspense fallback={<SectionFallback />}>
+          <MeetTeacher />
+        </Suspense>
+        {/* Action — low-friction free CTA (no payment) */}
         <Suspense fallback={<SectionFallback />}>
           <PlacementTestCTA />
         </Suspense>
+        {/* Desire — show the clear path forward */}
+        <Suspense fallback={<SectionFallback />}>
+          <LearningRoadmap />
+        </Suspense>
+        {/* Interest — fun differentiator */}
         <Suspense fallback={<SectionFallback />}>
           <HomeGamesSection />
         </Suspense>
+        {/* Interest — content authority */}
         <Suspense fallback={<SectionFallback />}>
           <HomeBlogSection />
         </Suspense>
+        {/* Action — final conversion push */}
         <Suspense fallback={<SectionFallback />}>
           <FinalCTA />
         </Suspense>

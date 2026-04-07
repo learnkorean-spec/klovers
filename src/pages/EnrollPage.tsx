@@ -10,31 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-
-type TierKey = "local" | "regional" | "global";
-type ClassType = "group" | "private";
-type Duration = 1 | 3 | 6;
-
-const DURATION_MAP: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
-
-const tierCountries: Record<TierKey, string[]> = {
-  local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
-  regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
-  global: ["UAE", "Saudi Arabia", "Qatar", "Bahrain", "Oman", "Kuwait", "United States", "United Kingdom", "Germany", "France", "Canada", "Australia", "Japan", "South Korea", "China"],
-};
-
-const tierPrices: Record<TierKey, Record<ClassType, Record<Duration, number>>> = {
-  local: { group: { 1: 25, 3: 70, 6: 130 }, private: { 1: 50, 3: 140, 6: 250 } },
-  regional: { group: { 1: 40, 3: 110, 6: 200 }, private: { 1: 80, 3: 220, 6: 380 } },
-  global: { group: { 1: 60, 3: 170, 6: 300 }, private: { 1: 120, 3: 330, 6: 580 } },
-};
-
-function getTierForCountry(country: string): TierKey | null {
-  for (const [tier, countries] of Object.entries(tierCountries)) {
-    if (countries.includes(country)) return tier as TierKey;
-  }
-  return null;
-}
+import { type TierKey, type ClassType, type Duration, tierPrices, getTierForCountry, DURATION_CLASSES } from "@/lib/stripePrices";
+import { track } from "@/lib/tracking";
 
 const EnrollPage = () => {
   useSEO({ title: "Enroll Now", description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.", canonical: "https://kloversegy.com/enroll" });
@@ -48,11 +25,13 @@ const EnrollPage = () => {
   const [userCountry, setUserCountry] = useState<string>("");
   const navigate = useNavigate();
 
+  useEffect(() => { track.pageView(); }, []);
+
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/login");
+        navigate(`/login?redirect=${encodeURIComponent("/enroll")}`);
         return;
       }
       setUserId(session.user.id);
@@ -73,43 +52,63 @@ const EnrollPage = () => {
     return tierPrices[tier]?.[planType as ClassType]?.[Number(duration) as Duration] ?? null;
   }, [tier, planType, duration]);
 
-  const classesIncluded = duration ? DURATION_MAP[Number(duration) as Duration] : 0;
+  const classesIncluded = duration ? DURATION_CLASSES[Number(duration) as Duration] : 0;
   const unitPrice = price && classesIncluded ? (price / classesIncluded).toFixed(2) : "0.00";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!receiptFile || !userId || !planType || !duration || !paymentMethod || price === null) return;
+
+    // Client-side file validation
+    if (receiptFile.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Receipt must be under 5MB.", variant: "destructive" });
+      return;
+    }
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!allowedTypes.includes(receiptFile.type)) {
+      toast({ title: "Invalid file type", description: "Only JPG, PNG, or PDF files are accepted.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
+    track.initiateCheckout({ value: price, currency: "USD" });
 
-    const filePath = `${userId}/${Date.now()}-${receiptFile.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from("receipts")
-      .upload(filePath, receiptFile);
+    try {
+      // 1. Create enrollment FIRST (so we have an ID before uploading)
+      const { data: enrollmentId, error: insertError } = await supabase.rpc("submit_manual_enrollment", {
+        _plan_type: planType,
+        _duration: Number(duration),
+        _amount: price,
+        _tx_ref: txRef,
+        _receipt_url: "",
+        _payment_method: paymentMethod,
+      } as any);
 
-    if (uploadError) {
-      toast({ title: "Upload failed", description: "Could not upload receipt.", variant: "destructive" });
+      if (insertError || !enrollmentId) {
+        throw new Error(insertError?.message || "Failed to submit enrollment.");
+      }
+
+      // 2. Upload receipt using enrollment ID in path
+      const ext = receiptFile.name.split(".").pop();
+      const filePath = `${userId}/${enrollmentId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("receipts")
+        .upload(filePath, receiptFile);
+
+      if (uploadError) {
+        throw new Error("Could not upload receipt. Your enrollment was created — please contact support.");
+      }
+
+      // 3. Update enrollment with receipt path
+      await supabase.from("enrollments").update({ receipt_url: filePath } as any).eq("id", enrollmentId);
+
+      toast({ title: "Enrollment submitted!", description: "We'll review your payment shortly." });
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data: enrollmentId, error: insertError } = await supabase.rpc("submit_manual_enrollment", {
-      _plan_type: planType,
-      _duration: Number(duration),
-      _amount: price,
-      _tx_ref: txRef,
-      _receipt_url: filePath,
-      _payment_method: paymentMethod,
-    } as any);
-
-    if (insertError || !enrollmentId) {
-      toast({ title: "Error", description: "Failed to submit enrollment.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    toast({ title: "Enrollment submitted!", description: "We'll review your payment shortly." });
-    setLoading(false);
-    navigate("/dashboard");
   };
 
   return (
@@ -162,16 +161,16 @@ const EnrollPage = () => {
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Select value={planType} onValueChange={(v) => setPlanType(v as ClassType)}>
-                  <SelectTrigger><SelectValue placeholder="Plan type" /></SelectTrigger>
+                <Select value={planType} onValueChange={(v) => setPlanType(v as ClassType)} required>
+                  <SelectTrigger aria-label="Plan type"><SelectValue placeholder="Plan type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="group">👥 Group Classes</SelectItem>
                     <SelectItem value="private">👤 Private Classes</SelectItem>
                   </SelectContent>
                 </Select>
 
-                <Select value={duration} onValueChange={setDuration}>
-                  <SelectTrigger><SelectValue placeholder="Duration" /></SelectTrigger>
+                <Select value={duration} onValueChange={setDuration} required>
+                  <SelectTrigger aria-label="Duration"><SelectValue placeholder="Duration" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1 Month — 4 classes</SelectItem>
                     <SelectItem value="3">3 Months — 12 classes</SelectItem>
@@ -192,11 +191,12 @@ const EnrollPage = () => {
                   </div>
                 )}
 
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
+                  <SelectTrigger aria-label="Payment method"><SelectValue placeholder="Payment method" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="vodafone_cash">📱 Vodafone Cash</SelectItem>
                     <SelectItem value="instapay">💳 InstaPay</SelectItem>
+                    <SelectItem value="bank_transfer">🏦 Bank Transfer</SelectItem>
                   </SelectContent>
                 </Select>
 

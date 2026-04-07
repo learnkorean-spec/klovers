@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchPrivateAvailability } from "@/lib/privateAvailability";
 import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-import { type TierKey, type ClassType, type Duration } from "@/lib/stripePrices";
+import { type TierKey, type ClassType, type Duration, tierPrices, tierCountries, DURATION_CLASSES } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -33,29 +33,17 @@ type Step = 1 | 2 | 3 | 4;
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const tierCountries: Record<TierKey, string[]> = {
-  local: ["Egypt", "Morocco", "Tunisia", "Algeria", "Libya", "Jordan", "Lebanon", "Iraq", "Syria", "Sudan", "Yemen"],
-  regional: ["Malaysia", "Indonesia", "Thailand", "Vietnam", "Philippines", "India", "Pakistan", "Brazil", "Mexico", "Colombia", "Argentina", "Turkey"],
-  global: ["UAE", "Saudi Arabia", "Qatar", "Bahrain", "Oman", "Kuwait", "United States", "United Kingdom", "Germany", "France", "Canada", "Australia", "Japan", "South Korea", "China"],
-};
-
 const allCountries = (Object.keys(tierCountries) as TierKey[]).flatMap((tier) =>
   tierCountries[tier].map((c) => ({ country: c, tier }))
 );
 allCountries.sort((a, b) => a.country.localeCompare(b.country));
-
-const tierPrices: Record<TierKey, Record<ClassType, Record<Duration, number>>> = {
-  local: { group: { 1: 25, 3: 70, 6: 130 }, private: { 1: 50, 3: 140, 6: 250 } },
-  regional: { group: { 1: 40, 3: 110, 6: 200 }, private: { 1: 80, 3: 220, 6: 380 } },
-  global: { group: { 1: 60, 3: 170, 6: 300 }, private: { 1: 120, 3: 330, 6: 580 } },
-};
 
 const egpPrices: Record<ClassType, Record<Duration, number>> = {
   group: { 1: 1200, 3: 3300, 6: 6100 },
   private: { 1: 2350, 3: 6600, 6: 11750 },
 };
 
-const durationClasses: Record<Duration, number> = { 1: 4, 3: 12, 6: 24 };
+const durationClasses = DURATION_CLASSES;
 
   // Schedule options are fetched dynamically from DB; no hardcoded fallbacks
 
@@ -76,7 +64,8 @@ const EnrollNowPage = () => {
         "name": "Klovers Korean Academy",
         "url": "https://kloversegy.com"
       },
-      "inLanguage": "ko",
+      "inLanguage": "en",
+      "courseMode": "online",
       "url": "https://kloversegy.com/enroll-now",
       "breadcrumb": {
         "@type": "BreadcrumbList",
@@ -90,6 +79,8 @@ const EnrollNowPage = () => {
     document.head.appendChild(el);
     return () => { el.remove(); };
   }, []);
+
+  useEffect(() => { track.pageView(); }, []);
 
   const [searchParams] = useSearchParams();
   const { t, tArray } = useLanguage();
@@ -522,6 +513,7 @@ const EnrollNowPage = () => {
       }
     } catch (err) {
       console.error("Lead submit error:", err);
+      toast({ title: "Couldn't save your info", description: "Please message us on WhatsApp to complete your enrollment.", variant: "destructive" });
     }
   };
 
@@ -600,6 +592,7 @@ const EnrollNowPage = () => {
       return;
     }
 
+    if (loading) return; // Prevent double-click race condition
     setLoading(true);
     try {
       // Submit lead async (don't block checkout)
@@ -682,9 +675,9 @@ const EnrollNowPage = () => {
           await supabase.from("enrollments").update(schedFields as any).eq("id", postRows[0].id);
         }
 
-        // Clear draft now that payment is initiated
+        // Clear draft BEFORE opening Stripe (so user can't lose state on back-nav)
         localStorage.removeItem("enroll_draft");
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       }
     } catch (err: any) {
       toast({ title: "Checkout error", description: err.message, variant: "destructive" });

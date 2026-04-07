@@ -14,9 +14,9 @@ const MILESTONE_ICONS: Record<string, React.ReactNode> = {
 };
 
 const TIER_COLORS: Record<number, string> = {
-  1: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40",
+  1: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 ring-1 ring-black/10",
   2: "border-muted bg-muted/40",
-  3: "border-yellow-300 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/40",
+  3: "border-yellow-300 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/40 ring-1 ring-black/10",
   4: "border-purple-300 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/40",
 };
 
@@ -30,7 +30,17 @@ const TIER_BADGES: Record<number, string> = {
 export function AchievementMilestoneCard() {
   const { groupedMilestones, completionPercentage, newlyAchieved } = useMilestones();
 
-  if (groupedMilestones.length === 0) return null;
+  if (groupedMilestones.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="pt-6 pb-6 text-center space-y-2">
+          <Trophy className="h-9 w-9 mx-auto text-muted-foreground/30" />
+          <p className="font-semibold text-sm text-foreground">No milestones yet</p>
+          <p className="text-xs text-muted-foreground">Complete lessons and earn XP to unlock milestone rewards.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -39,7 +49,7 @@ export function AchievementMilestoneCard() {
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="animate-bounce text-center">
             <div className="text-6xl mb-4">🎉</div>
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-2xl font-bold text-amber-700">
               {newlyAchieved.milestone_name}
             </p>
             <p className="text-sm text-muted-foreground">Milestone Achieved!</p>
@@ -47,11 +57,11 @@ export function AchievementMilestoneCard() {
         </div>
       )}
 
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent dark:border-amber-800 dark:from-amber-950/30 ring-1 ring-black/10">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
+              <Trophy className="h-5 w-5 text-amber-600" />
               Milestone Progress
             </span>
             <Badge variant="outline">{completionPercentage}%</Badge>

@@ -58,7 +58,7 @@ const HeroSection = () => {
     <section
       id="home"
       className="relative min-h-[100svh] flex flex-col items-center justify-center pt-16 overflow-hidden"
-      style={{ backgroundColor: "#3d2a10" }}
+      style={{ backgroundColor: "#1a1a1a" }}
     >
       {/* ── Background layer ─────────────────────────────────── */}
       <img
@@ -105,7 +105,7 @@ const HeroSection = () => {
         style={{
           fontSize: "clamp(180px, 30vw, 420px)",
           fontWeight: 900,
-          color: "rgba(255,255,0,0.035)",
+          color: "rgba(255, 255, 0, 0.035)",
           letterSpacing: "-0.02em",
           lineHeight: 1,
           userSelect: "none",
@@ -119,7 +119,7 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
           {/* Live badge — split pill design */}
-          <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-primary/40 backdrop-blur-md">
+          <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-black/30 backdrop-blur-md">
             <div className="bg-primary px-4 py-2 flex items-center gap-2">
               <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 K-LOVERS</span>
             </div>
@@ -141,10 +141,11 @@ const HeroSection = () => {
               {t("hero", "title1")}
             </span>
             <span
-              className="block text-primary mt-1"
+              className="block mt-1"
               style={{
                 fontSize: "clamp(2.4rem, 6.8vw, 5.5rem)",
-                textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)"
+                color: "#ffff00",
+                textShadow: "0 0 80px rgba(255, 255, 0, 0.4), 0 4px 24px rgba(0,0,0,0.7)"
               }}
             >
               {t("hero", "title2")}
@@ -156,7 +157,7 @@ const HeroSection = () => {
             className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
-            Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.{" "}
+            Live interactive Korean classes with <span className="font-semibold" style={{ color: "#ffff00" }}>real progress</span>.{" "}
             Join <span className="text-white font-semibold">1,000+ students</span> learning the right way.
           </p>
 
@@ -210,7 +211,7 @@ const HeroSection = () => {
                     {display}
                   </span>
                 </div>
-                <span className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">
+                <span className="text-white/75 text-xs sm:text-sm font-medium tracking-wide">
                   {label}
                 </span>
               </div>

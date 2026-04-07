@@ -13,8 +13,8 @@ const LEVELS = [
 ];
 
 const FEATURES = [
-  { icon: ClipboardCheck, label: "40 Questions" },
-  { icon: Clock,          label: "~10 Minutes" },
+  { icon: ClipboardCheck, label: "20 Questions" },
+  { icon: Clock,          label: "~5 Minutes" },
   { icon: Target,         label: "TOPIK-Based" },
   { icon: Brain,          label: "Instant Results" },
 ];
@@ -53,15 +53,15 @@ const PlacementTestCTA = () => {
       className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/40"
     >
       {/* Background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/6 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-primary/6 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-amber-200/15 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-amber-200/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
 
       {/* Floating Korean characters */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden>
         {["한", "국", "어", "급", "수"].map((char, i) => (
           <span
             key={char}
-            className="absolute text-5xl font-bold text-primary/5 dark:text-primary/8"
+            className="absolute text-5xl font-bold text-amber-300/10 dark:text-amber-400/8"
             style={{ top: `${15 + i * 18}%`, left: `${3 + i * 19}%`, transform: `rotate(${-15 + i * 8}deg)` }}
           >
             {char}
@@ -78,7 +78,7 @@ const PlacementTestCTA = () => {
               visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
             }`}
           >
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full text-sm font-semibold text-primary">
+            <div className="inline-flex items-center gap-2 bg-amber-100 border border-black/10 px-4 py-2 rounded-full text-sm font-semibold text-amber-700">
               <Sparkles className="h-4 w-4" />
               Free Assessment · No Sign-up Needed
             </div>
@@ -87,20 +87,20 @@ const PlacementTestCTA = () => {
               Where does your<br />
               <span className="relative inline-block">
                 <span className="relative z-10">Korean level</span>
-                <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/20 rounded-full -z-0" />
+                <span className="absolute bottom-1 left-0 w-full h-3 bg-amber-200/40 rounded-full -z-0" />
               </span>{" "}
               stand?
             </h2>
 
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Our free TOPIK-based test pinpoints your exact level — A1 to C2 — and gives you a personalised study roadmap in under 10 minutes.
+              Our free TOPIK-aligned test pinpoints your exact level — A1 to C2 — in just 20 questions and gives you a personalised study roadmap in under 5 minutes.
             </p>
 
             {/* Feature pills */}
             <div className="grid grid-cols-2 gap-3">
               {FEATURES.map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-2.5 bg-muted/60 rounded-xl px-3 py-2.5 text-sm text-foreground font-medium">
-                  <Icon className="h-4 w-4 text-primary shrink-0" />
+                  <Icon className="h-4 w-4 text-amber-600 shrink-0" />
                   {label}
                 </div>
               ))}
@@ -149,7 +149,7 @@ const PlacementTestCTA = () => {
                           {lvl.label}
                         </span>
                         {idx === activeLevel && (
-                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium animate-pulse">
+                          <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium animate-pulse border border-black/10">
                             Detecting…
                           </span>
                         )}
@@ -170,8 +170,8 @@ const PlacementTestCTA = () => {
 
                 {/* Card footer */}
                 <div className="px-5 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">40 questions · adaptive scoring</span>
-                  <span className="text-xs font-bold text-primary">FREE</span>
+                  <span className="text-xs text-muted-foreground">20 questions · TOPIK-aligned</span>
+                  <span className="text-xs font-bold text-amber-700">FREE</span>
                 </div>
               </div>
 

@@ -11,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { getLeagueProgress } from "@/constants/gamification";
+import { getLeagueProgress, BADGES } from "@/constants/gamification";
+import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X } from "lucide-react";
+import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
 import { toast } from "sonner";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
@@ -27,12 +29,19 @@ const WordScrambleGame = lazy(() => import("@/components/games/WordScrambleGame"
 const CounterWordsGame = lazy(() => import("@/components/games/CounterWordsGame"));
 const KDramaQuizGame = lazy(() => import("@/components/games/KDramaQuizGame"));
 const TimeTellerGame = lazy(() => import("@/components/games/TimeTellerGame"));
+const TypeKoreanGame = lazy(() => import("@/components/games/TypeKoreanGame"));
+const RomanizationGame = lazy(() => import("@/components/games/RomanizationGame"));
+const FlashcardGame = lazy(() => import("@/components/games/FlashcardGame"));
+const SpeedReadGame = lazy(() => import("@/components/games/SpeedReadGame"));
+const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGame"));
+const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
+const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
 
 const FREE_GAME_IDS = ["match", "hangul"];
 
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -41,9 +50,27 @@ const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
-  const { awardGameXp, progress, league } = useGamification();
+  const { awardGameXp, progress, league, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
+  const [xpFloat, setXpFloat] = useState<number | null>(null);
+  const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
   const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
   const { t } = useLanguage();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (newBadges.length > 0) {
+      newBadges.forEach(badgeKey => {
+        const badge = BADGES.find(b => b.key === badgeKey);
+        if (badge) {
+          toast({
+            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            duration: 4000,
+          });
+        }
+      });
+      clearNewBadges();
+    }
+  }, [newBadges]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,13 +96,25 @@ const GamesPage = () => {
     { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate"), free: false },
     { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner"), free: false },
     { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner"), free: false },
+    { id: "typekorean", title: t("games.typekoreanTitle"), description: t("games.typekoreanDesc"), icon: Keyboard, emoji: "⌨️", difficulty: t("games.intermediate"), free: false },
+    { id: "romanization", title: t("games.romanizationTitle"), description: t("games.romanizationDesc"), icon: Volume2, emoji: "🔤", difficulty: t("games.beginner"), free: false },
+    { id: "flashcard", title: t("games.flashcardTitle"), description: t("games.flashcardDesc"), icon: CreditCard, emoji: "🃏", difficulty: t("games.beginner"), free: false },
+    { id: "speedread", title: t("games.speedreadTitle"), description: t("games.speedreadDesc"), icon: ZapIcon, emoji: "⚡", difficulty: t("games.intermediate"), free: false },
+    { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner"), free: false },
+    { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate"), free: false },
+    { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner"), free: false },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
     if (isLoggedIn) {
       const xp = await awardGameXp(gameId, score, totalRounds);
       if (xp && xp > 0) {
+        setXpFloat(xp);
         toast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
+      }
+      // Show perfect score overlay
+      if (score === totalRounds && totalRounds > 0) {
+        setShowPerfectScore({ score, total: totalRounds });
       }
     } else {
       setShowSignupNudge(true);
@@ -102,7 +141,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Create a free account to unlock all 13 games, save your XP, and build your daily streak.
+              Create a free account to unlock all 30 games, save your XP, and build your daily streak.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -133,6 +172,13 @@ const GamesPage = () => {
       case "counters": return <Suspense fallback={<GameFallback />}><CounterWordsGame onGameComplete={onComplete} /></Suspense>;
       case "kdrama": return <Suspense fallback={<GameFallback />}><KDramaQuizGame onGameComplete={onComplete} /></Suspense>;
       case "time": return <Suspense fallback={<GameFallback />}><TimeTellerGame onGameComplete={onComplete} /></Suspense>;
+      case "typekorean": return <Suspense fallback={<GameFallback />}><TypeKoreanGame onGameComplete={onComplete} /></Suspense>;
+      case "romanization": return <Suspense fallback={<GameFallback />}><RomanizationGame onGameComplete={onComplete} /></Suspense>;
+      case "flashcard": return <Suspense fallback={<GameFallback />}><FlashcardGame onGameComplete={onComplete} /></Suspense>;
+      case "speedread": return <Suspense fallback={<GameFallback />}><SpeedReadGame onGameComplete={onComplete} /></Suspense>;
+      case "readingchoice": return <Suspense fallback={<GameFallback />}><ReadingChoiceGame onGameComplete={onComplete} /></Suspense>;
+      case "sentenceread": return <Suspense fallback={<GameFallback />}><SentenceReadGame onGameComplete={onComplete} /></Suspense>;
+      case "phonics": return <Suspense fallback={<GameFallback />}><PhonicsReadGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };
@@ -154,10 +200,10 @@ const GamesPage = () => {
               <Gamepad2 className="h-4 w-4" />
               {t("games.learnPlay")}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">
               {t("games.title")}
             </h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
               {t("games.subtitle").replace("{count}", String(games.length))}
             </p>
 
@@ -172,7 +218,7 @@ const GamesPage = () => {
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 13</a>
+                <a href="/signup" className="text-amber-700 font-semibold hover:underline">Sign up to unlock all 30 games</a>
               </div>
             )}
 
@@ -183,12 +229,12 @@ const GamesPage = () => {
                   <span>{league.emoji}</span>
                   <span>{league.name}</span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1 text-xs font-medium text-yellow-700">
+                <div className="inline-flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-200 ring-1 ring-black/10">
                   <Zap className="h-3.5 w-3.5" />
                   <span>{progress.totalXp.toLocaleString()} XP</span>
                 </div>
                 {progress.streak.current_streak > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 text-xs font-medium text-orange-700">
+                  <div className="inline-flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 text-xs font-medium text-orange-700 dark:text-orange-200">
                     <Flame className="h-3.5 w-3.5" />
                     <span>{progress.streak.current_streak} day streak</span>
                   </div>
@@ -221,7 +267,7 @@ const GamesPage = () => {
                       )}
                       {game.free && !isLoggedIn && (
                         <div className="absolute top-2 right-2">
-                          <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-medium">FREE</span>
+                          <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-medium">FREE</span>
                         </div>
                       )}
                       <div className="flex items-start gap-3">
@@ -257,7 +303,7 @@ const GamesPage = () => {
                 <Trophy className="h-4 w-4 text-amber-500" /> Top Players
               </h2>
               {!isLoggedIn && (
-                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">Sign up to join →</a>
+                <a href="/signup" className="text-xs text-amber-700 font-semibold hover:underline">Sign up to join →</a>
               )}
             </div>
             <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>
@@ -272,12 +318,12 @@ const GamesPage = () => {
                       const rankEmojis = ["🥇", "🥈", "🥉"];
                       const emoji = idx < 3 ? rankEmojis[idx] : `${idx + 1}`;
                       return (
-                        <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-primary/5" : ""}`}>
+                        <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-amber-50" : ""}`}>
                           <span className="text-base w-6 text-center font-bold">{emoji}</span>
-                          <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-primary font-bold" : "text-foreground"}`}>
+                          <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-amber-700 font-bold" : "text-foreground"}`}>
                             {p.name}{p.isCurrentUser ? " (you)" : ""}
                           </span>
-                          <span className="text-xs text-yellow-700 font-semibold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full">
+                          <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full ring-1 ring-black/10">
                             {p.value.toLocaleString()} XP
                           </span>
                         </div>
@@ -295,7 +341,7 @@ const GamesPage = () => {
                     <div key={p.rank} className="flex items-center gap-3 px-4 py-2.5">
                       <span className="text-base w-6 text-center">{p.emoji}</span>
                       <span className="flex-1 text-sm font-medium text-foreground">{p.name}</span>
-                      <span className="text-xs text-yellow-700 font-semibold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full">
                         {p.xp.toLocaleString()} XP
                       </span>
                     </div>
@@ -308,7 +354,7 @@ const GamesPage = () => {
                   <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3">
                     <a
                       href="/signup"
-                      className="text-xs bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-semibold hover:bg-primary/90 transition-colors shadow-md"
+                      className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md border border-black/15"
                     >
                       🏆 Sign up to see your rank
                     </a>
@@ -327,6 +373,22 @@ const GamesPage = () => {
       </main>
       <Footer />
 
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
+      {showPerfectScore && (
+        <PerfectScoreOverlay
+          score={showPerfectScore.score}
+          total={showPerfectScore.total}
+          onContinue={() => setShowPerfectScore(null)}
+        />
+      )}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
+      {leaguePromotion && (
+        <LeaguePromotionModal
+          fromLeague={leaguePromotion.fromLeague}
+          toLeague={leaguePromotion.toLeague}
+          onClose={clearLeaguePromotion}
+        />
+      )}
       {/* Signup nudge modal */}
       {showSignupNudge && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -342,13 +404,13 @@ const GamesPage = () => {
             <div className="text-center space-y-2">
               <div className="text-4xl">🎉</div>
               <h2 className="text-xl font-bold text-foreground">Nice work!</h2>
-              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 13 games.</p>
+              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 30 games.</p>
             </div>
 
             <div className="space-y-2">
               {[
                 { icon: "⭐", text: "Save your XP and streak" },
-                { icon: "🔓", text: "Unlock all 13 Korean games" },
+                { icon: "🔓", text: "Unlock all 30 Korean games" },
                 { icon: "📊", text: "Track your learning progress" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">

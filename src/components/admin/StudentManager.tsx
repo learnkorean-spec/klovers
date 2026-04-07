@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LEVEL_SELECT_OPTIONS_WITH_SPECIAL } from "@/constants/levels";
 import { Button } from "@/components/ui/button";
@@ -25,75 +25,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Search, Download, Trash2, Plus, Edit, Users, UserCheck, UserX, Settings, CalendarDays, Package, History, Loader2, UserPlus } from "lucide-react";
 import LegacyAttendancePanel from "./LegacyAttendancePanel";
+import type { StatusOverviewRow, LegacyStudent, StudentPackage, StudentGroup } from "@/types/admin";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
-// Overview row from admin_student_status_overview view
-interface StatusOverviewRow {
-  user_id: string;
-  name: string;
-  email: string;
-  country: string;
-  level: string;
-  profile_level: string;
-  profile_created_at: string;
-  active_enrollment_id: string | null;
-  enrollment_created_at: string | null;
-  payment_status: string | null;
-  approval_status: string | null;
-  enrollment_status: string | null;
-  slot_id: string | null;
-  matched_at: string | null;
-  plan_type: string | null;
-  duration: number | null;
-  amount: number | null;
-  currency: string | null;
-  classes_included: number | null;
-  sessions_remaining: number | null;
-  sessions_total: number | null;
-  unit_price: number | null;
-  package_id: string | null;
-  computed_status: string;
-}
-
-// Legacy student from students table
-interface LegacyStudent {
-  id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  country: string;
-  status: string;
-  course_type: string;
-  package_name: string;
-  total_classes: number;
-  used_classes: number;
-  remaining_classes: number;
-  total_paid: number;
-  price_per_class: number;
-  payment_status: string;
-  notes: string;
-  created_at: string;
-  group_name: string;
-}
-
-interface StudentPackage {
-  id: string;
-  student_id: string;
-  package_name: string;
-  total_classes: number;
-  used_classes: number;
-  total_paid: number;
-  price_per_class: number;
-  payment_status: string;
-  is_active: boolean;
-  notes: string;
-  created_at: string;
-}
-
-interface StudentGroup {
-  id: string;
-  name: string;
-  created_at: string;
-}
+type OverviewViewRow = Tables<"admin_student_overview">;
+type ProfileRow = Pick<Tables<"profiles">, "user_id" | "name" | "country" | "level">;
+type LeadRow = Tables<"leads">;
 
 const COURSE_TYPES = [
   { value: "group", label: "Group" },
@@ -163,7 +100,7 @@ const StudentManager = () => {
   const [studentForm, setStudentForm] = useState(EMPTY_STUDENT_FORM);
   const [saving, setSaving] = useState(false);
   const [lookingUpEmail, setLookingUpEmail] = useState(false);
-  const [mergedEnrollment, setMergedEnrollment] = useState<any>(null);
+  const [mergedEnrollment, setMergedEnrollment] = useState<OverviewViewRow | null>(null);
 
   // Package dialog (add new package to student)
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
@@ -197,15 +134,15 @@ const StudentManager = () => {
 
   const fetchGroups = async () => {
     // Fetch from pkg_groups (active groups from Teacher Available Slots)
-    const { data } = await (supabase as any).from("pkg_groups").select("id, name, created_at").eq("is_active", true).order("name");
+    const { data } = await supabase.from("pkg_groups").select("id, name, created_at").eq("is_active", true).order("name");
     setGroups(data || []);
   };
 
   const fetchOverview = async () => {
     setOverviewLoading(true);
-    const { data, error } = await supabase.from("admin_student_status_overview" as any).select("*");
+    const { data, error } = await supabase.from("admin_student_status_overview").select("*");
     if (error) toast({ title: "Error loading overview", description: error.message, variant: "destructive" });
-    setOverviewRows((data as any[]) || []);
+    setOverviewRows((data as StatusOverviewRow[]) || []);
     setOverviewLoading(false);
   };
 
@@ -213,7 +150,7 @@ const StudentManager = () => {
     setLegacyLoading(true);
     const { data, error } = await supabase.from("students").select("*").order("created_at", { ascending: false }).limit(200);
     if (error) toast({ title: "Error loading students", description: error.message, variant: "destructive" });
-    setLegacyStudents(((data as any[]) || []).map(s => ({ ...s, group_name: s.group_name || "" })));
+    setLegacyStudents(((data ?? []) as LegacyStudent[]).map(s => ({ ...s, group_name: s.group_name || "" })));
     setLegacyLoading(false);
   };
 
@@ -289,19 +226,19 @@ const StudentManager = () => {
         .eq("email", email)
         .maybeSingle();
 
-      const resolvedUserId = (profileMatch as any)?.user_id;
+      const resolvedUserId = profileMatch?.user_id;
 
       // Query all sources in parallel, preferring user_id when available
       const [enrollmentRes, leadRes] = await Promise.all([
         resolvedUserId
-          ? supabase.from("admin_student_overview" as any).select("*").eq("user_id", resolvedUserId).maybeSingle()
-          : supabase.from("admin_student_overview" as any).select("*").eq("email", email).maybeSingle(),
+          ? supabase.from("admin_student_overview").select("*").eq("user_id", resolvedUserId).maybeSingle()
+          : supabase.from("admin_student_overview").select("*").eq("email", email).maybeSingle(),
         supabase.from("leads").select("*").eq("email", email).maybeSingle(),
       ]);
 
-      const profile = profileMatch as any;
-      const enrollment = enrollmentRes.data as any;
-      const lead = leadRes.data as any;
+      const profile = profileMatch as ProfileRow | null;
+      const enrollment = enrollmentRes.data as OverviewViewRow | null;
+      const lead = leadRes.data as LeadRow | null;
 
       setStudentForm(prev => {
         const updated = { ...prev };
@@ -353,7 +290,7 @@ const StudentManager = () => {
     const email = studentForm.email.trim().toLowerCase();
 
     // Build base payload
-    const payload: any = {
+    const payload: TablesInsert<"students"> = {
       full_name: studentForm.full_name.trim(), email,
       phone: studentForm.phone.trim(), country: studentForm.country.trim(),
       status: studentForm.status, course_type: studentForm.course_type.trim(),
@@ -380,7 +317,7 @@ const StudentManager = () => {
         .from("students").select("id").eq("email", email).maybeSingle();
 
       if (existing) {
-        const { error } = await supabase.from("students").update(payload).eq("id", (existing as any).id);
+        const { error } = await supabase.from("students").update(payload).eq("id", existing.id);
         if (error) toast({ title: "Error updating", description: error.message, variant: "destructive" });
         else toast({ title: "Student merged", description: "Existing record updated with enrollment data." });
       } else {
@@ -390,7 +327,7 @@ const StudentManager = () => {
       }
 
       // Sync lead status to enrolled
-      await supabase.from("leads").update({ status: "enrolled" } as any).eq("email", email).neq("status", "enrolled");
+      await supabase.from("leads").update({ status: "enrolled" }).eq("email", email).neq("status", "enrolled");
     }
 
     setSaving(false);
@@ -417,8 +354,8 @@ const StudentManager = () => {
 
     // Deactivate existing active packages for this student
     await supabase
-      .from("student_packages" as any)
-      .update({ is_active: false } as any)
+      .from("student_packages")
+      .update({ is_active: false })
       .eq("student_id", packageStudentId)
       .eq("is_active", true);
 
@@ -426,7 +363,7 @@ const StudentManager = () => {
 
     // Insert new active package
     const { error } = await supabase
-      .from("student_packages" as any)
+      .from("student_packages")
       .insert({
         student_id: packageStudentId,
         package_name: packageForm.package_name.trim(),
@@ -436,7 +373,7 @@ const StudentManager = () => {
         price_per_class: pricePerClass,
         payment_status: packageForm.payment_status,
         is_active: true,
-      } as any);
+      });
 
     if (error) {
       toast({ title: "Error adding package", description: error.message, variant: "destructive" });
@@ -449,7 +386,7 @@ const StudentManager = () => {
         total_paid: totalPaid,
         price_per_class: pricePerClass,
         payment_status: packageForm.payment_status,
-      } as any).eq("id", packageStudentId);
+      }).eq("id", packageStudentId);
 
       toast({ title: "Package added", description: `New package for ${packageStudentName}` });
       fetchLegacyStudents();
@@ -465,13 +402,13 @@ const StudentManager = () => {
     setPackagesDialogOpen(true);
 
     const { data, error } = await supabase
-      .from("student_packages" as any)
+      .from("student_packages")
       .select("*")
       .eq("student_id", student.id)
       .order("created_at", { ascending: false });
 
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    setPackagesForStudent((data as any[]) || []);
+    setPackagesForStudent((data as StudentPackage[]) || []);
     setPackagesLoading(false);
   };
 
@@ -496,7 +433,7 @@ const StudentManager = () => {
 
   const handleGroupChange = async (studentId: string, groupName: string) => {
     const value = groupName === "unassigned" ? "" : groupName;
-    const { error } = await supabase.from("students").update({ group_name: value } as any).eq("id", studentId);
+    const { error } = await supabase.from("students").update({ group_name: value }).eq("id", studentId);
     if (error) toast({ title: "Error assigning group", description: error.message, variant: "destructive" });
     else {
       setLegacyStudents(prev => prev.map(s => s.id === studentId ? { ...s, group_name: value } : s));
@@ -507,7 +444,7 @@ const StudentManager = () => {
   const handleAddGroup = async () => {
     const name = newGroupName.trim();
     if (!name) return;
-    const { error } = await supabase.from("student_groups").insert({ name } as any);
+    const { error } = await supabase.from("student_groups").insert({ name });
     if (error) {
       const msg = error.message?.includes("duplicate") ? "Group name already exists." : error.message;
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -1236,4 +1173,4 @@ const StudentManager = () => {
   );
 };
 
-export default StudentManager;
+export default memo(StudentManager);

@@ -38,6 +38,7 @@ const MySchedulePage = lazy(() => import("./pages/MySchedulePage"));
 const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
 const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage"));
+const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
 const PlacementTestPage = lazy(() => import("./pages/PlacementTestPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
@@ -84,7 +85,7 @@ const AppInner = () => {
 // Minimal full-screen spinner shown while a lazy chunk loads
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -93,7 +94,7 @@ const App = () => (
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="bottom-center" />
         <AppInner />
         <WhatsAppButton />
         <BrowserRouter>
@@ -135,6 +136,7 @@ const App = () => (
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
+                <Route path="/admin/korean-orchestra" element={<ProtectedRoute><KoreanOrchestratorPage /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

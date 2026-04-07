@@ -21,6 +21,7 @@ export interface EnrollmentChecklist {
   created_at: string;
   payment_status: string;
   approval_status: string;
+  admin_notes: string;
   items: ChecklistItem[];
   overall_state: OverallState;
   blockers_count: number;
@@ -30,7 +31,7 @@ export interface EnrollmentChecklist {
 export async function fetchEnrollmentChecklists(): Promise<EnrollmentChecklist[]> {
   // Single batch fetch — no N+1
   const [enrollRes, profilesRes, prefsRes, slotsRes, emailsRes, batchRes] = await Promise.all([
-    supabase.from("enrollments").select("id, user_id, plan_type, duration, sessions_remaining, sessions_total, amount, currency, status, payment_status, approval_status, created_at, preferred_days, preferred_time, timezone, level, package_id").order("created_at", { ascending: false }),
+    supabase.from("enrollments").select("id, user_id, plan_type, duration, sessions_remaining, sessions_total, amount, currency, status, payment_status, approval_status, created_at, preferred_days, preferred_time, timezone, level, package_id, admin_notes").order("created_at", { ascending: false }),
     supabase.from("profiles").select("user_id, name, email, country, level, avatar_url"),
     supabase.from("student_slot_preferences").select("enrollment_id, slot_id, preferred_day, preferred_time"),
     supabase.from("matching_slots").select("id, day_of_week, time_slot, teacher_id, is_available"),
@@ -258,6 +259,7 @@ export async function fetchEnrollmentChecklists(): Promise<EnrollmentChecklist[]
       created_at: e.created_at,
       payment_status: e.payment_status,
       approval_status: e.approval_status,
+      admin_notes: (e as any).admin_notes || "",
       items,
       overall_state,
       blockers_count,

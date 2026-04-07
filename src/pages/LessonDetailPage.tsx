@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw, AlertTriangle } from "lucide-react";
 import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
@@ -16,10 +16,12 @@ import VisualVocabScene from "@/components/VisualVocabScene";
 import { MissionStartBanner, XpBadge, LeagueProgressBar, LessonProgressDots } from "@/components/GamificationUI";
 import { isCheckpointLesson, isBossChallenge, XP_VALUES, getRandomMotivation } from "@/constants/gamification";
 import { getWorldForLesson } from "@/constants/worlds";
+import { getGrammarMasteryWorldForLesson } from "@/constants/grammarMasteryWorlds";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MissionCompleteOverlay, XpFloatAnimation } from "@/components/XpAnimation";
+import { MissionCompleteOverlay, XpFloatAnimation, StreakCelebration } from "@/components/XpAnimation";
 import { Progress } from "@/components/ui/progress";
+import { NextStepCard } from "@/components/NextStepCard";
 
 interface Lesson {
   id: number;
@@ -45,7 +47,7 @@ const LessonDetailPage = () => {
   const lessonNum = parseInt(lessonId || "1", 10);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userId, progress, league, markSectionDone } = useGamification();
+  const { userId, progress, league, markSectionDone, awardXp, awardBadge, streakCelebration, clearStreakCelebration } = useGamification();
   const { speakKorean, isSpeaking } = useSpeech();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
@@ -59,6 +61,7 @@ const LessonDetailPage = () => {
   });
   const [totalLessons, setTotalLessons] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [vocab, setVocab] = useState<VocabItem[]>([]);
   const [grammar, setGrammar] = useState<GrammarItem[]>([]);
@@ -80,38 +83,46 @@ const LessonDetailPage = () => {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
+      setFetchError(null);
       setSelectedAnswers({});
       setShowResults({});
       setFlippedCards(new Set());
       setStudiedCards(new Set());
       setCorrectCount(0);
 
-      const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
-      const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
-      const [lessonRes, countRes] = await Promise.all([
-        (baseQuery as any).eq("book", bookSlug).maybeSingle(),
-        (countQuery as any).eq("book", bookSlug),
-      ]);
-
-      const l = lessonRes.data as unknown as Lesson | null;
-      setLesson(l);
-      setTotalLessons(countRes.count || 0);
-
-      if (l) {
-        const [vRes, gRes, dRes, eRes, rRes] = await Promise.all([
-          supabase.from("lesson_vocabulary").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_grammar").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_dialogues").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_exercises").select("*").eq("lesson_id", l.id).order("sort_order"),
-          supabase.from("lesson_reading").select("*").eq("lesson_id", l.id).order("sort_order"),
+      try {
+        const baseQuery = supabase.from("textbook_lessons").select("*").eq("sort_order", lessonNum).eq("is_published", true);
+        const countQuery = supabase.from("textbook_lessons").select("id", { count: "exact", head: true }).eq("is_published", true);
+        const [lessonRes, countRes] = await Promise.all([
+          (baseQuery as any).eq("book", bookSlug).maybeSingle(),
+          (countQuery as any).eq("book", bookSlug),
         ]);
-        setVocab((vRes.data as unknown as VocabItem[]) || []);
-        setGrammar((gRes.data as unknown as GrammarItem[]) || []);
-        setDialogue((dRes.data as unknown as DialogueLine[]) || []);
-        setExercises((eRes.data as unknown as ExerciseItem[]) || []);
-        setReading((rRes.data as unknown as ReadingItem[]) || []);
+
+        if (lessonRes.error) throw lessonRes.error;
+
+        const l = lessonRes.data as unknown as Lesson | null;
+        setLesson(l);
+        setTotalLessons(countRes.count || 0);
+
+        if (l) {
+          const [vRes, gRes, dRes, eRes, rRes] = await Promise.all([
+            supabase.from("lesson_vocabulary").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_grammar").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_dialogues").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_exercises").select("*").eq("lesson_id", l.id).order("sort_order"),
+            supabase.from("lesson_reading").select("*").eq("lesson_id", l.id).order("sort_order"),
+          ]);
+          setVocab((vRes.data as unknown as VocabItem[]) || []);
+          setGrammar((gRes.data as unknown as GrammarItem[]) || []);
+          setDialogue((dRes.data as unknown as DialogueLine[]) || []);
+          setExercises((eRes.data as unknown as ExerciseItem[]) || []);
+          setReading((rRes.data as unknown as ReadingItem[]) || []);
+        }
+        setLoading(false);
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : "Failed to load lesson");
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchAll();
   }, [lessonNum, bookSlug]);
@@ -125,7 +136,7 @@ const LessonDetailPage = () => {
     }
   };
 
-  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done") => {
+  const handleMarkDone = useCallback(async (section: "vocab_done" | "grammar_done" | "dialogue_done" | "exercises_done" | "reading_done" | "writing_done") => {
     if (!lesson || !userId) {
       toast({ title: t("textbook.signInRequired"), description: t("textbook.signInRequiredDesc"), variant: "destructive" });
       return;
@@ -148,12 +159,21 @@ const LessonDetailPage = () => {
     setXpFloat(xpMap[section]);
     setTimeout(() => setXpFloat(null), 1600);
 
+    // Award perfect_exercise badge if all exercise answers were correct
+    if (section === "exercises_done" && exercises.length > 0 && correctCount === exercises.length) {
+      await awardBadge("perfect_exercise");
+    }
+
     // Check if chapter just completed
-    const updatedLp = { ...lp, [section]: true };
     const allDone = ["vocab_done", "grammar_done", "dialogue_done", "exercises_done", "reading_done", "writing_done"]
       .every(s => s === section ? true : lp?.[s as keyof typeof lp]);
 
     if (allDone) {
+      // Boss challenge: award badge + 25 XP bonus
+      if (isBossChallenge(lesson.sort_order)) {
+        await awardBadge("boss_slayer");
+        await awardXp(lesson.id, "bonus");
+      }
       setTimeout(() => setShowMissionComplete(true), 800);
     }
 
@@ -161,7 +181,7 @@ const LessonDetailPage = () => {
       title: `+${xpMap[section]} XP earned! ⚡`,
       description: getRandomMotivation(),
     });
-  }, [lesson, userId, progress, markSectionDone, toast, t]);
+  }, [lesson, userId, progress, markSectionDone, awardXp, awardBadge, exercises, correctCount, toast, t]);
 
   const toggleFlip = (id: string) => {
     setFlippedCards((prev) => {
@@ -180,6 +200,23 @@ const LessonDetailPage = () => {
     ? [lp.vocab_done, lp.grammar_done, lp.dialogue_done, lp.exercises_done, lp.reading_done, (lp as any).writing_done].filter(Boolean).length
     : 0;
   const sectionProgress = (sectionsDone / 6) * 100;
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
+          <div className="text-center space-y-4 max-w-sm">
+            <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
+            <h1 className="font-semibold text-foreground">Couldn't load this lesson</h1>
+            <p className="text-sm text-muted-foreground">{fetchError}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">Refresh</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -204,7 +241,7 @@ const LessonDetailPage = () => {
         <Header />
         <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`} className="text-primary underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-amber-700 underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -213,7 +250,9 @@ const LessonDetailPage = () => {
 
   const boss = isBossChallenge(lesson.sort_order);
   const checkpoint = isCheckpointLesson(lesson.sort_order);
-  const world = getWorldForLesson(lesson.sort_order);
+  const world = bookSlug === "grammar-mastery"
+    ? (() => { const gw = getGrammarMasteryWorldForLesson(lesson.sort_order); return { name: gw.name, nameAr: gw.name, emoji: gw.emoji }; })()
+    : getWorldForLesson(lesson.sort_order);
 
   const sectionLabels: Record<string, string> = {
     vocab_done: t("textbook.vocabulary"),
@@ -229,7 +268,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-amber-700 underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -259,6 +298,7 @@ const LessonDetailPage = () => {
 
       {/* XP Float Animation */}
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} />}
+      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
 
       {/* Mission Complete Overlay */}
       {showMissionComplete && (
@@ -321,10 +361,15 @@ const LessonDetailPage = () => {
         )}
 
         {lp?.chapter_completed && (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-6 text-center">
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 mb-6 text-center ring-1 ring-black/10">
             <span className="text-2xl">⭐</span>
             <p className="font-bold text-foreground">{t("textbook.missionComplete")}</p>
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
+          </div>
+        )}
+        {lp?.chapter_completed && (
+          <div className="mb-6">
+            <NextStepCard completedType="lesson" lessonSection={activeTab} />
           </div>
         )}
 
@@ -340,27 +385,27 @@ const LessonDetailPage = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-6 mb-8">
-            <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
               <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
               {lp?.vocab_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
               <Languages className="h-4 w-4 hidden sm:block" /> {t("textbook.grammar")}
               {lp?.grammar_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
               <MessageSquare className="h-4 w-4 hidden sm:block" /> {t("textbook.dialogue")}
               {lp?.dialogue_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
               <Lightbulb className="h-4 w-4 hidden sm:block" /> {t("textbook.exercises")}
               {lp?.exercises_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
               <FileText className="h-4 w-4 hidden sm:block" /> {t("textbook.reading")}
               {lp?.reading_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
               <PenLine className="h-4 w-4 hidden sm:block" /> {isAr ? "كتابة" : "Writing"}
               {(lp as any)?.writing_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
@@ -371,7 +416,7 @@ const LessonDetailPage = () => {
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" /> {t("textbook.vocabulary")}
+                <BookOpen className="h-5 w-5 text-amber-600" /> {t("textbook.vocabulary")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.vocab} XP</span>
               </h2>
               <div className="flex items-center gap-2">
@@ -438,10 +483,10 @@ const LessonDetailPage = () => {
                             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                             className={cn(
                               "absolute inset-0 rounded-xl border flex flex-col items-center justify-center gap-2 p-4 overflow-hidden",
-                              isStudied ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-primary/20 hover:shadow-md"
+                              isStudied ? "border-amber-300 bg-amber-50" : "border-border bg-card hover:border-amber-200 hover:shadow-md"
                             )}
                           >
-                            {isStudied && <span className="absolute top-2 right-2 text-primary text-xs z-10">✓</span>}
+                            {isStudied && <span className="absolute top-2 right-2 text-amber-600 text-xs z-10">✓</span>}
                             {/* Image */}
                             {v.image_url && (
                               <img
@@ -476,11 +521,11 @@ const LessonDetailPage = () => {
                               WebkitBackfaceVisibility: 'hidden',
                               transform: 'rotateY(180deg)',
                             }}
-                            className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-2 p-4"
+                            className="absolute inset-0 rounded-xl border border-amber-300 bg-amber-50 flex flex-col items-center justify-center gap-2 p-4 ring-1 ring-black/10"
                           >
                             <p className="text-lg font-bold text-foreground text-center">{v.meaning}</p>
                             <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                            <p className="text-sm text-primary font-medium mt-1 text-center">{v.korean}</p>
+                            <p className="text-sm text-amber-700 font-medium mt-1 text-center">{v.korean}</p>
                           </div>
                         </div>
                       </div>
@@ -491,7 +536,7 @@ const LessonDetailPage = () => {
                 {/* Practice with Games */}
                 <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
                   <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
-                    <Gamepad2 className="h-4 w-4 text-primary" />
+                    <Gamepad2 className="h-4 w-4 text-amber-600" />
                     {isAr ? "تدرب مع الألعاب" : "Practice with Games"}
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -517,7 +562,7 @@ const LessonDetailPage = () => {
           {/* GRAMMAR */}
           <TabsContent value="grammar">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Languages className="h-5 w-5 text-primary" /> {t("textbook.grammar")}
+              <Languages className="h-5 w-5 text-amber-600" /> {t("textbook.grammar")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.grammar} XP</span>
             </h2>
             {grammar.length === 0 ? (
@@ -528,17 +573,17 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-white font-bold shadow-sm border border-black/15">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p className="text-sm font-mono text-foreground bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
+                        <p className="text-sm font-mono text-foreground bg-amber-100 inline-block px-3 py-1.5 rounded-lg mb-3 border border-black/10">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
                         <div className="space-y-2 bg-muted/30 rounded-lg p-3">
                           {g.examples.map((ex, i) => (
-                            <div key={i} className="border-l-2 border-primary/30 pl-3">
+                            <div key={i} className="border-l-2 border-amber-300 pl-3">
                               <p className="text-sm font-medium text-foreground">{ex.korean}</p>
                               <p className="text-xs text-muted-foreground">{ex.english}</p>
                             </div>
@@ -556,7 +601,7 @@ const LessonDetailPage = () => {
           {/* DIALOGUE - Enhanced chat-style */}
           <TabsContent value="dialogue">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> {t("textbook.dialogue")}
+              <MessageSquare className="h-5 w-5 text-amber-600" /> {t("textbook.dialogue")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.dialogue} XP</span>
             </h2>
             {dialogue.length === 0 ? (
@@ -575,7 +620,7 @@ const LessonDetailPage = () => {
                           "max-w-[80%] rounded-2xl p-4",
                           isEven
                             ? "rounded-tl-sm bg-card border border-border"
-                            : "rounded-tr-sm bg-primary/10 border border-primary/20"
+                            : "rounded-tr-sm bg-amber-100 border border-amber-200 ring-1 ring-black/10"
                         )}>
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <p className="text-xs font-bold text-foreground uppercase">{d.speaker}</p>
@@ -607,12 +652,12 @@ const LessonDetailPage = () => {
           <TabsContent value="exercises">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-primary" /> {t("textbook.exercises")}
+                <Lightbulb className="h-5 w-5 text-amber-600" /> {t("textbook.exercises")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.exercise} XP</span>
               </h2>
               {allAnswered && (
                 <div className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold",
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border border-black/10",
                   quizScore >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : quizScore >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                     : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -656,7 +701,7 @@ const LessonDetailPage = () => {
                                 "text-left px-4 py-3 rounded-lg border text-sm transition-all",
                                 revealed && isCorrect && "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 font-medium",
                                 revealed && selected && !isCorrect && "border-destructive bg-destructive/10 text-destructive",
-                                !revealed && "border-border hover:border-primary/40 hover:bg-accent text-foreground",
+                                !revealed && "border-border hover:border-amber-300 hover:bg-amber-50 text-foreground",
                                 revealed && !selected && !isCorrect && "opacity-40"
                               )}
                             >
@@ -716,7 +761,7 @@ const LessonDetailPage = () => {
           {/* READING */}
           <TabsContent value="reading">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" /> {t("textbook.reading")}
+              <FileText className="h-5 w-5 text-amber-600" /> {t("textbook.reading")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.reading} XP</span>
             </h2>
             {reading.length === 0 ? (
@@ -740,7 +785,7 @@ const LessonDetailPage = () => {
           {/* WRITING - Korean Typing Test */}
           <TabsContent value="writing">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <PenLine className="h-5 w-5 text-primary" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
+              <PenLine className="h-5 w-5 text-amber-600" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.writing} XP</span>
             </h2>
             <p className="text-sm text-muted-foreground mb-6">
@@ -754,7 +799,7 @@ const LessonDetailPage = () => {
               lessonTitle={isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}
               onComplete={(score, total) => {
                 if (score > 0) {
-                  handleMarkDone("writing_done" as any);
+                  handleMarkDone("writing_done");
                 }
               }}
             />
@@ -765,7 +810,7 @@ const LessonDetailPage = () => {
         {/* Games XP Banner */}
         <Link
           to="/games"
-          className="group flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 p-4 mt-10 transition-all"
+          className="group flex items-center gap-4 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 p-4 mt-10 transition-all ring-1 ring-black/10"
         >
           <span className="text-3xl">🎮</span>
           <div className="flex-1">
@@ -776,7 +821,7 @@ const LessonDetailPage = () => {
               {isAr ? "العب ألعاب المفردات والهانغول لتعزيز تعلمك" : "Play vocab & Hangul games to boost your learning"}
             </p>
           </div>
-          <span className="text-primary font-semibold text-sm group-hover:underline">
+          <span className="text-amber-700 font-semibold text-sm group-hover:underline">
             {isAr ? "العب الآن" : "Play Now →"}
           </span>
         </Link>

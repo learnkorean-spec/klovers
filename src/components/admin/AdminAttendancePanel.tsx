@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,12 +87,12 @@ const AdminAttendancePanel = ({
         .eq("id", enrollmentId)
         .single(),
       supabase
-        .from("admin_attendance_log" as any)
+        .from("admin_attendance_log")
         .select("id, session_date, created_at")
         .eq("enrollment_id", enrollmentId)
         .order("session_date", { ascending: false }),
       supabase
-        .from("pkg_attendance" as any)
+        .from("pkg_attendance")
         .select("session_id, created_at, status, pkg_group_sessions(id, session_date, group_id, pkg_groups(name))")
         .eq("user_id", userId)
         .eq("admin_approved", true),
@@ -103,7 +103,7 @@ const AdminAttendancePanel = ({
         .eq("status", "APPROVED")
         .order("request_date", { ascending: false }),
       supabase
-        .from("pkg_group_members" as any)
+        .from("pkg_group_members")
         .select("group_id, pkg_groups(name)")
         .eq("user_id", userId)
         .eq("member_status", "active")
@@ -113,19 +113,20 @@ const AdminAttendancePanel = ({
     if (enrollRes.data) setEnrollment(enrollRes.data as EnrollmentDetails);
 
     if (groupRes.data && groupRes.data.length > 0) {
-      setGroupName((groupRes.data[0] as any).pkg_groups?.name || null);
+      const member = groupRes.data[0] as { group_id: string; pkg_groups: { name: string } | null };
+      setGroupName(member.pkg_groups?.name || null);
     }
 
     const unified: UnifiedRecord[] = [];
 
     if (adminRes.data) {
-      for (const r of adminRes.data as any[]) {
+      for (const r of adminRes.data) {
         unified.push({ id: r.id, session_date: r.session_date, source: "Admin", created_at: r.created_at });
       }
     }
 
     if (pkgRes.data) {
-      for (const r of pkgRes.data as any[]) {
+      for (const r of pkgRes.data) {
         const session = r.pkg_group_sessions;
         if (session) {
           unified.push({
@@ -140,7 +141,7 @@ const AdminAttendancePanel = ({
     }
 
     if (selfRes.data) {
-      for (const r of selfRes.data as any[]) {
+      for (const r of selfRes.data) {
         unified.push({ id: r.id, session_date: r.request_date, source: "Student", created_at: r.created_at });
       }
     }
@@ -192,7 +193,7 @@ const AdminAttendancePanel = ({
     if (!selectedDate) return;
     setAdding(true);
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const { data, error } = await supabase.rpc("admin_add_attendance" as any, {
+    const { data, error } = await supabase.rpc("admin_add_attendance", {
       p_enrollment_id: enrollmentId,
       p_session_date: dateStr,
     });
@@ -208,7 +209,7 @@ const AdminAttendancePanel = ({
   };
 
   const handleRemoveAttendance = async (sessionDate: string) => {
-    const { data, error } = await supabase.rpc("admin_remove_attendance" as any, {
+    const { data, error } = await supabase.rpc("admin_remove_attendance", {
       p_enrollment_id: enrollmentId,
       p_session_date: sessionDate,
     });
@@ -227,7 +228,7 @@ const AdminAttendancePanel = ({
     } else if (r.source === "Group") {
       // Delete from pkg_attendance by session_id + user_id
       const { error } = await supabase
-        .from("pkg_attendance" as any)
+        .from("pkg_attendance")
         .delete()
         .eq("session_id", r.id)
         .eq("user_id", userId);
@@ -235,9 +236,9 @@ const AdminAttendancePanel = ({
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
         // Restore 1 session
-        await supabase.from("enrollments").update({ sessions_remaining: (enrollment?.sessions_remaining ?? 0) + 1 } as any).eq("id", enrollmentId);
+        await supabase.from("enrollments").update({ sessions_remaining: (enrollment?.sessions_remaining ?? 0) + 1 }).eq("id", enrollmentId);
         // Also remove charge record
-        await supabase.from("pkg_class_charges" as any).delete().eq("session_id", r.id).eq("user_id", userId);
+        await supabase.from("pkg_class_charges").delete().eq("session_id", r.id).eq("user_id", userId);
         toast({ title: "Group session removed" });
         fetchAll();
         onUpdated();
@@ -261,7 +262,7 @@ const AdminAttendancePanel = ({
     if (!editNewDate) return;
     setSaving(true);
     // Remove old, add new
-    const { error: removeErr } = await supabase.rpc("admin_remove_attendance" as any, {
+    const { error: removeErr } = await supabase.rpc("admin_remove_attendance", {
       p_enrollment_id: enrollmentId,
       p_session_date: oldDate,
     });
@@ -270,7 +271,7 @@ const AdminAttendancePanel = ({
       setSaving(false);
       return;
     }
-    const { error: addErr } = await supabase.rpc("admin_add_attendance" as any, {
+    const { error: addErr } = await supabase.rpc("admin_add_attendance", {
       p_enrollment_id: enrollmentId,
       p_session_date: editNewDate,
     });
@@ -295,7 +296,7 @@ const AdminAttendancePanel = ({
       const dupeRecords = records.filter(r => r.session_date === dupeDate && r.source === "Admin");
       // Keep the first, remove the rest
       for (let i = 1; i < dupeRecords.length; i++) {
-        const { error } = await supabase.rpc("admin_remove_attendance" as any, {
+        const { error } = await supabase.rpc("admin_remove_attendance", {
           p_enrollment_id: enrollmentId,
           p_session_date: dupeDate,
         });
@@ -316,7 +317,7 @@ const AdminAttendancePanel = ({
     const newRemaining = stats.remaining;
     const { error } = await supabase
       .from("enrollments")
-      .update({ sessions_remaining: newRemaining } as any)
+      .update({ sessions_remaining: newRemaining })
       .eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -332,7 +333,7 @@ const AdminAttendancePanel = ({
     const val = parseInt(editRemaining, 10);
     if (isNaN(val)) return;
     setSaving(true);
-    const { error } = await supabase.from("enrollments").update({ sessions_remaining: val } as any).eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ sessions_remaining: val }).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -348,7 +349,7 @@ const AdminAttendancePanel = ({
     const val = parseFloat(editUnitPrice);
     if (isNaN(val) || val < 0) return;
     setSaving(true);
-    const { error } = await supabase.from("enrollments").update({ unit_price: val } as any).eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ unit_price: val }).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -368,7 +369,7 @@ const AdminAttendancePanel = ({
     const newTotal = dur === 1 ? 4 : dur === 3 ? 12 : 24;
     const { error } = await supabase
       .from("enrollments")
-      .update({ plan_type: editPlanType, duration: dur, sessions_total: newTotal } as any)
+      .update({ plan_type: editPlanType, duration: dur, sessions_total: newTotal })
       .eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -385,7 +386,7 @@ const AdminAttendancePanel = ({
     const val = parseFloat(editPaid);
     if (isNaN(val) || val < 0) return;
     setSaving(true);
-    const { error } = await supabase.from("enrollments").update({ amount: val } as any).eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ amount: val }).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -399,7 +400,7 @@ const AdminAttendancePanel = ({
 
   const handleUnlock = async () => {
     setSaving(true);
-    const { error } = await supabase.from("enrollments").update({ sessions_remaining: 0 } as any).eq("id", enrollmentId);
+    const { error } = await supabase.from("enrollments").update({ sessions_remaining: 0 }).eq("id", enrollmentId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -686,4 +687,4 @@ const AdminAttendancePanel = ({
   );
 };
 
-export default AdminAttendancePanel;
+export default memo(AdminAttendancePanel);

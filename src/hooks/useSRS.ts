@@ -12,6 +12,7 @@ export interface SRSCard {
   interval_days: number;
   difficulty_factor: number;
   review_count: number;
+  lesson_id: number;
 }
 
 interface SRSState {
@@ -117,7 +118,8 @@ export function useSRS(): SRSState & {
           lesson_vocabulary (
             korean,
             romanization,
-            meaning
+            meaning,
+            lesson_id
           )
         `
         )
@@ -137,6 +139,7 @@ export function useSRS(): SRSState & {
         interval_days: item.interval_days,
         difficulty_factor: item.difficulty_factor,
         review_count: item.review_count,
+        lesson_id: item.lesson_vocabulary.lesson_id,
       }));
 
       setState({

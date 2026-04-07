@@ -19,13 +19,13 @@ const CoursesSection = () => {
   }[];
 
   return (
-    <section id="courses" className="py-20 bg-background">
+    <section id="courses" className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">
             {t("courses", "badge")}
           </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {t("courses", "title")}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -37,7 +37,7 @@ const CoursesSection = () => {
           {courses.map((course, index) => (
             <Card
               key={index}
-              className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-border hover:border-primary/50"
+              className="group hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden border-border hover:border-primary/50"
             >
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2 mb-2">

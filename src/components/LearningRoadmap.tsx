@@ -4,18 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const LEVEL_META: Record<string, { color: string; bg: string; border: string; icon: React.ElementType; emoji: string }> = {
-  A0: { color: "text-violet-500", bg: "bg-violet-500/10", border: "border-violet-500/40", icon: BookOpen,      emoji: "🇰🇷" },
-  "TOPIK 1 / A1": { color: "text-blue-500",   bg: "bg-blue-500/10",   border: "border-blue-500/40",   icon: MessageCircle, emoji: "🌱" },
-  "TOPIK 2 / A2": { color: "text-cyan-500",   bg: "bg-cyan-500/10",   border: "border-cyan-500/40",   icon: Zap,           emoji: "⚡" },
-  "TOPIK 3 / B1": { color: "text-green-500",  bg: "bg-green-500/10",  border: "border-green-500/40",  icon: Star,          emoji: "🔥" },
-  "TOPIK 4 / B2": { color: "text-amber-500",  bg: "bg-amber-500/10",  border: "border-amber-500/40",  icon: Flame,         emoji: "💪" },
-  "TOPIK 5 / C1": { color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/40", icon: Trophy,        emoji: "🏅" },
-  "TOPIK 6 / C2": { color: "text-rose-500",   bg: "bg-rose-500/10",   border: "border-rose-500/40",   icon: GraduationCap, emoji: "🏆" },
+const LEVEL_META: Record<string, { color: string; bg: string; border: string; gradient: string; icon: React.ElementType; emoji: string }> = {
+  A0:              { color: "text-violet-500", bg: "bg-violet-500/10", border: "border-violet-500/30", gradient: "from-violet-500/20 to-violet-500/5", icon: BookOpen,      emoji: "🇰🇷" },
+  "TOPIK 1 / A1":  { color: "text-blue-500",  bg: "bg-blue-500/10",  border: "border-blue-500/30",  gradient: "from-blue-500/20 to-blue-500/5",  icon: MessageCircle, emoji: "🌱" },
+  "TOPIK 2 / A2":  { color: "text-cyan-500",  bg: "bg-cyan-500/10",  border: "border-cyan-500/30",  gradient: "from-cyan-500/20 to-cyan-500/5",  icon: Zap,           emoji: "⚡" },
+  "TOPIK 3 / B1":  { color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/30", gradient: "from-green-500/20 to-green-500/5", icon: Star,          emoji: "🔥" },
+  "TOPIK 4 / B2":  { color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30", gradient: "from-amber-500/20 to-amber-500/5", icon: Flame,         emoji: "💪" },
+  "TOPIK 5 / C1":  { color: "text-orange-500",bg: "bg-orange-500/10",border: "border-orange-500/30",gradient: "from-orange-500/20 to-orange-500/5",icon: Trophy,       emoji: "🏅" },
+  "TOPIK 6 / C2":  { color: "text-rose-500",  bg: "bg-rose-500/10",  border: "border-rose-500/30",  gradient: "from-rose-500/20 to-rose-500/5",  icon: GraduationCap, emoji: "🏆" },
 };
 
 const getMeta = (level: string) =>
-  LEVEL_META[level] ?? { color: "text-primary", bg: "bg-primary/10", border: "border-primary/40", icon: Star, emoji: "⭐" };
+  LEVEL_META[level] ?? { color: "text-primary", bg: "bg-primary/10", border: "border-primary/30", gradient: "from-primary/20 to-primary/5", icon: Star, emoji: "⭐" };
 
 const LearningRoadmap = () => {
   const { t, tArray } = useLanguage();
@@ -47,104 +47,116 @@ const LearningRoadmap = () => {
     setActiveStep((prev) => (prev === index ? null : index));
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary text-black text-xs font-semibold uppercase tracking-widest mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary text-black text-xs font-semibold uppercase tracking-widest mb-4 border border-black/25 shadow-sm">
             Your Journey
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {t("roadmap", "title")}
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="text-muted-foreground max-w-xl mx-auto text-base md:text-lg">
             {t("roadmap", "subtitle")}
           </p>
         </div>
 
-        {/* Timeline */}
-        <div className="max-w-2xl mx-auto relative">
-          {/* Vertical line — visible on all sizes */}
-          <div className="absolute left-5 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/40 to-transparent" />
+        {/* Roadmap cards — centered stack, no timeline line */}
+        <div className="max-w-xl mx-auto space-y-3">
+          {stages.map((stage, index) => {
+            const isActive = activeStep === index;
+            const isVisible = visibleItems.has(index);
+            const meta = getMeta(stage.level);
+            const Icon = meta.icon;
+            const isLast = index === stages.length - 1;
 
-          <div className="space-y-4">
-            {stages.map((stage, index) => {
-              const isActive = activeStep === index;
-              const isVisible = visibleItems.has(index);
-              const meta = getMeta(stage.level);
-              const Icon = meta.icon;
-
-              return (
+            return (
+              <div
+                key={index}
+                ref={(el) => { itemRefs.current[index] = el; }}
+                style={{ transitionDelay: `${index * 80}ms` }}
+                className={`transition-all duration-700 ease-out ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                }`}
+              >
+                {/* Card */}
                 <div
-                  key={index}
-                  ref={(el) => { itemRefs.current[index] = el; }}
-                  style={{ transitionDelay: `${index * 60}ms` }}
-                  className={`relative flex items-start gap-4 transition-all duration-700 ease-out ${
-                    isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                  onClick={() => toggle(index)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && toggle(index)}
+                  className={`relative rounded-2xl p-5 md:p-6 cursor-pointer transition-all duration-300 border overflow-hidden group ${
+                    isActive
+                      ? `${meta.border} shadow-lg ring-1 ring-inset ${meta.border}`
+                      : "border-border hover:border-primary/30 hover:shadow-md"
                   }`}
                 >
-                  {/* Step circle */}
-                  <button
-                    onClick={() => toggle(index)}
-                    aria-label={`Step ${index + 1}: ${stage.title}`}
-                    className={`relative z-10 flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring border-2 ${
-                      isActive
-                        ? `${meta.bg} ${meta.border} scale-110 shadow-lg`
-                        : `bg-background border-border hover:${meta.border} hover:${meta.bg}`
-                    }`}
-                  >
-                    <span className={`text-lg`}>{meta.emoji}</span>
-                  </button>
+                  {/* Subtle gradient background when active */}
+                  {isActive && (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradient} pointer-events-none`} />
+                  )}
 
-                  {/* Card */}
-                  <div
-                    onClick={() => toggle(index)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && toggle(index)}
-                    className={`flex-1 rounded-xl p-4 md:p-5 cursor-pointer transition-all duration-300 border mb-1 ${
-                      isActive
-                        ? `${meta.bg} ${meta.border} shadow-lg`
-                        : "bg-card border-border hover:border-primary/30 hover:shadow-md"
-                    }`}
-                  >
-                    {/* Top row */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-8 h-8 rounded-lg ${meta.bg} flex items-center justify-center flex-shrink-0`}>
-                          <Icon className={`w-4 h-4 ${meta.color}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${meta.color}`}>
-                            {stage.level}
-                          </span>
-                          <h3 className="text-sm md:text-base font-bold text-foreground leading-tight truncate">
-                            {stage.title}
-                          </h3>
-                        </div>
+                  {/* Top row */}
+                  <div className="relative flex items-center gap-4">
+                    {/* Step number + emoji */}
+                    <div className={`relative flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                      isActive ? `${meta.bg} shadow-md` : "bg-muted/50 group-hover:bg-muted"
+                    }`}>
+                      <span className="text-2xl">{meta.emoji}</span>
+                      <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-background ${
+                        isActive ? `${meta.bg} ${meta.color}` : "bg-muted text-muted-foreground"
+                      }`}>
+                        {index + 1}
+                      </span>
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <Icon className={`w-3.5 h-3.5 ${isActive ? meta.color : "text-muted-foreground"} transition-colors`} />
+                        <span className={`text-[11px] font-bold uppercase tracking-widest ${
+                          isActive ? meta.color : "text-muted-foreground"
+                        } transition-colors`}>
+                          {stage.level}
+                        </span>
                       </div>
-                      <ChevronDown
-                        className={`w-4 h-4 flex-shrink-0 transition-all duration-300 ${
-                          isActive ? `rotate-180 ${meta.color}` : "text-muted-foreground"
-                        }`}
-                      />
+                      <h3 className="text-base md:text-lg font-bold text-foreground leading-tight">
+                        {stage.title}
+                      </h3>
                     </div>
 
-                    {/* Expandable description */}
-                    <div
-                      className={`overflow-hidden transition-all duration-400 ease-in-out ${
-                        isActive ? "max-h-40 mt-3 opacity-100" : "max-h-0 opacity-0"
+                    {/* Chevron */}
+                    <ChevronDown
+                      className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${
+                        isActive ? `rotate-180 ${meta.color}` : "text-muted-foreground"
                       }`}
-                    >
-                      <p className="text-sm text-muted-foreground leading-relaxed pl-[42px]">
-                        {stage.description}
-                      </p>
-                    </div>
+                    />
+                  </div>
+
+                  {/* Expandable description */}
+                  <div
+                    className={`relative overflow-hidden transition-all duration-400 ease-in-out ${
+                      isActive ? "max-h-40 mt-4 opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <p className="text-sm text-muted-foreground leading-relaxed pl-[72px]">
+                      {stage.description}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Connector line between cards */}
+                {!isLast && (
+                  <div className="flex justify-center py-1">
+                    <div className={`w-0.5 h-3 rounded-full transition-colors duration-300 ${
+                      isActive || activeStep === index + 1 ? "bg-primary/60" : "bg-border"
+                    }`} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* CTA */}

@@ -199,6 +199,151 @@ export function getCountdownPostTemplate(daysLeft: number, levelLabel: string): 
   };
 }
 
+// ─── Arabic Content Variants ───
+
+export type PostLang = "en" | "ar";
+
+const HOOKS_AR = [
+  (g: GroupData) => `🚀 ${getLevelLabel(g.level)} — يبدأ ${g.day_name} الساعة ${g.start_time}`,
+  (g: GroupData) => `🇰🇷 جاهز تتعلم كوري؟ ${getLevelLabel(g.level)} مفتوح!`,
+  (g: GroupData) => `✨ جروب جديد! ${getLevelLabel(g.level)} — ${g.day_name} الساعة ${g.start_time}`,
+];
+
+const BENEFITS_AR = [
+  "اتعلم تقرأ وتتكلم وتبني جمل كوري حقيقية من أول أسبوع.",
+  "مجموعة صغيرة = اهتمام شخصي وممارسة حقيقية.",
+  "منهج منظم يخليك تتكلم كوري بسرعة.",
+];
+
+const CTAS_AR = [
+  "احجز مكانك النهارده.",
+  "الأماكن بتخلص — سجّل دلوقتي!",
+  "ماتفوتش الفرصة — سجّل اليوم.",
+];
+
+const HASHTAGS_AR = "#تعلم_الكورية #كورس_كوري #كلوفرز #اللغة_الكورية";
+
+export function generateCaptionsAR(group: GroupData): string[] {
+  return [0, 1, 2].map(i => {
+    const seatsLine = group.seats_left <= 3 ? `\nفاضل بس ${group.seats_left} مقعد${group.seats_left === 1 ? "" : "!"}` : "";
+    return `${HOOKS_AR[i](group)}${seatsLine}\n\n${BENEFITS_AR[i]}\n\n${CTAS_AR[i]}\n\n${HASHTAGS_AR}`;
+  });
+}
+
+export function getGroupPostTemplateAR(group: GroupData): PostTemplate {
+  const levelLabel = getLevelLabel(group.level);
+  const isUrgent = group.seats_left <= 5;
+  const urgencyLine = group.seats_left <= 3
+    ? `\n🔴 فاضل بس ${group.seats_left} مقعد!`
+    : group.seats_left <= 6
+    ? `\n⚡ ${group.seats_left} أماكن متاحة`
+    : "";
+  return {
+    mainText: levelLabel,
+    subtitle: `${group.day_name} • ${group.start_time}\n${group.duration_min} دقيقة / حصة${urgencyLine}`,
+    extra: "#تعلم_الكورية  #كلوفرز  #كورس_كوري",
+    isUrgent,
+  };
+}
+
+export function getDiscountPostTemplateAR(discountPct: number, code: string): PostTemplate {
+  return {
+    mainText: `خصم ${discountPct}%`,
+    subtitle: `أول شهر\nكود: ${code || "SAVE" + discountPct}`,
+    extra: "#كورس_كوري  #كلوفرز  #خصم",
+    isUrgent: true,
+  };
+}
+
+export function getReferralPostTemplateAR(): PostTemplate {
+  return {
+    mainText: "وصّي صاحبك",
+    subtitle: "احصل على حصة مجانية\nشارك الرابط",
+    extra: "#كلوفرز  #تعلم_الكورية  #أكاديمية_كلوفرز",
+    isUrgent: false,
+  };
+}
+
+const TESTIMONIALS_AR = [
+  { quote: "نجحت في TOPIK 2!", student: "منى، المستوى ٤" },
+  { quote: "بقيت أقرأ المنيو!", student: "سارة، المستوى ٢" },
+  { quote: "أحسن كلاس كوري!", student: "أحمد، المستوى ١" },
+  { quote: "تستاهل كل قرش!", student: "رنا، المستوى ٣" },
+  { quote: "بتكلم كوري في سنة!", student: "نور، متقدم" },
+];
+
+export function getTestimonialPostTemplateAR(index = 0): PostTemplate {
+  const t = TESTIMONIALS_AR[index % TESTIMONIALS_AR.length];
+  return {
+    mainText: `"${t.quote}"`,
+    subtitle: `— ${t.student}\nأكاديمية كلوفرز`,
+    extra: "#نجاح_الطلاب  #كلوفرز  #نتائج_الكوري",
+    isUrgent: false,
+  };
+}
+
+const FAQ_ITEMS_AR = [
+  { q: "ممكن أتعلم كوري أونلاين؟", a: "أيوه! مجموعات صغيرة\nوحصص منظمة" },
+  { q: "هتقدم بسرعة قد إيه؟", a: "هتقرأ كوري في ٤ أسابيع\nمع المنهج بتاعنا" },
+  { q: "يستاهل أتعلم كوري؟", a: "دراما، كيبوب، سفر —\nافتح عوالم جديدة" },
+];
+
+export function getFAQPostTemplateAR(index = 0): PostTemplate {
+  const faq = FAQ_ITEMS_AR[index % FAQ_ITEMS_AR.length];
+  return {
+    mainText: faq.q,
+    subtitle: faq.a,
+    extra: "#أسئلة_كوري  #كلوفرز  #تعلم_الكورية",
+    isUrgent: false,
+  };
+}
+
+export function getCountdownPostTemplateAR(daysLeft: number, levelLabel: string): PostTemplate {
+  return {
+    mainText: `${daysLeft} يوم متبقي`,
+    subtitle: `${levelLabel}\nالتسجيل هيقفل قريب`,
+    extra: "#فرصة_أخيرة  #كلوفرز  #كورس_كوري",
+    isUrgent: true,
+  };
+}
+
+// ─── New Engagement Post Types ───
+
+const KOREAN_TIPS = [
+  { word: "안녕하세요", romanized: "Annyeonghaseyo", meaningEN: "Hello (formal)", meaningAR: "مرحبا (رسمي)" },
+  { word: "감사합니다", romanized: "Gamsahamnida", meaningEN: "Thank you", meaningAR: "شكرًا" },
+  { word: "사랑해요", romanized: "Saranghaeyo", meaningEN: "I love you", meaningAR: "أحبك" },
+  { word: "맛있어요", romanized: "Masisseoyo", meaningEN: "It's delicious!", meaningAR: "لذيذ!" },
+  { word: "화이팅", romanized: "Hwaiting!", meaningEN: "You can do it!", meaningAR: "يلّا بينا!" },
+  { word: "대박", romanized: "Daebak!", meaningEN: "Amazing!", meaningAR: "رهيب!" },
+];
+
+export function getTipPostTemplate(index = 0, lang: PostLang = "en"): PostTemplate {
+  const t = KOREAN_TIPS[index % KOREAN_TIPS.length];
+  return {
+    mainText: t.word,
+    subtitle: `${t.romanized}\n${lang === "ar" ? t.meaningAR : t.meaningEN}`,
+    extra: lang === "ar" ? "#كلمة_كورية  #كلوفرز  #تعلم_الكورية" : "#KoreanWord  #Klovers  #LearnKorean",
+    isUrgent: false,
+  };
+}
+
+const CULTURE_FACTS = [
+  { titleEN: "K-Drama Secret", titleAR: "سر الدراما الكورية", factEN: "Korean dramas use honorifics to show social hierarchy — learn Korean to catch every nuance!", factAR: "الدراما الكورية بتستخدم ألقاب الاحترام — اتعلم كوري عشان تفهم كل التفاصيل!" },
+  { titleEN: "Hangul in 2 Hours", titleAR: "هانغول في ساعتين", factEN: "The Korean alphabet was designed to be easy to learn — most students read it in under 2 hours!", factAR: "الأبجدية الكورية اتصممت عشان تكون سهلة — أغلب الطلاب بيقرأوها في أقل من ساعتين!" },
+  { titleEN: "K-Pop Power", titleAR: "قوة الكيبوب", factEN: "BTS sings in Korean — imagine understanding every word without subtitles!", factAR: "BTS بيغنوا بالكوري — تخيل تفهم كل كلمة من غير ترجمة!" },
+];
+
+export function getCulturePostTemplate(index = 0, lang: PostLang = "en"): PostTemplate {
+  const c = CULTURE_FACTS[index % CULTURE_FACTS.length];
+  return {
+    mainText: lang === "ar" ? c.titleAR : c.titleEN,
+    subtitle: lang === "ar" ? c.factAR : c.factEN,
+    extra: lang === "ar" ? "#ثقافة_كورية  #كلوفرز  #كيبوب" : "#KCulture  #Klovers  #KPop",
+    isUrgent: false,
+  };
+}
+
 // ─── Monthly 30-Post Plan ───
 
 export type MonthlyPostType =
@@ -208,7 +353,9 @@ export type MonthlyPostType =
   | "referral"
   | "testimonial"
   | "faq"
-  | "countdown";
+  | "countdown"
+  | "tip"
+  | "culture";
 
 export interface MonthlyPost {
   id: string;
@@ -218,36 +365,36 @@ export interface MonthlyPost {
   caption: string;
 }
 
-// 30-day posting schedule optimised for conversions
-// Pattern: Awareness (testimonial/faq) → Consideration (empty_slots/invite) → Decision (discount/countdown/referral)
+// 30-day posting schedule — mixed sales + engagement content
+// Pattern: Awareness (testimonial/faq/tip/culture) → Consideration (empty_slots/invite) → Decision (discount/countdown/referral)
 const MONTHLY_SCHEDULE: MonthlyPostType[] = [
   "empty_slots",   // 1  — open week hook
-  "faq",           // 2  — objection handling
+  "tip",           // 2  — educational engagement
   "invite_student",// 3  — soft invite
   "testimonial",   // 4  — social proof
-  "empty_slots",   // 5
+  "culture",       // 5  — K-culture engagement
   "discount",      // 6  — first promo push
   "referral",      // 7  — word of mouth
   "empty_slots",   // 8
   "testimonial",   // 9
-  "faq",           // 10 — second FAQ
+  "tip",           // 10 — educational engagement
   "invite_student",// 11
   "countdown",     // 12 — mid-month urgency
   "empty_slots",   // 13
   "discount",      // 14 — second promo push
-  "testimonial",   // 15 — mid-month social proof
+  "culture",       // 15 — K-culture engagement
   "empty_slots",   // 16
   "referral",      // 17
   "invite_student",// 18
   "empty_slots",   // 19
-  "testimonial",   // 20
-  "faq",           // 21 — third FAQ
+  "culture",       // 20 — K-culture engagement
+  "tip",           // 21 — educational engagement
   "discount",      // 22 — third promo push
   "countdown",     // 23 — urgency ramp up
   "empty_slots",   // 24
   "referral",      // 25
   "invite_student",// 26
-  "empty_slots",   // 27
+  "faq",           // 27 — objection handling
   "testimonial",   // 28
   "discount",      // 29 — end-of-month last chance
   "countdown",     // 30 — FINAL DAY urgency
@@ -257,11 +404,15 @@ export function generateMonthlyPlan(
   groups: GroupData[],
   discountPct: number,
   discountCode: string,
+  lang: PostLang = "en",
 ): MonthlyPost[] {
   let groupIdx = 0;
   let testimonialIdx = 0;
   let faqIdx = 0;
   let countdownIdx = 0;
+  let tipIdx = 0;
+  let cultureIdx = 0;
+  const isAR = lang === "ar";
 
   const safeGroup = () => groups.length ? groups[groupIdx++ % groups.length] : null;
 
@@ -273,51 +424,88 @@ export function generateMonthlyPlan(
     switch (type) {
       case "empty_slots": {
         const g = safeGroup();
-        template = g ? getGroupPostTemplate(g) : getDiscountPostTemplate(discountPct, discountCode);
+        template = g
+          ? (isAR ? getGroupPostTemplateAR(g) : getGroupPostTemplate(g))
+          : (isAR ? getDiscountPostTemplateAR(discountPct, discountCode) : getDiscountPostTemplate(discountPct, discountCode));
         caption = g
-          ? `📢 ${getLevelLabel(g.level)} — ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min sessions\n✅ Small group · Certified teacher · Real results from week 1\n\n📲 Register now: kloversegy.com/enroll\n\n#LearnKorean #Klovers #KoreanCourse`
-          : `📢 New Korean course spots open!\n\nSmall groups, certified teachers, structured curriculum.\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers`;
+          ? (isAR
+            ? `📢 ${getLevelLabel(g.level)} — فاضل ${g.seats_left} مقعد!\n\n🗓 كل ${g.day_name} الساعة ${g.start_time} · ${g.duration_min} دقيقة\n✅ مجموعة صغيرة · مدرس معتمد · نتائج من أول أسبوع\n\n📲 سجّل: kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+            : `📢 ${getLevelLabel(g.level)} — ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min sessions\n✅ Small group · Certified teacher · Real results from week 1\n\n📲 Register now: kloversegy.com/enroll\n\n#LearnKorean #Klovers #KoreanCourse`)
+          : (isAR
+            ? `📢 أماكن جديدة متاحة في كورسات الكوري!\n\nمجموعات صغيرة، مدرسين معتمدين، منهج منظم.\n\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+            : `📢 New Korean course spots open!\n\nSmall groups, certified teachers, structured curriculum.\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers`);
         break;
       }
       case "invite_student": {
         const g = safeGroup();
-        template = g ? getInvitePostTemplate(g) : getReferralPostTemplate();
-        caption = g
-          ? `👋 Know someone who wants to learn Korean?\n\n${getLevelLabel(g.level)} is open — every ${g.day_name} at ${g.start_time}.\n\nTag them below ⬇️ or share this post!\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers #KoreanClasses`
-          : `👋 Tag a friend who wants to learn Korean! 🇰🇷\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers`;
+        template = g
+          ? (isAR ? getGroupPostTemplateAR(g) : getInvitePostTemplate(g))
+          : (isAR ? getReferralPostTemplateAR() : getReferralPostTemplate());
+        caption = isAR
+          ? `👋 تعرف حد عايز يتعلم كوري؟\n\nتاج صاحبك ⬇️ أو شير البوست!\n\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+          : (g
+            ? `👋 Know someone who wants to learn Korean?\n\n${getLevelLabel(g.level)} is open — every ${g.day_name} at ${g.start_time}.\n\nTag them below ⬇️ or share this post!\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers #KoreanClasses`
+            : `👋 Tag a friend who wants to learn Korean! 🇰🇷\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers`);
         break;
       }
       case "discount": {
-        template = getDiscountPostTemplate(discountPct, discountCode);
-        caption = `🏷️ ${discountPct}% OFF your first month!\n\nUse code: ${discountCode} at checkout.\n\nLimited time — don't miss it.\n📲 kloversegy.com/enroll\n\n#KoreanCourse #Klovers #Discount #LearnKorean`;
+        template = isAR ? getDiscountPostTemplateAR(discountPct, discountCode) : getDiscountPostTemplate(discountPct, discountCode);
+        caption = isAR
+          ? `🏷️ خصم ${discountPct}% على أول شهر!\n\nاستخدم كود: ${discountCode}\n\nعرض لفترة محدودة.\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+          : `🏷️ ${discountPct}% OFF your first month!\n\nUse code: ${discountCode} at checkout.\n\nLimited time — don't miss it.\n📲 kloversegy.com/enroll\n\n#KoreanCourse #Klovers #Discount #LearnKorean`;
         break;
       }
       case "referral": {
-        template = getReferralPostTemplate();
-        caption = `🤝 Love Klovers? Refer a friend and BOTH of you get a FREE class!\n\nDM us or share the link in bio to get your code.\n\n#Klovers #LearnKorean #ReferAFriend`;
+        template = isAR ? getReferralPostTemplateAR() : getReferralPostTemplate();
+        caption = isAR
+          ? `🤝 بتحب كلوفرز؟ وصّي صاحبك والاتنين هتاخدوا حصة مجانية!\n\nابعتلنا أو شير اللينك.\n\n${HASHTAGS_AR}`
+          : `🤝 Love Klovers? Refer a friend and BOTH of you get a FREE class!\n\nDM us or share the link in bio to get your code.\n\n#Klovers #LearnKorean #ReferAFriend`;
         break;
       }
       case "testimonial": {
-        const t = TESTIMONIALS[testimonialIdx % TESTIMONIALS.length];
-        template = getTestimonialPostTemplate(testimonialIdx);
+        template = isAR ? getTestimonialPostTemplateAR(testimonialIdx) : getTestimonialPostTemplate(testimonialIdx);
+        const t = isAR ? TESTIMONIALS_AR[testimonialIdx % TESTIMONIALS_AR.length] : TESTIMONIALS[testimonialIdx % TESTIMONIALS.length];
         testimonialIdx++;
-        caption = `🌟 "${t.quote}" — ${t.student}\n\nThis is why we do what we do 🇰🇷\n\nReady to write YOUR success story?\n📲 kloversegy.com/enroll\n\n#StudentSuccess #Klovers #LearnKorean`;
+        caption = isAR
+          ? `🌟 "${t.quote}" — ${t.student}\n\nده السبب اللي بنعمل ده عشانه 🇰🇷\n\nجاهز تكتب قصة نجاحك؟\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+          : `🌟 "${t.quote}" — ${t.student}\n\nThis is why we do what we do 🇰🇷\n\nReady to write YOUR success story?\n📲 kloversegy.com/enroll\n\n#StudentSuccess #Klovers #LearnKorean`;
         break;
       }
       case "faq": {
-        const faq = FAQ_ITEMS[faqIdx % FAQ_ITEMS.length];
-        template = getFAQPostTemplate(faqIdx);
+        template = isAR ? getFAQPostTemplateAR(faqIdx) : getFAQPostTemplate(faqIdx);
+        const faq = isAR ? FAQ_ITEMS_AR[faqIdx % FAQ_ITEMS_AR.length] : FAQ_ITEMS[faqIdx % FAQ_ITEMS.length];
         faqIdx++;
-        caption = `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\nAt Klovers we offer structured online Korean classes with certified teachers, small groups, and a proven curriculum.\n\n📲 kloversegy.com/enroll\n\n#KoreanFAQ #LearnKorean #Klovers`;
+        caption = isAR
+          ? `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\nفي كلوفرز بنقدم كلاسات كوري أونلاين منظمة مع مدرسين معتمدين ومجموعات صغيرة.\n\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+          : `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\nAt Klovers we offer structured online Korean classes with certified teachers, small groups, and a proven curriculum.\n\n📲 kloversegy.com/enroll\n\n#KoreanFAQ #LearnKorean #Klovers`;
         break;
       }
       case "countdown": {
         const daysLeft = [3, 5, 2][countdownIdx % 3];
         const g = groups.length ? groups[countdownIdx % groups.length] : null;
-        const levelLabel = g ? getLevelLabel(g.level) : "New Korean Class";
-        template = getCountdownPostTemplate(daysLeft, levelLabel);
+        const levelLabel = g ? getLevelLabel(g.level) : (isAR ? "كورس كوري جديد" : "New Korean Class");
+        template = isAR ? getCountdownPostTemplateAR(daysLeft, levelLabel) : getCountdownPostTemplate(daysLeft, levelLabel);
         countdownIdx++;
-        caption = `⏰ Only ${daysLeft} days left to register for ${levelLabel}!\n\nSpots are filling up — secure yours now.\n📲 kloversegy.com/enroll\n\n#LastChance #Klovers #KoreanCourse`;
+        caption = isAR
+          ? `⏰ فاضل بس ${daysLeft} يوم للتسجيل في ${levelLabel}!\n\nالأماكن بتخلص — احجز مكانك دلوقتي.\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
+          : `⏰ Only ${daysLeft} days left to register for ${levelLabel}!\n\nSpots are filling up — secure yours now.\n📲 kloversegy.com/enroll\n\n#LastChance #Klovers #KoreanCourse`;
+        break;
+      }
+      case "tip": {
+        template = getTipPostTemplate(tipIdx, lang);
+        const t = KOREAN_TIPS[tipIdx % KOREAN_TIPS.length];
+        tipIdx++;
+        caption = isAR
+          ? `💡 كلمة كورية اليوم: ${t.word} (${t.romanized})\n\n${t.meaningAR}\n\nاحفظها واستخدمها! 🇰🇷\n\n${HASHTAGS_AR}`
+          : `💡 Korean word of the day: ${t.word} (${t.romanized})\n\n${t.meaningEN}\n\nSave this and use it! 🇰🇷\n\n#KoreanWord #LearnKorean #Klovers`;
+        break;
+      }
+      case "culture": {
+        template = getCulturePostTemplate(cultureIdx, lang);
+        cultureIdx++;
+        caption = isAR
+          ? `🎬 ${template.mainText}\n\n${template.subtitle}\n\nاتعلم كوري مع كلوفرز!\n📲 kloversegy.com\n\n${HASHTAGS_AR}`
+          : `🎬 ${template.mainText}\n\n${template.subtitle}\n\nLearn Korean with Klovers!\n📲 kloversegy.com\n\n#KCulture #KPop #LearnKorean #Klovers`;
         break;
       }
     }
@@ -347,6 +535,8 @@ const POST_TYPE_LABELS: Record<MonthlyPostType, string> = {
   testimonial:    "Student Story",
   faq:            "FAQ",
   countdown:      "Countdown",
+  tip:            "Korean Tip",
+  culture:        "K-Culture",
 };
 
 export function generatePublishingCopy(post: {

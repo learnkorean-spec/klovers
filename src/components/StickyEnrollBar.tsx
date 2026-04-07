@@ -37,7 +37,7 @@ const StickyEnrollBar = () => {
       role="complementary"
       aria-label="Enrollment call to action"
     >
-      <div className="bg-black border-t border-primary/40 px-4 py-3 flex items-center justify-between gap-3 max-w-4xl mx-auto">
+      <div className="bg-black border-t border-primary/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 max-w-4xl mx-auto">
         {/* Left: text */}
         <div className="flex items-center gap-3 min-w-0">
           <span className="text-primary text-lg flex-shrink-0">🇰🇷</span>
@@ -50,20 +50,20 @@ const StickyEnrollBar = () => {
         <div className="flex items-center gap-2 flex-shrink-0">
           <Link
             to="/free-trial"
-            className="text-xs font-semibold text-white/70 hover:text-white transition-colors hidden sm:block"
+            className="text-xs font-semibold text-white/85 hover:text-white transition-colors hidden sm:block"
           >
             Free Trial
           </Link>
           <Link
             to="/enroll-now"
-            className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-black/25"
           >
             Enroll Now <ArrowRight className="h-3.5 w-3.5" />
           </Link>
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="text-white/40 hover:text-white/80 transition-colors ml-1"
+            className="text-white/60 hover:text-white/90 transition-colors ml-1"
           >
             <X className="h-4 w-4" />
           </button>

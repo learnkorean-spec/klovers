@@ -38,3 +38,60 @@ verify_jwt = false
 
 [functions.generate-lesson-scene]
 verify_jwt = false
+
+[functions.seo-orchestration]
+verify_jwt = false
+
+[functions.image-audit]
+verify_jwt = false
+
+[functions.article-generator]
+verify_jwt = false
+
+# --- Webhook / Public endpoints ---
+
+[functions.auth-email-hook]
+verify_jwt = false
+
+[functions.notify-admin-email]
+verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false
+
+# --- Cron / Scheduled functions ---
+
+[functions.ping-search-engines]
+verify_jwt = false
+
+[functions.send-class-reminders]
+verify_jwt = false
+
+[functions.send-private-reminder]
+verify_jwt = false
+
+[functions.send-profile-reminders]
+verify_jwt = false
+
+[functions.send-student-lifecycle-email]
+verify_jwt = false
+
+# --- Admin / Internal (service-role, no JWT) ---
+
+[functions.admin-update-lead]
+verify_jwt = false
+
+[functions.batch-translate-articles]
+verify_jwt = false
+
+[functions.generate-lesson-content]
+verify_jwt = false
+
+[functions.seed-textbook-lessons]
+verify_jwt = false
+
+[functions.translate-article]
+verify_jwt = false
+
+[functions.translate-lessons]
+verify_jwt = false

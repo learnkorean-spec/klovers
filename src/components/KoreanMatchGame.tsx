@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, RotateCcw, Trophy, Timer, Sparkles } from "lucide-react";
+import { useGameData, GameVocabItem } from "@/hooks/useGameData";
 
 interface CardData {
   id: number;
@@ -13,7 +14,9 @@ interface CardData {
   isMatched: boolean;
 }
 
-const WORD_PAIRS = [
+interface Pair { korean: string; english: string; }
+
+const FALLBACK_PAIRS: Pair[] = [
   { korean: "사랑", english: "Love" },
   { korean: "친구", english: "Friend" },
   { korean: "학교", english: "School" },
@@ -41,8 +44,24 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffleArray(arr).slice(0, n);
 }
 
+function buildPairs(vocab: GameVocabItem[]): Pair[] {
+  if (vocab.length >= 6) {
+    return shuffleArray(vocab)
+      .slice(0, 12)
+      .map(v => ({ korean: v.korean, english: v.meaning }));
+  }
+  return FALLBACK_PAIRS;
+}
+
 const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
   const { t } = useLanguage();
+  const { vocab, loading: gameDataLoading } = useGameData();
+
+  // Keep vocab in a ref so initGame can read the latest value without being
+  // listed as a dependency (avoids restarting an in-progress game on refetch).
+  const vocabRef = useRef(vocab);
+  useEffect(() => { vocabRef.current = vocab; }, [vocab]);
+
   const [cards, setCards] = useState<CardData[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -50,10 +69,13 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
+  const [usingLessonVocab, setUsingLessonVocab] = useState(false);
   const pairCount = 6;
 
   const initGame = useCallback(() => {
-    const chosen = pickRandom(WORD_PAIRS, pairCount);
+    const pairs = buildPairs(vocabRef.current);
+    setUsingLessonVocab(vocabRef.current.length >= 6);
+    const chosen = pickRandom(pairs, pairCount);
     const cardList: CardData[] = [];
     chosen.forEach((pair, i) => {
       cardList.push({ id: i * 2, text: pair.korean, matchId: i, isFlipped: false, isMatched: false });
@@ -68,7 +90,14 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
     setGameComplete(false);
   }, []);
 
-  useEffect(() => { initGame(); }, [initGame]);
+  // Init once — wait for game data so lesson vocab is used from the start.
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (!gameDataLoading && !initialized.current) {
+      initialized.current = true;
+      initGame();
+    }
+  }, [gameDataLoading, initGame]);
 
   const xpAwardedRef = useRef(false);
   useEffect(() => {
@@ -136,6 +165,16 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
     return 1;
   };
 
+  if (gameDataLoading || cards.length === 0) {
+    return (
+      <section className="py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center text-muted-foreground animate-pulse">
+          Loading vocab…
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-12 px-4 relative overflow-hidden">
       <div className="max-w-4xl mx-auto relative z-10">
@@ -146,6 +185,11 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
           <p className="text-muted-foreground">
             {t("games.matchSubtitle")}
           </p>
+          {usingLessonVocab && (
+            <Badge variant="outline" className="text-xs gap-1">
+              📚 From your lessons
+            </Badge>
+          )}
         </div>
 
         <div className="flex justify-center gap-4 md:gap-6 mb-6 flex-wrap">

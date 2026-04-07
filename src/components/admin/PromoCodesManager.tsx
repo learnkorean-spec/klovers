@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -245,7 +245,7 @@ const PromoCodesManager = () => {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border">
-          <Table>
+          <Table aria-label="Promo codes">
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
@@ -270,7 +270,7 @@ const PromoCodesManager = () => {
                         <button
                           onClick={() => copyCode(c.code)}
                           className="text-muted-foreground hover:text-foreground transition-colors"
-                          title="Copy code"
+                          aria-label={`Copy code ${c.code}`}
                         >
                           <Copy className="h-3 w-3" />
                         </button>
@@ -302,12 +302,14 @@ const PromoCodesManager = () => {
                       <Switch
                         checked={c.active}
                         onCheckedChange={v => toggleActive(c.id, v)}
+                        aria-label={`Toggle ${c.code} active status`}
                       />
                     </TableCell>
                     <TableCell>
                       <button
                         onClick={() => deleteCode(c.id, c.code)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
+                        aria-label={`Delete code ${c.code}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -323,4 +325,4 @@ const PromoCodesManager = () => {
   );
 };
 
-export default PromoCodesManager;
+export default memo(PromoCodesManager);

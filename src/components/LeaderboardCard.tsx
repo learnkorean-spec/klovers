@@ -3,13 +3,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { Trophy, Flame, Crown, Medal } from "lucide-react";
+import { Trophy, Flame, Crown, Medal, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RANK_STYLES: Record<number, string> = {
-  1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700",
+  1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700 ring-1 ring-black/10",
   2: "bg-muted border-muted-foreground/30",
-  3: "bg-amber-100 border-amber-400 dark:bg-amber-900/30 dark:border-amber-700",
+  3: "bg-amber-100 border-amber-400 dark:bg-amber-900/30 dark:border-amber-700 ring-1 ring-black/10",
 };
 
 const RANK_ICONS: Record<number, React.ReactNode> = {
@@ -33,7 +33,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       className={cn(
         "flex items-center gap-3 p-3 rounded-lg border transition-all",
         RANK_STYLES[rank] || "border-border bg-card",
-        isCurrentUser && "ring-2 ring-primary ring-offset-1"
+        isCurrentUser && "ring-2 ring-amber-400 ring-offset-1 shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
       )}
     >
       {/* Rank */}
@@ -46,17 +46,17 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       {/* Avatar */}
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarImage src={avatarUrl || undefined} />
-        <AvatarFallback className="text-xs bg-primary/20 text-foreground font-semibold">
+        <AvatarFallback className="text-xs bg-amber-100 text-foreground font-semibold border border-black/10">
           {name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 
       {/* Name */}
       <div className="flex-1 min-w-0">
-        <p className={cn("text-sm font-medium truncate", isCurrentUser && "text-primary")}>
+        <p className={cn("text-sm font-medium truncate", isCurrentUser && "text-amber-700")}>
           {name}
           {isCurrentUser && (
-            <span className="ml-1 text-xs text-primary">(You)</span>
+            <span className="ml-1 text-xs text-amber-700">(You)</span>
           )}
         </p>
       </div>
@@ -73,6 +73,7 @@ export function LeaderboardCard() {
   const {
     xpLeaderboard,
     streakLeaderboard,
+    weeklyLeaderboard,
     currentUserXpRank,
     currentUserStreakRank,
     loading,
@@ -88,12 +89,15 @@ export function LeaderboardCard() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="xp">
-          <TabsList className="grid grid-cols-2 w-full mb-4">
+          <TabsList className="grid grid-cols-3 w-full mb-4">
             <TabsTrigger value="xp" className="gap-1.5">
               <Trophy className="h-3.5 w-3.5" /> XP Ranking
             </TabsTrigger>
             <TabsTrigger value="streak" className="gap-1.5">
               <Flame className="h-3.5 w-3.5" /> Streak Ranking
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="gap-1.5">
+              <Zap className="h-3.5 w-3.5" /> This Week
             </TabsTrigger>
           </TabsList>
 
@@ -124,7 +128,7 @@ export function LeaderboardCard() {
                 ))}
                 {currentUserXpRank && currentUserXpRank > 10 && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
-                    Your rank: <span className="font-bold text-primary">#{currentUserXpRank}</span>
+                    Your rank: <span className="font-bold text-amber-700">#{currentUserXpRank}</span>
                   </p>
                 )}
               </div>
@@ -158,9 +162,37 @@ export function LeaderboardCard() {
                 ))}
                 {currentUserStreakRank && currentUserStreakRank > 10 && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
-                    Your streak rank: <span className="font-bold text-primary">#{currentUserStreakRank}</span>
+                    Your streak rank: <span className="font-bold text-amber-700">#{currentUserStreakRank}</span>
                   </p>
                 )}
+              </div>
+            )}
+          </TabsContent>
+          {/* Weekly XP Tab */}
+          <TabsContent value="weekly">
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-14 rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : weeklyLeaderboard.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">
+                No activity this week yet. Start learning!
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {weeklyLeaderboard.map((entry) => (
+                  <EntryRow
+                    key={entry.user_id}
+                    rank={entry.rank}
+                    name={entry.name}
+                    avatarUrl={entry.avatar_url}
+                    value={entry.value}
+                    unit="XP"
+                    isCurrentUser={entry.isCurrentUser}
+                  />
+                ))}
               </div>
             )}
           </TabsContent>
