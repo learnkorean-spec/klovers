@@ -92,10 +92,10 @@ const HeroSection = () => {
       {/* Bottom scrim for stats readability */}
       <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
 
-      {/* Primary colour glow behind headline */}
+      {/* Amber colour glow behind headline */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.18) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse, hsl(45 93% 57% / 0.18) 0%, transparent 70%)" }}
       />
 
       {/* ── Decorative large Korean text (backdrop) ──────────── */}
@@ -105,7 +105,7 @@ const HeroSection = () => {
         style={{
           fontSize: "clamp(180px, 30vw, 420px)",
           fontWeight: 900,
-          color: "rgba(255,255,0,0.035)",
+          color: "rgba(217, 119, 6, 0.035)",
           letterSpacing: "-0.02em",
           lineHeight: 1,
           userSelect: "none",
@@ -120,13 +120,13 @@ const HeroSection = () => {
 
           {/* Live badge — split pill design */}
           <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-black/30 backdrop-blur-md">
-            <div className="bg-primary px-4 py-2 flex items-center gap-2">
+            <div className="bg-amber-400 px-4 py-2 flex items-center gap-2">
               <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 K-LOVERS</span>
             </div>
             <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
               <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
               </span>
               <span className="text-white text-xs font-semibold tracking-[0.12em] uppercase">Enrolling Now</span>
             </div>
@@ -141,10 +141,10 @@ const HeroSection = () => {
               {t("hero", "title1")}
             </span>
             <span
-              className="block text-primary mt-1"
+              className="block text-amber-400 mt-1"
               style={{
                 fontSize: "clamp(2.4rem, 6.8vw, 5.5rem)",
-                textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)"
+                textShadow: "0 0 80px hsl(45 93% 57% / 0.4), 0 4px 24px rgba(0,0,0,0.7)"
               }}
             >
               {t("hero", "title2")}
@@ -156,7 +156,7 @@ const HeroSection = () => {
             className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
-            Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.{" "}
+            Live interactive Korean classes with <span className="text-amber-400 font-semibold">real progress</span>.{" "}
             Join <span className="text-white font-semibold">1,000+ students</span> learning the right way.
           </p>
 
@@ -201,7 +201,7 @@ const HeroSection = () => {
             ].map(({ icon: Icon, ref: itemRef, display, label }) => (
               <div key={label} className="flex flex-col items-center gap-1 text-center group">
                 <div className="flex items-center gap-1.5">
-                  <Icon className="h-4 w-4 text-primary hidden sm:block" />
+                  <Icon className="h-4 w-4 text-amber-400 hidden sm:block" />
                   <span
                     ref={itemRef}
                     className="text-2xl sm:text-3xl md:text-4xl font-black text-white"
