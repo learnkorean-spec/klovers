@@ -223,7 +223,7 @@ const DailyQuizPage = () => {
         <Header />
         <main id="main-content" className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading your daily quiz...</p>
           </div>
         </main>
@@ -337,7 +337,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary text-outlined">{exercises.length}</p>
+                <p className="text-4xl font-bold text-amber-700">{exercises.length}</p>
                 <p className="text-muted-foreground mt-1">Questions from your completed lessons</p>
               </div>
               <div className="pt-4 border-t">
@@ -384,7 +384,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-primary text-outlined">
+                <p className="text-4xl font-bold text-amber-700">
                   {result.score}/{result.total}
                 </p>
                 <p className="text-muted-foreground mt-1">
@@ -476,7 +476,7 @@ const DailyQuizPage = () => {
                           "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all",
                           showAnswer && isCorrect && "bg-green-50 dark:bg-green-900/20 border-green-500",
                           showAnswer && selected && !isCorrect && "bg-red-50 dark:bg-red-900/20 border-red-500",
-                          !showAnswer && "hover:border-primary/40 hover:bg-accent"
+                          !showAnswer && "hover:border-amber-300 hover:bg-amber-50"
                         )}
                       >
                         <RadioGroupItem
