@@ -11,7 +11,6 @@ import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Mon
 import { toast } from "@/hooks/use-toast";
 import {
   type PostData,
-  type PostLang,
   type TemplateName,
   type ColorTheme,
   type FormatKey,
@@ -94,18 +93,18 @@ interface MonthlyDraftPost {
 }
 
 const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; themeName: ColorTheme }> = {
-  empty_slots:    { templateName: "klovers_alert",     themeName: "yellow" },
-  countdown:      { templateName: "klovers_countdown", themeName: "midnight" },
-  testimonial:    { templateName: "klovers_quote",     themeName: "yellow" },
-  faq:            { templateName: "klovers_varsity",   themeName: "midnight" },
-  referral:       { templateName: "klovers_varsity",   themeName: "midnight" },
-  discount:       { templateName: "klovers_split",     themeName: "yellow" },
-  invite_student: { templateName: "klovers_bold",      themeName: "yellow" },
-  tip:            { templateName: "klovers_tip",       themeName: "yellow" },
-  culture:        { templateName: "klovers_quote",     themeName: "yellow" },
+  empty_slots:    { templateName: "klovers_alert",        themeName: "yellow" },
+  countdown:      { templateName: "klovers_countdown",    themeName: "midnight" },
+  testimonial:    { templateName: "klovers_quote",        themeName: "yellow" },
+  faq:            { templateName: "klovers_varsity",      themeName: "midnight" },
+  referral:       { templateName: "klovers_mascot_left",  themeName: "yellow" },
+  discount:       { templateName: "klovers_split",        themeName: "yellow" },
+  invite_student: { templateName: "klovers_mascot_right", themeName: "midnight" },
+  tip:            { templateName: "klovers_tip",          themeName: "yellow" },
+  culture:        { templateName: "klovers_bold",         themeName: "yellow" },
 };
 
-// All 14 templates — balanced cycle for 30-post generator
+// All 16 templates — balanced cycle for 30-post generator
 const ALL_TEMPLATES: TemplateName[] = [
   "klovers_bold",
   "klovers_varsity",
@@ -114,6 +113,8 @@ const ALL_TEMPLATES: TemplateName[] = [
   "klovers_countdown",
   "klovers_quote",
   "klovers_tip",
+  "klovers_mascot_left",
+  "klovers_mascot_right",
   "classic",
   "character",
   "minimal",
@@ -126,33 +127,33 @@ const BALANCE_CYCLE: TemplateName[] = ALL_TEMPLATES;
 const BALANCE_THEME: Record<TemplateName, ColorTheme> = {
   klovers_bold: "yellow", klovers_varsity: "midnight", klovers_split: "yellow",
   klovers_alert: "yellow", klovers_countdown: "midnight", klovers_quote: "yellow", klovers_tip: "yellow",
+  klovers_mascot_left: "yellow", klovers_mascot_right: "midnight",
   classic: "yellow", character: "yellow", minimal: "yellow",
   gradient: "yellow", neon: "midnight", dark: "midnight", editorial: "yellow",
 };
 
-const PostPreview = memo(function PostPreview({ post, template, theme, size = 270, lang }: {
-  post: PostData; template: TemplateName; theme: ColorTheme; size?: number; lang?: PostLang;
+const PostPreview = memo(function PostPreview({ post, template, theme, size = 270 }: {
+  post: PostData; template: TemplateName; theme: ColorTheme; size?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
     c.width = size;
     c.height = size;
-    renderPost(c, post, template, theme, "instagram", null, lang);
-  }, [post.mainText, post.subtitle, post.extraText, template, theme, size, lang]);
+    renderPost(c, post, template, theme, "instagram");
+  }, [post.mainText, post.subtitle, post.extraText, template, theme, size]);
   return <canvas ref={ref} style={{ width: size, height: size, display: "block" }} className="rounded-lg" />;
 });
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
 // ─── Platform Grid Previews ───
-function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, lang }: {
+function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }: {
   posts: PostData[];
   template: TemplateName;
   theme: ColorTheme;
   bgImage: HTMLImageElement | null;
   postTemplates?: Array<{ template: TemplateName; theme: ColorTheme }>;
-  lang?: PostLang;
 }) {
   const igRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const fbRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -166,18 +167,18 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, 
       const th = postTemplates?.[i]?.theme ?? theme;
       // Instagram 1:1
       const ig = igRefs.current[i];
-      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, t, th, "instagram", bgImage, lang); }
+      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, t, th, "instagram", bgImage); }
       // Facebook
       const fb = fbRefs.current[i];
-      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, t, th, "facebook", bgImage, lang); }
+      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, t, th, "facebook", bgImage); }
       // Story
       const st = storyRefs.current[i];
-      if (st) { st.width = 180; st.height = 320; renderPost(st, post, t, th, "story", bgImage, lang); }
+      if (st) { st.width = 180; st.height = 320; renderPost(st, post, t, th, "story", bgImage); }
       // TikTok
       const tt = tiktokRefs.current[i];
-      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, t, th, "tiktok", bgImage, lang); }
+      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, t, th, "tiktok", bgImage); }
     });
-  }, [posts, template, theme, bgImage, postTemplates, lang]);
+  }, [posts, template, theme, bgImage, postTemplates]);
 
   const display = posts.slice(0, 30);
   if (display.length < 1) return null;
@@ -330,32 +331,34 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, 
 const TEMPLATE_CARDS: TemplateName[] = [
   "klovers_bold", "klovers_varsity", "klovers_split",
   "klovers_alert", "klovers_countdown", "klovers_quote", "klovers_tip",
+  "klovers_mascot_left", "klovers_mascot_right",
   "classic", "character", "minimal", "gradient", "neon", "dark", "editorial",
 ];
 const TEMPLATE_LABELS: Record<TemplateName, { label: string; desc: string }> = {
-  klovers_bold:      { label: "⚡ Bold",      desc: "Attention — Yellow frame" },
-  klovers_varsity:   { label: "🏆 Varsity",   desc: "Interest — Dark ring" },
-  klovers_split:     { label: "✂ Split",      desc: "Action — Diagonal CTA" },
-  klovers_alert:     { label: "🔴 Alert",     desc: "Urgency — Seat counter" },
-  klovers_countdown: { label: "⏳ Countdown", desc: "Days-left ring" },
-  klovers_quote:     { label: "💬 Quote",     desc: "Testimonial card" },
-  klovers_tip:       { label: "💡 Tip",       desc: "Educational tip" },
-  classic:           { label: "🟨 Classic",   desc: "Bold yellow background" },
-  character:         { label: "🎨 Character", desc: "Illustrated overlay" },
-  minimal:           { label: "□ Minimal",    desc: "Clean border inset" },
-  gradient:          { label: "🌈 Gradient",  desc: "Smooth color blend" },
-  neon:              { label: "✨ Neon",      desc: "Dark with glow" },
-  dark:              { label: "🌙 Dark",      desc: "Elegant dark theme" },
-  editorial:         { label: "📄 Editorial", desc: "Magazine style" },
+  klovers_bold:         { label: "⚡ Bold",      desc: "Attention — Yellow frame" },
+  klovers_varsity:      { label: "🏆 Varsity",   desc: "Interest — Dark ring" },
+  klovers_split:        { label: "✂ Split",      desc: "Action — Diagonal CTA" },
+  klovers_alert:        { label: "🔴 Alert",     desc: "Urgency — Seat counter" },
+  klovers_countdown:    { label: "⏳ Countdown", desc: "Days-left ring" },
+  klovers_quote:        { label: "💬 Quote",     desc: "Testimonial card" },
+  klovers_tip:          { label: "💡 Tip",       desc: "Educational tip" },
+  klovers_mascot_left:  { label: "🧑‍🎓 Mascot L", desc: "Characters left" },
+  klovers_mascot_right: { label: "🧑‍🎓 Mascot R", desc: "Characters right" },
+  classic:              { label: "🟨 Classic",   desc: "Bold yellow background" },
+  character:            { label: "🎨 Character", desc: "Illustrated overlay" },
+  minimal:              { label: "□ Minimal",    desc: "Clean border inset" },
+  gradient:             { label: "🌈 Gradient",  desc: "Smooth color blend" },
+  neon:                 { label: "✨ Neon",      desc: "Dark with glow" },
+  dark:                 { label: "🌙 Dark",      desc: "Elegant dark theme" },
+  editorial:            { label: "📄 Editorial", desc: "Magazine style" },
 };
 
-function AllTemplateCards({ post, theme, format, active, onSelect, lang }: {
+function AllTemplateCards({ post, theme, format, active, onSelect }: {
   post: PostData;
   theme: ColorTheme;
   format: FormatKey;
   active: TemplateName;
   onSelect: (t: TemplateName) => void;
-  lang?: PostLang;
 }) {
   const refs = useRef<(HTMLCanvasElement | null)[]>([]);
 
@@ -364,9 +367,9 @@ function AllTemplateCards({ post, theme, format, active, onSelect, lang }: {
       const c = refs.current[i];
       if (!c) return;
       c.width = 300; c.height = 300;
-      renderPost(c, post, tpl, theme, format, null, lang);
+      renderPost(c, post, tpl, theme, format);
     });
-  }, [post, theme, format, lang]);
+  }, [post, theme, format]);
 
   return (
     <div className="space-y-2">
@@ -409,7 +412,6 @@ export default function CreatorHub() {
   const [format, setFormat] = useState<FormatKey>("instagram");
   const [mainFontStyle, setMainFontStyle] = useState<string>("Bold Italic");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
-  const [lang, setLang] = useState<PostLang>("en");
   const [gridPattern, setGridPattern] = useState<GridPattern>("custom");
 
   // ── Monthly generator state ──
@@ -432,8 +434,8 @@ export default function CreatorHub() {
     const ratio = fmt.h / fmt.w;
     canvas.width = maxPreview;
     canvas.height = maxPreview * ratio;
-    renderPost(canvas, activePost, template, theme, format, bgImage, lang);
-  }, [activePost, template, theme, format, bgImage, lang]);
+    renderPost(canvas, activePost, template, theme, format, bgImage);
+  }, [activePost, template, theme, format, bgImage]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
@@ -466,12 +468,12 @@ export default function CreatorHub() {
     const dlCanvas = document.createElement("canvas");
     dlCanvas.width = fmt.w;
     dlCanvas.height = fmt.h;
-    renderPost(dlCanvas, activePost, template, theme, format, bgImage, lang);
+    renderPost(dlCanvas, activePost, template, theme, format, bgImage);
     const link = document.createElement("a");
-    link.download = `klovers-post-${format}-${lang}-${Date.now()}.png`;
+    link.download = `klovers-post-${format}-${Date.now()}.png`;
     link.href = dlCanvas.toDataURL("image/png");
     link.click();
-    toast({ title: "Downloaded!", description: `${fmt.w}×${fmt.h} ${lang.toUpperCase()} image saved.` });
+    toast({ title: "Downloaded!", description: `${fmt.w}×${fmt.h} image saved.` });
   }
 
   function handleDownloadAll() {
@@ -480,13 +482,13 @@ export default function CreatorHub() {
       const dlCanvas = document.createElement("canvas");
       dlCanvas.width = fmt.w;
       dlCanvas.height = fmt.h;
-      renderPost(dlCanvas, post, template, theme, format, bgImage, lang);
+      renderPost(dlCanvas, post, template, theme, format, bgImage);
       const link = document.createElement("a");
-      link.download = `klovers-${format}-${lang}-${i + 1}-${Date.now()}.png`;
+      link.download = `klovers-${format}-${i + 1}-${Date.now()}.png`;
       link.href = dlCanvas.toDataURL("image/png");
       setTimeout(() => link.click(), i * 200);
     });
-    toast({ title: "Downloading all!", description: `${posts.length} ${lang.toUpperCase()} images at ${fmt.w}×${fmt.h}` });
+    toast({ title: "Downloading all!", description: `${posts.length} images at ${fmt.w}×${fmt.h}` });
   }
 
   // ── Fetch groups for monthly generator ──
@@ -536,7 +538,7 @@ export default function CreatorHub() {
       autoGenDone.current = true;
       // Generate 30-post plan silently
       const today = new Date();
-      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10", lang);
+      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10");
       const recentTemplates: TemplateName[] = [];
       const drafts: MonthlyDraftPost[] = monthlyPosts.map((post, i) => {
         const d = new Date(today); d.setDate(d.getDate() + i);
@@ -556,12 +558,12 @@ export default function CreatorHub() {
       // Also set the posts array to drafts so the grid preview shows all 30
       setPosts(drafts.map(d => ({ id: d.id, mainText: d.mainText, subtitle: d.subtitle, extraText: d.extraText })));
     }
-  }, [groupsLoading, groups, lang]);
+  }, [groupsLoading, groups]);
 
   function generateMonthlyDrafts() {
     if (groupsLoading) { toast({ title: "Loading class data…", description: "Please wait a moment and try again.", variant: "destructive" }); return; }
     const today = new Date();
-    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10", lang);
+    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
     const recentTemplates: TemplateName[] = [];
     const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
       const d = new Date(today); d.setDate(d.getDate() + i);
@@ -594,16 +596,16 @@ export default function CreatorHub() {
         const folder = zip.folder(fk)!;
         for (const post of monthlyDrafts) {
           const c = document.createElement("canvas"); c.width = fmt.w; c.height = fmt.h;
-          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk, null, lang);
+          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk);
           const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
           folder.file(`${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}-${fk}.png`, blob);
         }
       }
       const captionBlocks = monthlyDrafts.map(generatePublishingCopy).join("\n\n");
-      zip.file(`captions-${lang}.txt`, captionBlocks);
+      zip.file("captions.txt", captionBlocks);
       const content = await zip.generateAsync({ type: "blob" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(content);
-      a.download = `klovers-30posts-${lang}-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
+      a.download = `klovers-30posts-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
       toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} posts × ${formatKeys.length} formats + captions ready.` });
     } catch (err: any) {
       toast({ title: "Download error", description: err.message, variant: "destructive" });
@@ -612,9 +614,9 @@ export default function CreatorHub() {
 
   function downloadSinglePost(post: MonthlyDraftPost) {
     const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram", null, lang);
+    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram");
     const a = document.createElement("a"); a.href = c.toDataURL("image/png");
-    a.download = `${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}-${lang}.png`; a.click();
+    a.download = `${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}.png`; a.click();
   }
 
   function handleBulkUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -688,7 +690,6 @@ export default function CreatorHub() {
               format={format}
               active={template}
               onSelect={setTemplate}
-              lang={lang}
             />
             <div>
               <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Other Templates</h3>
@@ -725,25 +726,6 @@ export default function CreatorHub() {
                 >
                   <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: val.dot }} />
                   <span className="text-[10px] text-foreground">{val.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Language Toggle */}
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Language</h3>
-            <div className="flex gap-2">
-              {(["en", "ar"] as const).map(l => (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  className={`flex-1 p-2.5 rounded-lg border text-center transition-colors ${
-                    lang === l ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
-                  }`}
-                >
-                  <span className="text-xs font-medium text-foreground block">{l === "en" ? "EN" : "AR"}</span>
-                  <span className="text-[10px] text-muted-foreground">{l === "en" ? "English" : "عربي"}</span>
                 </button>
               ))}
             </div>
@@ -803,8 +785,7 @@ export default function CreatorHub() {
               value={activePost.mainText}
               onChange={e => updatePost("mainText", e.target.value)}
               className="text-sm min-h-[80px]"
-              placeholder={lang === "ar" ? "النص الرئيسي" : "Main heading text"}
-              dir={lang === "ar" ? "rtl" : "ltr"}
+              placeholder="Main heading text"
             />
           </div>
 
@@ -814,8 +795,7 @@ export default function CreatorHub() {
               value={activePost.subtitle}
               onChange={e => updatePost("subtitle", e.target.value)}
               className="text-sm"
-              placeholder={lang === "ar" ? "🚀 كوري ١ — يبدأ الجمعة ٦:٠٠ م" : "🚀 Korean 1 — Starting Friday 6:00 PM"}
-              dir={lang === "ar" ? "rtl" : "ltr"}
+              placeholder="🚀 Korean 1 — Starting Friday 6:00 PM"
             />
           </div>
 
@@ -825,8 +805,7 @@ export default function CreatorHub() {
               value={activePost.extraText}
               onChange={e => updatePost("extraText", e.target.value)}
               className="text-sm"
-              placeholder={lang === "ar" ? "#هاشتاجات أو دعوة للعمل" : "#hashtags or call-to-action"}
-              dir={lang === "ar" ? "rtl" : "ltr"}
+              placeholder="#hashtags or call-to-action"
             />
           </div>
 
@@ -916,7 +895,6 @@ export default function CreatorHub() {
           template={template}
           theme={theme}
           bgImage={bgImage}
-          lang={lang}
           postTemplates={
             gridPattern !== "custom"
               ? getGridSlots(gridPattern, posts.length)
@@ -983,7 +961,6 @@ export default function CreatorHub() {
                       template={draft.templateName}
                       theme={draft.themeName}
                       size={270}
-                      lang={lang}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -1027,7 +1004,7 @@ export default function CreatorHub() {
                 <div className="flex justify-center">
                   <PostPreview
                     post={{ id: editingDraft.id, mainText: editDraftText.mainText, subtitle: editDraftText.subtitle, extraText: editDraftText.extraText }}
-                    template={editingDraft.templateName} theme={editingDraft.themeName} size={240} lang={lang}
+                    template={editingDraft.templateName} theme={editingDraft.themeName} size={240}
                   />
                 </div>
                 <div className="space-y-3">
@@ -1040,7 +1017,6 @@ export default function CreatorHub() {
                       <label className="text-xs font-semibold">{label}</label>
                       <textarea
                         rows={rows}
-                        dir={lang === "ar" ? "rtl" : "ltr"}
                         className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                         value={editDraftText[key]}
                         onChange={e => setEditDraftText(p => ({ ...p, [key]: e.target.value }))}

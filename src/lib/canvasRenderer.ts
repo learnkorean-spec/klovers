@@ -10,8 +10,8 @@ export interface PostData {
   lang?: PostLang;
 }
 
-export type TemplateName = "classic" | "character" | "minimal" | "gradient" | "neon" | "dark" | "editorial" | "klovers_bold" | "klovers_varsity" | "klovers_split" | "klovers_alert" | "klovers_countdown" | "klovers_quote" | "klovers_tip";
-export type ColorTheme = "yellow" | "midnight" | "coral" | "forest" | "lavender" | "sunset" | "ocean" | "mono";
+export type TemplateName = "classic" | "character" | "minimal" | "gradient" | "neon" | "dark" | "editorial" | "klovers_bold" | "klovers_varsity" | "klovers_split" | "klovers_alert" | "klovers_countdown" | "klovers_quote" | "klovers_tip" | "klovers_mascot_left" | "klovers_mascot_right";
+export type ColorTheme = "yellow" | "midnight";
 export type FormatKey = "instagram" | "story" | "facebook" | "tiktok";
 
 export interface FormatOption { label: string; w: number; h: number; }
@@ -26,12 +26,6 @@ export const FORMATS: Record<FormatKey, FormatOption> = {
 export const THEME_COLORS: Record<ColorTheme, { bg: string; text: string; accent: string; label: string; dot: string }> = {
   yellow:   { bg: "#FFFF00", text: "#1a1a1a", accent: "#333",    label: "Classic Yellow", dot: "#FFFF00" },
   midnight: { bg: "#1a1a2e", text: "#e0e0e0", accent: "#9b87f5", label: "Midnight",       dot: "#9b87f5" },
-  coral:    { bg: "#ff6b6b", text: "#fff",    accent: "#ffeaa7", label: "Coral Reef",     dot: "#ff6b6b" },
-  forest:   { bg: "#2d6a4f", text: "#d8f3dc", accent: "#95d5b2", label: "Forest",         dot: "#2d6a4f" },
-  lavender: { bg: "#e8d5f5", text: "#2d1b4e", accent: "#9b59b6", label: "Lavender",       dot: "#e8d5f5" },
-  sunset:   { bg: "#ff7f50", text: "#fff",    accent: "#ffe0b2", label: "Sunset",         dot: "#ff7f50" },
-  ocean:    { bg: "#0077b6", text: "#caf0f8", accent: "#90e0ef", label: "Ocean",          dot: "#0077b6" },
-  mono:     { bg: "#f5f5f5", text: "#222",    accent: "#888",    label: "Monochrome",     dot: "#ccc" },
 };
 
 export const TEMPLATE_META: { key: TemplateName; label: string; desc: string; isKlovers?: boolean }[] = [
@@ -49,6 +43,8 @@ export const TEMPLATE_META: { key: TemplateName; label: string; desc: string; is
   { key: "klovers_countdown", label: "⏳ Countdown", desc: "Urgency — Days-left countdown ring",  isKlovers: true },
   { key: "klovers_quote",     label: "💬 Quote",     desc: "Social proof — Testimonial card",     isKlovers: true },
   { key: "klovers_tip",       label: "💡 Tip",       desc: "Engagement — Educational tip card",   isKlovers: true },
+  { key: "klovers_mascot_left",  label: "🧑‍🎓 Mascot L", desc: "Characters left — text right",       isKlovers: true },
+  { key: "klovers_mascot_right", label: "🧑‍🎓 Mascot R", desc: "Text left — characters right",       isKlovers: true },
 ];
 
 // ─── Canvas Helpers ───
@@ -1004,6 +1000,197 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
   ctx.textAlign = "left";
 }
 
+// ─── MASCOT LEFT — Characters on left, text on right ───────────────────────
+function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
+  const pad = 48 * S;
+
+  // ── Yellow background ──
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(0, 0, w, h);
+
+  // ── Black right panel (55% of width) ──
+  const panelX = w * 0.45;
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(panelX, 0, w - panelX, h);
+
+  // ── Yellow diagonal accent between panels ──
+  ctx.strokeStyle = "#FFFF00";
+  ctx.lineWidth = 3 * S;
+  ctx.beginPath();
+  ctx.moveTo(panelX + 6 * S, 0);
+  ctx.lineTo(panelX + 6 * S, h);
+  ctx.stroke();
+
+  // ── Draw characters on left (from uploaded photo) ──
+  if (bgImage) {
+    const imgH = h * 0.70;
+    const imgW = imgH * (bgImage.width / bgImage.height);
+    const imgX = (panelX - imgW) / 2;
+    const imgY = h * 0.12;
+    ctx.drawImage(bgImage, imgX, imgY, imgW, imgH);
+  } else {
+    // Fallback: K badge
+    ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.06)";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("K", panelX / 2, h * 0.45);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  }
+
+  // ── Brand label on left top ──
+  ctx.font = fontStack(L, 700, 12 * S);
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.fillText("KLOVERS", panelX / 2, h * 0.06);
+  ctx.textAlign = "left";
+
+  // ── RIGHT SIDE TEXT ──
+  const rLeft = panelX + 24 * S;
+  const rW = w - rLeft - pad;
+
+  // Eyebrow
+  ctx.font = fontStack(L, 600, 14 * S);
+  ctx.fillStyle = "rgba(255,255,0,0.6)";
+  ctx.fillText(courseLabel(L), rLeft, h * 0.14);
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(rLeft, h * 0.17, 32 * S, 2 * S);
+
+  // Headline
+  const hlSize = Math.min(52 * S, rW / 5);
+  ctx.font = fontStack(L, 900, hlSize);
+  ctx.fillStyle = "#ffffff";
+  drawText(ctx, post.mainText, rLeft, h * 0.26, rW, hlSize * 1.10, 3, L, w);
+
+  // Subtitle
+  ctx.font = fontStack(L, 400, 18 * S);
+  ctx.fillStyle = "rgba(255,255,0,0.8)";
+  drawText(ctx, post.subtitle, rLeft, h * 0.58, rW, 24 * S, 3, L, w);
+
+  // CTA pill
+  const ctaH = 44 * S, ctaW = Math.min(rW * 0.85, 190 * S);
+  const ctaY = h * 0.78;
+  ctx.fillStyle = "#FFFF00";
+  rRect(ctx, rLeft, ctaY, ctaW, ctaH, ctaH / 2);
+  ctx.fill();
+  ctx.font = fontStack(L, 700, 15 * S);
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.fillText(ctaText(L), rLeft + ctaW / 2, ctaY + ctaH * 0.65);
+  ctx.textAlign = "left";
+
+  // Website
+  ctx.font = fontStack("en", 400, 11 * S);
+  ctx.fillStyle = "rgba(255,255,0,0.4)";
+  ctx.textAlign = "center";
+  ctx.fillText("kloversegy.com", rLeft + rW / 2, h * 0.93);
+  ctx.textAlign = "left";
+
+  // ── Bottom yellow strip on left ──
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0, h * 0.88, panelX, h * 0.12);
+  ctx.font = fontStack(L, 600, 12 * S);
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "center";
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", panelX / 2, h * 0.94);
+  ctx.textAlign = "left";
+}
+
+// ─── MASCOT RIGHT — Text on left, characters on right ──────────────────────
+function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
+  const pad = 48 * S;
+
+  // ── Black background ──
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0, 0, w, h);
+
+  // ── Yellow right panel (45% of width) ──
+  const panelX = w * 0.55;
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(panelX, 0, w - panelX, h);
+
+  // ── Diagonal accent line ──
+  ctx.strokeStyle = "#FFFF00";
+  ctx.lineWidth = 3 * S;
+  ctx.beginPath();
+  ctx.moveTo(panelX - 6 * S, 0);
+  ctx.lineTo(panelX - 6 * S, h);
+  ctx.stroke();
+
+  // ── Draw characters on right (from uploaded photo) ──
+  if (bgImage) {
+    const imgH = h * 0.70;
+    const imgW = imgH * (bgImage.width / bgImage.height);
+    const imgX = panelX + ((w - panelX) - imgW) / 2;
+    const imgY = h * 0.12;
+    ctx.drawImage(bgImage, imgX, imgY, imgW, imgH);
+  } else {
+    // Fallback: K badge
+    ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("K", panelX + (w - panelX) / 2, h * 0.45);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  }
+
+  // ── Brand label on right top ──
+  ctx.font = fontStack(L, 700, 12 * S);
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.fillText("KLOVERS", panelX + (w - panelX) / 2, h * 0.06);
+  ctx.textAlign = "left";
+
+  // ── LEFT SIDE TEXT ──
+  const lW = panelX - pad * 2;
+
+  // Yellow accent bar
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(pad, h * 0.08, 4 * S, h * 0.10);
+
+  // Eyebrow
+  ctx.font = fontStack(L, 600, 14 * S);
+  ctx.fillStyle = "rgba(255,255,0,0.6)";
+  ctx.fillText(courseLabel(L), pad, h * 0.12);
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(pad, h * 0.15, 32 * S, 2 * S);
+
+  // Headline
+  const hlSize = Math.min(56 * S, lW / 4.5);
+  ctx.font = fontStack(L, 900, hlSize);
+  ctx.fillStyle = "#ffffff";
+  drawText(ctx, post.mainText, pad, h * 0.26, lW, hlSize * 1.10, 3, L, w);
+
+  // Subtitle
+  ctx.font = fontStack(L, 400, 18 * S);
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  drawText(ctx, post.subtitle, pad, h * 0.58, lW, 24 * S, 3, L, w);
+
+  // CTA pill
+  const ctaH = 44 * S, ctaW = Math.min(lW * 0.85, 190 * S);
+  const ctaY = h * 0.78;
+  ctx.fillStyle = "#FFFF00";
+  rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
+  ctx.fill();
+  ctx.font = fontStack(L, 700, 15 * S);
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.fillText(ctaText(L), pad + ctaW / 2, ctaY + ctaH * 0.65);
+  ctx.textAlign = "left";
+
+  // Website
+  ctx.font = fontStack("en", 400, 11 * S);
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.fillText("kloversegy.com", pad, h * 0.93);
+
+  // ── Bottom strip on right ──
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(panelX, h * 0.88, w - panelX, h * 0.12);
+  ctx.font = fontStack(L, 600, 12 * S);
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.fillText(post.extraText || "#LearnKorean #Klovers", panelX + (w - panelX) / 2, h * 0.94);
+  ctx.textAlign = "left";
+}
+
 // ─── Mascot preload ───
 
 let _mascot: HTMLImageElement | null = null;
@@ -1047,6 +1234,8 @@ export function renderPost(
   if (template === "klovers_countdown") { renderKloversCountdown(ctx, post, w, h, scale, L); return; }
   if (template === "klovers_quote")     { renderKloversQuote(ctx, post, w, h, scale, L);     return; }
   if (template === "klovers_tip")       { renderKloversTip(ctx, post, w, h, scale, L);       return; }
+  if (template === "klovers_mascot_left")  { renderKloversMascotLeft(ctx, post, w, h, scale, L, bgImage);  return; }
+  if (template === "klovers_mascot_right") { renderKloversMascotRight(ctx, post, w, h, scale, L, bgImage); return; }
 
   // ─── PHOTO SPLIT LAYOUT ───────────────────────────────────
   if (bgImage) {
@@ -1401,6 +1590,8 @@ const ALERT_SLOT: GridSlot = { template: "klovers_alert", theme: "yellow" };
 const COUNT_SLOT: GridSlot = { template: "klovers_countdown", theme: "midnight" };
 const QUOTE_SLOT: GridSlot = { template: "klovers_quote", theme: "yellow" };
 const TIP_SLOT: GridSlot   = { template: "klovers_tip", theme: "yellow" };
+const MASCOT_L: GridSlot   = { template: "klovers_mascot_left", theme: "yellow" };
+const MASCOT_R: GridSlot   = { template: "klovers_mascot_right", theme: "midnight" };
 
 const GRID_PATTERNS: Record<Exclude<GridPattern, "custom">, GridSlot[]> = {
   // Alternating light/dark for visual rhythm
@@ -1421,11 +1612,11 @@ const GRID_PATTERNS: Record<Exclude<GridPattern, "custom">, GridSlot[]> = {
     LIGHT_SLOT, DARK_SLOT, SPLIT_SLOT,
     LIGHT_SLOT, DARK_SLOT, SPLIT_SLOT,
   ],
-  // Uses all Klovers templates including new ones
+  // Uses all Klovers templates including mascots
   brand_mix: [
-    LIGHT_SLOT, DARK_SLOT, TIP_SLOT,
-    QUOTE_SLOT, SPLIT_SLOT, ALERT_SLOT,
-    COUNT_SLOT, LIGHT_SLOT, DARK_SLOT,
+    LIGHT_SLOT, DARK_SLOT, MASCOT_L,
+    QUOTE_SLOT, SPLIT_SLOT, MASCOT_R,
+    TIP_SLOT, ALERT_SLOT, COUNT_SLOT,
   ],
 };
 
