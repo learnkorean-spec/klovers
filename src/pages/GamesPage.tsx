@@ -303,7 +303,7 @@ const GamesPage = () => {
                 <Trophy className="h-4 w-4 text-amber-500" /> Top Players
               </h2>
               {!isLoggedIn && (
-                <a href="/signup" className="text-xs text-primary font-semibold hover:underline">Sign up to join →</a>
+                <a href="/signup" className="text-xs text-amber-700 font-semibold hover:underline">Sign up to join →</a>
               )}
             </div>
             <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>
@@ -318,9 +318,9 @@ const GamesPage = () => {
                       const rankEmojis = ["🥇", "🥈", "🥉"];
                       const emoji = idx < 3 ? rankEmojis[idx] : `${idx + 1}`;
                       return (
-                        <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-primary/5" : ""}`}>
+                        <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-amber-50" : ""}`}>
                           <span className="text-base w-6 text-center font-bold">{emoji}</span>
-                          <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-primary font-bold" : "text-foreground"}`}>
+                          <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-amber-700 font-bold" : "text-foreground"}`}>
                             {p.name}{p.isCurrentUser ? " (you)" : ""}
                           </span>
                           <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full">
@@ -354,7 +354,7 @@ const GamesPage = () => {
                   <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3">
                     <a
                       href="/signup"
-                      className="text-xs bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-semibold hover:bg-primary/90 transition-colors shadow-md"
+                      className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md"
                     >
                       🏆 Sign up to see your rank
                     </a>

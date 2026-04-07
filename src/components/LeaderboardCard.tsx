@@ -33,7 +33,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       className={cn(
         "flex items-center gap-3 p-3 rounded-lg border transition-all",
         RANK_STYLES[rank] || "border-border bg-card",
-        isCurrentUser && "ring-2 ring-primary ring-offset-1"
+        isCurrentUser && "ring-2 ring-amber-400 ring-offset-1"
       )}
     >
       {/* Rank */}
@@ -46,17 +46,17 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       {/* Avatar */}
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarImage src={avatarUrl || undefined} />
-        <AvatarFallback className="text-xs bg-primary/20 text-foreground font-semibold">
+        <AvatarFallback className="text-xs bg-amber-100 text-foreground font-semibold">
           {name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 
       {/* Name */}
       <div className="flex-1 min-w-0">
-        <p className={cn("text-sm font-medium truncate", isCurrentUser && "text-primary")}>
+        <p className={cn("text-sm font-medium truncate", isCurrentUser && "text-amber-700")}>
           {name}
           {isCurrentUser && (
-            <span className="ml-1 text-xs text-primary">(You)</span>
+            <span className="ml-1 text-xs text-amber-700">(You)</span>
           )}
         </p>
       </div>
@@ -128,7 +128,7 @@ export function LeaderboardCard() {
                 ))}
                 {currentUserXpRank && currentUserXpRank > 10 && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
-                    Your rank: <span className="font-bold text-primary">#{currentUserXpRank}</span>
+                    Your rank: <span className="font-bold text-amber-700">#{currentUserXpRank}</span>
                   </p>
                 )}
               </div>
@@ -162,7 +162,7 @@ export function LeaderboardCard() {
                 ))}
                 {currentUserStreakRank && currentUserStreakRank > 10 && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
-                    Your streak rank: <span className="font-bold text-primary">#{currentUserStreakRank}</span>
+                    Your streak rank: <span className="font-bold text-amber-700">#{currentUserStreakRank}</span>
                   </p>
                 )}
               </div>
