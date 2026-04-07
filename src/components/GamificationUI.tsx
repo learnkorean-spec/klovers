@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 // --- XP Badge (small inline) ---
 export function XpBadge({ xp, className }: { xp: number; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold", className)}>
+    <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400 text-amber-950 text-xs font-bold shadow-sm", className)}>
       <Zap className="h-3 w-3" /> {xp} XP
     </span>
   );
