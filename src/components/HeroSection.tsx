@@ -141,10 +141,11 @@ const HeroSection = () => {
               {t("hero", "title1")}
             </span>
             <span
-              className="block text-primary mt-1"
+              className="block mt-1"
               style={{
                 fontSize: "clamp(2.4rem, 6.8vw, 5.5rem)",
-                textShadow: "0 0 80px hsl(60 100% 50% / 0.4), 0 4px 24px rgba(0,0,0,0.7)"
+                color: "#ffff00",
+                textShadow: "0 0 80px rgba(255, 255, 0, 0.4), 0 4px 24px rgba(0,0,0,0.7)"
               }}
             >
               {t("hero", "title2")}
@@ -156,7 +157,7 @@ const HeroSection = () => {
             className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
           >
-            Live interactive Korean classes with <span className="text-primary font-semibold">real progress</span>.{" "}
+            Live interactive Korean classes with <span className="font-semibold" style={{ color: "#ffff00" }}>real progress</span>.{" "}
             Join <span className="text-white font-semibold">1,000+ students</span> learning the right way.
           </p>
 
