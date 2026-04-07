@@ -217,6 +217,7 @@ const StudentDashboard = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [pendingEnrollments, setPendingEnrollments] = useState<{ id: string; plan_type: string; approval_status: string }[]>([]);
   const vocabStorageKey = `vocab_xp_${new Date().toISOString().split("T")[0]}`;
   const [vocabClaimed, setVocabClaimed] = useState(() => !!localStorage.getItem(`vocab_xp_${new Date().toISOString().split("T")[0]}`));
   const navigate = useNavigate();
@@ -271,6 +272,14 @@ const StudentDashboard = () => {
         .eq("referrer_user_id", session.user.id)
         .eq("xp_awarded", true);
       setReferralCount(refCount || 0);
+
+      // Pending enrollments
+      const { data: pendingEnrollData } = await supabase
+        .from("enrollments")
+        .select("id, plan_type, approval_status")
+        .eq("user_id", session.user.id)
+        .in("approval_status", ["PENDING_PAYMENT", "UNDER_REVIEW", "PENDING"]);
+      setPendingEnrollments(pendingEnrollData || []);
 
       // Weekly XP: from Monday 00:00 local time
       const now = new Date();
