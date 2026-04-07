@@ -33,11 +33,11 @@ interface Lesson {
   book?: string;
 }
 
-const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: string; icon: typeof BookOpen }> = {
-  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen },
-  "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun },
-  "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", emoji: "🎬", icon: Clapperboard },
-  "grammar-mastery": { titleEn: "Grammar Mastery", titleAr: "إتقان القواعد", emoji: "🧠", icon: Brain },
+const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: string; icon: typeof BookOpen; accent: string; accentBg: string; accentText: string }> = {
+  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen, accent: "text-amber-700", accentBg: "bg-amber-100 border border-amber-200", accentText: "text-amber-700" },
+  "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun, accent: "text-orange-600", accentBg: "bg-orange-100 border border-orange-200", accentText: "text-orange-700" },
+  "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", emoji: "🎬", icon: Clapperboard, accent: "text-rose-600", accentBg: "bg-rose-100 border border-rose-200", accentText: "text-rose-700" },
+  "grammar-mastery": { titleEn: "Grammar Mastery", titleAr: "إتقان القواعد", emoji: "🧠", icon: Brain, accent: "text-violet-600", accentBg: "bg-violet-100 border border-violet-200", accentText: "text-violet-700" },
 };
 
 const TextbookPage = () => {
@@ -101,7 +101,7 @@ const TextbookPage = () => {
 
         {/* Hero */}
         <section className="text-center mb-8 px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+          <div className={cn("inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6", config.accentBg, config.accentText)}>
             <config.icon className="h-4 w-4" />
             {config.emoji} {isAr ? config.titleAr : config.titleEn}
           </div>
@@ -137,7 +137,7 @@ const TextbookPage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">{completedCount}/{lessons.length}</span>
-                  <Link to="/textbook/progress" className="text-sm text-primary hover:underline flex items-center gap-1">
+                  <Link to="/textbook/progress" className={cn("text-sm hover:underline flex items-center gap-1", config.accent)}>
                     <Trophy className="h-4 w-4" /> {t("textbook.viewFullProgress")}
                   </Link>
                 </div>
@@ -153,7 +153,7 @@ const TextbookPage = () => {
         <section className="container mx-auto px-4 max-w-4xl">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              {viewMode === "path" ? <Map className="h-6 w-6 text-primary" /> : <LayoutGrid className="h-6 w-6 text-primary" />}
+              {viewMode === "path" ? <Map className={cn("h-6 w-6", config.accent)} /> : <LayoutGrid className={cn("h-6 w-6", config.accent)} />}
               {isAr ? "خريطة المهام" : "Mission Map"}
             </h2>
             <div className="flex gap-1 rounded-lg border border-border bg-card p-1">
@@ -250,7 +250,7 @@ const TextbookPage = () => {
                       <span className="text-3xl">{lesson.emoji}</span>
                       {completed && <span className="text-primary text-lg">✓</span>}
                     </div>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+                    <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1", config.accent)}>
                       {boss ? t("textbook.boss") : checkpoint ? t("textbook.checkpoint") : `${t("textbook.mission")} ${lesson.sort_order}`}
                     </p>
                     <h3 className="font-bold text-foreground text-lg leading-tight mb-0.5">
