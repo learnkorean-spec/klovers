@@ -400,11 +400,203 @@ const MONTHLY_SCHEDULE: MonthlyPostType[] = [
   "countdown",     // 30 — FINAL DAY urgency
 ];
 
+// ─── Campaign Directions ─────────────────────────────────────────────────────
+
+export type CampaignDirection = "balanced" | "engagement" | "enrollment" | "brand_awareness" | "referral_drive" | "re_engagement";
+
+export interface CampaignConfig {
+  id: CampaignDirection;
+  name: string;
+  description: string;
+  icon: string;
+  schedule: MonthlyPostType[];
+}
+
+// Engagement — build community, educate, entertain (tip: 8, culture: 8, testimonial: 4, faq: 3)
+const ENGAGEMENT_SCHEDULE: MonthlyPostType[] = [
+  "tip",           // 1
+  "culture",       // 2
+  "testimonial",   // 3
+  "tip",           // 4
+  "culture",       // 5
+  "faq",           // 6
+  "tip",           // 7
+  "culture",       // 8
+  "testimonial",   // 9
+  "tip",           // 10
+  "culture",       // 11
+  "empty_slots",   // 12
+  "tip",           // 13
+  "culture",       // 14
+  "faq",           // 15
+  "testimonial",   // 16
+  "culture",       // 17
+  "tip",           // 18
+  "empty_slots",   // 19
+  "culture",       // 20
+  "discount",      // 21
+  "tip",           // 22
+  "faq",           // 23
+  "culture",       // 24
+  "testimonial",   // 25
+  "invite_student",// 26
+  "tip",           // 27
+  "referral",      // 28
+  "empty_slots",   // 29
+  "discount",      // 30
+];
+
+// Enrollment — drive registrations with urgency (empty_slots: 8, countdown: 5, discount: 5, invite: 4)
+const ENROLLMENT_SCHEDULE: MonthlyPostType[] = [
+  "empty_slots",   // 1
+  "tip",           // 2
+  "empty_slots",   // 3
+  "discount",      // 4
+  "invite_student",// 5
+  "countdown",     // 6
+  "empty_slots",   // 7
+  "testimonial",   // 8
+  "discount",      // 9
+  "empty_slots",   // 10
+  "invite_student",// 11
+  "countdown",     // 12
+  "faq",           // 13
+  "empty_slots",   // 14
+  "discount",      // 15
+  "countdown",     // 16
+  "invite_student",// 17
+  "empty_slots",   // 18
+  "testimonial",   // 19
+  "tip",           // 20
+  "discount",      // 21
+  "empty_slots",   // 22
+  "countdown",     // 23
+  "invite_student",// 24
+  "testimonial",   // 25
+  "empty_slots",   // 26
+  "culture",       // 27
+  "faq",           // 28
+  "discount",      // 29
+  "countdown",     // 30
+];
+
+// Brand Awareness — visibility through culture & social proof (culture: 7, testimonial: 6, tip: 6)
+const BRAND_AWARENESS_SCHEDULE: MonthlyPostType[] = [
+  "culture",       // 1
+  "testimonial",   // 2
+  "tip",           // 3
+  "culture",       // 4
+  "testimonial",   // 5
+  "tip",           // 6
+  "culture",       // 7
+  "faq",           // 8
+  "testimonial",   // 9
+  "tip",           // 10
+  "culture",       // 11
+  "testimonial",   // 12
+  "empty_slots",   // 13
+  "tip",           // 14
+  "culture",       // 15
+  "faq",           // 16
+  "testimonial",   // 17
+  "tip",           // 18
+  "culture",       // 19
+  "invite_student",// 20
+  "testimonial",   // 21
+  "tip",           // 22
+  "faq",           // 23
+  "culture",       // 24
+  "invite_student",// 25
+  "empty_slots",   // 26
+  "referral",      // 27
+  "discount",      // 28
+  "empty_slots",   // 29
+  "discount",      // 30
+];
+
+// Referral Drive — word-of-mouth growth (referral: 6, invite: 6, testimonial: 5, discount: 4)
+const REFERRAL_DRIVE_SCHEDULE: MonthlyPostType[] = [
+  "referral",      // 1
+  "invite_student",// 2
+  "testimonial",   // 3
+  "referral",      // 4
+  "invite_student",// 5
+  "discount",      // 6
+  "testimonial",   // 7
+  "referral",      // 8
+  "invite_student",// 9
+  "tip",           // 10
+  "referral",      // 11
+  "testimonial",   // 12
+  "invite_student",// 13
+  "discount",      // 14
+  "empty_slots",   // 15
+  "referral",      // 16
+  "invite_student",// 17
+  "testimonial",   // 18
+  "culture",       // 19
+  "discount",      // 20
+  "referral",      // 21
+  "invite_student",// 22
+  "tip",           // 23
+  "testimonial",   // 24
+  "empty_slots",   // 25
+  "faq",           // 26
+  "discount",      // 27
+  "culture",       // 28
+  "empty_slots",   // 29
+  "faq",           // 30
+];
+
+// Re-engagement — win back cold leads (tip: 7, culture: 6, discount: 4, testimonial: 4)
+const RE_ENGAGEMENT_SCHEDULE: MonthlyPostType[] = [
+  "tip",           // 1
+  "culture",       // 2
+  "testimonial",   // 3
+  "tip",           // 4
+  "culture",       // 5
+  "discount",      // 6
+  "tip",           // 7
+  "testimonial",   // 8
+  "culture",       // 9
+  "tip",           // 10
+  "faq",           // 11
+  "culture",       // 12
+  "discount",      // 13
+  "tip",           // 14
+  "testimonial",   // 15
+  "culture",       // 16
+  "empty_slots",   // 17
+  "tip",           // 18
+  "invite_student",// 19
+  "culture",       // 20
+  "discount",      // 21
+  "tip",           // 22
+  "testimonial",   // 23
+  "faq",           // 24
+  "empty_slots",   // 25
+  "invite_student",// 26
+  "referral",      // 27
+  "countdown",     // 28
+  "empty_slots",   // 29
+  "discount",      // 30
+];
+
+export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
+  { id: "balanced",        name: "Balanced",        icon: "⚖️", description: "Mixed AIDA — equal blend of sales, engagement & awareness", schedule: MONTHLY_SCHEDULE },
+  { id: "engagement",      name: "Engagement",      icon: "💬", description: "Build community with tips, culture & student stories", schedule: ENGAGEMENT_SCHEDULE },
+  { id: "enrollment",      name: "Enrollment",      icon: "🎯", description: "Drive registrations with seat alerts, countdowns & promos", schedule: ENROLLMENT_SCHEDULE },
+  { id: "brand_awareness", name: "Brand Awareness",  icon: "📢", description: "Grow visibility with testimonials & K-culture hooks", schedule: BRAND_AWARENESS_SCHEDULE },
+  { id: "referral_drive",  name: "Referral Drive",   icon: "🤝", description: "Amplify word-of-mouth with referral offers & invites", schedule: REFERRAL_DRIVE_SCHEDULE },
+  { id: "re_engagement",   name: "Re-engagement",    icon: "🔄", description: "Win back cold leads with tips, culture & free trials", schedule: RE_ENGAGEMENT_SCHEDULE },
+];
+
 export function generateMonthlyPlan(
   groups: GroupData[],
   discountPct: number,
   discountCode: string,
   lang: PostLang = "en",
+  campaign: CampaignDirection = "balanced",
 ): MonthlyPost[] {
   let groupIdx = 0;
   let testimonialIdx = 0;
@@ -416,7 +608,9 @@ export function generateMonthlyPlan(
 
   const safeGroup = () => groups.length ? groups[groupIdx++ % groups.length] : null;
 
-  return MONTHLY_SCHEDULE.map((type, i) => {
+  const config = CAMPAIGN_CONFIGS.find(c => c.id === campaign) ?? CAMPAIGN_CONFIGS[0];
+
+  return config.schedule.map((type, i) => {
     const day = i + 1;
     let template: PostTemplate;
     let caption = "";

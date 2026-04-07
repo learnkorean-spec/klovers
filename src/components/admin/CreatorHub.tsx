@@ -24,7 +24,7 @@ import {
   renderPost,
   preloadMascot,
 } from "@/lib/canvasRenderer";
-import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, type MonthlyPostType, type GroupData } from "@/lib/marketingEngine";
+import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, CAMPAIGN_CONFIGS, type MonthlyPostType, type GroupData, type CampaignDirection } from "@/lib/marketingEngine";
 import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
@@ -417,6 +417,7 @@ export default function CreatorHub() {
   const [mainFontStyle, setMainFontStyle] = useState<string>("Bold Italic");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
   const [gridPattern, setGridPattern] = useState<GridPattern>("custom");
+  const [selectedCampaign, setSelectedCampaign] = useState<CampaignDirection>("balanced");
 
   // ── Monthly generator state ──
   const [groups, setGroups] = useState<GroupData[]>([]);
@@ -542,7 +543,7 @@ export default function CreatorHub() {
       autoGenDone.current = true;
       // Generate 30-post plan silently
       const today = new Date();
-      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10");
+      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10", "en", selectedCampaign);
       const recentTemplates: TemplateName[] = [];
       const drafts: MonthlyDraftPost[] = monthlyPosts.map((post, i) => {
         const d = new Date(today); d.setDate(d.getDate() + i);
@@ -567,7 +568,7 @@ export default function CreatorHub() {
   function generateMonthlyDrafts() {
     if (groupsLoading) { toast({ title: "Loading class data…", description: "Please wait a moment and try again.", variant: "destructive" }); return; }
     const today = new Date();
-    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
+    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10", "en", selectedCampaign);
     const recentTemplates: TemplateName[] = [];
     const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
       const d = new Date(today); d.setDate(d.getDate() + i);
@@ -585,7 +586,8 @@ export default function CreatorHub() {
       return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm };
     });
     setMonthlyDrafts(drafts);
-    toast({ title: "30 posts generated!", description: "Each post uses a balanced design. Download ZIP when ready." });
+    const campaignName = CAMPAIGN_CONFIGS.find(c => c.id === selectedCampaign)?.name ?? "Balanced";
+    toast({ title: "30 posts generated!", description: `${campaignName} campaign — download ZIP when ready.` });
   }
 
   async function handleBulkDownload() {
@@ -914,15 +916,34 @@ export default function CreatorHub() {
 
       {/* ── Monthly 30-Post Generator ── */}
       <div className="border-t pt-6 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" /> Monthly 30-Post Pack
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Auto-generates 30 AIDA-scheduled posts using your current design & theme</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={generateMonthlyDrafts} disabled={groupsLoading}>
+        <div>
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Monthly 30-Post Pack
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Choose a campaign direction, then generate 30 posts tailored to your goal</p>
+        </div>
+
+        {/* Campaign Direction Selector */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {CAMPAIGN_CONFIGS.map(c => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCampaign(c.id)}
+              className={`rounded-xl border p-3 text-left transition-all ${
+                selectedCampaign === c.id
+                  ? "ring-2 ring-primary border-primary bg-primary/5 shadow-sm"
+                  : "border-border hover:border-primary/40 hover:bg-muted/50"
+              }`}
+            >
+              <span className="text-lg block">{c.icon}</span>
+              <p className="text-xs font-semibold text-foreground mt-1">{c.name}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{c.description}</p>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={generateMonthlyDrafts} disabled={groupsLoading}>
               <Sparkles className="h-4 w-4 mr-1.5" />
               {groupsLoading ? "Loading…" : "Generate 30 Posts"}
             </Button>
