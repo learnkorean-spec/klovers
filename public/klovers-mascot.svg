@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" fill="none">
+  <rect width="400" height="600" rx="20" fill="#FFFF00"/>
+  <circle cx="200" cy="220" r="120" fill="#111111"/>
+  <text x="200" y="255" text-anchor="middle" font-family="Inter, sans-serif" font-weight="900" font-size="140" fill="#FFFF00">K</text>
+  <text x="200" y="420" text-anchor="middle" font-family="Inter, sans-serif" font-weight="700" font-size="32" fill="#111111">KLOVERS</text>
+  <text x="200" y="460" text-anchor="middle" font-family="Inter, sans-serif" font-weight="400" font-size="20" fill="#333333">Korean Academy</text>
+</svg>

@@ -22,6 +22,7 @@ import {
   GRID_PATTERN_META,
   getGridSlots,
   renderPost,
+  preloadMascot,
 } from "@/lib/canvasRenderer";
 import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, type MonthlyPostType, type GroupData } from "@/lib/marketingEngine";
 import { supabase } from "@/integrations/supabase/client";
@@ -405,6 +406,9 @@ function AllTemplateCards({ post, theme, format, active, onSelect }: {
 
 // ─── Main Component ───
 export default function CreatorHub() {
+  // Preload mascot image for mascot templates
+  useEffect(() => { preloadMascot(); }, []);
+
   const [posts, setPosts] = useState<PostData[]>(() => getMonthlyDefaultPosts());
   const [activeIndex, setActiveIndex] = useState(0);
   const [template, setTemplate] = useState<TemplateName>("classic");

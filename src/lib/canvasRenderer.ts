@@ -1003,6 +1003,7 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
 // ─── MASCOT LEFT — Characters on left, text on right ───────────────────────
 function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 48 * S;
+  const img = bgImage || (_mascotLoaded ? _mascot : null);
 
   // ── Yellow background ──
   ctx.fillStyle = "#FFFF00";
@@ -1021,13 +1022,13 @@ function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, 
   ctx.lineTo(panelX + 6 * S, h);
   ctx.stroke();
 
-  // ── Draw characters on left (from uploaded photo) ──
-  if (bgImage) {
+  // ── Draw characters on left (from uploaded photo or preloaded mascot) ──
+  if (img) {
     const imgH = h * 0.70;
-    const imgW = imgH * (bgImage.width / bgImage.height);
+    const imgW = imgH * (img.width / img.height);
     const imgX = (panelX - imgW) / 2;
     const imgY = h * 0.12;
-    ctx.drawImage(bgImage, imgX, imgY, imgW, imgH);
+    ctx.drawImage(img, imgX, imgY, imgW, imgH);
   } else {
     // Fallback: K badge
     ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
@@ -1098,6 +1099,7 @@ function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, 
 // ─── MASCOT RIGHT — Text on left, characters on right ──────────────────────
 function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 48 * S;
+  const img = bgImage || (_mascotLoaded ? _mascot : null);
 
   // ── Black background ──
   ctx.fillStyle = "#111111";
@@ -1116,13 +1118,13 @@ function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData,
   ctx.lineTo(panelX - 6 * S, h);
   ctx.stroke();
 
-  // ── Draw characters on right (from uploaded photo) ──
-  if (bgImage) {
+  // ── Draw characters on right (from uploaded photo or preloaded mascot) ──
+  if (img) {
     const imgH = h * 0.70;
-    const imgW = imgH * (bgImage.width / bgImage.height);
+    const imgW = imgH * (img.width / img.height);
     const imgX = panelX + ((w - panelX) - imgW) / 2;
     const imgY = h * 0.12;
-    ctx.drawImage(bgImage, imgX, imgY, imgW, imgH);
+    ctx.drawImage(img, imgX, imgY, imgW, imgH);
   } else {
     // Fallback: K badge
     ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
@@ -1200,7 +1202,7 @@ export function preloadMascot() {
   if (_mascot) return;
   _mascot = new Image();
   _mascot.onload = () => { _mascotLoaded = true; };
-  _mascot.src = "/klovers-mascot.png";
+  _mascot.src = "/klovers-mascot.svg";
 }
 
 // ─── Main Canvas Renderer ───
