@@ -41,7 +41,7 @@ const FREE_GAME_IDS = ["match", "hangul"];
 
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -218,7 +218,7 @@ const GamesPage = () => {
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-primary font-semibold hover:underline">Sign up to unlock all 30 games</a>
+                <a href="/signup" className="text-amber-700 font-semibold hover:underline">Sign up to unlock all 30 games</a>
               </div>
             )}
 

@@ -93,7 +93,7 @@ const TextbookPage = () => {
       <main id="main-content" className="pt-24 pb-16">
         {/* Back to library */}
         <section className="container mx-auto px-4 max-w-4xl mb-4">
-          <Link to="/textbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/textbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-700 transition-colors">
             <ArrowLeft className="h-4 w-4" />
             {isAr ? "العودة للمكتبة" : "Back to Library"}
           </Link>
@@ -243,12 +243,12 @@ const TextbookPage = () => {
                     to={`/textbook/${book}/${lesson.sort_order}`}
                     className={cn(
                       "group block rounded-xl border p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
-                      completed ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                      completed ? "border-amber-300 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30" : "border-border bg-card hover:border-amber-300/50"
                     )}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-3xl">{lesson.emoji}</span>
-                      {completed && <span className="text-primary text-lg">✓</span>}
+                      {completed && <span className="text-amber-600 text-lg">✓</span>}
                     </div>
                     <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1", config.accent)}>
                       {boss ? t("textbook.boss") : checkpoint ? t("textbook.checkpoint") : `${t("textbook.mission")} ${lesson.sort_order}`}
