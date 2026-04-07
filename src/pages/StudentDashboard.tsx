@@ -19,6 +19,15 @@ import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration } from "@/components/XpAnimation";
 import { useGamification } from "@/hooks/useGamification";
 import { BADGES } from "@/constants/gamification";
+// Korean scene photos for immersive gallery
+import imgJeju from "@/assets/blog/jeju-island.jpg";
+import imgBBQ from "@/assets/blog/korean-bbq.jpg";
+import imgTemple from "@/assets/blog/korean-temple.jpg";
+import imgHanbok from "@/assets/blog/hanbok-fashion.jpg";
+import imgKpop from "@/assets/blog/kpop-concert.jpg";
+import imgNightMarket from "@/assets/blog/korean-nightmarket.jpg";
+import imgTea from "@/assets/blog/korean-tea.jpg";
+import imgMarket from "@/assets/blog/korean-market.jpg";
 // Below-fold components — lazy loaded to keep initial paint fast
 const AnalyticsSection = lazy(() =>
   import("@/components/AnalyticsSection").then(m => ({ default: m.AnalyticsSection }))
@@ -702,13 +711,13 @@ const StudentDashboard = () => {
           {/* ── Vocabulary of the Day ── */}
           {(() => {
             const VOCAB = [
-              { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", emoji: "👋" },
-              { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", emoji: "🙏" },
-              { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", emoji: "❤️" },
-              { ko: "공부하다", rom: "gongbuhada", en: "To study", emoji: "📚" },
-              { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", emoji: "😋" },
-              { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", emoji: "💪" },
-              { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", emoji: "🐢" },
+              { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", emoji: "👋", img: imgTemple },
+              { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", emoji: "🙏", img: imgTea },
+              { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", emoji: "❤️", img: imgHanbok },
+              { ko: "공부하다", rom: "gongbuhada", en: "To study", emoji: "📚", img: imgMarket },
+              { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", emoji: "😋", img: imgBBQ },
+              { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", emoji: "💪", img: imgKpop },
+              { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", emoji: "🐢", img: imgJeju },
             ];
             const today = VOCAB[new Date().getDay() % VOCAB.length];
             const handleVocabClaim = async () => {
@@ -719,16 +728,76 @@ const StudentDashboard = () => {
               toast({ title: "+5 XP", description: "Vocabulary bonus earned!" });
             };
             return (
-              <div className="flex items-center gap-4 bg-card border border-border rounded-2xl px-5 py-4">
-                <div className="text-3xl">{today.emoji}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Word of the day</p>
-                  <p className="text-2xl md:text-3xl font-bold text-foreground leading-tight tracking-tight">{today.ko}</p>
-                  <p className="text-sm text-muted-foreground">{today.rom} · {today.en}</p>
+              <div className="relative overflow-hidden rounded-2xl border border-border">
+                {/* Background photo */}
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-all duration-700"
+                  style={{ backgroundImage: `url(${today.img})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/20" />
+                {/* Content */}
+                <div className="relative flex items-center gap-4 px-5 py-5">
+                  <div className="text-3xl drop-shadow">{today.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">Word of the day</p>
+                    <p className="text-2xl md:text-3xl font-bold text-white leading-tight tracking-tight drop-shadow-md">{today.ko}</p>
+                    <p className="text-sm text-white/75">{today.rom} · {today.en}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={vocabClaimed ? "ghost" : "default"}
+                    disabled={vocabClaimed}
+                    onClick={handleVocabClaim}
+                    className={`shrink-0 ${vocabClaimed ? "text-white/70 hover:text-white/70" : "bg-white text-black hover:bg-white/90"}`}
+                  >
+                    {vocabClaimed ? "✓ +5 XP" : "Claim +5 XP"}
+                  </Button>
                 </div>
-                <Button size="sm" variant={vocabClaimed ? "ghost" : "default"} disabled={vocabClaimed} onClick={handleVocabClaim} className="shrink-0">
-                  {vocabClaimed ? "✓ +5 XP" : "Claim +5 XP"}
-                </Button>
+              </div>
+            );
+          })()}
+
+          {/* ── Discover Korea Gallery ── */}
+          {(() => {
+            const SCENES = [
+              { img: imgJeju,       ko: "제주도",   en: "Jeju Island",        caption: "Volcanic paradise & UNESCO wonder" },
+              { img: imgBBQ,        ko: "삼겹살",   en: "Korean BBQ",          caption: "Grilled pork belly with friends" },
+              { img: imgTemple,     ko: "사찰",     en: "Buddhist Temple",      caption: "Ancient temples in the mountains" },
+              { img: imgHanbok,     ko: "한복",     en: "Traditional Hanbok",   caption: "Centuries of Korean fashion" },
+              { img: imgKpop,       ko: "케이팝",   en: "K-Pop Concert",        caption: "The sound taking over the world" },
+              { img: imgNightMarket,ko: "야시장",   en: "Night Market",         caption: "Street food & vibrant nightlife" },
+              { img: imgTea,        ko: "차 문화",  en: "Tea Culture",          caption: "A moment of calm & tradition" },
+              { img: imgMarket,     ko: "전통시장", en: "Traditional Market",   caption: "Colors, textures & local life" },
+            ];
+            return (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">🇰🇷 Discover Korea</h2>
+                  <span className="text-xs text-muted-foreground">Your destination awaits</span>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
+                  {SCENES.map(({ img, ko, en, caption }) => (
+                    <div
+                      key={ko}
+                      className="relative flex-none w-44 h-56 rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:scale-[1.03] transition-all duration-300 cursor-default"
+                    >
+                      <img
+                        src={img}
+                        alt={en}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {/* Text overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <p className="text-white font-bold text-lg leading-tight drop-shadow">{ko}</p>
+                        <p className="text-white/80 text-xs font-medium leading-tight">{en}</p>
+                        <p className="text-white/55 text-[10px] mt-0.5 leading-tight">{caption}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             );
           })()}

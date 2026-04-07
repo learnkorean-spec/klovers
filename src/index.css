@@ -356,3 +356,11 @@ All colors MUST be HSL.
 .animate-confetti-fall {
   animation: confetti-fall 1.5s ease-in forwards;
 }
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
