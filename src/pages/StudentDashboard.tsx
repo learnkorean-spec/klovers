@@ -445,10 +445,10 @@ const StudentDashboard = () => {
   ], [gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, league, weeklyXp]);
 
   const quickActions = useMemo(() => [
-    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", color: "hover:border-blue-400/60 hover:bg-blue-50/50 dark:hover:bg-blue-950/30" },
-    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", color: "hover:border-yellow-400/60 hover:bg-yellow-50/50 dark:hover:bg-yellow-950/30" },
-    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", color: "hover:border-green-400/60 hover:bg-green-50/50 dark:hover:bg-green-950/30" },
-    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", color: "hover:border-purple-400/60 hover:bg-purple-50/50 dark:hover:bg-purple-950/30" },
+    { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", bg: "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25" },
+    { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", bg: "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 shadow-orange-500/25" },
+    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", bg: "bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/25" },
+    { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", bg: "bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 shadow-violet-500/25" },
   ], []);
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -562,19 +562,16 @@ const StudentDashboard = () => {
           {/* ── Hero greeting ── */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 px-5 py-5">
             <div className="flex items-center gap-4">
-              <div className="h-11 w-11 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg shrink-0 select-none ring-2 ring-primary/30">
+              <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl shrink-0 select-none ring-2 ring-primary/30">
                 {displayName?.[0]?.toUpperCase() ?? "K"}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
-                <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+                {league && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{league.emoji} {league.name} · {gamification.totalXp.toLocaleString()} XP</p>
+                )}
               </div>
-              {league && (
-                <div className="hidden sm:flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-border text-sm font-semibold shrink-0">
-                  <span>{league.emoji}</span>
-                  <span className="text-foreground">{league.name}</span>
-                </div>
-              )}
               <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0 bg-background/80">
                 <Download className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Export</span>
@@ -643,20 +640,19 @@ const StudentDashboard = () => {
                 if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
                 else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
                 else if (label === "Lessons Done") displayValue = `${rawValue}/45`;
-                else displayValue = league?.emoji ? `${league.emoji} ${league.name}` : "Beginner";
+                else displayValue = league?.name ?? "Beginner";
+                const isXP = label === "Total XP";
                 return (
-                  <Card key={label} className="border-border/60">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">{label}</p>
-                          <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
-                          {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
-                        </div>
+                  <Card key={label} className={`border-border/60 ${isXP ? "bg-gradient-to-br from-yellow-50/60 to-transparent dark:from-yellow-950/20 border-yellow-200/60 dark:border-yellow-800/40" : ""}`}>
+                    <CardContent className="pt-4 pb-3">
+                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${color}`}>
+                        {label === "League" && league?.emoji
+                          ? <span className="text-base leading-none">{league.emoji}</span>
+                          : <Icon className="h-3.5 w-3.5" />}
                       </div>
+                      <p className={`font-extrabold text-foreground leading-none truncate ${isXP ? "text-2xl" : "text-xl"}`}>{displayValue}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
+                      {sub && <p className={`text-[10px] font-medium mt-0.5 ${isXP ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground"}`}>{sub}</p>}
                     </CardContent>
                   </Card>
                 );
@@ -686,20 +682,21 @@ const StudentDashboard = () => {
               <a
                 href={`https://wa.me/601121777560?text=${encodeURIComponent("Hi! I'd like to book my next Korean class.")}`}
                 target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-4 py-3 transition-all hover:shadow-lg"
+                className="flex items-center gap-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#1a9e4f] dark:text-[#4ade80] rounded-xl px-3.5 py-2.5 transition-all text-sm font-medium"
               >
-                <span className="text-xl">📅</span>
-                <div>
-                  <p className="font-semibold text-sm leading-tight">Book a Class</p>
-                  <p className="text-white/80 text-xs">WhatsApp us</p>
-                </div>
+                <span className="text-base">📅</span>
+                <span>Book a Class</span>
+                <span className="text-xs opacity-60 ml-auto">WhatsApp →</span>
               </a>
             </div>
           </div>
 
           {/* ── TODAY zone — vocab + bonus + actions grouped ── */}
           <div className="bg-muted/25 border border-border/40 rounded-2xl p-4 space-y-3">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Today</h2>
+            <div className="flex items-center gap-2 px-1">
+              <h2 className="text-sm font-bold text-foreground">Today</h2>
+              <span className="text-xs text-muted-foreground">{todayStr}</span>
+            </div>
 
             {/* Vocab of the day — photo background */}
             {(() => {
@@ -748,12 +745,12 @@ const StudentDashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {quickActions.map(({ label, desc, emoji, path, color }) => (
+              {quickActions.map(({ label, desc, emoji, path, bg }) => (
                 <button key={label} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
-                  className={`group rounded-xl border border-border/60 bg-background/70 p-3 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${color}`}>
+                  className={`group rounded-xl p-3 text-left shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ${bg}`}>
                   <div className="text-xl mb-1">{emoji}</div>
-                  <p className="font-semibold text-foreground text-sm">{label}</p>
-                  <p className="text-[11px] text-muted-foreground">{desc}</p>
+                  <p className="font-semibold text-white text-sm">{label}</p>
+                  <p className="text-white/75 text-[11px]">{desc}</p>
                 </button>
               ))}
             </div>
