@@ -557,252 +557,234 @@ const StudentDashboard = () => {
       <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
       <main id="main-content" className="pt-24 pb-16 px-4">
-        <div className="max-w-5xl mx-auto space-y-6">
-          {/* Header row */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-transparent rounded-2xl px-5 py-4 border border-amber-200/60 ring-1 ring-black/10">
-            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-base shrink-0 select-none border border-black/10">
-              {displayName?.[0]?.toUpperCase() ?? "K"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
-              <h1 className="text-lg md:text-2xl font-bold text-foreground leading-tight">{greeting}, {displayName.split(" ")[0]} 👋</h1>
-            </div>
-            {league && (
-              <div className="hidden sm:flex items-center gap-1.5 bg-background rounded-xl px-3 py-1.5 border border-border text-sm font-semibold shrink-0">
-                <span>{league.emoji}</span>
-                <span className="text-foreground">{league.name}</span>
+        <div className="max-w-5xl mx-auto space-y-5">
+
+          {/* ── Hero greeting ── */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 px-5 py-5">
+            <div className="flex items-center gap-4">
+              <div className="h-11 w-11 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg shrink-0 select-none ring-2 ring-primary/30">
+                {displayName?.[0]?.toUpperCase() ?? "K"}
               </div>
-            )}
-            <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0">
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Export Progress</span>
-            </Button>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{greeting}, {displayName.split(" ")[0]} 👋</h1>
+              </div>
+              {league && (
+                <div className="hidden sm:flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-border text-sm font-semibold shrink-0">
+                  <span>{league.emoji}</span>
+                  <span className="text-foreground">{league.name}</span>
+                </div>
+              )}
+              <Button variant="outline" size="sm" onClick={handleExportProgress} className="gap-1.5 shrink-0 bg-background/80">
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </div>
           </div>
 
-          {/* ── Streak at-risk banner ── */}
+          {/* ── Compact alerts (only rendered when active) ── */}
           {(() => {
+            const alerts: React.ReactNode[] = [];
             const streak = gamification.streak.current_streak;
-            if (streak < 1) return null;
-            const today = new Date().toISOString().slice(0, 10);
+            const todayDate = new Date().toISOString().slice(0, 10);
             const lastActive = gamification.streak.last_activity_date?.slice(0, 10);
-            if (lastActive === today) return null;
-            return (
-              <div className="flex items-center gap-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3 text-sm">
-                <span className="text-2xl animate-bounce">🔥</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-orange-800 dark:text-orange-300">Keep your {streak}-day streak alive!</p>
-                  <p className="text-orange-700 dark:text-orange-400 text-xs">Play a game or complete a lesson today before midnight.</p>
+            if (streak >= 1 && lastActive !== todayDate) {
+              alerts.push(
+                <div key="streak" className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200/80 dark:border-orange-800/60 rounded-xl px-3 py-2 text-sm">
+                  <span className="animate-bounce text-base">🔥</span>
+                  <span className="flex-1 font-medium text-orange-800 dark:text-orange-300">Keep your <strong>{streak}-day streak</strong> alive!</span>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 shrink-0 px-2" onClick={() => navigate("/games")}>Play →</Button>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30" onClick={() => navigate("/games")}>
-                  Play now
-                </Button>
-              </div>
-            );
+              );
+            }
+            if (enrollments.length > 0) {
+              const remaining = enrollments[0].sessions_total - attendanceDates.length;
+              if (remaining <= 2) {
+                alerts.push(
+                  <div key="sessions" className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 rounded-xl px-3 py-2 text-sm">
+                    <span className="text-base">📦</span>
+                    <span className="flex-1 font-medium text-blue-900 dark:text-blue-300">{remaining <= 0 ? "Package finished" : `Only ${remaining} session${remaining === 1 ? "" : "s"} left`}</span>
+                    <Button size="sm" className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white shrink-0 px-2" onClick={() => navigate("/enroll-now")}>Renew →</Button>
+                  </div>
+                );
+              }
+            }
+            pendingEnrollments.forEach(pe => {
+              const label = pe.approval_status === "PENDING_PAYMENT" ? "Awaiting payment" : pe.approval_status === "UNDER_REVIEW" ? "Under review" : "Pending";
+              alerts.push(
+                <div key={pe.id} className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="flex-1 text-muted-foreground capitalize">{pe.plan_type} enrollment — <strong>{label}</strong></span>
+                </div>
+              );
+            });
+            if (checklistItems.length > 0) {
+              const done = checklistItems.filter(i => i.completed).length;
+              const total = checklistItems.length;
+              if (done < total) {
+                alerts.push(
+                  <div key="profile" className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 rounded-xl px-3 py-2 text-sm">
+                    <span className="text-base">⚠️</span>
+                    <span className="flex-1 font-medium text-amber-800 dark:text-amber-300">Profile {Math.round((done / total) * 100)}% complete</span>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 shrink-0 px-2" onClick={() => navigate("/dashboard?complete=name")}>Fix →</Button>
+                  </div>
+                );
+              }
+            }
+            if (alerts.length === 0) return null;
+            return <div className="space-y-1.5">{alerts}</div>;
           })()}
 
-          {/* ── Sessions running low banner ── */}
-          {(() => {
-            if (enrollments.length === 0) return null;
-            const latest = enrollments[0];
-            const remaining = latest.sessions_total - attendanceDates.length;
-            if (remaining > 2) return null;
-            return (
-              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm">
-                <span className="text-2xl">📦</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-blue-900">
-                    {remaining <= 0 ? "Your package is finished!" : `Only ${remaining} session${remaining === 1 ? "" : "s"} left!`}
-                  </p>
-                  <p className="text-blue-700 text-xs">Renew now to keep your momentum going.</p>
-                </div>
-                <Button size="sm" className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate("/enroll-now")}>
-                  Renew
-                </Button>
-              </div>
-            );
-          })()}
-
-          {/* ── Quick Stats (always visible) ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickStats.map(({ label, rawValue, sub, icon: Icon, color }, idx) => {
-              let displayValue: string;
-              if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
-              else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
-              else if (label === "Lessons Done") displayValue = `${rawValue}/45`;
-              else displayValue = league?.emoji ? `${league.emoji} ${league.name}` : "Beginner";
-              return (
-                <Card
-                  key={label}
-                  className="border-border hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 animate-fade-up"
-                  style={{ animationDelay: `${idx * 60}ms` }}
-                >
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-                        <Icon className="h-4 w-4" />
+          {/* ── Stats row + Weekly Goal side-by-side ── */}
+          <div className="grid lg:grid-cols-5 gap-4">
+            <div className="lg:col-span-3 grid grid-cols-2 gap-3">
+              {quickStats.map(({ label, rawValue, sub, icon: Icon, color }, idx) => {
+                let displayValue: string;
+                if (label === "Total XP") displayValue = xpCountUp.toLocaleString();
+                else if (label === "Day Streak") displayValue = `${streakCountUp}d`;
+                else if (label === "Lessons Done") displayValue = `${rawValue}/45`;
+                else displayValue = league?.emoji ? `${league.emoji} ${league.name}` : "Beginner";
+                return (
+                  <Card key={label} className="border-border/60">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">{label}</p>
+                          <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
+                          {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground">{label}</p>
-                        <p className="font-bold text-foreground text-sm leading-tight truncate">{displayValue}</p>
-                        {sub && <p className="text-[10px] text-muted-foreground leading-tight">{sub}</p>}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            <div className="lg:col-span-2 flex flex-col gap-3">
+              {(() => {
+                const WEEKLY_GOAL = 300;
+                const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
+                const msg = pct >= 100 ? "🎉 Goal crushed!" : pct >= 60 ? "Almost there!" : pct >= 30 ? "Good start!" : "Start earning XP";
+                return (
+                  <div className="flex-1 bg-card border border-border/60 rounded-2xl px-4 py-4 flex flex-col justify-between gap-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold text-foreground">Weekly XP</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>{pct}%</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700" style={{ width: `${pct}%` }} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{msg}</p>
+                  </div>
+                );
+              })()}
+              <a
+                href={`https://wa.me/601121777560?text=${encodeURIComponent("Hi! I'd like to book my next Korean class.")}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-4 py-3 transition-all hover:shadow-lg"
+              >
+                <span className="text-xl">📅</span>
+                <div>
+                  <p className="font-semibold text-sm leading-tight">Book a Class</p>
+                  <p className="text-white/80 text-xs">WhatsApp us</p>
+                </div>
+              </a>
+            </div>
           </div>
 
-          {/* ── Daily Bonus (always visible, dismisses when claimed) ── */}
-          <Suspense fallback={<div className="h-24 bg-muted/30 rounded-2xl animate-pulse" />}>
-            <DailyBonusCard />
-          </Suspense>
+          {/* ── TODAY zone — vocab + bonus + actions grouped ── */}
+          <div className="bg-muted/25 border border-border/40 rounded-2xl p-4 space-y-3">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Today</h2>
 
-          {/* ── Quick Actions (always visible) ── */}
-          <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">What to do today</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {quickActions.map(({ label, desc, emoji, path, color }, idx) => (
-                <button
-                  key={label}
-                  onClick={() => navigate(path)}
-                  aria-label={`${label}: ${desc}`}
-                  className={`group rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all ${color} animate-fade-up`}
-                  style={{ animationDelay: `${180 + idx * 60}ms` }}
-                >
-                  <div className="text-2xl mb-2">{emoji}</div>
+            {/* Vocab of the day — photo background */}
+            {(() => {
+              const VOCAB = [
+                { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", emoji: "👋", img: imgTemple },
+                { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", emoji: "🙏", img: imgTea },
+                { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", emoji: "❤️", img: imgHanbok },
+                { ko: "공부하다", rom: "gongbuhada", en: "To study", emoji: "📚", img: imgMarket },
+                { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", emoji: "😋", img: imgBBQ },
+                { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", emoji: "💪", img: imgKpop },
+                { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", emoji: "🐢", img: imgJeju },
+              ];
+              const today = VOCAB[new Date().getDay() % VOCAB.length];
+              const handleVocabClaim = async () => {
+                if (vocabClaimed) return;
+                await awardGameXp("vocab_daily", 5, 1);
+                localStorage.setItem(vocabStorageKey, "1");
+                setVocabClaimed(true);
+                toast({ title: "+5 XP", description: "Vocabulary bonus earned!" });
+              };
+              return (
+                <div className="relative overflow-hidden rounded-xl h-28">
+                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${today.img})` }} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/15" />
+                  <div className="relative h-full flex items-center gap-4 px-5">
+                    <div className="text-3xl drop-shadow">{today.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">Word of the day</p>
+                      <p className="text-2xl md:text-3xl font-bold text-white leading-tight tracking-tight">{today.ko}</p>
+                      <p className="text-xs text-white/70">{today.rom} · {today.en}</p>
+                    </div>
+                    <Button size="sm" disabled={vocabClaimed} onClick={handleVocabClaim}
+                      className={`shrink-0 ${vocabClaimed ? "bg-white/20 text-white/60 hover:bg-white/20" : "bg-white text-black hover:bg-white/90"}`}
+                      variant={vocabClaimed ? "outline" : "default"}>
+                      {vocabClaimed ? "✓ +5 XP" : "Claim +5 XP"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Daily Bonus */}
+            <Suspense fallback={<div className="h-20 bg-background/60 rounded-xl animate-pulse" />}>
+              <DailyBonusCard />
+            </Suspense>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {quickActions.map(({ label, desc, emoji, path, color }) => (
+                <button key={label} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
+                  className={`group rounded-xl border border-border/60 bg-background/70 p-3 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${color}`}>
+                  <div className="text-xl mb-1">{emoji}</div>
                   <p className="font-semibold text-foreground text-sm">{label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                  <p className="text-[11px] text-muted-foreground">{desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ── Weekly XP goal bar + Book a class ── */}
-          {(() => {
-            const WEEKLY_GOAL = 300;
-            const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
-            const msg = pct >= 100 ? "🎉 Weekly goal crushed!" : pct >= 60 ? "Almost there — keep going!" : pct >= 30 ? "Good start — keep it up!" : "Start earning XP today!";
-            return (
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="bg-card border border-border rounded-2xl px-5 py-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-foreground">Weekly XP Goal</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full border border-black/10 ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"}`}>{pct}%</span>
-                    </div>
-                  </div>
-                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 animate-bar-grow"
-                      style={{ "--bar-target": `${pct}%` } as React.CSSProperties}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{msg}</p>
-                </div>
-                <a
-                  href={`https://wa.me/601121777560?text=${encodeURIComponent("Hi! I'd like to book my next Korean class.")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-5 py-4 transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <span className="text-2xl">📅</span>
-                  <div>
-                    <p className="font-semibold text-sm leading-tight">Book a Class</p>
-                    <p className="text-white/80 text-xs">Message us on WhatsApp</p>
-                  </div>
-                </a>
-              </div>
-            );
-          })()}
-
-          {/* ── Vocabulary of the Day ── */}
-          {(() => {
-            const VOCAB = [
-              { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", emoji: "👋", img: imgTemple },
-              { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", emoji: "🙏", img: imgTea },
-              { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", emoji: "❤️", img: imgHanbok },
-              { ko: "공부하다", rom: "gongbuhada", en: "To study", emoji: "📚", img: imgMarket },
-              { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", emoji: "😋", img: imgBBQ },
-              { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", emoji: "💪", img: imgKpop },
-              { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", emoji: "🐢", img: imgJeju },
-            ];
-            const today = VOCAB[new Date().getDay() % VOCAB.length];
-            const handleVocabClaim = async () => {
-              if (vocabClaimed) return;
-              await awardGameXp("vocab_daily", 5, 1);
-              localStorage.setItem(vocabStorageKey, "1");
-              setVocabClaimed(true);
-              toast({ title: "+5 XP", description: "Vocabulary bonus earned!" });
-            };
-            return (
-              <div className="relative overflow-hidden rounded-2xl border border-border">
-                {/* Background photo */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-all duration-700"
-                  style={{ backgroundImage: `url(${today.img})` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/20" />
-                {/* Content */}
-                <div className="relative flex items-center gap-4 px-5 py-5">
-                  <div className="text-3xl drop-shadow">{today.emoji}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">Word of the day</p>
-                    <p className="text-2xl md:text-3xl font-bold text-white leading-tight tracking-tight drop-shadow-md">{today.ko}</p>
-                    <p className="text-sm text-white/75">{today.rom} · {today.en}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={vocabClaimed ? "ghost" : "default"}
-                    disabled={vocabClaimed}
-                    onClick={handleVocabClaim}
-                    className={`shrink-0 ${vocabClaimed ? "text-white/70 hover:text-white/70" : "bg-white text-black hover:bg-white/90"}`}
-                  >
-                    {vocabClaimed ? "✓ +5 XP" : "Claim +5 XP"}
-                  </Button>
-                </div>
-              </div>
-            );
-          })()}
-
           {/* ── Discover Korea Gallery ── */}
           {(() => {
             const SCENES = [
-              { img: imgJeju,       ko: "제주도",   en: "Jeju Island",        caption: "Volcanic paradise & UNESCO wonder" },
-              { img: imgBBQ,        ko: "삼겹살",   en: "Korean BBQ",          caption: "Grilled pork belly with friends" },
-              { img: imgTemple,     ko: "사찰",     en: "Buddhist Temple",      caption: "Ancient temples in the mountains" },
-              { img: imgHanbok,     ko: "한복",     en: "Traditional Hanbok",   caption: "Centuries of Korean fashion" },
-              { img: imgKpop,       ko: "케이팝",   en: "K-Pop Concert",        caption: "The sound taking over the world" },
-              { img: imgNightMarket,ko: "야시장",   en: "Night Market",         caption: "Street food & vibrant nightlife" },
-              { img: imgTea,        ko: "차 문화",  en: "Tea Culture",          caption: "A moment of calm & tradition" },
-              { img: imgMarket,     ko: "전통시장", en: "Traditional Market",   caption: "Colors, textures & local life" },
+              { img: imgJeju,        ko: "제주도",   en: "Jeju Island",       caption: "Volcanic paradise" },
+              { img: imgBBQ,         ko: "삼겹살",   en: "Korean BBQ",         caption: "Grilled pork belly" },
+              { img: imgTemple,      ko: "사찰",     en: "Buddhist Temple",    caption: "Mountain temples" },
+              { img: imgHanbok,      ko: "한복",     en: "Traditional Hanbok", caption: "Centuries of fashion" },
+              { img: imgKpop,        ko: "케이팝",   en: "K-Pop Concert",      caption: "Global music wave" },
+              { img: imgNightMarket, ko: "야시장",   en: "Night Market",       caption: "Street food & vibes" },
+              { img: imgTea,         ko: "차 문화",  en: "Tea Culture",        caption: "Calm & tradition" },
+              { img: imgMarket,      ko: "전통시장", en: "Traditional Market", caption: "Colors & local life" },
             ];
             return (
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">🇰🇷 Discover Korea</h2>
-                  <span className="text-xs text-muted-foreground">Your destination awaits</span>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">🇰🇷 Discover Korea</h2>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
+                <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
                   {SCENES.map(({ img, ko, en, caption }) => (
-                    <div
-                      key={ko}
-                      className="relative flex-none w-44 h-56 rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:scale-[1.03] transition-all duration-300 cursor-default"
-                    >
-                      <img
-                        src={img}
-                        alt={en}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      {/* Text overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <p className="text-white font-bold text-lg leading-tight drop-shadow">{ko}</p>
-                        <p className="text-white/80 text-xs font-medium leading-tight">{en}</p>
-                        <p className="text-white/55 text-[10px] mt-0.5 leading-tight">{caption}</p>
+                    <div key={ko} className="relative flex-none w-36 h-44 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-300">
+                      <img src={img} alt={en} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                        <p className="text-white font-bold text-base leading-tight">{ko}</p>
+                        <p className="text-white/75 text-[10px] leading-tight">{en}</p>
+                        <p className="text-white/50 text-[9px] mt-0.5">{caption}</p>
                       </div>
                     </div>
                   ))}
@@ -811,56 +793,19 @@ const StudentDashboard = () => {
             );
           })()}
 
-          {/* ── Refer a Friend ── */}
+          {/* ── Refer a Friend — slim strip ── */}
           {userId && (() => {
             const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
-            const copyRef = () => {
-              navigator.clipboard.writeText(refLink);
-              toast({ title: "Link copied! 🎁", description: "Share it — you'll earn 1 free session when they enroll." });
-            };
             return (
-              <div className="flex items-center gap-4 bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-2xl px-5 py-4">
-                <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900 flex items-center justify-center shrink-0">
-                  <Gift className="h-5 w-5 text-violet-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">Refer a Friend → Earn 150 XP</p>
-                  <p className="text-xs text-muted-foreground truncate">{refLink}</p>
-                  {referralCount > 0 && (
-                    <p className="text-xs text-violet-600 font-medium mt-0.5">
-                      🎁 {referralCount} friend{referralCount !== 1 ? "s" : ""} joined · +{referralCount * 150} XP earned
-                    </p>
-                  )}
-                </div>
-                <Button size="sm" variant="outline" onClick={copyRef} className="shrink-0 gap-1.5 border-violet-300 text-violet-700 hover:bg-violet-100">
-                  <Copy className="h-3.5 w-3.5" /> Copy
-                </Button>
-              </div>
-            );
-          })()}
-
-          {/* ── Profile completion bar (only for enrolled users with incomplete items) ── */}
-          {checklistItems.length > 0 && (() => {
-            const done = checklistItems.filter(i => i.completed).length;
-            const total = checklistItems.length;
-            if (done === total) return null;
-            const pct = Math.round((done / total) * 100);
-            return (
-              <div className="flex items-center gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl px-4 py-3 ring-1 ring-black/10">
-                <div className="relative w-10 h-10 shrink-0">
-                  <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15" fill="none" stroke="#fde68a" strokeWidth="3" />
-                    <circle cx="18" cy="18" r="15" fill="none" stroke="#f59e0b" strokeWidth="3"
-                      strokeDasharray={`${(pct / 100) * 94.2} 94.2`} strokeLinecap="round" />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">{pct}%</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">Complete your registration ({done}/{total} items)</p>
-                  <p className="text-amber-700 dark:text-amber-400 text-xs">{total - done} item{total - done !== 1 ? "s" : ""} missing — finish setup to get placed in a class</p>
-                </div>
-                <Button size="sm" variant="outline" className="shrink-0 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30" onClick={() => navigate("/dashboard?complete=name")}>
-                  Complete
+              <div className="flex items-center gap-3 bg-violet-50/80 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-800/40 rounded-xl px-4 py-2.5">
+                <Gift className="h-4 w-4 text-violet-500 shrink-0" />
+                <span className="flex-1 text-sm text-muted-foreground min-w-0 truncate">
+                  <strong className="text-foreground">Refer a friend</strong> · earn 150 XP
+                  {referralCount > 0 && <> · <span className="text-violet-600 font-medium">{referralCount} joined</span></>}
+                </span>
+                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: "Link copied! 🎁" }); }}
+                  className="shrink-0 gap-1 border-violet-300 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 h-7 text-xs px-2">
+                  <Copy className="h-3 w-3" /> Copy
                 </Button>
               </div>
             );
