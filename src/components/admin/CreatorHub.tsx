@@ -160,7 +160,7 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, 
   const tiktokRefs = useRef<(HTMLCanvasElement | null)[]>([]);
 
   useEffect(() => {
-    const display = posts.slice(0, 9);
+    const display = posts.slice(0, 30);
     display.forEach((post, i) => {
       const t = postTemplates?.[i]?.template ?? template;
       const th = postTemplates?.[i]?.theme ?? theme;
@@ -179,10 +179,10 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, 
     });
   }, [posts, template, theme, bgImage, postTemplates, lang]);
 
-  const display = posts.slice(0, 9);
+  const display = posts.slice(0, 30);
   if (display.length < 1) return null;
 
-  const cols = Math.min(3, display.length);
+  const cols = 3;
 
   return (
     <Tabs defaultValue="instagram" className="w-full">
@@ -220,7 +220,7 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, 
             </div>
             <div
               className="grid gap-0.5 rounded-b-xl overflow-hidden border border-t-0 bg-border"
-              style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, maxWidth: cols * 160 }}
+              style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
             >
               {display.map((post, i) => (
                 <canvas
@@ -230,7 +230,7 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, 
                 />
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — How your grid looks on Instagram</p>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">1080×1080 — {display.length} posts — How your grid looks on Instagram</p>
           </CardContent>
         </Card>
       </TabsContent>
@@ -528,6 +528,35 @@ export default function CreatorHub() {
       finally { setGroupsLoading(false); }
     })();
   }, []);
+
+  // Auto-generate 30 posts once groups finish loading so the grid shows immediately
+  const autoGenDone = useRef(false);
+  useEffect(() => {
+    if (!groupsLoading && !autoGenDone.current) {
+      autoGenDone.current = true;
+      // Generate 30-post plan silently
+      const today = new Date();
+      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10", lang);
+      const recentTemplates: TemplateName[] = [];
+      const drafts: MonthlyDraftPost[] = monthlyPosts.map((post, i) => {
+        const d = new Date(today); d.setDate(d.getDate() + i);
+        const pd = monthlyPostToPostData(post);
+        let { templateName: tpl, themeName: thm } = POST_TYPE_AFFINITY[post.postType];
+        if (recentTemplates.length >= 2 &&
+            recentTemplates[recentTemplates.length - 1] === tpl &&
+            recentTemplates[recentTemplates.length - 2] === tpl) {
+          const others = BALANCE_CYCLE.filter(t => t !== tpl);
+          tpl = others[i % others.length];
+          thm = BALANCE_THEME[tpl];
+        }
+        recentTemplates.push(tpl);
+        return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm };
+      });
+      setMonthlyDrafts(drafts);
+      // Also set the posts array to drafts so the grid preview shows all 30
+      setPosts(drafts.map(d => ({ id: d.id, mainText: d.mainText, subtitle: d.subtitle, extraText: d.extraText })));
+    }
+  }, [groupsLoading, groups, lang]);
 
   function generateMonthlyDrafts() {
     if (groupsLoading) { toast({ title: "Loading class data…", description: "Please wait a moment and try again.", variant: "destructive" }); return; }
@@ -889,12 +918,14 @@ export default function CreatorHub() {
           bgImage={bgImage}
           lang={lang}
           postTemplates={
-            gridPattern === "custom"
-              ? posts.map((_, i) => ({
-                  template: BALANCE_CYCLE[i % BALANCE_CYCLE.length],
-                  theme: BALANCE_THEME[BALANCE_CYCLE[i % BALANCE_CYCLE.length]],
-                }))
-              : getGridSlots(gridPattern, posts.length)
+            gridPattern !== "custom"
+              ? getGridSlots(gridPattern, posts.length)
+              : monthlyDrafts.length > 0
+                ? monthlyDrafts.map(d => ({ template: d.templateName, theme: d.themeName }))
+                : posts.map((_, i) => ({
+                    template: BALANCE_CYCLE[i % BALANCE_CYCLE.length],
+                    theme: BALANCE_THEME[BALANCE_CYCLE[i % BALANCE_CYCLE.length]],
+                  }))
           }
         />
       </div>
