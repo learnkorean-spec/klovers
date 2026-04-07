@@ -13,21 +13,29 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: supabase/setup-cli@v1
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          version: latest
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase
 
       - name: Link project
-        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: supabase link --project-ref $SUPABASE_PROJECT_REF
 
       - name: Push schema migrations
         run: supabase db push
 
       - name: Install PostgreSQL client
-        run: sudo apt-get install -y postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Seed lesson content (idempotent)
         env:
@@ -52,14 +60,22 @@ jobs:
     name: Deploy Edge Functions
     runs-on: ubuntu-latest
     needs: migrate
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: supabase/setup-cli@v1
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          version: latest
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase
 
       - name: Deploy all edge functions
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: supabase functions deploy --project-ref $SUPABASE_PROJECT_REF
