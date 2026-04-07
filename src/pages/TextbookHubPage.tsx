@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, Sun, Sparkles, Clapperboard, Brain, ArrowRight } from "lucide-react";
+import { BookOpen, Sun, Sparkles, Clapperboard, Brain, ImageIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +17,8 @@ const BOOKS = [
     descAr: "أتقن الكورية من الهانغول إلى القواعد المتقدمة عبر العوالم والمهام.",
     emoji: "📘",
     icon: BookOpen,
-    gradient: "from-amber-100 to-yellow-50",
-    border: "border-amber-200 hover:border-amber-400",
-    iconColor: "text-amber-600",
-    subtitleColor: "text-amber-700",
-    badgeBg: "bg-amber-100 text-amber-800",
+    gradient: "from-primary/20 to-primary/5",
+    border: "border-primary/30 hover:border-primary/60",
   },
   {
     key: "daily-routine",
@@ -33,11 +30,8 @@ const BOOKS = [
     descAr: "تعلم الكورية من خلال الأفعال اليومية — النوم، الطبخ، التنظيف والمزيد.",
     emoji: "☀️",
     icon: Sun,
-    gradient: "from-orange-100 to-amber-50",
-    border: "border-orange-200 hover:border-orange-400",
-    iconColor: "text-orange-500",
-    subtitleColor: "text-orange-700",
-    badgeBg: "bg-orange-100 text-orange-800",
+    gradient: "from-accent/20 to-accent/5",
+    border: "border-accent/30 hover:border-accent/60",
   },
   {
     key: "kdrama",
@@ -49,11 +43,8 @@ const BOOKS = [
     descAr: "تعلم الكورية من خلال حوارات الدراما الأيقونية والعامية والسياق الثقافي.",
     emoji: "🎬",
     icon: Clapperboard,
-    gradient: "from-rose-100 to-pink-50",
-    border: "border-rose-200 hover:border-rose-400",
-    iconColor: "text-rose-500",
-    subtitleColor: "text-rose-700",
-    badgeBg: "bg-rose-100 text-rose-800",
+    gradient: "from-rose-500/20 to-rose-500/5",
+    border: "border-rose-500/30 hover:border-rose-500/60",
   },
   {
     key: "grammar-mastery",
@@ -65,11 +56,22 @@ const BOOKS = [
     descAr: "ادرس كل نمط قواعدي كوري بعمق — من الجسيمات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
     emoji: "🧠",
     icon: Brain,
-    gradient: "from-violet-100 to-purple-50",
-    border: "border-violet-200 hover:border-violet-400",
-    iconColor: "text-violet-500",
-    subtitleColor: "text-violet-700",
-    badgeBg: "bg-violet-100 text-violet-800",
+    gradient: "from-violet-500/20 to-violet-500/5",
+    border: "border-violet-500/30 hover:border-violet-500/60",
+    badge: "NEW",
+  },
+  {
+    key: "picture-vocab",
+    titleEn: "Picture Vocabulary",
+    titleAr: "مفردات الصور",
+    subtitleEn: "15 Visual Scene Lessons",
+    subtitleAr: "١٥ درساً بالصور",
+    descEn: "Learn Korean vocabulary through beautiful illustrated scenes — bedroom, café, park and more.",
+    descAr: "تعلم مفردات الكورية من خلال مشاهد مصوّرة جميلة — غرفة النوم، الكافيه، الحديقة والمزيد.",
+    emoji: "🖼️",
+    icon: ImageIcon,
+    gradient: "from-emerald-500/20 to-emerald-500/5",
+    border: "border-emerald-500/30 hover:border-emerald-500/60",
     badge: "NEW",
   },
 ];
@@ -83,15 +85,15 @@ const TextbookHubPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content" className="pt-24 pb-16">
-        <section className="text-center mb-14 px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 text-foreground/70 text-sm font-medium mb-6 border border-foreground/10">
+        <section className="text-center mb-12 px-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Sparkles className="h-4 w-4" />
             {isAr ? "مكتبة الكتب" : "Book Library"}
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             {isAr ? "اختر كتابك" : "Choose Your Book"}
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
+          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
             {isAr
               ? "اختر كتاباً تعليمياً وابدأ رحلتك في تعلم الكورية"
               : "Pick a learning book and start your Korean journey"}
@@ -108,33 +110,29 @@ const TextbookHubPage = () => {
                   key={book.key}
                   to={`/textbook/${book.key}`}
                   className={cn(
-                    "group relative block rounded-2xl border-2 p-6 transition-all duration-200 hover:shadow-xl hover:-translate-y-1.5 bg-gradient-to-br shadow-sm",
+                    "group relative block rounded-2xl border-2 p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br",
                     book.gradient,
                     book.border
                   )}
                 >
                   {hasBadge && (
-                    <span className="absolute top-3 right-3 text-[11px] font-bold tracking-wide px-2.5 py-1 rounded-full bg-violet-500 text-white shadow-sm">
+                    <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-violet-500 text-white">
                       {(book as { badge?: string }).badge}
                     </span>
                   )}
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-5xl drop-shadow-sm">{book.emoji}</span>
-                    <Icon className={cn("h-6 w-6 opacity-60", book.iconColor)} />
+                    <span className="text-5xl">{book.emoji}</span>
+                    <Icon className="h-6 w-6 text-primary opacity-50" />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-1">
                     {isAr ? book.titleAr : book.titleEn}
                   </h2>
-                  <p className={cn("text-sm font-semibold mb-2", book.subtitleColor)}>
+                  <p className="text-sm font-medium text-primary mb-2">
                     {isAr ? book.subtitleAr : book.subtitleEn}
                   </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-sm text-muted-foreground">
                     {isAr ? book.descAr : book.descEn}
                   </p>
-                  <div className={cn("mt-4 flex items-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity", book.subtitleColor)}>
-                    {isAr ? "ابدأ التعلم" : "Start learning"}
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
                 </Link>
               );
             })}
