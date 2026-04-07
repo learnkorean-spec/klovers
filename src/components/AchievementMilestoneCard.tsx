@@ -49,7 +49,7 @@ export function AchievementMilestoneCard() {
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="animate-bounce text-center">
             <div className="text-6xl mb-4">🎉</div>
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-2xl font-bold text-amber-700">
               {newlyAchieved.milestone_name}
             </p>
             <p className="text-sm text-muted-foreground">Milestone Achieved!</p>
@@ -57,11 +57,11 @@ export function AchievementMilestoneCard() {
         </div>
       )}
 
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent dark:border-amber-800 dark:from-amber-950/30">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
+              <Trophy className="h-5 w-5 text-amber-600" />
               Milestone Progress
             </span>
             <Badge variant="outline">{completionPercentage}%</Badge>
