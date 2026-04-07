@@ -42,14 +42,14 @@ const Testimonials = () => {
     <section className="py-20 md:py-28 relative overflow-hidden bg-background">
       {/* Decorative background blobs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
+        <div className="absolute top-0 left-0 w-96 h-96 bg-amber-200/15 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-200/15 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary text-black text-xs font-semibold uppercase tracking-widest mb-4 border border-black/25 shadow-sm">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-widest mb-4 border border-black/15 shadow-sm">
             Student Stories
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -63,7 +63,7 @@ const Testimonials = () => {
         {/* Stats bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-16">
           {STATS.map((s) => (
-            <div key={s.label} className="text-center bg-card border border-border rounded-xl px-4 py-4 hover:border-primary/30 transition-colors">
+            <div key={s.label} className="text-center bg-card border border-border rounded-xl px-4 py-4 hover:border-amber-300 transition-colors">
               <div className="text-xl md:text-2xl font-bold text-foreground">{s.value}</div>
               <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
             </div>
@@ -77,12 +77,12 @@ const Testimonials = () => {
               key={index}
               ref={el => { refs.current[index] = el; }}
               style={{ transitionDelay: `${index * 100}ms` }}
-              className={`group relative bg-card border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-xl transition-all duration-500 ease-out flex flex-col ${
+              className={`group relative bg-card border border-border rounded-2xl p-6 hover:border-amber-300 hover:shadow-xl transition-all duration-500 ease-out flex flex-col ${
                 visible.has(index) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
               {/* Large decorative quote */}
-              <div className="absolute top-4 right-5 text-6xl font-serif text-primary/10 leading-none select-none group-hover:text-primary/20 transition-colors">
+              <div className="absolute top-4 right-5 text-6xl font-serif text-amber-400/15 leading-none select-none group-hover:text-amber-400/25 transition-colors">
                 "
               </div>
 

@@ -114,7 +114,7 @@ const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => {
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary text-outlined font-bold text-sm flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0 border border-black/10">
             {initials}
           </div>
           <div className="min-w-0">
