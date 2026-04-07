@@ -23,16 +23,16 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        run: npx supabase@latest --version
 
       - name: Link project
-        run: supabase link --project-ref $SUPABASE_PROJECT_REF
+        run: npx supabase@latest link --project-ref $SUPABASE_PROJECT_REF
 
       - name: Push schema migrations
-        run: supabase db push
+        run: npx supabase@latest db push
 
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
@@ -72,10 +72,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        run: npx supabase@latest --version
 
       - name: Deploy all edge functions
-        run: supabase functions deploy --project-ref $SUPABASE_PROJECT_REF
+        run: npx supabase@latest functions deploy --project-ref $SUPABASE_PROJECT_REF
