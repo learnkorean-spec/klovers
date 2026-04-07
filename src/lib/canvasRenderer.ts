@@ -388,9 +388,9 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
 
 // BOLD — AIDA: ATTENTION. Stop the scroll. Maximum visual impact.
 function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en") {
-  const pad = 44 * S;
-  const topH = Math.round(h * 0.09);
-  const botH = Math.round(h * 0.20);
+  const pad = 52 * S;
+  const topH = Math.round(h * 0.10);
+  const botH = Math.round(h * 0.18);
   const botY = h - botH;
 
   // ── Yellow background ──
@@ -403,147 +403,147 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.fillStyle = "rgba(0,0,0,0.035)";
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
-  ctx.fillText("K", w - 8 * S, h * 0.76);
+  ctx.fillText("K", w - 12 * S, h * 0.76);
   ctx.textBaseline = "alphabetic";
   ctx.restore();
 
   // ── Black top bar ──
   ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, w, topH);
-  ctx.font = fontStack(L, 700, Math.round(20 * S));
+  ctx.font = fontStack(L, 700, Math.round(18 * S));
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(brandLabel(L), w / 2, topH * 0.72);
+  ctx.fillText(brandLabel(L), w / 2, topH * 0.62);
   ctx.textAlign = "left";
 
-  // ── Eyebrow zone (h*0.09 – h*0.21) — clearly above headline ──
-  const eyeY = h * 0.155;
-  ctx.font = fontStack(L, 700, Math.round(16 * S));
+  // ── Eyebrow zone — well below top bar ──
+  const eyeY = h * 0.18;
+  ctx.font = fontStack(L, 700, Math.round(14 * S));
   ctx.fillStyle = "#111111";
   if (L === "ar") {
     ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "right";
     ctx.fillText(courseLabel(L), w - pad, eyeY);
     ctx.restore();
-    ctx.fillRect(w - pad - 44 * S, eyeY + 6 * S, 44 * S, 3 * S);
+    ctx.fillRect(w - pad - 36 * S, eyeY + 6 * S, 36 * S, 3 * S);
   } else {
     ctx.fillText(courseLabel(L), pad, eyeY);
-    ctx.fillRect(pad, eyeY + 6 * S, 44 * S, 3 * S);
+    ctx.fillRect(pad, eyeY + 6 * S, 36 * S, 3 * S);
   }
 
   // ── K circle badge — opposite side from eyebrow ──
-  const bR = 30 * S;
+  const bR = 24 * S;
   const bx = L === "ar" ? pad + bR : w - pad - bR;
-  const by = h * 0.155;
+  const by = h * 0.18;
   ctx.fillStyle = "#111111";
   ctx.beginPath(); ctx.arc(bx, by, bR, 0, Math.PI * 2); ctx.fill();
-  ctx.font = fontStack("en", 900, Math.round(22 * S));
+  ctx.font = fontStack("en", 900, Math.round(18 * S));
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText("K", bx, by);
   ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
 
-  // ── ATTENTION: Massive headline — starts at h*0.27, well below eyebrow ──
+  // ── ATTENTION: Massive headline — starts at h*0.30 with breathing room ──
   const hlMax = w - pad * 2;
-  const hlSize = Math.min(96 * S, hlMax / 5.2);
+  const hlSize = Math.min(80 * S, hlMax / 5.5);
   ctx.font = fontStack(L, 900, hlSize);
   ctx.fillStyle = "#111111";
-  drawText(ctx, post.mainText, pad, h * 0.27, hlMax, hlSize * 1.10, 2, L, w);
+  drawText(ctx, post.mainText, pad, h * 0.30, hlMax, hlSize * 1.10, 2, L, w);
 
   // ── Divider (FIXED) ──
   ctx.fillStyle = "#111111";
-  ctx.fillRect(L === "ar" ? w - pad - 44 * S : pad, h * 0.57, 44 * S, 3 * S);
+  ctx.fillRect(L === "ar" ? w - pad - 36 * S : pad, h * 0.56, 36 * S, 3 * S);
 
   // ── Subtitle (FIXED zone) ──
-  ctx.font = fontStack(L, 400, Math.round(26 * S));
+  ctx.font = fontStack(L, 400, Math.round(22 * S));
   ctx.fillStyle = "#222222";
-  drawText(ctx, post.subtitle, pad, h * 0.615, w - pad * 2, 34 * S, 3, L, w);
+  drawText(ctx, post.subtitle, pad, h * 0.61, w - pad * 2, 30 * S, 3, L, w);
 
   // ── Black bottom bar ──
   ctx.fillStyle = "#111111";
   ctx.fillRect(0, botY, w, botH);
 
   // ── Yellow CTA pill ──
-  const ctaH = 52 * S, ctaW = 220 * S;
-  const ctaY = botY + (botH - ctaH) * 0.38;
+  const ctaH = 48 * S, ctaW = 200 * S;
+  const ctaY = botY + (botH - ctaH) * 0.42;
   ctx.fillStyle = "#FFFF00";
   rRect(ctx, pad, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = fontStack(L, 700, Math.round(18 * S));
+  ctx.font = fontStack(L, 700, Math.round(16 * S));
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), pad + ctaW / 2, ctaY + ctaH * 0.67);
+  ctx.fillText(ctaText(L), pad + ctaW / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // ── Website ──
-  ctx.font = fontStack("en", 400, Math.round(14 * S));
+  ctx.font = fontStack("en", 400, Math.round(12 * S));
   ctx.fillStyle = "rgba(255,255,0,0.5)";
   ctx.textAlign = "right";
-  ctx.fillText("kloversegy.com", w - pad, botY + botH * 0.80);
+  ctx.fillText("kloversegy.com", w - pad, botY + botH * 0.78);
   ctx.textAlign = "left";
 }
 
 // VARSITY — AIDA: INTEREST / DESIRE. Build credibility. "What's in it for me?"
 function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en") {
-  const pad = 36 * S;
+  const pad = 48 * S;
 
   // ── Black background ──
   ctx.fillStyle = "#0d0d0d";
   ctx.fillRect(0, 0, w, h);
 
   // ── Subtle yellow radial glow ──
-  const grd = ctx.createRadialGradient(w * 0.55, h * 0.32, 0, w * 0.55, h * 0.32, w * 0.65);
-  grd.addColorStop(0, "rgba(255,220,0,0.10)");
+  const grd = ctx.createRadialGradient(w * 0.55, h * 0.35, 0, w * 0.55, h * 0.35, w * 0.65);
+  grd.addColorStop(0, "rgba(255,220,0,0.08)");
   grd.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, w, h);
 
   // ── Yellow left accent bar ──
   ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(0, 0, 5 * S, h);
+  ctx.fillRect(0, 0, 4 * S, h);
 
   // ── KLOVERS eyebrow ──
-  ctx.font = fontStack(L, 900, 20 * S);
+  ctx.font = fontStack(L, 900, 18 * S);
   ctx.fillStyle = "#FFFF00";
   if (L === "ar") {
     ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "right";
-    ctx.fillText(AR_TEXT.brandShort, w - pad, h * 0.075);
+    ctx.fillText(AR_TEXT.brandShort, w - pad, h * 0.10);
     ctx.restore();
   } else {
-    ctx.fillText("KLOVERS", pad, h * 0.075);
+    ctx.fillText("KLOVERS", pad, h * 0.10);
   }
 
   // ── Yellow thick rule ──
   ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(L === "ar" ? w - pad - w * 0.38 : pad, h * 0.105, w * 0.38, 4 * S);
+  ctx.fillRect(L === "ar" ? w - pad - w * 0.32 : pad, h * 0.13, w * 0.32, 3 * S);
 
   // ── "KOREAN COURSE" label ──
-  ctx.font = fontStack(L, 400, 16 * S);
-  ctx.fillStyle = "rgba(255,255,255,0.45)";
+  ctx.font = fontStack(L, 400, 14 * S);
+  ctx.fillStyle = "rgba(255,255,255,0.40)";
   if (L === "ar") {
     ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "right";
-    ctx.fillText(courseLabel(L), w - pad, h * 0.165);
+    ctx.fillText(courseLabel(L), w - pad, h * 0.19);
     ctx.restore();
   } else {
-    ctx.fillText(courseLabel(L), pad, h * 0.165);
+    ctx.fillText(courseLabel(L), pad, h * 0.19);
   }
 
   // ── INTEREST: Large white headline (FIXED start, max 2 lines) ──
-  const hlSize = Math.min(76 * S, (w - pad * 2) / 6);
+  const hlSize = Math.min(68 * S, (w - pad * 2) / 6);
   ctx.font = fontStack(L, 900, hlSize);
   ctx.fillStyle = "#ffffff";
-  drawText(ctx, post.mainText, pad, h * 0.26, w - pad * 2, hlSize * 1.08, 2, L, w);
+  drawText(ctx, post.mainText, pad, h * 0.29, w - pad * 2, hlSize * 1.10, 2, L, w);
 
   // ── Yellow divider (FIXED) ──
   ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(pad, h * 0.57, w - pad * 2, 2 * S);
+  ctx.fillRect(pad, h * 0.56, w - pad * 2, 2 * S);
 
   // ── Subtitle (FIXED zone) ──
-  ctx.font = fontStack(L, 400, 24 * S);
+  ctx.font = fontStack(L, 400, 22 * S);
   ctx.fillStyle = "rgba(255,255,255,0.75)";
-  drawText(ctx, post.subtitle, pad, h * 0.625, w - pad * 2, 32 * S, 3, L, w);
+  drawText(ctx, post.subtitle, pad, h * 0.62, w - pad * 2, 30 * S, 3, L, w);
 
   // ── Yellow bottom strip ──
-  const stripH = 56 * S;
+  const stripH = 52 * S;
   ctx.fillStyle = "#FFFF00";
   ctx.fillRect(0, h - stripH, w, stripH);
 
@@ -719,78 +719,81 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 
 // ALERT — Urgency seat counter card. Bold red/yellow with large seat number.
 function renderKloversAlert(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
-  const pad = 44 * S;
+  const pad = 52 * S;
 
   // ── Black background ──
   ctx.fillStyle = "#0d0d0d";
   ctx.fillRect(0, 0, w, h);
 
   // ── Thick yellow border (urgency frame) ──
-  const bw = 8 * S;
+  const bw = 6 * S;
   ctx.strokeStyle = "#FFFF00";
   ctx.lineWidth = bw;
   ctx.strokeRect(bw / 2, bw / 2, w - bw, h - bw);
 
   // ── Inner red glow line ──
-  ctx.strokeStyle = "rgba(255,60,60,0.6)";
-  ctx.lineWidth = 3 * S;
-  ctx.strokeRect(bw + 6 * S, bw + 6 * S, w - bw * 2 - 12 * S, h - bw * 2 - 12 * S);
-
-  // ── Yellow top accent bar ──
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(pad, h * 0.06, w - pad * 2, 4 * S);
+  ctx.strokeStyle = "rgba(255,60,60,0.5)";
+  ctx.lineWidth = 2 * S;
+  ctx.strokeRect(bw + 8 * S, bw + 8 * S, w - bw * 2 - 16 * S, h - bw * 2 - 16 * S);
 
   // ── Brand eyebrow ──
-  ctx.font = fontStack(L, 700, 18 * S);
+  ctx.font = fontStack(L, 700, 16 * S);
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(brandLabel(L), w / 2, h * 0.12);
+  ctx.fillText(brandLabel(L), w / 2, h * 0.10);
+
+  // ── Yellow accent line ──
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(w * 0.3, h * 0.13, w * 0.4, 3 * S);
 
   // ── LARGE seat number (focal point) ──
   const numText = post.mainText.replace(/[^\d٠-٩]/g, "") || post.mainText;
-  const numSize = Math.min(220 * S, w * 0.35);
+  const numSize = Math.min(180 * S, w * 0.30);
   ctx.font = fontStack("en", 900, numSize);
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(numText.slice(0, 3), w / 2, h * 0.38);
+  ctx.fillText(numText.slice(0, 3), w / 2, h * 0.36);
   ctx.textBaseline = "alphabetic";
 
   // ── "Seats Left" / "مقاعد متبقية" label ──
-  ctx.font = fontStack(L, 700, 32 * S);
+  ctx.font = fontStack(L, 700, 28 * S);
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(L === "ar" ? AR_TEXT.seatsLeft : "SEATS LEFT", w / 2, h * 0.56);
+  ctx.fillText(L === "ar" ? AR_TEXT.seatsLeft : "SEATS LEFT", w / 2, h * 0.54);
 
   // ── Red urgency bar ──
   ctx.fillStyle = "#ff3c3c";
-  rRect(ctx, pad, h * 0.61, w - pad * 2, 6 * S, 3 * S);
+  rRect(ctx, pad, h * 0.59, w - pad * 2, 5 * S, 3 * S);
   ctx.fill();
 
   // ── Subtitle (schedule info) ──
-  ctx.font = fontStack(L, 400, 24 * S);
+  ctx.font = fontStack(L, 400, 20 * S);
   ctx.fillStyle = "rgba(255,255,255,0.8)";
-  drawText(ctx, post.subtitle, pad, h * 0.68, w - pad * 2, 32 * S, 3, L, w);
+  drawText(ctx, post.subtitle, pad, h * 0.66, w - pad * 2, 28 * S, 3, L, w);
 
   // ── CTA pill ──
-  const ctaH = 52 * S, ctaW = 240 * S;
+  const ctaH = 48 * S, ctaW = 220 * S;
   const ctaY = h * 0.82;
   ctx.fillStyle = "#FFFF00";
   rRect(ctx, (w - ctaW) / 2, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = fontStack(L, 700, 18 * S);
+  ctx.font = fontStack(L, 700, 16 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.67);
+  ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
-  // ── Bottom accent bar ──
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(pad, h - pad - 4 * S, w - pad * 2, 4 * S);
+  // ── Website ──
+  ctx.font = fontStack("en", 400, 12 * S);
+  ctx.fillStyle = "rgba(255,255,0,0.4)";
+  ctx.textAlign = "center";
+  ctx.fillText("kloversegy.com", w / 2, h * 0.94);
+  ctx.textAlign = "left";
 }
 
 // COUNTDOWN — Days-left countdown ring with progress arc.
 function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
-  const pad = 44 * S;
+  const pad = 52 * S;
 
   // ── Dark background ──
   ctx.fillStyle = "#111111";
@@ -804,14 +807,14 @@ function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w
   ctx.fillRect(0, 0, w, h);
 
   // ── Brand eyebrow ──
-  ctx.font = fontStack(L, 700, 18 * S);
+  ctx.font = fontStack(L, 700, 16 * S);
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(brandLabel(L), w / 2, h * 0.08);
+  ctx.fillText(brandLabel(L), w / 2, h * 0.10);
 
   // ── Yellow accent line ──
   ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(w * 0.3, h * 0.11, w * 0.4, 3 * S);
+  ctx.fillRect(w * 0.3, h * 0.13, w * 0.4, 3 * S);
 
   // ── Countdown ring (background) ──
   const cx = w / 2, cy = h * 0.38;
@@ -873,7 +876,7 @@ function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w
 
 // QUOTE — Testimonial / social proof card with decorative quotation marks.
 function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
-  const pad = 44 * S;
+  const pad = 52 * S;
 
   // ── White/cream background ──
   ctx.fillStyle = "#fafaf5";
@@ -881,26 +884,26 @@ function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 
   // ── Yellow top bar ──
   ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(0, 0, w, h * 0.06);
+  ctx.fillRect(0, 0, w, h * 0.08);
 
   // ── Brand name in top bar ──
-  ctx.font = fontStack(L, 700, 16 * S);
+  ctx.font = fontStack(L, 700, 14 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(brandLabel(L), w / 2, h * 0.038);
+  ctx.fillText(brandLabel(L), w / 2, h * 0.05);
 
   // ── Large decorative quotation mark ──
-  ctx.font = `900 ${Math.round(h * 0.25)}px Georgia, serif`;
-  ctx.fillStyle = "rgba(255,255,0,0.3)";
+  ctx.font = `900 ${Math.round(h * 0.18)}px Georgia, serif`;
+  ctx.fillStyle = "rgba(255,255,0,0.25)";
   ctx.textAlign = L === "ar" ? "right" : "left";
-  ctx.fillText(L === "ar" ? "\u201D" : "\u201C", L === "ar" ? w - pad * 0.5 : pad * 0.5, h * 0.30);
+  ctx.fillText(L === "ar" ? "\u201D" : "\u201C", L === "ar" ? w - pad : pad, h * 0.28);
 
   // ── Quote text (main) ──
-  ctx.font = fontStack(L, 700, Math.min(48 * S, (w - pad * 2) / 8));
+  const quoteSize = Math.min(42 * S, (w - pad * 2) / 8);
+  ctx.font = fontStack(L, 700, quoteSize);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  const quoteSize = Math.min(48 * S, (w - pad * 2) / 8);
-  drawText(ctx, post.mainText, pad, h * 0.38, w - pad * 2, quoteSize * 1.3, 3, L, w);
+  drawText(ctx, post.mainText, pad, h * 0.36, w - pad * 2, quoteSize * 1.3, 3, L, w);
 
   // ── Yellow divider ──
   ctx.fillStyle = "#FFFF00";
@@ -934,7 +937,7 @@ function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 
 // TIP — Educational tip card. Korean word with meaning. Engagement-focused.
 function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
-  const pad = 44 * S;
+  const pad = 52 * S;
 
   // ── Gradient background (yellow → white) ──
   const grad = ctx.createLinearGradient(0, 0, 0, h);
@@ -946,44 +949,44 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
 
   // ── Faint K watermark ──
   ctx.save();
-  ctx.font = `900 ${Math.round(h * 0.25)}px 'Inter', sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.025)";
+  ctx.font = `900 ${Math.round(h * 0.22)}px 'Inter', sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.02)";
   ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-  ctx.fillText("K", w - 8 * S, h * 0.78);
+  ctx.fillText("K", w - 12 * S, h * 0.76);
   ctx.restore();
 
-  // ── "Did you know?" / "هل تعلم؟" eyebrow ──
-  ctx.font = fontStack(L, 700, 20 * S);
-  ctx.fillStyle = "#111111";
-  ctx.textAlign = "center";
-  ctx.fillText(L === "ar" ? AR_TEXT.didYouKnow : "DID YOU KNOW?", w / 2, h * 0.10);
-
-  // ── Yellow underline ──
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(w * 0.3, h * 0.13, w * 0.4, 3 * S);
-
   // ── K badge (top-left) ──
-  const bR = 22 * S;
+  const bR = 20 * S;
   ctx.fillStyle = "#111111";
   ctx.beginPath(); ctx.arc(pad + bR, pad + bR, bR, 0, Math.PI * 2); ctx.fill();
-  ctx.font = fontStack("en", 900, 16 * S);
+  ctx.font = fontStack("en", 900, 14 * S);
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText("K", pad + bR, pad + bR);
   ctx.textBaseline = "alphabetic";
 
+  // ── "Did you know?" / "هل تعلم؟" eyebrow ──
+  ctx.font = fontStack(L, 700, 18 * S);
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.fillText(L === "ar" ? AR_TEXT.didYouKnow : "DID YOU KNOW?", w / 2, h * 0.14);
+
+  // ── Underline ──
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(w * 0.3, h * 0.17, w * 0.4, 3 * S);
+
   // ── Korean word/phrase (large, centered) ──
-  const mainSize = Math.min(80 * S, (w - pad * 2) / 5);
+  const mainSize = Math.min(72 * S, (w - pad * 2) / 5);
   ctx.font = fontStack(L, 900, mainSize);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
   drawText(ctx, post.mainText, pad, h * 0.30, w - pad * 2, mainSize * 1.15, 2, L, w);
 
   // ── Meaning / subtitle ──
-  ctx.font = fontStack(L, 500, 28 * S);
+  ctx.font = fontStack(L, 500, 24 * S);
   ctx.fillStyle = "#333";
   ctx.textAlign = "center";
-  drawText(ctx, post.subtitle, pad, h * 0.58, w - pad * 2, 36 * S, 3, L, w);
+  drawText(ctx, post.subtitle, pad, h * 0.56, w - pad * 2, 32 * S, 3, L, w);
 
   // ── Black bottom strip ──
   ctx.fillStyle = "#111111";
@@ -1307,81 +1310,81 @@ export function renderPost(
 
   // Left accent bar
   ctx.fillStyle = isDark ? c.accent : "#1a1a1a";
-  ctx.fillRect(28 * scale, 28 * scale, 4 * scale, h * 0.14);
+  ctx.fillRect(32 * scale, 32 * scale, 4 * scale, h * 0.12);
 
   if (template === "minimal") {
-    ctx.strokeStyle = c.text; ctx.lineWidth = 3 * scale;
-    const m = 30 * scale; ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+    ctx.strokeStyle = c.text; ctx.lineWidth = 2 * scale;
+    const m = 24 * scale; ctx.strokeRect(m, m, w - m * 2, h - m * 2);
   }
 
   // Editorial: left black panel
   if (template === "editorial") {
     ctx.fillStyle = "#111111";
-    ctx.fillRect(0, 0, w * 0.08, h);
+    ctx.fillRect(0, 0, w * 0.06, h);
     ctx.fillStyle = c.bg;
   }
 
-  if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 24 * scale; }
+  if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 20 * scale; }
 
-  // Text layout — all positions FIXED as fractions of h with proper safe zones
-  const pad    = 44 * scale;  // Standard 44px safe margin (4% of 1080px)
-  const tLeft  = template === "editorial" ? pad * 2 : pad;
-  const tW     = w - tLeft - pad;  // Ensure text never extends beyond right margin
+  // Text layout — all positions FIXED as fractions of h with generous safe zones
+  const pad    = 52 * scale;
+  const tLeft  = template === "editorial" ? pad * 1.6 : pad;
+  const tW     = w - tLeft - pad;
   const eyeColor = isDark ? (template === "neon" ? c.accent : "#aaa") : "#1a1a1a";
 
-  // Eyebrow at FIXED h*0.155 (upper eyebrow zone)
+  // Eyebrow
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
   ctx.fillStyle = eyeColor;
-  ctx.font = fontStack(L, 700, Math.round(20 * scale));
+  ctx.font = fontStack(L, 700, Math.round(16 * scale));
   if (L === "ar") {
     ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "right";
-    ctx.fillText(courseLabel(L), w - tLeft, h * 0.155);
+    ctx.fillText(courseLabel(L), w - tLeft, h * 0.18);
     ctx.restore();
-    ctx.fillRect(w - tLeft - 44 * scale, h * 0.155 + 8 * scale, 44 * scale, 3 * scale);
+    ctx.fillRect(w - tLeft - 36 * scale, h * 0.18 + 8 * scale, 36 * scale, 3 * scale);
   } else {
-    ctx.fillText(courseLabel(L), tLeft, h * 0.155);
-    ctx.fillRect(tLeft, h * 0.155 + 8 * scale, 44 * scale, 3 * scale);
+    ctx.fillText(courseLabel(L), tLeft, h * 0.18);
+    ctx.fillRect(tLeft, h * 0.18 + 8 * scale, 36 * scale, 3 * scale);
   }
 
-  if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 18 * scale; }
+  if (template === "neon") { ctx.shadowColor = c.accent; ctx.shadowBlur = 16 * scale; }
 
-  // Headline at FIXED h*0.27 (well-separated from eyebrow, max 2 lines)
-  const mSize = Math.min(isPortrait ? 96 * scale : 80 * scale, tW * 0.15);
+  // Headline at h*0.30 with breathing room from eyebrow
+  const mSize = Math.min(isPortrait ? 80 * scale : 68 * scale, tW * 0.14);
   ctx.font = fontStack(L, 900, Math.round(mSize));
   ctx.fillStyle = isDark ? "#fff" : "#1a1a1a";
-  drawText(ctx, post.mainText, tLeft, h * 0.27, tW, Math.round(mSize * 1.12), 2, L, w);
+  drawText(ctx, post.mainText, tLeft, h * 0.30, tW, Math.round(mSize * 1.12), 2, L, w);
 
   ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
 
-  // Subtitle at FIXED h*0.60 — position never depends on headline
+  // Subtitle at h*0.60
   if (post.subtitle) {
-    const sSize = Math.round(mSize * 0.42);
+    const sSize = Math.round(mSize * 0.40);
     ctx.font = fontStack(L, 500, sSize);
     ctx.fillStyle = isDark ? "#bbb" : "#333";
     drawText(ctx, post.subtitle, tLeft, h * 0.60, tW, Math.round(sSize * 1.45), 3, L, w);
   }
 
-  // CTA pill at FIXED position (h*0.75)
-  const ctaH  = Math.round(52 * scale);
-  const ctaW  = Math.round(220 * scale);
-  const ctaY  = h * 0.75;
+  // CTA pill at h*0.76
+  const ctaH  = Math.round(46 * scale);
+  const ctaW  = Math.round(200 * scale);
+  const ctaY  = h * 0.76;
   const ctaBg = isDark ? c.accent : "#1a1a1a";
   ctx.fillStyle = ctaBg;
   rRect(ctx, tLeft, ctaY, ctaW, ctaH, ctaH / 2);
   ctx.fill();
-  ctx.font = fontStack(L, 700, Math.round(18 * scale));
+  ctx.font = fontStack(L, 700, Math.round(16 * scale));
   ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), tLeft + ctaW / 2, ctaY + ctaH * 0.67);
+  ctx.fillText(ctaText(L), tLeft + ctaW / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
-  // Footer strip with hashtags (h*0.88–h*1.0)
+  // Footer strip with hashtags (h*0.89–h*1.0)
   ctx.fillStyle = isDark ? "#111" : "#1a1a1a";
-  ctx.fillRect(0, h * 0.88, w, h * 0.12);
-  ctx.font = fontStack(L, 700, Math.round(16 * scale));
+  ctx.fillRect(0, h * 0.89, w, h * 0.11);
+  ctx.font = fontStack(L, 700, Math.round(14 * scale));
   ctx.fillStyle = "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(post.extraText || (L === "ar" ? AR_TEXT.hashtags : "#LearnKorean #Klovers"), w / 2, h * 0.94);
+  ctx.fillText(post.extraText || (L === "ar" ? AR_TEXT.hashtags : "#LearnKorean #Klovers"), w / 2, h * 0.95);
   ctx.textAlign = "left";
 }
 
