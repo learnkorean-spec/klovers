@@ -93,7 +93,7 @@ const TextbookHubPage = () => {
                   <h2 className="text-xl font-bold text-foreground mb-1">
                     {isAr ? book.titleAr : book.titleEn}
                   </h2>
-                  <p className="text-sm font-medium text-primary mb-2">
+                  <p className="text-sm font-medium text-foreground/70 mb-2">
                     {isAr ? book.subtitleAr : book.subtitleEn}
                   </p>
                   <p className="text-sm text-muted-foreground">
