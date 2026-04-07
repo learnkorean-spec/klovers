@@ -241,7 +241,7 @@ const LessonDetailPage = () => {
         <Header />
         <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`} className="text-primary text-outlined underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-amber-700 underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -268,7 +268,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-primary text-outlined underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-amber-700 underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -361,7 +361,7 @@ const LessonDetailPage = () => {
         )}
 
         {lp?.chapter_completed && (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-6 text-center">
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 mb-6 text-center">
             <span className="text-2xl">⭐</span>
             <p className="font-bold text-foreground">{t("textbook.missionComplete")}</p>
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
@@ -385,27 +385,27 @@ const LessonDetailPage = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-6 mb-8">
-            <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
               {lp?.vocab_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <Languages className="h-4 w-4 hidden sm:block" /> {t("textbook.grammar")}
               {lp?.grammar_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <MessageSquare className="h-4 w-4 hidden sm:block" /> {t("textbook.dialogue")}
               {lp?.dialogue_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <Lightbulb className="h-4 w-4 hidden sm:block" /> {t("textbook.exercises")}
               {lp?.exercises_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <FileText className="h-4 w-4 hidden sm:block" /> {t("textbook.reading")}
               {lp?.reading_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <PenLine className="h-4 w-4 hidden sm:block" /> {isAr ? "كتابة" : "Writing"}
               {(lp as any)?.writing_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
@@ -416,7 +416,7 @@ const LessonDetailPage = () => {
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" /> {t("textbook.vocabulary")}
+                <BookOpen className="h-5 w-5 text-amber-600" /> {t("textbook.vocabulary")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.vocab} XP</span>
               </h2>
               <div className="flex items-center gap-2">
@@ -483,10 +483,10 @@ const LessonDetailPage = () => {
                             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                             className={cn(
                               "absolute inset-0 rounded-xl border flex flex-col items-center justify-center gap-2 p-4 overflow-hidden",
-                              isStudied ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-primary/20 hover:shadow-md"
+                              isStudied ? "border-amber-300 bg-amber-50" : "border-border bg-card hover:border-amber-200 hover:shadow-md"
                             )}
                           >
-                            {isStudied && <span className="absolute top-2 right-2 text-primary text-xs z-10">✓</span>}
+                            {isStudied && <span className="absolute top-2 right-2 text-amber-600 text-xs z-10">✓</span>}
                             {/* Image */}
                             {v.image_url && (
                               <img
@@ -521,11 +521,11 @@ const LessonDetailPage = () => {
                               WebkitBackfaceVisibility: 'hidden',
                               transform: 'rotateY(180deg)',
                             }}
-                            className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-2 p-4"
+                            className="absolute inset-0 rounded-xl border border-amber-300 bg-amber-50 flex flex-col items-center justify-center gap-2 p-4"
                           >
                             <p className="text-lg font-bold text-foreground text-center">{v.meaning}</p>
                             <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                            <p className="text-sm text-primary font-medium mt-1 text-center">{v.korean}</p>
+                            <p className="text-sm text-amber-700 font-medium mt-1 text-center">{v.korean}</p>
                           </div>
                         </div>
                       </div>
@@ -536,7 +536,7 @@ const LessonDetailPage = () => {
                 {/* Practice with Games */}
                 <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
                   <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
-                    <Gamepad2 className="h-4 w-4 text-primary" />
+                    <Gamepad2 className="h-4 w-4 text-amber-600" />
                     {isAr ? "تدرب مع الألعاب" : "Practice with Games"}
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -562,7 +562,7 @@ const LessonDetailPage = () => {
           {/* GRAMMAR */}
           <TabsContent value="grammar">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Languages className="h-5 w-5 text-primary" /> {t("textbook.grammar")}
+              <Languages className="h-5 w-5 text-amber-600" /> {t("textbook.grammar")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.grammar} XP</span>
             </h2>
             {grammar.length === 0 ? (
@@ -573,17 +573,17 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground font-bold border border-black/25">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-white font-bold shadow-sm">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p className="text-sm font-mono text-foreground bg-primary/10 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
+                        <p className="text-sm font-mono text-foreground bg-amber-100 inline-block px-3 py-1.5 rounded-lg mb-3">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
                         <div className="space-y-2 bg-muted/30 rounded-lg p-3">
                           {g.examples.map((ex, i) => (
-                            <div key={i} className="border-l-2 border-primary/30 pl-3">
+                            <div key={i} className="border-l-2 border-amber-300 pl-3">
                               <p className="text-sm font-medium text-foreground">{ex.korean}</p>
                               <p className="text-xs text-muted-foreground">{ex.english}</p>
                             </div>
@@ -601,7 +601,7 @@ const LessonDetailPage = () => {
           {/* DIALOGUE - Enhanced chat-style */}
           <TabsContent value="dialogue">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> {t("textbook.dialogue")}
+              <MessageSquare className="h-5 w-5 text-amber-600" /> {t("textbook.dialogue")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.dialogue} XP</span>
             </h2>
             {dialogue.length === 0 ? (
@@ -620,7 +620,7 @@ const LessonDetailPage = () => {
                           "max-w-[80%] rounded-2xl p-4",
                           isEven
                             ? "rounded-tl-sm bg-card border border-border"
-                            : "rounded-tr-sm bg-primary/10 border border-primary/20"
+                            : "rounded-tr-sm bg-amber-100 border border-amber-200"
                         )}>
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <p className="text-xs font-bold text-foreground uppercase">{d.speaker}</p>
@@ -652,7 +652,7 @@ const LessonDetailPage = () => {
           <TabsContent value="exercises">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-primary" /> {t("textbook.exercises")}
+                <Lightbulb className="h-5 w-5 text-amber-600" /> {t("textbook.exercises")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.exercise} XP</span>
               </h2>
               {allAnswered && (
@@ -701,7 +701,7 @@ const LessonDetailPage = () => {
                                 "text-left px-4 py-3 rounded-lg border text-sm transition-all",
                                 revealed && isCorrect && "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 font-medium",
                                 revealed && selected && !isCorrect && "border-destructive bg-destructive/10 text-destructive",
-                                !revealed && "border-border hover:border-primary/40 hover:bg-accent text-foreground",
+                                !revealed && "border-border hover:border-amber-300 hover:bg-amber-50 text-foreground",
                                 revealed && !selected && !isCorrect && "opacity-40"
                               )}
                             >
@@ -761,7 +761,7 @@ const LessonDetailPage = () => {
           {/* READING */}
           <TabsContent value="reading">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" /> {t("textbook.reading")}
+              <FileText className="h-5 w-5 text-amber-600" /> {t("textbook.reading")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.reading} XP</span>
             </h2>
             {reading.length === 0 ? (
@@ -785,7 +785,7 @@ const LessonDetailPage = () => {
           {/* WRITING - Korean Typing Test */}
           <TabsContent value="writing">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <PenLine className="h-5 w-5 text-primary" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
+              <PenLine className="h-5 w-5 text-amber-600" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.writing} XP</span>
             </h2>
             <p className="text-sm text-muted-foreground mb-6">
@@ -810,7 +810,7 @@ const LessonDetailPage = () => {
         {/* Games XP Banner */}
         <Link
           to="/games"
-          className="group flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 p-4 mt-10 transition-all"
+          className="group flex items-center gap-4 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 p-4 mt-10 transition-all"
         >
           <span className="text-3xl">🎮</span>
           <div className="flex-1">
@@ -821,7 +821,7 @@ const LessonDetailPage = () => {
               {isAr ? "العب ألعاب المفردات والهانغول لتعزيز تعلمك" : "Play vocab & Hangul games to boost your learning"}
             </p>
           </div>
-          <span className="text-primary font-semibold text-sm group-hover:underline">
+          <span className="text-amber-700 font-semibold text-sm group-hover:underline">
             {isAr ? "العب الآن" : "Play Now →"}
           </span>
         </Link>
