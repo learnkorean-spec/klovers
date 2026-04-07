@@ -110,7 +110,7 @@ const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
                 <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
-                    <CalendarCheck className="h-4 w-4 text-primary" />
+                    <CalendarCheck className="h-4 w-4 text-amber-600" />
                     <span className="text-sm font-medium text-foreground">
                       {new Date(d.date + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </span>
@@ -537,7 +537,7 @@ const StudentDashboard = () => {
   return (
     <div className="min-h-screen bg-muted/20">
       {showLevelUpFlash && (
-        <div className="fixed inset-0 z-50 pointer-events-none animate-level-up-flash flex items-center justify-center bg-primary/30">
+        <div className="fixed inset-0 z-50 pointer-events-none animate-level-up-flash flex items-center justify-center bg-amber-400/30">
           <div className="animate-scale-in text-center">
             <p className="text-5xl mb-2">{league?.emoji}</p>
             <p className="text-2xl font-black text-foreground text-outlined-lg">Level Up!</p>
@@ -550,8 +550,8 @@ const StudentDashboard = () => {
       <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header row */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-primary/5 to-transparent rounded-2xl px-5 py-4 border border-primary/10">
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-base shrink-0 select-none">
+          <div className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-transparent rounded-2xl px-5 py-4 border border-amber-200/60">
+            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-base shrink-0 select-none">
               {displayName?.[0]?.toUpperCase() ?? "K"}
             </div>
             <div className="flex-1 min-w-0">
@@ -681,12 +681,12 @@ const StudentDashboard = () => {
                     <span className="font-semibold text-foreground">Weekly XP Goal</span>
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">{weeklyXp} / {WEEKLY_GOAL} XP</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>{pct}%</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"}`}>{pct}%</span>
                     </div>
                   </div>
                   <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 animate-bar-grow"
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 animate-bar-grow"
                       style={{ "--bar-target": `${pct}%` } as React.CSSProperties}
                     />
                   </div>
@@ -860,11 +860,11 @@ const StudentDashboard = () => {
           {hasNoData ? (
             /* ── No-enrollment state: show learning features + enroll CTA ── */
             <div className="space-y-6">
-              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent">
                 <CardContent className="pt-6 pb-6 space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <GraduationCap className="h-6 w-6 text-primary" />
+                    <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+                      <GraduationCap className="h-6 w-6 text-amber-600" />
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-foreground">Start Your Korean Journey</h2>
@@ -1068,7 +1068,7 @@ const StudentDashboard = () => {
                           </div>
                           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-primary"}`}
+                              className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-amber-400"}`}
                               style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
                             />
                           </div>
@@ -1163,20 +1163,20 @@ const StudentDashboard = () => {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank')}
-                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-primary/40 hover:bg-primary/5 transition-all text-center"
+                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-amber-600" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Progress Report</span>
                   <span className="text-xs text-muted-foreground">Download PDF</span>
                 </button>
                 <button
                   onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank')}
-                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-primary/40 hover:bg-primary/5 transition-all text-center"
+                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Award className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                    <Award className="h-5 w-5 text-amber-600" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Certificate</span>
                   <span className="text-xs text-muted-foreground">Download PNG</span>
