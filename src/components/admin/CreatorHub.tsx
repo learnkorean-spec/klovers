@@ -11,12 +11,17 @@ import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Mon
 import { toast } from "@/hooks/use-toast";
 import {
   type PostData,
+  type PostLang,
   type TemplateName,
   type ColorTheme,
   type FormatKey,
+  type GridPattern,
+  type FormatOption,
   FORMATS,
   THEME_COLORS,
   TEMPLATE_META,
+  GRID_PATTERN_META,
+  getGridSlots,
   renderPost,
 } from "@/lib/canvasRenderer";
 import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, type MonthlyPostType, type GroupData } from "@/lib/marketingEngine";
@@ -89,20 +94,26 @@ interface MonthlyDraftPost {
 }
 
 const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; themeName: ColorTheme }> = {
-  empty_slots:    { templateName: "klovers_bold",    themeName: "yellow" },
-  countdown:      { templateName: "klovers_bold",    themeName: "yellow" },
-  testimonial:    { templateName: "klovers_varsity", themeName: "midnight" },
-  faq:            { templateName: "klovers_varsity", themeName: "midnight" },
-  referral:       { templateName: "klovers_varsity", themeName: "midnight" },
-  discount:       { templateName: "klovers_split",   themeName: "yellow" },
-  invite_student: { templateName: "klovers_split",   themeName: "yellow" },
+  empty_slots:    { templateName: "klovers_alert",     themeName: "yellow" },
+  countdown:      { templateName: "klovers_countdown", themeName: "midnight" },
+  testimonial:    { templateName: "klovers_quote",     themeName: "yellow" },
+  faq:            { templateName: "klovers_varsity",   themeName: "midnight" },
+  referral:       { templateName: "klovers_varsity",   themeName: "midnight" },
+  discount:       { templateName: "klovers_split",     themeName: "yellow" },
+  invite_student: { templateName: "klovers_bold",      themeName: "yellow" },
+  tip:            { templateName: "klovers_tip",       themeName: "yellow" },
+  culture:        { templateName: "klovers_quote",     themeName: "yellow" },
 };
 
-// All 10 templates — balanced cycle for 30-post generator
+// All 14 templates — balanced cycle for 30-post generator
 const ALL_TEMPLATES: TemplateName[] = [
   "klovers_bold",
   "klovers_varsity",
   "klovers_split",
+  "klovers_alert",
+  "klovers_countdown",
+  "klovers_quote",
+  "klovers_tip",
   "classic",
   "character",
   "minimal",
@@ -111,36 +122,37 @@ const ALL_TEMPLATES: TemplateName[] = [
   "dark",
   "editorial",
 ];
-const BALANCE_CYCLE: TemplateName[] = ALL_TEMPLATES;  // Use all 10 for variety
+const BALANCE_CYCLE: TemplateName[] = ALL_TEMPLATES;
 const BALANCE_THEME: Record<TemplateName, ColorTheme> = {
   klovers_bold: "yellow", klovers_varsity: "midnight", klovers_split: "yellow",
+  klovers_alert: "yellow", klovers_countdown: "midnight", klovers_quote: "yellow", klovers_tip: "yellow",
   classic: "yellow", character: "yellow", minimal: "yellow",
   gradient: "yellow", neon: "midnight", dark: "midnight", editorial: "yellow",
 };
 
-const PostPreview = memo(function PostPreview({ post, template, theme, size = 270 }: {
-  post: PostData; template: TemplateName; theme: ColorTheme; size?: number;
+const PostPreview = memo(function PostPreview({ post, template, theme, size = 270, lang }: {
+  post: PostData; template: TemplateName; theme: ColorTheme; size?: number; lang?: PostLang;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
-    // Render at display size so scale = 1.0, making fonts readable at any size
     c.width = size;
     c.height = size;
-    renderPost(c, post, template, theme, "instagram");
-  }, [post.mainText, post.subtitle, post.extraText, template, theme, size]);
+    renderPost(c, post, template, theme, "instagram", null, lang);
+  }, [post.mainText, post.subtitle, post.extraText, template, theme, size, lang]);
   return <canvas ref={ref} style={{ width: size, height: size, display: "block" }} className="rounded-lg" />;
 });
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
 // ─── Platform Grid Previews ───
-function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }: {
+function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates, lang }: {
   posts: PostData[];
   template: TemplateName;
   theme: ColorTheme;
   bgImage: HTMLImageElement | null;
   postTemplates?: Array<{ template: TemplateName; theme: ColorTheme }>;
+  lang?: PostLang;
 }) {
   const igRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const fbRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -154,18 +166,18 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }
       const th = postTemplates?.[i]?.theme ?? theme;
       // Instagram 1:1
       const ig = igRefs.current[i];
-      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, t, th, "instagram", bgImage); }
+      if (ig) { ig.width = 300; ig.height = 300; renderPost(ig, post, t, th, "instagram", bgImage, lang); }
       // Facebook
       const fb = fbRefs.current[i];
-      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, t, th, "facebook", bgImage); }
+      if (fb) { fb.width = 360; fb.height = 189; renderPost(fb, post, t, th, "facebook", bgImage, lang); }
       // Story
       const st = storyRefs.current[i];
-      if (st) { st.width = 180; st.height = 320; renderPost(st, post, t, th, "story", bgImage); }
+      if (st) { st.width = 180; st.height = 320; renderPost(st, post, t, th, "story", bgImage, lang); }
       // TikTok
       const tt = tiktokRefs.current[i];
-      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, t, th, "tiktok", bgImage); }
+      if (tt) { tt.width = 180; tt.height = 320; renderPost(tt, post, t, th, "tiktok", bgImage, lang); }
     });
-  }, [posts, template, theme, bgImage, postTemplates]);
+  }, [posts, template, theme, bgImage, postTemplates, lang]);
 
   const display = posts.slice(0, 9);
   if (display.length < 1) return null;
@@ -317,27 +329,33 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }
 // Show all 10 templates as a selectable gallery
 const TEMPLATE_CARDS: TemplateName[] = [
   "klovers_bold", "klovers_varsity", "klovers_split",
+  "klovers_alert", "klovers_countdown", "klovers_quote", "klovers_tip",
   "classic", "character", "minimal", "gradient", "neon", "dark", "editorial",
 ];
 const TEMPLATE_LABELS: Record<TemplateName, { label: string; desc: string }> = {
-  klovers_bold:    { label: "⚡ Bold",    desc: "Attention — Yellow frame" },
-  klovers_varsity: { label: "🏆 Varsity", desc: "Interest — Dark ring" },
-  klovers_split:   { label: "✂ Split",   desc: "Action — Diagonal CTA" },
-  classic:         { label: "🟨 Classic", desc: "Bold yellow background" },
-  character:       { label: "🎨 Character", desc: "Illustrated overlay" },
-  minimal:         { label: "□ Minimal",   desc: "Clean border inset" },
-  gradient:        { label: "🌈 Gradient", desc: "Smooth color blend" },
-  neon:            { label: "✨ Neon",     desc: "Dark with glow" },
-  dark:            { label: "🌙 Dark",     desc: "Elegant dark theme" },
-  editorial:       { label: "📄 Editorial", desc: "Magazine style" },
+  klovers_bold:      { label: "⚡ Bold",      desc: "Attention — Yellow frame" },
+  klovers_varsity:   { label: "🏆 Varsity",   desc: "Interest — Dark ring" },
+  klovers_split:     { label: "✂ Split",      desc: "Action — Diagonal CTA" },
+  klovers_alert:     { label: "🔴 Alert",     desc: "Urgency — Seat counter" },
+  klovers_countdown: { label: "⏳ Countdown", desc: "Days-left ring" },
+  klovers_quote:     { label: "💬 Quote",     desc: "Testimonial card" },
+  klovers_tip:       { label: "💡 Tip",       desc: "Educational tip" },
+  classic:           { label: "🟨 Classic",   desc: "Bold yellow background" },
+  character:         { label: "🎨 Character", desc: "Illustrated overlay" },
+  minimal:           { label: "□ Minimal",    desc: "Clean border inset" },
+  gradient:          { label: "🌈 Gradient",  desc: "Smooth color blend" },
+  neon:              { label: "✨ Neon",      desc: "Dark with glow" },
+  dark:              { label: "🌙 Dark",      desc: "Elegant dark theme" },
+  editorial:         { label: "📄 Editorial", desc: "Magazine style" },
 };
 
-function AllTemplateCards({ post, theme, format, active, onSelect }: {
+function AllTemplateCards({ post, theme, format, active, onSelect, lang }: {
   post: PostData;
   theme: ColorTheme;
   format: FormatKey;
   active: TemplateName;
   onSelect: (t: TemplateName) => void;
+  lang?: PostLang;
 }) {
   const refs = useRef<(HTMLCanvasElement | null)[]>([]);
 
@@ -346,13 +364,13 @@ function AllTemplateCards({ post, theme, format, active, onSelect }: {
       const c = refs.current[i];
       if (!c) return;
       c.width = 300; c.height = 300;
-      renderPost(c, post, tpl, theme, format);
+      renderPost(c, post, tpl, theme, format, null, lang);
     });
-  }, [post, theme, format]);
+  }, [post, theme, format, lang]);
 
   return (
     <div className="space-y-2">
-      <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">All Templates (10)</h3>
+      <h3 className="text-[10px] font-bold uppercase tracking-wider text-primary">All Templates ({TEMPLATE_CARDS.length})</h3>
       <div className="grid grid-cols-5 gap-2">
         {TEMPLATE_CARDS.map((tpl, i) => {
           const meta = TEMPLATE_LABELS[tpl];
@@ -391,6 +409,8 @@ export default function CreatorHub() {
   const [format, setFormat] = useState<FormatKey>("instagram");
   const [mainFontStyle, setMainFontStyle] = useState<string>("Bold Italic");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
+  const [lang, setLang] = useState<PostLang>("en");
+  const [gridPattern, setGridPattern] = useState<GridPattern>("custom");
 
   // ── Monthly generator state ──
   const [groups, setGroups] = useState<GroupData[]>([]);
@@ -412,8 +432,8 @@ export default function CreatorHub() {
     const ratio = fmt.h / fmt.w;
     canvas.width = maxPreview;
     canvas.height = maxPreview * ratio;
-    renderPost(canvas, activePost, template, theme, format, bgImage);
-  }, [activePost, template, theme, format, bgImage]);
+    renderPost(canvas, activePost, template, theme, format, bgImage, lang);
+  }, [activePost, template, theme, format, bgImage, lang]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
@@ -446,12 +466,12 @@ export default function CreatorHub() {
     const dlCanvas = document.createElement("canvas");
     dlCanvas.width = fmt.w;
     dlCanvas.height = fmt.h;
-    renderPost(dlCanvas, activePost, template, theme, format, bgImage);
+    renderPost(dlCanvas, activePost, template, theme, format, bgImage, lang);
     const link = document.createElement("a");
-    link.download = `klovers-post-${format}-${Date.now()}.png`;
+    link.download = `klovers-post-${format}-${lang}-${Date.now()}.png`;
     link.href = dlCanvas.toDataURL("image/png");
     link.click();
-    toast({ title: "Downloaded!", description: `${fmt.w}×${fmt.h} image saved.` });
+    toast({ title: "Downloaded!", description: `${fmt.w}×${fmt.h} ${lang.toUpperCase()} image saved.` });
   }
 
   function handleDownloadAll() {
@@ -460,13 +480,13 @@ export default function CreatorHub() {
       const dlCanvas = document.createElement("canvas");
       dlCanvas.width = fmt.w;
       dlCanvas.height = fmt.h;
-      renderPost(dlCanvas, post, template, theme, format, bgImage);
+      renderPost(dlCanvas, post, template, theme, format, bgImage, lang);
       const link = document.createElement("a");
-      link.download = `klovers-${format}-${i + 1}-${Date.now()}.png`;
+      link.download = `klovers-${format}-${lang}-${i + 1}-${Date.now()}.png`;
       link.href = dlCanvas.toDataURL("image/png");
       setTimeout(() => link.click(), i * 200);
     });
-    toast({ title: "Downloading all!", description: `${posts.length} images at ${fmt.w}×${fmt.h}` });
+    toast({ title: "Downloading all!", description: `${posts.length} ${lang.toUpperCase()} images at ${fmt.w}×${fmt.h}` });
   }
 
   // ── Fetch groups for monthly generator ──
@@ -512,7 +532,7 @@ export default function CreatorHub() {
   function generateMonthlyDrafts() {
     if (groupsLoading) { toast({ title: "Loading class data…", description: "Please wait a moment and try again.", variant: "destructive" }); return; }
     const today = new Date();
-    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10");
+    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10", lang);
     const recentTemplates: TemplateName[] = [];
     const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
       const d = new Date(today); d.setDate(d.getDate() + i);
@@ -539,18 +559,23 @@ export default function CreatorHub() {
     try {
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
-      for (const post of monthlyDrafts) {
-        const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-        renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram");
-        const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
-        zip.file(`day-${String(post.day).padStart(2, "0")}-${post.postType}.png`, blob);
+      const formatKeys: FormatKey[] = ["instagram", "story", "facebook"];
+      for (const fk of formatKeys) {
+        const fmt = FORMATS[fk];
+        const folder = zip.folder(fk)!;
+        for (const post of monthlyDrafts) {
+          const c = document.createElement("canvas"); c.width = fmt.w; c.height = fmt.h;
+          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk, null, lang);
+          const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
+          folder.file(`${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}-${fk}.png`, blob);
+        }
       }
       const captionBlocks = monthlyDrafts.map(generatePublishingCopy).join("\n\n");
-      zip.file("captions.txt", captionBlocks);
+      zip.file(`captions-${lang}.txt`, captionBlocks);
       const content = await zip.generateAsync({ type: "blob" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(content);
-      a.download = `klovers-30posts-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
-      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} images + captions.txt ready to upload.` });
+      a.download = `klovers-30posts-${lang}-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
+      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} posts × ${formatKeys.length} formats + captions ready.` });
     } catch (err: any) {
       toast({ title: "Download error", description: err.message, variant: "destructive" });
     } finally { setBulkDownloading(false); }
@@ -558,9 +583,9 @@ export default function CreatorHub() {
 
   function downloadSinglePost(post: MonthlyDraftPost) {
     const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram");
+    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram", null, lang);
     const a = document.createElement("a"); a.href = c.toDataURL("image/png");
-    a.download = `day-${String(post.day).padStart(2, "0")}-${post.postType}.png`; a.click();
+    a.download = `${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}-${lang}.png`; a.click();
   }
 
   function handleBulkUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -634,6 +659,7 @@ export default function CreatorHub() {
               format={format}
               active={template}
               onSelect={setTemplate}
+              lang={lang}
             />
             <div>
               <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Other Templates</h3>
@@ -670,6 +696,25 @@ export default function CreatorHub() {
                 >
                   <div className="w-6 h-6 rounded-full border border-border" style={{ backgroundColor: val.dot }} />
                   <span className="text-[10px] text-foreground">{val.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Language Toggle */}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Language</h3>
+            <div className="flex gap-2">
+              {(["en", "ar"] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`flex-1 p-2.5 rounded-lg border text-center transition-colors ${
+                    lang === l ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <span className="text-xs font-medium text-foreground block">{l === "en" ? "EN" : "AR"}</span>
+                  <span className="text-[10px] text-muted-foreground">{l === "en" ? "English" : "عربي"}</span>
                 </button>
               ))}
             </div>
@@ -729,7 +774,8 @@ export default function CreatorHub() {
               value={activePost.mainText}
               onChange={e => updatePost("mainText", e.target.value)}
               className="text-sm min-h-[80px]"
-              placeholder="Main heading text"
+              placeholder={lang === "ar" ? "النص الرئيسي" : "Main heading text"}
+              dir={lang === "ar" ? "rtl" : "ltr"}
             />
           </div>
 
@@ -739,7 +785,8 @@ export default function CreatorHub() {
               value={activePost.subtitle}
               onChange={e => updatePost("subtitle", e.target.value)}
               className="text-sm"
-              placeholder="🚀 Korean 1 — Starting Friday 6:00 PM"
+              placeholder={lang === "ar" ? "🚀 كوري ١ — يبدأ الجمعة ٦:٠٠ م" : "🚀 Korean 1 — Starting Friday 6:00 PM"}
+              dir={lang === "ar" ? "rtl" : "ltr"}
             />
           </div>
 
@@ -749,7 +796,8 @@ export default function CreatorHub() {
               value={activePost.extraText}
               onChange={e => updatePost("extraText", e.target.value)}
               className="text-sm"
-              placeholder="#hashtags or call-to-action"
+              placeholder={lang === "ar" ? "#هاشتاجات أو دعوة للعمل" : "#hashtags or call-to-action"}
+              dir={lang === "ar" ? "rtl" : "ltr"}
             />
           </div>
 
@@ -815,19 +863,39 @@ export default function CreatorHub() {
 
       {/* Platform Grid Previews — always visible */}
       <div>
-        <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-          <Grid3X3 className="h-4 w-4" /> Platform Grid Preview
-          <Badge variant="outline" className="text-[10px]">{posts.length} posts</Badge>
-        </h2>
+        <div className="flex flex-wrap items-center justify-between mb-3 gap-2">
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Grid3X3 className="h-4 w-4" /> Platform Grid Preview
+            <Badge variant="outline" className="text-[10px]">{posts.length} posts</Badge>
+          </h2>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Grid Style</span>
+            <Select value={gridPattern} onValueChange={v => setGridPattern(v as GridPattern)}>
+              <SelectTrigger className="h-7 w-36 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {GRID_PATTERN_META.map(p => (
+                  <SelectItem key={p.key} value={p.key}>
+                    <span className="text-xs">{p.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <PlatformGridPreviews
           posts={posts}
           template={template}
           theme={theme}
           bgImage={bgImage}
-          postTemplates={posts.map((_, i) => ({
-            template: BALANCE_CYCLE[i % BALANCE_CYCLE.length],
-            theme: BALANCE_THEME[BALANCE_CYCLE[i % BALANCE_CYCLE.length]],
-          }))}
+          lang={lang}
+          postTemplates={
+            gridPattern === "custom"
+              ? posts.map((_, i) => ({
+                  template: BALANCE_CYCLE[i % BALANCE_CYCLE.length],
+                  theme: BALANCE_THEME[BALANCE_CYCLE[i % BALANCE_CYCLE.length]],
+                }))
+              : getGridSlots(gridPattern, posts.length)
+          }
         />
       </div>
 
@@ -884,6 +952,7 @@ export default function CreatorHub() {
                       template={draft.templateName}
                       theme={draft.themeName}
                       size={270}
+                      lang={lang}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -927,7 +996,7 @@ export default function CreatorHub() {
                 <div className="flex justify-center">
                   <PostPreview
                     post={{ id: editingDraft.id, mainText: editDraftText.mainText, subtitle: editDraftText.subtitle, extraText: editDraftText.extraText }}
-                    template={editingDraft.templateName} theme={editingDraft.themeName} size={240}
+                    template={editingDraft.templateName} theme={editingDraft.themeName} size={240} lang={lang}
                   />
                 </div>
                 <div className="space-y-3">
@@ -940,6 +1009,7 @@ export default function CreatorHub() {
                       <label className="text-xs font-semibold">{label}</label>
                       <textarea
                         rows={rows}
+                        dir={lang === "ar" ? "rtl" : "ltr"}
                         className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                         value={editDraftText[key]}
                         onChange={e => setEditDraftText(p => ({ ...p, [key]: e.target.value }))}
