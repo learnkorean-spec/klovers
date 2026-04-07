@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import FinalCTA from "@/components/FinalCTA";
+import OptimizedImage from "@/components/OptimizedImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -198,20 +199,19 @@ const BlogPage = () => {
                     <article className="h-full rounded-2xl border border-border bg-card overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 flex flex-col">
 
                       {/* Thumbnail */}
-                      {post.hero_image ? (
-                        <div className="aspect-video overflow-hidden bg-muted">
-                          <img
-                            src={post.hero_image}
-                            alt={post.hero_alt || post.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading={idx < 3 ? "eager" : "lazy"}
-                          />
-                        </div>
-                      ) : (
-                        <div className="aspect-video bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center text-4xl">
-                          📖
-                        </div>
-                      )}
+                      <div className="aspect-video overflow-hidden bg-muted group-hover:bg-muted/80 transition-colors">
+                        <img
+                          src={post.hero_image}
+                          alt={post.hero_alt || post.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading={idx < 3 ? "eager" : "lazy"}
+                          decoding="async"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-4xl">📖</div>';
+                          }}
+                        />
+                      </div>
 
                       <div className="p-5 flex flex-col flex-1">
                         {/* Type badge + attraction badges */}

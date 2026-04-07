@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import OptimizedImage from "@/components/OptimizedImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -404,35 +405,23 @@ const BlogPostPage = () => {
           </div>
 
           {/* Hero Image 1 */}
-          {post.hero_image && (
-            <figure className="mb-8 -mx-4 sm:mx-0">
-              <img
-                src={post.hero_image}
-                alt={post.hero_alt || post.title}
-                className="w-full rounded-none sm:rounded-2xl object-cover aspect-[16/9] shadow-md"
-              />
-              {post.hero_caption && (
-                <figcaption className="text-xs text-muted-foreground mt-2 text-center italic px-4 sm:px-0">
-                  {post.hero_caption}
-                </figcaption>
-              )}
-            </figure>
-          )}
+          <OptimizedImage
+            src={post.hero_image}
+            alt={post.hero_alt || post.title}
+            caption={post.hero_caption}
+            isHero
+            className="w-full object-cover"
+          />
 
           {/* Hero Image 2 */}
           {post.hero_image_2 && (
-            <figure className="mb-8 -mx-4 sm:mx-0">
-              <img
-                src={post.hero_image_2}
-                alt={post.hero_alt_2 || post.title}
-                className="w-full rounded-none sm:rounded-2xl object-cover aspect-[16/9] shadow-md"
-              />
-              {post.hero_caption_2 && (
-                <figcaption className="text-xs text-muted-foreground mt-2 text-center italic px-4 sm:px-0">
-                  {post.hero_caption_2}
-                </figcaption>
-              )}
-            </figure>
+            <OptimizedImage
+              src={post.hero_image_2}
+              alt={post.hero_alt_2 || post.title}
+              caption={post.hero_caption_2}
+              isHero
+              className="w-full object-cover"
+            />
           )}
 
           {/* Article body */}
@@ -525,18 +514,19 @@ const BlogPostPage = () => {
                     to={`/blog/${rp.slug}`}
                     className="group block rounded-xl border border-border bg-card overflow-hidden hover:border-primary/30 hover:shadow-md transition-all"
                   >
-                    {rp.hero_image ? (
-                      <div className="aspect-video overflow-hidden bg-muted">
-                        <img
-                          src={rp.hero_image}
-                          alt={rp.hero_alt || rp.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-3xl">📖</div>
-                    )}
+                    <div className="aspect-video overflow-hidden bg-muted group-hover:bg-muted/80 transition-colors">
+                      <img
+                        src={rp.hero_image}
+                        alt={rp.hero_alt || rp.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">📖</div>';
+                        }}
+                      />
+                    </div>
                     <div className="p-3">
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[rp.article_type] || "bg-muted text-muted-foreground border-border"}`}>
                         {TYPE_LABEL[rp.article_type] || rp.article_type}
