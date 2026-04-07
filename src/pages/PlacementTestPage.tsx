@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { PLACEMENT_QUESTIONS, SPEAKING_PROMPTS, computePlacementResult, STUDY_ROADMAPS, type PlacementResult } from "@/constants/placementQuestions";
+import { PLACEMENT_QUESTIONS, SPEAKING_PROMPTS, LISTENING_EXAM, READING_EXAM, computePlacementResult, STUDY_ROADMAPS, type PlacementResult } from "@/constants/placementQuestions";
 import { useSpeech } from "@/hooks/useSpeech";
 import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
 import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
@@ -65,6 +65,13 @@ const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
   level_5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
 };
 
+function subTestSummary(correct: number, total: number, skill: string): string {
+  const pct = correct / total;
+  if (pct >= 0.8) return `Excellent ${skill} comprehension at this level!`;
+  if (pct >= 0.6) return `Good ${skill} skills — keep practising for full fluency.`;
+  return `${skill} comprehension needs more work — targeted practice will help.`;
+}
+
 function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string): string {
   const score = ratings.reduce((a, b) => a + b, 0);
   const label = levelKey.replace("_", " ");
@@ -79,7 +86,7 @@ const PlacementTestPage = () => {
   const { toast } = useToast();
   const { speakKorean, isSpeaking, cancel: cancelSpeech } = useSpeech();
   const [userId, setUserId] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"test" | "review" | "result" | "speaking_test">("test");
+  const [phase, setPhase] = useState<"test" | "review" | "result" | "speaking_test" | "listening_test" | "reading_test">("test");
   const [page, setPage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
@@ -95,6 +102,16 @@ const PlacementTestPage = () => {
   const [leadEmail, setLeadEmail] = useState("");
   const [leadSaving, setLeadSaving] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
+  // Listening exam state
+  const [listeningIndex, setListeningIndex] = useState(0);
+  const [listeningAnswers, setListeningAnswers] = useState<(number | null)[]>([]);
+  const [listeningSelected, setListeningSelected] = useState<number | null>(null);
+  const [listeningConfirmed, setListeningConfirmed] = useState(false);
+  // Reading exam state
+  const [readingIndex, setReadingIndex] = useState(0);
+  const [readingAnswers, setReadingAnswers] = useState<(number | null)[]>([]);
+  const [readingSelected, setReadingSelected] = useState<number | null>(null);
+  const [readingConfirmed, setReadingConfirmed] = useState(false);
   // Speaking assessment state
   const [speakingIndex, setSpeakingIndex] = useState(0);
   const [speakingRatings, setSpeakingRatings] = useState<(0 | 1 | 2)[]>([]);
@@ -356,6 +373,42 @@ const PlacementTestPage = () => {
     }
   };
 
+  const advanceListening = (chosen: number) => {
+    const next = [...listeningAnswers, chosen];
+    setListeningAnswers(next);
+    setListeningConfirmed(true);
+    setTimeout(() => {
+      if (listeningIndex + 1 < 5) {
+        setListeningIndex(i => i + 1);
+        setListeningSelected(null);
+        setListeningConfirmed(false);
+        cancelSpeech();
+      } else {
+        setPhase("result");
+        setListeningSelected(null);
+        setListeningConfirmed(false);
+        cancelSpeech();
+      }
+    }, 1500);
+  };
+
+  const advanceReading = (chosen: number) => {
+    const next = [...readingAnswers, chosen];
+    setReadingAnswers(next);
+    setReadingConfirmed(true);
+    setTimeout(() => {
+      if (readingIndex + 1 < 5) {
+        setReadingIndex(i => i + 1);
+        setReadingSelected(null);
+        setReadingConfirmed(false);
+      } else {
+        setPhase("result");
+        setReadingSelected(null);
+        setReadingConfirmed(false);
+      }
+    }, 1500);
+  };
+
   const handleLeadSubmit = async () => {
     if (!leadName.trim() || !leadEmail.trim()) {
       toast({ title: "Please enter your name and email.", variant: "destructive" }); return;
@@ -452,6 +505,189 @@ const PlacementTestPage = () => {
               {submitting ? "Submitting…" : "Submit Test"} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Listening exam screen ───────────────────────────────────
+  if (phase === "listening_test" && result) {
+    const questions = LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"];
+    const q = questions[listeningIndex];
+    const isLast = listeningIndex === questions.length - 1;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+          <div className="text-center space-y-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Listening Exam</p>
+            <h1 className="text-xl font-bold">Question {listeningIndex + 1} of {questions.length}</h1>
+            <Progress value={(listeningIndex / questions.length) * 100} className="h-1.5 mt-2" />
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 pb-6 space-y-5">
+              {/* Audio prompt */}
+              <div className="flex flex-col items-center gap-3 bg-primary/5 rounded-xl border border-primary/15 py-5 px-4">
+                <p className="text-xs text-muted-foreground text-center">Listen to the Korean audio, then answer below</p>
+                <Button
+                  className="gap-2"
+                  variant="outline"
+                  onClick={() => isSpeaking ? cancelSpeech() : speakKorean(q.audio!)}
+                >
+                  {isSpeaking
+                    ? <><Square className="h-4 w-4" /> Stop</>
+                    : <><Volume2 className="h-4 w-4" /> Play Audio</>}
+                </Button>
+              </div>
+
+              {/* Question */}
+              <p className="font-semibold text-sm">{q.question}</p>
+
+              {/* Options */}
+              <div className="space-y-2">
+                {q.options.map((opt, i) => {
+                  let cls = "w-full text-left rounded-lg border px-4 py-3 text-sm transition-all ";
+                  if (!listeningConfirmed) {
+                    cls += listeningSelected === i
+                      ? "bg-primary/10 border-primary text-foreground font-medium"
+                      : "border-border hover:bg-muted/60";
+                  } else {
+                    if (i === q.correctIndex) cls += "bg-green-500/10 border-green-500/50 text-green-800 dark:text-green-300 font-medium";
+                    else if (i === listeningSelected && listeningSelected !== q.correctIndex) cls += "bg-red-500/10 border-red-500/50 text-red-700 dark:text-red-300 line-through";
+                    else cls += "border-border text-muted-foreground";
+                  }
+                  return (
+                    <button
+                      key={i}
+                      className={cls}
+                      disabled={listeningConfirmed}
+                      onClick={() => setListeningSelected(i)}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Explanation (revealed after confirm) */}
+              {listeningConfirmed && (
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 leading-relaxed">
+                  {q.explanation}
+                </p>
+              )}
+
+              {/* Confirm / Next */}
+              {!listeningConfirmed ? (
+                <Button
+                  className="w-full"
+                  disabled={listeningSelected === null}
+                  onClick={() => listeningSelected !== null && advanceListening(listeningSelected)}
+                >
+                  {isLast ? "Finish Listening Exam" : "Confirm Answer"} <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <p className="text-center text-xs text-muted-foreground">
+                  {isLast ? "Returning to results…" : "Next question loading…"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <button
+            className="w-full text-xs text-muted-foreground hover:underline"
+            onClick={() => { cancelSpeech(); setPhase("result"); }}
+          >
+            Skip listening exam → back to result
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Reading exam screen ──────────────────────────────────────
+  if (phase === "reading_test" && result) {
+    const questions = READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"];
+    const q = questions[readingIndex];
+    const isLast = readingIndex === questions.length - 1;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+          <div className="text-center space-y-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Reading Exam</p>
+            <h1 className="text-xl font-bold">Question {readingIndex + 1} of {questions.length}</h1>
+            <Progress value={(readingIndex / questions.length) * 100} className="h-1.5 mt-2" />
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 pb-6 space-y-5">
+              {/* Passage */}
+              <div className="bg-muted/50 border-l-4 border-primary/40 rounded-r-lg px-4 py-3 text-sm leading-relaxed text-foreground font-medium">
+                {q.passage}
+              </div>
+
+              {/* Question */}
+              <p className="font-semibold text-sm">{q.question}</p>
+
+              {/* Options */}
+              <div className="space-y-2">
+                {q.options.map((opt, i) => {
+                  let cls = "w-full text-left rounded-lg border px-4 py-3 text-sm transition-all ";
+                  if (!readingConfirmed) {
+                    cls += readingSelected === i
+                      ? "bg-primary/10 border-primary text-foreground font-medium"
+                      : "border-border hover:bg-muted/60";
+                  } else {
+                    if (i === q.correctIndex) cls += "bg-green-500/10 border-green-500/50 text-green-800 dark:text-green-300 font-medium";
+                    else if (i === readingSelected && readingSelected !== q.correctIndex) cls += "bg-red-500/10 border-red-500/50 text-red-700 dark:text-red-300 line-through";
+                    else cls += "border-border text-muted-foreground";
+                  }
+                  return (
+                    <button
+                      key={i}
+                      className={cls}
+                      disabled={readingConfirmed}
+                      onClick={() => setReadingSelected(i)}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Explanation */}
+              {readingConfirmed && (
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 leading-relaxed">
+                  {q.explanation}
+                </p>
+              )}
+
+              {/* Confirm / Next */}
+              {!readingConfirmed ? (
+                <Button
+                  className="w-full"
+                  disabled={readingSelected === null}
+                  onClick={() => readingSelected !== null && advanceReading(readingSelected)}
+                >
+                  {isLast ? "Finish Reading Exam" : "Confirm Answer"} <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <p className="text-center text-xs text-muted-foreground">
+                  {isLast ? "Returning to results…" : "Next question loading…"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <button
+            className="w-full text-xs text-muted-foreground hover:underline"
+            onClick={() => setPhase("result")}
+          >
+            Skip reading exam → back to result
+          </button>
         </main>
         <Footer />
       </div>
@@ -800,16 +1036,68 @@ const PlacementTestPage = () => {
                   <RefreshCw className="h-3.5 w-3.5" /> Retake
                 </Button>
               </div>
-              {/* Speaking assessment CTA */}
-              {speakingRatings.length === 0 && (
-                <Button
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={() => { setSpeakingIndex(0); setSpeakingRatings([]); setRecordingUrl(null); setPhase("speaking_test"); }}
-                >
-                  <Mic className="h-4 w-4" /> Test My Speaking (5 prompts · ~3 min)
-                </Button>
-              )}
+              {/* Sub-test CTAs */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">Skill deep-dives</p>
+
+                {/* Listening Exam */}
+                {listeningAnswers.length === 0 ? (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => {
+                      setListeningIndex(0); setListeningAnswers([]);
+                      setListeningSelected(null); setListeningConfirmed(false);
+                      setPhase("listening_test");
+                    }}
+                  >
+                    <Volume2 className="h-4 w-4" /> Listening Exam (5 questions · ~5 min)
+                  </Button>
+                ) : (
+                  <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 space-y-1">
+                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Volume2 className="h-3.5 w-3.5 text-blue-600" />
+                      Listening: {listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length}/{listeningAnswers.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{subTestSummary(listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length, listeningAnswers.length, "Listening")}</p>
+                  </div>
+                )}
+
+                {/* Reading Exam */}
+                {readingAnswers.length === 0 ? (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => {
+                      setReadingIndex(0); setReadingAnswers([]);
+                      setReadingSelected(null); setReadingConfirmed(false);
+                      setPhase("reading_test");
+                    }}
+                  >
+                    <BookOpen className="h-4 w-4" /> Reading Exam (5 passages · ~5 min)
+                  </Button>
+                ) : (
+                  <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3 space-y-1">
+                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <BookOpen className="h-3.5 w-3.5 text-green-700" />
+                      Reading: {readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length}/{readingAnswers.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{subTestSummary(readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length, readingAnswers.length, "Reading")}</p>
+                  </div>
+                )}
+
+                {/* Speaking */}
+                {speakingRatings.length === 0 ? (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => { setSpeakingIndex(0); setSpeakingRatings([]); setRecordingUrl(null); setPhase("speaking_test"); }}
+                  >
+                    <Mic className="h-4 w-4" /> Speaking Test (5 prompts · ~3 min)
+                  </Button>
+                ) : null}
+              </div>
+
               {speakingRatings.length === 5 && (
                 <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1">
                   <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">

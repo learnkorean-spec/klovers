@@ -394,6 +394,399 @@ export const SPEAKING_PROMPTS: Record<string, { korean: string; romanisation: st
   ],
 };
 
+};
+
+// ─── Dedicated Listening Exam ─────────────────────────────────────────────────
+// 5 level-matched questions per band. Audio (TTS) → MCQ comprehension.
+
+export interface SubTestQuestion {
+  audio?: string;   // text played via TTS (Listening questions)
+  passage?: string; // text displayed (Reading questions)
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
+  foundation: [
+    {
+      audio: "저는 선생님이에요.",
+      question: "What is the speaker's job?",
+      options: ["Student", "Teacher", "Doctor", "Chef"],
+      correctIndex: 1,
+      explanation: "선생님 = teacher. 저는 선생님이에요 = I am a teacher.",
+    },
+    {
+      audio: "오늘 날씨가 맑아요.",
+      question: "What is the weather like today?",
+      options: ["Rainy", "Cloudy", "Clear and sunny", "Windy"],
+      correctIndex: 2,
+      explanation: "맑다 = clear/sunny. 날씨가 맑아요 = the weather is clear.",
+    },
+    {
+      audio: "사과가 있어요. 바나나도 있어요.",
+      question: "What items are mentioned?",
+      options: ["Only apples", "Apples and bananas", "Only bananas", "Apples and oranges"],
+      correctIndex: 1,
+      explanation: "사과 = apple, 바나나 = banana. 도 = also/too. Both are present.",
+    },
+    {
+      audio: "저는 학교에 가요.",
+      question: "Where is the speaker going?",
+      options: ["Home", "School", "Hospital", "Market"],
+      correctIndex: 1,
+      explanation: "학교 = school. 가요 = go (present). 학교에 가요 = going to school.",
+    },
+    {
+      audio: "이름이 뭐예요? 저는 민준이에요.",
+      question: "What is the speaker's name?",
+      options: ["Minjun", "Jihoon", "Seungi", "Jiyoung"],
+      correctIndex: 0,
+      explanation: "이름이 뭐예요? = What is your name? 저는 민준이에요 = I am Minjun.",
+    },
+  ],
+  level_1: [
+    {
+      audio: "저는 어제 도서관에서 공부했어요. 그리고 친구를 만났어요.",
+      question: "Where did the speaker study yesterday?",
+      options: ["Home", "Café", "Library", "School"],
+      correctIndex: 2,
+      explanation: "도서관 = library. 도서관에서 공부했어요 = studied at the library.",
+    },
+    {
+      audio: "저는 한국 음식을 좋아해요. 특히 비빔밥을 좋아해요.",
+      question: "Which food does the speaker especially like?",
+      options: ["Kimchi", "Bibimbap", "Bulgogi", "Tteokbokki"],
+      correctIndex: 1,
+      explanation: "특히 = especially. 비빔밥 = bibimbap (mixed rice bowl).",
+    },
+    {
+      audio: "내일 날씨가 추울 거예요. 그래서 두꺼운 옷을 입으세요.",
+      question: "What is the listener advised to do?",
+      options: ["Bring an umbrella", "Apply sunscreen", "Wear thick clothes", "Stay indoors"],
+      correctIndex: 2,
+      explanation: "추울 거예요 = will be cold. 두꺼운 옷을 입으세요 = please wear thick clothes.",
+    },
+    {
+      audio: "저는 매일 아침에 운동해요. 건강이 중요하니까요.",
+      question: "Why does the speaker exercise every morning?",
+      options: ["They enjoy it", "Health is important", "Doctor's recommendation", "Friends recommended it"],
+      correctIndex: 1,
+      explanation: "-니까요 = because. 건강이 중요하니까요 = because health is important.",
+    },
+    {
+      audio: "오늘 수업은 3시에 끝나요. 그래서 4시에 집에 가요.",
+      question: "What time does class end?",
+      options: ["2 o'clock", "3 o'clock", "4 o'clock", "5 o'clock"],
+      correctIndex: 1,
+      explanation: "수업 = class. 3시에 끝나요 = ends at 3 o'clock. 4시 is when they get home.",
+    },
+  ],
+  level_2: [
+    {
+      audio: "버스가 30분 뒤에 와요. 지하철을 타는 게 더 빠를 것 같아요.",
+      question: "Why is the subway recommended?",
+      options: ["Cheaper fare", "More comfortable", "Faster", "Safer"],
+      correctIndex: 2,
+      explanation: "빠르다 = fast. 더 빠를 것 같아요 = it seems faster. The subway is recommended for speed.",
+    },
+    {
+      audio: "이번 시험은 어려웠지만 열심히 공부해서 잘 봤어요.",
+      question: "How did the speaker do on the exam?",
+      options: ["It was easy and passed", "It was hard but did well from studying hard", "It was hard and failed", "Didn't prepare well"],
+      correctIndex: 1,
+      explanation: "-지만 = but/however. 열심히 공부해서 = because of studying hard. Difficult but passed.",
+    },
+    {
+      audio: "회의가 취소됐어요. 대신 내일 오후 2시로 바꿨어요.",
+      question: "What happened to the meeting?",
+      options: ["Moved to tomorrow afternoon at 2", "Cancelled entirely", "Moved to this afternoon", "Started early"],
+      correctIndex: 0,
+      explanation: "취소됐어요 = was cancelled. 대신 = instead. 내일 오후 2시로 바꿨어요 = rescheduled to tomorrow at 2pm.",
+    },
+    {
+      audio: "피곤해서 오늘 저녁은 집에서 쉴 거예요. 영화나 볼 것 같아요.",
+      question: "What will the speaker likely do tonight?",
+      options: ["Go out to eat", "Exercise at the gym", "Rest at home and watch a movie", "Study"],
+      correctIndex: 2,
+      explanation: "피곤해서 = because tired. 집에서 쉴 거예요 = will rest at home. 영화나 볼 것 같아요 = seems will watch a movie.",
+    },
+    {
+      audio: "제 친구는 노래를 잘 해요. 그래서 매주 노래방에 가요.",
+      question: "Why does the friend go to karaoke every week?",
+      options: ["They like dancing", "They sing well", "They work there", "It is cheap"],
+      correctIndex: 1,
+      explanation: "노래를 잘 해요 = sings well. 그래서 = therefore. 노래방 = karaoke room.",
+    },
+  ],
+  level_3: [
+    {
+      audio: "최근 연구에 따르면, 하루에 7-8시간 수면이 집중력과 기억력에 직접적인 영향을 미친다고 합니다.",
+      question: "What does the research suggest?",
+      options: ["Exercise improves memory", "7–8 hours of sleep directly affects concentration and memory", "Less sleep boosts productivity", "Diet affects focus"],
+      correctIndex: 1,
+      explanation: "에 따르면 = according to. 집중력 = concentration, 기억력 = memory. 직접적인 영향을 미치다 = directly affects.",
+    },
+    {
+      audio: "이번 프로젝트는 예상보다 시간이 많이 걸렸어요. 하지만 팀원들의 협력 덕분에 완성할 수 있었어요.",
+      question: "How was the project completed?",
+      options: ["One person worked overtime", "AI tools were used", "Team cooperation made it possible", "Deadline was extended"],
+      correctIndex: 2,
+      explanation: "팀원들의 협력 = team cooperation. 덕분에 = thanks to. 완성할 수 있었어요 = were able to complete.",
+    },
+    {
+      audio: "환경 오염을 줄이기 위해서는 개인의 노력뿐만 아니라 기업과 정부의 역할도 중요합니다.",
+      question: "According to this, who needs to act on pollution?",
+      options: ["Only individuals", "Only companies and governments", "Individuals, companies, AND governments all", "Only environmental groups"],
+      correctIndex: 2,
+      explanation: "뿐만 아니라 = not only... but also. 개인 = individuals, 기업 = companies, 정부 = government — all three mentioned.",
+    },
+    {
+      audio: "그 행사는 예상보다 많은 사람이 참가해서 준비한 음식이 모자랐어요.",
+      question: "What was the problem at the event?",
+      options: ["The weather was bad", "Too few people attended", "There was not enough food prepared", "The program was boring"],
+      correctIndex: 2,
+      explanation: "예상보다 많은 사람 = more people than expected. 음식이 모자랐어요 = food was not enough.",
+    },
+    {
+      audio: "요즘 젊은 세대가 결혼보다 개인 생활을 더 중요하게 생각하는 경향이 있습니다.",
+      question: "What trend is described?",
+      options: ["Young people prefer group activities", "Young generation prioritises personal life over marriage", "Marriage rates are increasing", "Career is valued above everything"],
+      correctIndex: 1,
+      explanation: "경향이 있다 = tend to. 결혼보다 개인 생활을 더 중요하게 = value personal life more than marriage.",
+    },
+  ],
+  level_5: [
+    {
+      audio: "이번 발표에서는 디지털 전환이 노동 시장 구조에 미치는 영향을 다각도에서 검토해 보겠습니다.",
+      question: "What will the presentation examine?",
+      options: ["Digital marketing strategies", "Digital transformation's multi-angle effect on labour market structure", "History of technology companies", "Future of AI"],
+      correctIndex: 1,
+      explanation: "디지털 전환 = digital transformation. 노동 시장 구조 = labour market structure. 다각도에서 = from multiple angles.",
+    },
+    {
+      audio: "해당 정책은 단기적으로는 효과를 거두겠지만 장기적 관점에서는 오히려 역효과가 날 수 있다는 우려가 제기되고 있습니다.",
+      question: "What concern is raised about the policy?",
+      options: ["It won't work short-term either", "It may be counterproductive long-term despite short-term gains", "It requires more funding", "It lacks public support"],
+      correctIndex: 1,
+      explanation: "단기적 = short-term, 장기적 = long-term. 역효과 = adverse/reverse effect. 우려 = concern.",
+    },
+    {
+      audio: "이 소설은 작가의 개인적 경험을 바탕으로 했지만, 그 이면에는 시대적 아픔을 담아내려는 의도가 담겨 있습니다.",
+      question: "What is the deeper intention behind the novel?",
+      options: ["To entertain readers", "To showcase personal success", "To capture the pain of an era", "To criticise political figures"],
+      correctIndex: 2,
+      explanation: "이면 = behind the surface. 시대적 아픔 = pain of an era. 담아내다 = to capture/contain.",
+    },
+    {
+      audio: "이 약은 복용 시 졸음이 올 수 있으므로, 운전이나 기계 조작은 삼가하시기 바랍니다.",
+      question: "What precaution is given with this medication?",
+      options: ["Take with food", "Avoid alcohol", "Avoid driving or operating machinery", "Consult a doctor first"],
+      correctIndex: 2,
+      explanation: "졸음이 올 수 있으므로 = because drowsiness may occur. 삼가하다 = to refrain from. 운전 = driving, 기계 조작 = operating machinery.",
+    },
+    {
+      audio: "글로벌 경제 불확실성이 지속되는 가운데, 각국은 자국 산업 보호를 위한 정책을 강화하고 있습니다.",
+      question: "Why are countries strengthening their domestic policies?",
+      options: ["To increase exports", "To protect domestic industries amid global economic uncertainty", "To attract foreign investment", "To reduce trade deficits"],
+      correctIndex: 1,
+      explanation: "불확실성 = uncertainty. 자국 산업 보호 = protecting domestic industry. 강화하다 = to strengthen.",
+    },
+  ],
+};
+
+// ─── Dedicated Reading Exam ───────────────────────────────────────────────────
+// 5 level-matched questions per band. Passage displayed → MCQ comprehension.
+
+export const READING_EXAM: Record<string, SubTestQuestion[]> = {
+  foundation: [
+    {
+      passage: "저는 이민준이에요. 저는 학생이에요. 학교는 서울에 있어요.",
+      question: "Where is the school?",
+      options: ["Busan", "Seoul", "Incheon", "Daegu"],
+      correctIndex: 1,
+      explanation: "학교는 서울에 있어요 = the school is in Seoul. 서울 is the capital city of Korea.",
+    },
+    {
+      passage: "오늘은 토요일이에요. 날씨가 맑아요. 공원에 가요.",
+      question: "What day is it?",
+      options: ["Sunday", "Monday", "Saturday", "Friday"],
+      correctIndex: 2,
+      explanation: "토요일 = Saturday. 일요일 = Sunday, 월요일 = Monday, 금요일 = Friday.",
+    },
+    {
+      passage: "저는 커피를 좋아해요. 그런데 오늘은 차를 마셔요.",
+      question: "What is the speaker drinking today?",
+      options: ["Coffee", "Juice", "Tea", "Milk"],
+      correctIndex: 2,
+      explanation: "그런데 = but/however. 차 = tea. Despite liking coffee, they are drinking tea today.",
+    },
+    {
+      passage: "고양이가 세 마리 있어요. 강아지는 한 마리 있어요.",
+      question: "How many cats are there?",
+      options: ["One", "Two", "Three", "Four"],
+      correctIndex: 2,
+      explanation: "세 마리 = three animals (마리 is the counter for animals). 고양이 = cat, 강아지 = puppy.",
+    },
+    {
+      passage: "내일 친구 생일이에요. 케이크를 사요.",
+      question: "Why is the speaker buying a cake?",
+      options: ["They are hungry", "It's a holiday", "A friend's birthday is tomorrow", "For a party tonight"],
+      correctIndex: 2,
+      explanation: "내일 = tomorrow. 친구 생일 = friend's birthday. The cake is for tomorrow's birthday.",
+    },
+  ],
+  level_1: [
+    {
+      passage: "저는 매일 아침 7시에 일어나요. 아침을 먹고 지하철을 타요. 회사는 9시에 시작해요.",
+      question: "How does the speaker commute to work?",
+      options: ["Bus", "Taxi", "Subway", "Walking"],
+      correctIndex: 2,
+      explanation: "지하철을 타요 = take the subway. 지하철 = subway/metro.",
+    },
+    {
+      passage: "오늘 날씨가 추워서 따뜻한 국을 먹었어요. 오후에는 친구와 카페에서 커피를 마셨어요.",
+      question: "Why did the speaker eat hot soup?",
+      options: ["They were hungry", "The weather was cold", "It was lunchtime", "Doctor's recommendation"],
+      correctIndex: 1,
+      explanation: "-어서 = because. 추워서 = because it was cold. Hot soup was chosen due to the cold weather.",
+    },
+    {
+      passage: "저는 운동을 좋아해요. 특히 수영을 좋아해요. 일주일에 세 번 수영장에 가요.",
+      question: "How often does the speaker go swimming?",
+      options: ["Every day", "Twice a week", "Three times a week", "Once a week"],
+      correctIndex: 2,
+      explanation: "일주일에 세 번 = three times a week. 일주일 = one week, 세 번 = three times.",
+    },
+    {
+      passage: "우리 가족은 5명이에요. 아버지, 어머니, 언니, 저, 그리고 남동생이 있어요.",
+      question: "How many siblings does the writer have?",
+      options: ["None", "One (older sister only)", "Two (older sister + younger brother)", "Three"],
+      correctIndex: 2,
+      explanation: "언니 = older sister (female speaker's), 남동생 = younger brother. Two siblings total.",
+    },
+    {
+      passage: "이번 주말에 부산에 갈 거예요. 부모님을 만나러 가요. 기차를 타고 갈 거예요.",
+      question: "Why is the speaker going to Busan this weekend?",
+      options: ["For a business trip", "To visit parents", "On a school trip", "For a concert"],
+      correctIndex: 1,
+      explanation: "부모님을 만나러 = to meet parents. -러 가다 = go in order to.",
+    },
+  ],
+  level_2: [
+    {
+      passage: "저는 요즘 바빠서 운동을 못 하고 있어요. 그래서 건강이 걱정돼요. 다음 달부터 헬스장에 등록하려고 해요.",
+      question: "What is the speaker planning to do next month?",
+      options: ["Start a diet", "Join a gym", "Take a break from work", "See a doctor"],
+      correctIndex: 1,
+      explanation: "헬스장에 등록하려고 해요 = planning to register at the gym. 다음 달 = next month.",
+    },
+    {
+      passage: "이 식당은 점심에는 사람이 많아요. 그래서 보통 오후 2시 이후에 가요. 2시 이후에는 자리가 많아요.",
+      question: "Why does the writer go to the restaurant after 2pm?",
+      options: ["Food is cheaper", "There are more seats and fewer people", "Better service", "Special menu available"],
+      correctIndex: 1,
+      explanation: "자리가 많아요 = there are many seats (fewer people). The restaurant is crowded at lunchtime.",
+    },
+    {
+      passage: "저는 집에서 회사까지 걸어서 10분이에요. 그래서 지하철을 안 타요. 버스도 타지 않아요.",
+      question: "How does the speaker get to work?",
+      options: ["Subway", "Bus", "Walking", "Bicycle"],
+      correctIndex: 2,
+      explanation: "걸어서 10분 = 10 minutes on foot. 지하철을 안 타요 and 버스도 타지 않아요 = doesn't take subway or bus.",
+    },
+    {
+      passage: "이번 여름방학에 제주도에 갔어요. 바다에서 수영하고 맛있는 음식도 먹었어요. 정말 즐거웠어요.",
+      question: "What did the speaker do in Jeju?",
+      options: ["Went hiking", "Visited museums", "Swam in the sea and ate delicious food", "Attended a festival"],
+      correctIndex: 2,
+      explanation: "바다에서 수영하고 = swam in the sea. 맛있는 음식도 먹었어요 = also ate delicious food.",
+    },
+    {
+      passage: "한국에서는 나이가 많은 사람에게 존댓말을 써야 해요. 처음 만나는 사람에게도 존댓말을 쓰는 것이 예의예요.",
+      question: "When should you use formal speech in Korea?",
+      options: ["Only at work", "With older people and strangers", "Only with family elders", "Only in formal settings"],
+      correctIndex: 1,
+      explanation: "나이가 많은 사람 = older people. 처음 만나는 사람 = people you meet for the first time. Both require 존댓말.",
+    },
+  ],
+  level_3: [
+    {
+      passage: "현대 사회에서 사람들은 점점 더 바쁜 생활을 하고 있습니다. 이로 인해 가족과 보내는 시간이 줄고 있으며, 이는 가족 관계에도 영향을 미치고 있습니다.",
+      question: "What negative effect of modern busyness is mentioned?",
+      options: ["Lower sleep quality", "Less time spent with family", "Increased work stress", "Higher income inequality"],
+      correctIndex: 1,
+      explanation: "이로 인해 = as a result of this. 가족과 보내는 시간이 줄다 = time with family decreases.",
+    },
+    {
+      passage: "운동이 건강에 좋다는 것은 모두가 알지만, 무리한 운동은 오히려 신체에 부담을 줄 수 있습니다. 따라서 자신의 체력에 맞는 운동량을 유지하는 것이 중요합니다.",
+      question: "What is the main advice?",
+      options: ["Exercise every day without rest", "Exercise is overrated", "Exercise according to your own physical capacity", "Only do light exercise always"],
+      correctIndex: 2,
+      explanation: "무리한 운동 = excessive exercise. 자신의 체력에 맞는 = suited to one's own physical fitness. Balance is key.",
+    },
+    {
+      passage: "이 책은 단순한 언어 학습서가 아니라, 한국 문화와 사고방식을 이해하는 데 도움을 주는 문화 입문서입니다.",
+      question: "What makes this book special?",
+      options: ["Focuses only on advanced grammar", "Designed only for beginners", "Helps understand Korean culture and way of thinking", "Includes practice exams"],
+      correctIndex: 2,
+      explanation: "단순한 언어 학습서가 아니라 = not merely a language textbook. 문화 입문서 = cultural introduction guide.",
+    },
+    {
+      passage: "그 영화는 개봉 첫 날 100만 명의 관객을 동원하며 역대 최고 기록을 세웠습니다. 하지만 일부 평론가들은 내용의 깊이가 부족하다고 비판했습니다.",
+      question: "What criticism did some reviewers give?",
+      options: ["Poor acting performances", "The content lacked depth", "The film was too long", "The soundtrack was bad"],
+      correctIndex: 1,
+      explanation: "평론가 = critic. 내용의 깊이가 부족하다 = the content lacks depth. 비판하다 = to criticise.",
+    },
+    {
+      passage: "이 프로그램은 취업을 준비하는 청년들에게 실질적인 직업 훈련과 취업 연계 서비스를 제공합니다.",
+      question: "Who is this program designed for?",
+      options: ["Senior workers seeking retraining", "Students studying abroad", "Young people preparing for employment", "Self-employed individuals"],
+      correctIndex: 2,
+      explanation: "취업을 준비하는 청년들 = young people preparing for employment. 직업 훈련 = vocational training.",
+    },
+  ],
+  level_5: [
+    {
+      passage: "인공지능 기술의 급속한 발전으로 의료, 금융, 교육 등 다양한 분야에서 패러다임의 전환이 이루어지고 있다. 이에 따라 기존 직업의 상당수가 대체될 것이라는 전망과 함께, 새로운 형태의 직업이 창출될 것이라는 기대도 공존하고 있다.",
+      question: "What dual outlook exists about AI's effect on the workforce?",
+      options: ["AI will only create jobs", "AI will only destroy jobs", "Both job replacement and new job creation are expected to coexist", "AI effects are limited to the tech sector"],
+      correctIndex: 2,
+      explanation: "공존하다 = to coexist. 기존 직업 대체 (job replacement) and 새로운 직업 창출 (new job creation) both appear.",
+    },
+    {
+      passage: "이 연구는 사회경제적 불평등이 교육 기회의 격차로 이어지며, 이것이 다시 세대 간 빈곤의 세습으로 연결된다는 점을 실증적으로 보여주고 있다.",
+      question: "What cycle does this research demonstrate?",
+      options: ["Economic growth leads to better education", "Inequality → educational gap → intergenerational poverty cycle", "Technology reduces inequality", "Rural areas lack educational investment"],
+      correctIndex: 1,
+      explanation: "세습 = inheritance/transmission. 세대 간 빈곤의 세습 = intergenerational transmission of poverty. 실증적 = empirical.",
+    },
+    {
+      passage: "해당 규제는 소비자 보호를 명목으로 도입됐지만, 오히려 신규 기업의 시장 진입을 가로막아 독과점을 심화시켰다는 비판이 나오고 있다.",
+      question: "What ironic outcome of the regulation is criticised?",
+      options: ["It increased consumer prices", "It blocked new entrants and worsened monopolies", "It reduced government revenue", "It slowed technological innovation"],
+      correctIndex: 1,
+      explanation: "오히려 = on the contrary / ironically. 시장 진입을 가로막다 = block market entry. 독과점 = monopoly/oligopoly.",
+    },
+    {
+      passage: "이 논문은 언어 습득 과정에서 모국어의 간섭 효과가 어떻게 나타나는지를 분석하고, 이를 최소화하기 위한 교육적 접근법을 제시한다.",
+      question: "What educational goal does this paper address?",
+      options: ["Teaching children to read faster", "Minimising mother-tongue interference in language acquisition", "Comparing grammar structures across languages", "Evaluating standardised language tests"],
+      correctIndex: 1,
+      explanation: "모국어의 간섭 효과 = mother-tongue interference effect. 최소화 = minimisation. 교육적 접근법 = educational approach.",
+    },
+    {
+      passage: "현 정부는 탄소 중립 목표 달성을 위해 신재생에너지 투자를 확대하고 있으나, 에너지 전환 과정에서 발생하는 고용 불안정 문제를 어떻게 해결할지가 과제로 남아 있다.",
+      question: "What challenge remains for the government's energy policy?",
+      options: ["Reducing carbon emissions further", "Addressing employment instability during the energy transition", "Increasing nuclear energy output", "Regulating domestic energy pricing"],
+      correctIndex: 1,
+      explanation: "에너지 전환 = energy transition. 고용 불안정 = employment instability. 과제로 남아 있다 = remains as a challenge.",
+    },
+  ],
+};
+
 export interface PlacementResult {
   score: number;
   levelKey: string;
