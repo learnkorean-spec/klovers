@@ -41,10 +41,10 @@ const CoursesPage = () => {
       <main id="main-content" className="pt-16">
         <CoursesSection />
 
-        <section className="py-16 bg-card">
+        <section className="py-20 md:py-28 bg-card">
           <div className="container mx-auto px-4">
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-2">
                 {t("courses", "weeklyStructure.title")}
               </h2>
               <p className="text-muted-foreground">

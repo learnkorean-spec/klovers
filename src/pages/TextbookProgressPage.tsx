@@ -28,6 +28,7 @@ interface Lesson {
   title_en: string;
   title_ko: string;
   sort_order: number;
+  book: string;
 }
 
 const TextbookProgressPage = () => {
@@ -41,7 +42,7 @@ const TextbookProgressPage = () => {
     const fetchData = async () => {
       const [lbRes, lessonsRes] = await Promise.all([
         supabase.from("xp_leaderboard").select("*").limit(20),
-        supabase.from("textbook_lessons").select("id, emoji, title_en, title_ko, sort_order").eq("is_published", true).order("sort_order"),
+        supabase.from("textbook_lessons").select("id, emoji, title_en, title_ko, sort_order, book").eq("is_published", true).order("sort_order"),
       ]);
       setLeaderboard((lbRes.data as unknown as LeaderboardEntry[]) || []);
       setLessons((lessonsRes.data as unknown as Lesson[]) || []);
@@ -90,7 +91,7 @@ const TextbookProgressPage = () => {
       <Header />
       <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-4xl">
         <Link to="/textbook" className="text-sm text-muted-foreground hover:text-foreground mb-4 inline-block">
-          ← {isAr ? "العودة للكتاب" : "Back to Textbook"}
+          {isAr ? "→" : "←"} {isAr ? "العودة للكتاب" : "Back to Textbook"}
         </Link>
 
         {/* Hero Stats */}
@@ -175,7 +176,7 @@ const TextbookProgressPage = () => {
                         return (
                           <Link
                             key={l.id}
-                            to={`/textbook/${l.sort_order}`}
+                            to={`/textbook/${l.book}/${l.sort_order}`}
                             className={cn(
                               "w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all hover:scale-110",
                               done ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"

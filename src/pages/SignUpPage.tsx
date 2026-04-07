@@ -20,7 +20,13 @@ const SignUpPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect");
-  const { t } = useLanguage();
+  // Capture referrer ID from URL param or localStorage (set by free-trial page)
+  const referrerId = searchParams.get("ref") ?? localStorage.getItem("referrer_id");
+  if (searchParams.get("ref")) {
+    localStorage.setItem("referrer_id", searchParams.get("ref")!);
+  }
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +65,19 @@ const SignUpPage = () => {
     }
 
     track.completeRegistration();
+
+    // Record referral if this signup came via a referral link
+    if (referrerId && data.user) {
+      try {
+        await supabase.functions.invoke("record-referral", {
+          body: { referrerId, referredEmail: email.trim().toLowerCase() },
+        });
+        localStorage.removeItem("referrer_id");
+      } catch {
+        // Non-critical — don't block signup on referral failure
+      }
+    }
+
     toast({
       title: t("auth.accountCreated") || "Account created!",
       description: t("auth.welcomeMessage") || "Welcome to K-Lovers! You can now sign in.",
@@ -82,13 +101,13 @@ const SignUpPage = () => {
 
         {/* Social proof strip */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5 font-medium text-foreground">⭐ 4.9 rated</span>
+          <span className="flex items-center gap-1.5 font-medium text-foreground">{isAr ? "⭐ تقييم 4.9" : "⭐ 4.9 rated"}</span>
           <span className="text-border">·</span>
-          <span>👥 1,000+ students</span>
+          <span>{isAr ? "👥 +1,000 طالب" : "👥 1,000+ students"}</span>
           <span className="text-border">·</span>
-          <span>🌍 15+ countries</span>
+          <span>{isAr ? "🌍 +15 دولة" : "🌍 15+ countries"}</span>
           <span className="text-border">·</span>
-          <span className="text-green-600 font-semibold">Free to join</span>
+          <span className="text-green-600 font-semibold">{isAr ? "مجاني" : "Free to join"}</span>
         </div>
 
         <Card className="w-full max-w-md">
@@ -99,7 +118,7 @@ const SignUpPage = () => {
             </p>
             {/* Benefit pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-3">
-              {["🎯 Free placement test", "🎮 13 learning games", "📚 Full textbook access"].map((b) => (
+              {(isAr ? ["🎯 اختبار مستوى مجاني", "🎮 13 لعبة تعليمية", "📚 كتاب دراسي كامل"] : ["🎯 Free placement test", "🎮 13 learning games", "📚 Full textbook access"]).map((b) => (
                 <span key={b} className="text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full font-medium">
                   {b}
                 </span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,11 +47,7 @@ interface RosterRow {
   admin_approved: boolean;
 }
 
-function formatTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ampm}`;
-}
+import { formatTime } from "@/lib/admin-utils";
 
 function formatDate(d: string) {
   const date = new Date(d + "T12:00:00");
@@ -418,4 +414,4 @@ const SessionAttendanceManager = () => {
   );
 };
 
-export default SessionAttendanceManager;
+export default memo(SessionAttendanceManager);

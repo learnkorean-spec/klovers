@@ -18,7 +18,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   // If user is already authenticated (e.g. returning from OAuth), redirect immediately
   useEffect(() => {
@@ -160,17 +161,17 @@ const LoginPage = () => {
 
         {/* Welcome strip */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
-          <span>🔥 Keep your streak</span>
+          <span>{isAr ? "🔥 حافظ على سلسلتك" : "🔥 Keep your streak"}</span>
           <span className="text-border">·</span>
-          <span>⭐ 4.9 rated academy</span>
+          <span>{isAr ? "⭐ تقييم 4.9" : "⭐ 4.9 rated academy"}</span>
           <span className="text-border">·</span>
-          <span>🇰🇷 A1–C2 levels</span>
+          <span>🇰🇷 A1–C2</span>
         </div>
 
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.logIn")}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Welcome back — your progress is waiting for you.</p>
+            <p className="text-sm text-muted-foreground mt-1">{isAr ? "مرحباً بعودتك — تقدمك في انتظارك." : "Welcome back — your progress is waiting for you."}</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -190,12 +191,12 @@ const LoginPage = () => {
         </Card>
 
         <p className="text-xs text-muted-foreground text-center">
-          New to Klovers?{" "}
+          {isAr ? "جديد في Klovers؟ " : "New to Klovers? "}
           <Link
             to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"}
             className="text-primary font-semibold hover:underline"
           >
-            Create a free account →
+            {isAr ? "أنشئ حساب مجاني ←" : "Create a free account →"}
           </Link>
         </p>
 

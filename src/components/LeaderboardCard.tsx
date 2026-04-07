@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { Trophy, Flame, Crown, Medal } from "lucide-react";
+import { Trophy, Flame, Crown, Medal, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RANK_STYLES: Record<number, string> = {
@@ -73,6 +73,7 @@ export function LeaderboardCard() {
   const {
     xpLeaderboard,
     streakLeaderboard,
+    weeklyLeaderboard,
     currentUserXpRank,
     currentUserStreakRank,
     loading,
@@ -88,12 +89,15 @@ export function LeaderboardCard() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="xp">
-          <TabsList className="grid grid-cols-2 w-full mb-4">
+          <TabsList className="grid grid-cols-3 w-full mb-4">
             <TabsTrigger value="xp" className="gap-1.5">
               <Trophy className="h-3.5 w-3.5" /> XP Ranking
             </TabsTrigger>
             <TabsTrigger value="streak" className="gap-1.5">
               <Flame className="h-3.5 w-3.5" /> Streak Ranking
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="gap-1.5">
+              <Zap className="h-3.5 w-3.5" /> This Week
             </TabsTrigger>
           </TabsList>
 
@@ -161,6 +165,34 @@ export function LeaderboardCard() {
                     Your streak rank: <span className="font-bold text-primary">#{currentUserStreakRank}</span>
                   </p>
                 )}
+              </div>
+            )}
+          </TabsContent>
+          {/* Weekly XP Tab */}
+          <TabsContent value="weekly">
+            {loading ? (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-14 rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : weeklyLeaderboard.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">
+                No activity this week yet. Start learning!
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {weeklyLeaderboard.map((entry) => (
+                  <EntryRow
+                    key={entry.user_id}
+                    rank={entry.rank}
+                    name={entry.name}
+                    avatarUrl={entry.avatar_url}
+                    value={entry.value}
+                    unit="XP"
+                    isCurrentUser={entry.isCurrentUser}
+                  />
+                ))}
               </div>
             )}
           </TabsContent>

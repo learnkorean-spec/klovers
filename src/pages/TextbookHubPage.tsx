@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, Sun, Sparkles, Clapperboard } from "lucide-react";
+import { BookOpen, Sun, Sparkles, Clapperboard, Brain } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +46,20 @@ const BOOKS = [
     gradient: "from-rose-500/20 to-rose-500/5",
     border: "border-rose-500/30 hover:border-rose-500/60",
   },
+  {
+    key: "grammar-mastery",
+    titleEn: "Grammar Mastery",
+    titleAr: "إتقان القواعد",
+    subtitleEn: "57 Pattern-Focused Lessons · All 6 Levels",
+    subtitleAr: "٥٧ درسًا على الأنماط · جميع المستويات الست",
+    descEn: "Deep-dive every Korean grammar pattern from basic particles to classical literary style.",
+    descAr: "ادرس كل نمط قواعدي كوري بعمق — من الجسيمات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
+    emoji: "🧠",
+    icon: Brain,
+    gradient: "from-violet-500/20 to-violet-500/5",
+    border: "border-violet-500/30 hover:border-violet-500/60",
+    badge: "NEW",
+  },
 ];
 
 const TextbookHubPage = () => {
@@ -62,30 +76,36 @@ const TextbookHubPage = () => {
             <Sparkles className="h-4 w-4" />
             {isAr ? "مكتبة الكتب" : "Book Library"}
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {isAr ? "اختر كتابك" : "Choose Your Book"}
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
             {isAr
               ? "اختر كتاباً تعليمياً وابدأ رحلتك في تعلم الكورية"
               : "Pick a learning book and start your Korean journey"}
           </p>
         </section>
 
-        <section className="container mx-auto px-4 max-w-3xl">
+        <section className="container mx-auto px-4 max-w-4xl">
           <div className="grid gap-6 sm:grid-cols-2">
             {BOOKS.map((book) => {
               const Icon = book.icon;
+              const hasBadge = "badge" in book && book.badge;
               return (
                 <Link
                   key={book.key}
                   to={`/textbook/${book.key}`}
                   className={cn(
-                    "group block rounded-2xl border-2 p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br",
+                    "group relative block rounded-2xl border-2 p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br",
                     book.gradient,
                     book.border
                   )}
                 >
+                  {hasBadge && (
+                    <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-violet-500 text-white">
+                      {(book as { badge?: string }).badge}
+                    </span>
+                  )}
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-5xl">{book.emoji}</span>
                     <Icon className="h-6 w-6 text-primary opacity-50" />

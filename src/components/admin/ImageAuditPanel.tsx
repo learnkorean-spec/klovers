@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -268,7 +268,7 @@ function ParitySection({ groups }: { groups: ParityGroup[] }) {
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export default function ImageAuditPanel() {
+function ImageAuditPanel() {
   const [loading, setLoading] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [result, setResult] = useState<AuditResponse | null>(null);
@@ -462,3 +462,5 @@ export default function ImageAuditPanel() {
     </div>
   );
 }
+
+export default memo(ImageAuditPanel);

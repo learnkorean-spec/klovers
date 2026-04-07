@@ -30,7 +30,7 @@ const HowItWorks = () => {
               // Wrapper carries the relative context so the badge is NOT clipped by the Card
               <div key={index} className="relative pt-3">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                  <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border border-black/25">
                     {index + 1}
                   </span>
                 </div>

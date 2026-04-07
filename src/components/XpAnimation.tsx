@@ -252,3 +252,58 @@ export function MissionCompleteOverlay({ lessonTitle, xpEarned, onContinue }: {
     </div>
   );
 }
+
+// --- Perfect Score Celebration ---
+export function PerfectScoreOverlay({ score, total, onContinue }: {
+  score: number;
+  total: number;
+  onContinue: () => void;
+}) {
+  const confettiPieces = Array.from({ length: 30 }, (_, i) => i);
+  const colors = ["#C60C30", "#003478", "#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1"];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md overflow-hidden"
+      onClick={onContinue}
+    >
+      {/* Confetti */}
+      {confettiPieces.map((i) => (
+        <span
+          key={i}
+          className="absolute top-0 animate-confetti-fall pointer-events-none select-none text-lg"
+          style={{
+            left: `${(i / confettiPieces.length) * 100}%`,
+            animationDelay: `${(i * 0.05) % 0.8}s`,
+            animationDuration: `${1.2 + (i % 4) * 0.3}s`,
+            color: colors[i % colors.length],
+            fontSize: `${12 + (i % 3) * 6}px`,
+          }}
+        >
+          {["★", "✦", "●", "◆", "▲"][i % 5]}
+        </span>
+      ))}
+
+      <div
+        className="max-w-sm w-full mx-4 text-center animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-7xl mb-4 animate-count-pop">🌟</div>
+        <h2 className="text-3xl font-black text-foreground mb-2">Perfect Score!</h2>
+        <p className="text-muted-foreground mb-2">
+          {score}/{total} — Flawless! 화이팅! 🔥
+        </p>
+        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-bold text-lg mb-6">
+          ⭐ You got them all!
+        </div>
+        <button
+          onClick={onContinue}
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95"
+        >
+          CONTINUE
+        </button>
+        <p className="text-xs text-muted-foreground mt-3">or tap anywhere</p>
+      </div>
+    </div>
+  );
+}

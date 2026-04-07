@@ -1850,6 +1850,93 @@ export type Database = {
           },
         ]
       }
+      achievement_milestones: {
+        Row: {
+          id: number
+          user_id: string
+          milestone_type: string
+          milestone_tier: number
+          milestone_name: string
+          target_value: number
+          progress_value: number
+          is_achieved: boolean
+          achieved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          milestone_type: string
+          milestone_tier: number
+          milestone_name: string
+          target_value: number
+          progress_value?: number
+          is_achieved?: boolean
+          achieved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          milestone_type?: string
+          milestone_tier?: number
+          milestone_name?: string
+          target_value?: number
+          progress_value?: number
+          is_achieved?: boolean
+          achieved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_learning_goals: {
+        Row: {
+          id: string
+          user_id: string
+          goal_type: string
+          goal_name: string
+          target_value: number
+          time_period: string
+          current_progress: number
+          status: string
+          created_at: string
+          target_date: string | null
+          completed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          goal_type: string
+          goal_name: string
+          target_value: number
+          time_period: string
+          current_progress?: number
+          status?: string
+          created_at?: string
+          target_date?: string | null
+          completed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          goal_type?: string
+          goal_name?: string
+          target_value?: number
+          time_period?: string
+          current_progress?: number
+          status?: string
+          created_at?: string
+          target_date?: string | null
+          completed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_streaks: {
         Row: {
           current_streak: number
