@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, Sun, Sparkles, Clapperboard, Brain } from "lucide-react";
+import { BookOpen, Sun, Sparkles, Clapperboard, Brain, ImageIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +58,20 @@ const BOOKS = [
     icon: Brain,
     gradient: "from-violet-500/20 to-violet-500/5",
     border: "border-violet-500/30 hover:border-violet-500/60",
+    badge: "NEW",
+  },
+  {
+    key: "picture-vocab",
+    titleEn: "Picture Vocabulary",
+    titleAr: "مفردات الصور",
+    subtitleEn: "15 Visual Scene Lessons",
+    subtitleAr: "١٥ درساً بالصور",
+    descEn: "Learn Korean vocabulary through beautiful illustrated scenes — bedroom, café, park and more.",
+    descAr: "تعلم مفردات الكورية من خلال مشاهد مصوّرة جميلة — غرفة النوم، الكافيه، الحديقة والمزيد.",
+    emoji: "🖼️",
+    icon: ImageIcon,
+    gradient: "from-emerald-500/20 to-emerald-500/5",
+    border: "border-emerald-500/30 hover:border-emerald-500/60",
     badge: "NEW",
   },
 ];

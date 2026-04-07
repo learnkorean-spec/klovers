@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun, Clapperboard, Brain } from "lucide-react";
+import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun, Clapperboard, Brain, Image } from "lucide-react";
 import { useGamification } from "@/hooks/useGamification";
 import { LeagueProgressBar, LessonProgressDots, XpBadge } from "@/components/GamificationUI";
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
@@ -14,10 +14,12 @@ import WorldPathMap from "@/components/WorldPathMap";
 import DailyRoutinePathMap from "@/components/DailyRoutinePathMap";
 import KDramaPathMap from "@/components/KDramaPathMap";
 import GrammarMasteryPathMap from "@/components/GrammarMasteryPathMap";
+import PictureVocabPathMap from "@/components/PictureVocabPathMap";
 import { WORLDS } from "@/constants/worlds";
 import { DAILY_ROUTINE_WORLDS } from "@/constants/dailyRoutineWorlds";
 import { KDRAMA_WORLDS } from "@/constants/kdramaWorlds";
 import { GRAMMAR_MASTERY_WORLDS } from "@/constants/grammarMasteryWorlds";
+import { PICTURE_VOCAB_WORLDS } from "@/constants/pictureVocabWorlds";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/useSEO";
 
@@ -38,6 +40,7 @@ const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: str
   "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun },
   "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", emoji: "🎬", icon: Clapperboard },
   "grammar-mastery": { titleEn: "Grammar Mastery", titleAr: "إتقان القواعد", emoji: "🧠", icon: Brain },
+  "picture-vocab": { titleEn: "Picture Vocabulary", titleAr: "مفردات الصور", emoji: "🖼️", icon: Image },
 };
 
 const TextbookPage = () => {
@@ -86,6 +89,7 @@ const TextbookPage = () => {
   const isDailyRoutine = book === "daily-routine";
   const isKDrama = book === "kdrama";
   const isGrammarMastery = book === "grammar-mastery";
+  const isPictureVocab = book === "picture-vocab";
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,6 +119,8 @@ const TextbookPage = () => {
               ? `${KDRAMA_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درس" : "lessons"}`
               : isGrammarMastery
               ? `${GRAMMAR_MASTERY_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درسًا · جميع المستويات الست" : "lessons · All 6 Levels"}`
+              : isPictureVocab
+              ? `${PICTURE_VOCAB_WORLDS.length} ${isAr ? "عوالم" : "worlds"} · ${lessons.length} ${isAr ? "درس" : "lessons"}`
               : `${WORLDS.filter(w => w.topikLevel === 1).length} ${isAr ? "عوالم توبيك ١" : "TOPIK 1 worlds"} · ${WORLDS.filter(w => w.topikLevel === 2).length} ${isAr ? "عوالم توبيك ٢" : "TOPIK 2 worlds"} · ${lessons.length} ${t("textbook.heroSubtitle")}`
             }
           </p>
@@ -215,6 +221,13 @@ const TextbookPage = () => {
               />
             ) : isGrammarMastery ? (
               <GrammarMasteryPathMap
+                lessons={lessons}
+                lessonProgress={progress.lessonProgress}
+                userId={userId}
+                bookSlug={book}
+              />
+            ) : isPictureVocab ? (
+              <PictureVocabPathMap
                 lessons={lessons}
                 lessonProgress={progress.lessonProgress}
                 userId={userId}

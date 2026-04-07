@@ -34,7 +34,7 @@ interface Lesson {
   scene_image_url?: string;
 }
 
-interface VocabItem { id: string; korean: string; romanization: string; meaning: string; image_url?: string; }
+interface VocabItem { id: string; korean: string; romanization: string; meaning: string; meaning_ar?: string; image_url?: string; }
 interface GrammarItem { id: string; title: string; structure: string; explanation: string; examples: { korean: string; english: string }[]; }
 interface DialogueLine { id: string; speaker: string; korean: string; romanization: string; english: string; }
 interface ExerciseItem { id: string; question: string; options: string[]; correct_index: number; explanation: string; }
@@ -481,7 +481,7 @@ const LessonDetailPage = () => {
                             }}
                             className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 flex flex-col items-center justify-center gap-2 p-4"
                           >
-                            <p className="text-lg font-bold text-foreground text-center">{v.meaning}</p>
+                            <p className="text-lg font-bold text-foreground text-center">{isAr && v.meaning_ar ? v.meaning_ar : v.meaning}</p>
                             <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
                             <p className="text-sm text-primary font-medium mt-1 text-center">{v.korean}</p>
                           </div>
