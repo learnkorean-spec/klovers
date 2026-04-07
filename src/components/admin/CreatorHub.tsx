@@ -918,9 +918,9 @@ export default function CreatorHub() {
       <div className="border-t pt-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" /> Monthly 30-Post Pack
+            <Sparkles className="h-4 w-4 text-primary" /> Campaign
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Choose a campaign direction, then generate 30 posts tailored to your goal</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Pick a goal, generate 30 posts</p>
         </div>
 
         {/* Campaign Direction Selector */}
