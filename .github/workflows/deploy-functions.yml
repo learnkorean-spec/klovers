@@ -23,23 +23,30 @@ jobs:
       - name: Link project
         run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
 
-      - name: Mark content migrations as reverted
-        run: |
-          for v in \
-            20260319000001 \
-            20260319000002 \
-            20260404000002 \
-            20260405000004 \
-            20260405000005 \
-            20260405000006 \
-            20260406000002; do
-            echo "Reverting $v..."
-            supabase migration repair --status reverted $v 2>&1 || true
-          done
-          supabase migration repair --status reverted 20260405100000 2>&1 || true
-
-      - name: Push all migrations
+      - name: Push schema migrations
         run: supabase db push
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Seed lesson content (idempotent)
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          DB_URL="postgresql://postgres:${PGPASSWORD}@db.${PROJECT_REF}.supabase.co:5432/postgres?sslmode=require"
+          for f in \
+            supabase/migrations/20260319000001_kdrama_lesson_1_content.sql \
+            supabase/migrations/20260319000002_kdrama_lessons_2_to_5_content.sql \
+            supabase/migrations/20260404000002_seed_all_textbook_lessons.sql \
+            supabase/migrations/20260405000004_grammar_mastery_1_57.sql \
+            supabase/migrations/20260405000005_daily_routine_lessons_21_32.sql \
+            supabase/migrations/20260405000006_kdrama_lessons_6_30.sql \
+            supabase/migrations/20260406000002_daily_routine_lessons_1_20.sql \
+            supabase/migrations/20260407000003_erase_korean1.sql; do
+            echo "Applying $f..."
+            psql "$DB_URL" -f "$f"
+          done
 
   deploy-functions:
     name: Deploy Edge Functions
