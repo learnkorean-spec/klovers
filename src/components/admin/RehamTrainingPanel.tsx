@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { useSpeech } from "@/hooks/useSpeech";
 import {
   GraduationCap, BookOpen, Mic, ListChecks, Volume2,
   ChevronLeft, ChevronRight, CheckCircle2, RotateCcw, Play,
+  Brain, Timer, FolderOpen, FileText, Languages,
+  Shuffle, Eye, EyeOff, ArrowLeft, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -451,6 +453,144 @@ const SECTION_COLORS: Record<string, string> = {
   Closing: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
 };
 
+/* ─── Data: Categories mapping ─── */
+
+const CATEGORIES: { name: string; icon: string; ids: number[] }[] = [
+  { name: "Self-Introduction", icon: "👋", ids: [1] },
+  { name: "Work Experience", icon: "💼", ids: [2, 4] },
+  { name: "Accenture", icon: "🏢", ids: [10, 25, 26] },
+  { name: "Kerry Logistics", icon: "📦", ids: [3, 20, 21, 22, 23, 24] },
+  { name: "CJ Logistics", icon: "🚚", ids: [35] },
+  { name: "Klivvr / Fintech", icon: "💳", ids: [27, 28] },
+  { name: "Klovers", icon: "🍀", ids: [29, 30] },
+  { name: "Data Processing", icon: "📊", ids: [3, 4, 26] },
+  { name: "Strengths & Weaknesses", icon: "💪", ids: [5, 6] },
+  { name: "Motivation & Fit", icon: "🎯", ids: [7, 8] },
+  { name: "Web Development", icon: "🌐", ids: [14, 31, 32] },
+  { name: "Problem Solving", icon: "🧩", ids: [9, 11, 13, 36, 37] },
+  { name: "Teamwork & Leadership", icon: "👥", ids: [10, 12, 33, 34] },
+  { name: "Career & Self-Dev", icon: "📈", ids: [18, 38, 39] },
+  { name: "Closing", icon: "🤝", ids: [40, 41] },
+];
+
+/* ─── Data: Key Metrics ─── */
+
+const KEY_METRICS: { label: string; korean: string; english: string }[] = [
+  { label: "Accenture Daily Volume", korean: "하루 최대 800건 처리", english: "Processed up to 800 items daily" },
+  { label: "Accenture Accuracy", korean: "정확도 95% 이상 달성", english: "Achieved 95%+ accuracy" },
+  { label: "Kerry Monthly Volume", korean: "월 1,000건 이상 주문 관리", english: "Managed 1,000+ orders monthly" },
+  { label: "Kerry Accuracy", korean: "정확도 96% 이상 유지", english: "Maintained 96%+ accuracy" },
+  { label: "Kerry Error Reduction", korean: "오류율 50% 이상 감소", english: "Reduced error rate by 50%+" },
+  { label: "Kerry Process Time", korean: "처리 시간 30% 단축", english: "Reduced processing time by 30%" },
+  { label: "Kerry Clients", korean: "50개 이상의 고객사 관리", english: "Managed 50+ client accounts" },
+  { label: "Kerry SAP Experience", korean: "SAP ERP 3년 이상 사용", english: "3+ years SAP ERP experience" },
+  { label: "Kerry Team Training", korean: "신입 10~15명 SAP 교육", english: "Trained 10-15 new hires on SAP" },
+  { label: "Klivvr Daily Interactions", korean: "하루 50~100건 고객 상호작용", english: "50-100+ daily customer interactions" },
+  { label: "International Experience", korean: "12년 이상의 국제 경험", english: "12+ years international experience" },
+  { label: "Languages", korean: "6개 언어 구사", english: "Fluent in 6 languages" },
+  { label: "Klovers Community", korean: "15개국 1,000명 이상 학생", english: "1,000+ students across 15+ countries" },
+  { label: "Klovers Duration", korean: "13년간 운영", english: "Running for 13 years" },
+  { label: "Team Productivity", korean: "팀 생산성 20% 향상", english: "Improved team productivity by 20%" },
+  { label: "System Onboarding", korean: "1~2주 내 새 시스템 숙련", english: "Proficient in new systems within 1-2 weeks" },
+];
+
+/* ─── Data: Power Phrases ─── */
+
+const POWER_PHRASES: { korean: string; romanization: string; english: string }[] = [
+  { korean: "감사합니다", romanization: "gamsahamnida", english: "Thank you" },
+  { korean: "최선을 다하겠습니다", romanization: "choeseon-eul dahagesseumnida", english: "I will do my best" },
+  { korean: "경험을 바탕으로", romanization: "gyeongheom-eul batang-euro", english: "Based on my experience" },
+  { korean: "기여할 수 있다고 확신합니다", romanization: "giyeohal su itdago hwaksinhamnida", english: "I am confident I can contribute" },
+  { korean: "체계적으로 접근합니다", romanization: "chegyejeogeuro jeopgeunhamnida", english: "I approach systematically" },
+  { korean: "데이터 품질에 대한 열정", romanization: "deiteo pumjire daehan yeoljeong", english: "Passion for data quality" },
+  { korean: "빠르게 적응하는 편입니다", romanization: "ppareuge jeogeunghaneun pyeonimnida", english: "I adapt quickly" },
+  { korean: "팀에 가치를 더할 수 있습니다", romanization: "time gachireul deohal su isseumnida", english: "I can add value to the team" },
+  { korean: "지속적으로 개선하고 있습니다", romanization: "jisogjeogeuro gaeseonhago isseumnida", english: "I am continuously improving" },
+  { korean: "즉시 가치를 제공할 수 있습니다", romanization: "jeuksi gachireul jegonghal su isseumnida", english: "I can deliver immediate value" },
+];
+
+/* ─── Data: Company Summaries ─── */
+
+const COMPANY_SUMMARIES: { name: string; korean: string; english: string }[] = [
+  { name: "Accenture", korean: "글로벌 IT 및 컨설팅 회사에서 콘텐츠 모더레이터로 3년 이상 근무", english: "Worked 3+ years as content moderator at global IT & consulting firm" },
+  { name: "Kerry Logistics", korean: "국제 물류 회사에서 Sales Ops & Order Management 담당", english: "Sales Ops & Order Management at international logistics company" },
+  { name: "CJ Logistics", korean: "한국 대표 물류 기업에서 다문화 환경 협업 경험", english: "Multicultural collaboration experience at Korea's leading logistics company" },
+  { name: "Klivvr", korean: "이집트 핀테크 스타트업에서 고객 서비스 담당", english: "Customer service at Egyptian fintech startup" },
+  { name: "Explore-Saudi", korean: "럭셔리 여행 플랫폼의 디지털 브랜딩 및 웹 개발 리드", english: "Digital branding & web development lead for luxury travel platform" },
+];
+
+/* ─── Data: Vocabulary Groups ─── */
+
+const VOCAB_GROUPS: { name: string; words: { korean: string; romanization: string; english: string }[] }[] = [
+  {
+    name: "Greetings & Politeness",
+    words: [
+      { korean: "안녕하세요", romanization: "annyeonghaseyo", english: "Hello (formal)" },
+      { korean: "감사합니다", romanization: "gamsahamnida", english: "Thank you (formal)" },
+      { korean: "실례합니다", romanization: "sillyehamnida", english: "Excuse me" },
+      { korean: "네, 알겠습니다", romanization: "ne, algesseumnida", english: "Yes, I understand" },
+      { korean: "죄송합니다", romanization: "joesonghamnida", english: "I'm sorry (formal)" },
+      { korean: "만나서 반갑습니다", romanization: "mannaseo bangapseumnida", english: "Nice to meet you" },
+      { korean: "잘 부탁드립니다", romanization: "jal butakdeurimnida", english: "Please take care of me / I look forward to working with you" },
+    ],
+  },
+  {
+    name: "Transitions & Connectors",
+    words: [
+      { korean: "그리고", romanization: "geurigo", english: "And / Also" },
+      { korean: "또한", romanization: "ttohan", english: "Furthermore" },
+      { korean: "그래서", romanization: "geuraeseo", english: "Therefore / So" },
+      { korean: "특히", romanization: "teukhi", english: "Especially" },
+      { korean: "이를 통해", romanization: "ireul tonghae", english: "Through this" },
+      { korean: "뿐만 아니라", romanization: "ppunman anira", english: "Not only ... but also" },
+      { korean: "결과적으로", romanization: "gyeolgwajeogeuro", english: "As a result" },
+      { korean: "먼저", romanization: "meonjeo", english: "First" },
+      { korean: "마지막으로", romanization: "majimageuro", english: "Finally / Lastly" },
+    ],
+  },
+  {
+    name: "Action Verbs (Work)",
+    words: [
+      { korean: "처리하다", romanization: "cheorihada", english: "To process / handle" },
+      { korean: "관리하다", romanization: "gwallihada", english: "To manage" },
+      { korean: "분석하다", romanization: "bunseokada", english: "To analyze" },
+      { korean: "개발하다", romanization: "gaebalhada", english: "To develop" },
+      { korean: "개선하다", romanization: "gaeseonhada", english: "To improve" },
+      { korean: "교육하다", romanization: "gyoyukada", english: "To train / educate" },
+      { korean: "달성하다", romanization: "dalseonghada", english: "To achieve" },
+      { korean: "유지하다", romanization: "yujihada", english: "To maintain" },
+      { korean: "협업하다", romanization: "hyeopeopada", english: "To collaborate" },
+      { korean: "도입하다", romanization: "doipada", english: "To introduce / implement" },
+    ],
+  },
+  {
+    name: "Numbers & Quantities",
+    words: [
+      { korean: "건 (件)", romanization: "geon", english: "Item / case (counter)" },
+      { korean: "퍼센트 (%)", romanization: "peosenteu", english: "Percent" },
+      { korean: "개월", romanization: "gaewol", english: "Months" },
+      { korean: "년", romanization: "nyeon", english: "Year(s)" },
+      { korean: "명", romanization: "myeong", english: "People (counter)" },
+      { korean: "백 (100)", romanization: "baek", english: "Hundred" },
+      { korean: "천 (1,000)", romanization: "cheon", english: "Thousand" },
+      { korean: "만 (10,000)", romanization: "man", english: "Ten thousand" },
+      { korean: "이상", romanization: "isang", english: "More than / above" },
+      { korean: "최대", romanization: "choedae", english: "Maximum / up to" },
+    ],
+  },
+  {
+    name: "Closing & Follow-up",
+    words: [
+      { korean: "기회를 주셔서 감사합니다", romanization: "gihoereul jusyeoseo gamsahamnida", english: "Thank you for the opportunity" },
+      { korean: "연락 주세요", romanization: "yeollak juseyo", english: "Please contact me" },
+      { korean: "기회를 주시면", romanization: "gihoereul jusimyeon", english: "If you give me the opportunity" },
+      { korean: "빠르게 기여하고 싶습니다", romanization: "ppareuge giyeohago sipseumnida", english: "I want to contribute quickly" },
+      { korean: "의미 있는 기여", romanization: "uimi inneun giyeo", english: "Meaningful contribution" },
+      { korean: "팀에 가치를 더하다", romanization: "time gachireul deohada", english: "To add value to the team" },
+    ],
+  },
+];
+
 /* ─── Play Button Component ─── */
 
 function PlayBtn({ onClick, label, variant = "kr", disabled }: {
@@ -477,11 +617,78 @@ function PlayBtn({ onClick, label, variant = "kr", disabled }: {
 
 /* ─── Main Component ─── */
 
+/* ─── Shuffle helper ─── */
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function RehamTrainingPanel() {
   const { speak, speakKorean, speakEnglish, isSpeaking, cancel } = useSpeech();
   const [activeSubTab, setActiveSubTab] = useState("introduction");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
+
+  /* Quiz Mode state */
+  const [quizShuffle, setQuizShuffle] = useState(false);
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
+  const [confidence, setConfidence] = useState<Map<number, 1 | 2 | 3>>(new Map());
+  const quizOrder = useMemo(
+    () => (quizShuffle ? shuffleArray(CONVERSATION_DATA) : CONVERSATION_DATA),
+    [quizShuffle],
+  );
+
+  /* Mock Interview state */
+  const [mockPhase, setMockPhase] = useState<"setup" | "question" | "thinking" | "answer" | "done">("setup");
+  const [mockCount, setMockCount] = useState(5);
+  const [mockQuestions, setMockQuestions] = useState<ConversationExchange[]>([]);
+  const [mockCurrent, setMockCurrent] = useState(0);
+  const [thinkingTime, setThinkingTime] = useState(30);
+  const [mockStartTime, setMockStartTime] = useState(0);
+  const [mockEndTime, setMockEndTime] = useState(0);
+
+  /* Category Practice state */
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [catIndex, setCatIndex] = useState(0);
+
+  /* Vocabulary state */
+  const [learnedVocab, setLearnedVocab] = useState<Set<string>>(new Set());
+
+  /* Mock Interview timer */
+  useEffect(() => {
+    if (mockPhase !== "thinking") return;
+    if (thinkingTime <= 0) {
+      setMockPhase("answer");
+      return;
+    }
+    const t = setTimeout(() => setThinkingTime((p) => p - 1), 1000);
+    return () => clearTimeout(t);
+  }, [mockPhase, thinkingTime]);
+
+  const startMock = useCallback(() => {
+    const shuffled = shuffleArray(CONVERSATION_DATA);
+    const count = mockCount === 0 ? CONVERSATION_DATA.length : mockCount;
+    setMockQuestions(shuffled.slice(0, count));
+    setMockCurrent(0);
+    setMockStartTime(Date.now());
+    setThinkingTime(30);
+    setMockPhase("question");
+  }, [mockCount]);
+
+  const mockNext = useCallback(() => {
+    if (mockCurrent + 1 >= mockQuestions.length) {
+      setMockEndTime(Date.now());
+      setMockPhase("done");
+    } else {
+      setMockCurrent((p) => p + 1);
+      setThinkingTime(30);
+      setMockPhase("question");
+    }
+  }, [mockCurrent, mockQuestions.length]);
 
   const current = CONVERSATION_DATA[currentIndex];
   const progress = ((currentIndex + 1) / CONVERSATION_DATA.length) * 100;
@@ -522,6 +729,21 @@ export default function RehamTrainingPanel() {
             </TabsTrigger>
             <TabsTrigger value="recap" className="gap-1 text-xs">
               <ListChecks className="h-3.5 w-3.5" /> Recap
+            </TabsTrigger>
+            <TabsTrigger value="quiz" className="gap-1 text-xs">
+              <Brain className="h-3.5 w-3.5" /> Quiz
+            </TabsTrigger>
+            <TabsTrigger value="mock" className="gap-1 text-xs">
+              <Timer className="h-3.5 w-3.5" /> Mock
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-1 text-xs">
+              <FolderOpen className="h-3.5 w-3.5" /> Categories
+            </TabsTrigger>
+            <TabsTrigger value="cheatsheet" className="gap-1 text-xs">
+              <FileText className="h-3.5 w-3.5" /> Cheat Sheet
+            </TabsTrigger>
+            <TabsTrigger value="vocabulary" className="gap-1 text-xs">
+              <Languages className="h-3.5 w-3.5" /> Vocab
             </TabsTrigger>
           </TabsList>
 
@@ -729,6 +951,507 @@ export default function RehamTrainingPanel() {
                 </p>
               </div>
             </div>
+          </TabsContent>
+          {/* ── Quiz Mode Tab ── */}
+          <TabsContent value="quiz">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Test your recall — reveal answers and rate your confidence.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={quizShuffle ? "default" : "outline"}
+                    className="gap-1 text-xs h-8"
+                    onClick={() => {
+                      setQuizShuffle(!quizShuffle);
+                      setRevealedAnswers(new Set());
+                      setConfidence(new Map());
+                    }}
+                  >
+                    <Shuffle className="h-3.5 w-3.5" /> {quizShuffle ? "Shuffled" : "Sequential"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 text-xs h-8"
+                    onClick={() => {
+                      setRevealedAnswers(new Set());
+                      setConfidence(new Map());
+                    }}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Reset
+                  </Button>
+                </div>
+              </div>
+
+              {/* Score Summary */}
+              {confidence.size > 0 && (
+                <div className="flex gap-3 p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="text-xs font-medium">{[...confidence.values()].filter((v) => v === 3).length} Confident</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <span className="text-xs font-medium">{[...confidence.values()].filter((v) => v === 2).length} Getting there</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <span className="text-xs font-medium">{[...confidence.values()].filter((v) => v === 1).length} Need practice</span>
+                  </div>
+                </div>
+              )}
+
+              <ScrollArea className="h-[520px] pr-3">
+                <div className="space-y-3">
+                  {quizOrder.map((ex) => (
+                    <Card key={ex.id} className="rounded-xl">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <Badge variant="outline" className="text-[10px] mb-2">{ex.topic}</Badge>
+                            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
+                              <p className="text-sm font-medium">{ex.interviewer.korean}</p>
+                              <p className="text-xs text-muted-foreground">{ex.interviewer.english}</p>
+                            </div>
+                            <div className="flex gap-1 mt-1">
+                              <PlayBtn onClick={() => speakKorean(ex.interviewer.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {revealedAnswers.has(ex.id) ? (
+                          <>
+                            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                              <p className="text-sm font-medium leading-relaxed">{ex.reham.korean}</p>
+                              <p className="text-xs text-muted-foreground leading-relaxed">{ex.reham.english}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              <PlayBtn onClick={() => speakKorean(ex.reham.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                              <PlayBtn onClick={() => speak(ex.reham.korean, { language: "ko-KR", rate: 0.75 })} label="Slow" variant="slow" disabled={isSpeaking} />
+                            </div>
+                            {/* Confidence rating */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Rate:</span>
+                              {([1, 2, 3] as const).map((level) => {
+                                const colors = { 1: "border-red-300 bg-red-50 text-red-700 hover:bg-red-100", 2: "border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100", 3: "border-green-300 bg-green-50 text-green-700 hover:bg-green-100" };
+                                const labels = { 1: "Need practice", 2: "Getting there", 3: "Confident" };
+                                return (
+                                  <Button
+                                    key={level}
+                                    size="sm"
+                                    variant="outline"
+                                    className={cn("h-7 text-xs", confidence.get(ex.id) === level ? colors[level] : "")}
+                                    onClick={() => setConfidence((prev) => new Map(prev).set(ex.id, level))}
+                                  >
+                                    {labels[level]}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 w-full"
+                            onClick={() => setRevealedAnswers((prev) => new Set(prev).add(ex.id))}
+                          >
+                            <Eye className="h-3.5 w-3.5" /> Show Answer
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </TabsContent>
+
+          {/* ── Mock Interview Tab ── */}
+          <TabsContent value="mock">
+            <div className="space-y-4">
+              {mockPhase === "setup" && (
+                <Card className="rounded-xl">
+                  <CardContent className="p-6 space-y-4 text-center">
+                    <Timer className="h-10 w-10 mx-auto text-muted-foreground" />
+                    <h3 className="text-lg font-semibold">Mock Interview Simulation</h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      Simulate a real interview. You'll see each question, have 30 seconds to think, then review the answer.
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-sm">Questions:</span>
+                      {[5, 10, 15, 0].map((n) => (
+                        <Button
+                          key={n}
+                          size="sm"
+                          variant={mockCount === n ? "default" : "outline"}
+                          onClick={() => setMockCount(n)}
+                          className="text-xs"
+                        >
+                          {n === 0 ? "All" : n}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button onClick={startMock} className="gap-2">
+                      <Play className="h-4 w-4" /> Start Interview
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {mockPhase === "question" && mockQuestions[mockCurrent] && (
+                <Card className="rounded-xl border-2 border-blue-200">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Question {mockCurrent + 1} of {mockQuestions.length}</span>
+                      <Badge variant="outline">{mockQuestions[mockCurrent].topic}</Badge>
+                    </div>
+                    <Progress value={((mockCurrent + 1) / mockQuestions.length) * 100} className="h-2" />
+                    <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-2">
+                      <p className="text-base font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
+                      <p className="text-sm text-muted-foreground">{mockQuestions[mockCurrent].interviewer.english}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <PlayBtn onClick={() => speakKorean(mockQuestions[mockCurrent].interviewer.korean)} label="Listen KR" variant="kr" disabled={isSpeaking} />
+                    </div>
+                    <Button
+                      onClick={() => { setThinkingTime(30); setMockPhase("thinking"); }}
+                      className="w-full gap-2"
+                    >
+                      <Clock className="h-4 w-4" /> Start Thinking Timer (30s)
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {mockPhase === "thinking" && mockQuestions[mockCurrent] && (
+                <Card className="rounded-xl border-2 border-orange-200">
+                  <CardContent className="p-5 space-y-4 text-center">
+                    <p className="text-sm text-muted-foreground">Think about your answer...</p>
+                    <div className="text-5xl font-bold tabular-nums text-orange-600">{thinkingTime}</div>
+                    <Progress value={(thinkingTime / 30) * 100} className="h-3" />
+                    <p className="text-sm font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
+                    <Button
+                      onClick={() => setMockPhase("answer")}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      I'm Ready — Show Answer
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {mockPhase === "answer" && mockQuestions[mockCurrent] && (
+                <Card className="rounded-xl border-2 border-emerald-200">
+                  <CardContent className="p-5 space-y-4">
+                    <Badge variant="outline" className="text-xs">{mockQuestions[mockCurrent].topic}</Badge>
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
+                      <p className="text-sm font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
+                      <p className="text-xs text-muted-foreground">{mockQuestions[mockCurrent].interviewer.english}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                      <p className="text-sm font-medium leading-relaxed">{mockQuestions[mockCurrent].reham.korean}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{mockQuestions[mockCurrent].reham.english}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      <PlayBtn onClick={() => speakKorean(mockQuestions[mockCurrent].reham.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                      <PlayBtn onClick={() => speak(mockQuestions[mockCurrent].reham.korean, { language: "ko-KR", rate: 0.75 })} label="Slow" variant="slow" disabled={isSpeaking} />
+                    </div>
+                    <Button onClick={mockNext} className="w-full gap-2">
+                      {mockCurrent + 1 >= mockQuestions.length ? "Finish Interview" : "Next Question"} <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {mockPhase === "done" && (
+                <Card className="rounded-xl">
+                  <CardContent className="p-6 space-y-4 text-center">
+                    <CheckCircle2 className="h-10 w-10 mx-auto text-green-500" />
+                    <h3 className="text-lg font-semibold">Interview Complete!</h3>
+                    <div className="flex justify-center gap-6 text-sm">
+                      <div>
+                        <div className="text-2xl font-bold">{mockQuestions.length}</div>
+                        <div className="text-muted-foreground text-xs">Questions</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold">{Math.round((mockEndTime - mockStartTime) / 1000)}s</div>
+                        <div className="text-muted-foreground text-xs">Total Time</div>
+                      </div>
+                    </div>
+                    <ScrollArea className="h-[300px] text-left">
+                      <div className="space-y-2">
+                        {mockQuestions.map((q, i) => (
+                          <div key={q.id} className="flex items-center gap-2 p-2 rounded-lg border text-xs">
+                            <span className="font-bold w-5 text-center text-muted-foreground">{i + 1}</span>
+                            <span className="flex-1 truncate">{q.interviewer.korean}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => {
+                                const idx = CONVERSATION_DATA.findIndex((c) => c.id === q.id);
+                                if (idx >= 0) jumpToPractice(idx);
+                              }}
+                            >
+                              <Play className="h-3 w-3" /> Review
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    <Button onClick={() => setMockPhase("setup")} variant="outline" className="gap-2">
+                      <RotateCcw className="h-4 w-4" /> New Interview
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ── Category Practice Tab ── */}
+          <TabsContent value="categories">
+            {selectedCategory === null ? (
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Practice by topic. Click a category to drill into its questions.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {CATEGORIES.map((cat) => {
+                    const catCompleted = cat.ids.filter((id) => completed.has(id)).length;
+                    const pct = Math.round((catCompleted / cat.ids.length) * 100);
+                    return (
+                      <Card
+                        key={cat.name}
+                        className="rounded-xl cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => { setSelectedCategory(cat.name); setCatIndex(0); }}
+                      >
+                        <CardContent className="p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{cat.icon}</span>
+                            <span className="text-sm font-medium">{cat.name}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{cat.ids.length} questions</span>
+                            <span>{catCompleted}/{cat.ids.length}</span>
+                          </div>
+                          <Progress value={pct} className="h-1.5" />
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (() => {
+              const cat = CATEGORIES.find((c) => c.name === selectedCategory)!;
+              const catExchanges = cat.ids
+                .map((id) => CONVERSATION_DATA.find((c) => c.id === id))
+                .filter(Boolean) as ConversationExchange[];
+              const ex = catExchanges[catIndex];
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" className="gap-1 h-8" onClick={() => setSelectedCategory(null)}>
+                      <ArrowLeft className="h-4 w-4" /> Back
+                    </Button>
+                    <span className="text-xl">{cat.icon}</span>
+                    <span className="text-sm font-semibold">{cat.name}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {catIndex + 1} / {catExchanges.length}
+                    </span>
+                  </div>
+                  <Progress value={((catIndex + 1) / catExchanges.length) * 100} className="h-2" />
+
+                  {ex && (
+                    <Card className="rounded-xl border-2">
+                      <CardContent className="p-5 space-y-4">
+                        <Badge variant="outline" className="text-xs">{ex.topic}</Badge>
+                        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
+                          <p className="text-sm font-medium">{ex.interviewer.korean}</p>
+                          <p className="text-xs text-muted-foreground">{ex.interviewer.english}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <PlayBtn onClick={() => speakKorean(ex.interviewer.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                          <PlayBtn onClick={() => speakEnglish(ex.interviewer.english)} label="EN" variant="en" disabled={isSpeaking} />
+                        </div>
+                        <div className="w-full h-px bg-border" />
+                        <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                          <p className="text-sm font-medium leading-relaxed">{ex.reham.korean}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{ex.reham.english}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          <PlayBtn onClick={() => speakKorean(ex.reham.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                          <PlayBtn onClick={() => speakEnglish(ex.reham.english)} label="EN" variant="en" disabled={isSpeaking} />
+                          <PlayBtn onClick={() => speak(ex.reham.korean, { language: "ko-KR", rate: 0.75 })} label="Slow" variant="slow" disabled={isSpeaking} />
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={completed.has(ex.id) ? "secondary" : "default"}
+                          onClick={() => setCompleted((prev) => new Set(prev).add(ex.id))}
+                          className="gap-1"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          {completed.has(ex.id) ? "Practiced" : "Mark as Practiced"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <Button size="sm" variant="outline" onClick={() => setCatIndex((p) => p - 1)} disabled={catIndex === 0} className="gap-1">
+                      <ChevronLeft className="h-4 w-4" /> Previous
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setCatIndex((p) => p + 1)} disabled={catIndex >= catExchanges.length - 1} className="gap-1">
+                      Next <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+          </TabsContent>
+
+          {/* ── Cheat Sheet Tab ── */}
+          <TabsContent value="cheatsheet">
+            <ScrollArea className="h-[600px] pr-3">
+              <div className="space-y-6">
+                {/* Key Metrics */}
+                <Card className="rounded-xl">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">📊 Key Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-2">
+                      {KEY_METRICS.map((m, i) => (
+                        <div key={i} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent/30 transition-colors">
+                          <Badge variant="secondary" className="text-[10px] shrink-0 w-40 justify-center">{m.label}</Badge>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{m.korean}</p>
+                            <p className="text-xs text-muted-foreground">{m.english}</p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <PlayBtn onClick={() => speakKorean(m.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Power Phrases */}
+                <Card className="rounded-xl">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">💬 Power Phrases</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-2">
+                      {POWER_PHRASES.map((p, i) => (
+                        <div key={i} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent/30 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{p.korean}</p>
+                            <p className="text-xs text-muted-foreground italic">{p.romanization}</p>
+                            <p className="text-xs text-muted-foreground">{p.english}</p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <PlayBtn onClick={() => speakKorean(p.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                            <PlayBtn onClick={() => speak(p.korean, { language: "ko-KR", rate: 0.75 })} label="Slow" variant="slow" disabled={isSpeaking} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Company Summaries */}
+                <Card className="rounded-xl">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">🏢 Company Summaries</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-2">
+                      {COMPANY_SUMMARIES.map((c, i) => (
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/30 transition-colors">
+                          <Badge variant="outline" className="text-xs shrink-0 w-28 justify-center">{c.name}</Badge>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{c.korean}</p>
+                            <p className="text-xs text-muted-foreground">{c.english}</p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <PlayBtn onClick={() => speakKorean(c.korean)} label="KR" variant="kr" disabled={isSpeaking} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          {/* ── Vocabulary Tab ── */}
+          <TabsContent value="vocabulary">
+            <ScrollArea className="h-[600px] pr-3">
+              <div className="space-y-6">
+                {VOCAB_GROUPS.map((group) => {
+                  const learned = group.words.filter((w) => learnedVocab.has(w.korean)).length;
+                  const pct = Math.round((learned / group.words.length) * 100);
+                  return (
+                    <Card key={group.name} className="rounded-xl">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">{group.name}</CardTitle>
+                          <span className="text-xs text-muted-foreground">{learned}/{group.words.length} learned</span>
+                        </div>
+                        <Progress value={pct} className="h-1.5" />
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {group.words.map((w) => (
+                            <div
+                              key={w.korean}
+                              className={cn(
+                                "flex items-center gap-2 p-2 rounded-lg border transition-colors",
+                                learnedVocab.has(w.korean)
+                                  ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
+                                  : "hover:bg-accent/30",
+                              )}
+                            >
+                              <button
+                                className={cn(
+                                  "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                  learnedVocab.has(w.korean)
+                                    ? "bg-green-500 border-green-500 text-white"
+                                    : "border-muted-foreground/30 hover:border-green-400",
+                                )}
+                                onClick={() => {
+                                  setLearnedVocab((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(w.korean)) next.delete(w.korean);
+                                    else next.add(w.korean);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {learnedVocab.has(w.korean) && <CheckCircle2 className="h-3 w-3" />}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">{w.korean}</p>
+                                <p className="text-[10px] text-muted-foreground italic">{w.romanization}</p>
+                                <p className="text-xs text-muted-foreground">{w.english}</p>
+                              </div>
+                              <PlayBtn onClick={() => speakKorean(w.korean)} variant="kr" disabled={isSpeaking} />
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </CardContent>
