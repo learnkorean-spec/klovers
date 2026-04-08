@@ -1022,6 +1022,7 @@ export default function RehamTrainingPanel() {
   const [fcFlipped, setFcFlipped] = useState(false);
   const [fcShuffle, setFcShuffle] = useState(false);
   const [fcMastered, setFcMastered] = useState<Set<string>>(new Set());
+  const [fcSeen, setFcSeen] = useState<Set<string>>(new Set());
   const fcFiltered = useMemo(
     () => fcLevel === 0 ? FLASHCARD_DATA : FLASHCARD_DATA.filter((c) => c.level === fcLevel),
     [fcLevel],
@@ -1032,6 +1033,38 @@ export default function RehamTrainingPanel() {
     [fcCategory, fcShuffle],
   );
   const fcCurrent = fcWords[fcCardIdx] || fcWords[0];
+
+  // Mark current card as seen whenever it changes
+  useEffect(() => {
+    if (fcCurrent) {
+      setFcSeen((prev) => {
+        if (prev.has(fcCurrent.korean)) return prev;
+        const next = new Set(prev);
+        next.add(fcCurrent.korean);
+        return next;
+      });
+    }
+  }, [fcCurrent]);
+
+  // Find next unmastered card index
+  const fcNextUnlearned = useMemo(() => {
+    for (let i = fcCardIdx + 1; i < fcWords.length; i++) {
+      if (!fcMastered.has(fcWords[i].korean)) return i;
+    }
+    for (let i = 0; i < fcCardIdx; i++) {
+      if (!fcMastered.has(fcWords[i].korean)) return i;
+    }
+    return -1; // all mastered
+  }, [fcCardIdx, fcWords, fcMastered]);
+
+  // Stats for current category
+  const fcStats = useMemo(() => {
+    const total = fcWords.length;
+    const mastered = fcWords.filter((w) => fcMastered.has(w.korean)).length;
+    const seen = fcWords.filter((w) => fcSeen.has(w.korean) && !fcMastered.has(w.korean)).length;
+    const unseen = total - mastered - seen;
+    return { total, mastered, seen, unseen };
+  }, [fcWords, fcMastered, fcSeen]);
 
   /* Mock Interview timer */
   useEffect(() => {
@@ -1897,6 +1930,23 @@ export default function RehamTrainingPanel() {
                 ))}
               </div>
 
+              {/* Stats Bar */}
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-gray-300" />
+                  <span className="text-muted-foreground">Unseen {fcStats.unseen}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span className="text-muted-foreground">Seen {fcStats.seen}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500" />
+                  <span className="text-muted-foreground">Mastered {fcStats.mastered}</span>
+                </div>
+                <span className="ml-auto font-medium">{Math.round((fcStats.mastered / fcStats.total) * 100)}%</span>
+              </div>
+
               {/* Progress */}
               <Progress value={((fcCardIdx + 1) / fcWords.length) * 100} className="h-2" />
               <p className="text-xs text-muted-foreground text-center">
@@ -1914,6 +1964,18 @@ export default function RehamTrainingPanel() {
                 )}
                 onClick={() => setFcFlipped(!fcFlipped)}
               >
+                <div className="absolute top-3 left-3">
+                  <Badge
+                    variant="outline"
+                    className={cn("text-[10px]", fcMastered.has(fcCurrent.korean)
+                      ? "bg-green-100 text-green-700 border-green-300"
+                      : fcSeen.has(fcCurrent.korean)
+                        ? "bg-amber-100 text-amber-700 border-amber-300"
+                        : "bg-gray-100 text-gray-600 border-gray-300")}
+                  >
+                    {fcMastered.has(fcCurrent.korean) ? "✓ Mastered" : fcSeen.has(fcCurrent.korean) ? "Seen" : "New"}
+                  </Badge>
+                </div>
                 <div className="absolute top-3 right-3">
                   <Badge variant="outline" className="text-[10px]">
                     {fcFlipped ? "Click to flip back" : "Click to reveal"}
@@ -1950,7 +2012,7 @@ export default function RehamTrainingPanel() {
               </div>
 
               {/* Controls */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-1.5">
                 <Button
                   size="sm"
                   variant="outline"
@@ -1966,17 +2028,33 @@ export default function RehamTrainingPanel() {
                   variant={fcMastered.has(fcCurrent.korean) ? "secondary" : "default"}
                   className="gap-1"
                   onClick={() => {
+                    const wasMastered = fcMastered.has(fcCurrent.korean);
                     setFcMastered((prev) => {
                       const next = new Set(prev);
                       if (next.has(fcCurrent.korean)) next.delete(fcCurrent.korean);
                       else next.add(fcCurrent.korean);
                       return next;
                     });
+                    // Auto-advance to next unlearned card after marking mastered
+                    if (!wasMastered && fcNextUnlearned !== -1) {
+                      setTimeout(() => { setFcCardIdx(fcNextUnlearned); setFcFlipped(false); }, 300);
+                    }
                   }}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  {fcMastered.has(fcCurrent.korean) ? "Mastered" : "Mark Mastered"}
+                  {fcMastered.has(fcCurrent.korean) ? "Undo" : "Mastered"}
                 </Button>
+
+                {fcNextUnlearned !== -1 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                    onClick={() => { setFcCardIdx(fcNextUnlearned); setFcFlipped(false); }}
+                  >
+                    Next Unlearned
+                  </Button>
+                )}
 
                 <Button
                   size="sm"
@@ -1993,22 +2071,32 @@ export default function RehamTrainingPanel() {
               <div className="mt-2">
                 <p className="text-xs text-muted-foreground mb-2">All words in this category:</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                  {fcWords.map((w, i) => (
-                    <button
-                      key={w.korean}
-                      className={cn(
-                        "text-left p-2 rounded-lg border text-xs transition-colors",
-                        fcCardIdx === i && "ring-2 ring-blue-400",
-                        fcMastered.has(w.korean)
-                          ? "bg-green-50 dark:bg-green-950/20 border-green-200"
-                          : "hover:bg-accent/30",
-                      )}
-                      onClick={() => { setFcCardIdx(i); setFcFlipped(false); }}
-                    >
-                      <span className="font-medium">{w.korean}</span>
-                      <span className="text-muted-foreground ml-1">{w.english}</span>
-                    </button>
-                  ))}
+                  {fcWords.map((w, i) => {
+                    const isMastered = fcMastered.has(w.korean);
+                    const isSeen = fcSeen.has(w.korean);
+                    return (
+                      <button
+                        key={w.korean}
+                        className={cn(
+                          "text-left p-2 rounded-lg border text-xs transition-colors flex items-center gap-1.5",
+                          fcCardIdx === i && "ring-2 ring-blue-400",
+                          isMastered
+                            ? "bg-green-50 dark:bg-green-950/20 border-green-300"
+                            : isSeen
+                              ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200"
+                              : "border-gray-200 hover:bg-accent/30",
+                        )}
+                        onClick={() => { setFcCardIdx(i); setFcFlipped(false); }}
+                      >
+                        <span className={cn(
+                          "inline-block w-2 h-2 rounded-full shrink-0",
+                          isMastered ? "bg-green-500" : isSeen ? "bg-amber-400" : "bg-gray-300",
+                        )} />
+                        <span className="font-medium">{w.korean}</span>
+                        <span className="text-muted-foreground truncate">{w.english}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
