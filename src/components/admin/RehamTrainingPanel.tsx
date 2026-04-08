@@ -720,7 +720,7 @@ const VOCAB_GROUPS: { name: string; words: { korean: string; romanization: strin
   },
 ];
 
-/* ─── Data: TOPIK 2급 Flash Cards ─── */
+/* ─── Data: TOPIK 2급–6급 Flash Cards ─── */
 
 interface FlashCardWord {
   korean: string;
@@ -730,48 +730,38 @@ interface FlashCardWord {
   sentence_en: string;
 }
 
-const FLASHCARD_DATA: { category: string; words: FlashCardWord[] }[] = [
+type TopikLevel = 2 | 3 | 4 | 5 | 6;
+
+const FLASHCARD_DATA: { level: TopikLevel; category: string; words: FlashCardWord[] }[] = [
+  /* ══════════════════ TOPIK 2급 ══════════════════ */
   {
-    category: "Business & Work (비즈니스)",
+    level: 2, category: "Business & Work (비즈니스)",
     words: [
       { korean: "회의", romanization: "hoeui", english: "Meeting", sentence_kr: "오늘 오후에 중요한 회의가 있습니다.", sentence_en: "There is an important meeting this afternoon." },
       { korean: "보고서", romanization: "bogoseo", english: "Report", sentence_kr: "내일까지 보고서를 제출해야 합니다.", sentence_en: "I have to submit the report by tomorrow." },
       { korean: "출장", romanization: "chuljang", english: "Business trip", sentence_kr: "다음 주에 말레이시아로 출장을 갑니다.", sentence_en: "I'm going on a business trip to Malaysia next week." },
-      { korean: "거래처", romanization: "georaecheo", english: "Business partner / client", sentence_kr: "거래처와 좋은 관계를 유지하는 것이 중요합니다.", sentence_en: "It is important to maintain good relationships with clients." },
-      { korean: "실적", romanization: "siljeok", english: "Performance / results", sentence_kr: "이번 분기 실적이 매우 좋았습니다.", sentence_en: "This quarter's performance was very good." },
+      { korean: "거래처", romanization: "georaecheo", english: "Client company", sentence_kr: "거래처와 좋은 관계를 유지하는 것이 중요합니다.", sentence_en: "It is important to maintain good relationships with clients." },
+      { korean: "실적", romanization: "siljeok", english: "Performance results", sentence_kr: "이번 분기 실적이 매우 좋았습니다.", sentence_en: "This quarter's performance was very good." },
       { korean: "승진", romanization: "seungjin", english: "Promotion", sentence_kr: "열심히 일해서 승진할 수 있었습니다.", sentence_en: "I was able to get promoted by working hard." },
       { korean: "계약", romanization: "gyeyak", english: "Contract", sentence_kr: "새로운 고객과 계약을 체결했습니다.", sentence_en: "We signed a contract with a new customer." },
       { korean: "마감", romanization: "magam", english: "Deadline", sentence_kr: "마감 기한을 꼭 지켜 주세요.", sentence_en: "Please make sure to meet the deadline." },
     ],
   },
   {
-    category: "Communication (소통)",
+    level: 2, category: "Communication (소통)",
     words: [
       { korean: "의견", romanization: "uigyeon", english: "Opinion", sentence_kr: "다른 의견이 있으시면 말씀해 주세요.", sentence_en: "Please share if you have a different opinion." },
       { korean: "제안", romanization: "jean", english: "Suggestion / proposal", sentence_kr: "새로운 프로젝트에 대한 제안을 준비했습니다.", sentence_en: "I prepared a proposal for the new project." },
       { korean: "설명", romanization: "seolmyeong", english: "Explanation", sentence_kr: "자세한 설명을 부탁드립니다.", sentence_en: "Could you please give a detailed explanation?" },
-      { korean: "확인", romanization: "hwaghin", english: "Confirmation / check", sentence_kr: "이메일을 확인하셨나요?", sentence_en: "Did you check the email?" },
+      { korean: "확인", romanization: "hwaghin", english: "Confirmation", sentence_kr: "이메일을 확인하셨나요?", sentence_en: "Did you check the email?" },
       { korean: "연락", romanization: "yeollak", english: "Contact", sentence_kr: "결과가 나오면 바로 연락드리겠습니다.", sentence_en: "I will contact you as soon as the results are out." },
-      { korean: "상의", romanization: "sangui", english: "Discussion / consultation", sentence_kr: "팀장님과 상의한 후에 결정하겠습니다.", sentence_en: "I will decide after discussing with the team leader." },
-      { korean: "전달", romanization: "jeondal", english: "Delivery / passing on", sentence_kr: "이 내용을 팀원들에게 전달해 주세요.", sentence_en: "Please pass this information on to the team members." },
+      { korean: "상의", romanization: "sangui", english: "Consultation", sentence_kr: "팀장님과 상의한 후에 결정하겠습니다.", sentence_en: "I will decide after discussing with the team leader." },
+      { korean: "전달", romanization: "jeondal", english: "Passing on info", sentence_kr: "이 내용을 팀원들에게 전달해 주세요.", sentence_en: "Please pass this information on to the team members." },
       { korean: "참석", romanization: "chamseok", english: "Attendance", sentence_kr: "내일 회의에 참석할 수 있으신가요?", sentence_en: "Can you attend tomorrow's meeting?" },
     ],
   },
   {
-    category: "Skills & Abilities (능력)",
-    words: [
-      { korean: "경험", romanization: "gyeongheom", english: "Experience", sentence_kr: "다양한 분야에서 경험을 쌓았습니다.", sentence_en: "I have gained experience in various fields." },
-      { korean: "능력", romanization: "neungnyeok", english: "Ability / capability", sentence_kr: "문제 해결 능력이 뛰어납니다.", sentence_en: "My problem-solving ability is excellent." },
-      { korean: "실력", romanization: "sillyeok", english: "Skill / proficiency", sentence_kr: "한국어 실력을 향상시키고 싶습니다.", sentence_en: "I want to improve my Korean language skills." },
-      { korean: "자격증", romanization: "jagyeokjeung", english: "Certificate / qualification", sentence_kr: "관련 자격증을 취득했습니다.", sentence_en: "I obtained the relevant certification." },
-      { korean: "전문", romanization: "jeonmun", english: "Expert / professional", sentence_kr: "데이터 분석 전문가로 성장하고 싶습니다.", sentence_en: "I want to grow as a data analysis expert." },
-      { korean: "적응", romanization: "jeogeung", english: "Adaptation", sentence_kr: "새로운 환경에 빠르게 적응할 수 있습니다.", sentence_en: "I can quickly adapt to new environments." },
-      { korean: "협력", romanization: "hyeomnyeok", english: "Cooperation", sentence_kr: "팀원들과 협력하여 프로젝트를 완성했습니다.", sentence_en: "I completed the project by cooperating with team members." },
-      { korean: "성과", romanization: "seonggwa", english: "Achievement / outcome", sentence_kr: "지난 분기에 큰 성과를 달성했습니다.", sentence_en: "I achieved significant outcomes last quarter." },
-    ],
-  },
-  {
-    category: "Daily Expressions (일상)",
+    level: 2, category: "Daily & Goals (일상)",
     words: [
       { korean: "약속", romanization: "yaksok", english: "Appointment / promise", sentence_kr: "내일 점심에 약속이 있습니다.", sentence_en: "I have an appointment at lunch tomorrow." },
       { korean: "준비", romanization: "junbi", english: "Preparation", sentence_kr: "면접 준비를 철저히 했습니다.", sentence_en: "I thoroughly prepared for the interview." },
@@ -784,29 +774,176 @@ const FLASHCARD_DATA: { category: string; words: FlashCardWord[] }[] = [
     ],
   },
   {
-    category: "Emotions & Personality (감정)",
+    level: 2, category: "Interview Basics (면접)",
     words: [
-      { korean: "자신감", romanization: "jasingam", english: "Confidence", sentence_kr: "면접에서 자신감을 보여 주는 것이 중요합니다.", sentence_en: "It is important to show confidence in an interview." },
-      { korean: "책임감", romanization: "chaegimgam", english: "Sense of responsibility", sentence_kr: "강한 책임감을 가지고 일합니다.", sentence_en: "I work with a strong sense of responsibility." },
-      { korean: "열정", romanization: "yeoljeong", english: "Passion", sentence_kr: "한국어 교육에 대한 열정이 있습니다.", sentence_en: "I have a passion for Korean language education." },
-      { korean: "인내심", romanization: "innaesim", english: "Patience", sentence_kr: "어려운 상황에서도 인내심을 유지합니다.", sentence_en: "I maintain patience even in difficult situations." },
-      { korean: "꼼꼼하다", romanization: "kkomkkomhada", english: "To be meticulous", sentence_kr: "저는 업무를 꼼꼼하게 처리합니다.", sentence_en: "I handle my work meticulously." },
-      { korean: "성실하다", romanization: "seongsilhada", english: "To be diligent / sincere", sentence_kr: "항상 성실하게 일하려고 노력합니다.", sentence_en: "I always try to work diligently." },
-      { korean: "적극적", romanization: "jeokgeukjeok", english: "Proactive / active", sentence_kr: "새로운 프로젝트에 적극적으로 참여합니다.", sentence_en: "I actively participate in new projects." },
-      { korean: "긍정적", romanization: "geungjeongjeok", english: "Positive", sentence_kr: "항상 긍정적인 태도를 유지합니다.", sentence_en: "I always maintain a positive attitude." },
+      { korean: "지원하다", romanization: "jiwonhada", english: "To apply", sentence_kr: "이 회사에 지원한 이유는 성장 가능성 때문입니다.", sentence_en: "The reason I applied to this company is its growth potential." },
+      { korean: "채용", romanization: "chaeyong", english: "Hiring", sentence_kr: "채용 공고를 보고 지원했습니다.", sentence_en: "I applied after seeing the job posting." },
+      { korean: "면접관", romanization: "myeonjeobgwan", english: "Interviewer", sentence_kr: "면접관의 질문에 정확하게 답변했습니다.", sentence_en: "I answered the interviewer's questions accurately." },
+      { korean: "이력서", romanization: "iryeokseo", english: "Resume / CV", sentence_kr: "이력서를 최신 상태로 업데이트했습니다.", sentence_en: "I updated my resume to the latest version." },
+      { korean: "포부", romanization: "pobu", english: "Ambition", sentence_kr: "이 분야의 전문가가 되는 것이 제 포부입니다.", sentence_en: "My ambition is to become an expert in this field." },
+      { korean: "기여하다", romanization: "giyeohada", english: "To contribute", sentence_kr: "팀의 성과에 기여하고 싶습니다.", sentence_en: "I want to contribute to the team's performance." },
+      { korean: "동기", romanization: "donggi", english: "Motivation", sentence_kr: "지원 동기를 말씀해 주세요.", sentence_en: "Please tell me your motivation for applying." },
+      { korean: "입사", romanization: "ipsa", english: "Joining a company", sentence_kr: "입사 후 첫 3개월 안에 빠르게 적응하겠습니다.", sentence_en: "I will adapt quickly within the first 3 months after joining." },
+    ],
+  },
+  /* ══════════════════ TOPIK 3급 ══════════════════ */
+  {
+    level: 3, category: "Workplace (직장생활)",
+    words: [
+      { korean: "업무", romanization: "eopmu", english: "Work / duties", sentence_kr: "새로운 업무를 맡게 되었습니다.", sentence_en: "I have been assigned new duties." },
+      { korean: "담당", romanization: "damdang", english: "In charge of", sentence_kr: "이 프로젝트의 담당자가 누구입니까?", sentence_en: "Who is in charge of this project?" },
+      { korean: "부서", romanization: "buseo", english: "Department", sentence_kr: "다른 부서와 협력하여 일합니다.", sentence_en: "I work in cooperation with other departments." },
+      { korean: "근무", romanization: "geunmu", english: "Work / service", sentence_kr: "해외에서 3년간 근무했습니다.", sentence_en: "I worked overseas for 3 years." },
+      { korean: "야근", romanization: "yageun", english: "Overtime", sentence_kr: "마감 전에 야근을 해야 했습니다.", sentence_en: "I had to work overtime before the deadline." },
+      { korean: "월급", romanization: "wolgeup", english: "Monthly salary", sentence_kr: "월급은 경력에 따라 다릅니다.", sentence_en: "The salary varies depending on experience." },
+      { korean: "퇴근", romanization: "toegeun", english: "Leaving work", sentence_kr: "보통 7시에 퇴근합니다.", sentence_en: "I usually leave work at 7." },
+      { korean: "출근", romanization: "chulgeun", english: "Going to work", sentence_kr: "매일 아침 8시에 출근합니다.", sentence_en: "I go to work at 8 every morning." },
     ],
   },
   {
-    category: "Interview Essentials (면접)",
+    level: 3, category: "Skills & Traits (역량)",
     words: [
-      { korean: "지원하다", romanization: "jiwonhada", english: "To apply", sentence_kr: "이 회사에 지원한 이유는 성장 가능성 때문입니다.", sentence_en: "The reason I applied to this company is its growth potential." },
-      { korean: "채용", romanization: "chaeyong", english: "Hiring / recruitment", sentence_kr: "채용 공고를 보고 지원했습니다.", sentence_en: "I applied after seeing the job posting." },
-      { korean: "면접관", romanization: "myeonjeobgwan", english: "Interviewer", sentence_kr: "면접관의 질문에 정확하게 답변했습니다.", sentence_en: "I answered the interviewer's questions accurately." },
-      { korean: "이력서", romanization: "iryeokseo", english: "Resume / CV", sentence_kr: "이력서를 최신 상태로 업데이트했습니다.", sentence_en: "I updated my resume to the latest version." },
-      { korean: "포부", romanization: "pobu", english: "Ambition / aspiration", sentence_kr: "이 분야의 전문가가 되는 것이 제 포부입니다.", sentence_en: "My ambition is to become an expert in this field." },
-      { korean: "기여하다", romanization: "giyeohada", english: "To contribute", sentence_kr: "팀의 성과에 기여하고 싶습니다.", sentence_en: "I want to contribute to the team's performance." },
-      { korean: "동기", romanization: "donggi", english: "Motivation / motive", sentence_kr: "지원 동기를 말씀해 주세요.", sentence_en: "Please tell me your motivation for applying." },
-      { korean: "입사", romanization: "ipsa", english: "Joining a company", sentence_kr: "입사 후 첫 3개월 안에 빠르게 적응하겠습니다.", sentence_en: "I will adapt quickly within the first 3 months after joining." },
+      { korean: "경험", romanization: "gyeongheom", english: "Experience", sentence_kr: "다양한 분야에서 경험을 쌓았습니다.", sentence_en: "I have gained experience in various fields." },
+      { korean: "능력", romanization: "neungnyeok", english: "Ability", sentence_kr: "문제 해결 능력이 뛰어납니다.", sentence_en: "My problem-solving ability is excellent." },
+      { korean: "자신감", romanization: "jasingam", english: "Confidence", sentence_kr: "면접에서 자신감을 보여 주는 것이 중요합니다.", sentence_en: "It is important to show confidence in an interview." },
+      { korean: "책임감", romanization: "chaegimgam", english: "Responsibility", sentence_kr: "강한 책임감을 가지고 일합니다.", sentence_en: "I work with a strong sense of responsibility." },
+      { korean: "성실하다", romanization: "seongsilhada", english: "Diligent", sentence_kr: "항상 성실하게 일하려고 노력합니다.", sentence_en: "I always try to work diligently." },
+      { korean: "꼼꼼하다", romanization: "kkomkkomhada", english: "Meticulous", sentence_kr: "저는 업무를 꼼꼼하게 처리합니다.", sentence_en: "I handle my work meticulously." },
+      { korean: "적극적", romanization: "jeokgeukjeok", english: "Proactive", sentence_kr: "새로운 프로젝트에 적극적으로 참여합니다.", sentence_en: "I actively participate in new projects." },
+      { korean: "유연하다", romanization: "yuyeonhada", english: "Flexible", sentence_kr: "유연한 사고로 문제를 해결합니다.", sentence_en: "I solve problems with flexible thinking." },
+    ],
+  },
+  {
+    level: 3, category: "Social & Relations (관계)",
+    words: [
+      { korean: "인사", romanization: "insa", english: "Greeting / HR", sentence_kr: "인사 담당자에게 연락해 주세요.", sentence_en: "Please contact the HR manager." },
+      { korean: "소개", romanization: "sogae", english: "Introduction", sentence_kr: "자기소개를 해 주세요.", sentence_en: "Please introduce yourself." },
+      { korean: "존경", romanization: "jongyeong", english: "Respect", sentence_kr: "선배님을 존경합니다.", sentence_en: "I respect my senior." },
+      { korean: "신뢰", romanization: "silloe", english: "Trust", sentence_kr: "팀원 간의 신뢰가 중요합니다.", sentence_en: "Trust between team members is important." },
+      { korean: "배려", romanization: "baeryeo", english: "Consideration", sentence_kr: "동료에 대한 배려가 필요합니다.", sentence_en: "Consideration for colleagues is needed." },
+      { korean: "갈등", romanization: "galdeung", english: "Conflict", sentence_kr: "갈등을 잘 해결하는 것이 중요합니다.", sentence_en: "It is important to resolve conflicts well." },
+      { korean: "협조", romanization: "hyeopjo", english: "Cooperation", sentence_kr: "협조해 주셔서 감사합니다.", sentence_en: "Thank you for your cooperation." },
+      { korean: "동료", romanization: "dongnyo", english: "Colleague", sentence_kr: "동료들과 좋은 관계를 유지하고 있습니다.", sentence_en: "I maintain good relationships with colleagues." },
+    ],
+  },
+  /* ══════════════════ TOPIK 4급 ══════════════════ */
+  {
+    level: 4, category: "Professional (전문 용어)",
+    words: [
+      { korean: "전략", romanization: "jeollyak", english: "Strategy", sentence_kr: "새로운 마케팅 전략을 수립했습니다.", sentence_en: "We established a new marketing strategy." },
+      { korean: "효율", romanization: "hyoyul", english: "Efficiency", sentence_kr: "업무 효율을 높이기 위해 프로세스를 개선했습니다.", sentence_en: "I improved processes to increase work efficiency." },
+      { korean: "분석", romanization: "bunseok", english: "Analysis", sentence_kr: "데이터를 분석하여 문제의 원인을 파악했습니다.", sentence_en: "I analyzed data to identify the cause of the problem." },
+      { korean: "평가", romanization: "pyeongga", english: "Evaluation", sentence_kr: "성과 평가에서 높은 점수를 받았습니다.", sentence_en: "I received a high score in the performance evaluation." },
+      { korean: "개선", romanization: "gaeseon", english: "Improvement", sentence_kr: "서비스 품질을 지속적으로 개선하고 있습니다.", sentence_en: "We are continuously improving service quality." },
+      { korean: "혁신", romanization: "hyeoksin", english: "Innovation", sentence_kr: "혁신적인 아이디어로 문제를 해결했습니다.", sentence_en: "I solved the problem with an innovative idea." },
+      { korean: "성취", romanization: "seongchwi", english: "Achievement", sentence_kr: "큰 성취감을 느꼈습니다.", sentence_en: "I felt a great sense of achievement." },
+      { korean: "수행", romanization: "suhaeng", english: "Execution", sentence_kr: "프로젝트를 성공적으로 수행했습니다.", sentence_en: "I successfully executed the project." },
+    ],
+  },
+  {
+    level: 4, category: "Management (관리)",
+    words: [
+      { korean: "예산", romanization: "yesan", english: "Budget", sentence_kr: "프로젝트 예산을 효율적으로 관리했습니다.", sentence_en: "I managed the project budget efficiently." },
+      { korean: "일정", romanization: "iljeong", english: "Schedule", sentence_kr: "일정을 조율하여 회의를 잡겠습니다.", sentence_en: "I will coordinate the schedule to set up a meeting." },
+      { korean: "절차", romanization: "jeolcha", english: "Procedure", sentence_kr: "정해진 절차에 따라 업무를 처리합니다.", sentence_en: "I handle tasks according to the established procedures." },
+      { korean: "기준", romanization: "gijun", english: "Standard / criteria", sentence_kr: "높은 품질 기준을 유지합니다.", sentence_en: "I maintain high quality standards." },
+      { korean: "조율", romanization: "joyul", english: "Coordination", sentence_kr: "여러 부서 간의 조율이 필요합니다.", sentence_en: "Coordination between multiple departments is needed." },
+      { korean: "위임", romanization: "wiim", english: "Delegation", sentence_kr: "적절한 업무 위임이 효율성을 높입니다.", sentence_en: "Proper task delegation increases efficiency." },
+      { korean: "감독", romanization: "gamdok", english: "Supervision", sentence_kr: "프로젝트 진행을 감독합니다.", sentence_en: "I supervise the project progress." },
+      { korean: "보완", romanization: "bowan", english: "Supplementation", sentence_kr: "부족한 부분을 보완하겠습니다.", sentence_en: "I will supplement the lacking areas." },
+    ],
+  },
+  {
+    level: 4, category: "Problem Solving (문제 해결)",
+    words: [
+      { korean: "원인", romanization: "wonin", english: "Cause", sentence_kr: "문제의 근본 원인을 파악했습니다.", sentence_en: "I identified the root cause of the problem." },
+      { korean: "해결책", romanization: "haegyeolchaek", english: "Solution", sentence_kr: "효과적인 해결책을 제시했습니다.", sentence_en: "I presented an effective solution." },
+      { korean: "대안", romanization: "daean", english: "Alternative", sentence_kr: "여러 대안을 검토한 후 결정했습니다.", sentence_en: "I decided after reviewing several alternatives." },
+      { korean: "위기", romanization: "wigi", english: "Crisis", sentence_kr: "위기 상황에서 침착하게 대응했습니다.", sentence_en: "I responded calmly in a crisis situation." },
+      { korean: "조치", romanization: "jochi", english: "Measure / action", sentence_kr: "즉시 적절한 조치를 취했습니다.", sentence_en: "I took appropriate measures immediately." },
+      { korean: "판단", romanization: "pandan", english: "Judgment", sentence_kr: "신속하고 정확한 판단이 중요합니다.", sentence_en: "Quick and accurate judgment is important." },
+      { korean: "예방", romanization: "yebang", english: "Prevention", sentence_kr: "재발 방지를 위한 예방 조치를 수립했습니다.", sentence_en: "I established preventive measures to prevent recurrence." },
+      { korean: "피드백", romanization: "pideubaek", english: "Feedback", sentence_kr: "고객의 피드백을 반영하여 개선했습니다.", sentence_en: "I improved by reflecting customer feedback." },
+    ],
+  },
+  /* ══════════════════ TOPIK 5급 ══════════════════ */
+  {
+    level: 5, category: "Leadership (리더십)",
+    words: [
+      { korean: "주도하다", romanization: "judohada", english: "To lead / take initiative", sentence_kr: "프로젝트를 주도하여 성공적으로 완료했습니다.", sentence_en: "I led the project and completed it successfully." },
+      { korean: "통솔력", romanization: "tongsollyeok", english: "Leadership ability", sentence_kr: "강한 통솔력으로 팀을 이끌었습니다.", sentence_en: "I led the team with strong leadership ability." },
+      { korean: "의사결정", romanization: "uisagyeoljeong", english: "Decision-making", sentence_kr: "신속한 의사결정이 프로젝트 성공의 핵심이었습니다.", sentence_en: "Quick decision-making was key to the project's success." },
+      { korean: "동기부여", romanization: "donggibuyeo", english: "Motivation (giving)", sentence_kr: "팀원들에게 동기부여를 하는 것을 중요하게 생각합니다.", sentence_en: "I value motivating team members." },
+      { korean: "역량", romanization: "yeokryang", english: "Competency", sentence_kr: "핵심 역량을 강화하기 위해 노력합니다.", sentence_en: "I strive to strengthen core competencies." },
+      { korean: "비전", romanization: "bijeon", english: "Vision", sentence_kr: "명확한 비전을 가지고 팀을 이끕니다.", sentence_en: "I lead the team with a clear vision." },
+      { korean: "권한", romanization: "gwonhan", english: "Authority", sentence_kr: "팀원에게 적절한 권한을 부여합니다.", sentence_en: "I grant appropriate authority to team members." },
+      { korean: "자율성", romanization: "jayulseong", english: "Autonomy", sentence_kr: "자율성을 존중하면서도 방향을 제시합니다.", sentence_en: "I provide direction while respecting autonomy." },
+    ],
+  },
+  {
+    level: 5, category: "Advanced Business (고급 비즈니스)",
+    words: [
+      { korean: "수익", romanization: "suik", english: "Profit / revenue", sentence_kr: "전년 대비 수익이 20% 증가했습니다.", sentence_en: "Revenue increased by 20% compared to last year." },
+      { korean: "투자", romanization: "tuja", english: "Investment", sentence_kr: "신기술에 대한 투자가 필요합니다.", sentence_en: "Investment in new technology is needed." },
+      { korean: "시장", romanization: "sijang", english: "Market", sentence_kr: "새로운 시장에 진출할 계획입니다.", sentence_en: "We plan to enter a new market." },
+      { korean: "경쟁력", romanization: "gyeongjaengnyeok", english: "Competitiveness", sentence_kr: "경쟁력을 갖추기 위해 끊임없이 혁신합니다.", sentence_en: "We constantly innovate to maintain competitiveness." },
+      { korean: "브랜드", romanization: "beuraendeu", english: "Brand", sentence_kr: "브랜드 가치를 높이는 데 기여했습니다.", sentence_en: "I contributed to enhancing brand value." },
+      { korean: "매출", romanization: "maechul", english: "Sales revenue", sentence_kr: "매출 목표를 초과 달성했습니다.", sentence_en: "I exceeded the sales target." },
+      { korean: "규모", romanization: "gyumo", english: "Scale / size", sentence_kr: "50명 규모의 부서를 관리했습니다.", sentence_en: "I managed a department of 50 people." },
+      { korean: "납기", romanization: "napgi", english: "Delivery date", sentence_kr: "납기를 준수하기 위해 일정을 관리합니다.", sentence_en: "I manage the schedule to meet delivery dates." },
+    ],
+  },
+  {
+    level: 5, category: "Negotiations (협상)",
+    words: [
+      { korean: "협상", romanization: "hyeopsang", english: "Negotiation", sentence_kr: "유리한 조건으로 협상을 마무리했습니다.", sentence_en: "I concluded the negotiation on favorable terms." },
+      { korean: "타협", romanization: "tahyeop", english: "Compromise", sentence_kr: "양측이 타협점을 찾았습니다.", sentence_en: "Both sides found a point of compromise." },
+      { korean: "제시하다", romanization: "jesihada", english: "To present / propose", sentence_kr: "새로운 조건을 제시했습니다.", sentence_en: "I presented new conditions." },
+      { korean: "수용하다", romanization: "suyonghada", english: "To accept", sentence_kr: "고객의 요청을 수용했습니다.", sentence_en: "I accepted the customer's request." },
+      { korean: "거절하다", romanization: "geojeolhada", english: "To refuse", sentence_kr: "불합리한 조건은 정중하게 거절했습니다.", sentence_en: "I politely refused unreasonable conditions." },
+      { korean: "양보", romanization: "yangbo", english: "Concession", sentence_kr: "상호 양보를 통해 합의에 도달했습니다.", sentence_en: "We reached an agreement through mutual concessions." },
+      { korean: "합의", romanization: "habui", english: "Agreement", sentence_kr: "최종 합의에 성공적으로 도달했습니다.", sentence_en: "We successfully reached a final agreement." },
+      { korean: "조건", romanization: "jogeon", english: "Condition / terms", sentence_kr: "계약 조건을 꼼꼼히 검토했습니다.", sentence_en: "I carefully reviewed the contract terms." },
+    ],
+  },
+  /* ══════════════════ TOPIK 6급 ══════════════════ */
+  {
+    level: 6, category: "Corporate Strategy (경영 전략)",
+    words: [
+      { korean: "구조조정", romanization: "gujojojeong", english: "Restructuring", sentence_kr: "효율적인 구조조정을 통해 조직을 개편했습니다.", sentence_en: "We reorganized the structure through efficient restructuring." },
+      { korean: "인수합병", romanization: "insuhapbyeong", english: "Mergers & acquisitions", sentence_kr: "인수합병을 통해 시장 점유율을 높였습니다.", sentence_en: "We increased market share through mergers and acquisitions." },
+      { korean: "지속가능성", romanization: "jisokganeungseong", english: "Sustainability", sentence_kr: "지속가능한 성장을 위한 전략을 수립했습니다.", sentence_en: "We established a strategy for sustainable growth." },
+      { korean: "거버넌스", romanization: "geobeoneonseu", english: "Governance", sentence_kr: "투명한 거버넌스 체계를 구축했습니다.", sentence_en: "We built a transparent governance system." },
+      { korean: "이해관계자", romanization: "ihaegwangyeja", english: "Stakeholder", sentence_kr: "이해관계자의 요구를 균형 있게 반영합니다.", sentence_en: "I reflect stakeholder needs in a balanced way." },
+      { korean: "시너지", romanization: "sineoji", english: "Synergy", sentence_kr: "부서 간 시너지를 극대화합니다.", sentence_en: "I maximize synergy between departments." },
+      { korean: "패러다임", romanization: "paereodaim", english: "Paradigm", sentence_kr: "새로운 패러다임에 적응해야 합니다.", sentence_en: "We must adapt to the new paradigm." },
+      { korean: "벤치마킹", romanization: "benchimaking", english: "Benchmarking", sentence_kr: "글로벌 기업을 벤치마킹하여 프로세스를 개선했습니다.", sentence_en: "I improved processes by benchmarking global companies." },
+    ],
+  },
+  {
+    level: 6, category: "Critical Thinking (비판적 사고)",
+    words: [
+      { korean: "논리적", romanization: "nollijeok", english: "Logical", sentence_kr: "논리적인 근거를 바탕으로 주장합니다.", sentence_en: "I argue based on logical grounds." },
+      { korean: "객관적", romanization: "gaekgwanjeok", english: "Objective", sentence_kr: "객관적인 데이터로 의사결정을 합니다.", sentence_en: "I make decisions based on objective data." },
+      { korean: "타당성", romanization: "tadangseong", english: "Validity", sentence_kr: "제안의 타당성을 검증했습니다.", sentence_en: "I verified the validity of the proposal." },
+      { korean: "모순", romanization: "mosun", english: "Contradiction", sentence_kr: "보고서에서 모순되는 부분을 발견했습니다.", sentence_en: "I found contradictory parts in the report." },
+      { korean: "근거", romanization: "geungeo", english: "Basis / evidence", sentence_kr: "충분한 근거를 가지고 결정을 내렸습니다.", sentence_en: "I made the decision with sufficient evidence." },
+      { korean: "통찰력", romanization: "tongchallyeok", english: "Insight", sentence_kr: "깊은 통찰력으로 시장 변화를 예측했습니다.", sentence_en: "I predicted market changes with deep insight." },
+      { korean: "관점", romanization: "gwanjeom", english: "Perspective", sentence_kr: "다양한 관점에서 문제를 바라봅니다.", sentence_en: "I look at problems from various perspectives." },
+      { korean: "함의", romanization: "hamui", english: "Implication", sentence_kr: "이 결과의 함의를 분석했습니다.", sentence_en: "I analyzed the implications of these results." },
+    ],
+  },
+  {
+    level: 6, category: "Formal Expressions (격식 표현)",
+    words: [
+      { korean: "견해", romanization: "gyeonhae", english: "View / opinion (formal)", sentence_kr: "이 문제에 대한 견해를 말씀해 주십시오.", sentence_en: "Please share your view on this matter." },
+      { korean: "수립하다", romanization: "suriphada", english: "To establish (formal)", sentence_kr: "장기적인 계획을 수립했습니다.", sentence_en: "I established a long-term plan." },
+      { korean: "도모하다", romanization: "domohada", english: "To pursue / promote", sentence_kr: "상호 발전을 도모하고자 합니다.", sentence_en: "I wish to pursue mutual development." },
+      { korean: "요망하다", romanization: "yomanghada", english: "To desire / request", sentence_kr: "적극적인 협조를 요망합니다.", sentence_en: "Active cooperation is requested." },
+      { korean: "취지", romanization: "chwiji", english: "Purpose / intent", sentence_kr: "이 정책의 취지를 설명하겠습니다.", sentence_en: "I will explain the purpose of this policy." },
+      { korean: "일환", romanization: "ilhwan", english: "Part of / as part of", sentence_kr: "혁신의 일환으로 시스템을 개편했습니다.", sentence_en: "We revamped the system as part of the innovation effort." },
+      { korean: "여지", romanization: "yeoji", english: "Room / possibility", sentence_kr: "개선의 여지가 충분합니다.", sentence_en: "There is plenty of room for improvement." },
+      { korean: "소신", romanization: "sosin", english: "Conviction / belief", sentence_kr: "소신을 가지고 의견을 말합니다.", sentence_en: "I speak my opinion with conviction." },
     ],
   },
 ];
@@ -879,15 +1016,20 @@ export default function RehamTrainingPanel() {
   const [learnedVocab, setLearnedVocab] = useState<Set<string>>(new Set());
 
   /* Flash Card state */
+  const [fcLevel, setFcLevel] = useState<TopikLevel | 0>(0); // 0 = all levels
   const [fcCategoryIdx, setFcCategoryIdx] = useState(0);
   const [fcCardIdx, setFcCardIdx] = useState(0);
   const [fcFlipped, setFcFlipped] = useState(false);
   const [fcShuffle, setFcShuffle] = useState(false);
   const [fcMastered, setFcMastered] = useState<Set<string>>(new Set());
-  const fcCategory = FLASHCARD_DATA[fcCategoryIdx];
+  const fcFiltered = useMemo(
+    () => fcLevel === 0 ? FLASHCARD_DATA : FLASHCARD_DATA.filter((c) => c.level === fcLevel),
+    [fcLevel],
+  );
+  const fcCategory = fcFiltered[fcCategoryIdx] || fcFiltered[0];
   const fcWords = useMemo(
-    () => (fcShuffle ? shuffleArray(fcCategory.words) : fcCategory.words),
-    [fcCategoryIdx, fcShuffle],
+    () => fcCategory ? (fcShuffle ? shuffleArray(fcCategory.words) : fcCategory.words) : [],
+    [fcCategory, fcShuffle],
   );
   const fcCurrent = fcWords[fcCardIdx] || fcWords[0];
 
@@ -979,7 +1121,7 @@ export default function RehamTrainingPanel() {
               <Languages className="h-3.5 w-3.5" /> Vocab
             </TabsTrigger>
             <TabsTrigger value="flashcards" className="gap-1 text-xs">
-              <Layers className="h-3.5 w-3.5" /> 2급 Cards
+              <Layers className="h-3.5 w-3.5" /> Flash Cards
             </TabsTrigger>
           </TabsList>
 
@@ -1689,18 +1831,18 @@ export default function RehamTrainingPanel() {
               </div>
             </ScrollArea>
           </TabsContent>
-          {/* ── Flash Cards Tab (TOPIK 2급) ── */}
+          {/* ── Flash Cards Tab (TOPIK 2급–6급) ── */}
           <TabsContent value="flashcards">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">TOPIK 2급</Badge>
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">TOPIK 2–6급</Badge>
                     Flash Cards
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {fcMastered.size} / {FLASHCARD_DATA.reduce((s, c) => s + c.words.length, 0)} words mastered
+                    {fcMastered.size} / {fcFiltered.reduce((s, c) => s + c.words.length, 0)} words mastered
                   </p>
                 </div>
                 <Button
@@ -1713,16 +1855,40 @@ export default function RehamTrainingPanel() {
                 </Button>
               </div>
 
+              {/* Level Selector */}
+              <div className="flex gap-1.5 items-center">
+                <span className="text-xs text-muted-foreground font-medium">Level:</span>
+                {([0, 2, 3, 4, 5, 6] as const).map((lv) => {
+                  const lvColors: Record<number, string> = {
+                    0: "", 2: "bg-green-100 text-green-800 border-green-300", 3: "bg-blue-100 text-blue-800 border-blue-300",
+                    4: "bg-purple-100 text-purple-800 border-purple-300", 5: "bg-orange-100 text-orange-800 border-orange-300",
+                    6: "bg-red-100 text-red-800 border-red-300",
+                  };
+                  return (
+                    <Button
+                      key={lv}
+                      size="sm"
+                      variant={fcLevel === lv ? "default" : "outline"}
+                      className={cn("text-xs h-7 px-2.5", fcLevel === lv && lv !== 0 && lvColors[lv])}
+                      onClick={() => { setFcLevel(lv as TopikLevel | 0); setFcCategoryIdx(0); setFcCardIdx(0); setFcFlipped(false); }}
+                    >
+                      {lv === 0 ? "All" : `${lv}급`}
+                    </Button>
+                  );
+                })}
+              </div>
+
               {/* Category Selector */}
               <div className="flex gap-2 flex-wrap">
-                {FLASHCARD_DATA.map((cat, i) => (
+                {fcFiltered.map((cat, i) => (
                   <Button
-                    key={cat.category}
+                    key={`${cat.level}-${cat.category}`}
                     size="sm"
                     variant={fcCategoryIdx === i ? "default" : "outline"}
                     className="text-xs h-7"
                     onClick={() => { setFcCategoryIdx(i); setFcCardIdx(0); setFcFlipped(false); }}
                   >
+                    {fcLevel === 0 && <span className="mr-1 opacity-60">{cat.level}급</span>}
                     {cat.category.split("(")[0].trim()}
                     <Badge variant="secondary" className="ml-1 text-[10px] h-4">
                       {cat.words.filter((w) => fcMastered.has(w.korean)).length}/{cat.words.length}
