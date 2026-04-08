@@ -1236,32 +1236,32 @@ export default function RehamTrainingPanel() {
       </CardHeader>
       <CardContent>
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="introduction" className="gap-1 text-xs">
+          <TabsList className="mb-4 grid h-auto w-full grid-cols-3 gap-1 md:inline-flex md:h-10 md:w-auto md:gap-0">
+            <TabsTrigger value="introduction" className="gap-1 text-xs py-2 md:py-1.5">
               <BookOpen className="h-3.5 w-3.5" /> Script
             </TabsTrigger>
-            <TabsTrigger value="practice" className="gap-1 text-xs">
+            <TabsTrigger value="practice" className="gap-1 text-xs py-2 md:py-1.5">
               <Mic className="h-3.5 w-3.5" /> Practice
             </TabsTrigger>
-            <TabsTrigger value="recap" className="gap-1 text-xs">
+            <TabsTrigger value="recap" className="gap-1 text-xs py-2 md:py-1.5">
               <ListChecks className="h-3.5 w-3.5" /> Recap
             </TabsTrigger>
-            <TabsTrigger value="quiz" className="gap-1 text-xs">
+            <TabsTrigger value="quiz" className="gap-1 text-xs py-2 md:py-1.5">
               <Brain className="h-3.5 w-3.5" /> Quiz
             </TabsTrigger>
-            <TabsTrigger value="mock" className="gap-1 text-xs">
+            <TabsTrigger value="mock" className="gap-1 text-xs py-2 md:py-1.5">
               <Timer className="h-3.5 w-3.5" /> Mock
             </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-1 text-xs">
+            <TabsTrigger value="categories" className="gap-1 text-xs py-2 md:py-1.5">
               <FolderOpen className="h-3.5 w-3.5" /> Categories
             </TabsTrigger>
-            <TabsTrigger value="cheatsheet" className="gap-1 text-xs">
+            <TabsTrigger value="cheatsheet" className="gap-1 text-xs py-2 md:py-1.5">
               <FileText className="h-3.5 w-3.5" /> Cheat Sheet
             </TabsTrigger>
-            <TabsTrigger value="vocabulary" className="gap-1 text-xs">
+            <TabsTrigger value="vocabulary" className="gap-1 text-xs py-2 md:py-1.5">
               <Languages className="h-3.5 w-3.5" /> Vocab
             </TabsTrigger>
-            <TabsTrigger value="flashcards" className="gap-1 text-xs">
+            <TabsTrigger value="flashcards" className="gap-1 text-xs py-2 md:py-1.5">
               <Layers className="h-3.5 w-3.5" /> Flash Cards
             </TabsTrigger>
             <TabsTrigger value="starred" className="gap-1 text-xs">
