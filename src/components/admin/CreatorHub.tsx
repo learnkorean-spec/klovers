@@ -22,9 +22,10 @@ import {
   GRID_PATTERN_META,
   getGridSlots,
   renderPost,
+  renderReelCover,
   preloadMascot,
 } from "@/lib/canvasRenderer";
-import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, isWhatsAppCTA, CAMPAIGN_CONFIGS, type MonthlyPostType, type GroupData, type CampaignDirection } from "@/lib/marketingEngine";
+import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, generateReelPublishingCopy, isWhatsAppCTA, CAMPAIGN_CONFIGS, type MonthlyPostType, type GroupData, type CampaignDirection, type ReelScript } from "@/lib/marketingEngine";
 import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
@@ -92,6 +93,8 @@ interface MonthlyDraftPost {
   approved: boolean; scheduledDate: string;
   templateName: TemplateName; themeName: ColorTheme;
   useWhatsApp: boolean;
+  isReel: boolean;
+  reelScript?: ReelScript;
 }
 
 const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; themeName: ColorTheme }> = {
@@ -563,7 +566,7 @@ export default function CreatorHub() {
           thm = BALANCE_THEME[tpl];
         }
         recentTemplates.push(tpl);
-        return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm, useWhatsApp: isWhatsAppCTA(post.postType) };
+        return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm, useWhatsApp: isWhatsAppCTA(post.postType), isReel: post.isReel, reelScript: post.reelScript };
       });
       setMonthlyDrafts(drafts);
       // Also set the posts array to drafts so the grid preview shows all 30
@@ -589,7 +592,7 @@ export default function CreatorHub() {
         thm = BALANCE_THEME[tpl];
       }
       recentTemplates.push(tpl);
-      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm, useWhatsApp: isWhatsAppCTA(post.postType) };
+      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm, useWhatsApp: isWhatsAppCTA(post.postType), isReel: post.isReel, reelScript: post.reelScript };
     });
     setMonthlyDrafts(drafts);
     const campaignName = CAMPAIGN_CONFIGS.find(c => c.id === selectedCampaign)?.name ?? "Balanced";
@@ -615,10 +618,28 @@ export default function CreatorHub() {
       }
       const captionBlocks = monthlyDrafts.map(generatePublishingCopy).join("\n\n");
       zip.file("captions.txt", captionBlocks);
+
+      // Reel scripts + covers
+      const reelDrafts = monthlyDrafts.filter(d => d.isReel && d.reelScript);
+      if (reelDrafts.length > 0) {
+        const reelScripts = reelDrafts.map(generateReelPublishingCopy).join("\n\n");
+        zip.file("reels-scripts.txt", reelScripts);
+        const reelFolder = zip.folder("reel-covers")!;
+        for (const post of reelDrafts) {
+          if (!post.reelScript) continue;
+          const c = document.createElement("canvas");
+          renderReelCover(c, post.reelScript);
+          const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
+          reelFolder.file(`${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-reel-cover.png`, blob);
+        }
+      }
+
+      const reelCount = reelDrafts.length;
+      const staticCount = monthlyDrafts.length - reelCount;
       const content = await zip.generateAsync({ type: "blob" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(content);
       a.download = `klovers-30posts-${new Date().toISOString().slice(0, 7)}.zip`; a.click();
-      toast({ title: "ZIP downloaded!", description: `${monthlyDrafts.length} posts × ${formatKeys.length} formats + captions ready.` });
+      toast({ title: "ZIP downloaded!", description: `${staticCount} posts + ${reelCount} reels × ${formatKeys.length} formats + scripts ready.` });
     } catch (err: any) {
       toast({ title: "Download error", description: err.message, variant: "destructive" });
     } finally { setBulkDownloading(false); }
@@ -997,6 +1018,7 @@ export default function CreatorHub() {
                     <div className="flex items-center gap-1 flex-wrap">
                       <Badge variant="secondary" className="text-[10px] font-bold">Day {draft.day}</Badge>
                       <Badge variant="outline" className="text-[10px] capitalize">{draft.postType.replace(/_/g, " ")}</Badge>
+                      {draft.isReel && <Badge className="text-[10px] bg-red-500 text-white border-0">🎬 Reel</Badge>}
                     </div>
                     <span className="text-[10px] text-muted-foreground">{draft.scheduledDate}</span>
                   </div>

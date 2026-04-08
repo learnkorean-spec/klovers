@@ -1584,6 +1584,97 @@ export function renderPost(
   ctx.textAlign = "left";
 }
 
+// ─── Reel Cover Renderer (3-frame storyboard) ───────────────────────────────
+
+export interface ReelSlide { text: string; }
+
+export function renderReelCover(
+  canvas: HTMLCanvasElement,
+  slides: { slide1: string; slide2: string; slide3: string },
+  bgImage?: HTMLImageElement | null,
+) {
+  const W = 1080, H = 1920;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+  const S = 1; // No scaling needed at native resolution
+
+  // ── Background ──
+  if (bgImage) {
+    // Draw Unsplash image stretched to cover
+    const imgR = bgImage.width / bgImage.height;
+    const canR = W / H;
+    let dw = W, dh = H;
+    if (imgR > canR) { dw = H * imgR; } else { dh = W / imgR; }
+    ctx.drawImage(bgImage, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    // Dark overlay
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Fallback: brand gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#111111");
+    grad.addColorStop(0.5, "#1a1a2e");
+    grad.addColorStop(1, "#111111");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  const pad = 60;
+  const slideH = H / 3;
+
+  // ── Yellow dividers ──
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillRect(pad, slideH - 2, W - pad * 2, 4);
+  ctx.fillRect(pad, slideH * 2 - 2, W - pad * 2, 4);
+
+  // ── Slide labels ──
+  const labels = ["HOOK · 3 sec", "CONTENT · 5 sec", "CTA · 3 sec"];
+  const slideTexts = [slides.slide1, slides.slide2, slides.slide3];
+
+  for (let i = 0; i < 3; i++) {
+    const y0 = slideH * i;
+
+    // Slide number badge
+    ctx.fillStyle = "#FFFF00";
+    rRect(ctx, pad, y0 + 30, 36, 36, 18);
+    ctx.fill();
+    ctx.font = "bold 20px 'Inter', 'Tahoma', sans-serif";
+    ctx.fillStyle = "#111111";
+    ctx.textAlign = "center";
+    ctx.fillText(String(i + 1), pad + 18, y0 + 53);
+    ctx.textAlign = "left";
+
+    // Label
+    ctx.font = "600 16px 'Inter', 'Tahoma', sans-serif";
+    ctx.fillStyle = "rgba(255,255,0,0.6)";
+    ctx.fillText(labels[i], pad + 48, y0 + 52);
+
+    // Slide text
+    ctx.font = "700 36px 'Inter', 'Tahoma', sans-serif";
+    ctx.fillStyle = "#ffffff";
+    wrapText(ctx, slideTexts[i], pad, y0 + 110, W - pad * 2, 48, 8);
+  }
+
+  // ── K badge (bottom-right) ──
+  const bR = 28;
+  ctx.fillStyle = "#FFFF00";
+  ctx.beginPath(); ctx.arc(W - pad - bR, H - 60, bR, 0, Math.PI * 2); ctx.fill();
+  ctx.font = "900 22px 'Inter', sans-serif";
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("K", W - pad - bR, H - 60);
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+
+  // ── Brand name (bottom-left) ──
+  ctx.font = "700 18px 'Inter', 'Tahoma', sans-serif";
+  ctx.fillStyle = "rgba(255,255,0,0.5)";
+  ctx.fillText("KLOVERS", pad, H - 50);
+  ctx.font = "400 14px 'Inter', 'Tahoma', sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.4)";
+  ctx.fillText("kloversegy.com", pad, H - 28);
+}
+
 // ─── Grid Pattern System ────────────────────────────────────────────────────
 
 export type GridPattern = "checkerboard" | "rows" | "columns" | "brand_mix" | "custom";

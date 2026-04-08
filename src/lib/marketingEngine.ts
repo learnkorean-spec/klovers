@@ -379,12 +379,120 @@ export type MonthlyPostType =
   | "tip"
   | "culture";
 
+export interface ReelScript {
+  slide1: string;
+  slide2: string;
+  slide3: string;
+  bgQuery: string;
+  audioSuggestion: string;
+}
+
 export interface MonthlyPost {
   id: string;
   day: number;
   postType: MonthlyPostType;
   template: PostTemplate;
   caption: string;
+  isReel: boolean;
+  reelScript?: ReelScript;
+}
+
+// Post types that work best as reels (visual, engaging, short-form)
+const REEL_PREFERRED_TYPES: Set<MonthlyPostType> = new Set([
+  "tip", "culture", "testimonial", "countdown", "faq",
+]);
+
+function generateReelScript(
+  postType: MonthlyPostType,
+  template: PostTemplate,
+  studentCount: string,
+  campaign: CampaignDirection,
+): ReelScript {
+  const url = enrollUrl(campaign, postType);
+  const trial = trialUrl(campaign);
+
+  switch (postType) {
+    case "tip":
+      return {
+        slide1: `Did you know this Korean word? 🇰🇷\n\n👆 Watch to learn`,
+        slide2: `${template.mainText}\n\n${template.subtitle}\n\n💡 Use it in your next conversation!`,
+        slide3: `Follow @klovers_academy for daily Korean tips!\n\n📲 Free class: ${trial}\n\n#KoreanWord #LearnKorean #Klovers`,
+        bgQuery: "korean hangul calligraphy",
+        audioSuggestion: "Trending K-pop instrumental or lo-fi Korean beats",
+      };
+    case "culture":
+      return {
+        slide1: `K-Drama fans, this one's for you 🎬\n\n👆 Keep watching`,
+        slide2: `${template.mainText}\n\n${template.subtitle}`,
+        slide3: `Learn Korean to experience K-culture fully! 🇰🇷\n\n📲 Free trial: ${trial}\n\n#KCulture #KPop #LearnKorean`,
+        bgQuery: "korean temple palace seoul",
+        audioSuggestion: "Popular K-drama OST or trending K-pop",
+      };
+    case "testimonial":
+      return {
+        slide1: `This student went from zero Korean to... 🤯\n\n👆 Hear their story`,
+        slide2: `${template.mainText}\n\n${template.subtitle}\n\n⭐ Join ${studentCount} students`,
+        slide3: `Ready to write YOUR success story? 🇰🇷\n\n📲 Free trial: ${trial}\n\n#StudentSuccess #Klovers`,
+        bgQuery: "happy students celebration",
+        audioSuggestion: "Inspirational background music",
+      };
+    case "countdown":
+      return {
+        slide1: `⏰ LAST CHANCE! Registration closing soon...\n\n👆 Don't miss this`,
+        slide2: `${template.mainText}\n\n${template.subtitle}\n\n🔥 ${studentCount} students already enrolled`,
+        slide3: `Secure your seat NOW before it's too late!\n\n📲 ${url}\n\n#LastChance #KoreanCourse`,
+        bgQuery: "alarm clock urgency",
+        audioSuggestion: "Dramatic countdown music or ticking clock sound",
+      };
+    case "faq":
+      return {
+        slide1: `"${template.mainText}" 🤔\n\n👆 Here's the truth`,
+        slide2: `${template.subtitle}\n\n✅ ${studentCount} students chose Klovers\n✅ Certified teachers\n✅ Small groups`,
+        slide3: `Try a FREE class and see for yourself!\n\n📲 ${trial}\n\n#KoreanFAQ #LearnKorean`,
+        bgQuery: "korean study books",
+        audioSuggestion: "Conversational background music",
+      };
+    case "empty_slots":
+      return {
+        slide1: `🔥 Seats are filling up FAST!\n\n👆 Check availability`,
+        slide2: `${template.mainText}\n\n${template.subtitle}\n\n✅ ${studentCount} students trust Klovers`,
+        slide3: `Register before your seat is taken!\n\n📲 ${url}\n\n#LearnKorean #Klovers`,
+        bgQuery: "empty classroom seats",
+        audioSuggestion: "Urgency sound effect + upbeat music",
+      };
+    case "discount":
+      return {
+        slide1: `We're giving THIS away... 🏷️\n\n👆 Watch to save`,
+        slide2: `${template.mainText}\n\n${template.subtitle}\n\n⏳ Limited time only`,
+        slide3: `Grab your discount NOW!\n\n📲 ${url}\n\n#KoreanDiscount #Klovers`,
+        bgQuery: "sale discount celebration",
+        audioSuggestion: "Exciting deal reveal music",
+      };
+    case "referral":
+      return {
+        slide1: `Want a FREE Korean class? 🎁\n\n👆 Here's how`,
+        slide2: `1️⃣ Share this reel\n2️⃣ Your friend enrolls\n3️⃣ BOTH get a free session!\n\nIt's that simple.`,
+        slide3: `DM us on WhatsApp to get started!\n\n📲 ${whatsappUrl(campaign, postType)}\n\n#ReferAFriend #Klovers`,
+        bgQuery: "friends together happy",
+        audioSuggestion: "Feel-good friendship music",
+      };
+    case "invite_student":
+      return {
+        slide1: `TAG someone who needs Korean in their life! 👇\n\n🇰🇷`,
+        slide2: `What they'll get:\n✅ Read Korean in 2 hours\n✅ Speak from week 1\n✅ Small group + certified teacher`,
+        slide3: `Share this reel with them NOW!\n\n📲 ${whatsappUrl(campaign, postType)}\n\n#LearnKorean #Klovers`,
+        bgQuery: "welcome greeting invitation",
+        audioSuggestion: "Upbeat social media trending audio",
+      };
+    default:
+      return {
+        slide1: `Learn Korean with Klovers! 🇰🇷`,
+        slide2: `${template.mainText}\n\n${template.subtitle}`,
+        slide3: `📲 ${url}\n\n#LearnKorean #Klovers`,
+        bgQuery: "korea seoul",
+        audioSuggestion: "K-pop instrumental",
+      };
+  }
 }
 
 // 30-day posting schedule — mixed sales + engagement content
@@ -711,7 +819,11 @@ export function generateMonthlyPlan(
       }
     }
 
-    return { id: `monthly-${day}`, day, postType: type, template: template!, caption };
+    // Alternate reel/static: odd days = reel (if post type is reel-friendly), even = static
+    const isReel = (day % 2 === 0) && REEL_PREFERRED_TYPES.has(type);
+    const reelScript = isReel ? generateReelScript(type, template!, sc, campaign) : undefined;
+
+    return { id: `monthly-${day}`, day, postType: type, template: template!, caption, isReel, reelScript };
   });
 }
 
@@ -751,6 +863,21 @@ export function generatePublishingCopy(post: {
     ? new Date(post.scheduledDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     : "";
   return `=== Day ${post.day} — ${label} ===\n📅 ${date}\n\n${post.caption}\n\n---`;
+}
+
+export function generateReelPublishingCopy(post: {
+  day: number;
+  postType: MonthlyPostType;
+  scheduledDate: string;
+  reelScript?: ReelScript;
+}): string {
+  if (!post.reelScript) return "";
+  const label = POST_TYPE_LABELS[post.postType];
+  const date = post.scheduledDate
+    ? new Date(post.scheduledDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    : "";
+  const rs = post.reelScript;
+  return `=== Day ${post.day} — ${label} (REEL) ===\n📅 ${date}\n\n🎬 SLIDE 1 (Hook — 3 sec):\n${rs.slide1}\n\n🎬 SLIDE 2 (Content — 5 sec):\n${rs.slide2}\n\n🎬 SLIDE 3 (CTA — 3 sec):\n${rs.slide3}\n\n🎵 Audio: ${rs.audioSuggestion}\n📸 Background: ${rs.bgQuery}\n\n---`;
 }
 
 // ─── Story Script (3-slide) ───
