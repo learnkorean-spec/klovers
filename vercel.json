@@ -29,7 +29,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!api|assets|videos|klovers-logo\\.jpg|favicon\\.ico|placeholder\\.svg|robots\\.txt|sitemap\\.xml|8f8e25f6c4d7b10abab899f355a7e529\\.txt).*)",
+      "source": "/((?!api|assets|videos|klovers-logo\\.jpg|klovers-mascot\\.svg|favicon\\.ico|placeholder\\.svg|robots\\.txt|sitemap\\.xml|8f8e25f6c4d7b10abab899f355a7e529\\.txt).*)",
       "destination": "/index.html"
     }
   ],
