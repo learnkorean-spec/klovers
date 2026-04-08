@@ -25,20 +25,22 @@ interface ScriptLine {
 
 const SELF_INTRO_LINES: ScriptLine[] = [
   { id: 1, section: "Greeting", korean: "안녕하세요, 제 이름은 리함입니다.", english: "Hello, my name is Reham." },
-  { id: 2, section: "Summary", korean: "저는 12년 이상의 국제 경험을 가진 Operations 및 Sales Operations 전문가입니다.", english: "I am an Operations and Sales Operations specialist with over 12 years of international experience." },
-  { id: 3, section: "Summary", korean: "현재는 웹 개발과 디지털 프로젝트도 함께 진행하고 있습니다.", english: "Currently, I am also working on web development and digital projects." },
-  { id: 4, section: "Projects", korean: "특히 Explore-Saudi 프로젝트에서는 웹사이트 구조 설계, SEO 최적화, 그리고 데이터 품질 개선을 직접 담당했습니다.", english: "In the Explore-Saudi project, I was directly responsible for website structure design, SEO optimization, and data quality improvement." },
-  { id: 5, section: "Languages", korean: "여러 언어 환경에서 일해왔기 때문에 언어의 정확성과 맥락의 중요성을 잘 이해하고 있습니다.", english: "Having worked in multilingual environments, I understand the importance of language accuracy and context." },
-  { id: 6, section: "Motivation", korean: "이 역할에 관심이 있는 이유는 데이터 품질이 AI 시스템의 성능에 직접적인 영향을 준다고 생각하기 때문입니다.", english: "I am interested in this role because I believe data quality directly impacts AI system performance." },
-  { id: 7, section: "Motivation", korean: "저는 이전 경험을 통해 정확성과 일관성을 유지하는 것이 얼마나 중요한지 배웠습니다.", english: "Through my previous experience, I learned how important it is to maintain accuracy and consistency." },
-  { id: 8, section: "Accenture", korean: "Accenture에서 콘텐츠 모더레이터로 근무하면서 하루 최대 800개의 데이터를 처리하며 95% 이상의 정확도를 유지했습니다.", english: "As a content moderator at Accenture, I processed up to 800 data items per day while maintaining over 95% accuracy." },
-  { id: 9, section: "Kerry", korean: "또한 Kerry Logistics에서는 월 1,000건 이상의 주문을 96% 이상의 정확도로 관리했습니다.", english: "At Kerry Logistics, I managed over 1,000 orders per month with over 96% accuracy." },
-  { id: 10, section: "Kerry", korean: "이러한 경험을 통해 대량 데이터 속에서도 높은 품질을 유지하는 능력을 갖추게 되었습니다.", english: "Through these experiences, I developed the ability to maintain high quality even with large volumes of data." },
-  { id: 11, section: "Web Dev", korean: "또한 웹 개발 프로젝트에서는 SEO와 콘텐츠 구조를 최적화하며 데이터의 일관성과 정확성을 지속적으로 개선했습니다.", english: "In web development projects, I continuously improved data consistency and accuracy by optimizing SEO and content structure." },
-  { id: 12, section: "Strengths", korean: "제 강점은 세부 사항에 대한 높은 집중력과 체계적인 분석 능력입니다.", english: "My strengths are a high level of attention to detail and systematic analytical ability." },
-  { id: 13, section: "Strengths", korean: "또한 다양한 문화와 언어 환경에서 협업해온 경험을 바탕으로, 맥락을 이해하며 데이터를 평가할 수 있습니다.", english: "With experience collaborating in diverse cultural and linguistic environments, I can evaluate data with contextual understanding." },
-  { id: 14, section: "Strengths", korean: "새로운 시스템에도 빠르게 적응하는 편입니다.", english: "I also adapt quickly to new systems." },
-  { id: 15, section: "Closing", korean: "이 기회를 주셔서 감사합니다. 제 경험과 언어 능력을 통해 이 역할에 의미 있는 기여를 할 수 있다고 생각합니다. 감사합니다.", english: "Thank you for this opportunity. I believe I can make a meaningful contribution to this role through my experience and language skills. Thank you." },
+  { id: 2, section: "Education", korean: "저는 이집트 출신이며, 아인샴스 대학교에서 한국어학 및 한국문학을 전공했습니다.", english: "I am from Egypt and majored in Korean Linguistics and Literature at Ain Shams University." },
+  { id: 3, section: "Summary", korean: "저는 13년 이상의 국제 경험을 가진 Operations 및 Sales Operations 전문가입니다.", english: "I am an Operations and Sales Operations specialist with over 13 years of international experience." },
+  { id: 4, section: "Summary", korean: "이집트, 말레이시아, 헝가리에서 근무하며 다양한 산업 분야에서 경력을 쌓았습니다.", english: "I have built my career across diverse industries, working in Egypt, Malaysia, and Hungary." },
+  { id: 5, section: "Summary", korean: "현재는 웹 개발과 디지털 프로젝트도 함께 진행하고 있습니다.", english: "Currently, I am also working on web development and digital projects." },
+  { id: 6, section: "Projects", korean: "특히 Explore-Saudi 프로젝트에서는 웹사이트 구조 설계, SEO 최적화, 그리고 데이터 품질 개선을 직접 담당했습니다.", english: "In the Explore-Saudi project, I was directly responsible for website structure design, SEO optimization, and data quality improvement." },
+  { id: 7, section: "Languages", korean: "아랍어, 한국어, 영어를 포함하여 6개 언어를 구사할 수 있으며, 여러 언어 환경에서 일해왔기 때문에 언어의 정확성과 맥락의 중요성을 잘 이해하고 있습니다.", english: "I speak 6 languages including Arabic, Korean, and English, and having worked in multilingual environments, I understand the importance of language accuracy and context." },
+  { id: 8, section: "Motivation", korean: "이 역할에 관심이 있는 이유는 데이터 품질이 AI 시스템의 성능에 직접적인 영향을 준다고 생각하기 때문입니다.", english: "I am interested in this role because I believe data quality directly impacts AI system performance." },
+  { id: 9, section: "Motivation", korean: "저는 이전 경험을 통해 정확성과 일관성을 유지하는 것이 얼마나 중요한지 배웠습니다.", english: "Through my previous experience, I learned how important it is to maintain accuracy and consistency." },
+  { id: 10, section: "Accenture", korean: "Accenture에서 콘텐츠 모더레이터로 근무하면서 하루 최대 800개의 데이터를 처리하며 95% 이상의 정확도를 유지했습니다.", english: "As a content moderator at Accenture, I processed up to 800 data items per day while maintaining over 95% accuracy." },
+  { id: 11, section: "Kerry", korean: "또한 Kerry에서 F&B 분야 다국적 고객사의 주문 관리를 담당하며 월 1,000건 이상의 주문을 96% 이상의 정확도로 관리했습니다.", english: "At Kerry, I managed order operations for multinational F&B clients, handling over 1,000 orders per month with over 96% accuracy." },
+  { id: 12, section: "Kerry", korean: "이러한 경험을 통해 대량 데이터 속에서도 높은 품질을 유지하는 능력을 갖추게 되었습니다.", english: "Through these experiences, I developed the ability to maintain high quality even with large volumes of data." },
+  { id: 13, section: "Web Dev", korean: "또한 웹 개발 프로젝트에서는 SEO와 콘텐츠 구조를 최적화하며 데이터의 일관성과 정확성을 지속적으로 개선했습니다.", english: "In web development projects, I continuously improved data consistency and accuracy by optimizing SEO and content structure." },
+  { id: 14, section: "Strengths", korean: "제 강점은 세부 사항에 대한 높은 집중력과 체계적인 분석 능력입니다.", english: "My strengths are a high level of attention to detail and systematic analytical ability." },
+  { id: 15, section: "Strengths", korean: "또한 다양한 문화와 언어 환경에서 협업해온 경험을 바탕으로, 맥락을 이해하며 데이터를 평가할 수 있습니다.", english: "With experience collaborating in diverse cultural and linguistic environments, I can evaluate data with contextual understanding." },
+  { id: 16, section: "Strengths", korean: "새로운 시스템에도 빠르게 적응하는 편입니다.", english: "I also adapt quickly to new systems." },
+  { id: 17, section: "Closing", korean: "이 기회를 주셔서 감사합니다. 제 경험과 언어 능력을 통해 이 역할에 의미 있는 기여를 할 수 있다고 생각합니다. 감사합니다.", english: "Thank you for this opportunity. I believe I can make a meaningful contribution to this role through my experience and language skills. Thank you." },
 ];
 
 /* ─── Data: Interview Conversation Exchanges ─── */
@@ -57,8 +59,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Self Introduction",
     interviewer: { korean: "자기소개를 해 주세요.", english: "Please introduce yourself." },
     reham: {
-      korean: "안녕하세요, 제 이름은 리함입니다. 저는 12년 이상의 국제 경험을 가진 Operations 및 Sales Operations 전문가이며, 현재는 웹 개발과 디지털 프로젝트도 함께 진행하고 있습니다.",
-      english: "Hello, my name is Reham. I am an Operations and Sales Operations specialist with over 12 years of international experience, and I am currently also working on web development and digital projects.",
+      korean: "안녕하세요, 제 이름은 리함입니다. 저는 이집트 출신이며, 아인샴스 대학교에서 한국어학 및 한국문학을 전공했습니다. 13년 이상의 국제 경험을 가진 Operations 및 Sales Operations 전문가이며, 이집트, 말레이시아, 헝가리에서 근무한 경험이 있습니다. 현재는 웹 개발과 디지털 프로젝트도 함께 진행하고 있습니다.",
+      english: "Hello, my name is Reham. I am from Egypt and majored in Korean Linguistics and Literature at Ain Shams University. I am an Operations and Sales Operations specialist with over 13 years of international experience, having worked in Egypt, Malaysia, and Hungary. I am currently also working on web development and digital projects.",
     },
   },
   {
@@ -76,8 +78,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Data Accuracy",
     interviewer: { korean: "데이터 처리 정확도에 대해 말씀해 주세요.", english: "Please tell me about your data handling accuracy." },
     reham: {
-      korean: "Accenture에서 콘텐츠 모더레이터로 근무하면서 하루 최대 800개의 데이터를 처리하며 95% 이상의 정확도를 유지했습니다. 또한 Kerry Logistics에서는 월 1,000건 이상의 주문을 96% 이상의 정확도로 관리했습니다.",
-      english: "At Accenture, I processed up to 800 data items per day as a content moderator while maintaining over 95% accuracy. At Kerry Logistics, I managed over 1,000 orders per month with over 96% accuracy.",
+      korean: "Accenture에서 콘텐츠 모더레이터로 근무하면서 하루 최대 800개의 데이터를 처리하며 95% 이상의 정확도를 유지했습니다. 또한 Kerry에서는 월 1,000건 이상의 주문을 96% 이상의 정확도로 관리했습니다.",
+      english: "At Accenture, I processed up to 800 data items per day as a content moderator while maintaining over 95% accuracy. At Kerry, I managed over 1,000 orders per month with over 96% accuracy.",
     },
   },
   {
@@ -133,8 +135,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Problem Solving",
     interviewer: { korean: "어려운 문제를 해결했던 경험을 말씀해 주세요.", english: "Tell me about a time you solved a difficult problem." },
     reham: {
-      korean: "Kerry Logistics에서 주문 오류율이 갑자기 증가했을 때, 저는 데이터를 분석하여 특정 공급업체의 입력 형식 변경이 원인임을 파악했습니다. 즉시 검증 규칙을 업데이트하고 팀에 교육을 실시하여 일주일 내에 오류율을 정상 수준으로 복원했습니다.",
-      english: "When order error rates suddenly increased at Kerry Logistics, I analyzed the data and identified that a specific supplier's input format change was the cause. I immediately updated validation rules and trained the team, restoring error rates to normal within a week.",
+      korean: "Kerry에서 주문 오류율이 갑자기 증가했을 때, 저는 데이터를 분석하여 특정 공급업체의 입력 형식 변경이 원인임을 파악했습니다. 즉시 검증 규칙을 업데이트하고 팀에 교육을 실시하여 일주일 내에 오류율을 정상 수준으로 복원했습니다.",
+      english: "When order error rates suddenly increased at Kerry, I analyzed the data and identified that a specific supplier's input format change was the cause. I immediately updated validation rules and trained the team, restoring error rates to normal within a week.",
     },
   },
   {
@@ -151,8 +153,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Handling Pressure",
     interviewer: { korean: "마감 기한이 촉박한 상황에서 어떻게 대처하셨나요?", english: "How did you handle a situation with a tight deadline?" },
     reham: {
-      korean: "Kerry Logistics에서 월말 마감 시 주문량이 평소의 두 배로 증가한 적이 있습니다. 저는 작업을 긴급도별로 분류하고, 반복 작업을 자동화하는 간단한 템플릿을 만들어 팀과 공유했습니다. 이를 통해 마감 기한 내에 모든 주문을 정확하게 처리할 수 있었습니다.",
-      english: "At Kerry Logistics, month-end order volume doubled. I categorized tasks by urgency, created simple templates to automate repetitive work, and shared them with the team. This enabled us to process all orders accurately within the deadline.",
+      korean: "Kerry에서 월말 마감 시 주문량이 평소의 두 배로 증가한 적이 있습니다. 저는 작업을 긴급도별로 분류하고, 반복 작업을 자동화하는 간단한 템플릿을 만들어 팀과 공유했습니다. 이를 통해 마감 기한 내에 모든 주문을 정확하게 처리할 수 있었습니다.",
+      english: "At Kerry, month-end order volume doubled. I categorized tasks by urgency, created simple templates to automate repetitive work, and shared them with the team. This enabled us to process all orders accurately within the deadline.",
     },
   },
   {
@@ -235,8 +237,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "SAP ERP Experience",
     interviewer: { korean: "SAP ERP 시스템 사용 경험에 대해 자세히 말씀해 주세요.", english: "Please tell me in detail about your SAP ERP experience." },
     reham: {
-      korean: "Kerry Logistics에서 SAP ERP의 Order-to-Cash 모듈을 3년 이상 사용했습니다. 주문 입력, 배송 처리, 송장 발행까지 전체 프로세스를 관리했으며, 다국가 포트폴리오에서 Oil & Energy, F&B 산업의 복잡한 워크플로우를 처리했습니다. 또한 신입 팀원 10~15명에게 SAP 시스템 교육을 직접 진행했습니다.",
-      english: "At Kerry Logistics, I used SAP ERP's Order-to-Cash module for over 3 years. I managed the entire process from order entry, shipment processing, to invoicing, handling complex workflows across multi-country portfolios in Oil & Energy and F&B industries. I also personally trained 10-15 new team members on SAP systems.",
+      korean: "Kerry에서 SAP ERP의 Order-to-Cash 모듈을 3년 이상 사용했습니다. 주문 입력, 배송 처리, 송장 발행까지 전체 프로세스를 관리했으며, 다국가 포트폴리오에서 Oil & Energy, F&B 산업의 복잡한 워크플로우를 처리했습니다. 또한 신입 팀원 10~15명에게 SAP 시스템 교육을 직접 진행했습니다.",
+      english: "At Kerry, I used SAP ERP's Order-to-Cash module for over 3 years. I managed the entire process from order entry, shipment processing, to invoicing, handling complex workflows across multi-country portfolios in Oil & Energy and F&B industries. I also personally trained 10-15 new team members on SAP systems.",
     },
   },
   {
@@ -253,11 +255,11 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Process Optimization",
     interviewer: { korean: "운영 프로세스를 개선했던 구체적인 사례를 말씀해 주세요.", english: "Give me a specific example of how you improved an operational process." },
     reham: {
-      korean: "Kerry Logistics에서 주문 처리 시 반복되는 수작업 오류를 발견했습니다. 표준화된 검증 체크리스트를 만들고, 자주 사용하는 주문 유형에 대한 템플릿을 도입했습니다. 이를 통해 처리 시간을 30% 단축하고 오류율을 크게 줄였습니다. 이 체크리스트는 이후 팀 전체의 표준 절차가 되었습니다.",
-      english: "At Kerry Logistics, I identified recurring manual errors in order processing. I created a standardized verification checklist and introduced templates for frequently used order types. This reduced processing time by 30% and significantly lowered error rates. The checklist later became the standard procedure for the entire team.",
+      korean: "Kerry에서 주문 처리 시 반복되는 수작업 오류를 발견했습니다. 표준화된 검증 체크리스트를 만들고, 자주 사용하는 주문 유형에 대한 템플릿을 도입했습니다. 이를 통해 처리 시간을 30% 단축하고 오류율을 크게 줄였습니다. 이 체크리스트는 이후 팀 전체의 표준 절차가 되었습니다.",
+      english: "At Kerry, I identified recurring manual errors in order processing. I created a standardized verification checklist and introduced templates for frequently used order types. This reduced processing time by 30% and significantly lowered error rates. The checklist later became the standard procedure for the entire team.",
     },
   },
-  /* ── Kerry Logistics Specific ── */
+  /* ── Kerry (F&B) Specific ── */
   {
     id: 23,
     topic: "Client Management",
@@ -329,8 +331,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Training & Development",
     interviewer: { korean: "팀원 교육 및 역량 개발 경험에 대해 말씀해 주세요.", english: "Tell me about your experience in training and developing team members." },
     reham: {
-      korean: "Kerry Logistics에서 신입 팀원 10~15명에게 SAP 시스템과 운영 절차를 교육했습니다. 교육 자료를 직접 만들고, 단계별 학습 프로그램을 설계했습니다. 또한 Klovers에서 13년간 다양한 수준의 학생들을 가르치며 개인별 맞춤 교육 방법을 개발했습니다. 사람마다 학습 스타일이 다르기 때문에 다양한 접근법을 사용합니다.",
-      english: "At Kerry Logistics, I trained 10-15 new team members on SAP systems and operational procedures. I created training materials and designed step-by-step learning programs. Additionally, at Klovers I've taught diverse-level students for 13 years, developing personalized teaching methods. Since everyone has different learning styles, I use various approaches.",
+      korean: "Kerry에서 신입 팀원 10~15명에게 SAP 시스템과 운영 절차를 교육했습니다. 교육 자료를 직접 만들고, 단계별 학습 프로그램을 설계했습니다. 또한 Klovers에서 13년간 다양한 수준의 학생들을 가르치며 개인별 맞춤 교육 방법을 개발했습니다. 사람마다 학습 스타일이 다르기 때문에 다양한 접근법을 사용합니다.",
+      english: "At Kerry, I trained 10-15 new team members on SAP systems and operational procedures. I created training materials and designed step-by-step learning programs. Additionally, at Klovers I've taught diverse-level students for 13 years, developing personalized teaching methods. Since everyone has different learning styles, I use various approaches.",
     },
   },
   /* ── Explore-Saudi & Digital ── */
@@ -413,8 +415,8 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Why Should We Hire You",
     interviewer: { korean: "저희가 왜 당신을 채용해야 하나요?", english: "Why should we hire you?" },
     reham: {
-      korean: "저는 12년 이상의 국제 운영 경험, 6개 언어 구사 능력, 그리고 검증된 데이터 처리 정확도를 갖추고 있습니다. Kerry에서 96% 이상의 주문 정확도, Accenture에서 95% 이상의 품질 정확도를 달성했습니다. SAP ERP 전문성, 웹 개발 역량, 그리고 13년간의 커뮤니티 리더십 경험까지 결합하면, 다양한 역할에서 즉시 가치를 제공할 수 있습니다.",
-      english: "I bring 12+ years of international operations experience, fluency in 6 languages, and proven data processing accuracy. I achieved 96%+ order accuracy at Kerry and 95%+ quality accuracy at Accenture. Combined with SAP ERP expertise, web development skills, and 13 years of community leadership, I can deliver immediate value across diverse roles.",
+      korean: "저는 13년 이상의 국제 운영 경험, 6개 언어 구사 능력, 그리고 검증된 데이터 처리 정확도를 갖추고 있습니다. Kerry에서 96% 이상의 주문 정확도, Accenture에서 95% 이상의 품질 정확도를 달성했습니다. SAP ERP 전문성, 웹 개발 역량, 그리고 13년간의 커뮤니티 리더십 경험까지 결합하면, 다양한 역할에서 즉시 가치를 제공할 수 있습니다.",
+      english: "I bring 13+ years of international operations experience, fluency in 6 languages, and proven data processing accuracy. I achieved 96%+ order accuracy at Kerry and 95%+ quality accuracy at Accenture. Combined with SAP ERP expertise, web development skills, and 13 years of community leadership, I can deliver immediate value across diverse roles.",
     },
   },
   /* ── Closing ── */
@@ -432,8 +434,98 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     topic: "Closing",
     interviewer: { korean: "마지막으로 하고 싶은 말씀이 있으신가요?", english: "Any final words you'd like to share?" },
     reham: {
-      korean: "이 기회를 주셔서 감사합니다. 제 경험과 언어 능력을 통해 이 역할에 의미 있는 기여를 할 수 있다고 생각합니다. 데이터 품질에 대한 열정과 12년 이상의 운영 경험을 바탕으로 팀에 가치를 더할 수 있다고 확신합니다. 감사합니다.",
-      english: "Thank you for this opportunity. I believe I can make a meaningful contribution through my experience and language skills. I am confident I can add value to the team with my passion for data quality and over 12 years of operational experience. Thank you.",
+      korean: "이 기회를 주셔서 감사합니다. 제 경험과 언어 능력을 통해 이 역할에 의미 있는 기여를 할 수 있다고 생각합니다. 데이터 품질에 대한 열정과 13년 이상의 운영 경험을 바탕으로 팀에 가치를 더할 수 있다고 확신합니다. 감사합니다.",
+      english: "Thank you for this opportunity. I believe I can make a meaningful contribution through my experience and language skills. I am confident I can add value to the team with my passion for data quality and over 13 years of operational experience. Thank you.",
+    },
+  },
+  /* ── El Zenouki / Interpretation ── */
+  {
+    id: 42,
+    topic: "Interpretation Experience",
+    interviewer: { korean: "통역 경험에 대해 말씀해 주세요.", english: "Please tell me about your interpretation experience." },
+    reham: {
+      korean: "El Zenouki Group에서 통역 서비스 코디네이터로 근무하며 아랍어, 한국어, 영어 간의 전문 통역을 담당했습니다. 국제 비즈니스 미팅과 기술 협의에서 주요 소통 역할을 수행했으며, 다국어 서신 관리와 국제 프로젝트 조율을 통해 원활한 협업을 보장했습니다.",
+      english: "At El Zenouki Group, I served as Interpreter Services Coordinator, providing professional interpretation between Arabic, Korean, and English. I was the primary communication link for international business meetings and technical discussions, managing multilingual correspondence and international project coordination.",
+    },
+  },
+  /* ── Golden Dragon / International Trade ── */
+  {
+    id: 43,
+    topic: "International Trade",
+    interviewer: { korean: "수출 및 무역 경험에 대해 말씀해 주세요.", english: "Please tell me about your export and trade experience." },
+    reham: {
+      korean: "Golden Dragon에서 리테일 총괄 매니저로 장어 및 수산물의 국제 수출 운영을 관리했습니다. 국제 무역 규정과 위생 기준을 철저히 준수하면서 글로벌 물류와 선적을 조율했습니다. 또한 다국어로 계약 협상과 공급업체 관리를 수행하여 운영 효율성을 최적화했습니다.",
+      english: "At Golden Dragon, as Retail General Manager, I managed international export operations for eels and seafood products. I ensured strict compliance with international trade regulations and health standards while coordinating global logistics and shipments. I also led contract negotiations and supplier management in multiple languages.",
+    },
+  },
+  /* ── ERC / Large Team Administration ── */
+  {
+    id: 44,
+    topic: "Large Team Management",
+    interviewer: { korean: "50명 규모의 팀을 관리한 경험에 대해 말씀해 주세요.", english: "Tell me about your experience managing a team of 50 people." },
+    reham: {
+      korean: "Egyptian Refining Company(ERC)에서 DAEAH E&C와 협력하여 50명 규모의 행정 부서를 총괄했습니다. 프로젝트의 주요 연락 창구로서 행정팀, 경영진, 외부 이해관계자 간의 소통을 중앙 집중화했습니다. 모든 사무 서비스 감독, 조달 관리, 벤더 청구 관리를 담당하며 고압적인 산업 환경에서 운영 안정성을 유지했습니다.",
+      english: "At ERC, collaborating with DAEAH E&C, I led an administrative department of 50 on-site personnel for a major Oil & Energy project. As the primary contact point, I centralized communication between the admin team, executive leadership, and external stakeholders. I supervised all office services, managed procurement and vendor billing, maintaining operational stability in a high-pressure industrial environment.",
+    },
+  },
+  /* ── Teaching Abroad ── */
+  {
+    id: 45,
+    topic: "Teaching Abroad",
+    interviewer: { korean: "해외에서 아랍어를 가르친 경험에 대해 말씀해 주세요.", english: "Tell me about your experience teaching Arabic abroad." },
+    reham: {
+      korean: "헝가리 부다페스트의 Nur School에서 영어 및 헝가리어를 사용하는 성인들에게 집중적인 아랍어 교육을 진행했습니다. 읽기, 쓰기, 말하기, 듣기를 포함한 맞춤형 커리큘럼을 개발하여 문화적, 언어적 차이를 극복했습니다. 이 경험을 통해 다양한 국제 환경에서의 적응력과 교육 리더십을 기를 수 있었습니다.",
+      english: "At Nur School in Budapest, Hungary, I facilitated intensive Arabic language training for English and Hungarian-speaking adults. I developed customized curriculum covering reading, writing, speaking, and listening to bridge cultural and linguistic gaps. This experience demonstrated my adaptability and instructional leadership in a diverse international setting.",
+    },
+  },
+  /* ── GLC Europe / Conference Sales ── */
+  {
+    id: 46,
+    topic: "B2B Sales",
+    interviewer: { korean: "B2B 영업 경험에 대해 말씀해 주세요.", english: "Tell me about your B2B sales experience." },
+    reham: {
+      korean: "GLC Europe에서 유럽 시장을 대상으로 고급 기업 컨퍼런스 및 전문 교육 프로그램의 홍보와 영업을 담당했습니다. 주요 업계 리더 및 의사결정자를 발굴하고 국제 행사에 대한 등록과 파트너십을 유도했습니다. 강한 설득력 있는 커뮤니케이션 능력과 시장 조사 역량이 요구되는 역할이었습니다.",
+      english: "At GLC Europe, I managed the promotion and sales of high-end corporate conferences and professional training programs across the European market. I identified and engaged key industry leaders and decision-makers to drive registrations and partnerships for international events. This role required strong persuasive communication and market research skills.",
+    },
+  },
+  /* ── Korean Cultural Centre ── */
+  {
+    id: 47,
+    topic: "Cultural Events & Interpretation",
+    interviewer: { korean: "한국문화원에서의 통역 및 행사 기획 경험에 대해 말씀해 주세요.", english: "Tell me about your interpretation and event planning experience at the Korean Cultural Centre." },
+    reham: {
+      korean: "카이로 한국문화원에서 2년 8개월간 대규모 문화 축제, 전시회, 기업 쇼케이스의 통역과 행사 기획을 담당했습니다. 국제 공연자, 기술팀, VIP 손님을 위한 주요 통역사로 활동하며 대규모 공공 행사의 원활한 운영을 보장했습니다. 다국어 행사 프로그래밍과 문화 교류 촉진을 통해 국제 문화 인식을 높이는 데 기여했습니다.",
+      english: "At the Korean Cultural Centre in Cairo, I managed interpretation and event planning for cultural festivals, exhibitions, and corporate showcases for over 2.5 years. I served as the primary interpreter for international performers, technical teams, and VIP guests, ensuring seamless operations during large public events. I facilitated multilingual event programming and cross-cultural exchanges to promote international cultural awareness.",
+    },
+  },
+  /* ── Education Background ── */
+  {
+    id: 48,
+    topic: "Education",
+    interviewer: { korean: "학력에 대해 말씀해 주세요.", english: "Please tell me about your educational background." },
+    reham: {
+      korean: "저는 이집트 아인샴스 대학교에서 한국어학 및 한국문학을 전공했습니다. 대학에서 한국어 언어학과 문학을 체계적으로 공부하며 한국어에 대한 깊은 이해를 갖추게 되었습니다. 이 학문적 배경이 13년 이상의 한국어 교육과 통역 경력의 기초가 되었습니다.",
+      english: "I studied Korean Linguistics and Literature at Ain Shams University in Egypt. Through systematic study of Korean linguistics and literature at university, I developed a deep understanding of the Korean language. This academic background became the foundation for my 13+ years of Korean language teaching and interpretation career.",
+    },
+  },
+  /* ── Why Korea / Korean Language ── */
+  {
+    id: 49,
+    topic: "Why Korean",
+    interviewer: { korean: "왜 한국어를 공부하게 되셨나요?", english: "Why did you start studying Korean?" },
+    reham: {
+      korean: "어릴 때부터 한국 문화에 관심이 많았고, 이 관심이 아인샴스 대학교에서 한국어를 전공하는 계기가 되었습니다. 졸업 후에는 한국문화원에서 통역사로 활동하며 실무 경험을 쌓았고, 2013년에 Klovers를 설립하여 전 세계 학생들에게 한국어를 가르치고 있습니다. 한국어는 제 커리어의 핵심이며, 언어를 통해 문화적 다리 역할을 하는 것에 큰 보람을 느낍니다.",
+      english: "I had a strong interest in Korean culture from a young age, which led me to major in Korean at Ain Shams University. After graduation, I gained practical experience as an interpreter at the Korean Cultural Centre, and in 2013 I founded Klovers to teach Korean to students worldwide. Korean is at the core of my career, and I find great fulfillment in serving as a cultural bridge through language.",
+    },
+  },
+  /* ── International Mobility ── */
+  {
+    id: 50,
+    topic: "International Experience",
+    interviewer: { korean: "여러 나라에서 근무한 경험에 대해 말씀해 주세요.", english: "Tell me about your experience working in multiple countries." },
+    reham: {
+      korean: "이집트, 말레이시아, 헝가리 세 나라에서 근무한 경험이 있습니다. 이집트에서는 통역, 무역, 행정 관리 분야에서 일했고, 말레이시아에서는 Accenture와 Kerry에서 다국적 환경의 콘텐츠 관리와 주문 운영을 담당했습니다. 헝가리에서는 아랍어 강사와 컨퍼런스 영업을 경험했습니다. 각 국가에서 다른 업무 문화를 경험하며 유연성과 문화적 적응력을 기를 수 있었습니다.",
+      english: "I have worked in three countries: Egypt, Malaysia, and Hungary. In Egypt, I worked in interpretation, trade, and administration. In Malaysia, I handled multilingual content management at Accenture and order operations at Kerry. In Hungary, I taught Arabic and managed conference sales. Working across different work cultures in each country helped me develop flexibility and cultural adaptability.",
     },
   },
 ];
@@ -442,6 +534,7 @@ const CONVERSATION_DATA: ConversationExchange[] = [
 
 const SECTION_COLORS: Record<string, string> = {
   Greeting: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  Education: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   Summary: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   Projects: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   Languages: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
@@ -456,20 +549,26 @@ const SECTION_COLORS: Record<string, string> = {
 /* ─── Data: Categories mapping ─── */
 
 const CATEGORIES: { name: string; icon: string; ids: number[] }[] = [
-  { name: "Self-Introduction", icon: "👋", ids: [1] },
-  { name: "Work Experience", icon: "💼", ids: [2, 4] },
+  { name: "Self-Introduction", icon: "👋", ids: [1, 48, 49] },
+  { name: "Work Experience", icon: "💼", ids: [2, 4, 50] },
   { name: "Accenture", icon: "🏢", ids: [10, 25, 26] },
-  { name: "Kerry Logistics", icon: "📦", ids: [3, 20, 21, 22, 23, 24] },
-  { name: "CJ Logistics", icon: "🚚", ids: [35] },
+  { name: "Kerry (F&B)", icon: "📦", ids: [3, 20, 21, 22, 23, 24] },
   { name: "Klivvr / Fintech", icon: "💳", ids: [27, 28] },
   { name: "Klovers", icon: "🍀", ids: [29, 30] },
+  { name: "El Zenouki / Interpretation", icon: "🗣️", ids: [42, 47] },
+  { name: "ERC / Administration", icon: "🏗️", ids: [44] },
+  { name: "International Trade", icon: "🚢", ids: [43] },
+  { name: "Teaching Abroad", icon: "🎓", ids: [45, 47, 49] },
+  { name: "Education & Background", icon: "📚", ids: [48, 49, 50] },
   { name: "Data Processing", icon: "📊", ids: [3, 4, 26] },
   { name: "Strengths & Weaknesses", icon: "💪", ids: [5, 6] },
   { name: "Motivation & Fit", icon: "🎯", ids: [7, 8] },
   { name: "Web Development", icon: "🌐", ids: [14, 31, 32] },
   { name: "Problem Solving", icon: "🧩", ids: [9, 11, 13, 36, 37] },
-  { name: "Teamwork & Leadership", icon: "👥", ids: [10, 12, 33, 34] },
+  { name: "Teamwork & Leadership", icon: "👥", ids: [10, 12, 33, 34, 44] },
+  { name: "B2B Sales", icon: "💼", ids: [46] },
   { name: "Career & Self-Dev", icon: "📈", ids: [18, 38, 39] },
+  { name: "Cross-Cultural", icon: "🌍", ids: [35, 42, 45, 50] },
   { name: "Closing", icon: "🤝", ids: [40, 41] },
 ];
 
@@ -486,12 +585,18 @@ const KEY_METRICS: { label: string; korean: string; english: string }[] = [
   { label: "Kerry SAP Experience", korean: "SAP ERP 3년 이상 사용", english: "3+ years SAP ERP experience" },
   { label: "Kerry Team Training", korean: "신입 10~15명 SAP 교육", english: "Trained 10-15 new hires on SAP" },
   { label: "Klivvr Daily Interactions", korean: "하루 50~100건 고객 상호작용", english: "50-100+ daily customer interactions" },
-  { label: "International Experience", korean: "12년 이상의 국제 경험", english: "12+ years international experience" },
+  { label: "International Experience", korean: "13년 이상의 국제 경험", english: "13+ years international experience" },
   { label: "Languages", korean: "6개 언어 구사", english: "Fluent in 6 languages" },
   { label: "Klovers Community", korean: "15개국 1,000명 이상 학생", english: "1,000+ students across 15+ countries" },
   { label: "Klovers Duration", korean: "13년간 운영", english: "Running for 13 years" },
   { label: "Team Productivity", korean: "팀 생산성 20% 향상", english: "Improved team productivity by 20%" },
   { label: "System Onboarding", korean: "1~2주 내 새 시스템 숙련", english: "Proficient in new systems within 1-2 weeks" },
+  { label: "ERC Team Size", korean: "50명 규모의 행정부서 관리", english: "Managed administrative dept of 50 personnel" },
+  { label: "Education", korean: "아인샴스 대학교 한국어과 졸업", english: "Ain Shams University Korean dept graduate" },
+  { label: "Countries Worked", korean: "3개국 근무 경험 (이집트, 말레이시아, 헝가리)", english: "Worked in 3 countries (Egypt, Malaysia, Hungary)" },
+  { label: "Korean Teaching", korean: "13년 이상의 한국어 교육 경험", english: "13+ years Korean language teaching" },
+  { label: "Cultural Events", korean: "대규모 문화 행사 통역 담당", english: "Lead interpreter for large cultural events" },
+  { label: "Korean Cultural Centre", korean: "한국문화원 2년 8개월 근무", english: "2 years 8 months at Korean Cultural Centre" },
 ];
 
 /* ─── Data: Power Phrases ─── */
@@ -507,16 +612,24 @@ const POWER_PHRASES: { korean: string; romanization: string; english: string }[]
   { korean: "팀에 가치를 더할 수 있습니다", romanization: "time gachireul deohal su isseumnida", english: "I can add value to the team" },
   { korean: "지속적으로 개선하고 있습니다", romanization: "jisogjeogeuro gaeseonhago isseumnida", english: "I am continuously improving" },
   { korean: "즉시 가치를 제공할 수 있습니다", romanization: "jeuksi gachireul jegonghal su isseumnida", english: "I can deliver immediate value" },
+  { korean: "이집트 출신입니다", romanization: "ijipteu chulshinimnida", english: "I am from Egypt" },
+  { korean: "한국어학을 전공했습니다", romanization: "hangugeohageul jeonggonghaesseumnida", english: "I majored in Korean Linguistics" },
+  { korean: "다양한 국가에서 근무한 경험이 있습니다", romanization: "dayanghan gugaeseo geunmuhan gyeongheomi isseumnida", english: "I have experience working in various countries" },
 ];
 
 /* ─── Data: Company Summaries ─── */
 
 const COMPANY_SUMMARIES: { name: string; korean: string; english: string }[] = [
-  { name: "Accenture", korean: "글로벌 IT 및 컨설팅 회사에서 콘텐츠 모더레이터로 3년 이상 근무", english: "Worked 3+ years as content moderator at global IT & consulting firm" },
-  { name: "Kerry Logistics", korean: "국제 물류 회사에서 Sales Ops & Order Management 담당", english: "Sales Ops & Order Management at international logistics company" },
-  { name: "CJ Logistics", korean: "한국 대표 물류 기업에서 다문화 환경 협업 경험", english: "Multicultural collaboration experience at Korea's leading logistics company" },
-  { name: "Klivvr", korean: "이집트 핀테크 스타트업에서 고객 서비스 담당", english: "Customer service at Egyptian fintech startup" },
-  { name: "Explore-Saudi", korean: "럭셔리 여행 플랫폼의 디지털 브랜딩 및 웹 개발 리드", english: "Digital branding & web development lead for luxury travel platform" },
+  { name: "Kerry", korean: "F&B 분야 다국적 고객사의 주문 관리 담당 (3년 5개월, 쿠알라룸푸르)", english: "Order Management Representative for multinational F&B clients (3yr 5mo, KL Malaysia)" },
+  { name: "Accenture", korean: "글로벌 IT 및 컨설팅 회사에서 다국어 콘텐츠 모더레이터로 3년 이상 근무 (쿠알라룸푸르)", english: "3+ years as multilingual content moderator at global IT & consulting firm (KL Malaysia)" },
+  { name: "Explore-Saudi", korean: "럭셔리 여행 플랫폼의 디지털 브랜딩 및 웹 개발 리드 (원격)", english: "Digital branding & web development lead for luxury travel platform (remote)" },
+  { name: "Klivvr", korean: "이집트 핀테크 스타트업에서 고객 서비스 전문가 (카이로)", english: "Customer Service Specialist at Egyptian fintech startup (Cairo)" },
+  { name: "El Zenouki Group", korean: "제조 기업 통역 서비스 코디네이터 — 아랍어/한국어/영어 (카이로)", english: "Interpreter Services Coordinator at manufacturing corp — Arabic/Korean/English (Cairo)" },
+  { name: "Golden Dragon", korean: "수산물 국제 수출 리테일 총괄 매니저 (카이로)", english: "Retail General Manager for international eel & seafood export (Cairo)" },
+  { name: "ERC (DAEAH E&C)", korean: "석유 및 에너지 프로젝트 행정 관리자 — 50명 관리 (카이로)", english: "Administration Manager for Oil & Energy project — 50 personnel (Cairo)" },
+  { name: "Korean Cultural Centre", korean: "문화 행사 통역 및 기획 담당 (카이로, 2년 8개월)", english: "Cultural event interpreter & planner (Cairo, 2yr 8mo)" },
+  { name: "GLC Europe", korean: "유럽 시장 기업 컨퍼런스 영업 담당 (부다페스트)", english: "Conference sales executive for European market (Budapest)" },
+  { name: "Nur School", korean: "헝가리에서 아랍어 강사로 성인 대상 교육 (부다페스트)", english: "Arabic instructor for adults in Hungary (Budapest)" },
 ];
 
 /* ─── Data: Vocabulary Groups ─── */
@@ -576,6 +689,22 @@ const VOCAB_GROUPS: { name: string; words: { korean: string; romanization: strin
       { korean: "만 (10,000)", romanization: "man", english: "Ten thousand" },
       { korean: "이상", romanization: "isang", english: "More than / above" },
       { korean: "최대", romanization: "choedae", english: "Maximum / up to" },
+    ],
+  },
+  {
+    name: "Education & Background",
+    words: [
+      { korean: "대학교", romanization: "daehakgyo", english: "University" },
+      { korean: "전공", romanization: "jeongong", english: "Major / Specialization" },
+      { korean: "졸업", romanization: "joreop", english: "Graduation" },
+      { korean: "문학", romanization: "munhak", english: "Literature" },
+      { korean: "언어학", romanization: "eoneohak", english: "Linguistics" },
+      { korean: "통역", romanization: "tongyeok", english: "Interpretation" },
+      { korean: "번역", romanization: "beonyeok", english: "Translation" },
+      { korean: "무역", romanization: "muyeok", english: "Trade" },
+      { korean: "수출", romanization: "suchul", english: "Export" },
+      { korean: "행정", romanization: "haengjeong", english: "Administration" },
+      { korean: "출신", romanization: "chulsin", english: "Origin / From" },
     ],
   },
   {
