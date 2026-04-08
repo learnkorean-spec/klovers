@@ -1065,13 +1065,31 @@ export default function RehamTrainingPanel() {
   }, [collections]);
 
   // Helper functions for starred items
-  const toggleStar = (id: number) => {
+  const toggleStar = (id: number, isIntroLine = false) => {
+    const wasStarred = starred.has(id);
     setStarred((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+    // Sync with selected collection
+    const colId = selectedCollectionId;
+    if (!colId) return;
+    setCollections((prev) =>
+      prev.map((col) => {
+        if (col.id !== colId) return col;
+        const next = { ...col };
+        if (isIntroLine) {
+          if (wasStarred) next.introIds = next.introIds.filter((i) => i !== id);
+          else if (!next.introIds.includes(id)) next.introIds = [...next.introIds, id];
+        } else {
+          if (wasStarred) next.questionIds = next.questionIds.filter((i) => i !== id);
+          else if (!next.questionIds.includes(id)) next.questionIds = [...next.questionIds, id];
+        }
+        return next;
+      })
+    );
   };
 
   const toggleStarInCollection = (id: number, isIntroLine: boolean) => {
@@ -1296,7 +1314,7 @@ export default function RehamTrainingPanel() {
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0"
-                        onClick={() => toggleStar(line.id)}
+                        onClick={() => toggleStar(line.id, true)}
                       >
                         <Star
                           className={cn("h-4 w-4", starred.has(line.id) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground")}
