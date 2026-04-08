@@ -24,7 +24,7 @@ import {
   renderPost,
   preloadMascot,
 } from "@/lib/canvasRenderer";
-import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, CAMPAIGN_CONFIGS, type MonthlyPostType, type GroupData, type CampaignDirection } from "@/lib/marketingEngine";
+import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, isWhatsAppCTA, CAMPAIGN_CONFIGS, type MonthlyPostType, type GroupData, type CampaignDirection } from "@/lib/marketingEngine";
 import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
@@ -91,6 +91,7 @@ interface MonthlyDraftPost {
   mainText: string; subtitle: string; extraText: string;
   approved: boolean; scheduledDate: string;
   templateName: TemplateName; themeName: ColorTheme;
+  useWhatsApp: boolean;
 }
 
 const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; themeName: ColorTheme }> = {
@@ -422,6 +423,7 @@ export default function CreatorHub() {
   // ── Monthly generator state ──
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
+  const [studentCount, setStudentCount] = useState(500);
   const [monthlyDrafts, setMonthlyDrafts] = useState<MonthlyDraftPost[]>([]);
   const [editingDraft, setEditingDraft] = useState<MonthlyDraftPost | null>(null);
   const [editDraftText, setEditDraftText] = useState({ mainText: "", subtitle: "", extraText: "" });
@@ -500,6 +502,10 @@ export default function CreatorHub() {
   useEffect(() => {
     (async () => {
       try {
+        // Fetch real student count
+        const { count } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+        if (count && count > 0) setStudentCount(count);
+
         const { data: pkgGroups } = await supabase.from("pkg_groups").select("id, name, capacity, package_id, is_active").eq("is_active", true).limit(500);
         if (!pkgGroups?.length) { setGroupsLoading(false); return; }
         const packageIds = [...new Set(pkgGroups.map(g => g.package_id))];
@@ -543,7 +549,7 @@ export default function CreatorHub() {
       autoGenDone.current = true;
       // Generate 30-post plan silently
       const today = new Date();
-      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10", "en", selectedCampaign);
+      const monthlyPosts = generateMonthlyPlan(groups, 10, "KLOVERS10", "en", selectedCampaign, studentCount);
       const recentTemplates: TemplateName[] = [];
       const drafts: MonthlyDraftPost[] = monthlyPosts.map((post, i) => {
         const d = new Date(today); d.setDate(d.getDate() + i);
@@ -557,7 +563,7 @@ export default function CreatorHub() {
           thm = BALANCE_THEME[tpl];
         }
         recentTemplates.push(tpl);
-        return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm };
+        return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm, useWhatsApp: isWhatsAppCTA(post.postType) };
       });
       setMonthlyDrafts(drafts);
       // Also set the posts array to drafts so the grid preview shows all 30
@@ -568,7 +574,7 @@ export default function CreatorHub() {
   function generateMonthlyDrafts() {
     if (groupsLoading) { toast({ title: "Loading class data…", description: "Please wait a moment and try again.", variant: "destructive" }); return; }
     const today = new Date();
-    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10", "en", selectedCampaign);
+    const posts = generateMonthlyPlan(groups, 10, "KLOVERS10", "en", selectedCampaign, studentCount);
     const recentTemplates: TemplateName[] = [];
     const drafts: MonthlyDraftPost[] = posts.map((post, i) => {
       const d = new Date(today); d.setDate(d.getDate() + i);
@@ -583,7 +589,7 @@ export default function CreatorHub() {
         thm = BALANCE_THEME[tpl];
       }
       recentTemplates.push(tpl);
-      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm };
+      return { ...pd, day: post.day, postType: post.postType, caption: post.caption, approved: false, scheduledDate: d.toISOString().split("T")[0], templateName: tpl, themeName: thm, useWhatsApp: isWhatsAppCTA(post.postType) };
     });
     setMonthlyDrafts(drafts);
     const campaignName = CAMPAIGN_CONFIGS.find(c => c.id === selectedCampaign)?.name ?? "Balanced";
@@ -602,7 +608,7 @@ export default function CreatorHub() {
         const folder = zip.folder(fk)!;
         for (const post of monthlyDrafts) {
           const c = document.createElement("canvas"); c.width = fmt.w; c.height = fmt.h;
-          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk);
+          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk, null, undefined, post.useWhatsApp);
           const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
           folder.file(`${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}-${fk}.png`, blob);
         }
@@ -620,7 +626,7 @@ export default function CreatorHub() {
 
   function downloadSinglePost(post: MonthlyDraftPost) {
     const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram");
+    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram", null, undefined, post.useWhatsApp);
     const a = document.createElement("a"); a.href = c.toDataURL("image/png");
     a.download = `${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}.png`; a.click();
   }

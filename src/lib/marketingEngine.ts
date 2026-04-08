@@ -97,6 +97,28 @@ export function generateWhatsAppMessage(group: GroupData): string {
   return `السلام عليكم 🌸\n\n📣 ${level} Korean Course\n🗓 ${group.day_name}s at ${group.start_time}\n⏱ ${group.duration_min} minutes/session\n\n✅ تعلم الكورية من الصفر مع مجموعة صغيرة ومتابعة شخصية\n${seatsLine}\n📲 سجل هنا:\n${regUrl}\n\n#Klovers #تعلم_الكورية #KoreanLanguage`;
 }
 
+// ─── UTM Link Builder ───
+
+export function enrollUrl(campaign: CampaignDirection, postType: MonthlyPostType, source = "instagram"): string {
+  return `kloversegy.com/enroll?utm_source=${source}&utm_campaign=${campaign}&utm_content=${postType}`;
+}
+
+export function whatsappUrl(campaign: CampaignDirection, postType: MonthlyPostType): string {
+  const msg = encodeURIComponent("Hi! I saw your post and I'm interested in learning Korean with Klovers 🇰🇷");
+  return `wa.me/601121777560?text=${msg}`;
+}
+
+export function trialUrl(campaign: CampaignDirection): string {
+  return `kloversegy.com/free-trial?utm_source=instagram&utm_campaign=${campaign}`;
+}
+
+// Which post types should use WhatsApp CTA instead of Register Now
+const WHATSAPP_CTA_TYPES: Set<MonthlyPostType> = new Set(["referral", "invite_student"]);
+
+export function isWhatsAppCTA(postType: MonthlyPostType): boolean {
+  return WHATSAPP_CTA_TYPES.has(postType);
+}
+
 // ─── Post Template Helpers (for canvas rendering) ───
 
 export interface PostTemplate {
@@ -597,6 +619,7 @@ export function generateMonthlyPlan(
   discountCode: string,
   lang: PostLang = "en",
   campaign: CampaignDirection = "balanced",
+  studentCount = 500,
 ): MonthlyPost[] {
   let groupIdx = 0;
   let testimonialIdx = 0;
@@ -605,8 +628,12 @@ export function generateMonthlyPlan(
   let tipIdx = 0;
   let cultureIdx = 0;
   const isAR = lang === "ar";
+  const sc = studentCount > 0 ? `${Math.floor(studentCount / 100) * 100}+` : "500+";
 
   const safeGroup = () => groups.length ? groups[groupIdx++ % groups.length] : null;
+  const url = (type: MonthlyPostType) => enrollUrl(campaign, type);
+  const waUrl = (type: MonthlyPostType) => whatsappUrl(campaign, type);
+  const trial = trialUrl(campaign);
 
   const config = CAMPAIGN_CONFIGS.find(c => c.id === campaign) ?? CAMPAIGN_CONFIGS[0];
 
@@ -622,12 +649,8 @@ export function generateMonthlyPlan(
           ? (isAR ? getGroupPostTemplateAR(g) : getGroupPostTemplate(g))
           : (isAR ? getDiscountPostTemplateAR(discountPct, discountCode) : getDiscountPostTemplate(discountPct, discountCode));
         caption = g
-          ? (isAR
-            ? `📢 ${getLevelLabel(g.level)} — فاضل ${g.seats_left} مقعد!\n\n🗓 كل ${g.day_name} الساعة ${g.start_time} · ${g.duration_min} دقيقة\n✅ مجموعة صغيرة · مدرس معتمد · نتائج من أول أسبوع\n\n📲 سجّل: kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-            : `📢 ${getLevelLabel(g.level)} — ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min sessions\n✅ Small group · Certified teacher · Real results from week 1\n\n📲 Register now: kloversegy.com/enroll\n\n#LearnKorean #Klovers #KoreanCourse`)
-          : (isAR
-            ? `📢 أماكن جديدة متاحة في كورسات الكوري!\n\nمجموعات صغيرة، مدرسين معتمدين، منهج منظم.\n\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-            : `📢 New Korean course spots open!\n\nSmall groups, certified teachers, structured curriculum.\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers`);
+          ? `📢 ${getLevelLabel(g.level)} — ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min\n✅ Join ${sc} students · Small groups · Certified teacher\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers #KoreanCourse`
+          : `📢 New Korean course spots open!\n\n✅ ${sc} students already enrolled. Small groups, certified teachers.\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers`;
         break;
       }
       case "invite_student": {
@@ -635,71 +658,55 @@ export function generateMonthlyPlan(
         template = g
           ? (isAR ? getGroupPostTemplateAR(g) : getInvitePostTemplate(g))
           : (isAR ? getReferralPostTemplateAR() : getReferralPostTemplate());
-        caption = isAR
-          ? `👋 تعرف حد عايز يتعلم كوري؟\n\nتاج صاحبك ⬇️ أو شير البوست!\n\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-          : (g
-            ? `👋 Know someone who wants to learn Korean?\n\n${getLevelLabel(g.level)} is open — every ${g.day_name} at ${g.start_time}.\n\nTag them below ⬇️ or share this post!\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers #KoreanClasses`
-            : `👋 Tag a friend who wants to learn Korean! 🇰🇷\n\n📲 kloversegy.com/enroll\n\n#LearnKorean #Klovers`);
+        caption = g
+          ? `👋 Know someone who'd love to learn Korean?\n\n${getLevelLabel(g.level)} — ${g.day_name} ${g.start_time}\n\nTag them ⬇️ or DM us on WhatsApp!\n\n📲 ${waUrl(type)}\n\n#LearnKorean #Klovers #KoreanClasses`
+          : `👋 Tag a friend who needs Korean in their life! 🇰🇷\n\nDM us to get started →\n\n📲 ${waUrl(type)}\n\n#LearnKorean #Klovers`;
         break;
       }
       case "discount": {
         template = isAR ? getDiscountPostTemplateAR(discountPct, discountCode) : getDiscountPostTemplate(discountPct, discountCode);
-        caption = isAR
-          ? `🏷️ خصم ${discountPct}% على أول شهر!\n\nاستخدم كود: ${discountCode}\n\nعرض لفترة محدودة.\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-          : `🏷️ ${discountPct}% OFF your first month!\n\nUse code: ${discountCode} at checkout.\n\nLimited time — don't miss it.\n📲 kloversegy.com/enroll\n\n#KoreanCourse #Klovers #Discount #LearnKorean`;
+        caption = `🏷️ ${discountPct}% OFF your first month!\n\n💰 Use code: ${discountCode}\n⏳ Limited time only\n✅ ${sc} students trust Klovers\n\n📲 ${url(type)}\n\n#KoreanCourse #Klovers #Discount #LearnKorean`;
         break;
       }
       case "referral": {
         template = isAR ? getReferralPostTemplateAR() : getReferralPostTemplate();
-        caption = isAR
-          ? `🤝 بتحب كلوفرز؟ وصّي صاحبك والاتنين هتاخدوا حصة مجانية!\n\nابعتلنا أو شير اللينك.\n\n${HASHTAGS_AR}`
-          : `🤝 Love Klovers? Refer a friend and BOTH of you get a FREE class!\n\nDM us or share the link in bio to get your code.\n\n#Klovers #LearnKorean #ReferAFriend`;
+        caption = `🤝 Refer a friend → BOTH get a FREE class!\n\n1️⃣ Share this post or DM us\n2️⃣ Your friend enrolls\n3️⃣ You both get a free session\n\n💬 Message us on WhatsApp:\n📲 ${waUrl(type)}\n\n#Klovers #LearnKorean #ReferAFriend`;
         break;
       }
       case "testimonial": {
         template = isAR ? getTestimonialPostTemplateAR(testimonialIdx) : getTestimonialPostTemplate(testimonialIdx);
         const t = isAR ? TESTIMONIALS_AR[testimonialIdx % TESTIMONIALS_AR.length] : TESTIMONIALS[testimonialIdx % TESTIMONIALS.length];
         testimonialIdx++;
-        caption = isAR
-          ? `🌟 "${t.quote}" — ${t.student}\n\nده السبب اللي بنعمل ده عشانه 🇰🇷\n\nجاهز تكتب قصة نجاحك؟\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-          : `🌟 "${t.quote}" — ${t.student}\n\nThis is why we do what we do 🇰🇷\n\nReady to write YOUR success story?\n📲 kloversegy.com/enroll\n\n#StudentSuccess #Klovers #LearnKorean`;
+        caption = `🌟 "${t.quote}" — ${t.student}\n\nJoin ${sc} students writing their Korean success story 🇰🇷\n\n📲 Free trial: ${trial}\n\n#StudentSuccess #Klovers #LearnKorean`;
         break;
       }
       case "faq": {
         template = isAR ? getFAQPostTemplateAR(faqIdx) : getFAQPostTemplate(faqIdx);
         const faq = isAR ? FAQ_ITEMS_AR[faqIdx % FAQ_ITEMS_AR.length] : FAQ_ITEMS[faqIdx % FAQ_ITEMS.length];
         faqIdx++;
-        caption = isAR
-          ? `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\nفي كلوفرز بنقدم كلاسات كوري أونلاين منظمة مع مدرسين معتمدين ومجموعات صغيرة.\n\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-          : `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\nAt Klovers we offer structured online Korean classes with certified teachers, small groups, and a proven curriculum.\n\n📲 kloversegy.com/enroll\n\n#KoreanFAQ #LearnKorean #Klovers`;
+        caption = `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\n${sc} students chose Klovers — certified teachers, small groups, proven curriculum.\n\n📲 Try free: ${trial}\n\n#KoreanFAQ #LearnKorean #Klovers`;
         break;
       }
       case "countdown": {
         const daysLeft = [3, 5, 2][countdownIdx % 3];
         const g = groups.length ? groups[countdownIdx % groups.length] : null;
-        const levelLabel = g ? getLevelLabel(g.level) : (isAR ? "كورس كوري جديد" : "New Korean Class");
+        const levelLabel = g ? getLevelLabel(g.level) : "New Korean Class";
         template = isAR ? getCountdownPostTemplateAR(daysLeft, levelLabel) : getCountdownPostTemplate(daysLeft, levelLabel);
         countdownIdx++;
-        caption = isAR
-          ? `⏰ فاضل بس ${daysLeft} يوم للتسجيل في ${levelLabel}!\n\nالأماكن بتخلص — احجز مكانك دلوقتي.\n📲 kloversegy.com/enroll\n\n${HASHTAGS_AR}`
-          : `⏰ Only ${daysLeft} days left to register for ${levelLabel}!\n\nSpots are filling up — secure yours now.\n📲 kloversegy.com/enroll\n\n#LastChance #Klovers #KoreanCourse`;
+        caption = `⏰ ${daysLeft} DAYS LEFT to register for ${levelLabel}!\n\n🔥 Spots are filling fast\n✅ ${sc} students already in\n\n📲 Secure your seat: ${url(type)}\n\n#LastChance #Klovers #KoreanCourse`;
         break;
       }
       case "tip": {
         template = getTipPostTemplate(tipIdx, lang);
         const t = KOREAN_TIPS[tipIdx % KOREAN_TIPS.length];
         tipIdx++;
-        caption = isAR
-          ? `💡 كلمة كورية اليوم: ${t.word} (${t.romanized})\n\n${t.meaningAR}\n\nاحفظها واستخدمها! 🇰🇷\n\n${HASHTAGS_AR}`
-          : `💡 Korean word of the day: ${t.word} (${t.romanized})\n\n${t.meaningEN}\n\nSave this and use it! 🇰🇷\n\n#KoreanWord #LearnKorean #Klovers`;
+        caption = `💡 Korean word of the day: ${t.word} (${t.romanized})\n\n${t.meaningEN}\n\n💾 Save this & practice!\n🎓 Want structured lessons? Try a free class:\n📲 ${trial}\n\n#KoreanWord #LearnKorean #Klovers`;
         break;
       }
       case "culture": {
         template = getCulturePostTemplate(cultureIdx, lang);
         cultureIdx++;
-        caption = isAR
-          ? `🎬 ${template.mainText}\n\n${template.subtitle}\n\nاتعلم كوري مع كلوفرز!\n📲 kloversegy.com\n\n${HASHTAGS_AR}`
-          : `🎬 ${template.mainText}\n\n${template.subtitle}\n\nLearn Korean with Klovers!\n📲 kloversegy.com\n\n#KCulture #KPop #LearnKorean #Klovers`;
+        caption = `🎬 ${template.mainText}\n\n${template.subtitle}\n\n🇰🇷 Learn Korean to experience K-culture fully!\n📲 Free trial: ${trial}\n\n#KCulture #KPop #LearnKorean #Klovers`;
         break;
       }
     }

@@ -134,7 +134,10 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   }
 }
 
-function ctaText(lang: PostLang): string { return lang === "ar" ? AR_TEXT.registerNow : "Register Now →"; }
+function ctaText(lang: PostLang, useWhatsApp = false): string {
+  if (useWhatsApp) return "Chat on WhatsApp →";
+  return lang === "ar" ? AR_TEXT.registerNow : "Register Now →";
+}
 function courseLabel(lang: PostLang): string { return lang === "ar" ? AR_TEXT.koreanCourse : "KOREAN COURSE"; }
 function brandLabel(lang: PostLang): string { return lang === "ar" ? AR_TEXT.brandName : "KLOVERS KOREAN ACADEMY"; }
 function enrollLabel(lang: PostLang): string { return lang === "ar" ? AR_TEXT.enrollToday : "ENROLL TODAY"; }
@@ -383,7 +386,7 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
 // All use fixed zone fractions so preview (270px CSS / 1080px canvas) = download (1080px canvas)
 
 // BOLD — AIDA: ATTENTION. Stop the scroll. Maximum visual impact.
-function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en") {
+function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en", wa = false) {
   const pad = 52 * S;
   const topH = Math.round(h * 0.10);
   const botH = Math.round(h * 0.18);
@@ -467,7 +470,7 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   ctx.font = fontStack(L, 700, Math.round(16 * S));
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), pad + ctaW / 2, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText(L, wa), pad + ctaW / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // ── Website ──
@@ -479,7 +482,7 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
 }
 
 // VARSITY — AIDA: INTEREST / DESIRE. Build credibility. "What's in it for me?"
-function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en") {
+function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en", wa = false) {
   const pad = 48 * S;
 
   // ── Black background ──
@@ -548,10 +551,10 @@ function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: 
   ctx.fillStyle = "#111111";
   if (L === "ar") {
     ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "right";
-    ctx.fillText(ctaText(L), w - pad, h - stripH + stripH * 0.67);
+    ctx.fillText(ctaText(L, wa), w - pad, h - stripH + stripH * 0.67);
     ctx.restore();
   } else {
-    ctx.fillText(ctaText(L), pad, h - stripH + stripH * 0.67);
+    ctx.fillText(ctaText(L, wa), pad, h - stripH + stripH * 0.67);
   }
 
   // Website right-aligned
@@ -563,7 +566,7 @@ function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: 
 }
 
 // SPLIT — AIDA: ACTION. Drive registration. Clear next step.
-function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, isPortrait: boolean, L: PostLang = "en") {
+function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, isPortrait: boolean, L: PostLang = "en", wa = false) {
   if (!isPortrait) {
     // Square / Landscape: yellow LEFT / black RIGHT with diagonal
     const splitX = w * 0.43;
@@ -635,7 +638,7 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     ctx.font = fontStack(L, 700, 18 * S);
     ctx.fillStyle = "#111111";
     ctx.textAlign = "center";
-    ctx.fillText(ctaText(L), ctaX + ctaW / 2, ctaY + ctaH * 0.67);
+    ctx.fillText(ctaText(L, wa), ctaX + ctaW / 2, ctaY + ctaH * 0.67);
     ctx.textAlign = "left";
 
     // RIGHT: website
@@ -699,7 +702,7 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     ctx.font = fontStack(L, 700, 20 * S);
     ctx.fillStyle = "#111111";
     ctx.textAlign = "center";
-    ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.67);
+    ctx.fillText(ctaText(L, wa), w / 2, ctaY + ctaH * 0.67);
     ctx.textAlign = "left";
 
     // Website
@@ -776,7 +779,7 @@ function renderKloversAlert(ctx: CanvasRenderingContext2D, post: PostData, w: nu
   ctx.font = fontStack(L, 700, 16 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText(L, wa), w / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // ── Website ──
@@ -861,7 +864,7 @@ function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w
   ctx.font = fontStack(L, 700, 18 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.67);
+  ctx.fillText(ctaText(L, wa), w / 2, ctaY + ctaH * 0.67);
 
   // ── Website ──
   ctx.font = fontStack("en", 400, 14 * S);
@@ -1001,7 +1004,7 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
 }
 
 // ─── MASCOT LEFT — Characters on left, text on right ───────────────────────
-function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
+function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null, wa = false) {
   const pad = 48 * S;
   const img = bgImage || (_mascotLoaded ? _mascot : null);
 
@@ -1076,7 +1079,7 @@ function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, 
   ctx.font = fontStack(L, 700, 15 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), rLeft + ctaW / 2, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText(L, wa), rLeft + ctaW / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // Website
@@ -1097,7 +1100,7 @@ function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, 
 }
 
 // ─── MASCOT RIGHT — Text on left, characters on right ──────────────────────
-function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
+function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null, wa = false) {
   const pad = 48 * S;
   const img = bgImage || (_mascotLoaded ? _mascot : null);
 
@@ -1175,7 +1178,7 @@ function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData,
   ctx.font = fontStack(L, 700, 15 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), pad + ctaW / 2, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText(L, wa), pad + ctaW / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // Website
@@ -1215,6 +1218,7 @@ export function renderPost(
   format: FormatKey,
   bgImage?: HTMLImageElement | null,
   lang?: PostLang,
+  useWhatsAppCTA = false,
 ) {
   const fmt = FORMATS[format];
   const scale = canvas.width / fmt.w;
@@ -1225,19 +1229,20 @@ export function renderPost(
   const isPortrait = h > w;
   const isDark = template === "neon" || template === "dark";
   const L: PostLang = lang || post.lang || "en";
+  const wa = useWhatsAppCTA;
 
   ctx.clearRect(0, 0, w, h);
 
   // ─── Klovers brand designs ────────────────────────────────
-  if (template === "klovers_bold")      { renderKloversBold(ctx, post, w, h, scale, isPortrait, L);      return; }
-  if (template === "klovers_varsity")   { renderKloversVarsity(ctx, post, w, h, scale, isPortrait, L);   return; }
-  if (template === "klovers_split")     { renderKloversSplit(ctx, post, w, h, scale, isPortrait, L);     return; }
+  if (template === "klovers_bold")      { renderKloversBold(ctx, post, w, h, scale, isPortrait, L, wa);      return; }
+  if (template === "klovers_varsity")   { renderKloversVarsity(ctx, post, w, h, scale, isPortrait, L, wa);   return; }
+  if (template === "klovers_split")     { renderKloversSplit(ctx, post, w, h, scale, isPortrait, L, wa);     return; }
   if (template === "klovers_alert")     { renderKloversAlert(ctx, post, w, h, scale, L);     return; }
   if (template === "klovers_countdown") { renderKloversCountdown(ctx, post, w, h, scale, L); return; }
   if (template === "klovers_quote")     { renderKloversQuote(ctx, post, w, h, scale, L);     return; }
   if (template === "klovers_tip")       { renderKloversTip(ctx, post, w, h, scale, L);       return; }
-  if (template === "klovers_mascot_left")  { renderKloversMascotLeft(ctx, post, w, h, scale, L, bgImage);  return; }
-  if (template === "klovers_mascot_right") { renderKloversMascotRight(ctx, post, w, h, scale, L, bgImage); return; }
+  if (template === "klovers_mascot_left")  { renderKloversMascotLeft(ctx, post, w, h, scale, L, bgImage, wa);  return; }
+  if (template === "klovers_mascot_right") { renderKloversMascotRight(ctx, post, w, h, scale, L, bgImage, wa); return; }
 
   // ─── PHOTO SPLIT LAYOUT ───────────────────────────────────
   if (bgImage) {
@@ -1566,7 +1571,7 @@ export function renderPost(
   ctx.font = fontStack(L, 700, Math.round(16 * scale));
   ctx.fillStyle = isDark ? "#1a1a1a" : "#FFFF00";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L), tLeft + ctaW / 2, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText(L, wa), tLeft + ctaW / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // Footer strip with hashtags (h*0.89–h*1.0)
