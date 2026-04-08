@@ -43,7 +43,7 @@ export default function InterviewQACard({ qa, index, locked }: {
   index: number;
   locked: boolean;
 }) {
-  const { speak, speakKorean, speakEnglish, isSpeaking } = useSpeech();
+  const { speak, isSpeaking } = useSpeech();
 
   if (locked) {
     return (
@@ -78,7 +78,7 @@ export default function InterviewQACard({ qa, index, locked }: {
       <CardContent className="p-5 space-y-4">
         <Badge variant="outline" className="text-xs">Q{index + 1}</Badge>
 
-        {/* Interviewer Question */}
+        {/* Interviewer Question â male voice */}
         <div className="space-y-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">Interviewer</span>
           <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
@@ -87,14 +87,14 @@ export default function InterviewQACard({ qa, index, locked }: {
             <p className="text-xs text-muted-foreground">{qa.interviewer_question_en}</p>
           </div>
           <div className="flex gap-1">
-            <PlayBtn onClick={() => speakKorean(qa.interviewer_question_kr)} label="KR" variant="kr" disabled={isSpeaking} />
-            <PlayBtn onClick={() => speakEnglish(qa.interviewer_question_en)} label="EN" variant="en" disabled={isSpeaking} />
+            <PlayBtn onClick={() => speak(qa.interviewer_question_kr, { language: "ko-KR", gender: "male" })} label="KR" variant="kr" disabled={isSpeaking} />
+            <PlayBtn onClick={() => speak(qa.interviewer_question_en, { language: "en-US", gender: "male" })} label="EN" variant="en" disabled={isSpeaking} />
           </div>
         </div>
 
         <div className="w-full h-px bg-border" />
 
-        {/* Model Answer */}
+        {/* Model Answer (Reham) â female voice */}
         <div className="space-y-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Model Answer</span>
           <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
@@ -103,9 +103,9 @@ export default function InterviewQACard({ qa, index, locked }: {
             <p className="text-xs text-muted-foreground leading-relaxed">{qa.model_answer_en}</p>
           </div>
           <div className="flex flex-wrap gap-1">
-            <PlayBtn onClick={() => speakKorean(qa.model_answer_kr)} label="KR" variant="kr" disabled={isSpeaking} />
-            <PlayBtn onClick={() => speakEnglish(qa.model_answer_en)} label="EN" variant="en" disabled={isSpeaking} />
-            <PlayBtn onClick={() => speak(qa.model_answer_kr, { language: "ko-KR", rate: 0.7 })} label="Slow" variant="slow" disabled={isSpeaking} />
+            <PlayBtn onClick={() => speak(qa.model_answer_kr, { language: "ko-KR", gender: "female" })} label="KR" variant="kr" disabled={isSpeaking} />
+            <PlayBtn onClick={() => speak(qa.model_answer_en, { language: "en-US", gender: "female" })} label="EN" variant="en" disabled={isSpeaking} />
+            <PlayBtn onClick={() => speak(qa.model_answer_kr, { language: "ko-KR", rate: 0.7, gender: "female" })} label="Slow" variant="slow" disabled={isSpeaking} />
           </div>
         </div>
       </CardContent>
