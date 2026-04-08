@@ -30,61 +30,47 @@ import { supabase } from "@/integrations/supabase/client";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
 
-// Post templates by type — 7 distinct categories, rotated each month
-const POST_TYPE_TEMPLATES = [
-  // 0 — Announcement
-  (mo: string) => ({
-    mainText: `${mo} Korean Classes`,
-    subtitle: `🗓️ New groups starting ${mo} — register now to secure your seat`,
-    extraText: "#NewClass #LearnKorean #Klovers",
-  }),
-  // 1 — Engagement / Question
-  (_mo: string) => ({
-    mainText: "Can You Read 한글?",
-    subtitle: "🤔 Most students read Korean in under 2 hours — challenge yourself!",
-    extraText: "#Hangul #KoreanChallenge #Klovers",
-  }),
-  // 2 — Social Proof
-  (_mo: string) => ({
-    mainText: "500+ Students Enrolled",
-    subtitle: "⭐ Klovers graduates work, travel & connect in Korean",
-    extraText: "#StudentSuccess #KoreanAcademy #Cairo",
-  }),
-  // 3 — Urgency / Seats
-  (mo: string) => ({
-    mainText: "Last Seats — Don't Miss Out",
-    subtitle: `⚡ ${mo} classes filling fast — limited spots per group`,
-    extraText: "#LimitedSeats #Enroll #Klovers",
-  }),
-  // 4 — Free Trial
-  (_mo: string) => ({
-    mainText: "Try Korean for Free",
-    subtitle: "🎁 One free trial class — no commitment, no pressure",
-    extraText: "#FreeTrial #LearnKorean #KloversEgy",
-  }),
-  // 5 — K-Culture hook
-  (_mo: string) => ({
-    mainText: "Love K-Drama? Learn Korean!",
-    subtitle: "🎬 Understand your favourite shows without subtitles",
-    extraText: "#KDrama #KPop #LearnKorean #Klovers",
-  }),
-  // 6 — Career / Benefit
-  (_mo: string) => ({
-    mainText: "Korean Opens Doors",
-    subtitle: "💼 Jobs, travel, culture — Korean is your next skill",
-    extraText: "#CareerGoals #Korean #KloversAcademy",
-  }),
+// Premium 30-post content pack — matching instagram-posts.html designs
+const PREMIUM_POSTS: { mainText: string; subtitle: string; extraText: string; style: TemplateName }[] = [
+  { mainText: "START SPEAKING\nKOREAN\nNOT JUST\nSTUDYING IT.", subtitle: "Live classes that get you talking from day one.", extraText: "#LearnKorean #Klovers #SpeakKorean", style: "klovers_bold" },
+  { mainText: "사랑", subtitle: "sa-rang\nLove — The most searched Korean word worldwide", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
+  { mainText: "WHY K-DRAMA FANS\nLEARN KOREAN\nFASTER THAN ANYONE", subtitle: "Passion is the best teacher. We just give it structure.", extraText: "#KDrama #LearnKorean #Klovers", style: "klovers_varsity" },
+  { mainText: "1,000+", subtitle: "Students Taught\nFrom 15+ countries — all learning Korean the right way with live classes.", extraText: "#Klovers #KoreanAcademy", style: "klovers_stats" },
+  { mainText: "STOP MEMORIZING.\nSTART SPEAKING.", subtitle: "The #1 mistake beginners make is studying grammar without ever opening their mouth. Our live classes fix that.", extraText: "#KoreanTip #Klovers #LearnKorean", style: "klovers_tip" },
+  { mainText: "\"I went from zero to ordering in Korean at a restaurant in Seoul — in 3 months.\"", subtitle: "— Sara, Egypt\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
+  { mainText: "YOUR FAVORITE\nK-DRAMA\nIS YOUR BEST\nTEXTBOOK.", subtitle: "We teach you how to actually learn from what you watch.", extraText: "#KDrama #KPop #LearnKorean #Klovers", style: "klovers_bold" },
+  { mainText: "화이팅", subtitle: "hwa-i-ting\nFighting! — Used to cheer someone on", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
+  { mainText: "5 REASONS YOU'RE\nNOT IMPROVING", subtitle: "You only use apps, never speak\nYou skip pronunciation practice\nYou study grammar without context\nYou don't have a structured plan\nYou learn alone with no feedback", extraText: "#KoreanTips #Klovers", style: "klovers_list" },
+  { mainText: "WHAT HAPPENS\nWHEN YOUR\nKOREAN CLICKS", subtitle: "That moment when you understand without subtitles — we get you there.", extraText: "#LearnKorean #Klovers #KoreanGoals", style: "klovers_varsity" },
+  { mainText: "DUOLINGO\nWON'T TEACH\nYOU REAL\nKOREAN.", subtitle: "Apps are fun. But speaking to a real teacher is how you actually learn.", extraText: "#LearnKorean #Klovers #RealKorean", style: "klovers_bold" },
+  { mainText: "HANGUL WAS\nDESIGNED TO BE\nLEARNED IN ONE DAY.", subtitle: "King Sejong created the Korean alphabet so anyone could read. We teach you Hangul in your very first class.", extraText: "#Hangul #KoreanTip #Klovers", style: "klovers_tip" },
+  { mainText: "4.9★", subtitle: "Average Rating\nRated by real students across 15+ countries. We don't just teach — we deliver results.", extraText: "#Klovers #KoreanAcademy #Rated", style: "klovers_stats" },
+  { mainText: "감사합니다", subtitle: "gam-sa-ham-ni-da\nThank you — The first phrase every learner needs", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
+  { mainText: "SMALL GROUPS.\nBIG PROGRESS.", subtitle: "Max 6 students per class. Everyone speaks. Everyone improves.", extraText: "#LiveClasses #Klovers #SmallGroup", style: "klovers_varsity" },
+  { mainText: "\"I tried apps for a year. Three months with K-Lovers taught me more than all of them combined.\"", subtitle: "— Ahmed, Saudi Arabia\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
+  { mainText: "FREE TRIAL\nCLASS.\nNO COMMITMENT.\nJUST TRY.", subtitle: "See what real Korean learning feels like — book your free session now.", extraText: "#FreeTrial #LearnKorean #Klovers", style: "klovers_bold" },
+  { mainText: "WHAT YOU GET IN\nEVERY CLASS", subtitle: "Live interaction with your teacher\nSpeaking practice every session\nReal Korean, not textbook Korean\nHomework & personalized feedback\nCultural context with every lesson", extraText: "#KoreanClass #Klovers", style: "klovers_list" },
+  { mainText: "맛있다", subtitle: "ma-sit-da\nDelicious — Perfect for your next Korean food adventure", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
+  { mainText: "YOU DON'T NEED\nTO LIVE IN KOREA\nTO SPEAK KOREAN.", subtitle: "Our students speak Korean from Egypt, Saudi Arabia, UAE, and 12 other countries — all online, all live.", extraText: "#MythBuster #Klovers #OnlineKorean", style: "klovers_tip" },
+  { mainText: "YOUR KOREAN\nJOURNEY STARTS\nWITH ONE CLASS", subtitle: "Book your free trial. We handle the rest.", extraText: "#LearnKorean #Klovers #StartNow", style: "klovers_varsity" },
+  { mainText: "CONSISTENCY\nBEATS\nTALENT.\nEVERY TIME.", subtitle: "30 minutes a day beats 5 hours on a weekend. Stay consistent.", extraText: "#Motivation #Klovers #LearnKorean", style: "klovers_bold" },
+  { mainText: "15+", subtitle: "Countries\nOur community spans the Middle East, North Africa, and beyond. Korean connects us all.", extraText: "#Klovers #Global #KoreanCommunity", style: "klovers_stats" },
+  { mainText: "\"My Korean teacher said my pronunciation was nearly perfect. That's K-Lovers training.\"", subtitle: "— Nour, UAE\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
+  { mainText: "꿈", subtitle: "kkum\nDream — Chase yours. Start learning Korean today.", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
+  { mainText: "WATCHING\nK-POP VIDEOS\nISN'T STUDYING.\nBUT IT CAN BE.", subtitle: "We show you how to turn your hobby into real language skills.", extraText: "#KPop #LearnKorean #Klovers", style: "klovers_bold" },
+  { mainText: "OUR LEVELS", subtitle: "Beginner — Hangul to basic conversations\nElementary — Daily life Korean\nIntermediate — Express opinions & feelings\nAdvanced — Fluent discussions & formal Korean", extraText: "#KoreanLevels #Klovers", style: "klovers_list" },
+  { mainText: "LEARN THE\nCULTURE,\nNOT JUST THE\nLANGUAGE.", subtitle: "Understanding honorifics, age culture, and social norms makes your Korean sound natural — not robotic.", extraText: "#ProTip #Klovers #KoreanCulture", style: "klovers_tip" },
+  { mainText: "NEW SEMESTER.\nNEW YOU.\nNEW LANGUAGE.", subtitle: "Limited spots. Enroll now and start your Korean journey this month.", extraText: "#EnrollNow #Klovers #NewSemester", style: "klovers_varsity" },
+  { mainText: "THE BEST TIME\nTO START WAS\nYESTERDAY.\nTHE NEXT BEST\nTIME IS NOW.", subtitle: "Book your free trial class — kloversegy.com", extraText: "#Klovers #LearnKorean #StartNow", style: "klovers_bold" },
 ];
 
 function getMonthlyDefaultPosts(): PostData[] {
-  const now = new Date();
-  const month = now.toLocaleDateString("en-US", { month: "long" });
-  // Rotate starting type by month index so each month starts with a different post type
-  const offset = now.getMonth(); // 0–11
-  return Array.from({ length: 5 }, (_, i) => {
-    const tpl = POST_TYPE_TEMPLATES[(offset + i) % POST_TYPE_TEMPLATES.length](month);
-    return { id: uid(), ...tpl };
-  });
+  return PREMIUM_POSTS.map((p, i) => ({
+    id: uid(),
+    mainText: p.mainText,
+    subtitle: p.subtitle,
+    extraText: p.extraText,
+  }));
 }
 
 interface MonthlyDraftPost {
@@ -109,30 +95,20 @@ const POST_TYPE_AFFINITY: Record<MonthlyPostType, { templateName: TemplateName; 
   culture:        { templateName: "klovers_bold",         themeName: "yellow" },
 };
 
-// All 16 templates — balanced cycle for 30-post generator
+// All 18 templates — balanced cycle for 30-post generator
 const ALL_TEMPLATES: TemplateName[] = [
-  "klovers_bold",
-  "klovers_varsity",
-  "klovers_split",
-  "klovers_alert",
-  "klovers_countdown",
-  "klovers_quote",
-  "klovers_tip",
-  "klovers_mascot_left",
-  "klovers_mascot_right",
-  "classic",
-  "character",
-  "minimal",
-  "gradient",
-  "neon",
-  "dark",
-  "editorial",
+  "klovers_bold", "klovers_varsity", "klovers_split",
+  "klovers_alert", "klovers_countdown", "klovers_quote", "klovers_tip",
+  "klovers_mascot_left", "klovers_mascot_right",
+  "klovers_stats", "klovers_list",
+  "classic", "character", "minimal", "gradient", "neon", "dark", "editorial",
 ];
 const BALANCE_CYCLE: TemplateName[] = ALL_TEMPLATES;
 const BALANCE_THEME: Record<TemplateName, ColorTheme> = {
   klovers_bold: "yellow", klovers_varsity: "midnight", klovers_split: "yellow",
   klovers_alert: "yellow", klovers_countdown: "midnight", klovers_quote: "yellow", klovers_tip: "yellow",
   klovers_mascot_left: "yellow", klovers_mascot_right: "midnight",
+  klovers_stats: "midnight", klovers_list: "midnight",
   classic: "yellow", character: "yellow", minimal: "yellow",
   gradient: "yellow", neon: "midnight", dark: "midnight", editorial: "yellow",
 };
@@ -337,25 +313,28 @@ const TEMPLATE_CARDS: TemplateName[] = [
   "klovers_bold", "klovers_varsity", "klovers_split",
   "klovers_alert", "klovers_countdown", "klovers_quote", "klovers_tip",
   "klovers_mascot_left", "klovers_mascot_right",
+  "klovers_stats", "klovers_list",
   "classic", "character", "minimal", "gradient", "neon", "dark", "editorial",
 ];
 const TEMPLATE_LABELS: Record<TemplateName, { label: string; desc: string }> = {
-  klovers_bold:         { label: "⚡ Bold",      desc: "Attention — Yellow frame" },
-  klovers_varsity:      { label: "🏆 Varsity",   desc: "Interest — Dark ring" },
-  klovers_split:        { label: "✂ Split",      desc: "Action — Diagonal CTA" },
-  klovers_alert:        { label: "🔴 Alert",     desc: "Urgency — Seat counter" },
+  klovers_bold:         { label: "⚡ Bold",      desc: "Big white headlines" },
+  klovers_varsity:      { label: "🏆 Varsity",   desc: "Dark + photo overlay" },
+  klovers_split:        { label: "✂ Split",      desc: "Diagonal CTA" },
+  klovers_alert:        { label: "🔴 Alert",     desc: "Seat counter" },
   klovers_countdown:    { label: "⏳ Countdown", desc: "Days-left ring" },
-  klovers_quote:        { label: "💬 Quote",     desc: "Testimonial card" },
-  klovers_tip:          { label: "💡 Tip",       desc: "Educational tip" },
+  klovers_quote:        { label: "💬 Quote",     desc: "Testimonial" },
+  klovers_tip:          { label: "💡 Tip",       desc: "Korean word / tip" },
   klovers_mascot_left:  { label: "🧑‍🎓 Mascot L", desc: "Characters left" },
   klovers_mascot_right: { label: "🧑‍🎓 Mascot R", desc: "Characters right" },
-  classic:              { label: "🟨 Classic",   desc: "Bold yellow background" },
-  character:            { label: "🎨 Character", desc: "Illustrated overlay" },
-  minimal:              { label: "□ Minimal",    desc: "Clean border inset" },
-  gradient:             { label: "🌈 Gradient",  desc: "Smooth color blend" },
-  neon:                 { label: "✨ Neon",      desc: "Dark with glow" },
-  dark:                 { label: "🌙 Dark",      desc: "Elegant dark theme" },
-  editorial:            { label: "📄 Editorial", desc: "Magazine style" },
+  klovers_stats:        { label: "📊 Stats",     desc: "Large number" },
+  klovers_list:         { label: "📋 List",      desc: "Numbered items" },
+  classic:              { label: "🟨 Classic",   desc: "Yellow background" },
+  character:            { label: "🎨 Character", desc: "Illustrated" },
+  minimal:              { label: "□ Minimal",    desc: "Border inset" },
+  gradient:             { label: "🌈 Gradient",  desc: "Color blend" },
+  neon:                 { label: "✨ Neon",      desc: "Dark glow" },
+  dark:                 { label: "🌙 Dark",      desc: "Elegant dark" },
+  editorial:            { label: "📄 Editorial", desc: "Magazine" },
 };
 
 function AllTemplateCards({ post, theme, format, active, onSelect }: {
@@ -934,8 +913,8 @@ export default function CreatorHub() {
               : monthlyDrafts.length > 0
                 ? monthlyDrafts.map(d => ({ template: d.templateName, theme: d.themeName }))
                 : posts.map((_, i) => ({
-                    template: BALANCE_CYCLE[i % BALANCE_CYCLE.length],
-                    theme: BALANCE_THEME[BALANCE_CYCLE[i % BALANCE_CYCLE.length]],
+                    template: PREMIUM_POSTS[i % PREMIUM_POSTS.length].style,
+                    theme: BALANCE_THEME[PREMIUM_POSTS[i % PREMIUM_POSTS.length].style],
                   }))
           }
         />

@@ -10,7 +10,7 @@ export interface PostData {
   lang?: PostLang;
 }
 
-export type TemplateName = "classic" | "character" | "minimal" | "gradient" | "neon" | "dark" | "editorial" | "klovers_bold" | "klovers_varsity" | "klovers_split" | "klovers_alert" | "klovers_countdown" | "klovers_quote" | "klovers_tip" | "klovers_mascot_left" | "klovers_mascot_right";
+export type TemplateName = "classic" | "character" | "minimal" | "gradient" | "neon" | "dark" | "editorial" | "klovers_bold" | "klovers_varsity" | "klovers_split" | "klovers_alert" | "klovers_countdown" | "klovers_quote" | "klovers_tip" | "klovers_mascot_left" | "klovers_mascot_right" | "klovers_stats" | "klovers_list";
 export type ColorTheme = "yellow" | "midnight";
 export type FormatKey = "instagram" | "story" | "facebook" | "tiktok";
 
@@ -45,6 +45,8 @@ export const TEMPLATE_META: { key: TemplateName; label: string; desc: string; is
   { key: "klovers_tip",       label: "💡 Tip",       desc: "Engagement — Educational tip card",   isKlovers: true },
   { key: "klovers_mascot_left",  label: "🧑‍🎓 Mascot L", desc: "Characters left — text right",       isKlovers: true },
   { key: "klovers_mascot_right", label: "🧑‍🎓 Mascot R", desc: "Text left — characters right",       isKlovers: true },
+  { key: "klovers_stats",        label: "📊 Stats",    desc: "Large number + label — social proof", isKlovers: true },
+  { key: "klovers_list",         label: "📋 List",     desc: "Numbered list — tips & reasons",       isKlovers: true },
 ];
 
 // ─── Canvas Helpers ───
@@ -1196,6 +1198,119 @@ function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData,
   ctx.textAlign = "left";
 }
 
+// STATS — Large number + label (social proof / authority)
+function renderKloversStats(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+  const pad = 52 * S;
+
+  // ── Black background with subtle border ──
+  ctx.fillStyle = "#0a0a0a";
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = "#1a1a1a";
+  ctx.lineWidth = 1 * S;
+  ctx.strokeRect(0, 0, w, h);
+
+  // ── Brand tag ──
+  ctx.font = fontStack(L, 700, 11 * S);
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillText("K-LOVERS", pad, h * 0.08);
+
+  // ── Large number (focal point) ──
+  const numText = post.mainText;
+  const numSize = Math.min(120 * S, w * 0.22);
+  ctx.font = fontStack("en", 900, numSize);
+  ctx.fillStyle = "#FFFF00";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(numText, w / 2, h * 0.38);
+  ctx.textBaseline = "alphabetic";
+
+  // ── Stat label ──
+  ctx.font = fontStack(L, 700, 26 * S);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(post.subtitle.split("\n")[0] || "", w / 2, h * 0.56);
+
+  // ── Description ──
+  const desc = post.subtitle.split("\n").slice(1).join(" ") || post.extraText;
+  if (desc) {
+    ctx.font = fontStack(L, 400, 15 * S);
+    ctx.fillStyle = "#888888";
+    wrapText(ctx, desc, pad, h * 0.66, w - pad * 2, 22 * S, 3);
+  }
+
+  // ── CTA + K badge ──
+  ctx.font = fontStack("en", 400, 11 * S);
+  ctx.fillStyle = "#555";
+  ctx.textAlign = "left";
+  ctx.fillText("kloversegy.com", pad, h - pad);
+
+  const bR = 22 * S;
+  ctx.fillStyle = "#FFFF00";
+  ctx.beginPath(); ctx.arc(w - pad - bR, h - pad, bR, 0, Math.PI * 2); ctx.fill();
+  ctx.font = fontStack("en", 900, 16 * S);
+  ctx.fillStyle = "#000";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("K", w - pad - bR, h - pad);
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+}
+
+// LIST — Numbered list with yellow circles (tips, reasons, steps)
+function renderKloversList(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+  const pad = 52 * S;
+
+  // ── Black background ──
+  ctx.fillStyle = "#0a0a0a";
+  ctx.fillRect(0, 0, w, h);
+
+  // ── Brand tag ──
+  ctx.font = fontStack(L, 700, 11 * S);
+  ctx.fillStyle = "#FFFF00";
+  ctx.fillText("K-LOVERS", pad, h * 0.08);
+
+  // ── Headline ──
+  const hlSize = Math.min(40 * S, (w - pad * 2) / 8);
+  ctx.font = fontStack(L, 900, hlSize);
+  ctx.fillStyle = "#ffffff";
+  wrapText(ctx, post.mainText, pad, h * 0.16, w - pad * 2, hlSize * 1.15, 2);
+
+  // ── List items from subtitle (split by newline) ──
+  const items = post.subtitle.split("\n").filter(s => s.trim());
+  const startY = h * 0.34;
+  const rowH = Math.min(48 * S, (h * 0.50) / Math.max(items.length, 1));
+  const circleR = 17 * S;
+
+  items.forEach((item, i) => {
+    const y = startY + i * rowH;
+
+    // Yellow circle with number
+    ctx.fillStyle = "#FFFF00";
+    ctx.beginPath(); ctx.arc(pad + circleR, y, circleR, 0, Math.PI * 2); ctx.fill();
+    ctx.font = fontStack("en", 900, 15 * S);
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(String(i + 1), pad + circleR, y);
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+
+    // Item text
+    ctx.font = fontStack(L, 400, 16 * S);
+    ctx.fillStyle = "#cccccc";
+    ctx.fillText(item.trim(), pad + circleR * 2 + 18 * S, y + 5 * S);
+  });
+
+  // ── CTA + K badge ──
+  ctx.font = fontStack("en", 400, 11 * S);
+  ctx.fillStyle = "#555";
+  ctx.fillText("kloversegy.com", pad, h - pad);
+
+  const bR = 22 * S;
+  ctx.fillStyle = "#FFFF00";
+  ctx.beginPath(); ctx.arc(w - pad - bR, h - pad, bR, 0, Math.PI * 2); ctx.fill();
+  ctx.font = fontStack("en", 900, 16 * S);
+  ctx.fillStyle = "#000";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("K", w - pad - bR, h - pad);
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+}
+
 // ─── Mascot preload ───
 
 let _mascot: HTMLImageElement | null = null;
@@ -1243,6 +1358,8 @@ export function renderPost(
   if (template === "klovers_tip")       { renderKloversTip(ctx, post, w, h, scale, L);       return; }
   if (template === "klovers_mascot_left")  { renderKloversMascotLeft(ctx, post, w, h, scale, L, bgImage, wa);  return; }
   if (template === "klovers_mascot_right") { renderKloversMascotRight(ctx, post, w, h, scale, L, bgImage, wa); return; }
+  if (template === "klovers_stats")       { renderKloversStats(ctx, post, w, h, scale, L); return; }
+  if (template === "klovers_list")        { renderKloversList(ctx, post, w, h, scale, L); return; }
 
   // ─── PHOTO SPLIT LAYOUT ───────────────────────────────────
   if (bgImage) {
