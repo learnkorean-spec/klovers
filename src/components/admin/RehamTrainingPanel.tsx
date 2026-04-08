@@ -49,6 +49,7 @@ interface ConversationExchange {
 }
 
 const CONVERSATION_DATA: ConversationExchange[] = [
+  /* ── Opening & Introduction ── */
   {
     id: 1,
     topic: "Self Introduction",
@@ -67,6 +68,7 @@ const CONVERSATION_DATA: ConversationExchange[] = [
       english: "Having worked in multilingual environments, I understand the importance of language accuracy and context. In the Explore-Saudi project, I was directly responsible for website structure design, SEO optimization, and data quality improvement.",
     },
   },
+  /* ── Performance & Metrics ── */
   {
     id: 3,
     topic: "Data Accuracy",
@@ -78,6 +80,16 @@ const CONVERSATION_DATA: ConversationExchange[] = [
   },
   {
     id: 4,
+    topic: "KPI & Targets",
+    interviewer: { korean: "이전 직장에서 어떤 KPI를 관리했으며, 목표를 어떻게 달성했습니까?", english: "What KPIs did you manage at your previous job, and how did you achieve your targets?" },
+    reham: {
+      korean: "주요 KPI는 데이터 정확도, 일일 처리량, 그리고 응답 시간이었습니다. 저는 체크리스트 기반의 검증 프로세스를 도입하여 오류율을 50% 이상 줄였습니다. 또한 우선순위를 정해 긴급 건을 먼저 처리하는 시스템을 만들었습니다.",
+      english: "Key KPIs were data accuracy, daily throughput, and response time. I introduced a checklist-based verification process that reduced the error rate by over 50%. I also created a prioritization system to handle urgent cases first.",
+    },
+  },
+  /* ── Strengths & Weaknesses ── */
+  {
+    id: 5,
     topic: "Strengths",
     interviewer: { korean: "본인의 강점은 무엇입니까?", english: "What are your strengths?" },
     reham: {
@@ -86,7 +98,17 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     },
   },
   {
-    id: 5,
+    id: 6,
+    topic: "Weaknesses",
+    interviewer: { korean: "본인의 약점은 무엇이라고 생각하시나요?", english: "What do you consider your weaknesses?" },
+    reham: {
+      korean: "때때로 완벽주의적인 성향 때문에 하나의 작업에 필요 이상으로 시간을 투자하는 경향이 있었습니다. 이를 개선하기 위해 타임박싱 기법을 활용하고, 품질과 효율성의 균형을 맞추는 연습을 하고 있습니다.",
+      english: "I sometimes tend to spend more time than necessary on a task due to perfectionism. To improve this, I've been using timeboxing techniques and practicing how to balance quality with efficiency.",
+    },
+  },
+  /* ── Motivation & Company Fit ── */
+  {
+    id: 7,
     topic: "Why This Role",
     interviewer: { korean: "왜 이 직무에 관심이 있으신가요?", english: "Why are you interested in this role?" },
     reham: {
@@ -95,7 +117,63 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     },
   },
   {
-    id: 6,
+    id: 8,
+    topic: "Why This Company",
+    interviewer: { korean: "왜 저희 회사에 지원하셨나요?", english: "Why did you apply to our company?" },
+    reham: {
+      korean: "귀사는 AI 기술 분야에서 혁신적인 성과를 이루고 있으며, 데이터 품질에 높은 기준을 두고 있다고 알고 있습니다. 저의 데이터 관리 경험과 다국어 능력이 귀사의 글로벌 프로젝트에 기여할 수 있다고 확신합니다.",
+      english: "I understand your company is achieving innovative results in AI technology and maintains high standards for data quality. I am confident that my data management experience and multilingual abilities can contribute to your global projects.",
+    },
+  },
+  /* ── Behavioral Questions (STAR Method) ── */
+  {
+    id: 9,
+    topic: "Problem Solving",
+    interviewer: { korean: "어려운 문제를 해결했던 경험을 말씀해 주세요.", english: "Tell me about a time you solved a difficult problem." },
+    reham: {
+      korean: "Kerry Logistics에서 주문 오류율이 갑자기 증가했을 때, 저는 데이터를 분석하여 특정 공급업체의 입력 형식 변경이 원인임을 파악했습니다. 즉시 검증 규칙을 업데이트하고 팀에 교육을 실시하여 일주일 내에 오류율을 정상 수준으로 복원했습니다.",
+      english: "When order error rates suddenly increased at Kerry Logistics, I analyzed the data and identified that a specific supplier's input format change was the cause. I immediately updated validation rules and trained the team, restoring error rates to normal within a week.",
+    },
+  },
+  {
+    id: 10,
+    topic: "Teamwork",
+    interviewer: { korean: "팀에서 갈등이 있었을 때 어떻게 해결하셨나요?", english: "How did you resolve a conflict within your team?" },
+    reham: {
+      korean: "Accenture에서 팀원 간 업무 분배에 대한 의견 차이가 있었습니다. 저는 각 팀원의 강점을 파악하여 역할을 재조정하는 방안을 제안했고, 정기 미팅을 통해 진행 상황을 공유하며 투명한 소통을 유지했습니다. 결과적으로 팀 생산성이 20% 향상되었습니다.",
+      english: "At Accenture, there was a disagreement about task distribution among team members. I proposed reassigning roles based on each member's strengths and maintained transparent communication through regular meetings. As a result, team productivity improved by 20%.",
+    },
+  },
+  {
+    id: 11,
+    topic: "Handling Pressure",
+    interviewer: { korean: "마감 기한이 촉박한 상황에서 어떻게 대처하셨나요?", english: "How did you handle a situation with a tight deadline?" },
+    reham: {
+      korean: "Kerry Logistics에서 월말 마감 시 주문량이 평소의 두 배로 증가한 적이 있습니다. 저는 작업을 긴급도별로 분류하고, 반복 작업을 자동화하는 간단한 템플릿을 만들어 팀과 공유했습니다. 이를 통해 마감 기한 내에 모든 주문을 정확하게 처리할 수 있었습니다.",
+      english: "At Kerry Logistics, month-end order volume doubled. I categorized tasks by urgency, created simple templates to automate repetitive work, and shared them with the team. This enabled us to process all orders accurately within the deadline.",
+    },
+  },
+  {
+    id: 12,
+    topic: "Leadership",
+    interviewer: { korean: "리더십을 발휘했던 경험을 말씀해 주세요.", english: "Tell me about a time you demonstrated leadership." },
+    reham: {
+      korean: "Explore-Saudi 프로젝트에서 SEO 최적화 전략을 주도했습니다. 팀원들에게 SEO 모범 사례를 교육하고, 주간 리뷰 세션을 도입하여 콘텐츠 품질을 지속적으로 개선했습니다. 3개월 만에 검색 엔진 순위가 크게 향상되었습니다.",
+      english: "I led the SEO optimization strategy for the Explore-Saudi project. I trained team members on SEO best practices and introduced weekly review sessions to continuously improve content quality. Within 3 months, search engine rankings improved significantly.",
+    },
+  },
+  {
+    id: 13,
+    topic: "Mistake & Learning",
+    interviewer: { korean: "실수를 했던 경험과 그것에서 무엇을 배웠는지 말씀해 주세요.", english: "Tell me about a mistake you made and what you learned from it." },
+    reham: {
+      korean: "초기에 데이터 검증 없이 대량 업로드를 진행하여 오류가 발생한 적이 있습니다. 이 경험을 통해 항상 샘플 검증을 먼저 수행하는 습관을 갖게 되었고, 이후에는 업로드 전 체크리스트를 만들어 팀 전체에 적용했습니다.",
+      english: "Early on, I made a bulk upload without data validation, which caused errors. This taught me to always perform sample verification first. After that, I created a pre-upload checklist and applied it across the entire team.",
+    },
+  },
+  /* ── Technical & Skills ── */
+  {
+    id: 14,
     topic: "Web Development",
     interviewer: { korean: "웹 개발 경험에 대해 말씀해 주세요.", english: "Tell me about your web development experience." },
     reham: {
@@ -104,12 +182,68 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     },
   },
   {
-    id: 7,
+    id: 15,
+    topic: "Tools & Technology",
+    interviewer: { korean: "어떤 도구와 기술을 사용해 보셨나요?", english: "What tools and technologies have you used?" },
+    reham: {
+      korean: "Excel과 Google Sheets를 활용한 데이터 분석, CRM 시스템 관리, SEO 도구 (Google Analytics, Search Console), 그리고 웹 개발에서는 React, TypeScript, Supabase를 사용해 보았습니다. 또한 AI 도구를 활용한 콘텐츠 생성과 데이터 처리 경험도 있습니다.",
+      english: "I have experience with data analysis using Excel and Google Sheets, CRM system management, SEO tools (Google Analytics, Search Console), and React, TypeScript, and Supabase for web development. I also have experience using AI tools for content generation and data processing.",
+    },
+  },
+  {
+    id: 16,
+    topic: "Multilingual Skills",
+    interviewer: { korean: "다국어 능력이 업무에 어떻게 도움이 되었나요?", english: "How have your multilingual skills helped in your work?" },
+    reham: {
+      korean: "아랍어, 영어, 한국어를 구사할 수 있어 다국적 팀과의 소통이 원활했습니다. 특히 콘텐츠 모더레이션 업무에서 아랍어 콘텐츠의 맥락과 뉘앙스를 정확하게 판단할 수 있었고, 이는 데이터 품질 향상에 직접적으로 기여했습니다.",
+      english: "Being able to speak Arabic, English, and Korean enabled smooth communication with multinational teams. Especially in content moderation, I could accurately judge the context and nuances of Arabic content, which directly contributed to improving data quality.",
+    },
+  },
+  /* ── Situational & Future ── */
+  {
+    id: 17,
+    topic: "Adaptability",
+    interviewer: { korean: "새로운 환경이나 시스템에 어떻게 적응하시나요?", english: "How do you adapt to new environments or systems?" },
+    reham: {
+      korean: "저는 먼저 시스템의 문서와 가이드를 꼼꼼히 읽고, 실제로 사용해 보면서 이해를 심화합니다. 모르는 부분은 동료에게 적극적으로 질문하고, 배운 내용을 정리하여 나만의 참고 자료를 만듭니다. 이 방법으로 대부분의 새 시스템에 1~2주 내에 능숙해질 수 있었습니다.",
+      english: "I first thoroughly read system documentation and guides, then deepen my understanding through hands-on use. I actively ask colleagues about things I don't know and organize what I learn into personal reference materials. This approach has allowed me to become proficient in most new systems within 1-2 weeks.",
+    },
+  },
+  {
+    id: 18,
+    topic: "Career Goals",
+    interviewer: { korean: "5년 후의 커리어 목표는 무엇인가요?", english: "What are your career goals in 5 years?" },
+    reham: {
+      korean: "5년 후에는 AI 데이터 품질 분야에서 전문가로 성장하고 싶습니다. 팀을 리드하며 데이터 품질 표준을 수립하고, 자동화된 검증 프로세스를 개발하여 조직의 AI 시스템 성능 향상에 기여하고 싶습니다.",
+      english: "In 5 years, I want to grow as an expert in AI data quality. I aim to lead a team, establish data quality standards, and develop automated verification processes to contribute to improving the organization's AI system performance.",
+    },
+  },
+  {
+    id: 19,
+    topic: "Salary Expectations",
+    interviewer: { korean: "희망하시는 급여 수준이 있으신가요?", english: "Do you have salary expectations?" },
+    reham: {
+      korean: "시장 조사를 통해 이 직무의 평균 급여 범위를 파악하고 있습니다. 저의 경험과 기술 수준을 고려했을 때, 합리적인 범위 내에서 유연하게 논의할 수 있습니다. 무엇보다 성장 기회와 업무 환경이 중요하다고 생각합니다.",
+      english: "I've researched the average salary range for this position. Considering my experience and skill level, I'm flexible to discuss within a reasonable range. Most importantly, I value growth opportunities and the work environment.",
+    },
+  },
+  /* ── Closing ── */
+  {
+    id: 20,
+    topic: "Questions for Interviewer",
+    interviewer: { korean: "저희에게 궁금한 점이 있으신가요?", english: "Do you have any questions for us?" },
+    reham: {
+      korean: "네, 두 가지 질문이 있습니다. 첫째, 이 팀의 일반적인 하루 업무 흐름은 어떻게 되나요? 둘째, 입사 후 첫 3개월 동안 기대하시는 성과는 무엇인가요? 이 역할에서 빠르게 기여하고 싶습니다.",
+      english: "Yes, I have two questions. First, what does a typical day look like for this team? Second, what outcomes do you expect in the first 3 months? I want to contribute quickly in this role.",
+    },
+  },
+  {
+    id: 21,
     topic: "Closing",
     interviewer: { korean: "마지막으로 하고 싶은 말씀이 있으신가요?", english: "Any final words you'd like to share?" },
     reham: {
-      korean: "이 기회를 주셔서 감사합니다. 제 경험과 언어 능력을 통해 이 역할에 의미 있는 기여를 할 수 있다고 생각합니다. 감사합니다.",
-      english: "Thank you for this opportunity. I believe I can make a meaningful contribution to this role through my experience and language skills. Thank you.",
+      korean: "이 기회를 주셔서 감사합니다. 제 경험과 언어 능력을 통해 이 역할에 의미 있는 기여를 할 수 있다고 생각합니다. 데이터 품질에 대한 열정과 12년 이상의 운영 경험을 바탕으로 팀에 가치를 더할 수 있다고 확신합니다. 감사합니다.",
+      english: "Thank you for this opportunity. I believe I can make a meaningful contribution through my experience and language skills. I am confident I can add value to the team with my passion for data quality and over 12 years of operational experience. Thank you.",
     },
   },
 ];
