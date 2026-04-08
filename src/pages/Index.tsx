@@ -79,18 +79,18 @@ const Index = () => {
         {/* Attention — strong hook, CTA, social proof stats */}
         <HeroSection />
 
-        {/* Interview Training — Under Construction Banner */}
+        {/* Korean Interview Training Banner */}
         <div className="bg-gradient-to-r from-emerald-600 to-green-500 text-white">
           <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center">
             <div className="flex items-center gap-2">
-              <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Under Construction</span>
-              <span className="text-sm font-medium">Practice Korean Interview with Klovers</span>
+              <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">AI-Powered</span>
+              <span className="text-sm font-medium">Korean Interview Training — Personalized Q&A</span>
             </div>
             <Link
-              to="/practice-interview"
+              to="/interview-training"
               className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-emerald-50 transition-colors"
             >
-              Try Now (Password Protected)
+              Start Free Interview Prep
             </Link>
           </div>
         </div>

@@ -168,6 +168,24 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const meta = session.metadata;
 
+      // ── Interview Training payment ──
+      if (meta?.product_type === "interview_training" && meta?.interview_session_id) {
+        const { error: itErr } = await supabaseAdmin
+          .from("interview_training_sessions")
+          .update({
+            payment_status: "paid",
+            paid_purchased: 5,
+            stripe_session_id: session.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", meta.interview_session_id);
+        if (itErr) console.error("Interview training payment update failed:", itErr.message);
+        else console.log("Interview training payment processed for session:", meta.interview_session_id);
+        return new Response(JSON.stringify({ received: true, type: "interview_training" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const email = meta?.email || session.customer_email;
       const name = meta?.name || "";
 
