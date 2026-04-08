@@ -55,6 +55,9 @@ const FreeTrialPage = lazy(() => import("./pages/FreeTrialPage"));
 const ProgressReportPage = lazy(() => import("./pages/ProgressReportPage"));
 const CertificatePage = lazy(() => import("./pages/CertificatePage"));
 const AffiliatePage = lazy(() => import("./pages/AffiliatePage"));
+const LearnKoreanArabicSpeakersPage = lazy(() => import("./pages/LearnKoreanArabicSpeakersPage"));
+const TopikExamPage = lazy(() => import("./pages/TopikExamPage"));
+const KDramaLearningPage = lazy(() => import("./pages/KDramaLearningPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,6 +136,9 @@ const App = () => (
                 <Route path="/progress-report" element={<AuthProtectedRoute><ProgressReportPage /></AuthProtectedRoute>} />
                 <Route path="/certificate" element={<AuthProtectedRoute><CertificatePage /></AuthProtectedRoute>} />
                 <Route path="/affiliate" element={<AffiliatePage />} />
+                <Route path="/learn-korean-arabic-speakers" element={<LearnKoreanArabicSpeakersPage />} />
+                <Route path="/topik-exam-preparation" element={<TopikExamPage />} />
+                <Route path="/learn-korean-kdramas" element={<KDramaLearningPage />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />

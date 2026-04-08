@@ -218,7 +218,7 @@ const BlogPostPage = () => {
     }
     canonical.href = `https://kloversegy.com/blog/${post.slug}`;
 
-    // JSON-LD: BlogPosting
+    // JSON-LD: BlogPosting with enhanced metadata
     let jsonLd = document.getElementById("blog-jsonld");
     if (!jsonLd) {
       jsonLd = document.createElement("script");
@@ -232,12 +232,17 @@ const BlogPostPage = () => {
       "@id": `https://kloversegy.com/blog/${post.slug}`,
       headline: post.title,
       description: post.description,
-      image: ogImage,
-      author: { "@type": "Person", name: post.author },
+      image: [ogImage],
+      author: {
+        "@type": "Organization",
+        name: post.author,
+        url: "https://kloversegy.com"
+      },
       publisher: {
         "@type": "Organization",
-        name: "Klovers",
-        logo: { "@type": "ImageObject", url: "https://kloversegy.com/klovers-logo.jpg" },
+        name: "Klovers — Korean Lovers Academy",
+        logo: { "@type": "ImageObject", url: "https://kloversegy.com/klovers-logo.jpg", width: 512, height: 512 },
+        url: "https://kloversegy.com"
       },
       datePublished: post.published_at || post.created_at,
       ...(post.updated_at ? { dateModified: post.updated_at } : {}),
@@ -246,6 +251,12 @@ const BlogPostPage = () => {
       inLanguage: post.lang || "en",
       wordCount,
       keywords: (post.keywords || []).join(", "),
+      articleSection: TYPE_LABEL[post.article_type] || post.article_type,
+      articleBody: post.content?.substring(0, 500) + "...",
+      speakable: {
+        "@type": "SpeakableSpecification",
+        "xpath": ["/html/head/title", "/html/body/article/h1", "/html/body/article/p"]
+      }
     });
 
     // JSON-LD: BreadcrumbList

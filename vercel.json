@@ -1,8 +1,93 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
   "redirects": [
-    { "source": "/enroll", "destination": "/enroll-now", "permanent": true }
+    {
+      "source": "/hangul-guide",
+      "destination": "/blog/learn-korean-alphabet-hangul-guide",
+      "permanent": true
+    },
+    {
+      "source": "/kdrama-learning",
+      "destination": "/learn-korean-kdramas",
+      "permanent": true
+    },
+    {
+      "source": "/topik-guide",
+      "destination": "/topik-exam-preparation",
+      "permanent": true
+    }
   ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "headers": [
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    },
+    {
+      "source": "/assets/**",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/:path*.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        }
+      ]
+    },
+    {
+      "source": "/:path*.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/:path*.css",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
   ]
 }
