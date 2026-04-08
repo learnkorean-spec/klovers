@@ -227,9 +227,197 @@ const CONVERSATION_DATA: ConversationExchange[] = [
       english: "I've researched the average salary range for this position. Considering my experience and skill level, I'm flexible to discuss within a reasonable range. Most importantly, I value growth opportunities and the work environment.",
     },
   },
-  /* ── Closing ── */
+  /* ── SAP & Operations Deep Dive ── */
   {
     id: 20,
+    topic: "SAP ERP Experience",
+    interviewer: { korean: "SAP ERP 시스템 사용 경험에 대해 자세히 말씀해 주세요.", english: "Please tell me in detail about your SAP ERP experience." },
+    reham: {
+      korean: "Kerry Logistics에서 SAP ERP의 Order-to-Cash 모듈을 3년 이상 사용했습니다. 주문 입력, 배송 처리, 송장 발행까지 전체 프로세스를 관리했으며, 다국가 포트폴리오에서 Oil & Energy, F&B 산업의 복잡한 워크플로우를 처리했습니다. 또한 신입 팀원 10~15명에게 SAP 시스템 교육을 직접 진행했습니다.",
+      english: "At Kerry Logistics, I used SAP ERP's Order-to-Cash module for over 3 years. I managed the entire process from order entry, shipment processing, to invoicing, handling complex workflows across multi-country portfolios in Oil & Energy and F&B industries. I also personally trained 10-15 new team members on SAP systems.",
+    },
+  },
+  {
+    id: 21,
+    topic: "Order-to-Cash Process",
+    interviewer: { korean: "Order-to-Cash 프로세스를 처음부터 끝까지 설명해 주시겠어요?", english: "Can you walk me through the Order-to-Cash process from start to finish?" },
+    reham: {
+      korean: "Order-to-Cash 프로세스는 고객 주문 접수부터 시작됩니다. 먼저 주문을 SAP에 입력하고 재고 확인 및 가격 검증을 합니다. 그 다음 배송 일정을 조율하고, 출하 후 송장을 발행합니다. 마지막으로 대금 수금까지 추적합니다. Kerry에서 월 1,000건 이상의 주문을 이 프로세스로 96% 이상의 정확도로 관리했습니다.",
+      english: "The Order-to-Cash process starts with receiving customer orders. First, I enter orders into SAP and verify inventory and pricing. Then I coordinate shipping schedules, issue invoices after shipment, and finally track payment collection. At Kerry, I managed over 1,000 orders monthly through this process with 96%+ accuracy.",
+    },
+  },
+  {
+    id: 22,
+    topic: "Process Optimization",
+    interviewer: { korean: "운영 프로세스를 개선했던 구체적인 사례를 말씀해 주세요.", english: "Give me a specific example of how you improved an operational process." },
+    reham: {
+      korean: "Kerry Logistics에서 주문 처리 시 반복되는 수작업 오류를 발견했습니다. 표준화된 검증 체크리스트를 만들고, 자주 사용하는 주문 유형에 대한 템플릿을 도입했습니다. 이를 통해 처리 시간을 30% 단축하고 오류율을 크게 줄였습니다. 이 체크리스트는 이후 팀 전체의 표준 절차가 되었습니다.",
+      english: "At Kerry Logistics, I identified recurring manual errors in order processing. I created a standardized verification checklist and introduced templates for frequently used order types. This reduced processing time by 30% and significantly lowered error rates. The checklist later became the standard procedure for the entire team.",
+    },
+  },
+  /* ── Kerry Logistics Specific ── */
+  {
+    id: 23,
+    topic: "Client Management",
+    interviewer: { korean: "50개 이상의 고객사를 어떻게 관리하셨나요?", english: "How did you manage relationships with 50+ clients?" },
+    reham: {
+      korean: "고객을 우선순위별로 분류하고, 각 고객의 특수 요구사항을 문서화했습니다. 주요 고객에 대해서는 정기적인 상태 업데이트를 제공하고, 문제 발생 시 선제적으로 소통했습니다. CRM 시스템을 활용하여 모든 상호작용을 기록하고, 100% 정시 배송 성과를 유지했습니다.",
+      english: "I categorized clients by priority and documented each client's special requirements. For key accounts, I provided regular status updates and communicated proactively when issues arose. Using CRM systems, I logged all interactions and maintained 100% on-time delivery performance.",
+    },
+  },
+  {
+    id: 24,
+    topic: "Customer Escalation",
+    interviewer: { korean: "고가치 고객의 불만을 어떻게 처리하셨나요?", english: "How did you handle a high-value customer complaint?" },
+    reham: {
+      korean: "Kerry에서 주요 고객의 대량 주문에 배송 지연이 발생한 적이 있습니다. 즉시 고객에게 연락하여 상황을 투명하게 공유하고, 대안적인 배송 경로를 찾아 제안했습니다. 동시에 내부 팀과 협력하여 근본 원인을 파악하고 재발 방지 조치를 수립했습니다. 고객은 신속한 대응에 만족하여 거래 관계가 오히려 강화되었습니다.",
+      english: "At Kerry, a major client experienced a shipping delay on a large order. I immediately contacted the client to transparently share the situation and found an alternative shipping route. Simultaneously, I worked with internal teams to identify the root cause and establish preventive measures. The client was satisfied with the quick response, which actually strengthened the business relationship.",
+    },
+  },
+  /* ── Accenture & Content Moderation ── */
+  {
+    id: 25,
+    topic: "Content Moderation",
+    interviewer: { korean: "콘텐츠 모더레이션 업무에서 어떤 종류의 콘텐츠를 처리하셨나요?", english: "What types of content did you handle in content moderation?" },
+    reham: {
+      korean: "Accenture에서 3년 이상 다양한 클라이언트 프로젝트의 콘텐츠를 검토했습니다. 정책 위반 콘텐츠를 식별하고, 문화적 맥락을 고려한 판단을 내렸습니다. 특히 아랍어 콘텐츠의 뉘앙스와 문화적 민감성을 정확하게 평가할 수 있었고, 하루 300~800건을 95% 이상의 품질 정확도로 처리했습니다.",
+      english: "At Accenture, I reviewed content across multiple client projects for over 3 years. I identified policy-violating content and made judgments considering cultural context. I could accurately assess the nuances and cultural sensitivity of Arabic content, processing 300-800 items daily with 95%+ quality accuracy.",
+    },
+  },
+  {
+    id: 26,
+    topic: "Quality Under Volume",
+    interviewer: { korean: "대량의 업무를 처리하면서 품질을 어떻게 유지하셨나요?", english: "How did you maintain quality while handling high volumes?" },
+    reham: {
+      korean: "세 가지 전략을 사용했습니다. 첫째, 작업을 시간 블록으로 나누어 집중력을 유지했습니다. 둘째, 자주 발생하는 유형에 대한 개인 참고 가이드를 만들어 판단 속도를 높였습니다. 셋째, 정기적으로 자가 품질 검사를 실시하여 일관성을 확인했습니다. 이 방법으로 속도와 정확성을 모두 유지할 수 있었습니다.",
+      english: "I used three strategies. First, I divided work into time blocks to maintain focus. Second, I created personal reference guides for frequently occurring types to speed up decision-making. Third, I conducted regular self-quality checks to verify consistency. This approach allowed me to maintain both speed and accuracy.",
+    },
+  },
+  /* ── Klivvr & Fintech ── */
+  {
+    id: 27,
+    topic: "Fintech Experience",
+    interviewer: { korean: "핀테크 환경에서의 고객 서비스 경험에 대해 말씀해 주세요.", english: "Tell me about your customer service experience in a fintech environment." },
+    reham: {
+      korean: "Klivvr에서 하루 50~100건 이상의 고객 상호작용을 처리했습니다. 핀테크 환경이기 때문에 금융 데이터 기밀 유지가 매우 중요했습니다. 엄격한 컴플라이언스 기준을 준수하면서 고객 문제를 신속하게 해결했고, CRM 시스템을 활용하여 모든 상호작용을 체계적으로 관리했습니다.",
+      english: "At Klivvr, I handled 50-100+ customer interactions daily. Since it was a fintech environment, maintaining financial data confidentiality was critical. I resolved customer issues quickly while adhering to strict compliance standards, and systematically managed all interactions using CRM systems.",
+    },
+  },
+  {
+    id: 28,
+    topic: "Data Confidentiality",
+    interviewer: { korean: "민감한 데이터를 다룰 때 어떻게 보안을 유지하셨나요?", english: "How did you maintain security when handling sensitive data?" },
+    reham: {
+      korean: "항상 회사의 데이터 보안 정책을 철저히 따랐습니다. 고객 정보는 승인된 시스템을 통해서만 접근하고, 작업 완료 후 민감한 데이터를 화면에 남기지 않았습니다. 또한 의심스러운 활동이 발견되면 즉시 보안 팀에 보고하는 절차를 따랐습니다. 핀테크에서의 경험을 통해 데이터 보안의 중요성을 깊이 이해하게 되었습니다.",
+      english: "I always strictly followed the company's data security policies. I accessed customer information only through authorized systems and never left sensitive data visible on screen after completing tasks. I also followed procedures to immediately report suspicious activities to the security team. My fintech experience deepened my understanding of data security importance.",
+    },
+  },
+  /* ── Klovers & Entrepreneurship ── */
+  {
+    id: 29,
+    topic: "Entrepreneurship",
+    interviewer: { korean: "Klovers 커뮤니티를 설립하고 운영한 경험에 대해 말씀해 주세요.", english: "Tell me about founding and running the Klovers community." },
+    reham: {
+      korean: "2013년에 Klovers를 설립하여 현재까지 13년간 운영하고 있습니다. 15개국 이상에서 1,000명 이상의 학생들에게 한국어를 가르치고 있습니다. 다양한 수준의 커리큘럼을 개발하고, 글로벌 학습자를 위한 맞춤형 학습 경로를 설계했습니다. 이 경험을 통해 팀 관리, 커리큘럼 개발, 그리고 지속 가능한 비즈니스 성장에 대해 깊이 배웠습니다.",
+      english: "I founded Klovers in 2013 and have been running it for 13 years. I teach Korean to over 1,000 students across 15+ countries. I developed multi-level curricula and designed customized learning paths for global learners. This experience taught me deeply about team management, curriculum development, and sustainable business growth.",
+    },
+  },
+  {
+    id: 30,
+    topic: "Training & Development",
+    interviewer: { korean: "팀원 교육 및 역량 개발 경험에 대해 말씀해 주세요.", english: "Tell me about your experience in training and developing team members." },
+    reham: {
+      korean: "Kerry Logistics에서 신입 팀원 10~15명에게 SAP 시스템과 운영 절차를 교육했습니다. 교육 자료를 직접 만들고, 단계별 학습 프로그램을 설계했습니다. 또한 Klovers에서 13년간 다양한 수준의 학생들을 가르치며 개인별 맞춤 교육 방법을 개발했습니다. 사람마다 학습 스타일이 다르기 때문에 다양한 접근법을 사용합니다.",
+      english: "At Kerry Logistics, I trained 10-15 new team members on SAP systems and operational procedures. I created training materials and designed step-by-step learning programs. Additionally, at Klovers I've taught diverse-level students for 13 years, developing personalized teaching methods. Since everyone has different learning styles, I use various approaches.",
+    },
+  },
+  /* ── Explore-Saudi & Digital ── */
+  {
+    id: 31,
+    topic: "Digital Project Leadership",
+    interviewer: { korean: "Explore-Saudi 프로젝트에서의 리더십 역할에 대해 말씀해 주세요.", english: "Tell me about your leadership role in the Explore-Saudi project." },
+    reham: {
+      korean: "Explore-Saudi 프로젝트에서 프리랜스 리드로서 럭셔리 여행 플랫폼의 디지털 브랜딩과 웹사이트 개발을 총괄했습니다. HTML, CSS, React를 사용하여 웹사이트 아키텍처를 설계하고 구축했으며, SEO 최적화, GA4 분석 구현, CMS 관리를 담당했습니다. AI 도구를 활용한 고품질 디지털 콘텐츠도 제작했습니다.",
+      english: "As Freelance Lead for the Explore-Saudi project, I oversaw digital branding and website development for a luxury travel platform. I designed and built the website architecture using HTML, CSS, and React, and managed SEO optimization, GA4 analytics implementation, and CMS administration. I also created high-quality digital content using AI tools.",
+    },
+  },
+  {
+    id: 32,
+    topic: "SEO & Analytics",
+    interviewer: { korean: "SEO 최적화와 Google Analytics 경험에 대해 말씀해 주세요.", english: "Tell me about your SEO optimization and Google Analytics experience." },
+    reham: {
+      korean: "Explore-Saudi 프로젝트에서 SEO 전략을 수립하고 실행했습니다. 키워드 리서치, 메타 태그 최적화, 콘텐츠 구조 개선을 통해 검색 엔진 순위를 향상시켰습니다. GA4를 구현하여 사용자 행동을 분석하고, 데이터 기반으로 콘텐츠 전략을 조정했습니다. 또한 Klovers 웹사이트에서도 지속적으로 SEO와 콘텐츠 품질을 개선하고 있습니다.",
+      english: "I developed and executed SEO strategies for the Explore-Saudi project. I improved search engine rankings through keyword research, meta tag optimization, and content structure improvements. I implemented GA4 to analyze user behavior and adjusted content strategy based on data. I also continuously improve SEO and content quality on the Klovers website.",
+    },
+  },
+  /* ── Team Lead / Manager Target Role ── */
+  {
+    id: 33,
+    topic: "Management Style",
+    interviewer: { korean: "팀을 관리할 때 어떤 리더십 스타일을 사용하시나요?", english: "What leadership style do you use when managing a team?" },
+    reham: {
+      korean: "저는 서번트 리더십과 결과 중심 리더십을 결합합니다. 팀원들이 필요한 자원과 교육을 제공하면서, 명확한 목표와 기대치를 설정합니다. 정기적인 일대일 미팅을 통해 개인의 성장을 지원하고, 팀 전체의 성과를 투명하게 공유합니다. Kerry에서 팀원 교육을 담당하며 이 스타일이 효과적임을 확인했습니다.",
+      english: "I combine servant leadership with results-oriented leadership. I provide team members with necessary resources and training while setting clear goals and expectations. Through regular one-on-one meetings, I support individual growth and transparently share overall team performance. While training team members at Kerry, I confirmed this style was effective.",
+    },
+  },
+  {
+    id: 34,
+    topic: "Remote Team Management",
+    interviewer: { korean: "원격 팀을 관리한 경험이 있으신가요?", english: "Do you have experience managing remote teams?" },
+    reham: {
+      korean: "네, Klovers를 통해 13년간 15개국 이상의 학생들과 원격으로 작업해왔습니다. 또한 Explore-Saudi 프로젝트도 완전 원격으로 진행했습니다. 시간대 차이를 관리하고, 비동기 커뮤니케이션 도구를 효과적으로 활용하며, 명확한 문서화를 통해 모든 팀원이 같은 방향으로 일할 수 있도록 했습니다.",
+      english: "Yes, through Klovers I've worked remotely with students across 15+ countries for 13 years. The Explore-Saudi project was also fully remote. I managed timezone differences, effectively used asynchronous communication tools, and ensured all team members worked in the same direction through clear documentation.",
+    },
+  },
+  {
+    id: 35,
+    topic: "Cross-Cultural Communication",
+    interviewer: { korean: "다문화 환경에서의 협업 경험을 말씀해 주세요.", english: "Tell me about your experience collaborating in multicultural environments." },
+    reham: {
+      korean: "말레이시아, 이집트, 헝가리에서 근무하며 다양한 문화권의 동료들과 협업했습니다. 6개 언어를 구사할 수 있어 언어 장벽을 줄이고, 문화적 차이를 이해하며 소통할 수 있었습니다. Kerry에서는 다국적 고객사와의 소통을, Accenture에서는 다국어 콘텐츠의 문화적 맥락을 정확히 판단하는 역할을 수행했습니다.",
+      english: "Working in Malaysia, Egypt, and Hungary, I've collaborated with colleagues from diverse cultural backgrounds. Speaking 6 languages, I could reduce language barriers and communicate with cultural understanding. At Kerry, I communicated with multinational clients, and at Accenture, I accurately assessed the cultural context of multilingual content.",
+    },
+  },
+  /* ── Situational - Target Roles ── */
+  {
+    id: 36,
+    topic: "Prioritization",
+    interviewer: { korean: "여러 긴급한 업무가 동시에 들어오면 어떻게 우선순위를 정하시나요?", english: "How do you prioritize when multiple urgent tasks come in at the same time?" },
+    reham: {
+      korean: "먼저 각 업무의 영향도와 긴급성을 평가합니다. 고객 영향이 큰 건과 마감이 임박한 건을 최우선으로 처리합니다. Kerry에서 월말 대량 주문 시 이 방법을 자주 사용했습니다. 필요한 경우 팀원에게 업무를 위임하고, 진행 상황을 실시간으로 관리자에게 보고합니다.",
+      english: "First, I assess each task's impact and urgency. I prioritize tasks with high customer impact and imminent deadlines. I frequently used this method during month-end high-volume periods at Kerry. When necessary, I delegate tasks to team members and report progress to managers in real-time.",
+    },
+  },
+  {
+    id: 37,
+    topic: "Handling Ambiguity",
+    interviewer: { korean: "명확한 지침이 없는 상황에서 어떻게 업무를 진행하시나요?", english: "How do you proceed when there are no clear guidelines?" },
+    reham: {
+      korean: "먼저 유사한 사례나 기존 정책을 참고합니다. 그래도 불명확하면 관련 이해관계자에게 확인을 요청합니다. Accenture에서 새로운 유형의 콘텐츠를 처리할 때 이런 상황이 자주 있었는데, 팀 리드와 상의하여 새로운 가이드라인을 수립하는 데 기여했습니다. 모호한 상황에서도 최선의 판단을 내리되, 항상 문서화하여 팀 전체에 공유합니다.",
+      english: "First, I reference similar cases or existing policies. If still unclear, I reach out to relevant stakeholders for clarification. At Accenture, this happened often when handling new content types — I contributed to establishing new guidelines by consulting with team leads. Even in ambiguous situations, I make the best judgment possible while always documenting and sharing with the team.",
+    },
+  },
+  {
+    id: 38,
+    topic: "Continuous Improvement",
+    interviewer: { korean: "자기 개발을 위해 어떤 노력을 하고 계시나요?", english: "What efforts are you making for self-development?" },
+    reham: {
+      korean: "지속적으로 새로운 기술을 배우고 있습니다. 최근에는 React와 TypeScript를 활용한 웹 개발 역량을 강화했고, Vibe Coding Gold 인증을 취득했습니다. 또한 AI 도구 활용 능력도 개발하고 있습니다. Klovers를 통해 가르치면서 동시에 배우는 것이 가장 효과적인 학습 방법이라고 믿습니다.",
+      english: "I continuously learn new skills. Recently, I've strengthened my web development capabilities with React and TypeScript, and obtained the Vibe Coding Gold certification. I'm also developing AI tool proficiency. Through Klovers, I believe teaching while learning simultaneously is the most effective learning method.",
+    },
+  },
+  {
+    id: 39,
+    topic: "Why Should We Hire You",
+    interviewer: { korean: "저희가 왜 당신을 채용해야 하나요?", english: "Why should we hire you?" },
+    reham: {
+      korean: "저는 12년 이상의 국제 운영 경험, 6개 언어 구사 능력, 그리고 검증된 데이터 처리 정확도를 갖추고 있습니다. Kerry에서 96% 이상의 주문 정확도, Accenture에서 95% 이상의 품질 정확도를 달성했습니다. SAP ERP 전문성, 웹 개발 역량, 그리고 13년간의 커뮤니티 리더십 경험까지 결합하면, 다양한 역할에서 즉시 가치를 제공할 수 있습니다.",
+      english: "I bring 12+ years of international operations experience, fluency in 6 languages, and proven data processing accuracy. I achieved 96%+ order accuracy at Kerry and 95%+ quality accuracy at Accenture. Combined with SAP ERP expertise, web development skills, and 13 years of community leadership, I can deliver immediate value across diverse roles.",
+    },
+  },
+  /* ── Closing ── */
+  {
+    id: 40,
     topic: "Questions for Interviewer",
     interviewer: { korean: "저희에게 궁금한 점이 있으신가요?", english: "Do you have any questions for us?" },
     reham: {
@@ -238,7 +426,7 @@ const CONVERSATION_DATA: ConversationExchange[] = [
     },
   },
   {
-    id: 21,
+    id: 41,
     topic: "Closing",
     interviewer: { korean: "마지막으로 하고 싶은 말씀이 있으신가요?", english: "Any final words you'd like to share?" },
     reham: {
