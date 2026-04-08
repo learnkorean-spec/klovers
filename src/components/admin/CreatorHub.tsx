@@ -964,8 +964,7 @@ export default function CreatorHub() {
                 </Button>
               </>
             )}
-          </div>
-        </div>
+          <\/div>
 
         {/* Empty state */}
         {monthlyDrafts.length === 0 && (
