@@ -9,7 +9,7 @@ import { useSpeech } from "@/hooks/useSpeech";
 import {
   GraduationCap, BookOpen, Mic, ListChecks, Volume2,
   ChevronLeft, ChevronRight, CheckCircle2, RotateCcw, Play,
-  Brain, Timer, FolderOpen, FileText, Languages,
+  Brain, Timer, FolderOpen, FileText, Languages, Layers,
   Shuffle, Eye, EyeOff, ArrowLeft, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -720,6 +720,97 @@ const VOCAB_GROUPS: { name: string; words: { korean: string; romanization: strin
   },
 ];
 
+/* ─── Data: TOPIK 2급 Flash Cards ─── */
+
+interface FlashCardWord {
+  korean: string;
+  romanization: string;
+  english: string;
+  sentence_kr: string;
+  sentence_en: string;
+}
+
+const FLASHCARD_DATA: { category: string; words: FlashCardWord[] }[] = [
+  {
+    category: "Business & Work (비즈니스)",
+    words: [
+      { korean: "회의", romanization: "hoeui", english: "Meeting", sentence_kr: "오늘 오후에 중요한 회의가 있습니다.", sentence_en: "There is an important meeting this afternoon." },
+      { korean: "보고서", romanization: "bogoseo", english: "Report", sentence_kr: "내일까지 보고서를 제출해야 합니다.", sentence_en: "I have to submit the report by tomorrow." },
+      { korean: "출장", romanization: "chuljang", english: "Business trip", sentence_kr: "다음 주에 말레이시아로 출장을 갑니다.", sentence_en: "I'm going on a business trip to Malaysia next week." },
+      { korean: "거래처", romanization: "georaecheo", english: "Business partner / client", sentence_kr: "거래처와 좋은 관계를 유지하는 것이 중요합니다.", sentence_en: "It is important to maintain good relationships with clients." },
+      { korean: "실적", romanization: "siljeok", english: "Performance / results", sentence_kr: "이번 분기 실적이 매우 좋았습니다.", sentence_en: "This quarter's performance was very good." },
+      { korean: "승진", romanization: "seungjin", english: "Promotion", sentence_kr: "열심히 일해서 승진할 수 있었습니다.", sentence_en: "I was able to get promoted by working hard." },
+      { korean: "계약", romanization: "gyeyak", english: "Contract", sentence_kr: "새로운 고객과 계약을 체결했습니다.", sentence_en: "We signed a contract with a new customer." },
+      { korean: "마감", romanization: "magam", english: "Deadline", sentence_kr: "마감 기한을 꼭 지켜 주세요.", sentence_en: "Please make sure to meet the deadline." },
+    ],
+  },
+  {
+    category: "Communication (소통)",
+    words: [
+      { korean: "의견", romanization: "uigyeon", english: "Opinion", sentence_kr: "다른 의견이 있으시면 말씀해 주세요.", sentence_en: "Please share if you have a different opinion." },
+      { korean: "제안", romanization: "jean", english: "Suggestion / proposal", sentence_kr: "새로운 프로젝트에 대한 제안을 준비했습니다.", sentence_en: "I prepared a proposal for the new project." },
+      { korean: "설명", romanization: "seolmyeong", english: "Explanation", sentence_kr: "자세한 설명을 부탁드립니다.", sentence_en: "Could you please give a detailed explanation?" },
+      { korean: "확인", romanization: "hwaghin", english: "Confirmation / check", sentence_kr: "이메일을 확인하셨나요?", sentence_en: "Did you check the email?" },
+      { korean: "연락", romanization: "yeollak", english: "Contact", sentence_kr: "결과가 나오면 바로 연락드리겠습니다.", sentence_en: "I will contact you as soon as the results are out." },
+      { korean: "상의", romanization: "sangui", english: "Discussion / consultation", sentence_kr: "팀장님과 상의한 후에 결정하겠습니다.", sentence_en: "I will decide after discussing with the team leader." },
+      { korean: "전달", romanization: "jeondal", english: "Delivery / passing on", sentence_kr: "이 내용을 팀원들에게 전달해 주세요.", sentence_en: "Please pass this information on to the team members." },
+      { korean: "참석", romanization: "chamseok", english: "Attendance", sentence_kr: "내일 회의에 참석할 수 있으신가요?", sentence_en: "Can you attend tomorrow's meeting?" },
+    ],
+  },
+  {
+    category: "Skills & Abilities (능력)",
+    words: [
+      { korean: "경험", romanization: "gyeongheom", english: "Experience", sentence_kr: "다양한 분야에서 경험을 쌓았습니다.", sentence_en: "I have gained experience in various fields." },
+      { korean: "능력", romanization: "neungnyeok", english: "Ability / capability", sentence_kr: "문제 해결 능력이 뛰어납니다.", sentence_en: "My problem-solving ability is excellent." },
+      { korean: "실력", romanization: "sillyeok", english: "Skill / proficiency", sentence_kr: "한국어 실력을 향상시키고 싶습니다.", sentence_en: "I want to improve my Korean language skills." },
+      { korean: "자격증", romanization: "jagyeokjeung", english: "Certificate / qualification", sentence_kr: "관련 자격증을 취득했습니다.", sentence_en: "I obtained the relevant certification." },
+      { korean: "전문", romanization: "jeonmun", english: "Expert / professional", sentence_kr: "데이터 분석 전문가로 성장하고 싶습니다.", sentence_en: "I want to grow as a data analysis expert." },
+      { korean: "적응", romanization: "jeogeung", english: "Adaptation", sentence_kr: "새로운 환경에 빠르게 적응할 수 있습니다.", sentence_en: "I can quickly adapt to new environments." },
+      { korean: "협력", romanization: "hyeomnyeok", english: "Cooperation", sentence_kr: "팀원들과 협력하여 프로젝트를 완성했습니다.", sentence_en: "I completed the project by cooperating with team members." },
+      { korean: "성과", romanization: "seonggwa", english: "Achievement / outcome", sentence_kr: "지난 분기에 큰 성과를 달성했습니다.", sentence_en: "I achieved significant outcomes last quarter." },
+    ],
+  },
+  {
+    category: "Daily Expressions (일상)",
+    words: [
+      { korean: "약속", romanization: "yaksok", english: "Appointment / promise", sentence_kr: "내일 점심에 약속이 있습니다.", sentence_en: "I have an appointment at lunch tomorrow." },
+      { korean: "준비", romanization: "junbi", english: "Preparation", sentence_kr: "면접 준비를 철저히 했습니다.", sentence_en: "I thoroughly prepared for the interview." },
+      { korean: "계획", romanization: "gyehoek", english: "Plan", sentence_kr: "올해의 계획을 세웠습니다.", sentence_en: "I made plans for this year." },
+      { korean: "결과", romanization: "gyeolgwa", english: "Result", sentence_kr: "노력의 결과가 좋았습니다.", sentence_en: "The results of my efforts were good." },
+      { korean: "기회", romanization: "gihoe", english: "Opportunity", sentence_kr: "이번 기회를 놓치고 싶지 않습니다.", sentence_en: "I don't want to miss this opportunity." },
+      { korean: "목표", romanization: "mokpyo", english: "Goal / target", sentence_kr: "올해의 목표는 TOPIK 4급 합격입니다.", sentence_en: "My goal this year is to pass TOPIK Level 4." },
+      { korean: "노력", romanization: "noryeok", english: "Effort", sentence_kr: "매일 꾸준히 노력하고 있습니다.", sentence_en: "I make consistent effort every day." },
+      { korean: "습관", romanization: "seupgwan", english: "Habit", sentence_kr: "좋은 습관을 만드는 것이 중요합니다.", sentence_en: "It is important to build good habits." },
+    ],
+  },
+  {
+    category: "Emotions & Personality (감정)",
+    words: [
+      { korean: "자신감", romanization: "jasingam", english: "Confidence", sentence_kr: "면접에서 자신감을 보여 주는 것이 중요합니다.", sentence_en: "It is important to show confidence in an interview." },
+      { korean: "책임감", romanization: "chaegimgam", english: "Sense of responsibility", sentence_kr: "강한 책임감을 가지고 일합니다.", sentence_en: "I work with a strong sense of responsibility." },
+      { korean: "열정", romanization: "yeoljeong", english: "Passion", sentence_kr: "한국어 교육에 대한 열정이 있습니다.", sentence_en: "I have a passion for Korean language education." },
+      { korean: "인내심", romanization: "innaesim", english: "Patience", sentence_kr: "어려운 상황에서도 인내심을 유지합니다.", sentence_en: "I maintain patience even in difficult situations." },
+      { korean: "꼼꼼하다", romanization: "kkomkkomhada", english: "To be meticulous", sentence_kr: "저는 업무를 꼼꼼하게 처리합니다.", sentence_en: "I handle my work meticulously." },
+      { korean: "성실하다", romanization: "seongsilhada", english: "To be diligent / sincere", sentence_kr: "항상 성실하게 일하려고 노력합니다.", sentence_en: "I always try to work diligently." },
+      { korean: "적극적", romanization: "jeokgeukjeok", english: "Proactive / active", sentence_kr: "새로운 프로젝트에 적극적으로 참여합니다.", sentence_en: "I actively participate in new projects." },
+      { korean: "긍정적", romanization: "geungjeongjeok", english: "Positive", sentence_kr: "항상 긍정적인 태도를 유지합니다.", sentence_en: "I always maintain a positive attitude." },
+    ],
+  },
+  {
+    category: "Interview Essentials (면접)",
+    words: [
+      { korean: "지원하다", romanization: "jiwonhada", english: "To apply", sentence_kr: "이 회사에 지원한 이유는 성장 가능성 때문입니다.", sentence_en: "The reason I applied to this company is its growth potential." },
+      { korean: "채용", romanization: "chaeyong", english: "Hiring / recruitment", sentence_kr: "채용 공고를 보고 지원했습니다.", sentence_en: "I applied after seeing the job posting." },
+      { korean: "면접관", romanization: "myeonjeobgwan", english: "Interviewer", sentence_kr: "면접관의 질문에 정확하게 답변했습니다.", sentence_en: "I answered the interviewer's questions accurately." },
+      { korean: "이력서", romanization: "iryeokseo", english: "Resume / CV", sentence_kr: "이력서를 최신 상태로 업데이트했습니다.", sentence_en: "I updated my resume to the latest version." },
+      { korean: "포부", romanization: "pobu", english: "Ambition / aspiration", sentence_kr: "이 분야의 전문가가 되는 것이 제 포부입니다.", sentence_en: "My ambition is to become an expert in this field." },
+      { korean: "기여하다", romanization: "giyeohada", english: "To contribute", sentence_kr: "팀의 성과에 기여하고 싶습니다.", sentence_en: "I want to contribute to the team's performance." },
+      { korean: "동기", romanization: "donggi", english: "Motivation / motive", sentence_kr: "지원 동기를 말씀해 주세요.", sentence_en: "Please tell me your motivation for applying." },
+      { korean: "입사", romanization: "ipsa", english: "Joining a company", sentence_kr: "입사 후 첫 3개월 안에 빠르게 적응하겠습니다.", sentence_en: "I will adapt quickly within the first 3 months after joining." },
+    ],
+  },
+];
+
 /* ─── Play Button Component ─── */
 
 function PlayBtn({ onClick, label, variant = "kr", disabled }: {
@@ -786,6 +877,19 @@ export default function RehamTrainingPanel() {
 
   /* Vocabulary state */
   const [learnedVocab, setLearnedVocab] = useState<Set<string>>(new Set());
+
+  /* Flash Card state */
+  const [fcCategoryIdx, setFcCategoryIdx] = useState(0);
+  const [fcCardIdx, setFcCardIdx] = useState(0);
+  const [fcFlipped, setFcFlipped] = useState(false);
+  const [fcShuffle, setFcShuffle] = useState(false);
+  const [fcMastered, setFcMastered] = useState<Set<string>>(new Set());
+  const fcCategory = FLASHCARD_DATA[fcCategoryIdx];
+  const fcWords = useMemo(
+    () => (fcShuffle ? shuffleArray(fcCategory.words) : fcCategory.words),
+    [fcCategoryIdx, fcShuffle],
+  );
+  const fcCurrent = fcWords[fcCardIdx] || fcWords[0];
 
   /* Mock Interview timer */
   useEffect(() => {
@@ -873,6 +977,9 @@ export default function RehamTrainingPanel() {
             </TabsTrigger>
             <TabsTrigger value="vocabulary" className="gap-1 text-xs">
               <Languages className="h-3.5 w-3.5" /> Vocab
+            </TabsTrigger>
+            <TabsTrigger value="flashcards" className="gap-1 text-xs">
+              <Layers className="h-3.5 w-3.5" /> 2급 Cards
             </TabsTrigger>
           </TabsList>
 
@@ -1581,6 +1688,164 @@ export default function RehamTrainingPanel() {
                 })}
               </div>
             </ScrollArea>
+          </TabsContent>
+          {/* ── Flash Cards Tab (TOPIK 2급) ── */}
+          <TabsContent value="flashcards">
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">TOPIK 2급</Badge>
+                    Flash Cards
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {fcMastered.size} / {FLASHCARD_DATA.reduce((s, c) => s + c.words.length, 0)} words mastered
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant={fcShuffle ? "default" : "outline"}
+                  className="gap-1 text-xs h-8"
+                  onClick={() => { setFcShuffle(!fcShuffle); setFcCardIdx(0); setFcFlipped(false); }}
+                >
+                  <Shuffle className="h-3.5 w-3.5" /> {fcShuffle ? "Shuffled" : "In Order"}
+                </Button>
+              </div>
+
+              {/* Category Selector */}
+              <div className="flex gap-2 flex-wrap">
+                {FLASHCARD_DATA.map((cat, i) => (
+                  <Button
+                    key={cat.category}
+                    size="sm"
+                    variant={fcCategoryIdx === i ? "default" : "outline"}
+                    className="text-xs h-7"
+                    onClick={() => { setFcCategoryIdx(i); setFcCardIdx(0); setFcFlipped(false); }}
+                  >
+                    {cat.category.split("(")[0].trim()}
+                    <Badge variant="secondary" className="ml-1 text-[10px] h-4">
+                      {cat.words.filter((w) => fcMastered.has(w.korean)).length}/{cat.words.length}
+                    </Badge>
+                  </Button>
+                ))}
+              </div>
+
+              {/* Progress */}
+              <Progress value={((fcCardIdx + 1) / fcWords.length) * 100} className="h-2" />
+              <p className="text-xs text-muted-foreground text-center">
+                Card {fcCardIdx + 1} of {fcWords.length} — {fcCategory.category}
+              </p>
+
+              {/* Flash Card */}
+              <div
+                className={cn(
+                  "relative min-h-[320px] rounded-2xl border-2 cursor-pointer transition-all duration-300",
+                  fcFlipped
+                    ? "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-emerald-300"
+                    : "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-300",
+                  fcMastered.has(fcCurrent.korean) && "ring-2 ring-green-400",
+                )}
+                onClick={() => setFcFlipped(!fcFlipped)}
+              >
+                <div className="absolute top-3 right-3">
+                  <Badge variant="outline" className="text-[10px]">
+                    {fcFlipped ? "Click to flip back" : "Click to reveal"}
+                  </Badge>
+                </div>
+
+                {!fcFlipped ? (
+                  /* Front: Korean word */
+                  <div className="flex flex-col items-center justify-center h-full min-h-[320px] p-6 text-center">
+                    <p className="text-4xl font-bold mb-3">{fcCurrent.korean}</p>
+                    <p className="text-sm text-muted-foreground italic mb-6">{fcCurrent.romanization}</p>
+                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <PlayBtn onClick={() => speakKorean(fcCurrent.korean)} label="Listen" variant="kr" disabled={isSpeaking} />
+                      <PlayBtn onClick={() => speak(fcCurrent.korean, { language: "ko-KR", rate: 0.7 })} label="Slow" variant="slow" disabled={isSpeaking} />
+                    </div>
+                  </div>
+                ) : (
+                  /* Back: English + example sentence */
+                  <div className="flex flex-col items-center justify-center h-full min-h-[320px] p-6 text-center space-y-4">
+                    <p className="text-2xl font-bold">{fcCurrent.korean}</p>
+                    <p className="text-lg text-emerald-700 dark:text-emerald-300 font-semibold">{fcCurrent.english}</p>
+                    <div className="w-full max-w-md p-4 rounded-xl bg-white/60 dark:bg-black/20 border space-y-2">
+                      <p className="text-sm font-medium">{fcCurrent.sentence_kr}</p>
+                      <p className="text-xs text-muted-foreground">{fcCurrent.sentence_en}</p>
+                    </div>
+                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <PlayBtn onClick={() => speakKorean(fcCurrent.sentence_kr)} label="Sentence KR" variant="kr" disabled={isSpeaking} />
+                      <PlayBtn onClick={() => speakEnglish(fcCurrent.sentence_en)} label="Sentence EN" variant="en" disabled={isSpeaking} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-between">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setFcCardIdx(Math.max(0, fcCardIdx - 1)); setFcFlipped(false); }}
+                  disabled={fcCardIdx === 0}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Prev
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant={fcMastered.has(fcCurrent.korean) ? "secondary" : "default"}
+                  className="gap-1"
+                  onClick={() => {
+                    setFcMastered((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(fcCurrent.korean)) next.delete(fcCurrent.korean);
+                      else next.add(fcCurrent.korean);
+                      return next;
+                    });
+                  }}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {fcMastered.has(fcCurrent.korean) ? "Mastered" : "Mark Mastered"}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setFcCardIdx(Math.min(fcWords.length - 1, fcCardIdx + 1)); setFcFlipped(false); }}
+                  disabled={fcCardIdx === fcWords.length - 1}
+                  className="gap-1"
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Word Grid Overview */}
+              <div className="mt-2">
+                <p className="text-xs text-muted-foreground mb-2">All words in this category:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {fcWords.map((w, i) => (
+                    <button
+                      key={w.korean}
+                      className={cn(
+                        "text-left p-2 rounded-lg border text-xs transition-colors",
+                        fcCardIdx === i && "ring-2 ring-blue-400",
+                        fcMastered.has(w.korean)
+                          ? "bg-green-50 dark:bg-green-950/20 border-green-200"
+                          : "hover:bg-accent/30",
+                      )}
+                      onClick={() => { setFcCardIdx(i); setFcFlipped(false); }}
+                    >
+                      <span className="font-medium">{w.korean}</span>
+                      <span className="text-muted-foreground ml-1">{w.english}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
