@@ -779,7 +779,7 @@ function renderKloversAlert(ctx: CanvasRenderingContext2D, post: PostData, w: nu
   ctx.font = fontStack(L, 700, 16 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L, wa), w / 2, ctaY + ctaH * 0.65);
+  ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.65);
   ctx.textAlign = "left";
 
   // ── Website ──
@@ -864,7 +864,7 @@ function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w
   ctx.font = fontStack(L, 700, 18 * S);
   ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  ctx.fillText(ctaText(L, wa), w / 2, ctaY + ctaH * 0.67);
+  ctx.fillText(ctaText(L), w / 2, ctaY + ctaH * 0.67);
 
   // ── Website ──
   ctx.font = fontStack("en", 400, 14 * S);
