@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { AlertCircle } from "lucide-react";
 
+const SRCSET_WIDTHS = [320, 480, 640, 828, 1080, 1200, 1920];
+
+function vercelImageUrl(src: string, width: number, quality = 75): string {
+  if (!src.startsWith("http://") && !src.startsWith("https://")) return src;
+  return `/_vercel/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
+}
+
+function buildSrcSet(src: string, quality = 75): string {
+  return SRCSET_WIDTHS.map((w) => `${vercelImageUrl(src, w, quality)} ${w}w`).join(", ");
+}
+
 interface OptimizedImageProps {
   src?: string;
   alt: string;
@@ -9,12 +20,15 @@ interface OptimizedImageProps {
   figureClassName?: string;
   isHero?: boolean;
   fallbackEmoji?: string;
+  variant?: "hero" | "card";
+  priority?: boolean;
+  sizes?: string;
+  quality?: number;
 }
 
-/**
- * Optimized image component with lazy loading, error handling, and responsive behavior
- * Prevents layout shifts and provides graceful degradation for missing/broken images
- */
+const DEFAULT_SIZES_HERO = "(max-width: 768px) 100vw, 720px";
+const DEFAULT_SIZES_CARD = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
+
 const OptimizedImage = ({
   src,
   alt,
@@ -23,34 +37,51 @@ const OptimizedImage = ({
   figureClassName = "mb-8 -mx-4 sm:mx-0",
   isHero = false,
   fallbackEmoji = "📖",
+  variant,
+  priority = false,
+  sizes,
+  quality = 75,
 }: OptimizedImageProps) => {
   const [imgError, setImgError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Validate URL format
+  const isCard = variant === "card";
+  const effectiveIsHero = variant === "hero" || (!variant && isHero);
+
+  const effectiveSizes =
+    sizes || (isCard ? DEFAULT_SIZES_CARD : effectiveIsHero ? DEFAULT_SIZES_HERO : DEFAULT_SIZES_HERO);
+
   const isValidUrl = src && (src.startsWith("http://") || src.startsWith("https://"));
 
+  // Fallback UI for missing/broken images
+  const fallbackContent = (
+    <div
+      className={`
+        w-full flex items-center justify-center
+        ${effectiveIsHero ? "aspect-[16/9] rounded-none sm:rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 border border-border" : "aspect-video bg-gradient-to-br from-muted/50 to-muted/20"}
+        ${className}
+      `}
+    >
+      <div className="text-center">
+        {imgError ? (
+          <>
+            <AlertCircle className="h-12 w-12 mx-auto text-destructive/50 mb-2" />
+            <p className="text-xs text-muted-foreground">Image unavailable</p>
+          </>
+        ) : (
+          <span className="text-5xl">{fallbackEmoji}</span>
+        )}
+      </div>
+    </div>
+  );
+
   if (!isValidUrl || imgError) {
+    if (isCard) {
+      return fallbackContent;
+    }
     return (
       <figure className={figureClassName}>
-        <div
-          className={`
-            w-full flex items-center justify-center
-            ${isHero ? "aspect-[16/9] rounded-none sm:rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 border border-border" : "aspect-video bg-gradient-to-br from-muted/50 to-muted/20"}
-            ${className}
-          `}
-        >
-          <div className="text-center">
-            {imgError ? (
-              <>
-                <AlertCircle className="h-12 w-12 mx-auto text-destructive/50 mb-2" />
-                <p className="text-xs text-muted-foreground">Image unavailable</p>
-              </>
-            ) : (
-              <span className="text-5xl">{fallbackEmoji}</span>
-            )}
-          </div>
-        </div>
+        {fallbackContent}
         {caption && (
           <figcaption className="text-xs text-muted-foreground mt-2 text-center italic px-4 sm:px-0">
             {caption}
@@ -60,30 +91,41 @@ const OptimizedImage = ({
     );
   }
 
+  const imgElement = (
+    <div className={`relative overflow-hidden ${effectiveIsHero ? "rounded-none sm:rounded-2xl" : "rounded-xl"}`}>
+      {isLoading && (
+        <div className={`absolute inset-0 bg-muted animate-pulse ${effectiveIsHero ? "aspect-[16/9]" : "aspect-video"}`} />
+      )}
+      <img
+        src={vercelImageUrl(src!, effectiveIsHero ? 1200 : 640, quality)}
+        srcSet={buildSrcSet(src!, quality)}
+        sizes={effectiveSizes}
+        alt={alt}
+        loading={priority ? "eager" : "lazy"}
+        decoding={priority ? "sync" : "async"}
+        {...(priority ? { fetchPriority: "high" as const } : {})}
+        className={`
+          ${className}
+          ${effectiveIsHero ? "rounded-none sm:rounded-2xl aspect-[16/9] shadow-md" : "rounded-xl shadow-md"}
+          ${isLoading ? "opacity-0" : "opacity-100"}
+          transition-opacity duration-300
+        `}
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setImgError(true);
+          setIsLoading(false);
+        }}
+      />
+    </div>
+  );
+
+  if (isCard) {
+    return imgElement;
+  }
+
   return (
     <figure className={figureClassName}>
-      <div className={`relative overflow-hidden ${isHero ? "rounded-none sm:rounded-2xl" : "rounded-xl"}`}>
-        {isLoading && (
-          <div className={`absolute inset-0 bg-muted animate-pulse ${isHero ? "aspect-[16/9]" : "aspect-video"}`} />
-        )}
-        <img
-          src={src}
-          alt={alt}
-          loading="lazy"
-          decoding="async"
-          className={`
-            ${className}
-            ${isHero ? "rounded-none sm:rounded-2xl aspect-[16/9] shadow-md" : "rounded-xl shadow-md"}
-            ${isLoading ? "opacity-0" : "opacity-100"}
-            transition-opacity duration-300
-          `}
-          onLoad={() => setIsLoading(false)}
-          onError={() => {
-            setImgError(true);
-            setIsLoading(false);
-          }}
-        />
-      </div>
+      {imgElement}
       {caption && (
         <figcaption className="text-xs text-muted-foreground mt-2 text-center italic px-4 sm:px-0">
           {caption}

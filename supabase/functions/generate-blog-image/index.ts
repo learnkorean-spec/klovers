@@ -51,9 +51,9 @@ serve(async (req) => {
     };
     const style = typeHint[article_type] || "professional editorial style";
 
-    const prompt = `Create a high-quality 16:9 hero blog image for an article titled "${title}". ${
+    const prompt = `Create a 1920x1080 pixel, photorealistic hero blog image for an article titled "${title}". ${
       description ? `The article is about: ${description}.` : ""
-    } ${keywordStr ? `Related topics: ${keywordStr}.` : ""} Style: ${style}. The image should be visually compelling, professional, and suitable for SEO (clear subject, good contrast, no text overlays). Korean language learning and education theme. Ultra high resolution.`;
+    } ${keywordStr ? `Related topics: ${keywordStr}.` : ""} Style: ${style}. Requirements: vibrant colors, sharp detail, high contrast, no text or watermarks, suitable as a blog hero banner. Theme: Korean language learning, K-culture, and education. The image must be visually striking and professional enough for social media sharing.`;
 
     console.log("Generating image with prompt:", prompt);
 

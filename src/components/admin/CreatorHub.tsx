@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Monitor, Smartphone, DownloadCloud, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { Download, Plus, Trash2, ChevronLeft, ChevronRight, Grid3X3, Upload, Monitor, Smartphone, DownloadCloud, Sparkles, Loader2, CheckCircle2, RefreshCw, ImageIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   type PostData,
@@ -27,6 +27,7 @@ import {
 } from "@/lib/canvasRenderer";
 import { generateMonthlyPlan, monthlyPostToPostData, generatePublishingCopy, generateReelPublishingCopy, isWhatsAppCTA, CAMPAIGN_CONFIGS, type MonthlyPostType, type GroupData, type CampaignDirection, type ReelScript } from "@/lib/marketingEngine";
 import { supabase } from "@/integrations/supabase/client";
+import { loadUnsplashForTemplate, loadUnsplashImage } from "@/lib/unsplash";
 
 const FONT_STYLES = ["Bold Italic", "Normal", "Small"] as const;
 
@@ -337,12 +338,13 @@ const TEMPLATE_LABELS: Record<TemplateName, { label: string; desc: string }> = {
   editorial:            { label: "📄 Editorial", desc: "Magazine" },
 };
 
-function AllTemplateCards({ post, theme, format, active, onSelect }: {
+function AllTemplateCards({ post, theme, format, active, onSelect, bgImage }: {
   post: PostData;
   theme: ColorTheme;
   format: FormatKey;
   active: TemplateName;
   onSelect: (t: TemplateName) => void;
+  bgImage?: HTMLImageElement | null;
 }) {
   const refs = useRef<(HTMLCanvasElement | null)[]>([]);
 
@@ -351,9 +353,9 @@ function AllTemplateCards({ post, theme, format, active, onSelect }: {
       const c = refs.current[i];
       if (!c) return;
       c.width = 300; c.height = 300;
-      renderPost(c, post, tpl, theme, format);
+      renderPost(c, post, tpl, theme, format, bgImage);
     });
-  }, [post, theme, format]);
+  }, [post, theme, format, bgImage]);
 
   return (
     <div className="space-y-2">
@@ -399,6 +401,7 @@ export default function CreatorHub() {
   const [format, setFormat] = useState<FormatKey>("instagram");
   const [mainFontStyle, setMainFontStyle] = useState<string>("Bold Italic");
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
+  const [unsplashLoading, setUnsplashLoading] = useState(false);
   const [gridPattern, setGridPattern] = useState<GridPattern>("custom");
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignDirection>("balanced");
 
@@ -428,6 +431,19 @@ export default function CreatorHub() {
 
   useEffect(() => { redraw(); }, [redraw]);
 
+  // Auto-load Unsplash photo when template or format changes
+  useEffect(() => {
+    let cancelled = false;
+    const fmt = FORMATS[format];
+    setUnsplashLoading(true);
+    loadUnsplashForTemplate(template, fmt.w, fmt.h).then(img => {
+      if (cancelled) return;
+      if (img) setBgImage(img);
+      setUnsplashLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [template, format]);
+
   function updatePost(field: keyof PostData, value: string) {
     setPosts(prev => prev.map((p, i) => i === activeIndex ? { ...p, [field]: value } : p));
   }
@@ -450,6 +466,19 @@ export default function CreatorHub() {
     const img = new Image();
     img.onload = () => setBgImage(img);
     img.src = URL.createObjectURL(file);
+  }
+
+  async function handleUnsplashLoad() {
+    setUnsplashLoading(true);
+    const fmt = FORMATS[format];
+    const img = await loadUnsplashForTemplate(template, fmt.w, fmt.h);
+    if (img) {
+      setBgImage(img);
+      toast({ title: "Photo loaded", description: "Unsplash photo applied as background." });
+    } else {
+      toast({ title: "Photo failed", description: "Could not load image. Try again.", variant: "destructive" });
+    }
+    setUnsplashLoading(false);
   }
 
   function handleDownload() {
@@ -582,6 +611,14 @@ export default function CreatorHub() {
     if (!monthlyDrafts.length) return;
     setBulkDownloading(true);
     try {
+      // Pre-load Unsplash photos per template (cached by template name)
+      const photoCache = new Map<string, HTMLImageElement | null>();
+      const uniqueTemplates = [...new Set(monthlyDrafts.map(d => d.templateName))];
+      await Promise.all(uniqueTemplates.map(async (tpl) => {
+        const img = await loadUnsplashImage(tpl, 1080, 1080);
+        photoCache.set(tpl, img);
+      }));
+
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
       const formatKeys: FormatKey[] = ["instagram", "story", "facebook"];
@@ -590,7 +627,8 @@ export default function CreatorHub() {
         const folder = zip.folder(fk)!;
         for (const post of monthlyDrafts) {
           const c = document.createElement("canvas"); c.width = fmt.w; c.height = fmt.h;
-          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk, null, undefined, post.useWhatsApp);
+          const photo = photoCache.get(post.templateName) || null;
+          renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, fk, photo, undefined, post.useWhatsApp);
           const blob = await new Promise<Blob>(res => c.toBlob(b => res(b!), "image/png"));
           folder.file(`${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}-${fk}.png`, blob);
         }
@@ -624,9 +662,10 @@ export default function CreatorHub() {
     } finally { setBulkDownloading(false); }
   }
 
-  function downloadSinglePost(post: MonthlyDraftPost) {
+  async function downloadSinglePost(post: MonthlyDraftPost) {
+    const photo = await loadUnsplashImage(post.templateName, 1080, 1080);
     const c = document.createElement("canvas"); c.width = 1080; c.height = 1080;
-    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram", null, undefined, post.useWhatsApp);
+    renderPost(c, { id: post.id, mainText: post.mainText, subtitle: post.subtitle, extraText: post.extraText }, post.templateName, post.themeName, "instagram", photo, undefined, post.useWhatsApp);
     const a = document.createElement("a"); a.href = c.toDataURL("image/png");
     a.download = `${post.scheduledDate}-day${String(post.day).padStart(2, "0")}-${post.postType.replace(/_/g, "-")}.png`; a.click();
   }
@@ -702,6 +741,7 @@ export default function CreatorHub() {
               format={format}
               active={template}
               onSelect={setTemplate}
+              bgImage={bgImage}
             />
             <div>
               <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Other Templates</h3>
@@ -745,40 +785,57 @@ export default function CreatorHub() {
 
           {/* Photo / Background Image */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Photo</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Photo Background</h3>
             {bgImage ? (
               <div className="space-y-2">
                 <div className="relative rounded-xl overflow-hidden border border-border aspect-square w-full max-w-[200px] mx-auto shadow-md">
                   <img
                     src={bgImage.src}
-                    alt="Uploaded photo"
+                    alt="Background photo"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-center py-1">
-                    <span className="text-[10px] text-yellow-300 font-medium">Split layout active</span>
+                    <span className="text-[10px] text-yellow-300 font-medium">Photo background active</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs gap-1"
+                    onClick={handleUnsplashLoad}
+                    disabled={unsplashLoading}
+                  >
+                    {unsplashLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                    Shuffle
+                  </Button>
                   <label className="flex-1 flex items-center justify-center gap-1 border border-border rounded-md py-1.5 cursor-pointer hover:border-muted-foreground/40 transition-colors text-xs text-muted-foreground">
-                    <Upload className="h-3.5 w-3.5" /> Change
+                    <Upload className="h-3.5 w-3.5" /> Upload
                     <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
                   </label>
-                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setBgImage(null)}>
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setBgImage(null)}>
                     Remove
                   </Button>
                 </div>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-colors">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-medium text-foreground">Upload your photo</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Creates a split photo + text layout</p>
-                </div>
-                <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
-              </label>
+              <div className="space-y-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-full gap-2 text-xs"
+                  onClick={handleUnsplashLoad}
+                  disabled={unsplashLoading}
+                >
+                  {unsplashLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                  {unsplashLoading ? "Loading photo..." : "Use Unsplash Photo"}
+                </Button>
+                <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-4 cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-colors">
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-[10px] text-muted-foreground">Or upload your own photo</p>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
+                </label>
+              </div>
             )}
           </div>
 

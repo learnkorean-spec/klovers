@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, User, ArrowRight, Clock, BookOpen } from "lucide-react";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlogPost {
@@ -98,11 +99,12 @@ const HomeBlogSection = () => {
                   {/* Hero image */}
                   {post.hero_image ? (
                     <div className="aspect-video overflow-hidden bg-muted">
-                      <img
+                      <OptimizedImage
                         src={post.hero_image}
                         alt={post.hero_alt || post.title}
+                        variant="card"
+                        priority={idx === 0}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
                       />
                     </div>
                   ) : (

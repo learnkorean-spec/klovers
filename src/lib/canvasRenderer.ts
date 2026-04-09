@@ -136,6 +136,130 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   }
 }
 
+// ─── Accent Word Highlighting (*asterisk* markup) ─────────────────────────────
+
+interface AccentWord { text: string; accent: boolean; }
+
+/** Parse "*accent*" markup into segments: "LEARN *KOREAN* TODAY" → [{text:"LEARN ",accent:false},{text:"KOREAN",accent:true},{text:" TODAY",accent:false}] */
+function parseAccentSegments(text: string): AccentWord[] {
+  const segments: AccentWord[] = [];
+  const re = /\*([^*]+)\*/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) segments.push({ text: text.slice(last, m.index), accent: false });
+    segments.push({ text: m[1], accent: true });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) segments.push({ text: text.slice(last), accent: false });
+  return segments.length ? segments : [{ text, accent: false }];
+}
+
+/** Strip asterisk markers for width measurement */
+function stripAccent(text: string): string { return text.replace(/\*([^*]+)\*/g, "$1"); }
+
+/** Word-wrap text with accent coloring. Renders word-by-word, switching fillStyle for *accent* words. */
+function wrapTextAccent(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number, maxLines: number, baseColor: string, accentColor: string) {
+  const plain = stripAccent(text);
+  const words = plain.split(" ");
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const test = line + word + " ";
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line.trim());
+      line = word + " ";
+    } else {
+      line = test;
+    }
+  }
+  if (line.trim()) lines.push(line.trim());
+
+  // Build accent map: which character ranges are accented
+  const segments = parseAccentSegments(text);
+  const accentChars = new Set<number>();
+  let ci = 0;
+  for (const seg of segments) {
+    if (seg.accent) for (let i = 0; i < seg.text.length; i++) accentChars.add(ci + i);
+    ci += seg.text.length;
+  }
+
+  // Render each line word-by-word
+  let charIdx = 0;
+  lines.slice(0, maxLines).forEach((lineText, li) => {
+    let cx = x;
+    const lineWords = lineText.split(" ");
+    for (let wi = 0; wi < lineWords.length; wi++) {
+      const w = lineWords[wi];
+      const isAccent = accentChars.has(charIdx);
+      ctx.fillStyle = isAccent ? accentColor : baseColor;
+      ctx.fillText(w, cx, y + li * lineH);
+      cx += ctx.measureText(w + " ").width;
+      charIdx += w.length + 1; // +1 for space
+    }
+  });
+}
+
+/** RTL version of accent word rendering */
+function wrapTextAccentRTL(ctx: CanvasRenderingContext2D, text: string, rightX: number, y: number, maxW: number, lineH: number, maxLines: number, baseColor: string, accentColor: string) {
+  ctx.save();
+  ctx.direction = "rtl";
+  ctx.textAlign = "right";
+  const plain = stripAccent(text);
+  const words = plain.split(" ");
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const test = line + word + " ";
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line.trim());
+      line = word + " ";
+    } else {
+      line = test;
+    }
+  }
+  if (line.trim()) lines.push(line.trim());
+
+  const segments = parseAccentSegments(text);
+  const accentChars = new Set<number>();
+  let ci = 0;
+  for (const seg of segments) {
+    if (seg.accent) for (let i = 0; i < seg.text.length; i++) accentChars.add(ci + i);
+    ci += seg.text.length;
+  }
+
+  let charIdx = 0;
+  lines.slice(0, maxLines).forEach((lineText, li) => {
+    let cx = rightX;
+    const lineWords = lineText.split(" ");
+    for (let wi = 0; wi < lineWords.length; wi++) {
+      const w = lineWords[wi];
+      const isAccent = accentChars.has(charIdx);
+      ctx.fillStyle = isAccent ? accentColor : baseColor;
+      ctx.fillText(w, cx, y + li * lineH);
+      cx -= ctx.measureText(w + " ").width;
+      charIdx += w.length + 1;
+    }
+  });
+  ctx.restore();
+}
+
+/** Draws text with optional accent coloring. Falls back to plain drawText if no accent markers. */
+function drawTextAccent(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number, maxLines: number, lang: PostLang, w: number, baseColor: string, accentColor?: string) {
+  if (accentColor && text.includes("*")) {
+    ctx.fillStyle = baseColor;
+    if (lang === "ar") {
+      wrapTextAccentRTL(ctx, text, w - (w - x - maxW), y, maxW, lineH, maxLines, baseColor, accentColor);
+    } else {
+      wrapTextAccent(ctx, text, x, y, maxW, lineH, maxLines, baseColor, accentColor);
+    }
+  } else {
+    const clean = stripAccent(text);
+    ctx.fillStyle = baseColor;
+    drawText(ctx, clean, x, y, maxW, lineH, maxLines, lang, w);
+  }
+}
+
 function ctaText(lang: PostLang, useWhatsApp = false): string {
   if (useWhatsApp) return "Chat on WhatsApp →";
   return lang === "ar" ? AR_TEXT.registerNow : "Register Now →";
@@ -384,32 +508,76 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
   ctx.fillText("kloversegy.com/placement-test", W / 2, H - 40);
 }
 
+// ─── Photo Background Helper ─────────────────────────────────────────────────
+// Draws an image as full-bleed cover with a dark gradient overlay for text readability.
+
+function drawPhotoBg(ctx: CanvasRenderingContext2D, img: HTMLImageElement, w: number, h: number, overlayStyle: "dark" | "dark-heavy" | "gradient-bottom" | "gradient-left" | "gradient-center" = "gradient-bottom") {
+  const imgR = img.width / img.height;
+  const canR = w / h;
+  let dw = w, dh = h;
+  if (imgR > canR) { dw = h * imgR; } else { dh = w / imgR; }
+  ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+
+  if (overlayStyle === "dark") {
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0, 0, w, h);
+  } else if (overlayStyle === "dark-heavy") {
+    ctx.fillStyle = "rgba(0,0,0,0.68)";
+    ctx.fillRect(0, 0, w, h);
+  } else if (overlayStyle === "gradient-bottom") {
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, "rgba(0,0,0,0.15)");
+    grad.addColorStop(0.4, "rgba(0,0,0,0.35)");
+    grad.addColorStop(1, "rgba(0,0,0,0.80)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  } else if (overlayStyle === "gradient-center") {
+    const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.7);
+    grad.addColorStop(0, "rgba(0,0,0,0.35)");
+    grad.addColorStop(1, "rgba(0,0,0,0.75)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    const grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, "rgba(0,0,0,0.75)");
+    grad.addColorStop(0.5, "rgba(0,0,0,0.35)");
+    grad.addColorStop(1, "rgba(0,0,0,0.15)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
+}
+
 // ─── KLOVERS BRAND DESIGNS ───────────────────────────────────────────────────
 // All use fixed zone fractions so preview (270px CSS / 1080px canvas) = download (1080px canvas)
 
 // BOLD — AIDA: ATTENTION. Stop the scroll. Maximum visual impact.
-function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en", wa = false) {
+function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en", wa = false, bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
   const topH = Math.round(h * 0.10);
   const botH = Math.round(h * 0.18);
   const botY = h - botH;
+  const hasPhoto = !!bgImage;
 
-  // ── Yellow background ──
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(0, 0, w, h);
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "gradient-bottom");
+  } else {
+    // ── Yellow background ──
+    ctx.fillStyle = "#FFFF00";
+    ctx.fillRect(0, 0, w, h);
 
-  // ── Decorative faint "K" watermark (subtle, bottom-right corner) ──
-  ctx.save();
-  ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', 'Segoe UI Black', sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.035)";
-  ctx.textAlign = "right";
-  ctx.textBaseline = "bottom";
-  ctx.fillText("K", w - 12 * S, h * 0.76);
-  ctx.textBaseline = "alphabetic";
-  ctx.restore();
+    // ── Decorative faint "K" watermark (subtle, bottom-right corner) ──
+    ctx.save();
+    ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', 'Segoe UI Black', sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.035)";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("K", w - 12 * S, h * 0.76);
+    ctx.textBaseline = "alphabetic";
+    ctx.restore();
+  }
 
   // ── Black top bar ──
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "rgba(0,0,0,0.6)" : "#111111";
   ctx.fillRect(0, 0, w, topH);
   ctx.font = fontStack(L, 700, Math.round(18 * S));
   ctx.fillStyle = "#FFFF00";
@@ -420,7 +588,7 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   // ── Eyebrow zone — well below top bar ──
   const eyeY = h * 0.18;
   ctx.font = fontStack(L, 700, Math.round(14 * S));
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "#FFFF00" : "#111111";
   if (L === "ar") {
     ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "right";
     ctx.fillText(courseLabel(L), w - pad, eyeY);
@@ -435,7 +603,7 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   const bR = 24 * S;
   const bx = L === "ar" ? pad + bR : w - pad - bR;
   const by = h * 0.18;
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "rgba(0,0,0,0.7)" : "#111111";
   ctx.beginPath(); ctx.arc(bx, by, bR, 0, Math.PI * 2); ctx.fill();
   ctx.font = fontStack("en", 900, Math.round(18 * S));
   ctx.fillStyle = "#FFFF00";
@@ -447,20 +615,20 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
   const hlMax = w - pad * 2;
   const hlSize = Math.min(80 * S, hlMax / 5.5);
   ctx.font = fontStack(L, 900, hlSize);
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "#ffffff" : "#111111";
   drawText(ctx, post.mainText, pad, h * 0.30, hlMax, hlSize * 1.10, 2, L, w);
 
   // ── Divider (FIXED) ──
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "#FFFF00" : "#111111";
   ctx.fillRect(L === "ar" ? w - pad - 36 * S : pad, h * 0.56, 36 * S, 3 * S);
 
   // ── Subtitle (FIXED zone) ──
   ctx.font = fontStack(L, 400, Math.round(22 * S));
-  ctx.fillStyle = "#222222";
+  ctx.fillStyle = hasPhoto ? "rgba(255,255,255,0.85)" : "#222222";
   drawText(ctx, post.subtitle, pad, h * 0.61, w - pad * 2, 30 * S, 3, L, w);
 
   // ── Black bottom bar ──
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "rgba(0,0,0,0.6)" : "#111111";
   ctx.fillRect(0, botY, w, botH);
 
   // ── Yellow CTA pill ──
@@ -484,19 +652,23 @@ function renderKloversBold(ctx: CanvasRenderingContext2D, post: PostData, w: num
 }
 
 // VARSITY — AIDA: INTEREST / DESIRE. Build credibility. "What's in it for me?"
-function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en", wa = false) {
+function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, _isPortrait: boolean, L: PostLang = "en", wa = false, bgImage?: HTMLImageElement | null) {
   const pad = 48 * S;
 
-  // ── Black background ──
-  ctx.fillStyle = "#0d0d0d";
-  ctx.fillRect(0, 0, w, h);
+  if (bgImage) {
+    drawPhotoBg(ctx, bgImage, w, h, "dark");
+  } else {
+    // ── Black background ──
+    ctx.fillStyle = "#0d0d0d";
+    ctx.fillRect(0, 0, w, h);
 
-  // ── Subtle yellow radial glow ──
-  const grd = ctx.createRadialGradient(w * 0.55, h * 0.35, 0, w * 0.55, h * 0.35, w * 0.65);
-  grd.addColorStop(0, "rgba(255,220,0,0.08)");
-  grd.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, w, h);
+    // ── Subtle yellow radial glow ──
+    const grd = ctx.createRadialGradient(w * 0.55, h * 0.35, 0, w * 0.55, h * 0.35, w * 0.65);
+    grd.addColorStop(0, "rgba(255,220,0,0.08)");
+    grd.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+  }
 
   // ── Yellow left accent bar ──
   ctx.fillStyle = "#FFFF00";
@@ -568,25 +740,36 @@ function renderKloversVarsity(ctx: CanvasRenderingContext2D, post: PostData, w: 
 }
 
 // SPLIT — AIDA: ACTION. Drive registration. Clear next step.
-function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, isPortrait: boolean, L: PostLang = "en", wa = false) {
+function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, isPortrait: boolean, L: PostLang = "en", wa = false, bgImage?: HTMLImageElement | null) {
+  const hasPhoto = !!bgImage;
   if (!isPortrait) {
     // Square / Landscape: yellow LEFT / black RIGHT with diagonal
     const splitX = w * 0.43;
     const slant = h * 0.08;
 
-    // Yellow left
-    ctx.fillStyle = "#FFFF00";
-    ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(splitX + slant, 0);
-    ctx.lineTo(splitX, h); ctx.lineTo(0, h);
-    ctx.closePath(); ctx.fill();
+    if (hasPhoto) {
+      drawPhotoBg(ctx, bgImage!, w, h, "dark");
+      // Semi-transparent left panel
+      ctx.fillStyle = "rgba(255,255,0,0.15)";
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(splitX + slant, 0);
+      ctx.lineTo(splitX, h); ctx.lineTo(0, h);
+      ctx.closePath(); ctx.fill();
+    } else {
+      // Yellow left
+      ctx.fillStyle = "#FFFF00";
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(splitX + slant, 0);
+      ctx.lineTo(splitX, h); ctx.lineTo(0, h);
+      ctx.closePath(); ctx.fill();
 
-    // Black right
-    ctx.fillStyle = "#111111";
-    ctx.beginPath();
-    ctx.moveTo(splitX + slant, 0); ctx.lineTo(w, 0);
-    ctx.lineTo(w, h); ctx.lineTo(splitX, h);
-    ctx.closePath(); ctx.fill();
+      // Black right
+      ctx.fillStyle = "#111111";
+      ctx.beginPath();
+      ctx.moveTo(splitX + slant, 0); ctx.lineTo(w, 0);
+      ctx.lineTo(w, h); ctx.lineTo(splitX, h);
+      ctx.closePath(); ctx.fill();
+    }
 
     // Yellow diagonal accent line
     ctx.strokeStyle = "#FFFF00";
@@ -598,14 +781,14 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     // LEFT: Large K (centered)
     const lCx = splitX * 0.5;
     ctx.font = `900 ${Math.round(splitX * 0.48)}px 'Inter', sans-serif`;
-    ctx.fillStyle = "#111111";
+    ctx.fillStyle = hasPhoto ? "rgba(255,255,255,0.15)" : "#111111";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText("K", lCx, h * 0.40);
     ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
 
     // LEFT: KLOVERS label (well below K, no overlap)
     ctx.font = fontStack(L, 700, Math.round(18 * S));
-    ctx.fillStyle = "#111111";
+    ctx.fillStyle = hasPhoto ? "#ffffff" : "#111111";
     ctx.textAlign = "center";
     ctx.fillText(L === "ar" ? AR_TEXT.brandShort : "KLOVERS", lCx, h * 0.70);
     ctx.textAlign = "left";
@@ -622,8 +805,7 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     // RIGHT: ACTION headline (FIXED, max 2 lines)
     const hlSize = Math.min(52 * S, rW / 5.5);
     ctx.font = fontStack(L, 900, hlSize);
-    ctx.fillStyle = "#ffffff";
-    drawText(ctx, post.mainText, rLeft, h * 0.30, rW, hlSize * 1.08, 2, L, w);
+    drawTextAccent(ctx, post.mainText, rLeft, h * 0.30, rW, hlSize * 1.08, 2, L, w, "#ffffff", "#FFFF00");
 
     // RIGHT: subtitle (FIXED zone)
     ctx.font = fontStack(L, 400, 20 * S);
@@ -656,16 +838,23 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     const slant = w * 0.10;
     const pad = 36 * S;
 
-    // Yellow top
-    ctx.fillStyle = "#FFFF00";
-    ctx.fillRect(0, 0, w, splitY + slant);
+    if (hasPhoto) {
+      drawPhotoBg(ctx, bgImage!, w, h, "gradient-bottom");
+      // Semi-transparent yellow top panel
+      ctx.fillStyle = "rgba(255,255,0,0.12)";
+      ctx.fillRect(0, 0, w, splitY + slant);
+    } else {
+      // Yellow top
+      ctx.fillStyle = "#FFFF00";
+      ctx.fillRect(0, 0, w, splitY + slant);
 
-    // Black bottom
-    ctx.fillStyle = "#111111";
-    ctx.beginPath();
-    ctx.moveTo(0, splitY); ctx.lineTo(w, splitY + slant);
-    ctx.lineTo(w, h); ctx.lineTo(0, h);
-    ctx.closePath(); ctx.fill();
+      // Black bottom
+      ctx.fillStyle = "#111111";
+      ctx.beginPath();
+      ctx.moveTo(0, splitY); ctx.lineTo(w, splitY + slant);
+      ctx.lineTo(w, h); ctx.lineTo(0, h);
+      ctx.closePath(); ctx.fill();
+    }
 
     // Diagonal accent
     ctx.strokeStyle = "#FFFF00";
@@ -676,7 +865,7 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 
     // TOP: K badge
     const bR = 26 * S;
-    ctx.fillStyle = "#111111";
+    ctx.fillStyle = hasPhoto ? "rgba(0,0,0,0.6)" : "#111111";
     ctx.beginPath(); ctx.arc(pad + bR, pad + bR, bR, 0, Math.PI * 2); ctx.fill();
     ctx.font = `900 ${17 * S}px 'Inter', sans-serif`;
     ctx.fillStyle = "#FFFF00";
@@ -687,12 +876,11 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
     // TOP: headline
     const hlSize = Math.min(76 * S, (w - pad * 2) / 5);
     ctx.font = fontStack(L, 900, hlSize);
-    ctx.fillStyle = "#111111";
-    drawText(ctx, post.mainText, pad, h * 0.19, w - pad * 2, hlSize * 1.08, 2, L, w);
+    drawTextAccent(ctx, post.mainText, pad, h * 0.19, w - pad * 2, hlSize * 1.08, 2, L, w, hasPhoto ? "#ffffff" : "#111111", "#FFFF00");
 
     // BOTTOM: subtitle (FIXED zone)
     ctx.font = fontStack(L, 400, 24 * S);
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillStyle = hasPhoto ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.85)";
     drawText(ctx, post.subtitle, pad, h * 0.60, w - pad * 2, 32 * S, 3, L, w);
 
     // BOTTOM: CTA pill
@@ -719,12 +907,17 @@ function renderKloversSplit(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 // ─── NEW TEMPLATES ──────────────────────────────────────────────────────────
 
 // ALERT — Urgency seat counter card. Bold red/yellow with large seat number.
-function renderKloversAlert(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+function renderKloversAlert(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
+  const hasPhoto = !!bgImage;
 
-  // ── Black background ──
-  ctx.fillStyle = "#0d0d0d";
-  ctx.fillRect(0, 0, w, h);
+  // ── Background ──
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "dark");
+  } else {
+    ctx.fillStyle = "#0d0d0d";
+    ctx.fillRect(0, 0, w, h);
+  }
 
   // ── Thick yellow border (urgency frame) ──
   const bw = 6 * S;
@@ -793,12 +986,17 @@ function renderKloversAlert(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 }
 
 // COUNTDOWN — Days-left countdown ring with progress arc.
-function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
+  const hasPhoto = !!bgImage;
 
-  // ── Dark background ──
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(0, 0, w, h);
+  // ── Background ──
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "dark");
+  } else {
+    ctx.fillStyle = "#111111";
+    ctx.fillRect(0, 0, w, h);
+  }
 
   // ── Subtle radial glow ──
   const grd = ctx.createRadialGradient(w / 2, h * 0.40, 0, w / 2, h * 0.40, w * 0.45);
@@ -876,35 +1074,39 @@ function renderKloversCountdown(ctx: CanvasRenderingContext2D, post: PostData, w
 }
 
 // QUOTE — Testimonial / social proof card with decorative quotation marks.
-function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
+  const hasPhoto = !!bgImage;
 
-  // ── White/cream background ──
-  ctx.fillStyle = "#fafaf5";
-  ctx.fillRect(0, 0, w, h);
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "gradient-center");
+  } else {
+    // ── White/cream background ──
+    ctx.fillStyle = "#fafaf5";
+    ctx.fillRect(0, 0, w, h);
 
-  // ── Yellow top bar ──
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(0, 0, w, h * 0.08);
+    // ── Yellow top bar ──
+    ctx.fillStyle = "#FFFF00";
+    ctx.fillRect(0, 0, w, h * 0.08);
+  }
 
-  // ── Brand name in top bar ──
+  // ── Brand name ──
   ctx.font = fontStack(L, 700, 14 * S);
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "#FFFF00" : "#111111";
   ctx.textAlign = "center";
   ctx.fillText(brandLabel(L), w / 2, h * 0.05);
 
   // ── Large decorative quotation mark ──
   ctx.font = `900 ${Math.round(h * 0.18)}px Georgia, serif`;
-  ctx.fillStyle = "rgba(255,255,0,0.25)";
+  ctx.fillStyle = hasPhoto ? "rgba(255,255,0,0.35)" : "rgba(255,255,0,0.25)";
   ctx.textAlign = L === "ar" ? "right" : "left";
   ctx.fillText(L === "ar" ? "\u201D" : "\u201C", L === "ar" ? w - pad : pad, h * 0.28);
 
   // ── Quote text (main) ──
   const quoteSize = Math.min(42 * S, (w - pad * 2) / 8);
   ctx.font = fontStack(L, 700, quoteSize);
-  ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  drawText(ctx, post.mainText, pad, h * 0.36, w - pad * 2, quoteSize * 1.3, 3, L, w);
+  drawTextAccent(ctx, post.mainText, pad, h * 0.36, w - pad * 2, quoteSize * 1.3, 3, L, w, hasPhoto ? "#ffffff" : "#111111", "#FFFF00");
 
   // ── Yellow divider ──
   ctx.fillStyle = "#FFFF00";
@@ -913,13 +1115,13 @@ function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 
   // ── Student name / attribution ──
   ctx.font = fontStack(L, 400, 22 * S);
-  ctx.fillStyle = "#555";
+  ctx.fillStyle = hasPhoto ? "rgba(255,255,255,0.75)" : "#555";
   ctx.textAlign = "center";
   drawText(ctx, post.subtitle, pad, h * 0.70, w - pad * 2, 28 * S, 2, L, w);
 
   // ── K badge bottom ──
   const bR = 24 * S;
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "rgba(0,0,0,0.5)" : "#111111";
   ctx.beginPath(); ctx.arc(w / 2, h * 0.84, bR, 0, Math.PI * 2); ctx.fill();
   ctx.font = fontStack("en", 900, 18 * S);
   ctx.fillStyle = "#FFFF00";
@@ -927,38 +1129,45 @@ function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: nu
   ctx.fillText("K", w / 2, h * 0.84);
   ctx.textBaseline = "alphabetic";
 
-  // ── Bottom yellow bar ──
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(0, h * 0.92, w, h * 0.08);
+  // ── Bottom bar ──
+  if (!hasPhoto) {
+    ctx.fillStyle = "#FFFF00";
+    ctx.fillRect(0, h * 0.92, w, h * 0.08);
+  }
   ctx.font = fontStack(L, 600, 14 * S);
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "rgba(255,255,0,0.6)" : "#111111";
   ctx.fillText(post.extraText || (L === "ar" ? AR_TEXT.hashtags : "#StudentSuccess #Klovers"), w / 2, h * 0.965);
   ctx.textAlign = "left";
 }
 
 // TIP — Educational tip card. Korean word with meaning. Engagement-focused.
-function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
+  const hasPhoto = !!bgImage;
 
-  // ── Gradient background (yellow → white) ──
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, "#FFFF00");
-  grad.addColorStop(0.5, "#fffde0");
-  grad.addColorStop(1, "#ffffff");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "gradient-bottom");
+  } else {
+    // ── Gradient background (yellow → white) ──
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, "#FFFF00");
+    grad.addColorStop(0.5, "#fffde0");
+    grad.addColorStop(1, "#ffffff");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
 
   // ── Faint K watermark ──
   ctx.save();
   ctx.font = `900 ${Math.round(h * 0.22)}px 'Inter', sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.02)";
+  ctx.fillStyle = hasPhoto ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)";
   ctx.textAlign = "right"; ctx.textBaseline = "bottom";
   ctx.fillText("K", w - 12 * S, h * 0.76);
   ctx.restore();
 
   // ── K badge (top-left) ──
   const bR = 20 * S;
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "rgba(0,0,0,0.5)" : "#111111";
   ctx.beginPath(); ctx.arc(pad + bR, pad + bR, bR, 0, Math.PI * 2); ctx.fill();
   ctx.font = fontStack("en", 900, 14 * S);
   ctx.fillStyle = "#FFFF00";
@@ -968,30 +1177,31 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
 
   // ── "Did you know?" / "هل تعلم؟" eyebrow ──
   ctx.font = fontStack(L, 700, 18 * S);
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = hasPhoto ? "#FFFF00" : "#111111";
   ctx.textAlign = "center";
   ctx.fillText(L === "ar" ? AR_TEXT.didYouKnow : "DID YOU KNOW?", w / 2, h * 0.14);
 
   // ── Underline ──
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = "#FFFF00";
   ctx.fillRect(w * 0.3, h * 0.17, w * 0.4, 3 * S);
 
   // ── Korean word/phrase (large, centered) ──
   const mainSize = Math.min(72 * S, (w - pad * 2) / 5);
   ctx.font = fontStack(L, 900, mainSize);
-  ctx.fillStyle = "#111111";
   ctx.textAlign = "center";
-  drawText(ctx, post.mainText, pad, h * 0.30, w - pad * 2, mainSize * 1.15, 2, L, w);
+  drawTextAccent(ctx, post.mainText, pad, h * 0.30, w - pad * 2, mainSize * 1.15, 2, L, w, hasPhoto ? "#ffffff" : "#111111", "#FFFF00");
 
   // ── Meaning / subtitle ──
   ctx.font = fontStack(L, 500, 24 * S);
-  ctx.fillStyle = "#333";
+  ctx.fillStyle = hasPhoto ? "rgba(255,255,255,0.85)" : "#333";
   ctx.textAlign = "center";
   drawText(ctx, post.subtitle, pad, h * 0.56, w - pad * 2, 32 * S, 3, L, w);
 
   // ── Black bottom strip ──
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(0, h * 0.82, w, h * 0.18);
+  if (!hasPhoto) {
+    ctx.fillStyle = "#111111";
+    ctx.fillRect(0, h * 0.82, w, h * 0.18);
+  }
 
   // ── Brand + hashtags in strip ──
   ctx.font = fontStack(L, 700, 16 * S);
@@ -1008,51 +1218,55 @@ function renderKloversTip(ctx: CanvasRenderingContext2D, post: PostData, w: numb
 // ─── MASCOT LEFT — Characters on left, text on right ───────────────────────
 function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null, wa = false) {
   const pad = 48 * S;
-  const img = bgImage || (_mascotLoaded ? _mascot : null);
+  const hasPhoto = !!bgImage;
+  const img = hasPhoto ? null : (_mascotLoaded ? _mascot : null);
 
-  // ── Yellow background ──
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(0, 0, w, h);
-
-  // ── Black right panel (55% of width) ──
-  const panelX = w * 0.45;
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(panelX, 0, w - panelX, h);
-
-  // ── Yellow diagonal accent between panels ──
-  ctx.strokeStyle = "#FFFF00";
-  ctx.lineWidth = 3 * S;
-  ctx.beginPath();
-  ctx.moveTo(panelX + 6 * S, 0);
-  ctx.lineTo(panelX + 6 * S, h);
-  ctx.stroke();
-
-  // ── Draw characters on left (from uploaded photo or preloaded mascot) ──
-  if (img) {
-    const imgH = h * 0.70;
-    const imgW = imgH * (img.width / img.height);
-    const imgX = (panelX - imgW) / 2;
-    const imgY = h * 0.12;
-    ctx.drawImage(img, imgX, imgY, imgW, imgH);
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "gradient-left");
   } else {
-    // Fallback: K badge
-    ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.06)";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("K", panelX / 2, h * 0.45);
-    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+    // ── Yellow background ──
+    ctx.fillStyle = "#FFFF00";
+    ctx.fillRect(0, 0, w, h);
+
+    // ── Black right panel (55% of width) ──
+    const panelX = w * 0.45;
+    ctx.fillStyle = "#111111";
+    ctx.fillRect(panelX, 0, w - panelX, h);
+
+    // ── Yellow diagonal accent between panels ──
+    ctx.strokeStyle = "#FFFF00";
+    ctx.lineWidth = 3 * S;
+    ctx.beginPath();
+    ctx.moveTo(panelX + 6 * S, 0);
+    ctx.lineTo(panelX + 6 * S, h);
+    ctx.stroke();
+
+    // ── Draw characters on left ──
+    if (img) {
+      const imgH = h * 0.70;
+      const imgW = imgH * (img.width / img.height);
+      const imgX = (panelX - imgW) / 2;
+      const imgY = h * 0.12;
+      ctx.drawImage(img, imgX, imgY, imgW, imgH);
+    } else {
+      ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("K", panelX / 2, h * 0.45);
+      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+    }
+
+    // ── Brand label on left top ──
+    ctx.font = fontStack(L, 700, 12 * S);
+    ctx.fillStyle = "#111111";
+    ctx.textAlign = "center";
+    ctx.fillText("KLOVERS", panelX / 2, h * 0.06);
+    ctx.textAlign = "left";
   }
 
-  // ── Brand label on left top ──
-  ctx.font = fontStack(L, 700, 12 * S);
-  ctx.fillStyle = "#111111";
-  ctx.textAlign = "center";
-  ctx.fillText("KLOVERS", panelX / 2, h * 0.06);
-  ctx.textAlign = "left";
-
-  // ── RIGHT SIDE TEXT ──
-  const rLeft = panelX + 24 * S;
-  const rW = w - rLeft - pad;
+  // ── TEXT SIDE ──
+  const rLeft = hasPhoto ? pad : (w * 0.45 + 24 * S);
+  const rW = hasPhoto ? (w * 0.45) : (w - rLeft - pad);
 
   // Eyebrow
   ctx.font = fontStack(L, 600, 14 * S);
@@ -1064,8 +1278,7 @@ function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, 
   // Headline
   const hlSize = Math.min(52 * S, rW / 5);
   ctx.font = fontStack(L, 900, hlSize);
-  ctx.fillStyle = "#ffffff";
-  drawText(ctx, post.mainText, rLeft, h * 0.26, rW, hlSize * 1.10, 3, L, w);
+  drawTextAccent(ctx, post.mainText, rLeft, h * 0.26, rW, hlSize * 1.10, 3, L, w, "#ffffff", "#FFFF00");
 
   // Subtitle
   ctx.font = fontStack(L, 400, 18 * S);
@@ -1090,64 +1303,59 @@ function renderKloversMascotLeft(ctx: CanvasRenderingContext2D, post: PostData, 
   ctx.textAlign = "center";
   ctx.fillText("kloversegy.com", rLeft + rW / 2, h * 0.93);
   ctx.textAlign = "left";
-
-  // ── Bottom yellow strip on left ──
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(0, h * 0.88, panelX, h * 0.12);
-  ctx.font = fontStack(L, 600, 12 * S);
-  ctx.fillStyle = "#FFFF00";
-  ctx.textAlign = "center";
-  ctx.fillText(post.extraText || "#LearnKorean #Klovers", panelX / 2, h * 0.94);
-  ctx.textAlign = "left";
 }
 
 // ─── MASCOT RIGHT — Text on left, characters on right ──────────────────────
 function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null, wa = false) {
   const pad = 48 * S;
-  const img = bgImage || (_mascotLoaded ? _mascot : null);
+  const hasPhoto = !!bgImage;
+  const img = hasPhoto ? null : (_mascotLoaded ? _mascot : null);
 
-  // ── Black background ──
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(0, 0, w, h);
-
-  // ── Yellow right panel (45% of width) ──
-  const panelX = w * 0.55;
-  ctx.fillStyle = "#FFFF00";
-  ctx.fillRect(panelX, 0, w - panelX, h);
-
-  // ── Diagonal accent line ──
-  ctx.strokeStyle = "#FFFF00";
-  ctx.lineWidth = 3 * S;
-  ctx.beginPath();
-  ctx.moveTo(panelX - 6 * S, 0);
-  ctx.lineTo(panelX - 6 * S, h);
-  ctx.stroke();
-
-  // ── Draw characters on right (from uploaded photo or preloaded mascot) ──
-  if (img) {
-    const imgH = h * 0.70;
-    const imgW = imgH * (img.width / img.height);
-    const imgX = panelX + ((w - panelX) - imgW) / 2;
-    const imgY = h * 0.12;
-    ctx.drawImage(img, imgX, imgY, imgW, imgH);
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "gradient-bottom");
   } else {
-    // Fallback: K badge
-    ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
-    ctx.fillStyle = "rgba(0,0,0,0.08)";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("K", panelX + (w - panelX) / 2, h * 0.45);
-    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+    // ── Black background ──
+    ctx.fillStyle = "#111111";
+    ctx.fillRect(0, 0, w, h);
+
+    // ── Yellow right panel (45% of width) ──
+    const panelX = w * 0.55;
+    ctx.fillStyle = "#FFFF00";
+    ctx.fillRect(panelX, 0, w - panelX, h);
+
+    // ── Diagonal accent line ──
+    ctx.strokeStyle = "#FFFF00";
+    ctx.lineWidth = 3 * S;
+    ctx.beginPath();
+    ctx.moveTo(panelX - 6 * S, 0);
+    ctx.lineTo(panelX - 6 * S, h);
+    ctx.stroke();
+
+    // ── Draw characters on right ──
+    if (img) {
+      const imgH = h * 0.70;
+      const imgW = imgH * (img.width / img.height);
+      const imgX = panelX + ((w - panelX) - imgW) / 2;
+      const imgY = h * 0.12;
+      ctx.drawImage(img, imgX, imgY, imgW, imgH);
+    } else {
+      ctx.font = `900 ${Math.round(h * 0.28)}px 'Inter', sans-serif`;
+      ctx.fillStyle = "rgba(0,0,0,0.08)";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("K", panelX + (w - panelX) / 2, h * 0.45);
+      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+    }
+
+    // ── Brand label on right top ──
+    ctx.font = fontStack(L, 700, 12 * S);
+    ctx.fillStyle = "#111111";
+    ctx.textAlign = "center";
+    ctx.fillText("KLOVERS", panelX + (w - panelX) / 2, h * 0.06);
+    ctx.textAlign = "left";
   }
 
-  // ── Brand label on right top ──
-  ctx.font = fontStack(L, 700, 12 * S);
-  ctx.fillStyle = "#111111";
-  ctx.textAlign = "center";
-  ctx.fillText("KLOVERS", panelX + (w - panelX) / 2, h * 0.06);
-  ctx.textAlign = "left";
-
   // ── LEFT SIDE TEXT ──
-  const lW = panelX - pad * 2;
+  const lW = hasPhoto ? (w - pad * 2) : (w * 0.55 - pad * 2);
 
   // Yellow accent bar
   ctx.fillStyle = "#FFFF00";
@@ -1163,8 +1371,7 @@ function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData,
   // Headline
   const hlSize = Math.min(56 * S, lW / 4.5);
   ctx.font = fontStack(L, 900, hlSize);
-  ctx.fillStyle = "#ffffff";
-  drawText(ctx, post.mainText, pad, h * 0.26, lW, hlSize * 1.10, 3, L, w);
+  drawTextAccent(ctx, post.mainText, pad, h * 0.26, lW, hlSize * 1.10, 3, L, w, "#ffffff", "#FFFF00");
 
   // Subtitle
   ctx.font = fontStack(L, 400, 18 * S);
@@ -1187,27 +1394,23 @@ function renderKloversMascotRight(ctx: CanvasRenderingContext2D, post: PostData,
   ctx.font = fontStack("en", 400, 11 * S);
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.fillText("kloversegy.com", pad, h * 0.93);
-
-  // ── Bottom strip on right ──
-  ctx.fillStyle = "#111111";
-  ctx.fillRect(panelX, h * 0.88, w - panelX, h * 0.12);
-  ctx.font = fontStack(L, 600, 12 * S);
-  ctx.fillStyle = "#111111";
-  ctx.textAlign = "center";
-  ctx.fillText(post.extraText || "#LearnKorean #Klovers", panelX + (w - panelX) / 2, h * 0.94);
-  ctx.textAlign = "left";
 }
 
 // STATS — Large number + label (social proof / authority)
-function renderKloversStats(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+function renderKloversStats(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
+  const hasPhoto = !!bgImage;
 
-  // ── Black background with subtle border ──
-  ctx.fillStyle = "#0a0a0a";
-  ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "#1a1a1a";
-  ctx.lineWidth = 1 * S;
-  ctx.strokeRect(0, 0, w, h);
+  // ── Background ──
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "dark");
+  } else {
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineWidth = 1 * S;
+    ctx.strokeRect(0, 0, w, h);
+  }
 
   // ── Brand tag ──
   ctx.font = fontStack(L, 700, 11 * S);
@@ -1254,12 +1457,17 @@ function renderKloversStats(ctx: CanvasRenderingContext2D, post: PostData, w: nu
 }
 
 // LIST — Numbered list with yellow circles (tips, reasons, steps)
-function renderKloversList(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en") {
+function renderKloversList(ctx: CanvasRenderingContext2D, post: PostData, w: number, h: number, S: number, L: PostLang = "en", bgImage?: HTMLImageElement | null) {
   const pad = 52 * S;
+  const hasPhoto = !!bgImage;
 
-  // ── Black background ──
-  ctx.fillStyle = "#0a0a0a";
-  ctx.fillRect(0, 0, w, h);
+  // ── Background ──
+  if (hasPhoto) {
+    drawPhotoBg(ctx, bgImage!, w, h, "dark-heavy");
+  } else {
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(0, 0, w, h);
+  }
 
   // ── Brand tag ──
   ctx.font = fontStack(L, 700, 11 * S);
@@ -1348,157 +1556,60 @@ export function renderPost(
 
   ctx.clearRect(0, 0, w, h);
 
-  // ─── Klovers brand designs ────────────────────────────────
-  if (template === "klovers_bold")      { renderKloversBold(ctx, post, w, h, scale, isPortrait, L, wa);      return; }
-  if (template === "klovers_varsity")   { renderKloversVarsity(ctx, post, w, h, scale, isPortrait, L, wa);   return; }
-  if (template === "klovers_split")     { renderKloversSplit(ctx, post, w, h, scale, isPortrait, L, wa);     return; }
-  if (template === "klovers_alert")     { renderKloversAlert(ctx, post, w, h, scale, L);     return; }
-  if (template === "klovers_countdown") { renderKloversCountdown(ctx, post, w, h, scale, L); return; }
-  if (template === "klovers_quote")     { renderKloversQuote(ctx, post, w, h, scale, L);     return; }
-  if (template === "klovers_tip")       { renderKloversTip(ctx, post, w, h, scale, L);       return; }
+  // ─── Klovers brand designs (bgImage passed through for photo backgrounds) ──
+  if (template === "klovers_bold")      { renderKloversBold(ctx, post, w, h, scale, isPortrait, L, wa, bgImage);      return; }
+  if (template === "klovers_varsity")   { renderKloversVarsity(ctx, post, w, h, scale, isPortrait, L, wa, bgImage);   return; }
+  if (template === "klovers_split")     { renderKloversSplit(ctx, post, w, h, scale, isPortrait, L, wa, bgImage);     return; }
+  if (template === "klovers_alert")     { renderKloversAlert(ctx, post, w, h, scale, L, bgImage);     return; }
+  if (template === "klovers_countdown") { renderKloversCountdown(ctx, post, w, h, scale, L, bgImage); return; }
+  if (template === "klovers_quote")     { renderKloversQuote(ctx, post, w, h, scale, L, bgImage);     return; }
+  if (template === "klovers_tip")       { renderKloversTip(ctx, post, w, h, scale, L, bgImage);       return; }
   if (template === "klovers_mascot_left")  { renderKloversMascotLeft(ctx, post, w, h, scale, L, bgImage, wa);  return; }
   if (template === "klovers_mascot_right") { renderKloversMascotRight(ctx, post, w, h, scale, L, bgImage, wa); return; }
-  if (template === "klovers_stats")       { renderKloversStats(ctx, post, w, h, scale, L); return; }
-  if (template === "klovers_list")        { renderKloversList(ctx, post, w, h, scale, L); return; }
+  if (template === "klovers_stats")       { renderKloversStats(ctx, post, w, h, scale, L, bgImage); return; }
+  if (template === "klovers_list")        { renderKloversList(ctx, post, w, h, scale, L, bgImage); return; }
 
-  // ─── PHOTO SPLIT LAYOUT ───────────────────────────────────
+  // ─── FULL-BLEED PHOTO LAYOUT (legacy templates with photo) ─────
   if (bgImage) {
-    if (isPortrait) {
-      const splitY = h * 0.44;
-      const slant = w * 0.07;
+    drawPhotoBg(ctx, bgImage, w, h, "gradient-bottom");
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, 0); ctx.lineTo(w, 0);
-      ctx.lineTo(w, splitY + slant); ctx.lineTo(0, splitY);
-      ctx.closePath(); ctx.clip();
-      const pR = bgImage.width / bgImage.height;
-      let pw = w, ph = w / pR;
-      if (ph < splitY + slant) { ph = splitY + slant; pw = ph * pR; }
-      const px = (w - pw) / 2;
-      ctx.drawImage(bgImage, px, 0, pw, ph);
-      const fadeGrad = ctx.createLinearGradient(0, splitY * 0.5, 0, splitY + slant);
-      fadeGrad.addColorStop(0, "rgba(0,0,0,0)");
-      fadeGrad.addColorStop(1, "rgba(0,0,0,0.45)");
-      ctx.fillStyle = fadeGrad; ctx.fill();
-      ctx.restore();
+    const tPad = 40 * scale;
+    const tW = w - tPad * 2;
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, splitY); ctx.lineTo(w, splitY + slant);
-      ctx.lineTo(w, h); ctx.lineTo(0, h);
-      ctx.closePath();
-      ctx.fillStyle = c.bg; ctx.fill();
-      ctx.restore();
+    // ── Brand eyebrow ──
+    ctx.font = fontStack(L, 700, 14 * scale);
+    ctx.fillStyle = "#FFFF00";
+    ctx.fillText(brandLabel(L), tPad, h * 0.10);
+    ctx.fillRect(tPad, h * 0.13, 48 * scale, 3 * scale);
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, splitY - 5 * scale); ctx.lineTo(w, splitY + slant - 5 * scale);
-      ctx.lineTo(w, splitY + slant); ctx.lineTo(0, splitY);
-      ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
-      ctx.restore();
+    // ── Headline ──
+    const mSize = Math.min(72 * scale, tW * 0.18);
+    ctx.font = fontStack(L, 900, mSize);
+    drawTextAccent(ctx, post.mainText, tPad, h * 0.50, tW, mSize * 1.12, 2, L, w, "#ffffff", "#FFFF00");
 
-      const tLeft = 40 * scale;
-      const tTop  = splitY + slant + 26 * scale;
-      const tW    = w - 80 * scale;
-
-      ctx.fillStyle = "#1a1a1a";
-      ctx.font = `700 ${14 * scale}px 'Inter', sans-serif`;
-      ctx.fillText("KOREAN COURSE", tLeft, tTop + 16 * scale);
-      ctx.fillRect(tLeft, tTop + 24 * scale, 52 * scale, 3 * scale);
-
-      const mSize = Math.min(82 * scale, tW * 0.2);
-      ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
-      ctx.fillStyle = "#1a1a1a";
-      wrapText(ctx, post.mainText, tLeft, tTop + 56 * scale, tW, mSize * 1.12, 2);
-
-      if (post.subtitle) {
-        const sSize = mSize * 0.46;
-        ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
-        ctx.fillStyle = "#333";
-        // FIXED position — not computed from headline
-        wrapText(ctx, post.subtitle, tLeft, h * 0.72, tW, sSize * 1.45, 3);
-      }
-
-      const ctaY = h - 72 * scale;
-      ctx.fillStyle = "#1a1a1a";
-      rRect(ctx, tLeft, ctaY, 174 * scale, 42 * scale, 21 * scale);
-      ctx.fill();
-      ctx.font = `bold ${14 * scale}px 'Inter', sans-serif`;
-      ctx.fillStyle = "#FFFF00"; ctx.textAlign = "center";
-      ctx.fillText("Register Now →", tLeft + 87 * scale, ctaY + 28 * scale);
-      ctx.textAlign = "start";
-
-      if (post.extraText) {
-        ctx.fillStyle = "#1a1a1a88";
-        ctx.font = `${12 * scale}px 'Inter', sans-serif`;
-        ctx.fillText(post.extraText, tLeft, h - 22 * scale);
-      }
-
-    } else {
-      const splitX = w * 0.47;
-      const slant  = h * 0.05;
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(0, 0); ctx.lineTo(splitX + slant, 0);
-      ctx.lineTo(splitX, h); ctx.lineTo(0, h);
-      ctx.closePath(); ctx.clip();
-      const pR = bgImage.width / bgImage.height;
-      let ph = h, pw = h * pR;
-      if (pw < splitX + slant) { pw = splitX + slant; ph = pw / pR; }
-      ctx.drawImage(bgImage, 0, (h - ph) / 2, pw, ph);
-      ctx.restore();
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(splitX - 4 * scale, 0); ctx.lineTo(splitX + slant - 4 * scale, h);
-      ctx.lineTo(splitX + slant, h); ctx.lineTo(splitX, 0);
-      ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
-      ctx.restore();
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(splitX, 0); ctx.lineTo(w, 0);
-      ctx.lineTo(w, h); ctx.lineTo(splitX + slant, h);
-      ctx.closePath(); ctx.fillStyle = c.bg; ctx.fill();
-      ctx.restore();
-
-      const tLeft = splitX + slant + 28 * scale;
-      const tW    = w - tLeft - 28 * scale;
-      const tTop  = h * 0.13;
-
-      ctx.fillStyle = "#1a1a1a";
-      ctx.font = `700 ${13 * scale}px 'Inter', sans-serif`;
-      ctx.fillText("KOREAN COURSE", tLeft, tTop);
-      ctx.fillRect(tLeft, tTop + 8 * scale, 48 * scale, 3 * scale);
-
-      const mSize = Math.min(62 * scale, tW * 0.2);
-      ctx.font = `900 ${mSize}px 'Inter', 'Segoe UI', sans-serif`;
-      ctx.fillStyle = "#1a1a1a";
-      wrapText(ctx, post.mainText, tLeft, tTop + 32 * scale, tW, mSize * 1.15, 2);
-
-      if (post.subtitle) {
-        const sSize = mSize * 0.46;
-        ctx.font = `500 ${sSize}px 'Inter', sans-serif`;
-        ctx.fillStyle = "#333";
-        // FIXED position
-        wrapText(ctx, post.subtitle, tLeft, h * 0.62, tW, sSize * 1.45, 3);
-      }
-
-      const logoY = h - 38 * scale;
-      ctx.fillStyle = "#1a1a1a";
-      ctx.beginPath();
-      ctx.arc(tLeft + 16 * scale, logoY, 15 * scale, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.font = `bold ${15 * scale}px 'Inter', sans-serif`;
-      ctx.fillStyle = "#FFFF00"; ctx.textAlign = "center";
-      ctx.fillText("K", tLeft + 16 * scale, logoY + 5 * scale);
-      ctx.textAlign = "start";
-      ctx.fillStyle = "#1a1a1a";
-      ctx.font = `bold ${12 * scale}px 'Inter', sans-serif`;
-      ctx.fillText("KLOVERS", tLeft + 38 * scale, logoY + 5 * scale);
+    // ── Subtitle ──
+    if (post.subtitle) {
+      ctx.font = fontStack(L, 400, 22 * scale);
+      ctx.fillStyle = "rgba(255,255,255,0.80)";
+      drawText(ctx, post.subtitle, tPad, h * 0.72, tW, 28 * scale, 3, L, w);
     }
+
+    // ── CTA pill ──
+    const ctaH = 48 * scale, ctaW = 220 * scale;
+    const ctaY = h - 90 * scale;
+    ctx.fillStyle = "#FFFF00";
+    rRect(ctx, tPad, ctaY, ctaW, ctaH, ctaH / 2);
+    ctx.fill();
+    ctx.font = fontStack(L, 700, 16 * scale);
+    ctx.fillStyle = "#111111";
+    ctx.textAlign = "center";
+    ctx.fillText(ctaText(L), tPad + ctaW / 2, ctaY + ctaH * 0.65);
+    ctx.textAlign = "left";
+
+    // ── Website ──
+    ctx.font = fontStack("en", 400, 12 * scale);
+    ctx.fillStyle = "rgba(255,255,0,0.4)";
+    ctx.fillText("kloversegy.com", tPad, h - 24 * scale);
     return;
   }
 
