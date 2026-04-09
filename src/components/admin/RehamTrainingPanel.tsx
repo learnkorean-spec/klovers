@@ -677,6 +677,106 @@ const CONVERSATION_DATA: ConversationExchange[] = [
       english: "At the Korean Cultural Centre, when introducing Korean cultural events to Egyptian audiences, I performed localization considering cultural context rather than simple translation. I converted Korean customs and expressions into analogies and explanations understandable in Arab culture. I've also developed this skill for 13 years at Klovers, adapting Korean learning content for Arabic-speaking learners.",
     },
   },
+  /* ── Translator / Interpreter — Extended ── */
+  {
+    id: 67,
+    topic: "Korean Language Proficiency",
+    interviewer: { korean: "한국어 능력 수준이 어떻게 되시나요? 공인 자격증이 있으신가요?", english: "What is your Korean language proficiency level? Do you have any official certifications?" },
+    reham: {
+      korean: "아인샴스 대학교에서 한국어학 및 한국문학을 전공하여 학술적 기반을 갖추고 있습니다. 13년 이상 한국어를 가르치고 통역 업무를 수행하며 실무 능력을 지속적으로 발전시켜왔습니다. 비즈니스 한국어, 일상 회화, 그리고 전문 분야 통역까지 폭넓게 대응할 수 있습니다.",
+      english: "I have an academic foundation from majoring in Korean Linguistics and Literature at Ain Shams University. I've continuously developed my practical skills through 13+ years of teaching Korean and performing interpretation work. I can handle business Korean, everyday conversation, and specialized field interpretation.",
+    },
+  },
+  {
+    id: 68,
+    topic: "Arabic-Korean Translation",
+    interviewer: { korean: "아랍어-한국어 번역에서 가장 어려운 점은 무엇인가요?", english: "What is the most challenging aspect of Arabic-Korean translation?" },
+    reham: {
+      korean: "아랍어와 한국어는 문장 구조, 경어법, 그리고 문화적 표현 방식이 매우 다릅니다. 특히 아랍어의 수사적 표현을 한국어의 존댓말 체계에 맞게 변환하는 것이 어렵습니다. 저는 13년간 두 언어를 가르치며 이런 차이점을 깊이 이해했고, 직역이 아닌 의미와 뉘앙스를 살린 번역을 합니다.",
+      english: "Arabic and Korean differ greatly in sentence structure, honorific systems, and cultural expressions. Converting Arabic rhetorical expressions to fit Korean's honorific system is particularly challenging. Through 13 years of teaching both languages, I deeply understand these differences and translate for meaning and nuance rather than literally.",
+    },
+  },
+  {
+    id: 69,
+    topic: "Interpretation Mistake Recovery",
+    interviewer: { korean: "통역 중 실수를 했을 때 어떻게 대처하시나요?", english: "How do you handle mistakes during live interpretation?" },
+    reham: {
+      korean: "즉시 정정하는 것이 가장 중요합니다. '정정하겠습니다'라고 말하고 올바른 내용을 전달합니다. 한국문화원에서 대규모 행사 통역 시 이런 상황을 경험했는데, 침착하게 수정하면 오히려 전문성에 대한 신뢰를 높일 수 있습니다. 실수를 방지하기 위해 사전 준비를 철저히 하고, 통역 후에는 반드시 복기하여 같은 실수를 반복하지 않도록 합니다.",
+      english: "Immediate correction is most important. I say 'Let me correct that' and deliver the right content. I experienced this during large event interpretation at the Korean Cultural Centre — calmly correcting actually builds trust in your professionalism. To prevent mistakes, I prepare thoroughly beforehand and always review after interpretation to avoid repeating the same errors.",
+    },
+  },
+  {
+    id: 70,
+    topic: "Confidentiality in Interpretation",
+    interviewer: { korean: "통역 시 기밀 정보를 어떻게 관리하시나요?", english: "How do you handle confidential information during interpretation?" },
+    reham: {
+      korean: "통역사로서 기밀 유지는 가장 기본적인 직업 윤리입니다. El Zenouki에서 비즈니스 협상 통역을 할 때 양측의 기밀 정보를 접했지만, 철저하게 비밀을 유지했습니다. 통역 자료는 업무 후 안전하게 폐기하고, 통역 내용을 제3자에게 절대 공유하지 않습니다. Klivvr에서 금융 데이터를 다룬 경험도 기밀 관리 능력을 강화해주었습니다.",
+      english: "Confidentiality is the most fundamental professional ethic for an interpreter. At El Zenouki, I had access to confidential information during business negotiation interpretation but maintained strict confidentiality. I safely dispose of interpretation materials after work and never share content with third parties. My experience handling financial data at Klivvr also strengthened my confidentiality management skills.",
+    },
+  },
+  {
+    id: 71,
+    topic: "High-Pressure Interpretation",
+    interviewer: { korean: "VIP나 고위급 인사가 참석한 자리에서 통역한 경험이 있으신가요?", english: "Have you interpreted at events with VIPs or senior officials?" },
+    reham: {
+      korean: "네, 한국문화원에서 2년 8개월간 대규모 문화 축제, 전시회, 기업 쇼케이스에서 국제 공연자, 기술팀, VIP 손님을 위한 주요 통역사로 활동했습니다. 압박감이 큰 상황에서도 정확성을 유지하기 위해 사전에 행사 자료를 꼼꼼히 검토하고, 관련 용어를 미리 준비합니다. 침착하고 전문적인 태도가 VIP 환경에서 가장 중요합니다.",
+      english: "Yes, at the Korean Cultural Centre for over 2.5 years, I served as the primary interpreter for international performers, technical teams, and VIP guests at cultural festivals, exhibitions, and corporate showcases. To maintain accuracy under high pressure, I thoroughly review event materials and prepare relevant terminology in advance. A calm and professional demeanor is most important in VIP settings.",
+    },
+  },
+  {
+    id: 72,
+    topic: "Language Pair Flexibility",
+    interviewer: { korean: "아랍어, 한국어, 영어 외에 다른 언어도 통역이 가능하신가요?", english: "Can you interpret in languages other than Arabic, Korean, and English?" },
+    reham: {
+      korean: "네, 6개 언어를 구사할 수 있습니다. 아랍어, 한국어, 영어가 주력이며, 헝가리에서 근무하며 헝가리어도 사용한 경험이 있습니다. 다국어 능력 덕분에 복잡한 다자간 미팅에서 중간 언어 없이 직접 통역이 가능하고, 이는 소통의 정확성과 속도를 높여줍니다.",
+      english: "Yes, I speak 6 languages. Arabic, Korean, and English are my primary languages, and I also have experience using Hungarian from working in Hungary. My multilingual abilities allow direct interpretation in complex multilateral meetings without relay languages, which improves both accuracy and speed of communication.",
+    },
+  },
+  {
+    id: 73,
+    topic: "Korean Honorific System",
+    interviewer: { korean: "한국어 경어법을 번역에서 어떻게 처리하시나요?", english: "How do you handle Korean honorifics in translation?" },
+    reham: {
+      korean: "한국어의 존댓말 체계는 번역에서 매우 중요합니다. 상황, 상대방의 직위, 관계에 따라 적절한 경어 수준을 선택합니다. 비즈니스 환경에서는 합니다체를 기본으로 사용하고, 발표자의 의도와 톤을 정확히 전달하기 위해 맥락을 주의 깊게 파악합니다. 아인샴스 대학에서 한국어학을 전공하며 이 체계를 학술적으로 공부했고, 13년간의 실무에서 자연스럽게 적용하고 있습니다.",
+      english: "Korean's honorific system is crucial in translation. I choose the appropriate level of formality based on the situation, the other person's position, and the relationship. In business settings, I default to formal polite style (hapnida-che), carefully reading context to accurately convey the speaker's intent and tone. I studied this system academically at Ain Shams University and have been naturally applying it through 13 years of practice.",
+    },
+  },
+  {
+    id: 74,
+    topic: "Translation Speed & Volume",
+    interviewer: { korean: "하루에 얼마나 많은 양의 번역을 처리할 수 있으신가요?", english: "How much translation volume can you handle per day?" },
+    reham: {
+      korean: "문서의 복잡도에 따라 다르지만, 일반 비즈니스 문서는 하루 3,000~5,000단어, 전문 기술 문서는 2,000~3,000단어를 번역할 수 있습니다. Accenture에서 하루 800건의 콘텐츠를 95% 이상의 정확도로 처리한 경험이 있어, 대량 작업에서도 품질을 유지하는 방법을 잘 알고 있습니다. 속도보다 정확성을 우선시하되, 효율적인 작업 프로세스로 둘 다 달성합니다.",
+      english: "It depends on document complexity, but I can translate 3,000-5,000 words for general business documents and 2,000-3,000 for specialized technical documents per day. Having processed 800 content items daily at 95%+ accuracy at Accenture, I know how to maintain quality in high-volume work. I prioritize accuracy over speed but achieve both through efficient work processes.",
+    },
+  },
+  {
+    id: 75,
+    topic: "Remote Interpretation",
+    interviewer: { korean: "원격 통역 경험이 있으신가요? 어떤 도구를 사용하시나요?", english: "Do you have experience with remote interpretation? What tools do you use?" },
+    reham: {
+      korean: "네, Klovers에서 13년간 15개국 이상의 학생들과 온라인으로 작업하며 원격 소통에 매우 익숙합니다. Zoom, Google Meet, Microsoft Teams 등 주요 화상회의 도구를 능숙하게 사용합니다. 원격 통역 시에는 오디오 품질 확인, 네트워크 안정성 점검, 백업 장비 준비 등 기술적 준비를 철저히 합니다. 대면보다 비언어적 단서가 적기 때문에 더 집중하여 맥락을 파악합니다.",
+      english: "Yes, I'm very comfortable with remote communication from 13 years of working online with students across 15+ countries at Klovers. I'm proficient with Zoom, Google Meet, Microsoft Teams, and other video conferencing tools. For remote interpretation, I thoroughly check audio quality, network stability, and prepare backup equipment. Since there are fewer non-verbal cues than in person, I focus more intensely on context.",
+    },
+  },
+  {
+    id: 76,
+    topic: "Korean Business Culture",
+    interviewer: { korean: "한국 비즈니스 문화에 대한 이해도가 어떻게 되시나요?", english: "How well do you understand Korean business culture?" },
+    reham: {
+      korean: "아인샴스 대학에서 한국 문화와 문학을 전공했고, 한국문화원에서 2년 8개월간 한국 기업인과 직접 교류하며 비즈니스 문화를 체험했습니다. 명함 교환 예절, 회의 문화, 상하 관계의 중요성을 잘 이해하고 있습니다. 또한 13년간 한국어를 가르치며 학생들에게 비즈니스 한국어와 문화도 함께 교육하고 있어, 이론과 실무 모두에서 깊은 이해를 갖추고 있습니다.",
+      english: "I majored in Korean culture and literature at Ain Shams University and experienced Korean business culture firsthand during 2.5+ years of direct interaction with Korean business professionals at the Korean Cultural Centre. I understand business card exchange etiquette, meeting culture, and the importance of hierarchical relationships. Teaching Korean for 13 years, I also educate students on business Korean and culture, giving me deep understanding in both theory and practice.",
+    },
+  },
+  {
+    id: 77,
+    topic: "Translation Portfolio",
+    interviewer: { korean: "지금까지 어떤 분야의 번역/통역을 가장 많이 하셨나요?", english: "What fields have you translated/interpreted in most?" },
+    reham: {
+      korean: "주요 분야는 문화 행사, 비즈니스 협상, 제조업, 그리고 교육입니다. 한국문화원에서 문화 축제와 기업 행사 통역을 담당했고, El Zenouki에서 제조업 비즈니스 통역을 수행했습니다. 또한 Kerry에서 다국적 고객과의 소통에서 비즈니스 통역이 필요한 상황을 자주 처리했습니다. 교육 분야에서는 Klovers를 통해 13년간 교육 콘텐츠 번역과 개발을 지속해왔습니다.",
+      english: "My main fields are cultural events, business negotiations, manufacturing, and education. At the Korean Cultural Centre, I handled cultural festival and corporate event interpretation. At El Zenouki, I performed manufacturing business interpretation. At Kerry, I frequently handled situations requiring business interpretation with multinational clients. In education, I've been continuously translating and developing educational content through Klovers for 13 years.",
+    },
+  },
 ];
 
 /* ─── Section color map ─── */
@@ -726,7 +826,7 @@ const CATEGORIES: { name: string; icon: string; ids: number[] }[] = [
   { name: "AI / Data Annotation", icon: "🤖", ids: [51, 52, 53, 54, 55] },
   { name: "Operations & Supply Chain", icon: "⚙️", ids: [56, 57, 58] },
   { name: "Customer Service", icon: "💬", ids: [59, 60, 61, 62] },
-  { name: "Translation & Interpretation", icon: "🌐", ids: [63, 64, 65, 66] },
+  { name: "Translation & Interpretation", icon: "🌐", ids: [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77] },
 ];
 
 /* ─── Interview Field Configs ─── */
@@ -781,7 +881,7 @@ const FIELD_CONFIGS: FieldConfig[] = [
     labelKr: "번역 / 통역",
     icon: "🌐",
     description: "Translation, interpretation, cultural mediation",
-    questionIds: [1, 2, 5, 6, 16, 17, 35, 42, 45, 47, 49, 38, 39, 40, 41, 63, 64, 65, 66],
+    questionIds: [1, 2, 5, 6, 16, 17, 35, 42, 45, 47, 49, 38, 39, 40, 41, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77],
   },
 ];
 
