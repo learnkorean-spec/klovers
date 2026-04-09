@@ -1,7 +1,7 @@
 {
   "images": {
     "sizes": [320, 480, 640, 828, 1080, 1200, 1920],
-    "domains": ["ewtdgpbybkceokfohhyg.supabase.co"],
+    "domains": ["images.unsplash.com", "pmiubsqfjeyxvrobaecn.supabase.co"],
     "formats": ["image/avif", "image/webp"],
     "minimumCacheTTL": 2592000
   },
