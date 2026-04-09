@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   Shuffle, Eye, EyeOff, ArrowLeft, Clock, Star, Plus, Trash2, Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Data: Self-Introduction Script (line-by-line) ─── */
 
@@ -528,6 +529,154 @@ const CONVERSATION_DATA: ConversationExchange[] = [
       english: "I have worked in three countries: Egypt, Malaysia, and Hungary. In Egypt, I worked in interpretation, trade, and administration. In Malaysia, I handled multilingual content management at Accenture and order operations at Kerry. In Hungary, I taught Arabic and managed conference sales. Working across different work cultures in each country helped me develop flexibility and cultural adaptability.",
     },
   },
+  /* ── AI / Data Roles ── */
+  {
+    id: 51,
+    topic: "AI Data Annotation",
+    interviewer: { korean: "AI 모델을 위한 학습 데이터 어노테이션 작업을 어떻게 진행하시나요?", english: "How would you approach annotating training data for an AI model?" },
+    reham: {
+      korean: "먼저 어노테이션 가이드라인을 꼼꼼히 숙지하고, 샘플 데이터를 통해 기준을 확인합니다. 작업 중에는 일관성을 유지하기 위해 애매한 사례를 별도로 기록하고 팀과 공유합니다. Accenture에서 대량 데이터를 처리한 경험을 바탕으로, 효율적이면서도 정확한 어노테이션 프로세스를 구축할 수 있습니다.",
+      english: "I first thoroughly study the annotation guidelines and verify standards through sample data. During work, I record ambiguous cases separately and share them with the team to maintain consistency. Based on my experience processing large volumes of data at Accenture, I can build an efficient yet accurate annotation process.",
+    },
+  },
+  {
+    id: 52,
+    topic: "Bias Detection",
+    interviewer: { korean: "학습 데이터에서 편향을 어떻게 식별하고 처리하시나요?", english: "How do you identify and handle bias in training data?" },
+    reham: {
+      korean: "데이터의 분포와 패턴을 분석하여 특정 그룹이나 관점이 과대 또는 과소 대표되는지 확인합니다. 다국어 콘텐츠 모더레이션 경험을 통해 문화적 편향을 인식하는 능력을 키웠습니다. 편향이 발견되면 문서화하고 팀 리드에게 보고하여 가이드라인을 업데이트합니다.",
+      english: "I analyze data distribution and patterns to check if certain groups or perspectives are over- or under-represented. My multilingual content moderation experience developed my ability to recognize cultural biases. When bias is found, I document it and report to the team lead to update guidelines.",
+    },
+  },
+  {
+    id: 53,
+    topic: "Annotation Guidelines",
+    interviewer: { korean: "어노테이션 가이드라인이 불명확할 때 어떻게 대처하시나요?", english: "How do you handle ambiguous cases when annotation guidelines are unclear?" },
+    reham: {
+      korean: "먼저 기존 가이드라인에서 유사한 사례를 찾아봅니다. 그래도 불명확하면 해당 사례를 스크린샷과 함께 문서화하고, 팀 리드에게 명확한 판단 기준을 요청합니다. Accenture에서 새로운 유형의 콘텐츠를 처리할 때 이런 방식으로 가이드라인 개선에 기여했습니다.",
+      english: "First, I look for similar cases in existing guidelines. If still unclear, I document the case with screenshots and request clear criteria from the team lead. At Accenture, I contributed to guideline improvements this way when handling new types of content.",
+    },
+  },
+  {
+    id: 54,
+    topic: "AI Ethics",
+    interviewer: { korean: "윤리적 AI와 데이터 책임에 대한 생각을 말씀해 주세요.", english: "What are your thoughts on ethical AI and data responsibility?" },
+    reham: {
+      korean: "AI 시스템의 품질은 학습 데이터의 품질에 직접적으로 의존합니다. 데이터 어노테이터로서 편향 없는 정확한 데이터를 제공하는 것이 윤리적 책임이라고 생각합니다. 또한 개인정보 보호와 데이터 보안을 철저히 준수해야 합니다. Klivvr에서 금융 데이터를 다루며 이런 원칙을 실천했습니다.",
+      english: "AI system quality directly depends on training data quality. As a data annotator, I believe it's an ethical responsibility to provide accurate, unbiased data. Data privacy and security must also be strictly observed. I practiced these principles handling financial data at Klivvr.",
+    },
+  },
+  {
+    id: 55,
+    topic: "AI Tools & Platforms",
+    interviewer: { korean: "어떤 AI 도구나 플랫폼을 사용해 보셨나요?", english: "What AI tools and platforms have you worked with?" },
+    reham: {
+      korean: "데이터 처리와 분석에 Excel, Google Sheets를 활용했고, 웹 개발에서는 AI 기반 코드 생성 도구를 사용한 경험이 있습니다. Klovers 웹사이트에서는 AI를 활용한 콘텐츠 생성과 SEO 최적화를 진행했습니다. 새로운 도구에 빠르게 적응하는 편이며, 보통 1~2주 내에 새 플랫폼을 숙련할 수 있습니다.",
+      english: "I've used Excel and Google Sheets for data processing and analysis, and have experience with AI-based code generation tools in web development. For the Klovers website, I used AI for content generation and SEO optimization. I adapt quickly to new tools and can typically master new platforms within 1-2 weeks.",
+    },
+  },
+  /* ── Operations ── */
+  {
+    id: 56,
+    topic: "Supply Chain Disruption",
+    interviewer: { korean: "공급망 차질이 발생했을 때 어떻게 대처하셨나요?", english: "How did you handle a supply chain disruption?" },
+    reham: {
+      korean: "Kerry에서 주요 공급업체의 배송 지연이 발생했을 때, 즉시 대안 공급업체를 파악하고 긴급 주문을 조율했습니다. 동시에 영향을 받는 고객사에 사전 통보하여 기대치를 관리했습니다. 이 경험을 통해 위기 상황에서의 신속한 의사결정과 이해관계자 소통의 중요성을 배웠습니다.",
+      english: "When a key supplier experienced delivery delays at Kerry, I immediately identified alternative suppliers and coordinated emergency orders. Simultaneously, I proactively notified affected clients to manage expectations. This taught me the importance of rapid decision-making and stakeholder communication during crises.",
+    },
+  },
+  {
+    id: 57,
+    topic: "Cross-Department Coordination",
+    interviewer: { korean: "부서 간 협력을 통해 운영 목표를 달성한 경험을 말씀해 주세요.", english: "Describe coordinating between departments to meet an operational deadline." },
+    reham: {
+      korean: "Kerry에서 월말 마감 시 물류, 재무, 고객 서비스 부서와 긴밀히 협력했습니다. 매일 진행 상황 미팅을 주최하고, 공유 대시보드를 만들어 실시간 상태를 추적했습니다. 각 부서의 병목 현상을 사전에 파악하고 해결함으로써 마감 기한을 100% 준수했습니다.",
+      english: "At Kerry, I closely coordinated with logistics, finance, and customer service departments during month-end closings. I hosted daily progress meetings and created shared dashboards for real-time status tracking. By proactively identifying and resolving bottlenecks across departments, we achieved 100% deadline compliance.",
+    },
+  },
+  {
+    id: 58,
+    topic: "System Migration",
+    interviewer: { korean: "시스템 마이그레이션 경험이 있으신가요? 어떻게 관리하셨나요?", english: "Have you experienced a system migration? How did you manage it?" },
+    reham: {
+      korean: "Kerry에서 주문 관리 프로세스의 업데이트를 경험했습니다. 기존 데이터의 무결성을 확인하기 위해 마이그레이션 전후 검증 체크리스트를 만들었고, 팀원들에게 새 시스템 교육을 진행했습니다. 단계별 전환 방식을 채택하여 업무 중단을 최소화하면서 성공적으로 전환을 완료했습니다.",
+      english: "At Kerry, I experienced an order management process update. I created pre- and post-migration verification checklists to ensure data integrity and trained team members on the new system. By adopting a phased transition approach, we completed the migration successfully while minimizing business disruption.",
+    },
+  },
+  /* ── Customer Care ── */
+  {
+    id: 59,
+    topic: "Difficult Customer",
+    interviewer: { korean: "매우 불만족한 고객을 어떻게 응대하셨나요?", english: "Describe handling an extremely dissatisfied customer." },
+    reham: {
+      korean: "Klivvr에서 거래 오류로 매우 화가 난 고객을 응대한 적이 있습니다. 먼저 고객의 말을 끝까지 경청하고 공감을 표현했습니다. 그 다음 문제의 원인을 신속하게 파악하여 즉시 해결 방안을 제시했습니다. 후속 연락을 통해 문제가 완전히 해결되었는지 확인했고, 고객은 결국 긍정적인 피드백을 남겼습니다.",
+      english: "At Klivvr, I handled a very upset customer due to a transaction error. I first listened completely and expressed empathy. Then I quickly identified the cause and immediately provided a resolution. Through follow-up contact, I confirmed the issue was fully resolved, and the customer eventually left positive feedback.",
+    },
+  },
+  {
+    id: 60,
+    topic: "Customer Retention",
+    interviewer: { korean: "고객 유지를 위해 어떤 전략을 사용하셨나요?", english: "What strategies have you used to retain customers?" },
+    reham: {
+      korean: "Kerry에서 고객 이탈 징후를 조기에 파악하기 위해 주문 빈도와 커뮤니케이션 패턴을 모니터링했습니다. 불만 사항이 감지되면 선제적으로 연락하여 솔루션을 제안했습니다. 또한 주요 고객에 대해 정기적인 만족도 조사를 실시하여 잠재적 문제를 사전에 해결했습니다. 이 접근법으로 고객 유지율을 높게 유지했습니다.",
+      english: "At Kerry, I monitored order frequency and communication patterns to detect early signs of customer churn. When dissatisfaction was detected, I proactively reached out to propose solutions. I also conducted regular satisfaction surveys for key clients to address potential issues before they escalated. This approach helped maintain high customer retention rates.",
+    },
+  },
+  {
+    id: 61,
+    topic: "Multilingual Customer Support",
+    interviewer: { korean: "다국어 능력이 고객 서비스에 어떻게 도움이 되었나요?", english: "How do your language skills help in customer service?" },
+    reham: {
+      korean: "6개 언어를 구사할 수 있어 다양한 국적의 고객과 직접 소통할 수 있었습니다. 아랍어와 한국어 고객의 경우 모국어로 응대하면 신뢰감이 크게 높아졌습니다. Klivvr에서는 아랍어 고객을, Kerry에서는 다국적 고객을 언어 장벽 없이 지원하여 더 빠르고 정확한 서비스를 제공했습니다.",
+      english: "Speaking 6 languages allowed me to communicate directly with customers of various nationalities. For Arabic and Korean customers, responding in their native language significantly increased trust. At Klivvr I supported Arabic customers, and at Kerry multinational clients, providing faster and more accurate service without language barriers.",
+    },
+  },
+  {
+    id: 62,
+    topic: "CRM Workflow Improvement",
+    interviewer: { korean: "고객 서비스 워크플로우를 개선한 경험을 말씀해 주세요.", english: "Describe a time you improved a customer service workflow." },
+    reham: {
+      korean: "Klivvr에서 고객 문의 유형을 분석하여 자주 발생하는 질문에 대한 표준 응답 템플릿을 만들었습니다. 이를 CRM 시스템에 통합하여 응답 시간을 40% 단축했습니다. 또한 문의 유형별 에스컬레이션 기준을 명확히 하여 복잡한 문제가 더 빨리 전문가에게 전달되도록 개선했습니다.",
+      english: "At Klivvr, I analyzed customer inquiry types and created standard response templates for frequently asked questions. Integrating these into the CRM system reduced response time by 40%. I also clarified escalation criteria by inquiry type so complex issues reached specialists faster.",
+    },
+  },
+  /* ── Translator / Interpreter ── */
+  {
+    id: 63,
+    topic: "Simultaneous vs Consecutive",
+    interviewer: { korean: "동시통역과 순차통역 경험에 대해 말씀해 주세요.", english: "What is your experience with simultaneous vs consecutive interpretation?" },
+    reham: {
+      korean: "한국문화원에서 대규모 행사 시 순차통역을 주로 담당했고, 비즈니스 미팅에서는 동시통역도 수행했습니다. 순차통역은 정확성이, 동시통역은 속도와 집중력이 중요합니다. 상황에 따라 적절한 방식을 선택하며, 두 가지 모두에서 높은 품질을 유지하기 위해 사전 준비를 철저히 합니다.",
+      english: "At the Korean Cultural Centre, I primarily handled consecutive interpretation for large events and performed simultaneous interpretation in business meetings. Consecutive requires accuracy while simultaneous demands speed and focus. I choose the appropriate method based on the situation and prepare thoroughly to maintain high quality in both.",
+    },
+  },
+  {
+    id: 64,
+    topic: "Technical Terminology",
+    interviewer: { korean: "전문 분야의 통역을 위해 어떻게 준비하시나요?", english: "How do you prepare for interpreting in a specialized/technical field?" },
+    reham: {
+      korean: "통역 전에 해당 분야의 전문 용어집을 작성하고 관련 자료를 미리 학습합니다. El Zenouki에서 제조업 관련 통역 시 기술 용어를 한국어, 아랍어, 영어로 정리한 개인 용어집을 만들어 활용했습니다. 또한 발표자와 사전 미팅을 하여 핵심 내용과 맥락을 파악합니다.",
+      english: "Before interpreting, I create a glossary of specialized terms and study related materials in advance. At El Zenouki, I built a personal glossary with technical manufacturing terms in Korean, Arabic, and English. I also hold pre-meetings with speakers to understand key content and context.",
+    },
+  },
+  {
+    id: 65,
+    topic: "Translation Quality",
+    interviewer: { korean: "번역의 정확성을 보장하기 위해 어떤 프로세스를 따르시나요?", english: "What process do you follow to ensure translation accuracy?" },
+    reham: {
+      korean: "번역 후 반드시 자체 검토를 수행하고, 가능하면 제3자 리뷰도 진행합니다. 원문의 의미뿐만 아니라 문화적 맥락과 뉘앙스도 정확히 전달되는지 확인합니다. Accenture에서 다국어 콘텐츠를 검토한 경험을 통해 체계적인 품질 보증 프로세스의 중요성을 깊이 이해하고 있습니다.",
+      english: "I always perform self-review after translation and arrange third-party review when possible. I verify not only the meaning but also that cultural context and nuances are accurately conveyed. My experience reviewing multilingual content at Accenture gave me deep understanding of systematic quality assurance processes.",
+    },
+  },
+  {
+    id: 66,
+    topic: "Cultural Localization",
+    interviewer: { korean: "문화적 적절성을 위해 콘텐츠를 현지화한 경험을 말씀해 주세요.", english: "Give an example of adapting content for cultural appropriateness." },
+    reham: {
+      korean: "한국문화원에서 한국 문화 행사를 이집트 관객에게 소개할 때, 단순 번역이 아닌 문화적 맥락을 고려한 현지화를 진행했습니다. 한국의 관습이나 표현을 아랍 문화에서 이해할 수 있는 비유나 설명으로 변환했습니다. 또한 Klovers에서 한국어 교육 콘텐츠를 아랍어권 학습자에게 맞게 조정하며 13년간 이 능력을 발전시켜왔습니다.",
+      english: "At the Korean Cultural Centre, when introducing Korean cultural events to Egyptian audiences, I performed localization considering cultural context rather than simple translation. I converted Korean customs and expressions into analogies and explanations understandable in Arab culture. I've also developed this skill for 13 years at Klovers, adapting Korean learning content for Arabic-speaking learners.",
+    },
+  },
 ];
 
 /* ─── Section color map ─── */
@@ -544,6 +693,10 @@ const SECTION_COLORS: Record<string, string> = {
   "Web Dev": "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
   Strengths: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   Closing: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+  "AI Data": "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
+  Operations: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
+  "Customer Care": "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+  Translation: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
 };
 
 /* ─── Data: Categories mapping ─── */
@@ -570,6 +723,66 @@ const CATEGORIES: { name: string; icon: string; ids: number[] }[] = [
   { name: "Career & Self-Dev", icon: "📈", ids: [18, 38, 39] },
   { name: "Cross-Cultural", icon: "🌍", ids: [35, 42, 45, 50] },
   { name: "Closing", icon: "🤝", ids: [40, 41] },
+  { name: "AI / Data Annotation", icon: "🤖", ids: [51, 52, 53, 54, 55] },
+  { name: "Operations & Supply Chain", icon: "⚙️", ids: [56, 57, 58] },
+  { name: "Customer Service", icon: "💬", ids: [59, 60, 61, 62] },
+  { name: "Translation & Interpretation", icon: "🌐", ids: [63, 64, 65, 66] },
+];
+
+/* ─── Interview Field Configs ─── */
+
+type InterviewField = "all" | "ai" | "operations" | "customer-care" | "translator";
+
+interface FieldConfig {
+  key: InterviewField;
+  label: string;
+  labelKr: string;
+  icon: string;
+  description: string;
+  questionIds: number[];
+}
+
+const FIELD_CONFIGS: FieldConfig[] = [
+  {
+    key: "all",
+    label: "All Questions",
+    labelKr: "전체 질문",
+    icon: "📋",
+    description: "All interview questions across all fields",
+    questionIds: [],
+  },
+  {
+    key: "ai",
+    label: "AI / Data Roles",
+    labelKr: "AI / 데이터 직무",
+    icon: "🤖",
+    description: "AI Data Annotator, AI Trainer, Machine Learning",
+    questionIds: [1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16, 17, 25, 26, 38, 39, 40, 41, 51, 52, 53, 54, 55],
+  },
+  {
+    key: "operations",
+    label: "Operations",
+    labelKr: "운영 관리",
+    icon: "⚙️",
+    description: "Order management, process optimization, SAP",
+    questionIds: [1, 2, 3, 4, 5, 6, 9, 11, 17, 20, 21, 22, 23, 24, 36, 38, 39, 40, 41, 56, 57, 58],
+  },
+  {
+    key: "customer-care",
+    label: "Customer Care",
+    labelKr: "고객 서비스",
+    icon: "💬",
+    description: "Customer service, complaint handling, CRM",
+    questionIds: [1, 2, 5, 6, 10, 17, 23, 24, 27, 28, 35, 38, 39, 40, 41, 59, 60, 61, 62],
+  },
+  {
+    key: "translator",
+    label: "Translator / Interpreter",
+    labelKr: "번역 / 통역",
+    icon: "🌐",
+    description: "Translation, interpretation, cultural mediation",
+    questionIds: [1, 2, 5, 6, 16, 17, 35, 42, 45, 47, 49, 38, 39, 40, 41, 63, 64, 65, 66],
+  },
 ];
 
 /* ─── Data: Key Metrics ─── */
@@ -990,13 +1203,57 @@ export default function RehamTrainingPanel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
 
+  /* Interview Field state */
+  const [selectedField, setSelectedField] = useState<InterviewField>(() => {
+    try {
+      const saved = localStorage.getItem("reham-training-field");
+      if (saved && ["all", "ai", "operations", "customer-care", "translator"].includes(saved)) {
+        return saved as InterviewField;
+      }
+    } catch {}
+    return "all";
+  });
+
+  const activeFieldConfig = FIELD_CONFIGS.find((f) => f.key === selectedField)!;
+
+  const filteredConversationData = useMemo(() => {
+    if (selectedField === "all") return CONVERSATION_DATA;
+    return activeFieldConfig.questionIds
+      .map((id) => CONVERSATION_DATA.find((c) => c.id === id))
+      .filter(Boolean) as ConversationExchange[];
+  }, [selectedField]);
+
+  const filteredCategories = useMemo(() => {
+    if (selectedField === "all") return CATEGORIES;
+    const fieldIds = new Set(activeFieldConfig.questionIds);
+    return CATEGORIES
+      .map((cat) => ({ ...cat, ids: cat.ids.filter((id) => fieldIds.has(id)) }))
+      .filter((cat) => cat.ids.length > 0);
+  }, [selectedField]);
+
+  // Persist field selection
+  useEffect(() => {
+    localStorage.setItem("reham-training-field", selectedField);
+  }, [selectedField]);
+
+  // Reset navigation state on field change
+  useEffect(() => {
+    setCurrentIndex(0);
+    setCompleted(new Set());
+    setRevealedAnswers(new Set());
+    setConfidence(new Map());
+    setMockPhase("setup");
+    setSelectedCategory(null);
+    setCatIndex(0);
+  }, [selectedField]);
+
   /* Quiz Mode state */
   const [quizShuffle, setQuizShuffle] = useState(false);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
   const [confidence, setConfidence] = useState<Map<number, 1 | 2 | 3>>(new Map());
   const quizOrder = useMemo(
-    () => (quizShuffle ? shuffleArray(CONVERSATION_DATA) : CONVERSATION_DATA),
-    [quizShuffle],
+    () => (quizShuffle ? shuffleArray(filteredConversationData) : filteredConversationData),
+    [quizShuffle, filteredConversationData],
   );
 
   /* Mock Interview state */
@@ -1027,41 +1284,109 @@ export default function RehamTrainingPanel() {
   const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null);
   const [editingCollectionName, setEditingCollectionName] = useState("");
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const initialLoadDone = useRef(false);
 
-  // Load starred items and collections from localStorage on mount
+  // Debounced save to Supabase
+  const saveToSupabase = useCallback((starredArr: number[], cols: StarredCollection[]) => {
+    if (!userId) return;
+    clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      supabase.from("training_starred").upsert({
+        user_id: userId,
+        starred: starredArr,
+        collections: cols as unknown as Record<string, unknown>,
+        updated_at: new Date().toISOString(),
+      });
+    }, 500);
+  }, [userId]);
+
+  // Load starred items from Supabase (if auth'd) or localStorage
   useEffect(() => {
-    try {
-      const savedStarred = localStorage.getItem("reham-training-starred");
-      const savedCollections = localStorage.getItem("reham-training-collections");
-      if (savedStarred) setStarred(new Set(JSON.parse(savedStarred)));
-      if (savedCollections) {
-        const parsed = JSON.parse(savedCollections);
-        setCollections(parsed);
-        if (parsed.length > 0 && !selectedCollectionId) {
-          setSelectedCollectionId(parsed[0].id);
+    const defaultCol: StarredCollection = { id: "default", name: "My Favorites", questionIds: [], introIds: [] };
+
+    function applyLocal() {
+      try {
+        const savedStarred = localStorage.getItem("reham-training-starred");
+        const savedCollections = localStorage.getItem("reham-training-collections");
+        if (savedStarred) setStarred(new Set(JSON.parse(savedStarred)));
+        if (savedCollections) {
+          const parsed = JSON.parse(savedCollections);
+          setCollections(parsed);
+          if (parsed.length > 0) setSelectedCollectionId(parsed[0].id);
+        } else {
+          setCollections([defaultCol]);
+          setSelectedCollectionId("default");
         }
-      } else {
-        // Initialize with default collection
-        const defaultCollection: StarredCollection = { id: "default", name: "My Favorites", questionIds: [], introIds: [] };
-        setCollections([defaultCollection]);
+        return { starred: savedStarred, collections: savedCollections };
+      } catch {
+        setCollections([defaultCol]);
         setSelectedCollectionId("default");
+        return { starred: null, collections: null };
       }
-    } catch {
-      // Fallback: create default collection if localStorage fails
-      const defaultCollection: StarredCollection = { id: "default", name: "My Favorites", questionIds: [], introIds: [] };
-      setCollections([defaultCollection]);
-      setSelectedCollectionId("default");
     }
+
+    async function loadStarred() {
+      const { data: { user } } = await supabase.auth.getUser();
+      const uid = user?.id ?? null;
+      setUserId(uid);
+
+      if (uid) {
+        const { data } = await supabase
+          .from("training_starred")
+          .select("starred, collections")
+          .eq("user_id", uid)
+          .maybeSingle();
+
+        if (data) {
+          const starredArr = (data.starred ?? []) as number[];
+          const cols = (data.collections ?? [defaultCol]) as unknown as StarredCollection[];
+          setStarred(new Set(starredArr));
+          setCollections(cols);
+          setSelectedCollectionId(cols[0]?.id ?? null);
+          localStorage.setItem("reham-training-starred", JSON.stringify(starredArr));
+          localStorage.setItem("reham-training-collections", JSON.stringify(cols));
+          initialLoadDone.current = true;
+          return;
+        }
+
+        // No remote row — load localStorage and migrate up
+        const local = applyLocal();
+        initialLoadDone.current = true;
+        if (local.starred || local.collections) {
+          const starredArr = local.starred ? JSON.parse(local.starred) : [];
+          const colsArr = local.collections ? JSON.parse(local.collections) : [defaultCol];
+          await supabase.from("training_starred").upsert({
+            user_id: uid,
+            starred: starredArr,
+            collections: colsArr as unknown as Record<string, unknown>,
+            updated_at: new Date().toISOString(),
+          });
+        }
+        return;
+      }
+
+      // Not auth'd — localStorage only
+      applyLocal();
+      initialLoadDone.current = true;
+    }
+    loadStarred();
   }, []);
 
-  // Save starred items to localStorage whenever they change
+  // Save starred items to localStorage + Supabase whenever they change
   useEffect(() => {
-    localStorage.setItem("reham-training-starred", JSON.stringify([...starred]));
+    if (!initialLoadDone.current) return;
+    const arr = [...starred];
+    localStorage.setItem("reham-training-starred", JSON.stringify(arr));
+    saveToSupabase(arr, collections);
   }, [starred]);
 
-  // Save collections to localStorage whenever they change
+  // Save collections to localStorage + Supabase whenever they change
   useEffect(() => {
+    if (!initialLoadDone.current) return;
     localStorage.setItem("reham-training-collections", JSON.stringify(collections));
+    saveToSupabase([...starred], collections);
   }, [collections]);
 
   // Helper functions for starred items
@@ -1204,8 +1529,8 @@ export default function RehamTrainingPanel() {
   }, [mockPhase, thinkingTime]);
 
   const startMock = useCallback(() => {
-    const shuffled = shuffleArray(CONVERSATION_DATA);
-    const count = mockCount === 0 ? CONVERSATION_DATA.length : mockCount;
+    const shuffled = shuffleArray(filteredConversationData);
+    const count = mockCount === 0 ? filteredConversationData.length : mockCount;
     setMockQuestions(shuffled.slice(0, count));
     setMockCurrent(0);
     setMockStartTime(Date.now());
@@ -1224,8 +1549,8 @@ export default function RehamTrainingPanel() {
     }
   }, [mockCurrent, mockQuestions.length]);
 
-  const current = CONVERSATION_DATA[currentIndex];
-  const progress = ((currentIndex + 1) / CONVERSATION_DATA.length) * 100;
+  const current = filteredConversationData[currentIndex];
+  const progress = ((currentIndex + 1) / filteredConversationData.length) * 100;
 
   const markComplete = () => {
     setCompleted((prev) => new Set(prev).add(current.id));
@@ -1253,6 +1578,33 @@ export default function RehamTrainingPanel() {
         </p>
       </CardHeader>
       <CardContent>
+        {/* ── Interview Field Selector ── */}
+        <div className="mb-4 space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Interview Field</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {FIELD_CONFIGS.map((field) => (
+              <button
+                key={field.key}
+                onClick={() => setSelectedField(field.key)}
+                className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${
+                  selectedField === field.key
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <span className="text-lg">{field.icon}</span>
+                <span className="text-xs font-semibold">{field.label}</span>
+                <span className="text-[10px] text-muted-foreground">{field.labelKr}</span>
+              </button>
+            ))}
+          </div>
+          {selectedField !== "all" && (
+            <p className="text-xs text-muted-foreground">
+              {activeFieldConfig.description} — {filteredConversationData.length} questions
+            </p>
+          )}
+        </div>
+
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
           <TabsList className="mb-4 grid h-auto w-full grid-cols-3 gap-1 md:inline-flex md:h-10 md:w-auto md:gap-0">
             <TabsTrigger value="introduction" className="gap-1 text-xs py-2 md:py-1.5">
@@ -1335,8 +1687,8 @@ export default function RehamTrainingPanel() {
               {/* Progress */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Question {currentIndex + 1} of {CONVERSATION_DATA.length}</span>
-                  <span>{completed.size} / {CONVERSATION_DATA.length} practiced</span>
+                  <span>Question {currentIndex + 1} of {filteredConversationData.length}</span>
+                  <span>{completed.size} / {filteredConversationData.length} practiced</span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
@@ -1449,7 +1801,7 @@ export default function RehamTrainingPanel() {
                   size="sm"
                   variant="outline"
                   onClick={() => goTo(currentIndex + 1)}
-                  disabled={currentIndex === CONVERSATION_DATA.length - 1}
+                  disabled={currentIndex === filteredConversationData.length - 1}
                   className="gap-1"
                 >
                   Next <ChevronRight className="h-4 w-4" />
@@ -1464,7 +1816,7 @@ export default function RehamTrainingPanel() {
               <p className="text-xs text-muted-foreground mb-3">
                 All interview questions at a glance. Click play to hear, or jump to practice mode.
               </p>
-              {CONVERSATION_DATA.map((ex, i) => (
+              {filteredConversationData.map((ex, i) => (
                 <div
                   key={ex.id}
                   className={cn(
@@ -1517,9 +1869,9 @@ export default function RehamTrainingPanel() {
               {/* Summary */}
               <div className="mt-4 p-3 rounded-lg bg-muted/50 text-center">
                 <p className="text-sm font-medium">
-                  {completed.size === CONVERSATION_DATA.length
+                  {completed.size === filteredConversationData.length
                     ? "All questions practiced! Great job, Reham! 🎉"
-                    : `${completed.size} of ${CONVERSATION_DATA.length} questions practiced`}
+                    : `${completed.size} of ${filteredConversationData.length} questions practiced`}
                 </p>
               </div>
             </div>
@@ -1778,7 +2130,7 @@ export default function RehamTrainingPanel() {
                               variant="ghost"
                               className="h-7 text-xs gap-1"
                               onClick={() => {
-                                const idx = CONVERSATION_DATA.findIndex((c) => c.id === q.id);
+                                const idx = filteredConversationData.findIndex((c) => c.id === q.id);
                                 if (idx >= 0) jumpToPractice(idx);
                               }}
                             >
@@ -1805,7 +2157,7 @@ export default function RehamTrainingPanel() {
                   Practice by topic. Click a category to drill into its questions.
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {CATEGORIES.map((cat) => {
+                  {filteredCategories.map((cat) => {
                     const catCompleted = cat.ids.filter((id) => completed.has(id)).length;
                     const pct = Math.round((catCompleted / cat.ids.length) * 100);
                     return (
@@ -1831,7 +2183,7 @@ export default function RehamTrainingPanel() {
                 </div>
               </div>
             ) : (() => {
-              const cat = CATEGORIES.find((c) => c.name === selectedCategory)!;
+              const cat = filteredCategories.find((c) => c.name === selectedCategory)!;
               const catExchanges = cat.ids
                 .map((id) => CONVERSATION_DATA.find((c) => c.id === id))
                 .filter(Boolean) as ConversationExchange[];
