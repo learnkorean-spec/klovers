@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2, Image } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2, Image, Trophy } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -54,6 +54,7 @@ const PromoCodesManager = lazy(() => import("@/components/admin/PromoCodesManage
 const SeoOrchestrationPanel = lazy(() => import("@/components/admin/SeoOrchestrationPanel"));
 const ImageAuditPanel = lazy(() => import("@/components/admin/ImageAuditPanel"));
 const LeadsPanel = lazy(() => import("@/components/admin/LeadsPanel"));
+const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"));
 
 const TabLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -668,6 +669,9 @@ const AdminDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="preferences" className={TAB_CLS}>
                   <BarChart3 className="h-3.5 w-3.5" /> Preferences
+                </TabsTrigger>
+                <TabsTrigger value="league-users" className={TAB_CLS}>
+                  <Trophy className="h-3.5 w-3.5" /> Leagues
                 </TabsTrigger>
               </div>
 
@@ -1590,6 +1594,15 @@ const AdminDashboard = () => {
             <TabsContent value="preferences">
               <TabErrorBoundary name="Student Preferences">
                 <StudentPreferenceDashboard />
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* LEAGUE USERS TAB */}
+            <TabsContent value="league-users">
+              <TabErrorBoundary name="League Users">
+                <Suspense fallback={<TabLoader />}>
+                  <LeagueUsersPanel />
+                </Suspense>
               </TabErrorBoundary>
             </TabsContent>
 
