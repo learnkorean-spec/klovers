@@ -466,7 +466,7 @@ const ReturningStudentsLandingPage = () => {
         )}
 
         {/* ── Final CTA ── */}
-        <section className="py-16 md:py-20 px-4 bg-primary text-primary-foreground">
+        <section className="py-16 md:py-20 px-4 bg-primary text-primary-foreground border-y border-black/25">
           <div className="container mx-auto max-w-3xl text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
               {t("welcomeBack.finalCta.title")}

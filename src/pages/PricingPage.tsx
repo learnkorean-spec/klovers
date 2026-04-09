@@ -94,7 +94,7 @@ const ExitNudge = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-primary text-black px-4 py-3 flex items-center justify-between gap-3 max-w-2xl mx-auto mb-4 rounded-xl shadow-2xl">
+      <div className="bg-primary text-black px-4 py-3 flex items-center justify-between gap-3 max-w-2xl mx-auto mb-4 rounded-xl shadow-2xl border border-black/25">
         <div className="flex items-center gap-3">
           <span className="text-2xl">💬</span>
           <div>

@@ -47,7 +47,7 @@ const FinalCTA = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-20 md:py-28 relative overflow-hidden bg-primary"
+      className="py-20 md:py-28 relative overflow-hidden bg-primary border-y border-black/25"
     >
       {/* Top edge gradient for depth */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
