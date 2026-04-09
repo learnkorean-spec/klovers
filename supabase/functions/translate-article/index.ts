@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { slug } = await req.json();
+    const { slug, direction = "en-to-ar" } = await req.json();
     if (!slug) throw new Error("slug is required");
 
     const supabase = createClient(
@@ -17,29 +17,51 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch the English article
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+
+    // ── Determine source/target based on direction ───────────────────────────
+    const isReverse = direction === "ar-to-en";
+    const sourceLang = isReverse ? "ar" : "en";
+    const targetLang = isReverse ? "en" : "ar";
+
+    let targetSlug: string;
+    if (isReverse) {
+      if (!slug.endsWith("-ar")) throw new Error("AR post slug must end with -ar for reverse translation");
+      targetSlug = slug.replace(/-ar$/, "");
+    } else {
+      targetSlug = `${slug}-ar`;
+    }
+
+    // Fetch the source article
     const { data: post, error: fetchErr } = await supabase
       .from("blog_posts")
       .select("*")
       .eq("slug", slug)
-      .eq("lang", "en")
+      .eq("lang", sourceLang)
       .single();
 
-    if (fetchErr || !post) throw new Error("Article not found: " + (fetchErr?.message || slug));
+    if (fetchErr || !post) throw new Error(`${sourceLang.toUpperCase()} article not found: ${fetchErr?.message || slug}`);
 
-    // Check if Arabic version already exists
-    const arSlug = `${slug}-ar`;
+    // Check if target version already exists
     const { data: existing } = await supabase
       .from("blog_posts")
       .select("id")
-      .eq("slug", arSlug)
+      .eq("slug", targetSlug)
       .maybeSingle();
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    // ── Build translation prompt ─────────────────────────────────────────────
+    const langInstructions = isReverse
+      ? `You are a professional English translator specializing in Korean language education content. Translate the following blog article from Arabic to English.
 
-    // Translate using AI
-    const prompt = `You are a professional Arabic translator specializing in Korean language education content. Translate the following blog article from English to Arabic (Modern Standard Arabic). 
+IMPORTANT RULES:
+- Translate ALL text naturally into English
+- Keep Korean words/phrases in their original form (한글, 안녕하세요, etc.)
+- Keep markdown formatting intact (##, **, -, links, etc.)
+- Keep any URLs unchanged
+- Make the English text flow naturally, not word-for-word translation
+- Use clear, engaging English suitable for an international audience`
+      : `You are a professional Arabic translator specializing in Korean language education content. Translate the following blog article from English to Arabic (Modern Standard Arabic).
 
 IMPORTANT RULES:
 - Translate ALL text naturally into Arabic
@@ -47,18 +69,20 @@ IMPORTANT RULES:
 - Keep markdown formatting intact (##, **, -, links, etc.)
 - Keep any URLs unchanged
 - Make the Arabic text flow naturally, not word-for-word translation
-- Use appropriate Arabic punctuation
+- Use appropriate Arabic punctuation`;
+
+    const prompt = `${langInstructions}
 
 Translate each field separately and return a JSON object with these keys:
 - title (string)
-- description (string) 
+- description (string)
 - content (string - full markdown)
 - hero_alt (string)
 - hero_caption (string)
 - hero_alt_2 (string, can be empty)
 - hero_caption_2 (string, can be empty)
 - cta_text (string)
-- keywords (array of Arabic keyword strings)
+- keywords (array of ${targetLang === "ar" ? "Arabic" : "English"} keyword strings)
 
 Here is the article to translate:
 
@@ -94,7 +118,7 @@ ${post.content}`;
 
     const aiData = await aiRes.json();
     const rawContent = aiData.choices?.[0]?.message?.content || "";
-    
+
     // Extract JSON from the response
     let translated;
     try {
@@ -105,9 +129,9 @@ ${post.content}`;
       throw new Error("Failed to parse AI translation response: " + e.message);
     }
 
-    const arPost = {
+    const targetPost = {
       title: translated.title || post.title,
-      slug: arSlug,
+      slug: targetSlug,
       description: translated.description || post.description,
       keywords: translated.keywords || post.keywords,
       article_type: post.article_type,
@@ -121,7 +145,7 @@ ${post.content}`;
       cta_url: post.cta_url,
       content: translated.content || post.content,
       author: post.author,
-      lang: "ar",
+      lang: targetLang,
       published: post.published,
       published_at: post.published_at,
       seo_score: post.seo_score,
@@ -129,27 +153,25 @@ ${post.content}`;
 
     let result;
     if (existing) {
-      // Update existing Arabic version
       const { data, error } = await supabase
         .from("blog_posts")
-        .update(arPost)
+        .update(targetPost)
         .eq("id", existing.id)
         .select("id, slug")
         .single();
       if (error) throw error;
       result = data;
     } else {
-      // Insert new Arabic version
       const { data, error } = await supabase
         .from("blog_posts")
-        .insert(arPost)
+        .insert(targetPost)
         .select("id, slug")
         .single();
       if (error) throw error;
       result = data;
     }
 
-    return new Response(JSON.stringify({ success: true, slug: arSlug, id: result.id }), {
+    return new Response(JSON.stringify({ success: true, slug: targetSlug, id: result.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

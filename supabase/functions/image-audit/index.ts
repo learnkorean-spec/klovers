@@ -53,7 +53,10 @@ interface PostAuditResult {
 }
 
 interface ParityGroup {
-  hero_image: string;  // shared image URL (the link)
+  slug_base: string;           // EN slug (or AR slug with -ar stripped)
+  hero_image_en: string | null;
+  hero_image_ar: string | null;
+  images_match: boolean;
   posts: Array<{
     id: string;
     slug: string;
@@ -61,11 +64,18 @@ interface ParityGroup {
     has_alt: boolean;
     has_alt_correct_lang: boolean;
     published: boolean;
+    hero_image: string | null;
   }>;
   has_en: boolean;
   has_ar: boolean;
-  is_complete: boolean;  // both languages present with correct alt text
+  is_complete: boolean;
   missing_langs: string[];
+  match_method: "slug" | "standalone_ar";
+  debug: {
+    en_slug_searched: string | null;
+    ar_slug_searched: string | null;
+    counterpart_found: boolean;
+  };
 }
 
 interface AuditSummary {
@@ -286,23 +296,12 @@ ${JSON.stringify(input)}`;
 }
 
 // ── Bilingual parity analysis ──────────────────────────────────────────────────
-// Groups posts by shared hero_image URL to find EN/AR pairs
+// Groups posts by slug convention: EN slug "X" pairs with AR slug "X-ar"
 
 function buildParityGroups(
   posts: BlogPost[],
   auditMap: Map<string, ImageIssue[]>
 ): ParityGroup[] {
-  const imageMap = new Map<string, BlogPost[]>();
-
-  for (const post of posts) {
-    if (!post.hero_image || post.hero_image.trim() === "") continue;
-    const key = post.hero_image.trim();
-    if (!imageMap.has(key)) imageMap.set(key, []);
-    imageMap.get(key)!.push(post);
-  }
-
-  const groups: ParityGroup[] = [];
-
   function toParityPost(p: BlogPost) {
     const issues = auditMap.get(p.id) ?? [];
     return {
@@ -314,45 +313,89 @@ function buildParityGroups(
         (i) => i.code === "lang_mismatch_alt1" || i.code === "missing_hero_alt" || i.code === "hero_alt_too_short"
       ),
       published: p.published,
+      hero_image: p.hero_image,
     };
   }
 
-  for (const [imageUrl, group] of imageMap) {
-    if (group.length < 2) {
-      const post = group[0];
-      const lang = langLabel(post.lang);
-      groups.push({
-        hero_image: imageUrl,
-        posts: [toParityPost(post)],
-        has_en: lang === "en",
-        has_ar: lang === "ar",
-        is_complete: false,
-        missing_langs: lang === "en" ? ["ar"] : ["en"],
-      });
-      continue;
+  // Build slug→post maps
+  const enBySlug = new Map<string, BlogPost>();
+  const arBySlug = new Map<string, BlogPost>();
+
+  for (const post of posts) {
+    const lang = langLabel(post.lang);
+    if (lang === "en") enBySlug.set(post.slug, post);
+    else if (lang === "ar") arBySlug.set(post.slug, post);
+  }
+
+  const groups: ParityGroup[] = [];
+  const consumedArSlugs = new Set<string>();
+
+  // 1. For each EN post, look for AR counterpart with slug "X-ar"
+  for (const [enSlug, enPost] of enBySlug) {
+    const arSlug = `${enSlug}-ar`;
+    const arPost = arBySlug.get(arSlug);
+
+    const postEntries = [toParityPost(enPost)];
+    if (arPost) {
+      postEntries.push(toParityPost(arPost));
+      consumedArSlugs.add(arSlug);
     }
 
-    const langs = group.map((p) => langLabel(p.lang));
-    const hasEn = langs.includes("en");
-    const hasAr = langs.includes("ar");
-    const postEntries = group.map(toParityPost);
+    const hasAr = !!arPost;
+    const imagesMatch = hasAr
+      ? (enPost.hero_image ?? "") === (arPost!.hero_image ?? "")
+      : false;
+
+    const missingLangs: string[] = [];
+    if (!hasAr) missingLangs.push("ar");
 
     const isComplete =
-      hasEn &&
       hasAr &&
       postEntries.every((p) => p.has_alt && p.has_alt_correct_lang && p.published);
 
-    const missingLangs: string[] = [];
-    if (!hasEn) missingLangs.push("en");
-    if (!hasAr) missingLangs.push("ar");
-
     groups.push({
-      hero_image: imageUrl,
+      slug_base: enSlug,
+      hero_image_en: enPost.hero_image,
+      hero_image_ar: arPost?.hero_image ?? null,
+      images_match: imagesMatch,
       posts: postEntries,
-      has_en: hasEn,
+      has_en: true,
       has_ar: hasAr,
       is_complete: isComplete,
       missing_langs: missingLangs,
+      match_method: "slug",
+      debug: {
+        en_slug_searched: enSlug,
+        ar_slug_searched: arSlug,
+        counterpart_found: hasAr,
+      },
+    });
+  }
+
+  // 2. Remaining AR posts not yet consumed
+  for (const [arSlug, arPost] of arBySlug) {
+    if (consumedArSlugs.has(arSlug)) continue;
+
+    const hasArSuffix = arSlug.endsWith("-ar");
+    const slugBase = hasArSuffix ? arSlug.replace(/-ar$/, "") : arSlug;
+    const enSlugSearched = hasArSuffix ? slugBase : null;
+
+    groups.push({
+      slug_base: slugBase,
+      hero_image_en: null,
+      hero_image_ar: arPost.hero_image,
+      images_match: false,
+      posts: [toParityPost(arPost)],
+      has_en: false,
+      has_ar: true,
+      is_complete: false,
+      missing_langs: ["en"],
+      match_method: hasArSuffix ? "slug" : "standalone_ar",
+      debug: {
+        en_slug_searched: enSlugSearched,
+        ar_slug_searched: arSlug,
+        counterpart_found: false,
+      },
     });
   }
 

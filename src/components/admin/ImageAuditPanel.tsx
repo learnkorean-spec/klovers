@@ -39,15 +39,25 @@ interface ParityPost {
   has_alt: boolean;
   has_alt_correct_lang: boolean;
   published: boolean;
+  hero_image: string | null;
 }
 
 interface ParityGroup {
-  hero_image: string;
+  slug_base: string;
+  hero_image_en: string | null;
+  hero_image_ar: string | null;
+  images_match: boolean;
   posts: ParityPost[];
   has_en: boolean;
   has_ar: boolean;
   is_complete: boolean;
   missing_langs: string[];
+  match_method: "slug" | "standalone_ar";
+  debug: {
+    en_slug_searched: string | null;
+    ar_slug_searched: string | null;
+    counterpart_found: boolean;
+  };
 }
 
 interface AuditSummary {
@@ -180,6 +190,42 @@ function PostRow({ item }: { item: PostAuditResult }) {
   );
 }
 
+// ── Debug info per parity group ───────────────────────────────────────────────
+
+function DebugInfo({ group }: { group: ParityGroup }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-dashed pt-1.5 mt-1.5">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground"
+      >
+        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        Debug Info
+      </button>
+      {open && (
+        <div className="mt-1.5 p-2 rounded bg-muted/30 text-xs font-mono space-y-1">
+          <div>Slug base: <span className="text-primary">{group.slug_base}</span></div>
+          <div>Match method: {group.match_method}</div>
+          <div>EN slug searched: {group.debug.en_slug_searched ?? "—"}</div>
+          <div>AR slug searched: {group.debug.ar_slug_searched ?? "—"}</div>
+          <div>Counterpart found: {group.debug.counterpart_found ? "Yes" : "No"}</div>
+          <div>Images match: {group.images_match ? "Yes" : "No"}</div>
+          {group.hero_image_en && (
+            <div className="truncate">EN image: <span className="text-blue-600" title={group.hero_image_en}>{group.hero_image_en}</span></div>
+          )}
+          {group.hero_image_ar && (
+            <div className="truncate">AR image: <span className="text-green-600" title={group.hero_image_ar}>{group.hero_image_ar}</span></div>
+          )}
+          {!group.images_match && group.hero_image_en && group.hero_image_ar && (
+            <div className="text-yellow-600">⚠ Hero images differ between EN and AR versions</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Parity section ────────────────────────────────────────────────────────────
 
 function ParitySection({ groups }: { groups: ParityGroup[] }) {
@@ -198,68 +244,72 @@ function ParitySection({ groups }: { groups: ParityGroup[] }) {
         <span className="ml-auto text-xs text-muted-foreground">
           {completeCount} complete · {groups.length - completeCount} incomplete
         </span>
-
       </button>
 
       {open && (
         <CardContent className="border-t pt-4 space-y-3">
-          {groups.map((group, idx) => {
-            const imageId = group.hero_image.match(/photo-([a-z0-9]+)/)?.[1] ?? `img-${idx}`;
-            return (
-              <div key={idx} className={`rounded-lg border p-3 text-sm space-y-2 ${group.is_complete ? "border-green-200 bg-green-50/40" : "border-red-200 bg-red-50/30"}`}>
-                <div className="flex items-center gap-2">
-                  <Image className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="font-mono text-xs text-muted-foreground truncate" title={group.hero_image}>
-                    {imageId}
+          {groups.map((group, idx) => (
+            <div key={idx} className={`rounded-lg border p-3 text-sm space-y-2 ${group.is_complete ? "border-green-200 bg-green-50/40" : "border-red-200 bg-red-50/30"}`}>
+              <div className="flex items-center gap-2">
+                <Languages className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="font-mono text-xs text-muted-foreground truncate" title={group.slug_base}>
+                  {group.slug_base}
+                </span>
+                {group.match_method === "standalone_ar" && (
+                  <span className="inline-flex rounded px-1.5 py-0.5 text-xs font-semibold border bg-orange-100 text-orange-700 border-orange-200">
+                    standalone AR
                   </span>
-                  {group.is_complete
-                    ? <CheckCircle className="h-4 w-4 text-green-500 ml-auto shrink-0" />
-                    : <XCircle className="h-4 w-4 text-red-500 ml-auto shrink-0" />
-                  }
-                </div>
-
-                {/* Per-language rows */}
-                <div className="space-y-1">
-                  {group.posts.map((p) => (
-                    <div key={p.id} className="flex items-center gap-2 text-xs">
-                      <LangBadge lang={p.lang} />
-                      <span className="font-mono text-primary truncate max-w-[200px]" title={`/blog/${p.slug}`}>
-                        /{p.slug}
-                      </span>
-                      <span className="ml-auto flex items-center gap-2 shrink-0">
-                        {p.has_alt
-                          ? <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Has alt text" />
-                          : <XCircle className="h-3.5 w-3.5 text-red-500" title="Missing alt text" />
-                        }
-                        {p.has_alt_correct_lang
-                          ? <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Correct language" />
-                          : <AlertCircle className="h-3.5 w-3.5 text-yellow-500" title="Wrong language" />
-                        }
-                        {p.published
-                          ? <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Published" />
-                          : <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" title="Draft" />
-                        }
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Missing languages */}
-                {group.missing_langs.length > 0 && (
-                  <p className="text-xs text-red-600 font-medium">
-                    Missing {group.missing_langs.map((l) => l.toUpperCase()).join(", ")} version
-                  </p>
                 )}
-
-                {/* Legend */}
-                <div className="flex gap-3 text-xs text-muted-foreground pt-1 border-t border-dashed">
-                  <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> alt text</span>
-                  <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> correct lang</span>
-                  <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> published</span>
-                </div>
+                {group.is_complete
+                  ? <CheckCircle className="h-4 w-4 text-green-500 ml-auto shrink-0" />
+                  : <XCircle className="h-4 w-4 text-red-500 ml-auto shrink-0" />
+                }
               </div>
-            );
-          })}
+
+              {/* Per-language rows */}
+              <div className="space-y-1">
+                {group.posts.map((p) => (
+                  <div key={p.id} className="flex items-center gap-2 text-xs">
+                    <LangBadge lang={p.lang} />
+                    <span className="font-mono text-primary truncate max-w-[200px]" title={`/blog/${p.slug}`}>
+                      /{p.slug}
+                    </span>
+                    <span className="ml-auto flex items-center gap-2 shrink-0">
+                      {p.has_alt
+                        ? <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Has alt text" />
+                        : <XCircle className="h-3.5 w-3.5 text-red-500" title="Missing alt text" />
+                      }
+                      {p.has_alt_correct_lang
+                        ? <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Correct language" />
+                        : <AlertCircle className="h-3.5 w-3.5 text-yellow-500" title="Wrong language" />
+                      }
+                      {p.published
+                        ? <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Published" />
+                        : <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" title="Draft" />
+                      }
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Missing languages */}
+              {group.missing_langs.length > 0 && (
+                <p className="text-xs text-red-600 font-medium">
+                  Missing {group.missing_langs.map((l) => l.toUpperCase()).join(", ")} version
+                </p>
+              )}
+
+              {/* Debug info */}
+              <DebugInfo group={group} />
+
+              {/* Legend */}
+              <div className="flex gap-3 text-xs text-muted-foreground pt-1 border-t border-dashed">
+                <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> alt text</span>
+                <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> correct lang</span>
+                <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> published</span>
+              </div>
+            </div>
+          ))}
         </CardContent>
       )}
     </Card>

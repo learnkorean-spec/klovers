@@ -199,7 +199,7 @@ const ReturningStudentOffer = () => {
                 return (
                   <div key={i} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground font-bold text-sm border-2 border-secondary
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground font-bold text-sm border-2 border-secondary">
                         {i + 1}
                       </span>
                       {i < steps.length - 1 && (

@@ -321,6 +321,30 @@ const BlogManager = () => {
     }
   };
 
+  const handleTranslateToEn = async (post: BlogPost) => {
+    if (post.lang !== "ar") return;
+    if (!post.slug.endsWith("-ar")) {
+      toast({ title: "Cannot auto-translate", description: "This Arabic post's slug doesn't follow the -ar convention.", variant: "destructive" });
+      return;
+    }
+    setTranslating(post.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-article", {
+        body: { slug: post.slug, direction: "ar-to-en" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Article translated to English!", description: `Slug: ${data.slug}` });
+      fetchPosts();
+    } catch (e: any) {
+      toast({ title: "Translation failed", description: e.message, variant: "destructive" });
+    } finally {
+      setTranslating(null);
+    }
+  };
+
+  const enSlugs = new Set(posts.filter((p) => p.lang === "en").map((p) => p.slug));
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageNum: 1 | 2) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -459,6 +483,11 @@ const BlogManager = () => {
                     {post.lang === "en" && (
                       <Button variant="ghost" size="icon" onClick={() => handleTranslate(post)} disabled={translating === post.id} title="Translate to Arabic">
                         <Languages className={`h-4 w-4 ${translating === post.id ? "animate-spin" : ""}`} />
+                      </Button>
+                    )}
+                    {post.lang === "ar" && post.slug.endsWith("-ar") && !enSlugs.has(post.slug.replace(/-ar$/, "")) && (
+                      <Button variant="ghost" size="icon" onClick={() => handleTranslateToEn(post)} disabled={translating === post.id} title="Translate to English">
+                        <Languages className={`h-4 w-4 text-blue-600 ${translating === post.id ? "animate-spin" : ""}`} />
                       </Button>
                     )}
                     <Button variant="ghost" size="icon" onClick={() => togglePublish(post)} title={post.published ? "Unpublish" : "Publish"}>
