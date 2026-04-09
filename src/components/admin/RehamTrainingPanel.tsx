@@ -1336,7 +1336,7 @@ export default function RehamTrainingPanel() {
     localStorage.setItem("reham-training-field", selectedField);
   }, [selectedField]);
 
-  // Reset navigation state on field change
+  // Reset navigation state on field change & switch to Practice tab
   useEffect(() => {
     setCurrentIndex(0);
     setCompleted(new Set());
@@ -1345,6 +1345,9 @@ export default function RehamTrainingPanel() {
     setMockPhase("setup");
     setSelectedCategory(null);
     setCatIndex(0);
+    if (selectedField !== "all") {
+      setActiveSubTab("practice");
+    }
   }, [selectedField]);
 
   /* Quiz Mode state */
@@ -1796,8 +1799,9 @@ export default function RehamTrainingPanel() {
               {/* Exchange Card */}
               <Card className="rounded-xl border-2">
                 <CardContent className="p-5 space-y-5">
-                  {/* Topic with Star */}
+                  {/* Question Number + Topic with Star */}
                   <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">{currentIndex + 1}</span>
                     <Badge variant="outline" className="text-xs">{current.topic}</Badge>
                     <Button
                       size="sm"
@@ -1906,6 +1910,39 @@ export default function RehamTrainingPanel() {
                 >
                   Next <ChevronRight className="h-4 w-4" />
                 </Button>
+              </div>
+
+              {/* Question List — numbered, scrollable */}
+              <div className="mt-4 border rounded-xl p-3">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                  All {filteredConversationData.length} Questions — tap to jump
+                </p>
+                <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                  {filteredConversationData.map((ex, i) => (
+                    <button
+                      key={ex.id}
+                      onClick={() => goTo(i)}
+                      className={`w-full flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-colors ${
+                        i === currentIndex
+                          ? "bg-primary/10 border border-primary/30 font-semibold"
+                          : completed.has(ex.id)
+                          ? "bg-green-50 dark:bg-green-950/20 hover:bg-green-100"
+                          : "hover:bg-accent/50"
+                      }`}
+                    >
+                      <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-bold shrink-0 ${
+                        i === currentIndex
+                          ? "bg-primary text-primary-foreground"
+                          : completed.has(ex.id)
+                          ? "bg-green-500 text-white"
+                          : "bg-muted text-muted-foreground"
+                      }`}>{i + 1}</span>
+                      <span className="truncate flex-1">{ex.interviewer.korean}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">{ex.topic}</span>
+                      {completed.has(ex.id) && <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </TabsContent>
