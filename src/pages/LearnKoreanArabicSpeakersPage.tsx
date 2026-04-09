@@ -96,14 +96,14 @@ const LearnKoreanArabicSpeakersPage = () => {
       <Header />
       <main id="main-content">
         {/* Hero Section */}
-        <section className="pt-24 pb-16 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+        <section className="pt-24 pb-16 bg-muted/50">
           <div className="container mx-auto px-4 max-w-4xl">
             <Badge className="mb-4" variant="outline">For Arabic Learners</Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
               Learn Korean as an Arabic Speaker
             </h1>
             <p className="text-xl text-foreground/70 mb-8 leading-relaxed">
-              Korean is actually <span className="font-semibold text-blue-600">easier for Arabic speakers</span> than English speakers. Discover why, and reach intermediate fluency in 6-8 months instead of 12+.
+              Korean is actually <span className="font-semibold text-primary">easier for Arabic speakers</span> than English speakers. Discover why, and reach intermediate fluency in 6-8 months instead of 12+.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" asChild>
@@ -128,7 +128,7 @@ const LearnKoreanArabicSpeakersPage = () => {
                   desc: "SOV word order + agglutinative suffixes = Arabic structure. You won't learn grammar, you'll recognize it."
                 },
                 {
-                  icon: <Award className="h-8 w-8 text-blue-500" />,
+                  icon: <Award className="h-8 w-8 text-primary" />,
                   title: "Formal/Informal Levels (Like Arabic)",
                   desc: "Korean has respect words and formal/casual speech just like Arabic. This is intuitive for you."
                 },
@@ -216,13 +216,13 @@ const LearnKoreanArabicSpeakersPage = () => {
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 items-start">
                   <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-500 text-white font-bold">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-secondary text-white font-bold">
                       {i + 1}
                     </div>
                   </div>
                   <div className="flex-grow pt-1">
                     <p className="font-bold text-lg">{item.month}</p>
-                    <p className="text-sm font-semibold text-blue-600 mb-2">{item.level}</p>
+                    <p className="text-sm font-semibold text-primary mb-2">{item.level}</p>
                     <p className="text-foreground/70">{item.skills}</p>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ const LearnKoreanArabicSpeakersPage = () => {
         </section>
 
         {/* Why Klovers is Perfect for Arabic Speakers */}
-        <section className="py-16 border-b bg-blue-50/50 dark:bg-blue-950/10">
+        <section className="py-16 border-b bg-muted/50">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-3xl font-bold mb-12 text-center">Why Klovers for Arabic Speakers</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -312,10 +312,10 @@ const LearnKoreanArabicSpeakersPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <section className="py-20 bg-secondary text-white">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Master Korean Faster?</h2>
-            <p className="text-lg mb-8 text-blue-100 max-w-2xl mx-auto">
+            <p className="text-lg mb-8 text-white/80 max-w-2xl mx-auto">
               Join 500+ Arabic speakers learning Korean with Klovers. Get personalized lessons tailored to your Arabic-speaking background.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -328,7 +328,7 @@ const LearnKoreanArabicSpeakersPage = () => {
                 <a href="/contact">Chat with us</a>
               </Button>
             </div>
-            <p className="text-sm text-blue-100 mt-6">
+            <p className="text-sm text-white/80 mt-6">
               <Clock className="h-4 w-4 inline mr-2" />
               Free placement test • No credit card required • Start anytime
             </p>

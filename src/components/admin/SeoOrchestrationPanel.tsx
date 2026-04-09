@@ -32,7 +32,7 @@ interface GenerationResult { slug: string; title: string; id?: string; status: "
 function ScoreBar({ score, max = 10, label }: { score: number | null | undefined; max?: number; label?: string }) {
   if (score == null) return <span className="text-muted-foreground text-xs">—</span>;
   const pct = Math.round((score / max) * 100);
-  const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400";
+  const color = pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400";
   return (
     <div className="flex items-center gap-2 min-w-[100px]">
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -46,14 +46,14 @@ function ScoreBar({ score, max = 10, label }: { score: number | null | undefined
 
 function ScoreBadge({ score, title }: { score: number | null | undefined; title?: string }) {
   if (score == null) return <span className="text-muted-foreground text-xs">—</span>;
-  const color = score >= 8 ? "bg-emerald-100 text-emerald-800 border-emerald-200" : score >= 5 ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-red-100 text-red-800 border-red-200";
+  const color = score >= 8 ? "bg-green-100 text-green-800 border-green-200" : score >= 5 ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-red-100 text-red-800 border-red-200";
   return <span title={title} className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold border ${color}`}>{score}/10</span>;
 }
 
 function BoolDot({ value, label }: { value: boolean; label: string }) {
   return (
-    <span className={`flex items-center gap-1 text-xs ${value ? "text-emerald-700" : "text-muted-foreground"}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${value ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+    <span className={`flex items-center gap-1 text-xs ${value ? "text-green-700" : "text-muted-foreground"}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${value ? "bg-green-500" : "bg-muted-foreground/40"}`} />
       {label}
     </span>
   );
@@ -96,7 +96,7 @@ function PostRow({ item }: { item: AgentReport }) {
 
         {hasIssues
           ? <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
-          : <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+          : <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
         }
       </button>
 
@@ -210,7 +210,7 @@ function PostRow({ item }: { item: AgentReport }) {
           )}
 
           {item.agents_run.length === 0 && (
-            <p className="text-emerald-600 font-medium flex items-center gap-2">
+            <p className="text-green-600 font-medium flex items-center gap-2">
               <CheckCircle className="h-4 w-4" /> All checks passed — no improvements needed.
             </p>
           )}
@@ -279,19 +279,19 @@ function TopicGapPanel({
 
       {/* Auto-gen status banner */}
       {(autoGenerating || autoGenResults.length > 0) && (
-        <Card className={`rounded-xl border-2 ${autoGenerating ? "border-primary/30 bg-primary/5" : autoCreatedCount > 0 ? "border-emerald-300 bg-emerald-50/60" : "border-border"}`}>
+        <Card className={`rounded-xl border-2 ${autoGenerating ? "border-primary/30 bg-primary/5" : autoCreatedCount > 0 ? "border-green-300 bg-green-50/60" : "border-border"}`}>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-3">
               {autoGenerating
                 ? <><Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" /><div><p className="text-sm font-semibold text-primary">Auto-generating top 5 articles…</p><p className="text-xs text-muted-foreground mt-0.5">Writing full SEO-optimised drafts from your top priority gaps</p></div></>
-                : <><CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" /><div><p className="text-sm font-semibold text-emerald-800">{autoCreatedCount} article draft{autoCreatedCount !== 1 ? "s" : ""} auto-generated</p><p className="text-xs text-muted-foreground mt-0.5">{autoGenResults.filter(r => r.status === "exists").length} already existed · Review and publish from the Blog tab</p></div></>
+                : <><CheckCircle className="h-5 w-5 text-green-600 shrink-0" /><div><p className="text-sm font-semibold text-green-800">{autoCreatedCount} article draft{autoCreatedCount !== 1 ? "s" : ""} auto-generated</p><p className="text-xs text-muted-foreground mt-0.5">{autoGenResults.filter(r => r.status === "exists").length} already existed · Review and publish from the Blog tab</p></div></>
               }
             </div>
             {!autoGenerating && autoGenResults.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {autoGenResults.map((r) => (
                   <span key={r.slug} className={`inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 border font-medium
-                    ${r.status === "created" ? "bg-emerald-100 border-emerald-300 text-emerald-800" :
+                    ${r.status === "created" ? "bg-green-100 border-green-300 text-green-800" :
                       r.status === "exists" ? "bg-blue-100 border-blue-300 text-blue-800" :
                       "bg-red-100 border-red-300 text-red-800"}`}>
                     {r.status === "created" ? <CheckCircle className="h-3 w-3" /> : r.status === "exists" ? <FileText className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
@@ -338,7 +338,7 @@ function TopicGapPanel({
                 key={a.slug}
                 onClick={() => !isCreated && !isExisting && !generating && !autoGenerating && toggleSelect(a.slug)}
                 className={`flex flex-col gap-1 p-3 rounded-lg border text-sm transition-all select-none
-                  ${isCreated ? "border-emerald-300 bg-emerald-50/60 cursor-default" :
+                  ${isCreated ? "border-green-300 bg-green-50/60 cursor-default" :
                     isExisting ? "border-blue-200 bg-blue-50/40 cursor-default" :
                     hasError ? "border-red-200 bg-red-50/40 cursor-default" :
                     isSelected ? "border-primary bg-primary/5 cursor-pointer ring-1 ring-primary/30" :
@@ -346,7 +346,7 @@ function TopicGapPanel({
               >
                 <div className="flex items-start gap-2.5">
                   <span className="mt-0.5 shrink-0">
-                    {isCreated ? <CheckCircle className="h-4 w-4 text-emerald-600" /> :
+                    {isCreated ? <CheckCircle className="h-4 w-4 text-green-600" /> :
                      isExisting ? <CheckCircle className="h-4 w-4 text-blue-500" /> :
                      hasError ? <AlertCircle className="h-4 w-4 text-red-500" /> :
                      <span className={`flex h-4 w-4 rounded border-2 items-center justify-center ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"}`}>
@@ -374,7 +374,7 @@ function TopicGapPanel({
                       <Badge variant="outline" className="text-xs">{a.search_intent}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{a.reason}</p>
-                    {isCreated && <p className="text-xs text-emerald-700 font-medium mt-0.5">Draft created — publish from the Blog tab</p>}
+                    {isCreated && <p className="text-xs text-green-700 font-medium mt-0.5">Draft created — publish from the Blog tab</p>}
                     {isExisting && <p className="text-xs text-blue-700 mt-0.5">Already exists in blog</p>}
                     {hasError && <p className="text-xs text-red-600 mt-0.5">{errMsg ?? "Generation failed"}</p>}
                   </div>
@@ -530,7 +530,7 @@ function SeoOrchestrationPanel() {
             { label: "Posts Scanned", value: summary.total_posts, icon: BarChart2, color: "text-foreground" },
             { label: "Needing Work", value: summary.posts_needing_work, icon: AlertCircle, color: "text-amber-600" },
             { label: "AI Calls", value: summary.ai_calls_made, icon: Zap, color: "text-primary" },
-            { label: "Avg SEO", value: summary.avg_seo_score != null ? `${summary.avg_seo_score}/10` : "—", icon: TrendingUp, color: summary.avg_seo_score != null && summary.avg_seo_score >= 7 ? "text-emerald-600" : "text-amber-600" },
+            { label: "Avg SEO", value: summary.avg_seo_score != null ? `${summary.avg_seo_score}/10` : "—", icon: TrendingUp, color: summary.avg_seo_score != null && summary.avg_seo_score >= 7 ? "text-green-600" : "text-amber-600" },
             { label: "Topic Gaps", value: summary.topic_gaps_found, icon: PlusCircle, color: "text-primary" },
             { label: "Cannibalization", value: summary.cannibalization_warnings, icon: AlertTriangle, color: summary.cannibalization_warnings > 0 ? "text-red-500" : "text-muted-foreground" },
           ].map(({ label, value, icon: Icon, color }) => (

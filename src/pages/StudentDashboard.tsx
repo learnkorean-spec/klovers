@@ -447,7 +447,7 @@ const StudentDashboard = () => {
   const quickActions = useMemo(() => [
     { label: "Textbook", desc: "Continue lessons", emoji: "📚", path: "/textbook", bg: "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25" },
     { label: "Daily Quiz", desc: "+30 XP reward", emoji: "⚡", path: "/daily-quiz", bg: "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 shadow-orange-500/25" },
-    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", bg: "bg-gradient-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/25" },
+    { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", bg: "bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/25" },
     { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", bg: "bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 shadow-violet-500/25" },
   ], []);
   // ─────────────────────────────────────────────────────────────────────────

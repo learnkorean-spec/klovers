@@ -21,7 +21,7 @@ function PlayBtn({ onClick, label, variant = "kr", disabled }: {
 }) {
   const colors = {
     kr: "text-blue-600 hover:text-blue-800 hover:bg-blue-50",
-    en: "text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50",
+    en: "text-green-600 hover:text-green-800 hover:bg-green-50",
     slow: "text-orange-600 hover:text-orange-800 hover:bg-orange-50",
   };
   return (
@@ -57,9 +57,9 @@ export default function InterviewQACard({ qa, index, locked }: {
               <div className="h-4 bg-blue-200 rounded w-3/4 mb-2" />
               <div className="h-3 bg-blue-100 rounded w-1/2" />
             </div>
-            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-              <div className="h-4 bg-emerald-200 rounded w-full mb-2" />
-              <div className="h-3 bg-emerald-100 rounded w-2/3" />
+            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30">
+              <div className="h-4 bg-green-200 rounded w-full mb-2" />
+              <div className="h-3 bg-green-100 rounded w-2/3" />
             </div>
           </div>
           <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-900/60">
@@ -96,8 +96,8 @@ export default function InterviewQACard({ qa, index, locked }: {
 
         {/* Model Answer (Reham) â female voice */}
         <div className="space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Model Answer</span>
-          <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-green-600">Model Answer</span>
+          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
             <p className="text-sm font-medium leading-relaxed">{qa.model_answer_kr}</p>
             <p className="text-[11px] text-muted-foreground italic">{qa.model_answer_romanization}</p>
             <p className="text-xs text-muted-foreground leading-relaxed">{qa.model_answer_en}</p>

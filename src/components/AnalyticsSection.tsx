@@ -19,8 +19,8 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { TrendingUp, BookOpen, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
-const MASTERY_COLORS = ["#fbbf24", "#60a5fa", "#34d399"];
+const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#E8D9FF"];
+const MASTERY_COLORS = ["#FFE5CC", "#D6E8FF", "#CFF7D3"];
 
 export function AnalyticsSection() {
   const {

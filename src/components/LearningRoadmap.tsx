@@ -5,13 +5,13 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LEVEL_META: Record<string, { color: string; bg: string; border: string; gradient: string; icon: React.ElementType; emoji: string }> = {
-  A0:              { color: "text-violet-500", bg: "bg-violet-500/10", border: "border-violet-500/30", gradient: "from-violet-500/20 to-violet-500/5", icon: BookOpen,      emoji: "🇰🇷" },
-  "TOPIK 1 / A1":  { color: "text-blue-500",  bg: "bg-blue-500/10",  border: "border-blue-500/30",  gradient: "from-blue-500/20 to-blue-500/5",  icon: MessageCircle, emoji: "🌱" },
-  "TOPIK 2 / A2":  { color: "text-cyan-500",  bg: "bg-cyan-500/10",  border: "border-cyan-500/30",  gradient: "from-cyan-500/20 to-cyan-500/5",  icon: Zap,           emoji: "⚡" },
-  "TOPIK 3 / B1":  { color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/30", gradient: "from-green-500/20 to-green-500/5", icon: Star,          emoji: "🔥" },
-  "TOPIK 4 / B2":  { color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30", gradient: "from-amber-500/20 to-amber-500/5", icon: Flame,         emoji: "💪" },
-  "TOPIK 5 / C1":  { color: "text-orange-500",bg: "bg-orange-500/10",border: "border-orange-500/30",gradient: "from-orange-500/20 to-orange-500/5",icon: Trophy,       emoji: "🏅" },
-  "TOPIK 6 / C2":  { color: "text-rose-500",  bg: "bg-rose-500/10",  border: "border-rose-500/30",  gradient: "from-rose-500/20 to-rose-500/5",  icon: GraduationCap, emoji: "🏆" },
+  A0:              { color: "text-[#E8D9FF]", bg: "bg-[#E8D9FF]/10", border: "border-[#E8D9FF]/30", gradient: "from-[#E8D9FF]/30 to-[#E8D9FF]/5", icon: BookOpen,      emoji: "🇰🇷" },
+  "TOPIK 1 / A1":  { color: "text-[#D6E8FF]", bg: "bg-[#D6E8FF]/10", border: "border-[#D6E8FF]/30", gradient: "from-[#D6E8FF]/30 to-[#D6E8FF]/5", icon: MessageCircle, emoji: "🌱" },
+  "TOPIK 2 / A2":  { color: "text-[#D7F7F7]", bg: "bg-[#D7F7F7]/10", border: "border-[#D7F7F7]/30", gradient: "from-[#D7F7F7]/30 to-[#D7F7F7]/5", icon: Zap,           emoji: "⚡" },
+  "TOPIK 3 / B1":  { color: "text-[#CFF7D3]", bg: "bg-[#CFF7D3]/10", border: "border-[#CFF7D3]/30", gradient: "from-[#CFF7D3]/30 to-[#CFF7D3]/5", icon: Star,          emoji: "🔥" },
+  "TOPIK 4 / B2":  { color: "text-[#FFE5CC]", bg: "bg-[#FFE5CC]/10", border: "border-[#FFE5CC]/30", gradient: "from-[#FFE5CC]/30 to-[#FFE5CC]/5", icon: Flame,         emoji: "💪" },
+  "TOPIK 5 / C1":  { color: "text-[#FFE5CC]", bg: "bg-[#FFE5CC]/10", border: "border-[#FFE5CC]/30", gradient: "from-[#FFE5CC]/30 to-[#FFE5CC]/5", icon: Trophy,        emoji: "🏅" },
+  "TOPIK 6 / C2":  { color: "text-[#FFD9E6]", bg: "bg-[#FFD9E6]/10", border: "border-[#FFD9E6]/30", gradient: "from-[#FFD9E6]/30 to-[#FFD9E6]/5", icon: GraduationCap, emoji: "🏆" },
 };
 
 const getMeta = (level: string) =>

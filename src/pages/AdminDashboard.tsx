@@ -597,7 +597,7 @@ const AdminDashboard = () => {
                 <p className="text-xs text-muted-foreground">Referral Program</p>
                 <p className="font-semibold text-sm text-foreground">
                   {referralStats.total} total conversion{referralStats.total !== 1 ? "s" : ""}
-                  {referralStats.thisMonth > 0 && <span className="text-emerald-600 dark:text-emerald-400 ml-2">· +{referralStats.thisMonth} this month</span>}
+                  {referralStats.thisMonth > 0 && <span className="text-green-600 dark:text-green-400 ml-2">· +{referralStats.thisMonth} this month</span>}
                 </p>
               </div>
             </div>

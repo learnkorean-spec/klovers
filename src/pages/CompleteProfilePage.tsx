@@ -99,8 +99,8 @@ const CompleteProfilePage = () => {
         <Header />
         <main className="pt-28 pb-20 px-4 flex flex-col items-center text-center">
           <div className="max-w-md mx-auto space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">Profile Updated!</h1>
             <p className="text-muted-foreground leading-relaxed">

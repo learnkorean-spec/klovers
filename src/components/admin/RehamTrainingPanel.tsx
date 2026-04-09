@@ -789,13 +789,13 @@ const SECTION_COLORS: Record<string, string> = {
   Projects: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   Languages: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   Motivation: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
-  Accenture: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+  Accenture: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   Kerry: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   "Web Dev": "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
   Strengths: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  Closing: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+  Closing: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   "AI Data": "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
-  Operations: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
+  Operations: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   "Customer Care": "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
   Translation: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
 };
@@ -1269,7 +1269,7 @@ function PlayBtn({ onClick, label, variant = "kr", disabled }: {
 }) {
   const colors = {
     kr: "text-blue-600 hover:text-blue-800 hover:bg-blue-50",
-    en: "text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50",
+    en: "text-green-600 hover:text-green-800 hover:bg-green-50",
     slow: "text-orange-600 hover:text-orange-800 hover:bg-orange-50",
   };
   return (
@@ -1862,12 +1862,12 @@ export default function RehamTrainingPanel() {
                   {/* Reham's Answer */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Reham (리함)</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-green-600">Reham (리함)</span>
                       {completed.has(current.id) && (
                         <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                       )}
                     </div>
-                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                    <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
                       <p className="text-sm font-medium leading-relaxed">{current.reham.korean}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{current.reham.english}</p>
                     </div>
@@ -2124,7 +2124,7 @@ export default function RehamTrainingPanel() {
 
                         {revealedAnswers.has(ex.id) ? (
                           <>
-                            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
                               <p className="text-sm font-medium leading-relaxed">{ex.reham.korean}</p>
                               <p className="text-xs text-muted-foreground leading-relaxed">{ex.reham.english}</p>
                             </div>
@@ -2246,14 +2246,14 @@ export default function RehamTrainingPanel() {
               )}
 
               {mockPhase === "answer" && mockQuestions[mockCurrent] && (
-                <Card className="rounded-xl border-2 border-emerald-200">
+                <Card className="rounded-xl border-2 border-green-200">
                   <CardContent className="p-5 space-y-4">
                     <Badge variant="outline" className="text-xs">{mockQuestions[mockCurrent].topic}</Badge>
                     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
                       <p className="text-sm font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
                       <p className="text-xs text-muted-foreground">{mockQuestions[mockCurrent].interviewer.english}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                    <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
                       <p className="text-sm font-medium leading-relaxed">{mockQuestions[mockCurrent].reham.korean}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{mockQuestions[mockCurrent].reham.english}</p>
                     </div>
@@ -2379,7 +2379,7 @@ export default function RehamTrainingPanel() {
                           <PlayBtn onClick={() => speakEnglish(ex.interviewer.english)} label="EN" variant="en" disabled={isSpeaking} />
                         </div>
                         <div className="w-full h-px bg-border" />
-                        <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 space-y-1">
+                        <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
                           <p className="text-sm font-medium leading-relaxed">{ex.reham.korean}</p>
                           <p className="text-xs text-muted-foreground leading-relaxed">{ex.reham.english}</p>
                         </div>
@@ -2647,8 +2647,8 @@ export default function RehamTrainingPanel() {
                 className={cn(
                   "relative min-h-[320px] rounded-2xl border-2 cursor-pointer transition-all duration-300",
                   fcFlipped
-                    ? "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-emerald-300"
-                    : "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-300",
+                    ? "bg-green-50 dark:bg-green-950/30 border-green-300"
+                    : "bg-blue-50 dark:bg-blue-950/30 border-blue-300",
                   fcMastered.has(fcCurrent.korean) && "ring-2 ring-green-400",
                 )}
                 onClick={() => setFcFlipped(!fcFlipped)}
@@ -2686,7 +2686,7 @@ export default function RehamTrainingPanel() {
                   /* Back: English + example sentence */
                   <div className="flex flex-col items-center justify-center h-full min-h-[320px] p-6 text-center space-y-4">
                     <p className="text-2xl font-bold">{fcCurrent.korean}</p>
-                    <p className="text-lg text-emerald-700 dark:text-emerald-300 font-semibold">{fcCurrent.english}</p>
+                    <p className="text-lg text-green-700 dark:text-green-300 font-semibold">{fcCurrent.english}</p>
                     <div className="w-full max-w-md p-4 rounded-xl bg-white/60 dark:bg-black/20 border space-y-2">
                       <p className="text-sm font-medium">{fcCurrent.sentence_kr}</p>
                       <p className="text-xs text-muted-foreground">{fcCurrent.sentence_en}</p>
@@ -2938,7 +2938,7 @@ export default function RehamTrainingPanel() {
                                       <p className="text-xs font-medium">{ex.interviewer.korean}</p>
                                       <p className="text-xs text-muted-foreground">{ex.interviewer.english}</p>
                                     </div>
-                                    <div className="p-2 rounded bg-emerald-50 dark:bg-emerald-950/30 space-y-1 mt-1">
+                                    <div className="p-2 rounded bg-green-50 dark:bg-green-950/30 space-y-1 mt-1">
                                       <p className="text-xs font-medium">{ex.reham.korean}</p>
                                       <p className="text-xs text-muted-foreground">{ex.reham.english}</p>
                                     </div>

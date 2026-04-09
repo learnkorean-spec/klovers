@@ -93,7 +93,7 @@ function SeverityBadge({ severity }: { severity: "error" | "warning" }) {
 function LangBadge({ lang }: { lang: string }) {
   const isAr = lang === "ar";
   return (
-    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold border ${isAr ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-blue-100 text-blue-800 border-blue-200"}`}>
+    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold border ${isAr ? "bg-green-100 text-green-700 border-green-200" : "bg-blue-100 text-blue-800 border-blue-200"}`}>
       {isAr ? "AR" : "EN"}
     </span>
   );
@@ -385,7 +385,7 @@ function ImageAuditPanel() {
           </Card>
           <Card className="rounded-xl flex-1">
             <CardContent className="pt-3 pb-2 flex items-center gap-3">
-              <span className="text-2xl font-bold text-emerald-600">{summary.ar_posts}</span>
+              <span className="text-2xl font-bold text-green-600">{summary.ar_posts}</span>
               <div>
                 <p className="text-xs text-muted-foreground">Arabic posts</p>
                 <p className="text-xs text-muted-foreground">{summary.bilingual_pairs} paired with English</p>

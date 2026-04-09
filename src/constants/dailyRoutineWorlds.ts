@@ -20,7 +20,7 @@ export const DAILY_ROUTINE_WORLDS: DailyRoutineWorld[] = [
     emoji: "🌅",
     description: "Wake up, wash, and get ready for the day",
     descriptionAr: "استيقظ واغتسل واستعد ليومك",
-    color: "hsl(45 93% 47%)",
+    color: "#FFE5CC",
     lessonRange: [1, 10],
   },
   {
@@ -31,7 +31,7 @@ export const DAILY_ROUTINE_WORLDS: DailyRoutineWorld[] = [
     emoji: "🏠",
     description: "Cooking, eating, cleaning, and laundry",
     descriptionAr: "الطبخ والأكل والتنظيف والغسيل",
-    color: "hsl(142 76% 36%)",
+    color: "#CFF7D3",
     lessonRange: [11, 16],
   },
   {
@@ -42,7 +42,7 @@ export const DAILY_ROUTINE_WORLDS: DailyRoutineWorld[] = [
     emoji: "📺",
     description: "Phone, TV, radio, internet, and reading",
     descriptionAr: "الهاتف والتلفزيون والراديو والإنترنت والقراءة",
-    color: "hsl(217 91% 60%)",
+    color: "#D6E8FF",
     lessonRange: [17, 21],
   },
   {
@@ -53,7 +53,7 @@ export const DAILY_ROUTINE_WORLDS: DailyRoutineWorld[] = [
     emoji: "🧠",
     description: "Sitting, standing, hearing, seeing, tasting, touching, walking",
     descriptionAr: "الجلوس والوقوف والسمع والبصر والتذوق واللمس والمشي",
-    color: "hsl(262 83% 58%)",
+    color: "#E8D9FF",
     lessonRange: [22, 29],
   },
   {
@@ -64,7 +64,7 @@ export const DAILY_ROUTINE_WORLDS: DailyRoutineWorld[] = [
     emoji: "🎉",
     description: "Marriage, birthday, and moving house",
     descriptionAr: "الزواج وعيد الميلاد والانتقال",
-    color: "hsl(340 82% 52%)",
+    color: "#FFD9E6",
     lessonRange: [30, 32],
   },
 ];

@@ -25,7 +25,7 @@ All colors MUST be HSL.
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 35%;
+    --muted-foreground: 0 0% 33.3%;
 
     --accent: 60 60% 88%;
     --accent-foreground: 0 0% 0%;
@@ -33,8 +33,8 @@ All colors MUST be HSL.
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 85%;
-    --input: 0 0% 85%;
+    --border: 0 0% 86.7%;
+    --input: 0 0% 86.7%;
     --ring: 60 100% 50%;
 
     --radius: 1rem;
@@ -45,7 +45,7 @@ All colors MUST be HSL.
     --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 60 60% 88%;
     --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 85%;
+    --sidebar-border: 0 0% 86.7%;
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;

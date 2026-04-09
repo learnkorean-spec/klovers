@@ -101,7 +101,7 @@ const TopikExamPage = () => {
       <Header />
       <main id="main-content">
         {/* Hero */}
-        <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20">
+        <section className="pt-24 pb-16 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20">
           <div className="container mx-auto px-4 max-w-4xl">
             <Badge className="mb-4" variant="outline">TOPIK Preparation</Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
@@ -135,7 +135,7 @@ const TopikExamPage = () => {
                 { level: "Level 6 (C2)", range: "231-300 points", desc: "Mastery — Native-like fluency, subtle cultural references understood" }
               ].map((item, i) => (
                 <div key={i} className={`p-6 rounded-lg border transition-colors ${
-                  item.highlight ? "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-800" : "bg-slate-50/50 dark:bg-slate-900/50"
+                  item.highlight ? "bg-green-50 dark:bg-green-950/10 border-green-200 dark:border-green-800" : "bg-slate-50/50 dark:bg-slate-900/50"
                 }`}>
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-bold text-lg">{item.level}</h3>
@@ -250,18 +250,18 @@ const TopikExamPage = () => {
               ].map((item, i) => (
                 <div key={i} className="p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-500 text-white font-bold text-sm flex-shrink-0">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-green-500 text-white font-bold text-sm flex-shrink-0">
                       {i + 1}
                     </div>
                     <div>
                       <p className="font-bold text-lg">{item.week}</p>
-                      <p className="text-sm font-semibold text-emerald-600">{item.focus}</p>
+                      <p className="text-sm font-semibold text-green-600">{item.focus}</p>
                     </div>
                   </div>
                   <ul className="space-y-2">
                     {item.tasks.map((task, j) => (
                       <li key={j} className="flex items-start gap-2 text-foreground/70">
-                        <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0 text-emerald-500" />
+                        <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0 text-green-500" />
                         {task}
                       </li>
                     ))}
@@ -331,7 +331,7 @@ const TopikExamPage = () => {
               ].map((item, i) => (
                 <div key={i} className="p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex items-start gap-3 mb-4">
-                    <Award className="h-6 w-6 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <Award className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
                     <h3 className="font-bold text-lg">{item.title}</h3>
                   </div>
                   <p className="text-foreground/70">{item.desc}</p>
@@ -383,10 +383,10 @@ const TopikExamPage = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+        <section className="py-20 bg-gradient-to-r from-green-600 to-teal-600 text-white">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Ace Your TOPIK Exam?</h2>
-            <p className="text-lg mb-8 text-emerald-100 max-w-2xl mx-auto">
+            <p className="text-lg mb-8 text-green-100 max-w-2xl mx-auto">
               Start preparing with Klovers' TOPIK-specific curriculum. Expert tutors, 200+ practice tests, and personalized feedback.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -399,7 +399,7 @@ const TopikExamPage = () => {
                 <a href="/placement-test">Take Free Test</a>
               </Button>
             </div>
-            <p className="text-sm text-emerald-100 mt-6">
+            <p className="text-sm text-green-100 mt-6">
               <BookOpen className="h-4 w-4 inline mr-2" />
               Next TOPIK Exam: April 19, 2026 • Registration closes March 23
             </p>

@@ -146,7 +146,6 @@ export const COLOR_SPECS = {
   accents: {
     brightYellow: "#FFFF00",
     neonPurple: "#9b87f5",
-    brightCoral: "#ff6b6b",
   },
 } as const;
 

@@ -227,10 +227,10 @@ const SalesAnalytics = () => {
           </CardContent>
         </Card>
         {/* NEW: Avg Sessions Used */}
-        <Card className="rounded-2xl border-indigo-200 dark:border-indigo-800/40 bg-indigo-50 dark:bg-indigo-950/10">
+        <Card className="rounded-2xl border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-950/10">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="rounded-xl p-2 bg-indigo-500/10"><BarChart3 className="h-4 w-4 text-indigo-600" /></div>
+              <div className="rounded-xl p-2 bg-blue-500/10"><BarChart3 className="h-4 w-4 text-blue-600" /></div>
               <span className="text-xs text-muted-foreground">Avg Sessions Used</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{avgSessionsUsed.toFixed(0)}%</p>
@@ -244,7 +244,7 @@ const SalesAnalytics = () => {
         <Card className="rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="rounded-xl p-2 bg-emerald-500/10"><DollarSign className="h-4 w-4 text-emerald-600" /></div>
+              <div className="rounded-xl p-2 bg-green-500/10"><DollarSign className="h-4 w-4 text-green-600" /></div>
               <span className="text-xs text-muted-foreground">Total Revenue</span>
             </div>
             <p className="text-2xl font-bold text-foreground">${totalRevenue.toLocaleString()}</p>
@@ -258,8 +258,8 @@ const SalesAnalytics = () => {
             </div>
             <p className="text-2xl font-bold text-foreground">${currentMonthRevenue.toLocaleString()}</p>
             <div className="flex items-center gap-1 mt-1">
-              {revenueGrowth >= 0 ? <ArrowUpRight className="h-3 w-3 text-emerald-600" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />}
-              <span className={`text-xs ${revenueGrowth >= 0 ? "text-emerald-600" : "text-destructive"}`}>{Math.abs(revenueGrowth).toFixed(0)}%</span>
+              {revenueGrowth >= 0 ? <ArrowUpRight className="h-3 w-3 text-green-600" /> : <ArrowDownRight className="h-3 w-3 text-destructive" />}
+              <span className={`text-xs ${revenueGrowth >= 0 ? "text-green-600" : "text-destructive"}`}>{Math.abs(revenueGrowth).toFixed(0)}%</span>
             </div>
           </CardContent>
         </Card>
@@ -290,9 +290,9 @@ const SalesAnalytics = () => {
             <p className="text-2xl font-bold text-foreground">{activeStudents}</p>
             <div className="flex items-center gap-1 mt-1">
               {activeStudents >= prevMonthActiveEnrollments
-                ? <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+                ? <ArrowUpRight className="h-3 w-3 text-green-600" />
                 : <ArrowDownRight className="h-3 w-3 text-destructive" />}
-              <span className={`text-xs ${activeStudents >= prevMonthActiveEnrollments ? "text-emerald-600" : "text-destructive"}`}>vs {prevMonthActiveEnrollments} last mo</span>
+              <span className={`text-xs ${activeStudents >= prevMonthActiveEnrollments ? "text-green-600" : "text-destructive"}`}>vs {prevMonthActiveEnrollments} last mo</span>
             </div>
           </CardContent>
         </Card>
@@ -387,9 +387,9 @@ const SalesAnalytics = () => {
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-0 md:justify-between">
             {[
               { label: "Leads", count: funnel.leads, color: "bg-blue-500" },
-              { label: "Registered", count: funnel.registered, color: "bg-indigo-500" },
+              { label: "Registered", count: funnel.registered, color: "bg-blue-500" },
               { label: "Enrolled", count: funnel.enrolled, color: "bg-amber-500" },
-              { label: "Active", count: funnel.active, color: "bg-emerald-500" },
+              { label: "Active", count: funnel.active, color: "bg-green-500" },
               { label: "Completed", count: funnel.completed, color: "bg-primary" },
             ].map((s, i, arr) => (
               <div key={s.label} className="flex items-center gap-2 md:gap-3">
@@ -483,7 +483,7 @@ const SalesAnalytics = () => {
               {planBreakdown.map(p => {
                 const mom = p.lastMonth > 0 ? ((p.thisMonth - p.lastMonth) / p.lastMonth * 100) : null;
                 const momLabel = mom !== null ? `${mom >= 0 ? "+" : ""}${mom.toFixed(0)}%` : p.thisMonth > 0 ? "New" : "—";
-                const momColor = mom !== null ? (mom >= 0 ? "text-emerald-600" : "text-destructive") : p.thisMonth > 0 ? "text-blue-600" : "text-muted-foreground";
+                const momColor = mom !== null ? (mom >= 0 ? "text-green-600" : "text-destructive") : p.thisMonth > 0 ? "text-blue-600" : "text-muted-foreground";
                 return (
                   <TableRow key={p.name}>
                     <TableCell className="font-medium">{p.name}</TableCell>

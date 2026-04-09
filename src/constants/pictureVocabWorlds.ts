@@ -20,7 +20,7 @@ export const PICTURE_VOCAB_WORLDS: PictureVocabWorld[] = [
     emoji: "🏠",
     description: "Bedroom, bathroom, kitchen, living room & clothes",
     descriptionAr: "غرفة النوم، الحمام، المطبخ، غرفة المعيشة والملابس",
-    color: "hsl(217 91% 60%)",
+    color: "#D6E8FF",
     lessonRange: [1, 5],
   },
   {
@@ -31,7 +31,7 @@ export const PICTURE_VOCAB_WORLDS: PictureVocabWorld[] = [
     emoji: "🌆",
     description: "Supermarket, restaurant, café, transport & hospital",
     descriptionAr: "سوبرماركت، مطعم، كافيه، مواصلات ومستشفى",
-    color: "hsl(142 76% 36%)",
+    color: "#CFF7D3",
     lessonRange: [6, 10],
   },
   {
@@ -42,7 +42,7 @@ export const PICTURE_VOCAB_WORLDS: PictureVocabWorld[] = [
     emoji: "🌿",
     description: "Park, weather, body, emotions & celebrations",
     descriptionAr: "الحديقة، الطقس، الجسم، المشاعر والاحتفالات",
-    color: "hsl(340 82% 52%)",
+    color: "#FFD9E6",
     lessonRange: [11, 15],
   },
 ];

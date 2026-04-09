@@ -722,9 +722,9 @@ const GroupMatcher = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
-                <RefreshCw className="h-4 w-4 text-indigo-500" />
+                <RefreshCw className="h-4 w-4 text-blue-500" />
                 Schedule Resubmission Requests
-                <Badge className="ml-1 bg-indigo-100 text-indigo-700 border-indigo-200 text-xs">
+                <Badge className="ml-1 bg-blue-100 text-blue-700 border-blue-200 text-xs">
                   {resubmitRequests.length}
                 </Badge>
               </CardTitle>
@@ -1129,13 +1129,13 @@ const GroupMatcher = () => {
                           <div className="flex flex-wrap items-center gap-1 mt-1">
                             <span className="text-xs text-muted-foreground">Preferred days:</span>
                             {m.preferred_days.map(d => (
-                              <Badge key={d} variant="outline" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-700">{d}</Badge>
+                              <Badge key={d} variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-700">{d}</Badge>
                             ))}
                           </div>
                         ) : m.preferred_day ? (
                           <div className="flex flex-wrap items-center gap-1 mt-1">
                             <span className="text-xs text-muted-foreground">Preferred day:</span>
-                            <Badge variant="outline" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-700">{m.preferred_day}</Badge>
+                            <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-700">{m.preferred_day}</Badge>
                           </div>
                         ) : null}
 

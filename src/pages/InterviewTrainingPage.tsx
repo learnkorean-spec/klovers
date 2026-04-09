@@ -25,11 +25,11 @@ export default function InterviewTrainingPage() {
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-900 dark:to-gray-800 p-4">
         <Card className="w-full max-w-md rounded-2xl shadow-lg">
           <CardHeader className="text-center space-y-2 pb-2">
-            <div className="mx-auto w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
-              <GraduationCap className="h-7 w-7 text-emerald-600" />
+            <div className="mx-auto w-14 h-14 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+              <GraduationCap className="h-7 w-7 text-green-600" />
             </div>
             <CardTitle className="text-xl">Practice Interview with Klovers</CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -66,7 +66,7 @@ export default function InterviewTrainingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -85,7 +85,7 @@ export default function InterviewTrainingPage() {
             <Lock className="h-3.5 w-3.5" /> Lock
           </Button>
         </div>
-        <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" /></div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" /></div>}>
           <RehamTrainingPanel />
         </Suspense>
       </div>

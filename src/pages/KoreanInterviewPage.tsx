@@ -232,7 +232,7 @@ export default function KoreanInterviewPage() {
       <Header />
       <main>
         {/* ── Hero Section ── */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 text-white">
+        <section className="relative overflow-hidden bg-secondary text-white">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 text-8xl font-bold rotate-12">면접</div>
             <div className="absolute bottom-10 right-10 text-8xl font-bold -rotate-12">준비</div>
@@ -251,7 +251,7 @@ export default function KoreanInterviewPage() {
               pronunciation guides, and text-to-speech — all tailored to your skills.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="#skill-form" className="inline-flex items-center gap-2 bg-white text-sky-700 font-semibold px-6 py-3 rounded-full hover:bg-sky-50 transition-colors">
+              <a href="#skill-form" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-full hover:bg-[#E6E600] transition-colors">
                 <Sparkles className="h-5 w-5" /> Start Free — 2 Questions
               </a>
               <Link
@@ -275,8 +275,8 @@ export default function KoreanInterviewPage() {
             ].map((step) => (
               <Card key={step.title} className="rounded-xl text-center">
                 <CardContent className="p-6 space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900 flex items-center justify-center mx-auto">
-                    <step.icon className="h-6 w-6 text-sky-600" />
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+                    <step.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="font-semibold">{step.title}</h3>
                   <p className="text-sm text-muted-foreground">{step.desc}</p>
@@ -345,8 +345,8 @@ export default function KoreanInterviewPage() {
                         onClick={() => toggleLang(lang)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                           selectedLangs.includes(lang)
-                            ? "bg-sky-100 border-sky-300 text-sky-800 dark:bg-sky-900 dark:border-sky-700 dark:text-sky-200"
-                            : "bg-white border-gray-200 text-gray-600 hover:border-sky-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
+                            ? "bg-muted border-border text-foreground dark:bg-secondary dark:border-border dark:text-secondary-foreground"
+                            : "bg-white border-gray-200 text-gray-600 hover:border-border dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
                         }`}
                       >
                         {lang}
@@ -358,7 +358,7 @@ export default function KoreanInterviewPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="w-full gap-2 bg-sky-600 hover:bg-sky-700 text-white h-12 text-base"
+                  className="w-full gap-2 text-white h-12 text-base"
                 >
                   {generating ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> Generating Questions...</>
@@ -370,7 +370,7 @@ export default function KoreanInterviewPage() {
                 </Button>
                 {!user && !authLoading && (
                   <p className="text-xs text-center text-muted-foreground">
-                    Free account required to generate questions. <Link to="/login?redirect=/interview-training" className="text-sky-600 underline">Sign in</Link> or <Link to="/signup?redirect=/interview-training" className="text-sky-600 underline">create one</Link>.
+                    Free account required to generate questions. <Link to="/login?redirect=/interview-training" className="text-primary underline">Sign in</Link> or <Link to="/signup?redirect=/interview-training" className="text-primary underline">create one</Link>.
                   </p>
                 )}
               </CardContent>
@@ -410,13 +410,13 @@ export default function KoreanInterviewPage() {
                         <Badge variant="outline" className="text-xs">Q{questions.length + i + 1}</Badge>
                       </div>
                       <div className="space-y-3 blur-sm select-none pointer-events-none">
-                        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30">
-                          <div className="h-4 bg-blue-200 rounded w-3/4 mb-2" />
-                          <div className="h-3 bg-blue-100 rounded w-1/2" />
+                        <div className="p-3 rounded-lg bg-muted/50">
+                          <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                          <div className="h-3 bg-muted/70 rounded w-1/2" />
                         </div>
-                        <div className="p-3 rounded-lg bg-sky-50 dark:bg-sky-950/30">
-                          <div className="h-4 bg-sky-200 rounded w-full mb-2" />
-                          <div className="h-3 bg-sky-100 rounded w-2/3" />
+                        <div className="p-3 rounded-lg bg-muted/50">
+                          <div className="h-4 bg-muted rounded w-full mb-2" />
+                          <div className="h-3 bg-muted/70 rounded w-2/3" />
                         </div>
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-900/60">
@@ -433,7 +433,7 @@ export default function KoreanInterviewPage() {
 
             {/* Upgrade Prompt */}
             {paymentStatus !== "paid" && questions.length >= 2 && (
-              <Card className="rounded-2xl mt-8 border-2 border-sky-200 dark:border-sky-800 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-950/30 dark:to-blue-950/30">
+              <Card className="rounded-2xl mt-8 border-2 border-border bg-muted/50">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="flex items-center justify-center gap-2">
                     <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -444,13 +444,13 @@ export default function KoreanInterviewPage() {
                     Get 5 additional AI-generated interview questions personalized to your skills — with Korean translations, romanization, and text-to-speech.
                   </p>
                   <div className="flex items-center justify-center gap-2">
-                    <span className="text-3xl font-bold text-sky-700 dark:text-sky-400">$5</span>
+                    <span className="text-3xl font-bold text-foreground">$5</span>
                     <span className="text-sm text-muted-foreground">one-time</span>
                   </div>
                   <Button
                     onClick={handlePurchase}
                     disabled={purchasing}
-                    className="gap-2 bg-sky-600 hover:bg-sky-700 text-white px-8 h-12 text-base"
+                    className="gap-2 text-white px-8 h-12 text-base"
                   >
                     {purchasing ? (
                       <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
@@ -467,7 +467,7 @@ export default function KoreanInterviewPage() {
         {/* ── Demo Teacher Section ── */}
         <section className="bg-gray-50 dark:bg-gray-900 py-16">
           <div className="max-w-3xl mx-auto px-4 text-center space-y-4">
-            <GraduationCap className="h-10 w-10 mx-auto text-sky-600" />
+            <GraduationCap className="h-10 w-10 mx-auto text-primary" />
             <h2 className="text-xl font-bold">See How a Teacher Practices</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Watch a full demo of 41 real interview questions and answers prepared by a Klovers teacher. Password protected — for preview only.
@@ -490,7 +490,7 @@ export default function KoreanInterviewPage() {
               { icon: Star, label: "1,000+ Students", desc: "Trusted by Klovers community" },
             ].map((item) => (
               <div key={item.label} className="space-y-2">
-                <item.icon className="h-8 w-8 mx-auto text-sky-600" />
+                <item.icon className="h-8 w-8 mx-auto text-primary" />
                 <p className="font-semibold text-sm">{item.label}</p>
                 <p className="text-xs text-muted-foreground">{item.desc}</p>
               </div>

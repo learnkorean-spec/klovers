@@ -1,4 +1,26 @@
 // Shared canvas renderer — used by both CreatorHub and MarketingGeneratorPage
+//
+// ─── Canvas Color Constants ───
+// Centralised palette for canvas rendering. New templates should reference
+// these constants instead of hardcoding hex values.
+const CANVAS_PALETTE = {
+  brand:     "#FFFF00",
+  gold:      "#EBC82E",
+  black:     "#111111",
+  darkBlue:  "#1a1a2e",
+  white:     "#FFFFFF",
+  textDark:  "#1a1a1a",
+  textMid:   "#555555",
+  textLight: "#888888",
+  gray900:   "#222222",
+  gray800:   "#333333",
+  gray700:   "#444444",
+  gray600:   "#555555",
+  gray400:   "#888888",
+  gray200:   "#e5e5e5",
+  gray100:   "#f5f5f5",
+  nearBlack: "#0d0d0d",
+} as const;
 
 export type PostLang = "en" | "ar";
 

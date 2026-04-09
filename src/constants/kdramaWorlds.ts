@@ -21,7 +21,7 @@ export const KDRAMA_WORLDS: KDramaWorld[] = [
     emoji: "👋",
     description: "Greetings, introductions & small talk from K-Dramas",
     descriptionAr: "التحيات والتعارف والمحادثات القصيرة من الدراما الكورية",
-    color: "hsl(200 80% 50%)",
+    color: "#D6E8FF",
     lessonRange: [1, 5],
   },
   {
@@ -32,7 +32,7 @@ export const KDRAMA_WORLDS: KDramaWorld[] = [
     emoji: "💕",
     description: "Love confessions, dating & relationship expressions",
     descriptionAr: "اعترافات الحب والمواعدة وتعبيرات العلاقات",
-    color: "hsl(340 82% 55%)",
+    color: "#FFD9E6",
     lessonRange: [6, 10],
   },
   {
@@ -43,7 +43,7 @@ export const KDRAMA_WORLDS: KDramaWorld[] = [
     emoji: "👨‍👩‍👧‍👦",
     description: "Family conflicts, honorifics & generational speech",
     descriptionAr: "صراعات العائلة والتشريفات وأساليب الخطاب بين الأجيال",
-    color: "hsl(30 90% 50%)",
+    color: "#FFE5CC",
     lessonRange: [11, 15],
   },
   {
@@ -54,7 +54,7 @@ export const KDRAMA_WORLDS: KDramaWorld[] = [
     emoji: "💼",
     description: "Corporate Korean, meetings & office culture",
     descriptionAr: "الكورية في الشركات والاجتماعات وثقافة المكتب",
-    color: "hsl(220 70% 50%)",
+    color: "#D6E8FF",
     lessonRange: [16, 20],
   },
   {
@@ -65,7 +65,7 @@ export const KDRAMA_WORLDS: KDramaWorld[] = [
     emoji: "🔥",
     description: "Intense scenes, commands & dramatic expressions",
     descriptionAr: "المشاهد المكثفة والأوامر والتعبيرات الدرامية",
-    color: "hsl(0 80% 50%)",
+    color: "#FFD9E6",
     lessonRange: [21, 25],
   },
   {
@@ -76,7 +76,7 @@ export const KDRAMA_WORLDS: KDramaWorld[] = [
     emoji: "🍜",
     description: "Restaurant orders, food reactions & dining culture",
     descriptionAr: "طلبات المطاعم وردود فعل الطعام وثقافة تناول الطعام",
-    color: "hsl(45 90% 50%)",
+    color: "#FFE5CC",
     lessonRange: [26, 30],
   },
 ];

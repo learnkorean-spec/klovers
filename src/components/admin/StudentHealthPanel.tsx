@@ -126,10 +126,10 @@ const StudentHealthPanel = ({ overviewRows }: Props) => {
         ))}
 
         {/* Renewal Pipeline Value */}
-        <Card className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-950/20">
+        <Card className="rounded-xl border border-green-200 dark:border-green-800/40 bg-green-50 dark:bg-green-950/20">
           <CardContent className="p-4">
             <div className="flex items-start gap-2">
-              <DollarSign className="h-5 w-5 shrink-0 text-emerald-600 mt-0.5" />
+              <DollarSign className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
               <div>
                 <p className="text-2xl font-black text-foreground leading-none">
                   {avgUnitPrice > 0

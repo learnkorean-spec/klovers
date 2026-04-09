@@ -424,7 +424,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
             <span>·</span>
             <span className="text-red-600 font-medium">{fullCount} full</span>
             <span>·</span>
-            <span className="text-emerald-600 font-medium">{openCount} with open spots</span>
+            <span className="text-green-600 font-medium">{openCount} with open spots</span>
           </div>
         );
       })()}

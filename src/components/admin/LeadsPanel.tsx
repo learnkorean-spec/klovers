@@ -386,7 +386,7 @@ const LeadsPanel: React.FC = () => {
                   <span key={src} className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-background border border-border rounded-full px-2.5 py-1">
                     <span className="text-foreground capitalize">{src}</span>
                     <span className="text-muted-foreground">{total}</span>
-                    <span className="text-emerald-600 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
+                    <span className="text-green-600 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
                   </span>
                 ))}
               </div>
@@ -402,7 +402,7 @@ const LeadsPanel: React.FC = () => {
                 {[
                   { label: "New", count: funnelNew, color: "bg-blue-500" },
                   { label: "Contacted", count: funnelContacted, color: "bg-amber-500" },
-                  { label: "Enrolled", count: funnelEnrolled, color: "bg-emerald-500" },
+                  { label: "Enrolled", count: funnelEnrolled, color: "bg-green-500" },
                 ].map(({ label, count, color }) => (
                   <div key={label} className="flex-1">
                     <div className="flex justify-between mb-1">

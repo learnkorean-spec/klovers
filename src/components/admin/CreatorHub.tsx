@@ -1040,7 +1040,7 @@ export default function CreatorHub() {
         {monthlyDrafts.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {monthlyDrafts.map(draft => (
-              <Card key={draft.id} className={`rounded-2xl transition-all ${draft.approved ? "ring-2 ring-emerald-400/60 border-emerald-300" : ""}`}>
+              <Card key={draft.id} className={`rounded-2xl transition-all ${draft.approved ? "ring-2 ring-green-400/60 border-green-300" : ""}`}>
                 <CardContent className="p-3 space-y-3">
                   <div className="w-full overflow-hidden rounded-xl bg-muted flex justify-center">
                     <PostPreview
@@ -1069,7 +1069,7 @@ export default function CreatorHub() {
                     </Button>
                     <button
                       onClick={() => setMonthlyDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, approved: !d.approved } : d))}
-                      className={`ml-auto h-7 w-7 rounded-full flex items-center justify-center transition-colors ${draft.approved ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+                      className={`ml-auto h-7 w-7 rounded-full flex items-center justify-center transition-colors ${draft.approved ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
                       title={draft.approved ? "Approved" : "Mark approved"}
                     >
                       <CheckCircle2 className="h-4 w-4" />

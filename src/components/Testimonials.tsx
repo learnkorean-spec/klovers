@@ -3,12 +3,12 @@ import { Star } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const AVATAR_COLORS = [
-  "from-violet-500 to-purple-600",
-  "from-blue-500 to-cyan-600",
-  "from-rose-500 to-pink-600",
-  "from-amber-500 to-orange-600",
-  "from-emerald-500 to-green-600",
-  "from-sky-500 to-indigo-600",
+  "from-[#E8D9FF] to-[#EFE6FF]",
+  "from-[#D6E8FF] to-[#D7F7F7]",
+  "from-[#FFD9E6] to-[#FFE5CC]",
+  "from-[#FFE5CC] to-[#DFFFE6]",
+  "from-[#CFF7D3] to-[#D7F7F7]",
+  "from-[#EFE6FF] to-[#D6E8FF]",
 ];
 
 const STATS = [

@@ -135,10 +135,10 @@ const ReturningStudentsLandingPage = () => {
       <Header />
       <main id="main-content">
         {/* ── Share & Referral (Lead Section) ── */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 py-20 md:py-28 px-4">
+        <section className="relative overflow-hidden bg-muted/30 py-20 md:py-28 px-4">
           <div className="absolute inset-0 pointer-events-none" aria-hidden>
-            <div className="absolute -top-24 -start-24 w-80 h-80 bg-emerald-200/30 dark:bg-emerald-800/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -end-24 w-72 h-72 bg-green-200/30 dark:bg-green-800/10 rounded-full blur-3xl" />
+            <div className="absolute -top-24 -start-24 w-80 h-80 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -end-24 w-72 h-72 bg-muted/30 dark:bg-muted/20 rounded-full blur-3xl" />
           </div>
 
           <div className="container mx-auto max-w-5xl relative z-10">
@@ -153,14 +153,14 @@ const ReturningStudentsLandingPage = () => {
 
             <div className="grid md:grid-cols-2 gap-8">
               {/* Referral tiers */}
-              <Card className="border-emerald-200/60 dark:border-emerald-800/40 bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-950/20 dark:to-green-950/20">
+              <Card className="border-border/60 bg-muted/50">
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     {referralItems.map((item, i) => {
                       const Icon = REFERRAL_ICONS[i];
                       return (
                         <div key={i} className="flex items-start gap-3">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300 shrink-0">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/5 text-foreground shrink-0">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div>
@@ -177,7 +177,7 @@ const ReturningStudentsLandingPage = () => {
               </Card>
 
               {/* Share buttons */}
-              <Card className="border-emerald-200/60 dark:border-emerald-800/40 flex items-center">
+              <Card className="border-border/60 flex items-center">
                 <CardContent className="pt-6 w-full space-y-4">
                   <p className="text-sm font-medium text-center text-muted-foreground mb-2">
                     {isAr ? "شارك هذه الصفحة مع أصدقائك" : "Share this page with your friends"}
@@ -186,7 +186,7 @@ const ReturningStudentsLandingPage = () => {
                   <Button
                     onClick={handleCopyLink}
                     variant="outline"
-                    className="w-full gap-2 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                    className="w-full gap-2 border-border text-foreground hover:bg-muted"
                   >
                     {linkCopied ? (
                       <>
@@ -213,7 +213,7 @@ const ReturningStudentsLandingPage = () => {
                     <Button
                       onClick={handleNativeShare}
                       variant="outline"
-                      className="w-full gap-2 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                      className="w-full gap-2 border-border text-foreground hover:bg-muted"
                     >
                       <Share2 className="h-4 w-4" />
                       {t("welcomeBack.share.shareButton")}
@@ -230,7 +230,7 @@ const ReturningStudentsLandingPage = () => {
           <div className="container mx-auto max-w-4xl text-center">
             <Badge
               variant="outline"
-              className="mb-5 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 text-sm px-4 py-1"
+              className="mb-5 border-border text-foreground bg-muted text-sm px-4 py-1"
             >
               <GraduationCap className="h-4 w-4 me-2" />
               {t("welcomeBack.hero.badge")}
@@ -255,7 +255,7 @@ const ReturningStudentsLandingPage = () => {
                 size="lg"
                 variant="outline"
                 asChild
-                className="gap-2 h-13 px-8 text-base font-medium border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                className="gap-2 h-13 px-8 text-base font-medium border-border text-foreground hover:bg-muted"
               >
                 <Link to="/placement-test">
                   {t("welcomeBack.hero.ctaSecondary")}
@@ -268,10 +268,10 @@ const ReturningStudentsLandingPage = () => {
         {/* ── Offer Details + Promo Code ── */}
         <section
           ref={sectionRef}
-          className="py-16 md:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-background to-emerald-50/30 dark:to-emerald-950/10"
+          className="py-16 md:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/50"
         >
           <div className="absolute inset-0 pointer-events-none" aria-hidden>
-            <div className="absolute -top-20 -start-20 w-72 h-72 bg-emerald-200/20 dark:bg-emerald-800/10 rounded-full blur-3xl" />
+            <div className="absolute -top-20 -start-20 w-72 h-72 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl" />
           </div>
 
           <div className="container mx-auto max-w-6xl relative z-10">
@@ -281,10 +281,10 @@ const ReturningStudentsLandingPage = () => {
               }`}
             >
               {/* Offer card */}
-              <Card className="border-emerald-200/60 dark:border-emerald-800/40">
+              <Card className="border-border/60">
                 <CardContent className="pt-6">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/5 text-foreground">
                       <GraduationCap className="h-4 w-4" />
                     </span>
                     {t("welcomeBack.offer.title")}
@@ -292,7 +292,7 @@ const ReturningStudentsLandingPage = () => {
                   <ul className="space-y-3">
                     {offerItems.map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                         <span className="text-sm text-muted-foreground">
                           {item as string}
                         </span>
@@ -303,20 +303,20 @@ const ReturningStudentsLandingPage = () => {
               </Card>
 
               {/* Promo code */}
-              <Card className="border-2 border-dashed border-emerald-400/60 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center">
+              <Card className="border-2 border-dashed border-primary/40 bg-muted/50 flex items-center">
                 <CardContent className="pt-6 text-center w-full">
                   <p className="text-sm text-muted-foreground mb-3 font-medium">
                     {t("welcomeBack.offer.promoLabel")}
                   </p>
                   <div className="flex items-center justify-center gap-3">
-                    <span className="font-mono text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-300 tracking-wider select-all">
+                    <span className="font-mono text-xl sm:text-2xl font-bold text-foreground tracking-wider select-all">
                       {RETURNING_STUDENT_CODE}
                     </span>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={handleCopyCode}
-                      className="gap-1.5 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                      className="gap-1.5 border-border text-foreground hover:bg-muted"
                     >
                       {codeCopied ? (
                         <>
@@ -350,16 +350,16 @@ const ReturningStudentsLandingPage = () => {
                 return (
                   <div key={i} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-bold text-sm border-2 border-emerald-300/60 dark:border-emerald-700/60">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/5 text-foreground font-bold text-sm border-2 border-primary/30 dark:border-primary/20">
                         {i + 1}
                       </span>
                       {i < steps.length - 1 && (
-                        <div className="w-0.5 h-8 bg-emerald-300/40 dark:bg-emerald-700/40 mt-1" />
+                        <div className="w-0.5 h-8 bg-border mt-1" />
                       )}
                     </div>
                     <div className="pt-1.5">
                       <p className="font-semibold text-sm flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <Icon className="h-4 w-4 text-foreground" />
                         {step.title}
                       </p>
                       <p className="text-sm text-muted-foreground mt-0.5">
@@ -372,7 +372,7 @@ const ReturningStudentsLandingPage = () => {
             </div>
 
             {/* Optional placement test note */}
-            <div className="mt-8 p-4 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/20 text-center">
+            <div className="mt-8 p-4 rounded-lg border border-border/60 bg-muted/50 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 {t("welcomeBack.steps.placementNote")}
               </p>
@@ -380,7 +380,7 @@ const ReturningStudentsLandingPage = () => {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 gap-1.5"
+                className="text-foreground hover:bg-muted gap-1.5"
               >
                 <Link to="/placement-test">
                   {t("welcomeBack.steps.placementLink")}
@@ -392,7 +392,7 @@ const ReturningStudentsLandingPage = () => {
         </section>
 
         {/* ── What's New ── */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-emerald-50/30 to-background dark:from-emerald-950/10 dark:to-background">
+        <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-muted/30 to-background">
           <div className="container mx-auto max-w-5xl">
             <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-10">
               {t("welcomeBack.whyReturn.title")}
@@ -404,10 +404,10 @@ const ReturningStudentsLandingPage = () => {
                 return (
                   <Card
                     key={i}
-                    className="border-emerald-200/60 dark:border-emerald-800/40 hover:shadow-md transition-shadow"
+                    className="border-border/60 hover:shadow-md transition-shadow"
                   >
                     <CardContent className="pt-6 flex items-start gap-4">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 shrink-0">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/5 text-foreground shrink-0">
                         <Icon className="h-5 w-5" />
                       </span>
                       <div>
@@ -436,11 +436,11 @@ const ReturningStudentsLandingPage = () => {
                 {faqs.map((faq, i) => (
                   <div
                     key={i}
-                    className="border border-emerald-200/60 dark:border-emerald-800/40 rounded-lg overflow-hidden"
+                    className="border border-border/60 rounded-lg overflow-hidden"
                   >
                     <button
                       onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-start text-sm font-medium hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 text-start text-sm font-medium hover:bg-muted/50 transition-colors"
                     >
                       {faq.question}
                       <ChevronDown
@@ -452,7 +452,7 @@ const ReturningStudentsLandingPage = () => {
                     <div
                       className={`px-4 text-sm text-muted-foreground overflow-hidden transition-all duration-200 ${
                         openFaq === i
-                          ? "py-3 border-t border-emerald-200/40 dark:border-emerald-800/30"
+                          ? "py-3 border-t border-border/60"
                           : "max-h-0 py-0"
                       }`}
                     >
@@ -466,12 +466,12 @@ const ReturningStudentsLandingPage = () => {
         )}
 
         {/* ── Final CTA ── */}
-        <section className="py-16 md:py-20 px-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white">
+        <section className="py-16 md:py-20 px-4 bg-primary text-primary-foreground">
           <div className="container mx-auto max-w-3xl text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
               {t("welcomeBack.finalCta.title")}
             </h2>
-            <p className="text-emerald-100 text-lg mb-8 max-w-xl mx-auto">
+            <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
               {t("welcomeBack.finalCta.subtitle")}
             </p>
 
@@ -479,7 +479,7 @@ const ReturningStudentsLandingPage = () => {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 h-13 px-8 text-base font-bold bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg"
+                className="gap-2 h-13 px-8 text-base font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg"
               >
                 <Link to="/enroll-now">
                   {t("welcomeBack.finalCta.button")}
@@ -499,7 +499,7 @@ const ReturningStudentsLandingPage = () => {
               </Button>
             </div>
 
-            <p className="text-sm text-emerald-200">
+            <p className="text-sm text-primary-foreground/60">
               {t("welcomeBack.finalCta.note")}
             </p>
           </div>

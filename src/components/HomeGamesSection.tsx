@@ -6,19 +6,19 @@ import { Gamepad2, ArrowRight, Zap, Trophy, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const GAMES = [
-  { emoji: "🃏", title: "Memory Match",     desc: "Match Korean words to meanings",   color: "from-yellow-400/20 to-yellow-600/10", border: "hover:border-yellow-400/50",  hot: true  },
-  { emoji: "⚡", title: "Hangul Quiz",      desc: "Master Korean alphabet fast",       color: "from-blue-400/20 to-blue-600/10",   border: "hover:border-blue-400/50",    hot: false },
-  { emoji: "🎬", title: "K-Drama Quiz",     desc: "Learn through K-Drama phrases",     color: "from-pink-400/20 to-pink-600/10",   border: "hover:border-pink-400/50",    hot: true  },
-  { emoji: "🧩", title: "Sentence Builder", desc: "Arrange words into sentences",      color: "from-purple-400/20 to-purple-600/10", border: "hover:border-purple-400/50", hot: false },
-  { emoji: "🔢", title: "Numbers Game",     desc: "Korean numbers & counting",         color: "from-green-400/20 to-green-600/10", border: "hover:border-green-400/50",   hot: false },
-  { emoji: "🎨", title: "Color Match",      desc: "Colors in Korean",                  color: "from-red-400/20 to-red-600/10",     border: "hover:border-red-400/50",     hot: false },
-  { emoji: "📝", title: "Verb Conjugation", desc: "Conjugate verbs correctly",         color: "from-orange-400/20 to-orange-600/10", border: "hover:border-orange-400/50", hot: false },
-  { emoji: "👋", title: "Greeting Master",  desc: "Greetings & polite expressions",    color: "from-teal-400/20 to-teal-600/10",   border: "hover:border-teal-400/50",    hot: false },
-  { emoji: "↔️", title: "Opposites",        desc: "Learn antonyms in Korean",          color: "from-indigo-400/20 to-indigo-600/10", border: "hover:border-indigo-400/50", hot: false },
-  { emoji: "✏️", title: "Fill the Blank",   desc: "Complete the sentences",            color: "from-cyan-400/20 to-cyan-600/10",   border: "hover:border-cyan-400/50",    hot: false },
-  { emoji: "🔀", title: "Word Scramble",    desc: "Unscramble Korean words",           color: "from-lime-400/20 to-lime-600/10",   border: "hover:border-lime-400/50",    hot: false },
-  { emoji: "🔢", title: "Counter Words",    desc: "Korean counting classifiers",       color: "from-amber-400/20 to-amber-600/10", border: "hover:border-amber-400/50",   hot: false },
-  { emoji: "⏰", title: "Time Teller",      desc: "Tell time in Korean",               color: "from-violet-400/20 to-violet-600/10", border: "hover:border-violet-400/50", hot: false },
+  { emoji: "🃏", title: "Memory Match",     desc: "Match Korean words to meanings",   color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]",  hot: true  },
+  { emoji: "⚡", title: "Hangul Quiz",      desc: "Master Korean alphabet fast",       color: "from-[#D6E8FF]/40 to-[#D6E8FF]/10",   border: "hover:border-[#D6E8FF]",    hot: false },
+  { emoji: "🎬", title: "K-Drama Quiz",     desc: "Learn through K-Drama phrases",     color: "from-[#FFD9E6]/40 to-[#FFD9E6]/10",   border: "hover:border-[#FFD9E6]",    hot: true  },
+  { emoji: "🧩", title: "Sentence Builder", desc: "Arrange words into sentences",      color: "from-[#E8D9FF]/40 to-[#E8D9FF]/10", border: "hover:border-[#E8D9FF]", hot: false },
+  { emoji: "🔢", title: "Numbers Game",     desc: "Korean numbers & counting",         color: "from-[#CFF7D3]/40 to-[#CFF7D3]/10", border: "hover:border-[#CFF7D3]",   hot: false },
+  { emoji: "🎨", title: "Color Match",      desc: "Colors in Korean",                  color: "from-[#FFD9E6]/40 to-[#FFD9E6]/10",     border: "hover:border-[#FFD9E6]",     hot: false },
+  { emoji: "📝", title: "Verb Conjugation", desc: "Conjugate verbs correctly",         color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]", hot: false },
+  { emoji: "👋", title: "Greeting Master",  desc: "Greetings & polite expressions",    color: "from-[#D7F7F7]/40 to-[#D7F7F7]/10",   border: "hover:border-[#D7F7F7]",    hot: false },
+  { emoji: "↔️", title: "Opposites",        desc: "Learn antonyms in Korean",          color: "from-[#EFE6FF]/40 to-[#EFE6FF]/10", border: "hover:border-[#EFE6FF]", hot: false },
+  { emoji: "✏️", title: "Fill the Blank",   desc: "Complete the sentences",            color: "from-[#D7F7F7]/40 to-[#D7F7F7]/10",   border: "hover:border-[#D7F7F7]",    hot: false },
+  { emoji: "🔀", title: "Word Scramble",    desc: "Unscramble Korean words",           color: "from-[#DFFFE6]/40 to-[#DFFFE6]/10",   border: "hover:border-[#DFFFE6]",    hot: false },
+  { emoji: "🔢", title: "Counter Words",    desc: "Korean counting classifiers",       color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]",   hot: false },
+  { emoji: "⏰", title: "Time Teller",      desc: "Tell time in Korean",               color: "from-[#EFE6FF]/40 to-[#EFE6FF]/10", border: "hover:border-[#EFE6FF]", hot: false },
 ];
 
 const STATS = [
