@@ -134,14 +134,100 @@ const ReturningStudentsLandingPage = () => {
     <>
       <Header />
       <main id="main-content">
-        {/* ── Hero ── */}
+        {/* ── Share & Referral (Lead Section) ── */}
         <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 py-20 md:py-28 px-4">
           <div className="absolute inset-0 pointer-events-none" aria-hidden>
             <div className="absolute -top-24 -start-24 w-80 h-80 bg-emerald-200/30 dark:bg-emerald-800/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-24 -end-24 w-72 h-72 bg-green-200/30 dark:bg-green-800/10 rounded-full blur-3xl" />
           </div>
 
-          <div className="container mx-auto max-w-4xl relative z-10 text-center">
+          <div className="container mx-auto max-w-5xl relative z-10">
+            <div className="text-center mb-10">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-3">
+                {t("welcomeBack.share.title")}
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                {t("welcomeBack.share.subtitle")}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Referral tiers */}
+              <Card className="border-emerald-200/60 dark:border-emerald-800/40 bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-950/20 dark:to-green-950/20">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    {referralItems.map((item, i) => {
+                      const Icon = REFERRAL_ICONS[i];
+                      return (
+                        <div key={i} className="flex items-start gap-3">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300 shrink-0">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <p className="font-semibold text-sm">{item.label}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Share buttons */}
+              <Card className="border-emerald-200/60 dark:border-emerald-800/40 flex items-center">
+                <CardContent className="pt-6 w-full space-y-4">
+                  <p className="text-sm font-medium text-center text-muted-foreground mb-2">
+                    {isAr ? "شارك هذه الصفحة مع أصدقائك" : "Share this page with your friends"}
+                  </p>
+
+                  <Button
+                    onClick={handleCopyLink}
+                    variant="outline"
+                    className="w-full gap-2 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  >
+                    {linkCopied ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        {t("welcomeBack.share.copiedLink")}
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="h-4 w-4" />
+                        {t("welcomeBack.share.copyLink")}
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={handleWhatsAppShare}
+                    className="w-full gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {t("welcomeBack.share.whatsapp")}
+                  </Button>
+
+                  {canShare && (
+                    <Button
+                      onClick={handleNativeShare}
+                      variant="outline"
+                      className="w-full gap-2 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      {t("welcomeBack.share.shareButton")}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Hero ── */}
+        <section className="py-16 md:py-24 px-4 bg-background">
+          <div className="container mx-auto max-w-4xl text-center">
             <Badge
               variant="outline"
               className="mb-5 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 text-sm px-4 py-1"
@@ -150,9 +236,9 @@ const ReturningStudentsLandingPage = () => {
               {t("welcomeBack.hero.badge")}
             </Badge>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-5 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-5 leading-tight">
               {t("welcomeBack.hero.title")}
-            </h1>
+            </h2>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               {t("welcomeBack.hero.subtitle")}
@@ -334,92 +420,6 @@ const ReturningStudentsLandingPage = () => {
                   </Card>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Share & Referral ── */}
-        <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-background to-emerald-50/40 dark:to-emerald-950/15">
-          <div className="container mx-auto max-w-5xl">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
-                {t("welcomeBack.share.title")}
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                {t("welcomeBack.share.subtitle")}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Referral tiers */}
-              <Card className="border-emerald-200/60 dark:border-emerald-800/40 bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-950/20 dark:to-green-950/20">
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    {referralItems.map((item, i) => {
-                      const Icon = REFERRAL_ICONS[i];
-                      return (
-                        <div key={i} className="flex items-start gap-3">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300 shrink-0">
-                            <Icon className="h-4 w-4" />
-                          </span>
-                          <div>
-                            <p className="font-semibold text-sm">{item.label}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Share buttons */}
-              <Card className="border-emerald-200/60 dark:border-emerald-800/40 flex items-center">
-                <CardContent className="pt-6 w-full space-y-4">
-                  <p className="text-sm font-medium text-center text-muted-foreground mb-2">
-                    {isAr ? "شارك هذه الصفحة مع أصدقائك" : "Share this page with your friends"}
-                  </p>
-
-                  <Button
-                    onClick={handleCopyLink}
-                    variant="outline"
-                    className="w-full gap-2 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                  >
-                    {linkCopied ? (
-                      <>
-                        <Check className="h-4 w-4" />
-                        {t("welcomeBack.share.copiedLink")}
-                      </>
-                    ) : (
-                      <>
-                        <Link2 className="h-4 w-4" />
-                        {t("welcomeBack.share.copyLink")}
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={handleWhatsAppShare}
-                    className="w-full gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    {t("welcomeBack.share.whatsapp")}
-                  </Button>
-
-                  {canShare && (
-                    <Button
-                      onClick={handleNativeShare}
-                      variant="outline"
-                      className="w-full gap-2 border-emerald-400/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      {t("welcomeBack.share.shareButton")}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
             </div>
           </div>
         </section>
