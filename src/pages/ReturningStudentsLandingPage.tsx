@@ -160,7 +160,7 @@ const ReturningStudentsLandingPage = () => {
                       const Icon = REFERRAL_ICONS[i];
                       return (
                         <div key={i} className="flex items-start gap-3">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/5 text-foreground shrink-0">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-secondary text-secondary-foreground shrink-0">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div>
@@ -284,7 +284,7 @@ const ReturningStudentsLandingPage = () => {
               <Card className="border-border/60">
                 <CardContent className="pt-6">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/5 text-foreground">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground">
                       <GraduationCap className="h-4 w-4" />
                     </span>
                     {t("welcomeBack.offer.title")}
@@ -350,7 +350,7 @@ const ReturningStudentsLandingPage = () => {
                 return (
                   <div key={i} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/5 text-foreground font-bold text-sm border-2 border-primary/30 dark:border-primary/20">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground font-bold text-sm border-2 border-secondary">
                         {i + 1}
                       </span>
                       {i < steps.length - 1 && (
@@ -407,7 +407,7 @@ const ReturningStudentsLandingPage = () => {
                     className="border-border/60 hover:shadow-md transition-shadow"
                   >
                     <CardContent className="pt-6 flex items-start gap-4">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/5 text-foreground shrink-0">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-secondary-foreground shrink-0">
                         <Icon className="h-5 w-5" />
                       </span>
                       <div>
