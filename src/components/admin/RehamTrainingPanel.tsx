@@ -11,6 +11,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle2, RotateCcw, Play,
   Brain, Timer, FolderOpen, FileText, Languages, Layers,
   Shuffle, Eye, EyeOff, ArrowLeft, Clock, Star, Plus, Trash2, Pencil,
+  Pause, Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -1298,7 +1299,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 export default function RehamTrainingPanel() {
-  const { speak, speakKorean, speakEnglish, isSpeaking, cancel } = useSpeech();
+  const { speak, speakKorean, speakEnglish, isSpeaking, isPaused, togglePause, cancel } = useSpeech();
   const [activeSubTab, setActiveSubTab] = useState("introduction");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
@@ -1707,6 +1708,32 @@ export default function RehamTrainingPanel() {
             </p>
           )}
         </div>
+
+        {/* ── Speaking Controls (visible when TTS is active) ── */}
+        {isSpeaking && (
+          <div className="mb-4 flex items-center gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 animate-in fade-in">
+            <Volume2 className="h-4 w-4 text-blue-600 animate-pulse shrink-0" />
+            <span className="text-xs font-medium text-blue-700 dark:text-blue-300 flex-1">
+              {isPaused ? "Paused" : "Speaking..."}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300"
+              onClick={togglePause}
+            >
+              {isPaused ? <><Play className="h-3 w-3" /> Resume</> : <><Pause className="h-3 w-3" /> Pause</>}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300"
+              onClick={cancel}
+            >
+              <Square className="h-3 w-3" /> Stop
+            </Button>
+          </div>
+        )}
 
         <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
           <TabsList className="mb-4 grid h-auto w-full grid-cols-3 gap-1 md:inline-flex md:h-10 md:w-auto md:gap-0">

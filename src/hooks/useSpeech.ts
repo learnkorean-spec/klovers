@@ -77,6 +77,7 @@ function pickVoice(
 export function useSpeech(options: UseSpeechOptions = {}) {
   const { language = "ko-KR", rate = 1, pitch = 1 } = options;
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [voicesReady, setVoicesReady] = useState(false);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
 
@@ -110,6 +111,7 @@ export function useSpeech(options: UseSpeechOptions = {}) {
       const finalGender = opts?.gender;
 
       window.speechSynthesis.cancel();
+      setIsPaused(false);
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = finalLang;
@@ -121,17 +123,37 @@ export function useSpeech(options: UseSpeechOptions = {}) {
       if (voice) utterance.voice = voice;
 
       utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onend = () => { setIsSpeaking(false); setIsPaused(false); };
+      utterance.onerror = () => { setIsSpeaking(false); setIsPaused(false); };
 
       window.speechSynthesis.speak(utterance);
     },
     [language, rate, pitch],
   );
 
+  const pause = useCallback(() => {
+    if ("speechSynthesis" in window && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  const resume = useCallback(() => {
+    if ("speechSynthesis" in window && window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    }
+  }, []);
+
+  const togglePause = useCallback(() => {
+    if (isPaused) resume();
+    else pause();
+  }, [isPaused, pause, resume]);
+
   const cancel = useCallback(() => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    setIsPaused(false);
   }, []);
 
   /* âââ Convenience: language helpers âââ */
@@ -170,8 +192,12 @@ export function useSpeech(options: UseSpeechOptions = {}) {
     speakEnglish,
     speakAsMale,
     speakAsFemale,
+    pause,
+    resume,
+    togglePause,
     cancel,
     isSpeaking,
+    isPaused,
     voicesReady,
   };
 }
