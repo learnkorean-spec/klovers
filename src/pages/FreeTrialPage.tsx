@@ -187,8 +187,8 @@ const FreeTrialPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
               {PERKS.map(({ icon: Icon, text }) => (
                 <div key={text} className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-primary border border-black/25 flex items-center justify-center">
+                    <Icon className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <span className="text-xs font-semibold text-foreground text-center">{text}</span>
                 </div>

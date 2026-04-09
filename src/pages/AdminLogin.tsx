@@ -47,8 +47,8 @@ const AdminLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Lock className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary border border-black/25">
+            <Lock className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle>Admin Login</CardTitle>
         </CardHeader>

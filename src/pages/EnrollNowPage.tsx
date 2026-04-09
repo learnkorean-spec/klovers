@@ -1038,8 +1038,8 @@ const EnrollNowPage = () => {
               {/* Auth Gate: if not logged in, show sign-in CTA */}
               {!userId ? (
                 <div className="text-center space-y-4 py-6">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                    <LogIn className="h-8 w-8 text-primary" />
+                  <div className="w-16 h-16 mx-auto rounded-full bg-primary border border-black/25 flex items-center justify-center">
+                    <LogIn className="h-8 w-8 text-primary-foreground" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">
                     {t("auth.signInToContinue")}
@@ -1063,8 +1063,8 @@ const EnrollNowPage = () => {
                 <>
                   {/* Authenticated user info */}
                   <div className="bg-muted rounded-lg p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
+                    <div className="w-10 h-10 rounded-full bg-primary border border-black/25 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">{name || email}</p>
@@ -1258,7 +1258,7 @@ const EnrollNowPage = () => {
                   { step: "3", icon: "🎉", title: "First class!", desc: "We send your meeting link — ready to learn!" },
                 ].map(({ step: s, icon, title, desc }) => (
                   <div key={s} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">{s}</div>
+                    <div className="w-7 h-7 rounded-full bg-primary border border-black/25 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-foreground">{s}</div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{icon} {title}</p>
                       <p className="text-xs text-muted-foreground">{desc}</p>

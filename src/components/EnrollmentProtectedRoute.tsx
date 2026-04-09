@@ -53,8 +53,8 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md w-full text-center space-y-6">
           <div className="flex justify-center">
-            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <Lock className="h-9 w-9 text-primary" />
+            <div className="h-20 w-20 rounded-full bg-primary border border-black/25 flex items-center justify-center">
+              <Lock className="h-9 w-9 text-primary-foreground" />
             </div>
           </div>
 
