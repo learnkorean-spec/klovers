@@ -106,7 +106,7 @@ const ReturningStudentOffer = () => {
           <Card className="border-2 border-primary/30 dark:border-primary/20 bg-muted/50 shadow-lg">
             <CardContent className="pt-8 pb-8">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-secondary text-secondary-foreground mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground border border-black/25 mb-4">
                   <Share2 className="h-7 w-7" />
                 </div>
                 <h3 className="text-2xl md:text-3xl font-extrabold mb-2">{t("returningStudents.section.referralTitle")}</h3>
@@ -117,7 +117,7 @@ const ReturningStudentOffer = () => {
                   const Icon = REFERRAL_ICONS[i];
                   return (
                     <div key={i} className="text-center p-4 rounded-xl bg-white/60 dark:bg-muted/30 border border-border/60">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground mb-3">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-black/25 mb-3">
                         <Icon className="h-5 w-5" />
                       </span>
                       <p className="font-bold text-sm mb-1">{item.label}</p>
@@ -141,7 +141,7 @@ const ReturningStudentOffer = () => {
             <Card className="border-border">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground border border-black/25">
                     <GraduationCap className="h-4 w-4" />
                   </span>
                   {t("returningStudents.section.offerTitle")}
@@ -199,7 +199,7 @@ const ReturningStudentOffer = () => {
                 return (
                   <div key={i} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground font-bold text-sm border-2 border-secondary">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-black/25 font-bold text-sm">
                         {i + 1}
                       </span>
                       {i < steps.length - 1 && (
