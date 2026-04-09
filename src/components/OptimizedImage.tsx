@@ -3,13 +3,21 @@ import { AlertCircle } from "lucide-react";
 
 const SRCSET_WIDTHS = [320, 480, 640, 828, 1080, 1200, 1920];
 
-function vercelImageUrl(src: string, width: number, quality = 75): string {
+function optimizedUrl(src: string, width: number, quality = 75): string {
   if (!src.startsWith("http://") && !src.startsWith("https://")) return src;
-  return `/_vercel/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
+  // Unsplash supports native resizing via URL params
+  if (src.includes("images.unsplash.com")) {
+    const url = new URL(src);
+    url.searchParams.set("w", String(width));
+    url.searchParams.set("q", String(quality));
+    url.searchParams.set("auto", "format");
+    return url.toString();
+  }
+  return src;
 }
 
 function buildSrcSet(src: string, quality = 75): string {
-  return SRCSET_WIDTHS.map((w) => `${vercelImageUrl(src, w, quality)} ${w}w`).join(", ");
+  return SRCSET_WIDTHS.map((w) => `${optimizedUrl(src, w, quality)} ${w}w`).join(", ");
 }
 
 interface OptimizedImageProps {
@@ -97,7 +105,7 @@ const OptimizedImage = ({
         <div className={`absolute inset-0 bg-muted animate-pulse ${effectiveIsHero ? "aspect-[16/9]" : "aspect-video"}`} />
       )}
       <img
-        src={vercelImageUrl(src!, effectiveIsHero ? 1200 : 640, quality)}
+        src={optimizedUrl(src!, effectiveIsHero ? 1200 : 640, quality)}
         srcSet={buildSrcSet(src!, quality)}
         sizes={effectiveSizes}
         alt={alt}
