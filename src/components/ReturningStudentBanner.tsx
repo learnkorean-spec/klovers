@@ -19,7 +19,7 @@ const ReturningStudentBanner = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-amber-600 to-yellow-500 text-white relative">
+    <div className="bg-gradient-to-r from-emerald-600 to-green-500 text-white relative">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center pe-10">
         <div className="flex items-center gap-2 flex-wrap justify-center">
           <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
@@ -31,7 +31,7 @@ const ReturningStudentBanner = () => {
         </div>
         <Link
           to="/placement-test"
-          className="inline-flex items-center gap-1.5 bg-white text-amber-700 text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-amber-50 transition-colors shrink-0"
+          className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-emerald-50 transition-colors shrink-0"
         >
           {t("returningStudents.banner.cta")}
         </Link>
