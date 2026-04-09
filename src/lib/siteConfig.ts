@@ -7,3 +7,5 @@ export const WHATSAPP_BASE = `https://wa.me/${WHATSAPP_NUMBER}`;
 export const CONTACT_EMAIL = "koreanlovers.net@gmail.com";
 export const SITE_URL = "https://kloversegy.com";
 export const ENROLL_URL = `${SITE_URL}/enroll-now`;
+
+export const RETURNING_STUDENT_CODE = "KLOVERSOLDSTUDENT1";

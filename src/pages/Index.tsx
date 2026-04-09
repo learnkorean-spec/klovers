@@ -6,6 +6,7 @@ import HeroSection from "@/components/HeroSection";
 import WhyLearnKorean from "@/components/WhyLearnKorean";
 import Footer from "@/components/Footer";
 import StickyEnrollBar from "@/components/StickyEnrollBar";
+import ReturningStudentBanner from "@/components/ReturningStudentBanner";
 
 // Lazy-load below-fold sections for faster initial paint
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
@@ -16,6 +17,7 @@ const HomeBlogSection = lazy(() => import("@/components/HomeBlogSection"));
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
 const HomeGamesSection = lazy(() => import("@/components/HomeGamesSection"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
+const ReturningStudentOffer = lazy(() => import("@/components/ReturningStudentOffer"));
 
 const SectionFallback = () => (
   <div className="py-20 flex items-center justify-center">
@@ -95,6 +97,9 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Returning students promotional banner */}
+        <ReturningStudentBanner />
+
         {/* Interest — immediately answer "how does this work?" */}
         <Suspense fallback={<SectionFallback />}>
           <HowItWorks />
@@ -116,6 +121,10 @@ const Index = () => {
         {/* Desire — show the clear path forward */}
         <Suspense fallback={<SectionFallback />}>
           <LearningRoadmap />
+        </Suspense>
+        {/* Returning student offer — capitalize on roadmap motivation */}
+        <Suspense fallback={<SectionFallback />}>
+          <ReturningStudentOffer />
         </Suspense>
         {/* Interest — fun differentiator */}
         <Suspense fallback={<SectionFallback />}>
