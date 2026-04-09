@@ -123,6 +123,75 @@ export const translations = {
         cta: "Start Your Placement Test",
       },
     },
+    welcomeBack: {
+      hero: {
+        badge: "Welcome Back, K-Lovers!",
+        title: "Continue Your Korean Journey",
+        subtitle: "Returning students get 20% off — enroll now and pick up where you left off.",
+        ctaPrimary: "Enroll Now",
+        ctaSecondary: "Take Optional Placement Test",
+      },
+      offer: {
+        title: "Your Exclusive Offer",
+        items: [
+          "20% off your next enrollment — no questions asked",
+          "Use code KLOVERSOLDSTUDENT1 at checkout",
+          "Valid for group and private classes, all tiers",
+        ],
+        promoLabel: "Your Promo Code",
+        promoCopy: "Copy Code",
+        promoCopied: "Copied!",
+      },
+      steps: {
+        title: "How to Enroll",
+        items: [
+          { title: "Choose Your Course", description: "Browse our group and private class options at your level." },
+          { title: "Apply Your Promo Code", description: "Enter KLOVERSOLDSTUDENT1 at checkout for 20% off." },
+          { title: "Start Learning!", description: "Join your class and continue your Korean journey." },
+        ],
+        placementNote: "Not sure of your level? Take our free 5-minute placement test — it's completely optional.",
+        placementLink: "Take Placement Test",
+      },
+      whyReturn: {
+        title: "What's New at Klovers",
+        items: [
+          { title: "Updated Curriculum", description: "Fresh content aligned with the latest TOPIK standards." },
+          { title: "Flexible Scheduling", description: "More class times to fit your busy life." },
+          { title: "Growing Community", description: "Join 500+ active K-Lovers students." },
+          { title: "Exam Preparation", description: "Dedicated TOPIK I & II preparation tracks." },
+        ],
+      },
+      share: {
+        title: "Share with Friends & Save More",
+        subtitle: "Earn extra discounts when you refer friends or classmates to Klovers.",
+        referralItems: [
+          { label: "+5% per friend", description: "For each friend who enrolls, you get an extra 5% off" },
+          { label: "+2% for sharing", description: "Even if your friend doesn't join, you still get 2% off for sharing" },
+          { label: "Up to 35% total", description: "Stack referrals on top of your 20% base — max 35% off" },
+        ],
+        copyLink: "Copy Link",
+        copiedLink: "Link Copied!",
+        whatsapp: "Share on WhatsApp",
+        shareButton: "Share",
+      },
+      faq: {
+        title: "Frequently Asked Questions",
+        items: [
+          { question: "Is the placement test required?", answer: "No! The placement test is completely optional. If you already know your level, you can enroll directly." },
+          { question: "Can I combine this with other discounts?", answer: "The returning student code replaces the first-time 10% discount but stacks with referral bonuses up to the 35% cap." },
+          { question: "How long is the promo code valid?", answer: "The code is valid for the current enrollment cycle. Contact us on WhatsApp if you need an extension." },
+          { question: "How does the referral program work?", answer: "Share this page with friends. For each friend who enrolls, you get +5% off. Even sharing earns you +2%. Stack up to 35% total." },
+          { question: "What if I forgot my previous level?", answer: "Take our free 5-minute placement test to find your current level. It's quick and completely optional." },
+        ],
+      },
+      finalCta: {
+        title: "Ready to Continue?",
+        subtitle: "Your 20% discount is waiting. Enroll now and rejoin the K-Lovers community.",
+        button: "Enroll Now",
+        whatsapp: "Questions? Chat on WhatsApp",
+        note: "Use code KLOVERSOLDSTUDENT1 at checkout",
+      },
+    },
     why: {
       title: "Why K-Lovers?",
       subtitle: "Everything you need to master Korean in one place",
@@ -756,6 +825,75 @@ export const translations = {
           { question: "ماذا لو لا أتذكر مستواي القديم؟", answer: "لا مشكلة — اختبار تحديد المستوى سيحدد مستواك الحالي في أقل من 5 دقائق." },
         ],
         cta: "ابدأ اختبار تحديد المستوى",
+      },
+    },
+    welcomeBack: {
+      hero: {
+        badge: "!أهلاً بعودتكم يا K-Lovers",
+        title: "أكمل رحلتك في تعلم الكورية",
+        subtitle: "خصم 20% للطلاب العائدين — سجّل الآن وأكمل من حيث توقفت.",
+        ctaPrimary: "سجّل الآن",
+        ctaSecondary: "خذ اختبار المستوى (اختياري)",
+      },
+      offer: {
+        title: "عرضك الحصري",
+        items: [
+          "خصم 20% على تسجيلك القادم — بدون شروط",
+          "استخدم الكود KLOVERSOLDSTUDENT1 عند الدفع",
+          "صالح للحصص الجماعية والخاصة، جميع الفئات",
+        ],
+        promoLabel: "كود الخصم الخاص بك",
+        promoCopy: "انسخ الكود",
+        promoCopied: "تم النسخ!",
+      },
+      steps: {
+        title: "كيف تسجّل",
+        items: [
+          { title: "اختر دورتك", description: "تصفح خيارات الحصص الجماعية والخاصة حسب مستواك." },
+          { title: "أدخل كود الخصم", description: "أدخل الكود KLOVERSOLDSTUDENT1 عند الدفع واحصل على خصم 20%." },
+          { title: "ابدأ التعلم!", description: "انضم إلى صفك وأكمل رحلتك في تعلم الكورية." },
+        ],
+        placementNote: "غير متأكد من مستواك؟ خذ اختبار تحديد المستوى المجاني — إنه اختياري تمامًا.",
+        placementLink: "خذ اختبار المستوى",
+      },
+      whyReturn: {
+        title: "ما الجديد في Klovers",
+        items: [
+          { title: "منهج محدّث", description: "محتوى جديد متوافق مع أحدث معايير TOPIK." },
+          { title: "جدول مرن", description: "مواعيد حصص أكثر تناسب حياتك المزدحمة." },
+          { title: "مجتمع متنامي", description: "انضم إلى أكثر من 500 طالب نشط في K-Lovers." },
+          { title: "إعداد للامتحان", description: "مسارات تحضيرية مخصصة لـ TOPIK I و II." },
+        ],
+      },
+      share: {
+        title: "شارك مع أصدقائك ووفّر أكثر",
+        subtitle: "احصل على خصومات إضافية عند دعوة أصدقائك أو زملائك إلى Klovers.",
+        referralItems: [
+          { label: "+5% لكل صديق", description: "لكل صديق يسجل، تحصل على خصم إضافي 5%" },
+          { label: "+2% للمشاركة", description: "حتى لو لم ينضم صديقك، تحصل على 2% خصم للمشاركة" },
+          { label: "حتى 35% إجمالي", description: "اجمع مكافآت الإحالة فوق خصمك 20% — بحد أقصى 35%" },
+        ],
+        copyLink: "انسخ الرابط",
+        copiedLink: "تم نسخ الرابط!",
+        whatsapp: "شارك عبر واتساب",
+        shareButton: "مشاركة",
+      },
+      faq: {
+        title: "أسئلة شائعة",
+        items: [
+          { question: "هل اختبار تحديد المستوى إلزامي؟", answer: "لا! اختبار تحديد المستوى اختياري تمامًا. إذا كنت تعرف مستواك، يمكنك التسجيل مباشرة." },
+          { question: "هل يمكنني دمج هذا مع خصومات أخرى؟", answer: "كود الطالب العائد يحل محل خصم 10% للطلاب الجدد لكنه يُجمع مع مكافآت الإحالة حتى سقف 35%." },
+          { question: "كم مدة صلاحية الكود؟", answer: "الكود صالح لدورة التسجيل الحالية. تواصل معنا على واتساب إذا احتجت تمديد." },
+          { question: "كيف يعمل برنامج الإحالة؟", answer: "شارك هذه الصفحة مع أصدقائك. لكل صديق يسجل، تحصل على +5% خصم. حتى المشاركة تمنحك +2%. اجمع حتى 35% إجمالي." },
+          { question: "ماذا لو نسيت مستواي السابق؟", answer: "خذ اختبار تحديد المستوى المجاني لمعرفة مستواك الحالي. إنه سريع واختياري تمامًا." },
+        ],
+      },
+      finalCta: {
+        title: "مستعد للاستمرار؟",
+        subtitle: "خصمك 20% في انتظارك. سجّل الآن وانضم مجددًا لمجتمع K-Lovers.",
+        button: "سجّل الآن",
+        whatsapp: "أسئلة؟ تحدث معنا على واتساب",
+        note: "استخدم الكود KLOVERSOLDSTUDENT1 عند الدفع",
       },
     },
     why: {

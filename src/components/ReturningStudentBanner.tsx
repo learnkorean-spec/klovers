@@ -30,7 +30,7 @@ const ReturningStudentBanner = () => {
           </span>
         </div>
         <Link
-          to="/placement-test"
+          to="/welcome-back"
           className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-emerald-50 transition-colors shrink-0"
         >
           {t("returningStudents.banner.cta")}
