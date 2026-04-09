@@ -2155,6 +2155,30 @@ export type Database = {
         }
         Relationships: []
       }
+      training_starred: {
+        Row: {
+          id: string
+          user_id: string
+          starred: number[]
+          collections: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          starred?: number[]
+          collections?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          starred?: number[]
+          collections?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_student_overview: {
