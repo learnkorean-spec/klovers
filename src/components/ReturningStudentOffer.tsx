@@ -61,12 +61,12 @@ const ReturningStudentOffer = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-16 md:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/50"
+      className="py-16 md:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-green-50 to-green-100/60 dark:from-green-950/40 dark:to-green-900/20"
     >
       {/* Decorative blobs */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
-        <div className="absolute -top-20 -start-20 w-72 h-72 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -end-20 w-64 h-64 bg-muted/50 dark:bg-muted/30 rounded-full blur-3xl" />
+        <div className="absolute -top-20 -start-20 w-72 h-72 bg-green-200/40 dark:bg-green-800/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -end-20 w-64 h-64 bg-green-100/50 dark:bg-green-900/20 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto max-w-6xl relative z-10">
@@ -74,7 +74,7 @@ const ReturningStudentOffer = () => {
         <div className="text-center mb-12">
           <Badge
             variant="outline"
-            className={`mb-4 border-border text-foreground bg-muted transition-all duration-700 ${
+            className={`mb-4 border-green-300 text-green-800 dark:text-green-200 bg-green-100 dark:bg-green-900/40 transition-all duration-700 ${
               visible ? "opacity-100 scale-100" : "opacity-0 scale-90"
             }`}
           >
