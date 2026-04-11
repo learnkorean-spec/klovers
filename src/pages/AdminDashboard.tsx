@@ -53,7 +53,7 @@ const StudentHealthPanel = lazy(() => import("@/components/admin/StudentHealthPa
 const PromoCodesManager = lazy(() => import("@/components/admin/PromoCodesManager"));
 const SeoOrchestrationPanel = lazy(() => import("@/components/admin/SeoOrchestrationPanel"));
 const ImageAuditPanel = lazy(() => import("@/components/admin/ImageAuditPanel"));
-const LeadsPanel = lazy(() => import("@/components/admin/LeadsPanel"));
+const LeadsPanel = lazy(() => import("@/components/admin/LeadsPanel").catch(() => import("@/components/admin/LeadsPanel")));
 const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"));
 
 const TabLoader = () => (
@@ -74,6 +74,9 @@ class TabErrorBoundary extends Component<
 > {
   state = { error: false };
   static getDerivedStateFromError() { return { error: true }; }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(`[TabErrorBoundary] ${this.props.name} crashed:`, error, errorInfo);
+  }
   render() {
     if (this.state.error) {
       return (
@@ -81,8 +84,11 @@ class TabErrorBoundary extends Component<
           <CardContent className="py-12 text-center space-y-3">
             <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
             <p className="text-sm text-muted-foreground">
-              Failed to load <strong>{this.props.name}</strong>. Try refreshing the page.
+              Failed to load <strong>{this.props.name}</strong>.
             </p>
+            <Button variant="outline" size="sm" onClick={() => this.setState({ error: false })}>
+              Retry
+            </Button>
           </CardContent>
         </Card>
       );
@@ -111,7 +117,7 @@ const AdminDashboard = () => {
   const { data: leads = [], isLoading: leadsLoading, error: leadsQueryError } = useLeads({ overviewByEmail });
   const { data: enrollments = [], isLoading: enrollmentsLoading } = useEnrollments({ profileMap });
   const { data: attendanceReqs = [], isLoading: attendanceLoading } = useAttendanceRequests({ profileMap, overviewRows });
-  const { data: referralStats = { total: 0, thisMonth: 0 } } = useReferralStats();
+  const { data: referralStats = { total: 0, thisMonth: 0, totalClicks: 0, clicksThisMonth: 0, perUser: [] } } = useReferralStats();
 
 
   const loading = leadsLoading || enrollmentsLoading || overviewLoading || attendanceLoading;
@@ -588,18 +594,37 @@ const AdminDashboard = () => {
           <StudentHealthPanel overviewRows={overviewRows} />
 
           {/* Referral program stats */}
-          {referralStats.total > 0 && (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-pink-100 dark:bg-pink-900/30 shrink-0">
-                <Tag className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+          {(referralStats.total > 0 || referralStats.totalClicks > 0) && (
+            <div className="rounded-2xl border border-border bg-card px-4 py-3 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-pink-100 dark:bg-pink-900/30 shrink-0">
+                  <Tag className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Referral Program</p>
+                  <p className="font-semibold text-sm text-foreground">
+                    {referralStats.total} conversion{referralStats.total !== 1 ? "s" : ""} · {referralStats.totalClicks} link click{referralStats.totalClicks !== 1 ? "s" : ""}
+                    {referralStats.thisMonth > 0 && <span className="text-green-600 dark:text-green-400 ml-2">· +{referralStats.thisMonth} this month</span>}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">Referral Program</p>
-                <p className="font-semibold text-sm text-foreground">
-                  {referralStats.total} total conversion{referralStats.total !== 1 ? "s" : ""}
-                  {referralStats.thisMonth > 0 && <span className="text-green-600 dark:text-green-400 ml-2">· +{referralStats.thisMonth} this month</span>}
-                </p>
-              </div>
+
+              {/* Per-user breakdown */}
+              {referralStats.perUser.length > 0 && (
+                <div className="border-t border-border pt-2">
+                  <p className="text-xs text-muted-foreground mb-2">Top referrers</p>
+                  <div className="space-y-1.5">
+                    {referralStats.perUser.slice(0, 5).map((u) => (
+                      <div key={u.userId} className="flex items-center justify-between text-xs">
+                        <span className="font-mono text-muted-foreground truncate max-w-[180px]">{u.userId.slice(0, 8)}...</span>
+                        <span className="text-foreground">
+                          {u.conversions} enrolled · {u.clicks} clicks · <span className="font-semibold text-green-600 dark:text-green-400">+{u.bonusPercent}%</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

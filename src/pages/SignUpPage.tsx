@@ -24,6 +24,10 @@ const SignUpPage = () => {
   const referrerId = searchParams.get("ref") ?? localStorage.getItem("referrer_id");
   if (searchParams.get("ref")) {
     localStorage.setItem("referrer_id", searchParams.get("ref")!);
+    // Track the referral link click (fire-and-forget, for +2% sharing bonus)
+    supabase.functions.invoke("track-referral-click", {
+      body: { referrerId: searchParams.get("ref") },
+    }).catch(() => {});
   }
   const { t, language } = useLanguage();
   const isAr = language === "ar";

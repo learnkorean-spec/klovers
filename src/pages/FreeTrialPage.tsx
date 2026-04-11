@@ -77,6 +77,16 @@ const FreeTrialPage = () => {
   const [searchParams] = useSearchParams();
   const referredBy = searchParams.get("ref") || "";
 
+  // Track the referral link click (fire-and-forget, for +2% sharing bonus)
+  useEffect(() => {
+    if (referredBy) {
+      localStorage.setItem("referrer_id", referredBy);
+      supabase.functions.invoke("track-referral-click", {
+        body: { referrerId: referredBy },
+      }).catch(() => {});
+    }
+  }, [referredBy]);
+
   const [step, setStep] = useState<"form" | "success">("form");
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({

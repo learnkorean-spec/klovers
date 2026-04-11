@@ -90,7 +90,7 @@ const LeadsPanel: React.FC = () => {
   const handleDeduplicateLeads = useCallback(async () => {
     const emailMap: Record<string, typeof leads> = {};
     for (const l of leads) {
-      const key = l.email.toLowerCase().trim();
+      const key = (l.email || "").toLowerCase().trim();
       if (!emailMap[key]) emailMap[key] = [];
       emailMap[key].push(l);
     }
@@ -173,7 +173,7 @@ const LeadsPanel: React.FC = () => {
       if (p.email) profileByEmail[p.email.toLowerCase().trim()] = p.user_id;
     }
     for (const lead of unlinked) {
-      const userId = profileByEmail[lead.email.toLowerCase().trim()];
+      const userId = profileByEmail[(lead.email || "").toLowerCase().trim()];
       if (userId) {
         try { await updateLeadViaFn(lead.id, { user_id: userId }); linked++; } catch { /* skip */ }
       }
@@ -201,8 +201,8 @@ const LeadsPanel: React.FC = () => {
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
-      const matchesSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
-      const isConfirmed = l.status === "enrolled" || confirmedEmails.has(l.email.toLowerCase());
+      const matchesSearch = !search || (l.name || "").toLowerCase().includes(search.toLowerCase()) || (l.email || "").toLowerCase().includes(search.toLowerCase());
+      const isConfirmed = l.status === "enrolled" || confirmedEmails.has((l.email || "").toLowerCase());
       const matchesPlan = planFilter === "all" || l.plan_type === planFilter;
       const matchesSource = !leadsSourceFilter || l.source === leadsSourceFilter;
       if (statusFilter === "confirmed") return matchesSearch && isConfirmed && matchesPlan && matchesSource;
@@ -306,7 +306,7 @@ const LeadsPanel: React.FC = () => {
           const abandoned = leads.filter(l =>
             l.plan_type &&
             l.user_id &&
-            !confirmedEmails.has(l.email.toLowerCase()) &&
+            !confirmedEmails.has((l.email || "").toLowerCase()) &&
             l.status !== "enrolled" &&
             new Date(l.created_at) > cutoff
           ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
@@ -551,11 +551,7 @@ const LeadsPanel: React.FC = () => {
                         <Select
                           value={lead.status}
                           onValueChange={async (v) => {
-                            const { error } = await supabase.from("crm_leads").update({ status: v }).eq("id", lead.id);
-                            if (!error) {
-                              queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
-                              toast({ title: "Status updated" });
-                            }
+                            await handleStatusChange(lead.id, v);
                             setQuickStatusLeadId(null);
                           }}
                           open

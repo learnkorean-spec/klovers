@@ -25,6 +25,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
 import { RETURNING_STUDENT_CODE, WHATSAPP_BASE, SITE_URL } from "@/lib/siteConfig";
 
 const STEP_ICONS = [ShoppingCart, Tag, GraduationCap];
@@ -42,6 +43,12 @@ const ReturningStudentsLandingPage = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [canShare, setCanShare] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [referralStats, setReferralStats] = useState<{
+    conversions: number;
+    clicks: number;
+    bonusPercent: number;
+  } | null>(null);
 
   useSEO({
     title: "Welcome Back — Returning Students Offer",
@@ -52,6 +59,33 @@ const ReturningStudentsLandingPage = () => {
 
   useEffect(() => {
     setCanShare(typeof navigator.share === "function");
+  }, []);
+
+  // Fetch logged-in user for personal referral links + stats
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      const uid = session.user.id;
+      setUserId(uid);
+
+      // Fetch referral stats for discount progress
+      Promise.all([
+        supabase
+          .from("referral_conversions")
+          .select("id", { count: "exact", head: true })
+          .eq("referrer_user_id", uid),
+        supabase
+          .from("referral_clicks")
+          .select("id", { count: "exact", head: true })
+          .eq("referrer_user_id", uid),
+      ]).then(([convResult, clickResult]) => {
+        const conversions = convResult.count ?? 0;
+        const clicks = clickResult.count ?? 0;
+        const shareOnly = Math.max(0, clicks - conversions);
+        const bonusPercent = Math.min(conversions * 5 + shareOnly * 2, 15);
+        setReferralStats({ conversions, clicks, bonusPercent });
+      });
+    });
   }, []);
 
   useEffect(() => {
@@ -84,8 +118,11 @@ const ReturningStudentsLandingPage = () => {
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
+  // Use personal referral link if logged in, otherwise generic page URL
+  const shareUrl = userId ? `${SITE_URL}/signup?ref=${userId}` : PAGE_URL;
+
   const handleCopyLink = async () => {
-    await copyToClipboard(PAGE_URL);
+    await copyToClipboard(shareUrl);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
@@ -93,8 +130,8 @@ const ReturningStudentsLandingPage = () => {
   const handleWhatsAppShare = () => {
     const msg = encodeURIComponent(
       isAr
-        ? `عرض حصري للطلاب العائدين في Klovers! خصم 20% 🎉\n${PAGE_URL}`
-        : `Exclusive offer for returning Klovers students! 20% off 🎉\n${PAGE_URL}`
+        ? `عرض حصري للطلاب العائدين في Klovers! خصم 20% 🎉\n${shareUrl}`
+        : `Exclusive offer for returning Klovers students! 20% off 🎉\n${shareUrl}`
     );
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
@@ -104,7 +141,7 @@ const ReturningStudentsLandingPage = () => {
       try {
         await navigator.share({
           title: t("welcomeBack.share.title"),
-          url: PAGE_URL,
+          url: shareUrl,
         });
       } catch {
         /* user cancelled */
@@ -182,6 +219,32 @@ const ReturningStudentsLandingPage = () => {
                   <p className="text-sm font-medium text-center text-muted-foreground mb-2">
                     {isAr ? "شارك هذه الصفحة مع أصدقائك" : "Share this page with your friends"}
                   </p>
+
+                  {/* Referral progress (logged-in users only) */}
+                  {referralStats && referralStats.bonusPercent > 0 && (
+                    <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800 p-3 text-center">
+                      <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                        {isAr
+                          ? `لقد حصلت على خصم إضافي ${referralStats.bonusPercent}%!`
+                          : `You've earned +${referralStats.bonusPercent}% referral bonus!`}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                        {isAr
+                          ? `${referralStats.conversions} صديق انضم · ${Math.max(0, referralStats.clicks - referralStats.conversions)} شخص زار رابطك`
+                          : `${referralStats.conversions} friend${referralStats.conversions !== 1 ? "s" : ""} enrolled · ${Math.max(0, referralStats.clicks - referralStats.conversions)} link visitor${Math.max(0, referralStats.clicks - referralStats.conversions) !== 1 ? "s" : ""}`}
+                      </p>
+                    </div>
+                  )}
+
+                  {!userId && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      {isAr ? (
+                        <><Link to="/login" className="underline font-medium text-foreground">سجل دخولك</Link> للحصول على رابط إحالة شخصي</>
+                      ) : (
+                        <><Link to="/login" className="underline font-medium text-foreground">Log in</Link> to get your personal referral link</>
+                      )}
+                    </p>
+                  )}
 
                   <Button
                     onClick={handleCopyLink}

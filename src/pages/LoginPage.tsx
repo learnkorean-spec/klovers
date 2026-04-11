@@ -139,16 +139,16 @@ const LoginPage = () => {
       if (error) {
         localStorage.removeItem("enroll_redirect");
         toast({
-          title: `Google sign-in unavailable`,
-          description: `Please use email and password to log in, or contact support.`,
+          title: isAr ? "تسجيل الدخول عبر Google غير متاح" : "Google sign-in unavailable",
+          description: isAr ? "يرجى استخدام البريد الإلكتروني وكلمة المرور، أو تواصل مع الدعم." : "Please use email and password to log in, or contact support.",
           variant: "destructive",
         });
       }
     } catch {
       localStorage.removeItem("enroll_redirect");
       toast({
-        title: "Sign-in failed",
-        description: "Please use email and password to log in.",
+        title: isAr ? "فشل تسجيل الدخول" : "Sign-in failed",
+        description: isAr ? "يرجى استخدام البريد الإلكتروني وكلمة المرور." : "Please use email and password to log in.",
         variant: "destructive",
       });
     }

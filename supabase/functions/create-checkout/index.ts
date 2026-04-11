@@ -172,6 +172,35 @@ serve(async (req) => {
       discounts.push({ coupon: coupon.id });
     }
 
+    // Calculate referral bonus discount (stacks with first-timer or promo code)
+    let referralExtra = 0;
+    if (matchedUser) {
+      const [convResult, clickResult] = await Promise.all([
+        supabaseAdmin
+          .from("referral_conversions")
+          .select("id", { count: "exact", head: true })
+          .eq("referrer_user_id", matchedUser.id),
+        supabaseAdmin
+          .from("referral_clicks")
+          .select("id", { count: "exact", head: true })
+          .eq("referrer_user_id", matchedUser.id),
+      ]);
+
+      const conversions = convResult.count ?? 0;
+      const clicks = clickResult.count ?? 0;
+      const shareOnly = Math.max(0, clicks - conversions);
+      referralExtra = Math.min(conversions * 5 + shareOnly * 2, 15);
+
+      if (referralExtra > 0) {
+        const referralCoupon = await stripe.coupons.create({
+          percent_off: referralExtra,
+          duration: "once",
+          name: `Referral bonus (${referralExtra}%)`,
+        });
+        discounts.push({ coupon: referralCoupon.id });
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
@@ -193,6 +222,7 @@ serve(async (req) => {
         preferred_start: (schedule?.preferred_start || "").slice(0, 50),
         timezone: (schedule?.timezone || "").slice(0, 60),
         first_time_discount: applyDiscount ? "true" : "false",
+        referral_bonus_percent: String(referralExtra),
       },
     });
 

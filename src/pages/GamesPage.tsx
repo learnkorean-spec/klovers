@@ -54,7 +54,8 @@ const GamesPage = () => {
   const [xpFloat, setXpFloat] = useState<number | null>(null);
   const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
   const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const { toast } = useToast();
 
   useEffect(() => {
@@ -139,20 +140,20 @@ const GamesPage = () => {
             <Lock className="h-7 w-7 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} is for members</h3>
+            <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Create a free account to unlock all 30 games, save your XP, and build your daily streak.
+              {isAr ? "أنشئ حساباً مجانياً لفتح جميع الألعاب الـ 30، حفظ XP الخاص بك، وبناء سلسلتك اليومية." : "Create a free account to unlock all 30 games, save your XP, and build your daily streak."}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Button size="lg" asChild>
-              <a href="/signup">🚀 Sign Up Free</a>
+              <a href="/signup">{isAr ? "🚀 سجّل مجاناً" : "🚀 Sign Up Free"}</a>
             </Button>
             <Button variant="outline" asChild>
-              <a href="/login">Log In</a>
+              <a href="/login">{isAr ? "تسجيل الدخول" : "Log In"}</a>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">No credit card needed · 1,000+ students already joined</p>
+          <p className="text-xs text-muted-foreground">{isAr ? "بدون بطاقة ائتمان · انضم أكثر من 1,000 طالب" : "No credit card needed · 1,000+ students already joined"}</p>
         </div>
       );
     }
@@ -217,8 +218,8 @@ const GamesPage = () => {
             {/* Guest banner */}
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
-                <span>🎮 2 free games · </span>
-                <a href="/signup" className="text-amber-700 font-semibold hover:underline">Sign up to unlock all 30 games</a>
+                <span>{isAr ? "🎮 لعبتان مجانيتان · " : "🎮 2 free games · "}</span>
+                <a href="/signup" className="text-amber-700 font-semibold hover:underline">{isAr ? "سجّل لفتح جميع الألعاب الـ 30" : "Sign up to unlock all 30 games"}</a>
               </div>
             )}
 
@@ -236,7 +237,7 @@ const GamesPage = () => {
                 {progress.streak.current_streak > 0 && (
                   <div className="inline-flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 text-xs font-medium text-orange-700 dark:text-orange-200">
                     <Flame className="h-3.5 w-3.5" />
-                    <span>{progress.streak.current_streak} day streak</span>
+                    <span>{progress.streak.current_streak} {isAr ? "يوم متتالي" : "day streak"}</span>
                   </div>
                 )}
               </div>
@@ -267,7 +268,7 @@ const GamesPage = () => {
                       )}
                       {game.free && !isLoggedIn && (
                         <div className="absolute top-2 right-2">
-                          <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-medium">FREE</span>
+                          <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-medium">{isAr ? "مجاني" : "FREE"}</span>
                         </div>
                       )}
                       <div className="flex items-start gap-3">
@@ -300,19 +301,19 @@ const GamesPage = () => {
           <div className="max-w-md mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-500" /> Top Players
+                <Trophy className="h-4 w-4 text-amber-500" /> {isAr ? "أفضل اللاعبين" : "Top Players"}
               </h2>
               {!isLoggedIn && (
-                <a href="/signup" className="text-xs text-amber-700 font-semibold hover:underline">Sign up to join →</a>
+                <a href="/signup" className="text-xs text-amber-700 font-semibold hover:underline">{isAr ? "سجّل للانضمام ←" : "Sign up to join →"}</a>
               )}
             </div>
             <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>
               <div className="divide-y divide-border">
                 {isLoggedIn ? (
                   lbLoading ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">Loading leaderboard…</div>
+                    <div className="py-8 text-center text-sm text-muted-foreground">{isAr ? "جارٍ تحميل الترتيب..." : "Loading leaderboard…"}</div>
                   ) : xpLeaderboard.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">No data yet. Play games to earn XP!</div>
+                    <div className="py-8 text-center text-sm text-muted-foreground">{isAr ? "لا توجد بيانات بعد. العب لكسب XP!" : "No data yet. Play games to earn XP!"}</div>
                   ) : (
                     xpLeaderboard.slice(0, 10).map((p, idx) => {
                       const rankEmojis = ["🥇", "🥈", "🥉"];
@@ -321,7 +322,7 @@ const GamesPage = () => {
                         <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-amber-50" : ""}`}>
                           <span className="text-base w-6 text-center font-bold">{emoji}</span>
                           <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-amber-700 font-bold" : "text-foreground"}`}>
-                            {p.name}{p.isCurrentUser ? " (you)" : ""}
+                            {p.name}{p.isCurrentUser ? (isAr ? " (أنت)" : " (you)") : ""}
                           </span>
                           <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full ring-1 ring-black/10">
                             {p.value.toLocaleString()} XP
@@ -356,7 +357,7 @@ const GamesPage = () => {
                       href="/signup"
                       className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md border border-black/15"
                     >
-                      🏆 Sign up to see your rank
+                      {isAr ? "🏆 سجّل لرؤية ترتيبك" : "🏆 Sign up to see your rank"}
                     </a>
                   </div>
                 </>
@@ -403,15 +404,15 @@ const GamesPage = () => {
 
             <div className="text-center space-y-2">
               <div className="text-4xl">🎉</div>
-              <h2 className="text-xl font-bold text-foreground">Nice work!</h2>
-              <p className="text-sm text-muted-foreground">Create a free account to save your progress and unlock all 30 games.</p>
+              <h2 className="text-xl font-bold text-foreground">{isAr ? "أحسنت!" : "Nice work!"}</h2>
+              <p className="text-sm text-muted-foreground">{isAr ? "أنشئ حساباً مجانياً لحفظ تقدمك وفتح جميع الألعاب الـ 30." : "Create a free account to save your progress and unlock all 30 games."}</p>
             </div>
 
             <div className="space-y-2">
               {[
-                { icon: "⭐", text: "Save your XP and streak" },
-                { icon: "🔓", text: "Unlock all 30 Korean games" },
-                { icon: "📊", text: "Track your learning progress" },
+                { icon: "⭐", text: isAr ? "احفظ XP وسلسلتك" : "Save your XP and streak" },
+                { icon: "🔓", text: isAr ? "افتح جميع الألعاب الكورية الـ 30" : "Unlock all 30 Korean games" },
+                { icon: "📊", text: isAr ? "تتبع تقدمك في التعلّم" : "Track your learning progress" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">
                   <span>{icon}</span>
@@ -422,10 +423,10 @@ const GamesPage = () => {
 
             <div className="space-y-2 pt-1">
               <Button className="w-full" size="lg" asChild>
-                <a href="/signup">🚀 Sign Up Free</a>
+                <a href="/signup">{isAr ? "🚀 سجّل مجاناً" : "🚀 Sign Up Free"}</a>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href="/login">Already have an account? Log in</a>
+                <a href="/login">{isAr ? "لديك حساب بالفعل؟ سجّل الدخول" : "Already have an account? Log in"}</a>
               </Button>
             </div>
 
@@ -433,7 +434,7 @@ const GamesPage = () => {
               onClick={() => setShowSignupNudge(false)}
               className="w-full text-xs text-muted-foreground hover:underline"
             >
-              Continue playing as guest
+              {isAr ? "واصل اللعب كضيف" : "Continue playing as guest"}
             </button>
           </div>
         </div>
