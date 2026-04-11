@@ -75,7 +75,7 @@ export function VocabularyReviewPage() {
       setXpEarned((prev) => prev + 5);
       await awardXp(0, "review");
     } catch {
-      toast.error("Could not save review. Please try again.");
+      toast.error(isAr ? "تعذر حفظ المراجعة. حاول مرة أخرى." : "Could not save review. Please try again.");
     }
   };
 
@@ -131,7 +131,7 @@ export function VocabularyReviewPage() {
               <CardContent className="flex items-center justify-center h-64">
                 <div className="text-center space-y-3">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-muted-foreground">Loading your vocabulary review…</p>
+                  <p className="text-muted-foreground">{isAr ? "جارٍ تحميل مراجعة المفردات..." : "Loading your vocabulary review…"}</p>
                 </div>
               </CardContent>
             </Card>
@@ -139,10 +139,10 @@ export function VocabularyReviewPage() {
             <Card className="border-2">
               <CardContent className="text-center py-12">
                 <span className="text-6xl block mb-4">🎉</span>
-                <h2 className="text-2xl font-bold text-foreground mb-2">No Cards Due Today!</h2>
-                <p className="text-muted-foreground mb-6">You've reviewed all vocabulary items. Come back tomorrow!</p>
+                <h2 className="text-2xl font-bold text-foreground mb-2">{isAr ? "لا توجد بطاقات مطلوبة اليوم!" : "No Cards Due Today!"}</h2>
+                <p className="text-muted-foreground mb-6">{isAr ? "لقد راجعت جميع المفردات. عُد غداً!" : "You've reviewed all vocabulary items. Come back tomorrow!"}</p>
                 <Button onClick={() => navigate("/textbook")} className="gap-2">
-                  <BookOpen className="w-4 h-4" /> Continue Learning
+                  <BookOpen className="w-4 h-4" /> {isAr ? "واصل التعلّم" : "Continue Learning"}
                 </Button>
               </CardContent>
             </Card>
@@ -150,20 +150,22 @@ export function VocabularyReviewPage() {
             <Card className="border-2">
               <CardContent className="py-12 text-center">
                 <Zap className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Review?</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-4">{isAr ? "مستعد للمراجعة؟" : "Ready to Review?"}</h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  You have <strong>{filteredCards.length}</strong> vocabulary items ready.
-                  This session will take about {Math.max(1, Math.ceil(filteredCards.length / 20))} minutes.
+                  {isAr
+                    ? <>لديك <strong>{filteredCards.length}</strong> مفردة جاهزة. ستستغرق هذه الجلسة حوالي {Math.max(1, Math.ceil(filteredCards.length / 20))} دقائق.</>
+                    : <>You have <strong>{filteredCards.length}</strong> vocabulary items ready. This session will take about {Math.max(1, Math.ceil(filteredCards.length / 20))} minutes.</>
+                  }
                 </p>
                 {lessonOptions.length > 1 && (
                   <div className="mb-6 text-left">
-                    <label className="block text-sm font-medium text-foreground mb-2">Filter by lesson</label>
+                    <label className="block text-sm font-medium text-foreground mb-2">{isAr ? "تصفية حسب الدرس" : "Filter by lesson"}</label>
                     <select
                       value={selectedLessonId ?? ""}
                       onChange={e => setSelectedLessonId(e.target.value ? Number(e.target.value) : null)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                      <option value="">All lessons ({dueCards.length} cards)</option>
+                      <option value="">{isAr ? `جميع الدروس (${dueCards.length} بطاقة)` : `All lessons (${dueCards.length} cards)`}</option>
                       {lessonOptions.map(l => (
                         <option key={l.id} value={l.id}>
                           {l.title} ({dueCards.filter(c => c.lesson_id === l.id).length} cards)
@@ -173,15 +175,15 @@ export function VocabularyReviewPage() {
                   </div>
                 )}
                 <Button onClick={() => { setSessionCardCount(filteredCards.length); setSessionStarted(true); }} size="lg" className="gap-2">
-                  <BookOpen className="w-4 h-4" /> Start Review Session
+                  <BookOpen className="w-4 h-4" /> {isAr ? "ابدأ جلسة المراجعة" : "Start Review Session"}
                 </Button>
                 <div className="mt-8 text-left space-y-3 bg-muted/50 p-6 rounded-xl">
-                  <h3 className="font-semibold text-sm text-foreground">💡 Tips</h3>
+                  <h3 className="font-semibold text-sm text-foreground">{isAr ? "💡 نصائح" : "💡 Tips"}</h3>
                   <ul className="text-sm text-muted-foreground space-y-1.5">
-                    <li>• Rate yourself honestly — this helps the algorithm work better</li>
-                    <li>• "Again" = complete blackout (card repeats tomorrow)</li>
-                    <li>• "Easy" = perfect response (card won't appear for weeks)</li>
-                    <li>• Take breaks every 20 cards to stay focused</li>
+                    <li>• {isAr ? "قيّم نفسك بصدق — هذا يساعد الخوارزمية على العمل بشكل أفضل" : "Rate yourself honestly — this helps the algorithm work better"}</li>
+                    <li>• {isAr ? "\"مرة أخرى\" = نسيان تام (البطاقة تتكرر غداً)" : "\"Again\" = complete blackout (card repeats tomorrow)"}</li>
+                    <li>• {isAr ? "\"سهل\" = إجابة مثالية (البطاقة لن تظهر لأسابيع)" : "\"Easy\" = perfect response (card won't appear for weeks)"}</li>
+                    <li>• {isAr ? "خذ استراحة كل 20 بطاقة للحفاظ على التركيز" : "Take breaks every 20 cards to stay focused"}</li>
                   </ul>
                 </div>
               </CardContent>
@@ -191,30 +193,30 @@ export function VocabularyReviewPage() {
               <Card className="border-2">
                 <CardContent className="py-12 text-center space-y-5">
                   <div className="text-6xl">🎉</div>
-                  <h2 className="text-2xl font-bold text-foreground">Session Complete!</h2>
+                  <h2 className="text-2xl font-bold text-foreground">{isAr ? "اكتملت الجلسة!" : "Session Complete!"}</h2>
                   <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
                     <div className="text-center">
                       <p className="text-2xl font-bold text-foreground">{reviewedCount}</p>
-                      <p className="text-xs text-muted-foreground">Reviewed</p>
+                      <p className="text-xs text-muted-foreground">{isAr ? "تمت المراجعة" : "Reviewed"}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-green-600">{masteredCount}</p>
-                      <p className="text-xs text-muted-foreground">Mastered</p>
+                      <p className="text-xs text-muted-foreground">{isAr ? "تم الإتقان" : "Mastered"}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-primary">+{xpEarned}</p>
-                      <p className="text-xs text-muted-foreground">XP Earned</p>
+                      <p className="text-xs text-muted-foreground">{isAr ? "XP مكتسب" : "XP Earned"}</p>
                     </div>
                   </div>
                   {masteredCount === reviewedCount && (
-                    <p className="text-sm font-medium text-green-600">🌟 Perfect session — you knew every card!</p>
+                    <p className="text-sm font-medium text-green-600">{isAr ? "🌟 جلسة مثالية — عرفت كل بطاقة!" : "🌟 Perfect session — you knew every card!"}</p>
                   )}
                   <div className="flex gap-3 justify-center pt-2">
                     <Button variant="outline" onClick={() => { setSessionComplete(false); setSessionStarted(false); setReviewedCount(0); setMasteredCount(0); setXpEarned(0); }}>
-                      Review Again
+                      {isAr ? "مراجعة مرة أخرى" : "Review Again"}
                     </Button>
                     <Button onClick={() => navigate("/dashboard")}>
-                      Back to Dashboard
+                      {isAr ? "العودة للوحة التحكم" : "Back to Dashboard"}
                     </Button>
                   </div>
                 </CardContent>
@@ -226,7 +228,7 @@ export function VocabularyReviewPage() {
                   <div className="mt-8 text-center">
                     <Card className="border-primary/20 bg-primary/5">
                       <CardContent className="pt-6 pb-5">
-                        <p className="text-sm text-muted-foreground mb-1">XP Earned This Session</p>
+                        <p className="text-sm text-muted-foreground mb-1">{isAr ? "XP مكتسب في هذه الجلسة" : "XP Earned This Session"}</p>
                         <p className="text-3xl font-bold text-primary">+{xpEarned} XP</p>
                       </CardContent>
                     </Card>

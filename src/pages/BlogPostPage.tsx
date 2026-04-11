@@ -44,6 +44,14 @@ const TYPE_LABEL: Record<string, string> = {
   review: "Review",
 };
 
+const TYPE_LABEL_AR: Record<string, string> = {
+  howto: "شرح عملي",
+  listicle: "قائمة",
+  longform: "مقال",
+  news: "أخبار",
+  review: "مراجعة",
+};
+
 const TYPE_COLOR: Record<string, string> = {
   howto: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
   listicle: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
@@ -60,6 +68,7 @@ const BlogPostPage = () => {
   const [copied, setCopied] = useState(false);
   const [relatedPosts, setRelatedPosts] = useState<Pick<BlogPost, "id"|"title"|"slug"|"description"|"hero_image"|"hero_alt"|"article_type"|"author"|"published_at"|"created_at">[]>([]);
   const { language } = useLanguage();
+  const isAr = language === "ar";
 
   // Set canonical immediately from slug so Google doesn't see homepage canonical during load
   useEffect(() => {
@@ -296,12 +305,12 @@ const BlogPostPage = () => {
         <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
           <div className="text-center space-y-4 max-w-sm">
             <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
-            <h1 className="font-semibold text-foreground">Couldn't load this article</h1>
+            <h1 className="font-semibold text-foreground">{isAr ? "تعذر تحميل هذا المقال" : "Couldn't load this article"}</h1>
             <p className="text-sm text-muted-foreground">{fetchError}</p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button onClick={() => window.location.reload()} variant="outline">Try again</Button>
+              <Button onClick={() => window.location.reload()} variant="outline">{isAr ? "حاول مرة أخرى" : "Try again"}</Button>
               <Button asChild variant="ghost">
-                <Link to="/blog"><ArrowLeft className="h-4 w-4 mr-2" />Back to Blog</Link>
+                <Link to="/blog"><ArrowLeft className="h-4 w-4 mr-2" />{isAr ? "العودة للمدونة" : "Back to Blog"}</Link>
               </Button>
             </div>
           </div>
@@ -340,10 +349,10 @@ const BlogPostPage = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main id="main-content" className="pt-24 pb-16 text-center px-4">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Article not found</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-4">{isAr ? "المقال غير موجود" : "Article not found"}</h1>
           <Button asChild variant="outline">
             <Link to="/blog">
-              <ArrowLeft className="h-4 w-4 mr-2" />Back to Blog
+              <ArrowLeft className="h-4 w-4 mr-2" />{isAr ? "العودة للمدونة" : "Back to Blog"}
             </Link>
           </Button>
         </main>
@@ -365,11 +374,11 @@ const BlogPostPage = () => {
           <nav aria-label="breadcrumb" className="mb-6">
             <ol className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
               <li>
-                <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+                <Link to="/" className="hover:text-foreground transition-colors">{isAr ? "الرئيسية" : "Home"}</Link>
               </li>
               <li><ChevronRight className="h-3.5 w-3.5" /></li>
               <li>
-                <Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link>
+                <Link to="/blog" className="hover:text-foreground transition-colors">{isAr ? "المدونة" : "Blog"}</Link>
               </li>
               <li><ChevronRight className="h-3.5 w-3.5" /></li>
               <li className="text-foreground font-medium truncate max-w-[260px]" aria-current="page">
@@ -381,7 +390,7 @@ const BlogPostPage = () => {
           {/* Type badge */}
           <div className="mb-4">
             <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full border ${TYPE_COLOR[post.article_type] || "bg-muted text-muted-foreground border-border"}`}>
-              {TYPE_LABEL[post.article_type] || post.article_type}
+              {(isAr ? TYPE_LABEL_AR : TYPE_LABEL)[post.article_type] || post.article_type}
             </span>
           </div>
 
@@ -404,13 +413,13 @@ const BlogPostPage = () => {
             <span className="flex items-center gap-1.5">
               <CalendarDays className="h-3.5 w-3.5" />
               <time dateTime={post.published_at || post.created_at}>
-                {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                {new Date(post.published_at || post.created_at).toLocaleDateString(isAr ? "ar-EG" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
               </time>
             </span>
             {readingTime && (
               <span className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" />
-                {readingTime} min read
+                {isAr ? `${readingTime} دقيقة قراءة` : `${readingTime} min read`}
               </span>
             )}
           </div>
@@ -464,19 +473,19 @@ const BlogPostPage = () => {
           {/* CTA block — custom if set, default otherwise */}
           <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
             <p className="text-xs font-semibold text-primary text-outlined uppercase tracking-widest">
-              {post.cta_text ? "Ready to start?" : "Start learning Korean today"}
+              {post.cta_text ? (isAr ? "مستعد للبدء؟" : "Ready to start?") : (isAr ? "ابدأ تعلّم الكورية اليوم" : "Start learning Korean today")}
             </p>
             <h3 className="text-xl font-bold text-foreground">
-              {post.cta_text || "Find your level with our free placement test and join 1,000+ students."}
+              {post.cta_text || (isAr ? "اكتشف مستواك مع اختبار تحديد المستوى المجاني وانضم لأكثر من 1,000 طالب." : "Find your level with our free placement test and join 1,000+ students.")}
             </h3>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
               <Button asChild size="lg" className="gap-2">
                 <Link to={post.cta_url || "/placement-test"}>
-                  {post.cta_url ? "Get Started" : "🎯 Take the Free Placement Test"} <ArrowRight className="h-4 w-4" />
+                  {post.cta_url ? (isAr ? "ابدأ الآن" : "Get Started") : (isAr ? "🎯 خذ اختبار تحديد المستوى المجاني" : "🎯 Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="gap-2">
-                <Link to="/enroll">📚 View Courses & Pricing</Link>
+                <Link to="/enroll">{isAr ? "📚 عرض الدورات والأسعار" : "📚 View Courses & Pricing"}</Link>
               </Button>
             </div>
           </div>
@@ -484,14 +493,14 @@ const BlogPostPage = () => {
           {/* Share row */}
           <div className="mt-8 pt-6 border-t border-border flex items-center gap-3 flex-wrap">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Share2 className="h-3.5 w-3.5" /> Share
+              <Share2 className="h-3.5 w-3.5" /> {isAr ? "مشاركة" : "Share"}
             </span>
             <button
               onClick={handleCopyLink}
               className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
             >
               {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? "Copied!" : "Copy link"}
+              {copied ? (isAr ? "تم النسخ!" : "Copied!") : (isAr ? "نسخ الرابط" : "Copy link")}
             </button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(post.title + " — " + window.location.href)}`}
@@ -517,7 +526,7 @@ const BlogPostPage = () => {
           {/* Related posts */}
           {relatedPosts.length > 0 && (
             <div className="mt-14 pt-10 border-t border-border">
-              <h2 className="text-lg font-bold text-foreground mb-5">You might also like</h2>
+              <h2 className="text-lg font-bold text-foreground mb-5">{isAr ? "قد يعجبك أيضاً" : "You might also like"}</h2>
               <div className="grid sm:grid-cols-3 gap-4">
                 {relatedPosts.map((rp) => (
                   <Link
@@ -535,14 +544,14 @@ const BlogPostPage = () => {
                     </div>
                     <div className="p-3">
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[rp.article_type] || "bg-muted text-muted-foreground border-border"}`}>
-                        {TYPE_LABEL[rp.article_type] || rp.article_type}
+                        {(isAr ? TYPE_LABEL_AR : TYPE_LABEL)[rp.article_type] || rp.article_type}
                       </span>
                       <h3 className="text-sm font-semibold text-foreground mt-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                         {rp.title}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                         <CalendarDays className="h-3 w-3" />
-                        {new Date(rp.published_at || rp.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {new Date(rp.published_at || rp.created_at).toLocaleDateString(isAr ? "ar-EG" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
                   </Link>
@@ -555,7 +564,7 @@ const BlogPostPage = () => {
           <div className="mt-8">
             <Button asChild variant="outline" size="sm">
               <Link to="/blog">
-                <ArrowLeft className="h-4 w-4 mr-2" />All Articles
+                <ArrowLeft className="h-4 w-4 mr-2" />{isAr ? "جميع المقالات" : "All Articles"}
               </Link>
             </Button>
           </div>

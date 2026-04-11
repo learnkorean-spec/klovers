@@ -19,6 +19,7 @@ import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRendere
 import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin, Volume2, Square, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const QUESTIONS_PER_PAGE = 6;
 const TOTAL_PAGES = Math.ceil(PLACEMENT_QUESTIONS.length / QUESTIONS_PER_PAGE);
@@ -39,6 +40,14 @@ const LEVEL_META: Record<string, { emoji: string; tagline: string; description: 
   level_5:    { emoji: "🏆", tagline: "Advanced (C1–C2)", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II.", prevLabel: "Level 3–4" },
 };
 
+const LEVEL_META_AR: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
+  foundation: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "أنت في البداية. صفنا التأسيسي سيعلمك الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
+  level_1:    { emoji: "🌿", tagline: "مبتدئ (A1)", description: "تعرف الأساسيات. صفنا مستوى 1 يبني جملاً بسيطة وأرقاماً ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
+  level_2:    { emoji: "📚", tagline: "ابتدائي (A2)", description: "تستطيع التعامل مع المحادثات البسيطة. صفنا مستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
+  level_3:    { emoji: "🎯", tagline: "متوسط (B1–B2)", description: "أنت مرتاح مع الكورية. صفنا مستوى 3–4 يتعمق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
+  level_5:    { emoji: "🏆", tagline: "متقدم (C1–C2)", description: "تتحدث الكورية بطلاقة. صفنا مستوى 5–6 يصقل الكورية الأكاديمية والمهنية لـ TOPIK II.", prevLabel: "مستوى 3–4" },
+};
+
 const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
   0: { label: "Foundation", hint: "Hangul, core vocabulary, reading passages & speaking basics" },
   1: { label: "TOPIK 1 — A1 Beginner", hint: "Grammar particles, reading sentences & spoken expressions" },
@@ -47,7 +56,16 @@ const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
   4: { label: "TOPIK 5–6 — C1/C2 Advanced", hint: "Nuanced grammar, academic reading & formal speech" },
 };
 
+const SECTION_BANNERS_AR: Record<number, { label: string; hint: string }> = {
+  0: { label: "تأسيس", hint: "الهانغول، المفردات الأساسية، نصوص القراءة وأساسيات المحادثة" },
+  1: { label: "TOPIK 1 — مبتدئ A1", hint: "جسيمات القواعد، قراءة الجمل والتعبيرات المنطوقة" },
+  2: { label: "TOPIK 2 — ابتدائي A2", hint: "الروابط، نصوص القراءة وأشكال القواعد المنطوقة" },
+  3: { label: "TOPIK 3–4 — متوسط B1/B2", hint: "القواعد المتقدمة، فهم القراءة والكلام الطبيعي" },
+  4: { label: "TOPIK 5–6 — متقدم C1/C2", hint: "القواعد الدقيقة، القراءة الأكاديمية والكلام الرسمي" },
+};
+
 const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
+const BAND_LABELS_AR = ["تأسيس", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
 
 const JOURNEY_MESSAGES: Record<string, string> = {
   foundation: "Most Foundation students reach Level 1 in just 8 weeks with Klovers",
@@ -55,6 +73,14 @@ const JOURNEY_MESSAGES: Record<string, string> = {
   level_2:    "Most Level 2 students reach Level 3–4 in 20 weeks with Klovers",
   level_3:    "Advanced fluency typically takes 6–12 more months of focused practice",
   level_5:    "You're already advanced — refine your Korean for TOPIK 5–6 certification",
+};
+
+const JOURNEY_MESSAGES_AR: Record<string, string> = {
+  foundation: "معظم طلاب التأسيس يصلون للمستوى 1 في 8 أسابيع فقط مع Klovers",
+  level_1:    "معظم طلاب المستوى 1 يصلون للمستوى 2 في 12 أسبوعاً مع Klovers",
+  level_2:    "معظم طلاب المستوى 2 يصلون للمستوى 3–4 في 20 أسبوعاً مع Klovers",
+  level_3:    "الطلاقة المتقدمة تستغرق عادة 6–12 شهراً إضافية من التمرين المركز",
+  level_5:    "أنت متقدم بالفعل — صقّل كوريتك لشهادة TOPIK 5–6",
 };
 
 const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
@@ -65,16 +91,34 @@ const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
   level_5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
 };
 
-function subTestSummary(correct: number, total: number, skill: string): string {
+const SOCIAL_PROOF_AR: Record<string, { quote: string; author: string }> = {
+  foundation: { quote: "البدء من الصفر كان مخيفاً، لكن Klovers جعلت الهانغول سهلاً جداً. أفضل قرار اتخذته!", author: "ياسمين ح.، الإسكندرية" },
+  level_1:    { quote: "استطعت إجراء محادثات بسيطة بالكورية بعد 8 أسابيع فقط. الحصص مذهلة!", author: "أحمد ك.، القاهرة" },
+  level_2:    { quote: "نطقي تحسن كثيراً — أصدقائي يقولون أنني أبدو كأهل اللغة الآن.", author: "نور م.، القاهرة" },
+  level_3:    { quote: "اجتزت TOPIK II بعد الدراسة مع Klovers لمدة 6 أشهر. أنصح بشدة!", author: "سارة ل.، الجيزة" },
+  level_5:    { quote: "الصف المتقدم ساعدني في الحصول على وظيفة في شركة كورية في مصر. غيّر حياتي!", author: "عمر ف.، القاهرة" },
+};
+
+function subTestSummary(correct: number, total: number, skill: string, isAr = false): string {
   const pct = correct / total;
+  if (isAr) {
+    if (pct >= 0.8) return `فهم ${skill} ممتاز في هذا المستوى!`;
+    if (pct >= 0.6) return `مهارات ${skill} جيدة — واصل التمرين للوصول للطلاقة الكاملة.`;
+    return `فهم ${skill} يحتاج لمزيد من العمل — التمرين المركز سيساعد.`;
+  }
   if (pct >= 0.8) return `Excellent ${skill} comprehension at this level!`;
   if (pct >= 0.6) return `Good ${skill} skills — keep practising for full fluency.`;
   return `${skill} comprehension needs more work — targeted practice will help.`;
 }
 
-function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string): string {
+function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string, isAr = false): string {
   const score = ratings.reduce((a, b) => a + b, 0);
   const label = levelKey.replace("_", " ");
+  if (isAr) {
+    if (score >= 8) return `ممتاز! كوريتك المنطوقة تتوافق مع تصنيفك ${label}.`;
+    if (score >= 5) return "جهد جيد! واصل تمرين المحادثة بجانب القراءة والقواعد.";
+    return "كوريتك المنطوقة تحتاج لمزيد من التمرين — فكّر في البدء بمستوى أقل.";
+  }
   if (score >= 8) return `Excellent! Your spoken Korean matches your ${label} placement.`;
   if (score >= 5) return "Good effort! Keep practising speaking alongside your reading and grammar.";
   return "Your spoken Korean needs more practice — consider starting 1 level below your MCQ result.";
@@ -84,6 +128,8 @@ const PlacementTestPage = () => {
   useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const isAr = language === "ar";
   const { speakKorean, isSpeaking, cancel: cancelSpeech } = useSpeech();
   const [userId, setUserId] = useState<string | null>(null);
   const [phase, setPhase] = useState<"test" | "review" | "result" | "speaking_test" | "listening_test" | "reading_test">("test");
@@ -172,7 +218,7 @@ const PlacementTestPage = () => {
         setPage(p ?? 0);
         setElapsedSeconds(e ?? 0);
         if (e) startTimeRef.current = Date.now() - e * 1000;
-        toast({ title: "Test resumed", description: "Your previous progress has been restored." });
+        toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
       }
     } catch { /* ignore */ }
     localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
@@ -254,7 +300,7 @@ const PlacementTestPage = () => {
 
   const handleSubmit = async () => {
     if (totalAnswered === 0) {
-      toast({ title: "Answer at least one question before submitting.", variant: "destructive" });
+      toast({ title: isAr ? "أجب على سؤال واحد على الأقل قبل الإرسال." : "Answer at least one question before submitting.", variant: "destructive" });
       return;
     }
     finalTimeRef.current = elapsedSeconds;
@@ -287,8 +333,8 @@ const PlacementTestPage = () => {
   const handleShare = (res: PlacementResult) => {
     const text = `I scored ${res.score}/30 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
-      .then(() => toast({ title: "Copied to clipboard!", description: "Share your level with friends." }))
-      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: "Copy the link to share your result." }));
+      .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "شارك مستواك مع أصدقائك." : "Share your level with friends." }))
+      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "انسخ الرابط لمشاركة نتيجتك." : "Copy the link to share your result." }));
   };
 
   const handleWhatsApp = (res: PlacementResult) => {
@@ -310,7 +356,7 @@ const PlacementTestPage = () => {
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-${res.levelKey}.png`;
     a.click();
-    toast({ title: "Card downloaded!", description: "Share your level on social media." });
+    toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "شارك مستواك على مواقع التواصل." : "Share your level on social media." });
   };
 
   const handleWhatsAppEnroll = (res: PlacementResult) => {
@@ -333,7 +379,7 @@ const PlacementTestPage = () => {
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-certificate-${res.levelKey}.png`;
     a.click();
-    toast({ title: "Certificate downloaded!", description: "Share your achievement on LinkedIn or CV." });
+    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "شارك إنجازك على LinkedIn أو سيرتك الذاتية." : "Share your achievement on LinkedIn or CV." });
   };
 
   const startRecording = async () => {
@@ -352,7 +398,7 @@ const PlacementTestPage = () => {
       setIsRecording(true);
       setRecordingUrl(null);
     } catch {
-      toast({ title: "Microphone access denied", description: "Enable microphone access to record yourself.", variant: "destructive" });
+      toast({ title: isAr ? "تم رفض الوصول للميكروفون" : "Microphone access denied", description: isAr ? "فعّل الوصول للميكروفون لتسجيل نفسك." : "Enable microphone access to record yourself.", variant: "destructive" });
     }
   };
 
@@ -411,7 +457,7 @@ const PlacementTestPage = () => {
 
   const handleLeadSubmit = async () => {
     if (!leadName.trim() || !leadEmail.trim()) {
-      toast({ title: "Please enter your name and email.", variant: "destructive" }); return;
+      toast({ title: isAr ? "يرجى إدخال اسمك وبريدك الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
     }
     setLeadSaving(true);
     await supabase.from("leads").insert({
@@ -442,24 +488,24 @@ const PlacementTestPage = () => {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-1">
               <ClipboardList className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-bold">Review Your Answers</h1>
+              <h1 className="text-2xl font-bold">{isAr ? "مراجعة إجاباتك" : "Review Your Answers"}</h1>
             </div>
-            <p className="text-sm text-muted-foreground">Click any question to go back and change it.</p>
+            <p className="text-sm text-muted-foreground">{isAr ? "اضغط على أي سؤال للعودة وتغييره." : "Click any question to go back and change it."}</p>
           </div>
 
           {/* Stats */}
           <div className="flex gap-3 mb-6 text-sm flex-wrap">
             <span className="flex items-center gap-1.5 bg-green-500/10 text-green-800 dark:text-green-300 px-3 py-1.5 rounded-full font-medium">
-              <span className="h-2 w-2 rounded-full bg-green-500 inline-block" /> {totalAnswered} answered
+              <span className="h-2 w-2 rounded-full bg-green-500 inline-block" /> {isAr ? `${totalAnswered} تمت الإجابة` : `${totalAnswered} answered`}
             </span>
             {totalSkipped > 0 && (
               <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-800 dark:text-amber-300 px-3 py-1.5 rounded-full font-medium">
-                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" /> {totalSkipped} skipped
+                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" /> {isAr ? `${totalSkipped} تم التخطي` : `${totalSkipped} skipped`}
               </span>
             )}
             {totalRemaining > 0 && (
               <span className="flex items-center gap-1.5 bg-muted text-muted-foreground px-3 py-1.5 rounded-full font-medium">
-                <span className="h-2 w-2 rounded-full bg-muted-foreground/40 inline-block" /> {totalRemaining} not attempted
+                <span className="h-2 w-2 rounded-full bg-muted-foreground/40 inline-block" /> {isAr ? `${totalRemaining} لم يُحاول` : `${totalRemaining} not attempted`}
               </span>
             )}
           </div>
@@ -467,7 +513,7 @@ const PlacementTestPage = () => {
           {/* Question grid — grouped by TOPIK band */}
           <Card className="mb-6">
             <CardContent className="pt-5 pb-5">
-              {BAND_LABELS.map((band, bi) => {
+              {(isAr ? BAND_LABELS_AR : BAND_LABELS).map((band, bi) => {
                 const bandQs = PLACEMENT_QUESTIONS.slice(bi * 6, bi * 6 + 6);
                 return (
                   <div key={band} className="mb-4 last:mb-0">
@@ -499,10 +545,10 @@ const PlacementTestPage = () => {
 
           <div className="flex justify-between gap-3">
             <Button variant="outline" onClick={() => setPhase("test")}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Test
+              <ArrowLeft className="mr-2 h-4 w-4" /> {isAr ? "العودة للاختبار" : "Back to Test"}
             </Button>
             <Button onClick={handleSubmit} disabled={submitting || totalAnswered === 0}>
-              {submitting ? "Submitting…" : "Submit Test"} <ArrowRight className="ml-2 h-4 w-4" />
+              {submitting ? (isAr ? "جارٍ الإرسال..." : "Submitting…") : (isAr ? "إرسال الاختبار" : "Submit Test")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </main>
@@ -521,8 +567,8 @@ const PlacementTestPage = () => {
         <Header />
         <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
           <div className="text-center space-y-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Listening Exam</p>
-            <h1 className="text-xl font-bold">Question {listeningIndex + 1} of {questions.length}</h1>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{isAr ? "اختبار الاستماع" : "Listening Exam"}</p>
+            <h1 className="text-xl font-bold">{isAr ? `السؤال ${listeningIndex + 1} من ${questions.length}` : `Question ${listeningIndex + 1} of ${questions.length}`}</h1>
             <Progress value={(listeningIndex / questions.length) * 100} className="h-1.5 mt-2" />
           </div>
 
@@ -530,15 +576,15 @@ const PlacementTestPage = () => {
             <CardContent className="pt-6 pb-6 space-y-5">
               {/* Audio prompt */}
               <div className="flex flex-col items-center gap-3 bg-primary/5 rounded-xl border border-primary/15 py-5 px-4">
-                <p className="text-xs text-muted-foreground text-center">Listen to the Korean audio, then answer below</p>
+                <p className="text-xs text-muted-foreground text-center">{isAr ? "استمع للصوت الكوري ثم أجب أدناه" : "Listen to the Korean audio, then answer below"}</p>
                 <Button
                   className="gap-2"
                   variant="outline"
                   onClick={() => isSpeaking ? cancelSpeech() : speakKorean(q.audio!)}
                 >
                   {isSpeaking
-                    ? <><Square className="h-4 w-4" /> Stop</>
-                    : <><Volume2 className="h-4 w-4" /> Play Audio</>}
+                    ? <><Square className="h-4 w-4" /> {isAr ? "إيقاف" : "Stop"}</>
+                    : <><Volume2 className="h-4 w-4" /> {isAr ? "تشغيل الصوت" : "Play Audio"}</>}
                 </Button>
               </div>
 
@@ -585,11 +631,11 @@ const PlacementTestPage = () => {
                   disabled={listeningSelected === null}
                   onClick={() => listeningSelected !== null && advanceListening(listeningSelected)}
                 >
-                  {isLast ? "Finish Listening Exam" : "Confirm Answer"} <ArrowRight className="ml-2 h-4 w-4" />
+                  {isLast ? (isAr ? "إنهاء اختبار الاستماع" : "Finish Listening Exam") : (isAr ? "تأكيد الإجابة" : "Confirm Answer")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
                 <p className="text-center text-xs text-muted-foreground">
-                  {isLast ? "Returning to results…" : "Next question loading…"}
+                  {isLast ? (isAr ? "جارٍ العودة للنتائج..." : "Returning to results…") : (isAr ? "جارٍ تحميل السؤال التالي..." : "Next question loading…")}
                 </p>
               )}
             </CardContent>
@@ -599,7 +645,7 @@ const PlacementTestPage = () => {
             className="w-full text-xs text-muted-foreground hover:underline"
             onClick={() => { cancelSpeech(); setPhase("result"); }}
           >
-            Skip listening exam → back to result
+            {isAr ? "تخطي اختبار الاستماع ← العودة للنتيجة" : "Skip listening exam → back to result"}
           </button>
         </main>
         <Footer />
@@ -617,8 +663,8 @@ const PlacementTestPage = () => {
         <Header />
         <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
           <div className="text-center space-y-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Reading Exam</p>
-            <h1 className="text-xl font-bold">Question {readingIndex + 1} of {questions.length}</h1>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{isAr ? "اختبار القراءة" : "Reading Exam"}</p>
+            <h1 className="text-xl font-bold">{isAr ? `السؤال ${readingIndex + 1} من ${questions.length}` : `Question ${readingIndex + 1} of ${questions.length}`}</h1>
             <Progress value={(readingIndex / questions.length) * 100} className="h-1.5 mt-2" />
           </div>
 
@@ -672,11 +718,11 @@ const PlacementTestPage = () => {
                   disabled={readingSelected === null}
                   onClick={() => readingSelected !== null && advanceReading(readingSelected)}
                 >
-                  {isLast ? "Finish Reading Exam" : "Confirm Answer"} <ArrowRight className="ml-2 h-4 w-4" />
+                  {isLast ? (isAr ? "إنهاء اختبار القراءة" : "Finish Reading Exam") : (isAr ? "تأكيد الإجابة" : "Confirm Answer")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
                 <p className="text-center text-xs text-muted-foreground">
-                  {isLast ? "Returning to results…" : "Next question loading…"}
+                  {isLast ? (isAr ? "جارٍ العودة للنتائج..." : "Returning to results…") : (isAr ? "جارٍ تحميل السؤال التالي..." : "Next question loading…")}
                 </p>
               )}
             </CardContent>
@@ -686,7 +732,7 @@ const PlacementTestPage = () => {
             className="w-full text-xs text-muted-foreground hover:underline"
             onClick={() => setPhase("result")}
           >
-            Skip reading exam → back to result
+            {isAr ? "تخطي اختبار القراءة ← العودة للنتيجة" : "Skip reading exam → back to result"}
           </button>
         </main>
         <Footer />
@@ -703,8 +749,8 @@ const PlacementTestPage = () => {
         <Header />
         <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
           <div className="text-center space-y-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Speaking Assessment</p>
-            <h1 className="text-xl font-bold">Prompt {speakingIndex + 1} of 5</h1>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{isAr ? "تقييم المحادثة" : "Speaking Assessment"}</p>
+            <h1 className="text-xl font-bold">{isAr ? `التمرين ${speakingIndex + 1} من 5` : `Prompt ${speakingIndex + 1} of 5`}</h1>
             <Progress value={(speakingIndex / 5) * 100} className="h-1.5 mt-2" />
           </div>
 
@@ -724,21 +770,21 @@ const PlacementTestPage = () => {
                 onClick={() => isSpeaking ? cancelSpeech() : speakKorean(currentPrompt.korean)}
               >
                 {isSpeaking
-                  ? <><Square className="h-3.5 w-3.5" /> Stop</>
-                  : <><Volume2 className="h-3.5 w-3.5" /> Hear model pronunciation</>}
+                  ? <><Square className="h-3.5 w-3.5" /> {isAr ? "إيقاف" : "Stop"}</>
+                  : <><Volume2 className="h-3.5 w-3.5" /> {isAr ? "استمع للنطق النموذجي" : "Hear model pronunciation"}</>}
               </Button>
 
               {/* Record yourself */}
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground font-medium">Say it yourself, then rate how you did:</p>
+                <p className="text-xs text-muted-foreground font-medium">{isAr ? "قلها بنفسك ثم قيّم أداءك:" : "Say it yourself, then rate how you did:"}</p>
                 {!isRecording && !recordingUrl && (
                   <Button variant="outline" className="w-full gap-2" onClick={startRecording}>
-                    <Mic className="h-4 w-4" /> Record yourself (optional)
+                    <Mic className="h-4 w-4" /> {isAr ? "سجّل نفسك (اختياري)" : "Record yourself (optional)"}
                   </Button>
                 )}
                 {isRecording && (
                   <Button variant="destructive" className="w-full gap-2 animate-pulse" onClick={stopRecording}>
-                    <Square className="h-4 w-4" /> Stop recording
+                    <Square className="h-4 w-4" /> {isAr ? "إيقاف التسجيل" : "Stop recording"}
                   </Button>
                 )}
                 {recordingUrl && !isRecording && (
@@ -754,7 +800,7 @@ const PlacementTestPage = () => {
                   className="text-green-700 border-green-500/30 bg-green-500/5 hover:bg-green-500/15 font-semibold"
                   onClick={() => handleSpeakingRate(2)}
                 >
-                  ✓ Nailed it
+                  {isAr ? "✓ أتقنتها" : "✓ Nailed it"}
                 </Button>
                 <Button
                   variant="outline"
@@ -762,7 +808,7 @@ const PlacementTestPage = () => {
                   className="text-amber-700 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 font-semibold"
                   onClick={() => handleSpeakingRate(1)}
                 >
-                  ～ Almost
+                  {isAr ? "～ تقريباً" : "～ Almost"}
                 </Button>
                 <Button
                   variant="outline"
@@ -770,7 +816,7 @@ const PlacementTestPage = () => {
                   className="text-red-700 border-red-500/30 bg-red-500/5 hover:bg-red-500/15 font-semibold"
                   onClick={() => handleSpeakingRate(0)}
                 >
-                  ✗ Struggled
+                  {isAr ? "✗ واجهت صعوبة" : "✗ Struggled"}
                 </Button>
               </div>
             </CardContent>
@@ -780,7 +826,7 @@ const PlacementTestPage = () => {
             className="w-full text-xs text-muted-foreground hover:underline"
             onClick={() => { cancelSpeech(); setPhase("result"); }}
           >
-            Skip speaking test → go back to result
+            {isAr ? "تخطي اختبار المحادثة ← العودة للنتيجة" : "Skip speaking test → go back to result"}
           </button>
         </main>
         <Footer />
@@ -790,19 +836,19 @@ const PlacementTestPage = () => {
 
   // ── Result screen ───────────────────────────────────────────
   if (phase === "result" && result) {
-    const meta = LEVEL_META[result.levelKey] ?? { emoji: "🎓", tagline: "Your Level", description: "Ready to start your Korean journey?" };
+    const meta = (isAr ? LEVEL_META_AR : LEVEL_META)[result.levelKey] ?? { emoji: "🎓", tagline: isAr ? "مستواك" : "Your Level", description: isAr ? "مستعد لبدء رحلتك الكورية؟" : "Ready to start your Korean journey?" };
 
     const confidenceChip = result.confidence === "solid"
-      ? { label: "Confident placement", color: "bg-green-500/10 text-green-800 dark:text-green-300" }
+      ? { label: isAr ? "تصنيف واثق" : "Confident placement", color: "bg-green-500/10 text-green-800 dark:text-green-300" }
       : result.confidence === "borderline-up"
-      ? { label: `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" }
-      : { label: `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" };
+      ? { label: isAr ? `قريب من ${meta.nextLabel ?? "المستوى التالي"}` : `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" }
+      : { label: isAr ? `على حافة ${meta.prevLabel ?? "المستوى السابق"}` : `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" };
 
     // Section breakdown (5 Vocab, 10 Grammar, 10 Reading, 5 Speaking)
     const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 5, Listening: 5, Speaking: 5 };
 
     // Band breakdown (6 per band)
-    const bandBreakdown = BAND_LABELS.map((band, bi) => {
+    const bandBreakdown = (isAr ? BAND_LABELS_AR : BAND_LABELS).map((band, bi) => {
       const qs = PLACEMENT_QUESTIONS.slice(bi * 6, bi * 6 + 6);
       const correct = qs.filter(q => answers[q.id] === q.correctIndex).length;
       return { band, correct, total: 6 };
@@ -835,16 +881,16 @@ const PlacementTestPage = () => {
             </div>
             <CardContent className="pt-5 pb-6 space-y-3">
               <p className="text-sm text-muted-foreground leading-relaxed">{meta.description}</p>
-              {JOURNEY_MESSAGES[result.levelKey] && (
+              {(isAr ? JOURNEY_MESSAGES_AR : JOURNEY_MESSAGES)[result.levelKey] && (
                 <p className="text-xs text-primary font-medium flex items-center gap-1.5 justify-center">
                   <TrendingUp className="h-3 w-3 shrink-0" />
-                  {JOURNEY_MESSAGES[result.levelKey]}
+                  {(isAr ? JOURNEY_MESSAGES_AR : JOURNEY_MESSAGES)[result.levelKey]}
                 </p>
               )}
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  Score: <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong>
+                  {isAr ? "النتيجة:" : "Score:"} <strong className="text-foreground">{result.score} / {PLACEMENT_QUESTIONS.length}</strong>
                 </span>
                 {finalTimeRef.current > 0 && (
                   <span className="flex items-center gap-1.5">
@@ -861,20 +907,23 @@ const PlacementTestPage = () => {
             <CardContent className="pt-5 pb-5 space-y-5">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                Performance breakdown
+                {isAr ? "تحليل الأداء" : "Performance breakdown"}
               </div>
 
               {/* By section */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">By skill</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{isAr ? "حسب المهارة" : "By skill"}</p>
                 {(["Vocabulary", "Grammar", "Reading", "Listening", "Speaking"] as const).map(sec => {
+                  const skillLabels: Record<string, string> = isAr
+                    ? { Vocabulary: "المفردات", Grammar: "القواعد", Reading: "القراءة", Listening: "الاستماع", Speaking: "المحادثة" }
+                    : { Vocabulary: "Vocabulary", Grammar: "Grammar", Reading: "Reading", Listening: "Listening", Speaking: "Speaking" };
                   const correct = result.sectionScores[sec];
                   const total = sectionTotal[sec];
                   const pct = Math.round((correct / total) * 100);
                   return (
                     <div key={sec} className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="font-medium">{sec}</span>
+                        <span className="font-medium">{skillLabels[sec]}</span>
                         <span className="text-muted-foreground">{correct} / {total}</span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -887,11 +936,20 @@ const PlacementTestPage = () => {
 
               {/* Weak area action card */}
               {(() => {
+                const skillLabelsWeak: Record<string, string> = isAr
+                  ? { Vocabulary: "المفردات", Grammar: "القواعد", Reading: "القراءة", Listening: "الاستماع", Speaking: "المحادثة" }
+                  : { Vocabulary: "Vocabulary", Grammar: "Grammar", Reading: "Reading", Listening: "Listening", Speaking: "Speaking" };
                 const weakest = (["Vocabulary", "Grammar", "Reading", "Listening", "Speaking"] as const)
                   .map(sec => ({ sec, pct: result.sectionScores[sec] / sectionTotal[sec] }))
                   .sort((a, b) => a.pct - b.pct)[0];
                 if (!weakest || weakest.pct >= 0.7) return null;
-                const tips: Record<string, { tip: string; link: string; label: string }> = {
+                const tips: Record<string, { tip: string; link: string; label: string }> = isAr ? {
+                  Vocabulary: { tip: "ابنِ مفرداتك الكورية بألعاب تفاعلية مجانية.", link: "/games", label: "العب ألعاب المفردات" },
+                  Grammar:    { tip: "تدرّب على أنماط القواعد الكورية بتمارين موجّهة.", link: "/games", label: "تمارين القواعد" },
+                  Reading:    { tip: "حسّن فهمك للقراءة مع مقالات مدونتنا.", link: "/blog", label: "اقرأ المقالات" },
+                  Listening:  { tip: "درّب أذنك مع الحوارات الكورية والدراما والتمارين الصوتية.", link: "/games", label: "ألعاب الاستماع" },
+                  Speaking:   { tip: "احجز حصة محادثة لتحسين كوريتك المنطوقة.", link: "/enroll", label: "احجز حصة محادثة" },
+                } : {
                   Vocabulary: { tip: "Build your Korean vocabulary with free interactive games.", link: "/games", label: "Play vocab games" },
                   Grammar:    { tip: "Practise Korean grammar patterns with guided exercises.", link: "/games", label: "Grammar exercises" },
                   Reading:    { tip: "Improve your reading comprehension with our blog articles.", link: "/blog", label: "Read articles" },
@@ -902,7 +960,7 @@ const PlacementTestPage = () => {
                 return (
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-1.5">
                     <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                      ⚠️ Your weakest area: {weakest.sec} ({result.sectionScores[weakest.sec]}/{sectionTotal[weakest.sec]})
+                      ⚠️ {isAr ? `أضعف مهارة: ${skillLabelsWeak[weakest.sec]}` : `Your weakest area: ${weakest.sec}`} ({result.sectionScores[weakest.sec]}/{sectionTotal[weakest.sec]})
                     </p>
                     <p className="text-xs text-muted-foreground">{tip}</p>
                     <button
@@ -917,7 +975,7 @@ const PlacementTestPage = () => {
 
               {/* By TOPIK band */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">By TOPIK band</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{isAr ? "حسب مستوى TOPIK" : "By TOPIK band"}</p>
                 {bandBreakdown.map(({ band, correct, total }) => (
                   <div key={band} className="flex items-center gap-3 text-xs">
                     <span className="w-28 shrink-0 font-medium truncate">{band}</span>
@@ -946,7 +1004,7 @@ const PlacementTestPage = () => {
                 >
                   <span className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
-                    Your 4-week study roadmap
+                    {isAr ? "خطة دراستك لمدة 4 أسابيع" : "Your 4-week study roadmap"}
                   </span>
                   {showRoadmap ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
@@ -954,7 +1012,7 @@ const PlacementTestPage = () => {
                   <div className="mt-4 space-y-4">
                     {STUDY_ROADMAPS[result.levelKey].map((week) => (
                       <div key={week.week} className="border-t border-border pt-4 first:border-0 first:pt-0">
-                        <p className="text-xs font-bold text-primary mb-1.5">Week {week.week}: {week.title}</p>
+                        <p className="text-xs font-bold text-primary mb-1.5">{isAr ? `الأسبوع ${week.week}: ${week.title}` : `Week ${week.week}: ${week.title}`}</p>
                         <ul className="space-y-1">
                           {week.tasks.map((task, ti) => (
                             <li key={ti} className="text-xs text-muted-foreground flex items-start gap-1.5">
@@ -974,47 +1032,47 @@ const PlacementTestPage = () => {
           <Card>
             <CardContent className="pt-5 pb-5 space-y-3">
               {/* Social proof block */}
-              {SOCIAL_PROOF[result.levelKey] && (
+              {(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey] && (
                 <div className="rounded-lg bg-muted/50 px-4 py-3 space-y-1.5 text-xs">
                   <div className="text-amber-500 tracking-widest text-sm">★★★★★</div>
-                  <p className="text-foreground/80 italic leading-relaxed">"{SOCIAL_PROOF[result.levelKey].quote}"</p>
-                  <p className="text-muted-foreground font-medium">— {SOCIAL_PROOF[result.levelKey].author}</p>
-                  <p className="text-muted-foreground">500+ Egyptian students enrolled in 2025</p>
+                  <p className="text-foreground/80 italic leading-relaxed">"{(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey].quote}"</p>
+                  <p className="text-muted-foreground font-medium">— {(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey].author}</p>
+                  <p className="text-muted-foreground">{isAr ? "أكثر من 500 طالب مصري مسجل في 2025" : "500+ Egyptian students enrolled in 2025"}</p>
                 </div>
               )}
-              <p className="text-sm font-semibold text-foreground text-center">Ready to start learning?</p>
+              <p className="text-sm font-semibold text-foreground text-center">{isAr ? "مستعد لبدء التعلّم؟" : "Ready to start learning?"}</p>
               <div className="flex gap-2">
                 <Button size="lg" className="flex-1" onClick={() => navigate("/enroll")}>
-                  📚 Book a Class <ArrowRight className="ml-2 h-4 w-4" />
+                  {isAr ? "📚 احجز حصة" : "📚 Book a Class"} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" className="flex-1 gap-2" onClick={() => handleWhatsAppEnroll(result)}>
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
-                  WhatsApp Us
+                  {isAr ? "واتساب" : "WhatsApp Us"}
                 </Button>
               </div>
               {!userId && (
                 <Button variant="outline" className="w-full" onClick={() => navigate("/signup")}>
-                  Save My Result — Sign Up Free
+                  {isAr ? "احفظ نتيجتي — سجّل مجاناً" : "Save My Result — Sign Up Free"}
                 </Button>
               )}
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => setLeadDialogOpen(true)}>
-                  📚 Get free study plan
+                  {isAr ? "📚 احصل على خطة دراسية مجانية" : "📚 Get free study plan"}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
-                  <Download className="h-3.5 w-3.5" /> Download card
+                  <Download className="h-3.5 w-3.5" /> {isAr ? "تحميل البطاقة" : "Download card"}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCertificate(result)}>
-                  <Download className="h-3.5 w-3.5" /> Certificate
+                  <Download className="h-3.5 w-3.5" /> {isAr ? "الشهادة" : "Certificate"}
                 </Button>
               </div>
               <div className="grid grid-cols-3 gap-2 pt-1">
                 {[
-                  { icon: <Users className="h-3.5 w-3.5" />, label: "1,000+ students" },
-                  { icon: <BookOpen className="h-3.5 w-3.5" />, label: "A1–C2 levels" },
-                  { icon: <Gamepad2 className="h-3.5 w-3.5" />, label: "13 free games" },
+                  { icon: <Users className="h-3.5 w-3.5" />, label: isAr ? "+1,000 طالب" : "1,000+ students" },
+                  { icon: <BookOpen className="h-3.5 w-3.5" />, label: isAr ? "مستويات A1–C2" : "A1–C2 levels" },
+                  { icon: <Gamepad2 className="h-3.5 w-3.5" />, label: isAr ? "13 لعبة مجانية" : "13 free games" },
                 ].map(({ icon, label }) => (
                   <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2 text-center">
                     <span className="text-muted-foreground">{icon}</span>
@@ -1024,21 +1082,21 @@ const PlacementTestPage = () => {
               </div>
               <div className="flex gap-2 pt-1">
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleShare(result)}>
-                  <Share2 className="h-3.5 w-3.5" /> Copy result
+                  <Share2 className="h-3.5 w-3.5" /> {isAr ? "نسخ النتيجة" : "Copy result"}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleWhatsApp(result)}>
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
-                  WhatsApp
+                  {isAr ? "واتساب" : "WhatsApp"}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={handleRetake}>
-                  <RefreshCw className="h-3.5 w-3.5" /> Retake
+                  <RefreshCw className="h-3.5 w-3.5" /> {isAr ? "إعادة" : "Retake"}
                 </Button>
               </div>
               {/* Sub-test CTAs */}
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">Skill deep-dives</p>
+                <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">{isAr ? "تعمق في المهارات" : "Skill deep-dives"}</p>
 
                 {/* Listening Exam */}
                 {listeningAnswers.length === 0 ? (
@@ -1051,15 +1109,15 @@ const PlacementTestPage = () => {
                       setPhase("listening_test");
                     }}
                   >
-                    <Volume2 className="h-4 w-4" /> Listening Exam (5 questions · ~5 min)
+                    <Volume2 className="h-4 w-4" /> {isAr ? "اختبار الاستماع (5 أسئلة · ~5 دقائق)" : "Listening Exam (5 questions · ~5 min)"}
                   </Button>
                 ) : (
                   <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 space-y-1">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                       <Volume2 className="h-3.5 w-3.5 text-blue-600" />
-                      Listening: {listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length}/{listeningAnswers.length}
+                      {isAr ? "الاستماع:" : "Listening:"} {listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length}/{listeningAnswers.length}
                     </p>
-                    <p className="text-xs text-muted-foreground">{subTestSummary(listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length, listeningAnswers.length, "Listening")}</p>
+                    <p className="text-xs text-muted-foreground">{subTestSummary(listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length, listeningAnswers.length, isAr ? "الاستماع" : "Listening", isAr)}</p>
                   </div>
                 )}
 
@@ -1074,15 +1132,15 @@ const PlacementTestPage = () => {
                       setPhase("reading_test");
                     }}
                   >
-                    <BookOpen className="h-4 w-4" /> Reading Exam (5 passages · ~5 min)
+                    <BookOpen className="h-4 w-4" /> {isAr ? "اختبار القراءة (5 نصوص · ~5 دقائق)" : "Reading Exam (5 passages · ~5 min)"}
                   </Button>
                 ) : (
                   <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3 space-y-1">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                       <BookOpen className="h-3.5 w-3.5 text-green-700" />
-                      Reading: {readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length}/{readingAnswers.length}
+                      {isAr ? "القراءة:" : "Reading:"} {readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length}/{readingAnswers.length}
                     </p>
-                    <p className="text-xs text-muted-foreground">{subTestSummary(readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length, readingAnswers.length, "Reading")}</p>
+                    <p className="text-xs text-muted-foreground">{subTestSummary(readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length, readingAnswers.length, isAr ? "القراءة" : "Reading", isAr)}</p>
                   </div>
                 )}
 
@@ -1093,7 +1151,7 @@ const PlacementTestPage = () => {
                     className="w-full gap-2"
                     onClick={() => { setSpeakingIndex(0); setSpeakingRatings([]); setRecordingUrl(null); setPhase("speaking_test"); }}
                   >
-                    <Mic className="h-4 w-4" /> Speaking Test (5 prompts · ~3 min)
+                    <Mic className="h-4 w-4" /> {isAr ? "اختبار المحادثة (5 تمارين · ~3 دقائق)" : "Speaking Test (5 prompts · ~3 min)"}
                   </Button>
                 ) : null}
               </div>
@@ -1102,13 +1160,13 @@ const PlacementTestPage = () => {
                 <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1">
                   <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <Mic className="h-3.5 w-3.5 text-primary" />
-                    Speaking score: {speakingRatings.reduce((a, b) => a + b, 0)}/10
+                    {isAr ? "نتيجة المحادثة:" : "Speaking score:"} {speakingRatings.reduce((a, b) => a + b, 0)}/10
                   </p>
-                  <p className="text-xs text-muted-foreground">{speakingSummary(speakingRatings, result.levelKey)}</p>
+                  <p className="text-xs text-muted-foreground">{speakingSummary(speakingRatings, result.levelKey, isAr)}</p>
                 </div>
               )}
               <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground hover:underline">
-                Back to home
+                {isAr ? "العودة للرئيسية" : "Back to home"}
               </button>
             </CardContent>
           </Card>
@@ -1122,7 +1180,7 @@ const PlacementTestPage = () => {
               >
                 <span className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-primary" />
-                  Review answers & explanations
+                  {isAr ? "مراجعة الإجابات والشروحات" : "Review answers & explanations"}
                 </span>
                 {showExplanations ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
@@ -1150,7 +1208,7 @@ const PlacementTestPage = () => {
                             className="flex items-center gap-1 text-primary hover:underline text-[11px]"
                             onClick={() => speakKorean(q.passage!)}
                           >
-                            <Volume2 className="h-3 w-3" /> Listen again
+                            <Volume2 className="h-3 w-3" /> {isAr ? "استمع مجدداً" : "Listen again"}
                           </button>
                         </div>
                       )}
@@ -1159,11 +1217,11 @@ const PlacementTestPage = () => {
                         <div className="ml-7 text-xs space-y-1 mb-2">
                           {!isCorrect && (
                             <p className="text-red-700 dark:text-red-300">
-                              Your answer: {q.options[userAnswer] ?? "—"}
+                              {isAr ? "إجابتك:" : "Your answer:"} {q.options[userAnswer] ?? "—"}
                             </p>
                           )}
                           <p className="text-green-800 dark:text-green-300 font-medium">
-                            Correct: {q.options[q.correctIndex]}
+                            {isAr ? "الصحيح:" : "Correct:"} {q.options[q.correctIndex]}
                           </p>
                         </div>
                       )}
@@ -1185,31 +1243,31 @@ const PlacementTestPage = () => {
           <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
             <DialogContent className="max-w-sm">
               <DialogHeader>
-                <DialogTitle>Get your free study plan</DialogTitle>
+                <DialogTitle>{isAr ? "احصل على خطة دراستك المجانية" : "Get your free study plan"}</DialogTitle>
                 <DialogDescription>
-                  We'll send a personalised {result.levelLabel} study plan to your inbox.
+                  {isAr ? `سنرسل خطة دراسية مخصصة لمستوى ${result.levelLabel} لبريدك.` : `We'll send a personalised ${result.levelLabel} study plan to your inbox.`}
                 </DialogDescription>
               </DialogHeader>
               {leadSaved ? (
                 <div className="text-center py-4 space-y-2">
                   <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
-                  <p className="font-semibold text-sm">We'll send your plan shortly!</p>
+                  <p className="font-semibold text-sm">{isAr ? "سنرسل خطتك قريباً!" : "We'll send your plan shortly!"}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <Input
-                    placeholder="Your name"
+                    placeholder={isAr ? "اسمك" : "Your name"}
                     value={leadName}
                     onChange={e => setLeadName(e.target.value)}
                   />
                   <Input
-                    placeholder="Your email"
+                    placeholder={isAr ? "بريدك الإلكتروني" : "Your email"}
                     type="email"
                     value={leadEmail}
                     onChange={e => setLeadEmail(e.target.value)}
                   />
                   <Button className="w-full" onClick={handleLeadSubmit} disabled={leadSaving}>
-                    {leadSaving ? "Sending…" : "Send me the plan"}
+                    {leadSaving ? (isAr ? "جارٍ الإرسال..." : "Sending…") : (isAr ? "أرسل لي الخطة" : "Send me the plan")}
                   </Button>
                 </div>
               )}
@@ -1222,22 +1280,22 @@ const PlacementTestPage = () => {
     );
   }
 
-  const banner = SECTION_BANNERS[page];
+  const banner = (isAr ? SECTION_BANNERS_AR : SECTION_BANNERS)[page];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-1">Placement Test</h1>
-          <p className="text-muted-foreground text-sm">Answer or skip each question — press 1–4 to select, then move to the next.</p>
+          <h1 className="text-3xl font-bold mb-1">{isAr ? "اختبار تحديد المستوى" : "Placement Test"}</h1>
+          <p className="text-muted-foreground text-sm">{isAr ? "أجب أو تخطَّ كل سؤال — اضغط 1–4 للاختيار ثم انتقل للتالي." : "Answer or skip each question — press 1–4 to select, then move to the next."}</p>
         </div>
 
         {/* Progress */}
         <div className="mb-4 space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
-              Section {page + 1} of {TOTAL_PAGES}
+              {isAr ? `القسم ${page + 1} من ${TOTAL_PAGES}` : `Section ${page + 1} of ${TOTAL_PAGES}`}
               {elapsedSeconds > 0 && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Timer className="h-3 w-3" />{formatTime(elapsedSeconds)}
@@ -1245,12 +1303,12 @@ const PlacementTestPage = () => {
               )}
             </span>
             <span className="flex items-center gap-3 text-xs">
-              <span className="text-green-800 dark:text-green-300 font-medium">{totalAnswered} answered</span>
-              {totalSkipped > 0 && <span className="text-amber-800 dark:text-amber-300 font-medium">{totalSkipped} skipped</span>}
-              {totalRemaining > 0 && <span>{totalRemaining} left</span>}
+              <span className="text-green-800 dark:text-green-300 font-medium">{isAr ? `${totalAnswered} تمت الإجابة` : `${totalAnswered} answered`}</span>
+              {totalSkipped > 0 && <span className="text-amber-800 dark:text-amber-300 font-medium">{isAr ? `${totalSkipped} تم التخطي` : `${totalSkipped} skipped`}</span>}
+              {totalRemaining > 0 && <span>{isAr ? `${totalRemaining} متبقي` : `${totalRemaining} left`}</span>}
               <span className="flex items-center gap-1 ml-1 text-muted-foreground" title="Auto-advance to next question after answering">
                 <Switch id="auto-advance" checked={autoAdvance} onCheckedChange={toggleAutoAdvance} className="scale-75 origin-right" />
-                <label htmlFor="auto-advance" className="cursor-pointer select-none hidden sm:inline">Auto</label>
+                <label htmlFor="auto-advance" className="cursor-pointer select-none hidden sm:inline">{isAr ? "تلقائي" : "Auto"}</label>
               </span>
             </span>
           </div>
@@ -1325,7 +1383,7 @@ const PlacementTestPage = () => {
 
                   {q.passage && q.section === "Listening" ? (
                     <div className="flex flex-col items-center gap-2 mb-4 py-4 bg-primary/5 rounded-xl border border-primary/15">
-                      <p className="text-xs text-muted-foreground">Listen to the passage, then answer below</p>
+                      <p className="text-xs text-muted-foreground">{isAr ? "استمع للنص ثم أجب أدناه" : "Listen to the passage, then answer below"}</p>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1333,8 +1391,8 @@ const PlacementTestPage = () => {
                         onClick={() => isSpeaking ? cancelSpeech() : speakKorean(q.passage!)}
                       >
                         {isSpeaking
-                          ? <><Square className="h-3.5 w-3.5" /> Stop</>
-                          : <><Volume2 className="h-3.5 w-3.5" /> Listen</>}
+                          ? <><Square className="h-3.5 w-3.5" /> {isAr ? "إيقاف" : "Stop"}</>
+                          : <><Volume2 className="h-3.5 w-3.5" /> {isAr ? "استمع" : "Listen"}</>}
                       </Button>
                     </div>
                   ) : q.passage ? (
@@ -1345,12 +1403,12 @@ const PlacementTestPage = () => {
 
                   {isSkipped ? (
                     <div className="flex items-center justify-between ml-1">
-                      <span className="text-sm text-muted-foreground italic">Skipped — counts as 0</span>
+                      <span className="text-sm text-muted-foreground italic">{isAr ? "تم التخطي — يحتسب كـ 0" : "Skipped — counts as 0"}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUnskip(q.id); }}
                         className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                       >
-                        <Undo2 className="h-3.5 w-3.5" /> Answer this question
+                        <Undo2 className="h-3.5 w-3.5" /> {isAr ? "أجب هذا السؤال" : "Answer this question"}
                       </button>
                     </div>
                   ) : (
@@ -1391,7 +1449,7 @@ const PlacementTestPage = () => {
                           onClick={(e) => { e.stopPropagation(); handleSkip(q.id); }}
                           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          <SkipForward className="h-3.5 w-3.5" /> Skip this question
+                          <SkipForward className="h-3.5 w-3.5" /> {isAr ? "تخطي هذا السؤال" : "Skip this question"}
                         </button>
                       </div>
                     </>
@@ -1405,16 +1463,16 @@ const PlacementTestPage = () => {
         {/* Navigation */}
         <div className="flex justify-between mt-8 pb-8 gap-3">
           <Button variant="outline" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+            <ArrowLeft className="mr-2 h-4 w-4" /> {isAr ? "السابق" : "Previous"}
           </Button>
 
           {page < TOTAL_PAGES - 1 ? (
             <Button onClick={() => setPage((p) => p + 1)}>
-              Next <ArrowRight className="ml-2 h-4 w-4" />
+              {isAr ? "التالي" : "Next"} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
             <Button onClick={() => setPhase("review")} disabled={totalAnswered === 0}>
-              <ClipboardList className="mr-2 h-4 w-4" /> Review & Submit
+              <ClipboardList className="mr-2 h-4 w-4" /> {isAr ? "مراجعة وإرسال" : "Review & Submit"}
             </Button>
           )}
         </div>
