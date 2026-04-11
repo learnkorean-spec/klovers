@@ -103,7 +103,7 @@ const ReturningStudentOffer = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <Card className="border-2 border-primary/30 dark:border-primary/20 bg-muted/50 shadow-lg">
+          <Card className="border-2 border-green-200 dark:border-green-800/40 bg-green-50 dark:bg-green-950/30 shadow-lg">
             <CardContent className="pt-8 pb-8">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground border border-black/25 mb-4">
@@ -116,7 +116,7 @@ const ReturningStudentOffer = () => {
                 {referralItems.map((item, i) => {
                   const Icon = REFERRAL_ICONS[i];
                   return (
-                    <div key={i} className="text-center p-4 rounded-xl bg-white/60 dark:bg-muted/30 border border-border/60">
+                    <div key={i} className="text-center p-4 rounded-xl bg-white/80 dark:bg-green-900/20 border border-green-200/60 dark:border-green-800/40">
                       <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-black/25 mb-3">
                         <Icon className="h-5 w-5" />
                       </span>
