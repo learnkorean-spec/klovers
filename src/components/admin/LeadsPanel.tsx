@@ -322,7 +322,7 @@ const LeadsPanel: React.FC = () => {
                 {abandoned.map(l => {
                   const hoursAgo = Math.round((Date.now() - new Date(l.created_at).getTime()) / 3600000);
                   const timeLabel = hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.round(hoursAgo / 24)}d ago`;
-                  const waMsg = encodeURIComponent(`Hi ${l.name.split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling in Klovers Korean. Your spot is still available \u2014 would you like to complete your ${l.plan_type} class enrollment? \u{1F1F0}\u{1F1F7}`);
+                  const waMsg = encodeURIComponent(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling in Klovers Korean. Your spot is still available \u2014 would you like to complete your ${l.plan_type} class enrollment? \u{1F1F0}\u{1F1F7}`);
                   const waLink = `https://wa.me/?text=${waMsg}`;
                   return (
                     <div key={l.id} className="flex items-center justify-between bg-white dark:bg-background border border-amber-100 dark:border-amber-900/40 rounded-lg px-3 py-2 gap-3">
@@ -337,7 +337,7 @@ const LeadsPanel: React.FC = () => {
                       <div className="flex gap-1.5 shrink-0">
                         <Button size="sm" variant="outline" className={`h-7 px-2 text-xs ${contactedLeadIds.has(l.id) && copiedLeadId !== l.id ? "border-green-400 text-green-700 dark:text-green-400" : ""}`}
                           onClick={() => {
-                            navigator.clipboard.writeText(`Hi ${l.name.split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling. Your spot is still available \u2014 complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
+                            navigator.clipboard.writeText(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling. Your spot is still available \u2014 complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
                             toast({ title: "Copied!", description: "Follow-up message copied to clipboard" });
                             setContactedLeadIds(prev => new Set(prev).add(l.id));
                             setCopiedLeadId(l.id);
@@ -350,7 +350,7 @@ const LeadsPanel: React.FC = () => {
                               : <><Copy className="h-3 w-3 mr-1" />Copy</>}
                         </Button>
                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
-                          <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${l.name.split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
+                          <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${(l.name || "").split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
                             <Mail className="h-3 w-3 mr-1" />Email
                           </a>
                         </Button>
