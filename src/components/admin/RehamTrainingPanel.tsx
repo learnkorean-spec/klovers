@@ -778,6 +778,187 @@ const CONVERSATION_DATA: ConversationExchange[] = [
       english: "My main fields are cultural events, business negotiations, manufacturing, and education. At the Korean Cultural Centre, I handled cultural festival and corporate event interpretation. At El Zenouki, I performed manufacturing business interpretation. At Kerry, I frequently handled situations requiring business interpretation with multinational clients. In education, I've been continuously translating and developing educational content through Klovers for 13 years.",
     },
   },
+  /* ── Interpretation / Medical ── */
+  {
+    id: 78,
+    topic: "Interpreter Self Introduction",
+    interviewer: { korean: "자기소개를 해 주세요.", english: "Please introduce yourself." },
+    reham: {
+      korean: "제 이름은 리햄입니다. 저는 12년 이상의 국제 업무 경험을 가진 다국어 전문가입니다. 아랍어, 영어, 한국어를 사용하며 다양한 문화권의 사람들과 소통해 왔습니다.",
+      english: "My name is Reham Elshrkawy. I am a multilingual professional with more than 12 years of international experience working in Malaysia, Egypt, and Hungary. I speak Arabic, English, and Korean, and I have strong experience in customer communication, operations, and cross-cultural collaboration.",
+    },
+  },
+  {
+    id: 79,
+    topic: "Interpreter Motivation",
+    interviewer: { korean: "왜 통역사로 일하고 싶습니까?", english: "Why do you want to work as an interpreter?" },
+    reham: {
+      korean: "저는 언어 장벽을 넘어 사람들이 서로 이해하도록 돕는 일을 좋아합니다. 다양한 국제 환경에서 일한 경험이 있어 정확한 의사소통의 중요성을 잘 알고 있습니다.",
+      english: "I enjoy helping people communicate across languages and cultures. My experience working with international clients and students taught me how important clear communication is, especially when people cannot understand each other directly.",
+    },
+  },
+  {
+    id: 80,
+    topic: "Customer Communication",
+    interviewer: { korean: "고객과 소통한 경험이 있습니까?", english: "Do you have experience communicating with customers?" },
+    reham: {
+      korean: "네, 고객 서비스 역할에서 하루에 50명에서 100명 이상의 고객을 응대한 경험이 있습니다.",
+      english: "Yes. In my previous customer service role, I handled between 50 and 100 customer interactions daily, solving problems and ensuring clear communication.",
+    },
+  },
+  {
+    id: 81,
+    topic: "Handling Unknown Words",
+    interviewer: { korean: "통역 중 이해하지 못한 단어가 있으면 어떻게 하시겠습니까?", english: "What would you do if you do not understand a word during interpretation?" },
+    reham: {
+      korean: "정확한 통역을 위해 화자에게 정중하게 다시 말해 달라고 요청하겠습니다.",
+      english: "I would politely ask the speaker to repeat or clarify the sentence to ensure the interpretation remains accurate.",
+    },
+  },
+  {
+    id: 82,
+    topic: "Interpreter Neutrality",
+    interviewer: { korean: "통역할 때 중립성을 어떻게 유지합니까?", english: "How do you maintain neutrality as an interpreter?" },
+    reham: {
+      korean: "통역사는 개인적인 의견을 추가하지 않고 말한 내용을 그대로 전달해야 한다고 생각합니다.",
+      english: "I focus on delivering the exact message without adding personal opinions or changing the meaning. Neutrality is essential in interpretation.",
+    },
+  },
+  {
+    id: 83,
+    topic: "Stressful Calls",
+    interviewer: { korean: "스트레스가 있는 통화를 어떻게 처리합니까?", english: "How do you handle stressful calls?" },
+    reham: {
+      korean: "침착하게 상황을 듣고 정확하고 명확한 통역에 집중합니다.",
+      english: "I stay calm, listen carefully, and focus on providing clear and accurate interpretation so both parties can understand each other.",
+    },
+  },
+  {
+    id: 84,
+    topic: "International Work Experience",
+    interviewer: { korean: "국제 환경에서 일한 경험이 있습니까?", english: "Do you have international work experience?" },
+    reham: {
+      korean: "네, 말레이시아, 이집트, 헝가리에서 일하며 다양한 국적의 팀과 협업했습니다.",
+      english: "Yes. I worked in multinational environments in Malaysia and collaborated with clients from many countries.",
+    },
+  },
+  {
+    id: 85,
+    topic: "Interpretation Accuracy",
+    interviewer: { korean: "통역의 정확성을 어떻게 보장합니까?", english: "How do you ensure accuracy in interpretation?" },
+    reham: {
+      korean: "주의 깊게 듣고 단어 단위가 아니라 의미 중심으로 전달합니다.",
+      english: "I focus on listening carefully and understanding the full meaning before translating. I avoid word-for-word translation and instead deliver the message clearly and accurately.",
+    },
+  },
+  {
+    id: 86,
+    topic: "Working Under Pressure",
+    interviewer: { korean: "압박 속에서 일할 수 있습니까?", english: "Can you work under pressure?" },
+    reham: {
+      korean: "네, 하루에 많은 업무를 처리해야 하는 환경에서 정확도를 유지하며 일한 경험이 있습니다.",
+      english: "Yes. I worked in high-volume operational environments where accuracy and efficiency were essential.",
+    },
+  },
+  {
+    id: 87,
+    topic: "Confidential Information",
+    interviewer: { korean: "기밀 정보를 어떻게 처리합니까?", english: "How do you handle confidential information?" },
+    reham: {
+      korean: "고객 정보와 대화 내용은 항상 비밀을 유지해야 한다고 생각합니다.",
+      english: "I treat all information as strictly confidential and follow professional ethics to protect privacy and trust.",
+    },
+  },
+  {
+    id: 88,
+    topic: "Training Others",
+    interviewer: { korean: "다른 사람을 교육한 경험이 있습니까?", english: "Do you have experience training others?" },
+    reham: {
+      korean: "네, 이전 직장에서 10명에서 15명 정도의 팀원을 교육한 경험이 있습니다.",
+      english: "Yes. I trained 10–15 team members on operational processes and systems in my previous roles.",
+    },
+  },
+  {
+    id: 89,
+    topic: "Polite Repeat Request",
+    interviewer: { korean: "화자에게 정중하게 다시 말해 달라고 어떻게 요청합니까?", english: "How do you ask a speaker to repeat politely?" },
+    reham: {
+      korean: "정확한 이해를 위해 '다시 말씀해 주시겠습니까?'라고 요청하겠습니다.",
+      english: "I would say: \"Could you please repeat that?\" or \"Could you please clarify that for me?\"",
+    },
+  },
+  {
+    id: 90,
+    topic: "Different Accents",
+    interviewer: { korean: "다양한 억양을 어떻게 이해합니까?", english: "How do you deal with different accents?" },
+    reham: {
+      korean: "국제 환경에서 일하며 다양한 억양에 익숙해졌습니다.",
+      english: "I worked in multinational environments in Malaysia and collaborated with clients from many countries.",
+    },
+  },
+  {
+    id: 91,
+    topic: "Languages Spoken",
+    interviewer: { korean: "어떤 언어를 할 수 있습니까?", english: "What languages do you speak?" },
+    reham: {
+      korean: "아랍어, 영어, 한국어를 포함하여 여러 언어를 사용합니다.",
+      english: "I speak Arabic as my native language, English professionally, and Korean at an intermediate-advanced level. I also have knowledge of Hungarian, German, and French.",
+    },
+  },
+  {
+    id: 92,
+    topic: "Interpreter Key Skills",
+    interviewer: { korean: "좋은 통역사가 되기 위한 기술은 무엇이라고 생각합니까?", english: "What skills make you a good interpreter?" },
+    reham: {
+      korean: "집중력, 정확성, 그리고 문화적 이해가 중요하다고 생각합니다.",
+      english: "My multilingual background, international experience, and strong listening skills help me communicate clearly between people from different cultures.",
+    },
+  },
+  {
+    id: 93,
+    topic: "Focus During Long Calls",
+    interviewer: { korean: "긴 통화 중 집중력을 어떻게 유지합니까?", english: "How do you stay focused during long calls?" },
+    reham: {
+      korean: "대화의 흐름에 집중하고 필요한 정보를 정확하게 전달하는 데 집중합니다.",
+      english: "I stay engaged in the conversation and concentrate on delivering accurate information without losing context.",
+    },
+  },
+  {
+    id: 94,
+    topic: "Language Motivation",
+    interviewer: { korean: "언어 분야에서 일하게 된 동기는 무엇입니까?", english: "What motivates you to work in languages?" },
+    reham: {
+      korean: "언어와 문화 교류에 관심이 많기 때문입니다.",
+      english: "I have always been passionate about languages and cultural communication, and I enjoy helping people understand each other.",
+    },
+  },
+  {
+    id: 95,
+    topic: "Teaching Experience",
+    interviewer: { korean: "교육 경험이 있습니까?", english: "Do you have teaching experience?" },
+    reham: {
+      korean: "네, 전 세계 학생들을 가르친 경험이 있습니다.",
+      english: "Yes. I trained 10–15 team members on operational processes and systems in my previous roles.",
+    },
+  },
+  {
+    id: 96,
+    topic: "Unfamiliar Terminology",
+    interviewer: { korean: "익숙하지 않은 용어를 어떻게 처리합니까?", english: "How do you deal with unfamiliar terminology?" },
+    reham: {
+      korean: "문맥을 이해하고 필요한 경우 화자에게 설명을 요청합니다.",
+      english: "I would politely ask the speaker to repeat or clarify the sentence to ensure the interpretation remains accurate.",
+    },
+  },
+  {
+    id: 97,
+    topic: "Why Hire You (Interpreter)",
+    interviewer: { korean: "왜 당신을 채용해야 합니까?", english: "Why should we hire you?" },
+    reham: {
+      korean: "저는 다국어 능력과 국제 업무 경험이 있으며 다양한 환경에서 효과적으로 소통할 수 있기 때문입니다.",
+      english: "I bring multilingual communication skills, international experience, and strong professionalism. I am reliable and focused on delivering accurate and clear communication.",
+    },
+  },
 ];
 
 /* ─── Section color map ─── */
@@ -828,11 +1009,12 @@ const CATEGORIES: { name: string; icon: string; ids: number[] }[] = [
   { name: "Operations & Supply Chain", icon: "⚙️", ids: [56, 57, 58] },
   { name: "Customer Service", icon: "💬", ids: [59, 60, 61, 62] },
   { name: "Translation & Interpretation", icon: "🌐", ids: [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77] },
+  { name: "Interpretation / Medical", icon: "🏥", ids: [78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97] },
 ];
 
 /* ─── Interview Field Configs ─── */
 
-type InterviewField = "all" | "ai" | "operations" | "customer-care" | "translator";
+type InterviewField = "all" | "ai" | "operations" | "customer-care" | "translator" | "interpretation-medical";
 
 interface FieldConfig {
   key: InterviewField;
@@ -883,6 +1065,14 @@ const FIELD_CONFIGS: FieldConfig[] = [
     icon: "🌐",
     description: "Translation, interpretation, cultural mediation",
     questionIds: [1, 2, 5, 6, 16, 17, 35, 42, 45, 47, 49, 38, 39, 40, 41, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77],
+  },
+  {
+    key: "interpretation-medical",
+    label: "Interpretation / Medical",
+    labelKr: "통역 / 의료",
+    icon: "🏥",
+    description: "Medical interpretation, OPI-style interpreter interviews",
+    questionIds: [78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97],
   },
 ];
 
@@ -1685,7 +1875,7 @@ export default function RehamTrainingPanel() {
         {/* ── Interview Field Selector ── */}
         <div className="mb-4 space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Interview Field</p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             {FIELD_CONFIGS.map((field) => (
               <button
                 key={field.key}
