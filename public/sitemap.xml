@@ -79,12 +79,7 @@
     <priority>0.7</priority>
   </url>
 
-  <url>
-    <loc>https://kloversegy.com/textbook</loc>
-    <lastmod>2026-04-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <!-- /textbook removed: blocked by robots.txt (enrollment-gated) -->
 
   <!-- ============================
        CONVERSION / LEAD
@@ -352,6 +347,21 @@
     <lastmod>2026-04-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+
+
+  <url>
+    <loc>https://kloversegy.com/blog/learn-hangul-in-one-day-the-ultimate-beginner-s-guide-to-reading-korean</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://kloversegy.com/blog/how-to-stay-consistent-when-learning-korean-simple-daily-system</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 
 </urlset>
