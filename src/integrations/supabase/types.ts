@@ -1050,6 +1050,7 @@ export type Database = {
           image_url_4x5: string | null
           image_url_story: string | null
           status: string
+          video_url: string | null
         }
         Insert: {
           ad_primary_text?: string
@@ -1063,6 +1064,7 @@ export type Database = {
           image_url_4x5?: string | null
           image_url_story?: string | null
           status?: string
+          video_url?: string | null
         }
         Update: {
           ad_primary_text?: string
@@ -1076,6 +1078,7 @@ export type Database = {
           image_url_4x5?: string | null
           image_url_story?: string | null
           status?: string
+          video_url?: string | null
         }
         Relationships: [
           {

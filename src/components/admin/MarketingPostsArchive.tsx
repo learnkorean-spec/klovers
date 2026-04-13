@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Image, Copy, Calendar, Loader2 } from "lucide-react";
+import { Download, Image, Copy, Calendar, Loader2, Film } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
 
@@ -18,6 +18,7 @@ interface MarketingPost {
   image_url_1x1: string | null;
   image_url_4x5: string | null;
   image_url_story: string | null;
+  video_url: string | null;
   status: string;
   created_at: string;
 }
@@ -236,6 +237,40 @@ export default function MarketingPostsArchive() {
                       )}
                     </div>
                   </div>
+
+                  {/* Reel video preview */}
+                  {post.video_url && (
+                    <div className="flex items-center gap-2 py-1">
+                      <div className="shrink-0 aspect-[9/16] w-24 rounded-lg overflow-hidden border shadow-sm bg-black">
+                        <video
+                          src={post.video_url}
+                          className="w-full h-full object-cover"
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                          onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                          onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className="text-[10px] gap-1 w-fit">
+                          <Film className="h-3 w-3" /> Reel
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-[10px]"
+                          onClick={() => {
+                            const slug = (post.headline || "post").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
+                            downloadImage(post.video_url!, `${slug}-reel.webm`);
+                          }}
+                        >
+                          <Download className="h-3 w-3 mr-1" /> Download
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Image thumbnails */}
                   {(post.image_url_1x1 || post.image_url_4x5 || post.image_url_story) && (
