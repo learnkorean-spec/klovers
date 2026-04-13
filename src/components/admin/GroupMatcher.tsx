@@ -149,7 +149,10 @@ const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
   const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
   const [privateMatched, setPrivateMatched] = useState<(UnmatchedEnrollment & { matched_at: string })[]>([]);
+  const [rejectedEnrollments, setRejectedEnrollments] = useState<(UnmatchedEnrollment & { slot_rejection_reason: string | null; slot_rejection_at: string | null })[]>([]);
   const [showAssigned, setShowAssigned] = useState(false);
+  const [showRejected, setShowRejected] = useState(false);
+  const [unrejecting, setUnrejecting] = useState<string | null>(null);
   const [teacherSlots, setTeacherSlots] = useState<{ day: number; time: string }[]>([]);
   const [packages, setPackages] = useState<SchedulePackage[]>([]);
   const [needsReview, setNeedsReview] = useState<NeedsReviewItem[]>([]);
@@ -230,6 +233,14 @@ const GroupMatcher = () => {
       .order("matched_at", { ascending: false })
       .limit(30);
 
+    // Fetch rejected enrollments (either fully rejected, or slot-rejected)
+    const { data: rawRejected } = await supabase
+      .from("enrollments")
+      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url, slot_rejection_reason, slot_rejection_at")
+      .or("approval_status.eq.REJECTED,slot_rejection_reason.not.is.null")
+      .order("slot_rejection_at", { ascending: false, nullsFirst: false })
+      .limit(50);
+
     if (error || privateError) {
       console.error("Failed to fetch unmatched enrollments:", error || privateError);
       toast({ title: "Failed to load enrollments", description: (error || privateError)?.message, variant: "destructive" });
@@ -245,7 +256,7 @@ const GroupMatcher = () => {
 
     setPackages((pkgs as SchedulePackage[]) || []);
 
-    const allRaw = [...(rawGroupEnrollments as any[] || []), ...(rawPrivateEnrollments as any[] || []), ...(rawMatchedPrivate as any[] || [])];
+    const allRaw = [...(rawGroupEnrollments as any[] || []), ...(rawPrivateEnrollments as any[] || []), ...(rawMatchedPrivate as any[] || []), ...(rawRejected as any[] || [])];
     const userIds = [...new Set(allRaw.map((e: any) => e.user_id))];
     const profileMap: Record<string, { name: string; email: string }> = {};
     if (userIds.length > 0) {
@@ -278,9 +289,16 @@ const GroupMatcher = () => {
       email: profileMap[e.user_id]?.email || "",
     }));
 
+    const enrichRejected = (rawRejected as any[] || []).map((e: any) => ({
+      ...e,
+      name: profileMap[e.user_id]?.name || "Unknown",
+      email: profileMap[e.user_id]?.email || "",
+    }));
+
     setEnrollments(enrichGroup);
     setPrivateUnmatched(enrichPrivate);
     setPrivateMatched(enrichMatched);
+    setRejectedEnrollments(enrichRejected);
 
     // Fetch teacher availability for slot matching
     const { data: availability } = await supabase
@@ -421,6 +439,41 @@ const GroupMatcher = () => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setRejecting(false);
+    }
+  };
+
+  const handleUndoRejection = async (
+    enrollment: UnmatchedEnrollment & { slot_rejection_reason: string | null }
+  ) => {
+    setUnrejecting(enrollment.id);
+    try {
+      const isFullReject = enrollment.approval_status === "REJECTED";
+      const updatePayload: Record<string, any> = isFullReject
+        ? {
+            approval_status: "APPROVED",
+            enrollment_status: null,
+            slot_rejection_reason: null,
+            slot_rejection_at: null,
+          }
+        : {
+            slot_rejection_reason: null,
+            slot_rejection_at: null,
+            matched_at: null,
+          };
+      const { error } = await supabase
+        .from("enrollments")
+        .update(updatePayload as any)
+        .eq("id", enrollment.id);
+      if (error) throw error;
+      toast({
+        title: "Rejection undone",
+        description: `${enrollment.name} is back in the unassigned list.`,
+      });
+      fetchUnmatched();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUnrejecting(null);
     }
   };
 
@@ -827,7 +880,7 @@ const GroupMatcher = () => {
         </Card>
       )}
 
-      {enrollments.length === 0 && needsReview.length === 0 && privateUnmatched.length === 0 && !createdGroup ? (
+      {enrollments.length === 0 && needsReview.length === 0 && privateUnmatched.length === 0 && privateMatched.length === 0 && rejectedEnrollments.length === 0 && !createdGroup ? (
         <div className="text-center py-12 text-muted-foreground">
           <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
           <p className="font-medium">No unmatched enrollments</p>
@@ -1242,16 +1295,101 @@ const GroupMatcher = () => {
                             {m.email} · {m.level || "no level"} · Assigned {new Date(m.matched_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="shrink-0 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
-                          onClick={() => handleUnassign(m)}
-                        >
-                          Unassign
-                        </Button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                            onClick={() => handleUnassign(m)}
+                          >
+                            Unassign
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() => { setRejectTarget(m); setRejectReason("no_slots"); setRejectNote(""); }}
+                            title="Reject this enrollment"
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                          </Button>
+                        </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          )}
+
+          {/* Rejected Students */}
+          {rejectedEnrollments.length > 0 && (
+            <Card className="border-destructive/40">
+              <CardHeader
+                className="pb-3 cursor-pointer select-none"
+                onClick={() => setShowRejected(p => !p)}
+              >
+                <CardTitle className="text-base flex items-center gap-2 text-destructive">
+                  <XCircle className="h-4 w-4" />
+                  Rejected Students ({rejectedEnrollments.length})
+                  <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showRejected ? "rotate-180" : ""}`} />
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Click to {showRejected ? "hide" : "show"} — enrollments rejected by admin with reasons.
+                </p>
+              </CardHeader>
+              {showRejected && (
+                <CardContent>
+                  <div className="space-y-2">
+                    {rejectedEnrollments.map(m => {
+                      const isFullReject = m.approval_status === "REJECTED";
+                      return (
+                        <div key={m.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-1.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground truncate">{m.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge
+                                variant={isFullReject ? "destructive" : "secondary"}
+                                className="text-[10px]"
+                              >
+                                {isFullReject ? "Enrollment rejected" : "Slot rejected"}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={unrejecting === m.id}
+                                className="text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                                onClick={() => handleUndoRejection(m)}
+                                title="Undo rejection"
+                              >
+                                {unrejecting === m.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                                )}
+                                Undo
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
+                            <Badge variant="outline" className="text-[10px]">{m.plan_type}</Badge>
+                            {m.level && <Badge variant="outline" className="text-[10px]">{m.level.replace(/_/g, " ")}</Badge>}
+                            {m.slot_rejection_at && (
+                              <span>Rejected {new Date(m.slot_rejection_at).toLocaleString()}</span>
+                            )}
+                          </div>
+                          {m.slot_rejection_reason && (
+                            <div className="text-xs bg-destructive/5 border border-destructive/20 rounded px-2 py-1.5 text-foreground">
+                              <span className="font-semibold text-destructive">Reason: </span>
+                              {m.slot_rejection_reason}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               )}
