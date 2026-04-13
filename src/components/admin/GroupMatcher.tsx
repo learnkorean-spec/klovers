@@ -802,13 +802,51 @@ const GroupMatcher = () => {
                 }`}>
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className="font-medium text-foreground">{r.email}</span>
-                    <Badge className={`text-xs ${
-                      isCompleted ? "bg-green-100 text-green-700 border-green-200" :
-                      isExpired   ? "bg-muted text-muted-foreground" :
-                                   "bg-amber-100 text-amber-700 border-amber-200"
-                    }`}>
-                      {isCompleted ? "✅ Completed" : isExpired ? "⏰ Expired" : "⏳ Pending"}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge className={`text-xs ${
+                        isCompleted ? "bg-green-100 text-green-700 border-green-200" :
+                        isExpired   ? "bg-muted text-muted-foreground" :
+                                     "bg-amber-100 text-amber-700 border-amber-200"
+                      }`}>
+                        {isCompleted ? "✅ Completed" : isExpired ? "⏰ Expired" : "⏳ Pending"}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setRejectTarget({
+                            id: r.enrollment_id,
+                            email: r.email,
+                            name: r.email,
+                            user_id: "",
+                            plan_type: "",
+                            preferred_day: r.preferred_day,
+                            preferred_days: null,
+                            preferred_start: null,
+                            preferred_time: r.preferred_time,
+                            timezone: r.timezone,
+                            duration: 0,
+                            level: r.level,
+                            package_id: null,
+                            amount: null,
+                            currency: null,
+                            classes_included: null,
+                            payment_method: null,
+                            payment_provider: null,
+                            payment_status: null,
+                            approval_status: null,
+                            created_at: r.created_at,
+                            receipt_url: null,
+                          });
+                          setRejectReason(isExpired ? "no_slots" : "other");
+                          setRejectNote("");
+                        }}
+                        title="Reject this enrollment"
+                      >
+                        <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                      </Button>
+                    </div>
                   </div>
                   {isCompleted && (r.level || r.preferred_day || r.preferred_time) && (
                     <div className="flex flex-wrap gap-2 mt-1">
