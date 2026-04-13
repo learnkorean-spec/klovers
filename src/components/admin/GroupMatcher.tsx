@@ -893,6 +893,15 @@ const GroupMatcher = () => {
                                   {m.approval_status}
                                 </Badge>
                               )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-destructive hover:bg-destructive/10"
+                                onClick={() => { setRejectTarget(m); setRejectReason("no_slots"); setRejectNote(""); }}
+                                title="Reject this enrollment"
+                              >
+                                <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                              </Button>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
@@ -984,14 +993,29 @@ const GroupMatcher = () => {
                 <div className="space-y-2">
                   {needsReview.map((item) => (
                     <div key={item.enrollment.id} className="text-sm bg-muted/50 rounded-lg px-3 py-2 space-y-1">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <div>
                           <p className="font-medium text-foreground">{item.enrollment.name}</p>
                           <p className="text-xs text-muted-foreground">{item.enrollment.email}</p>
                         </div>
-                        <Badge variant="destructive" className="text-xs">
-                          {item.reason}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="destructive" className="text-xs">
+                            {item.reason}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              setRejectTarget(item.enrollment);
+                              setRejectReason(item.reason.toLowerCase().includes("missing") ? "missing_info" : "other");
+                              setRejectNote("");
+                            }}
+                            title="Reject this enrollment"
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         <span>{item.enrollment.plan_type} · {item.enrollment.duration}mo</span>
