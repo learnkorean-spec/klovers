@@ -346,14 +346,21 @@ const GroupMatcher = () => {
 
   const handleUnassign = async (enrollment: UnmatchedEnrollment & { matched_at: string }) => {
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("enrollments")
-        .update({ matched_at: null } as any)
-        .eq("id", enrollment.id);
+        .update({ matched_at: null, slot_id: null } as any)
+        .eq("id", enrollment.id)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Update was blocked (no rows changed). Check admin role / RLS.");
+      }
+      // Optimistic local removal so the row disappears immediately
+      setPrivateMatched(prev => prev.filter(m => m.id !== enrollment.id));
       toast({ title: "Unassigned", description: `${enrollment.name} moved back to unassigned.` });
       fetchUnmatched();
     } catch (err: any) {
+      console.error("Unassign failed", err);
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   };
