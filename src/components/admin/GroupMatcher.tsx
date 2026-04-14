@@ -413,10 +413,10 @@ const GroupMatcher = () => {
         .eq("id", rejectTarget.id);
       if (error) throw error;
 
-      // Mark as assigned so it leaves the unassigned list (slot rejected = dealt with)
+      // Clear matched_at so the student leaves the "Assigned" list and appears only in "Rejected"
       if (!isPaymentReject) {
         await supabase.from("enrollments")
-          .update({ matched_at: new Date().toISOString() } as any)
+          .update({ matched_at: null } as any)
           .eq("id", rejectTarget.id);
       }
 
