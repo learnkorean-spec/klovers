@@ -23,7 +23,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Search, Download, Trash2, Check, X, AlertCircle, ChevronLeft, ChevronRight,
-  Pencil, Mail, Eraser, Sparkles, Copy, Clock,
+  Pencil, Mail, Eraser, Sparkles, Copy, Clock, CalendarCheck, XCircle,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLeads } from "@/hooks/admin/useLeads";
@@ -196,6 +196,94 @@ const LeadsPanel: React.FC = () => {
     toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });
     queryClient.invalidateQueries({ queryKey: ["admin"] });
   }, [leads, updateLeadViaFn, queryClient]);
+
+  // ── Trial approve / reject ────────────────────────────────────────────────
+
+  const [approvingTrialId, setApprovingTrialId] = useState<string | null>(null);
+
+  const handleApproveTrial = useCallback(async (lead: Lead) => {
+    setApprovingTrialId(lead.id);
+    try {
+      // 1. Confirm trial_booking
+      const { error: tbErr } = await supabase
+        .from("trial_bookings")
+        .update({ status: "confirmed", confirmed_at: new Date().toISOString() } as any)
+        .eq("email", lead.email.toLowerCase())
+        .eq("status", "pending");
+      if (tbErr) console.error("trial_bookings update error:", tbErr.message);
+
+      // 2. Update lead status
+      await updateLeadViaFn(lead.id, { status: "confirmed" });
+
+      // 3. Fetch booking details for the email
+      const { data: booking } = await supabase
+        .from("trial_bookings")
+        .select("trial_date, start_time, timezone, day_of_week")
+        .eq("email", lead.email.toLowerCase())
+        .eq("status", "confirmed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (booking) {
+        const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayName = DAY_NAMES[booking.day_of_week] || "";
+        const [h, m] = (booking.start_time || "18:00").split(":").map(Number);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const h12 = h % 12 || 12;
+        const time12 = `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+        const tz = booking.timezone || "Africa/Cairo";
+
+        // Build calendar URL
+        const dateClean = (booking.trial_date || "").replace(/-/g, "");
+        const start = `${dateClean}T${String(h).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
+        const endH = h + Math.floor((m + 45) / 60);
+        const endM = (m + 45) % 60;
+        const end = `${dateClean}T${String(endH).padStart(2, "0")}${String(endM).padStart(2, "0")}00`;
+        const calParams = new URLSearchParams({ action: "TEMPLATE", text: "Free Korean Trial Class — Klovers Academy", dates: `${start}/${end}`, details: `Level: ${lead.level || "Beginner"}`, ctz: tz });
+        const calendarUrl = `https://calendar.google.com/calendar/render?${calParams.toString()}`;
+
+        const trialDateFormatted = new Date(booking.trial_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+        // 4. Send confirmation email
+        await supabase.functions.invoke("send-confirmation-email", {
+          body: {
+            template: "trial_confirmed",
+            email: lead.email,
+            name: lead.name || lead.email,
+            level: lead.level,
+            trial_date: trialDateFormatted,
+            trial_time: time12,
+            trial_timezone: tz,
+            calendar_url: calendarUrl,
+            language: "ar",
+          },
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
+      toast({ title: "Trial approved", description: `${lead.name} has been notified via email.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setApprovingTrialId(null);
+    }
+  }, [updateLeadViaFn, queryClient]);
+
+  const handleRejectTrial = useCallback(async (lead: Lead) => {
+    try {
+      await supabase
+        .from("trial_bookings")
+        .update({ status: "cancelled" } as any)
+        .eq("email", lead.email.toLowerCase())
+        .in("status", ["pending", "confirmed"]);
+      await updateLeadViaFn(lead.id, { status: "rejected" });
+      queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
+      toast({ title: "Trial rejected", description: `${lead.name}'s trial has been cancelled.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  }, [updateLeadViaFn, queryClient]);
 
   // ── Computed values ───────────────────────────────────────────────────────
 
@@ -609,6 +697,31 @@ const LeadsPanel: React.FC = () => {
                           </>
                         ) : (
                           <>
+                            {lead.status === "trial_booked" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleApproveTrial(lead)}
+                                  disabled={approvingTrialId === lead.id}
+                                  aria-label="Approve trial"
+                                  title="Approve trial & send confirmation email"
+                                >
+                                  <CalendarCheck className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleRejectTrial(lead)}
+                                  aria-label="Reject trial"
+                                  title="Reject trial"
+                                >
+                                  <XCircle className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </>
+                            )}
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditLead(lead)} aria-label="Edit lead">
                               <Pencil className="h-4 w-4 text-muted-foreground" />
                             </Button>

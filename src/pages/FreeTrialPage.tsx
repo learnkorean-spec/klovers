@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
-import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift } from "lucide-react";
+import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift, CalendarPlus, MessageCircle } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { track } from "@/lib/tracking";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import TrialSlotPicker from "@/components/TrialSlotPicker";
+import { DAY_NAMES, formatTime12h } from "@/lib/calendarUrl";
 
 const LEVELS = [
   { value: "A0 – Complete Beginner", label: "A0 – Complete Beginner (I know nothing)" },
@@ -40,6 +42,16 @@ const PERKS = [
   { icon: Clock, text: "45-minute session" },
   { icon: Star, text: "Personalised level assessment" },
 ];
+
+interface BookingResult {
+  trial_date: string;
+  day_name: string;
+  start_time: string;
+  start_time_12h: string;
+  duration_min: number;
+  timezone: string;
+  calendar_url: string;
+}
 
 const FreeTrialPage = () => {
   useSEO({
@@ -80,7 +92,6 @@ const FreeTrialPage = () => {
   const [searchParams] = useSearchParams();
   const referredBy = searchParams.get("ref") || "";
 
-  // Track the referral link click (fire-and-forget, for +2% sharing bonus)
   useEffect(() => {
     if (referredBy) {
       localStorage.setItem("referrer_id", referredBy);
@@ -90,9 +101,10 @@ const FreeTrialPage = () => {
     }
   }, [referredBy]);
 
-  const [step, setStep] = useState<"form" | "success">("form");
+  const [step, setStep] = useState<"form" | "pick_slot" | "success">("form");
   const [loading, setLoading] = useState(false);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -105,47 +117,63 @@ const FreeTrialPage = () => {
   const set = (k: keyof typeof form, v: string) =>
     setForm((prev) => ({ ...prev, [k]: v }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /** Step 1 → Step 2: validate form, move to slot picker */
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.level || selectedDays.length === 0) {
-      toast({ title: "Please fill in all required fields", description: selectedDays.length === 0 ? "Please select at least one preferred day" : undefined, variant: "destructive" });
+      toast({
+        title: "Please fill in all required fields",
+        description: selectedDays.length === 0 ? "Please select at least one preferred day" : undefined,
+        variant: "destructive",
+      });
       return;
     }
-
-    setLoading(true);
-    const goalWithPhone = [
-      form.goal || "Free trial",
-      form.phone ? `WhatsApp: ${form.phone}` : "",
-      referredBy ? `ref:${referredBy}` : "",
-    ].filter(Boolean).join(" | ");
-
-    const { error } = await supabase.functions.invoke("submit-lead", {
-      body: {
-        name: form.name,
-        email: form.email.trim().toLowerCase(),
-        country: form.country || "Unknown",
-        level: form.level,
-        goal: goalWithPhone,
-        schedule: selectedDays.join(", "),
-        source: "free-trial-page",
-      },
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast({ title: "Something went wrong", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    track.lead({ content_name: "free-trial" });
-    setStep("success");
+    setStep("pick_slot");
   };
 
-  if (step === "success") {
-    const waMsg = encodeURIComponent(
-      `Hi! I just booked a free trial class on the Klovers website.\nName: ${form.name}\nLevel: ${form.level}\nGoal: ${form.goal}\nPreferred day(s): ${selectedDays.join(", ")}`
-    );
+  /** Step 2 → Step 3: book the selected slot */
+  const handleSlotSelect = async (dayOfWeek: number, startTime: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("book-trial", {
+        body: {
+          name: form.name,
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone || undefined,
+          country: form.country || "Unknown",
+          level: form.level,
+          goal: form.goal || undefined,
+          day_of_week: dayOfWeek,
+          start_time: startTime,
+          referrer_id: referredBy || undefined,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Booking failed", description: data.error, variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      setBookingResult(data.booking);
+      track.lead({ content_name: "free-trial" });
+      setStep("success");
+    } catch (err: any) {
+      toast({ title: "Something went wrong", description: err.message || "Please try again.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Success Screen ──────────────────────────────────────────────────────────
+  if (step === "success" && bookingResult) {
+    const formattedDate = new Date(bookingResult.trial_date + "T00:00:00").toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -154,23 +182,51 @@ const FreeTrialPage = () => {
             <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
-            <h1 className="text-3xl font-black text-foreground mb-3">You're in! 🎉</h1>
-            <p className="text-muted-foreground text-lg mb-8">
-              We've received your booking. A teacher will confirm your free class time via WhatsApp within a few hours.
+            <h1 className="text-3xl font-black text-foreground mb-3">Your trial is booked! 🎉</h1>
+
+            {/* Booking details card */}
+            <div className="bg-card border border-border rounded-2xl p-6 text-left mb-6 space-y-2">
+              <div className="flex items-center gap-3">
+                <CalendarPlus className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="font-bold text-foreground">{formattedDate}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {bookingResult.start_time_12h} · {bookingResult.duration_min} min · Cairo time
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-muted-foreground mb-6">
+              A teacher will confirm your class within a few hours. You'll receive a confirmation email with a calendar invite.
             </p>
+
+            {/* Add to Calendar */}
             <a
-              href={`${WHATSAPP_BASE}?text=${waMsg}`}
+              href={bookingResult.calendar_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold px-8 py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.02] text-base mb-4"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.02] text-base mb-4"
             >
-              Confirm via WhatsApp
-              <ArrowRight className="h-5 w-5" />
+              <CalendarPlus className="h-5 w-5" />
+              Add to Google Calendar
             </a>
-            <p className="text-sm text-muted-foreground mt-4">
-              Or explore the platform while you wait
-            </p>
-            <Button variant="outline" className="mt-3" onClick={() => navigate("/")}>
+
+            {/* Secondary: WhatsApp */}
+            <div className="mt-6 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-2">Have questions?</p>
+              <a
+                href={`${WHATSAPP_BASE}?text=${encodeURIComponent(`Hi! I just booked a free trial class for ${formattedDate} at ${bookingResult.start_time_12h}. I have a question.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-[#25D366] hover:underline font-medium"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Message us on WhatsApp
+              </a>
+            </div>
+
+            <Button variant="outline" className="mt-6" onClick={() => navigate("/")}>
               Back to Home
             </Button>
           </div>
@@ -180,6 +236,48 @@ const FreeTrialPage = () => {
     );
   }
 
+  // ── Slot Picker Screen (Step 2) ─────────────────────────────────────────────
+  if (step === "pick_slot") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-16">
+          <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
+            <div className="container mx-auto px-4 text-center max-w-3xl">
+              <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-3">
+                Pick your trial time
+              </h1>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Choose an available time slot for your free 45-minute class.
+              </p>
+            </div>
+          </section>
+
+          <section className="py-12 pb-24">
+            <div className="container mx-auto px-4">
+              <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
+                {loading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground">Booking your class...</p>
+                  </div>
+                ) : (
+                  <TrialSlotPicker
+                    selectedDays={selectedDays}
+                    onSelect={handleSlotSelect}
+                    onBack={() => setStep("form")}
+                  />
+                )}
+              </div>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Form Screen (Step 1) ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -217,9 +315,9 @@ const FreeTrialPage = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-foreground mb-1">Book your free class</h2>
-              <p className="text-sm text-muted-foreground mb-8">Takes 30 seconds. We'll confirm your slot via WhatsApp.</p>
+              <p className="text-sm text-muted-foreground mb-8">Takes 30 seconds. Pick your info, then choose a time.</p>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleFormSubmit} className="space-y-5">
                 {/* Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="name">Your name <span className="text-destructive">*</span></Label>
@@ -326,14 +424,13 @@ const FreeTrialPage = () => {
                   type="submit"
                   size="lg"
                   className="w-full gap-2 text-base font-bold h-13 mt-2"
-                  disabled={loading}
                 >
-                  {loading ? "Booking..." : "Book My Free Class"}
-                  {!loading && <ArrowRight className="h-5 w-5" />}
+                  Choose a Time Slot
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  No payment. No spam. We'll contact you to confirm your class time.
+                  No payment. No spam. Pick your time on the next step.
                 </p>
 
                 {/* Social proof nudge */}

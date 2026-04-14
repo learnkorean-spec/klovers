@@ -14,7 +14,7 @@ interface EmailPayload {
   sessions_total?: number;
   amount?: number;
   language?: string;
-  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review" | "payment_method_reminder" | "rejection";
+  template?: "welcome" | "enrollment" | "group_match" | "slot_confirmed" | "approval" | "pending_review" | "payment_method_reminder" | "rejection" | "trial_confirmed";
   enrollment_id?: string;
   rejection_reason?: "payment_not_received" | "time_slots_unavailable" | "other";
   rejection_note?: string;
@@ -35,6 +35,10 @@ interface EmailPayload {
   timezone?: string;
   level?: string;
   currency?: string;
+  trial_date?: string;
+  trial_time?: string;
+  trial_timezone?: string;
+  calendar_url?: string;
 }
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -503,6 +507,63 @@ function buildPaymentMethodReminderEmail(name: string, enrollmentId: string, lan
   };
 }
 
+function buildTrialConfirmedEmail(p: EmailPayload) {
+  const isAr = p.language === "ar";
+  const tz = (p.trial_timezone || "Africa/Cairo").replace(/_/g, " ");
+  const calBtn = p.calendar_url
+    ? `<div style="margin: 20px 0; text-align: center;">
+        <a href="${p.calendar_url}" style="display: inline-block; background: #4285f4; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">📅 ${isAr ? "أضف إلى تقويم جوجل" : "Add to Google Calendar"}</a>
+       </div>`
+    : "";
+
+  if (isAr) {
+    return {
+      subject: "KLovers — تم تأكيد حصتك التجريبية المجانية! ✅",
+      html: brandWrapper(`
+        <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 🎉</h1>
+        <p>تم تأكيد حصتك التجريبية المجانية في الكورية!</p>
+        ${brandTable([
+          ["📅 التاريخ", p.trial_date || ""],
+          ["⏰ الوقت", p.trial_time || ""],
+          ["🌍 المنطقة الزمنية", tz],
+          ["📚 المستوى", p.level || "مبتدئ"],
+          ["⏱ المدة", "45 دقيقة"],
+        ])}
+        ${calBtn}
+        <h3 style="color: ${BRAND_DARK}; font-size: 16px; margin-top: 24px;">ماذا تتوقع:</h3>
+        <ul style="color: ${BRAND_TEXT}; padding-right: 20px;">
+          <li>حصة مباشرة مع مدرس حقيقي</li>
+          <li>تقييم شخصي لمستواك</li>
+          <li>نصائح لتعلم الكورية بشكل أسرع</li>
+        </ul>
+        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">عندك أسئلة؟ تواصل معنا على واتساب.</p>
+      `, true),
+    };
+  }
+  return {
+    subject: "KLovers — Your Free Trial Class is Confirmed! ✅",
+    html: brandWrapper(`
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 🎉</h1>
+      <p>Your free Korean trial class has been confirmed!</p>
+      ${brandTable([
+        ["📅 Date", p.trial_date || ""],
+        ["⏰ Time", p.trial_time || ""],
+        ["🌍 Timezone", tz],
+        ["📚 Level", p.level || "Beginner"],
+        ["⏱ Duration", "45 minutes"],
+      ])}
+      ${calBtn}
+      <h3 style="color: ${BRAND_DARK}; font-size: 16px; margin-top: 24px;">What to expect:</h3>
+      <ul style="color: ${BRAND_TEXT}; padding-left: 20px;">
+        <li>Live class with a real teacher</li>
+        <li>Personalised level assessment</li>
+        <li>Tips on how to learn Korean faster</li>
+      </ul>
+      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Have questions? Message us on WhatsApp.</p>
+    `, false),
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -547,6 +608,9 @@ serve(async (req) => {
         break;
       case "rejection":
         ({ subject, html } = buildRejectionEmail(payload));
+        break;
+      case "trial_confirmed":
+        ({ subject, html } = buildTrialConfirmedEmail(payload));
         break;
       case "enrollment":
       default:
