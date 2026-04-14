@@ -148,7 +148,7 @@ interface ResubmitRequest {
 const GroupMatcher = () => {
   const [enrollments, setEnrollments] = useState<UnmatchedEnrollment[]>([]);
   const [privateUnmatched, setPrivateUnmatched] = useState<UnmatchedEnrollment[]>([]);
-  const [privateMatched, setPrivateMatched] = useState<(UnmatchedEnrollment & { matched_at: string })[]>([]);
+  const [privateMatched, setPrivateMatched] = useState<(UnmatchedEnrollment & { matched_at: string; assigned_day?: string; assigned_time?: string; assigned_timezone?: string })[]>([]);
   const [rejectedEnrollments, setRejectedEnrollments] = useState<(UnmatchedEnrollment & { slot_rejection_reason: string | null; slot_rejection_at: string | null })[]>([]);
   const [showAssigned, setShowAssigned] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
@@ -160,6 +160,10 @@ const GroupMatcher = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
   const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
+  const [assignTarget, setAssignTarget] = useState<UnmatchedEnrollment | null>(null);
+  const [assignDay, setAssignDay] = useState("");
+  const [assignTime, setAssignTime] = useState("");
+  const [assignTimezone, setAssignTimezone] = useState("Africa/Cairo");
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<UnmatchedEnrollment | null>(null);
   const [rejectResubmitId, setRejectResubmitId] = useState<string | null>(null);
@@ -229,7 +233,7 @@ const GroupMatcher = () => {
     // Fetch already-assigned private enrollments (matched_at set)
     const { data: rawMatchedPrivate } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url, matched_at")
+      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url, matched_at, assigned_day, assigned_time, assigned_timezone")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "private")
       .not("matched_at", "is", null)
@@ -369,15 +373,25 @@ const GroupMatcher = () => {
     }
   };
 
-  const handleMarkAssigned = async (enrollment: UnmatchedEnrollment) => {
-    setMarkingAssigned(enrollment.id);
+  const handleMarkAssigned = async () => {
+    if (!assignTarget || !assignDay || !assignTime) return;
+    setMarkingAssigned(assignTarget.id);
     try {
       const { error } = await supabase
         .from("enrollments")
-        .update({ matched_at: new Date().toISOString() } as any)
-        .eq("id", enrollment.id);
+        .update({
+          matched_at: new Date().toISOString(),
+          assigned_day: assignDay,
+          assigned_time: assignTime,
+          assigned_timezone: assignTimezone,
+        } as any)
+        .eq("id", assignTarget.id);
       if (error) throw error;
-      toast({ title: "Marked as assigned", description: `${enrollment.name} has been marked as assigned.` });
+      toast({ title: "Marked as assigned", description: `${assignTarget.name} assigned to ${assignDay} ${assignTime} (${assignTimezone}).` });
+      setAssignTarget(null);
+      setAssignDay("");
+      setAssignTime("");
+      setAssignTimezone("Africa/Cairo");
       fetchUnmatched();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1210,14 +1224,14 @@ const GroupMatcher = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={markingAssigned === m.id}
-                              onClick={() => handleMarkAssigned(m)}
+                              onClick={() => {
+                                setAssignTarget(m);
+                                setAssignDay(m.preferred_day || (m.preferred_days && m.preferred_days[0]) || "");
+                                setAssignTime(m.preferred_time || "");
+                                setAssignTimezone(m.timezone || "Africa/Cairo");
+                              }}
                             >
-                              {markingAssigned === m.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                "Mark Assigned"
-                              )}
+                              Mark Assigned
                             </Button>
                             <Button
                               size="sm"
@@ -1352,6 +1366,11 @@ const GroupMatcher = () => {
                           <p className="font-medium text-foreground truncate">{m.name}</p>
                           <p className="text-xs text-muted-foreground">
                             {m.email} · {m.level || "no level"} · Assigned {new Date(m.matched_at).toLocaleDateString()}
+                            {m.assigned_day && m.assigned_time && (
+                              <span className="ml-1 text-green-700 dark:text-green-400 font-medium">
+                                — {m.assigned_day} {m.assigned_time} ({m.assigned_timezone || "?"})
+                              </span>
+                            )}
                           </p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -1486,6 +1505,84 @@ const GroupMatcher = () => {
       </Dialog>
 
       {/* Reject Class Request Dialog */}
+      {/* Assign Slot Picker Dialog */}
+      <Dialog open={!!assignTarget} onOpenChange={open => { if (!open) setAssignTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" /> Assign Private Slot
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Assigning <span className="font-semibold text-foreground">{assignTarget?.name}</span> ({assignTarget?.email})
+            </p>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Day</label>
+              <Select value={assignDay} onValueChange={setAssignDay}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Time</label>
+              <Select value={assignTime} onValueChange={setAssignTime}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 24 }, (_, h) => {
+                    const hour = h.toString().padStart(2, "0");
+                    return [`${hour}:00`, `${hour}:30`];
+                  }).flat().map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Timezone</label>
+              <Select value={assignTimezone} onValueChange={setAssignTimezone}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Africa/Cairo">Africa/Cairo (Egypt)</SelectItem>
+                  <SelectItem value="Asia/Riyadh">Asia/Riyadh (Saudi)</SelectItem>
+                  <SelectItem value="Asia/Dubai">Asia/Dubai (UAE)</SelectItem>
+                  <SelectItem value="Asia/Kuwait">Asia/Kuwait</SelectItem>
+                  <SelectItem value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (Malaysia)</SelectItem>
+                  <SelectItem value="Asia/Singapore">Asia/Singapore</SelectItem>
+                  <SelectItem value="Asia/Jakarta">Asia/Jakarta (Indonesia)</SelectItem>
+                  <SelectItem value="Asia/Seoul">Asia/Seoul (Korea)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Asia/Tokyo (Japan)</SelectItem>
+                  <SelectItem value="Europe/London">Europe/London (UK)</SelectItem>
+                  <SelectItem value="Europe/Berlin">Europe/Berlin (CET)</SelectItem>
+                  <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
+                  <SelectItem value="America/Los_Angeles">America/Los_Angeles (PST)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignTarget(null)}>Cancel</Button>
+            <Button
+              disabled={!assignDay || !assignTime || markingAssigned === assignTarget?.id}
+              onClick={handleMarkAssigned}
+            >
+              {markingAssigned === assignTarget?.id ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
+              Assign Slot
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!rejectTarget} onOpenChange={open => !open && setRejectTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
