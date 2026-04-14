@@ -1,13 +1,14 @@
 /**
  * src/constants/levels.ts — Single source of truth for Korean course levels.
  *
- * What changed (2026-02-24):
- * - Replaced scattered "Beginner 1/2", "Intermediate 1/2", "Advanced 1/2" arrays
- *   with a unified 7-level TOPIK/CEFR classification (Foundation + Levels 1–6).
- * - All hardcoded level arrays across ~10 files now import from here.
- * - Legacy DB values (snake_case strings like "beginner_1") are preserved via
- *   mapLegacyLevel() — no DB migration needed.
- * - normalizeLevel() centralised here (was duplicated in 4 files).
+ * Canonical DB values (post-2026-04 migration):
+ *   hangul, l1, l2, l3, l4, l5, l6
+ *
+ * These short keys are what the database stores and what every API write must
+ * send. UI rendering uses `shortLabel` (e.g. "Hangul (A0)") via `LEVEL_SELECT_OPTIONS`.
+ *
+ * Legacy values (`foundation`, `level_1`…`level_6`, `beginner_1`, `intermediate_2`
+ * etc.) are supported READ-SIDE only via `mapLegacyLevel()` — never emit them on write.
  */
 
 export interface Level {
@@ -25,7 +26,7 @@ export interface Level {
 export const LEVELS: Level[] = [
   {
     id: 0,
-    key: "foundation",
+    key: "hangul",
     name: "Hangul Foundation",
     shortLabel: "Hangul (A0)",
     topik: null,
@@ -36,7 +37,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 1,
-    key: "level_1",
+    key: "l1",
     name: "Level 1",
     shortLabel: "L1 (TOPIK 1 / A1)",
     topik: 1,
@@ -47,7 +48,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 2,
-    key: "level_2",
+    key: "l2",
     name: "Level 2",
     shortLabel: "L2 (TOPIK 2 / A2)",
     topik: 2,
@@ -58,7 +59,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 3,
-    key: "level_3",
+    key: "l3",
     name: "Level 3",
     shortLabel: "L3 (TOPIK 3 / B1)",
     topik: 3,
@@ -69,7 +70,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 4,
-    key: "level_4",
+    key: "l4",
     name: "Level 4",
     shortLabel: "L4 (TOPIK 4 / B2)",
     topik: 4,
@@ -80,7 +81,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 5,
-    key: "level_5",
+    key: "l5",
     name: "Level 5",
     shortLabel: "L5 (TOPIK 5 / C1)",
     topik: 5,
@@ -91,7 +92,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 6,
-    key: "level_6",
+    key: "l6",
     name: "Level 6",
     shortLabel: "L6 (TOPIK 6 / C2)",
     topik: 6,
@@ -129,59 +130,95 @@ export const isFoundationLevel = (id: number): boolean => id === 0;
 // Normalizer (centralised — was duplicated in 4 files)
 // ---------------------------------------------------------------------------
 
-/** Convert any level label to snake_case for DB comparison */
-export const normalizeLevel = (label: string): string =>
-  label.trim().toLowerCase().replace(/\s+/g, "_");
+/**
+ * Convert any level label (legacy snake_case, shortLabel, display name, etc.)
+ * into the canonical DB key (`hangul`, `l1`…`l6`). Falls back to a lowercase
+ * snake_case form if no mapping exists — that keeps the old behaviour for
+ * unrelated fields (e.g. self-reported CEFR strings) while routing every
+ * recognised level through the canonical vocabulary.
+ */
+export const normalizeLevel = (label: string): string => {
+  if (!label) return "";
+  const snake = label.trim().toLowerCase().replace(/\s+/g, "_");
+  // Try legacy map first — covers "foundation", "level_1", "Beginner 1", etc.
+  const mapped = LEGACY_MAP[snake];
+  if (mapped) return mapped;
+  // Canonical key already? Return as-is.
+  if ((LEVEL_KEYS as readonly string[]).includes(snake)) return snake;
+  return snake;
+};
+
+// ---------------------------------------------------------------------------
+// Display helper (use anywhere a level key is rendered to the user)
+// ---------------------------------------------------------------------------
+
+/**
+ * Map a canonical key → friendly `shortLabel` (e.g. "l1" → "L1 (TOPIK 1 / A1)").
+ * Falls back to the raw value for anything unrecognised, so legacy strings
+ * still render readably during the transition.
+ */
+export const getLevelShortLabel = (key: string | null | undefined): string => {
+  if (!key) return "";
+  const lvl = getLevelByKey(key) ?? mapLegacyLevel(key);
+  return lvl?.shortLabel ?? key;
+};
 
 // ---------------------------------------------------------------------------
 // Legacy mapping — maps old DB keys to new Level objects
 // ---------------------------------------------------------------------------
 
 const LEGACY_MAP: Record<string, string> = {
+  // Canonical keys (identity — already correct)
+  hangul: "hangul",
+  l1: "l1",
+  l2: "l2",
+  l3: "l3",
+  l4: "l4",
+  l5: "l5",
+  l6: "l6",
+  // Pre-2026-04 canonical keys
+  foundation: "hangul",
+  level_0: "hangul",
+  level_1: "l1",
+  level_2: "l2",
+  level_3: "l3",
+  level_4: "l4",
+  level_5: "l5",
+  level_6: "l6",
   // Old "Beginner 1" style
-  beginner_1: "level_1",
-  "beginner-1": "level_1",
-  beginner1: "level_1",
-  beginner_2: "level_2",
-  "beginner-2": "level_2",
-  beginner2: "level_2",
+  beginner_1: "l1",
+  "beginner-1": "l1",
+  beginner1: "l1",
+  beginner_2: "l2",
+  "beginner-2": "l2",
+  beginner2: "l2",
   // Old "Intermediate" style
-  intermediate_1: "level_3",
-  "intermediate-1": "level_3",
-  intermediate1: "level_3",
-  "intermediate-3": "level_3",
-  intermediate_3: "level_3",
-  intermediate_2: "level_4",
-  "intermediate-2": "level_4",
-  intermediate2: "level_4",
-  "intermediate-4": "level_4",
-  intermediate_4: "level_4",
+  intermediate_1: "l3",
+  "intermediate-1": "l3",
+  intermediate1: "l3",
+  "intermediate-3": "l3",
+  intermediate_3: "l3",
+  intermediate_2: "l4",
+  "intermediate-2": "l4",
+  intermediate2: "l4",
+  "intermediate-4": "l4",
+  intermediate_4: "l4",
   // Old "Advanced" style
-  advanced_1: "level_5",
-  "advanced-1": "level_5",
-  advanced1: "level_5",
-  "advanced-5": "level_5",
-  advanced_5: "level_5",
-  advanced_2: "level_6",
-  "advanced-2": "level_6",
-  advanced2: "level_6",
-  "advanced-6": "level_6",
-  advanced_6: "level_6",
-  // Hangul / foundation
-  hangul: "foundation",
-  hangul_foundation: "foundation",
-  foundation: "foundation",
-  level_0: "foundation",
+  advanced_1: "l5",
+  "advanced-1": "l5",
+  advanced1: "l5",
+  "advanced-5": "l5",
+  advanced_5: "l5",
+  advanced_2: "l6",
+  "advanced-2": "l6",
+  advanced2: "l6",
+  "advanced-6": "l6",
+  advanced_6: "l6",
+  // Hangul aliases
+  hangul_foundation: "hangul",
   // TOPIK special
-  topik_1: "level_1",
-  topik_2: "level_2",
-  // Direct keys (already correct)
-  level_1: "level_1",
-  level_2: "level_2",
-  level_3: "level_3",
-  level_4: "level_4",
-  level_5: "level_5",
-  level_6: "level_6",
+  topik_1: "l1",
+  topik_2: "l2",
 };
 
 /**

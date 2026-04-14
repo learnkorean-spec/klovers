@@ -11,8 +11,10 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-import { LEVEL_NAMES, normalizeLevel } from "@/constants/levels";
-const LEVELS = LEVEL_NAMES;
+import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelShortLabel } from "@/constants/levels";
+// Keep the canonical short keys (hangul, l1 … l6) as values so the RPC
+// receives exactly what schedule_packages.level contains. Labels stay friendly.
+const LEVELS = LEVEL_SELECT_OPTIONS;
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 import { formatTime } from "@/lib/admin-utils";
@@ -206,7 +208,7 @@ const ResubmitSchedulePage = () => {
               <Select value={selectedLevel} onValueChange={setSelectedLevel}>
                 <SelectTrigger><SelectValue placeholder="Select your level" /></SelectTrigger>
                 <SelectContent>
-                  {LEVELS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  {LEVELS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -254,7 +256,7 @@ const ResubmitSchedulePage = () => {
                               <span className="text-xs">{pkg.timezone.replace(/_/g, " ")}</span>
                             </div>
                           </div>
-                          <Badge variant="outline">{pkg.level.replace(/_/g, " ")}</Badge>
+                          <Badge variant="outline">{getLevelShortLabel(pkg.level)}</Badge>
                         </div>
                       </button>
                     ))}

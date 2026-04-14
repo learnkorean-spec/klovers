@@ -1,5 +1,6 @@
 import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getLevelShortLabel } from "@/constants/levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -177,7 +178,7 @@ const ScheduleOptionsManager = () => {
               .map(([level, days]) => (
                 <div key={level} className="flex items-center gap-3 text-sm">
                   <span className="text-muted-foreground w-36 capitalize flex-shrink-0">
-                    {level.replace(/_/g, " ")}
+                    {getLevelShortLabel(level)}
                   </span>
                   <div className="flex flex-wrap gap-1">
                     {days.map((d) => (

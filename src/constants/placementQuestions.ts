@@ -357,35 +357,35 @@ export const PLACEMENT_QUESTIONS: PlacementQuestion[] = [
 // ─── Speaking Assessment Prompts ──────────────────────────────────────────────
 // 5 prompts per level — shown in the post-MCQ speaking self-assessment phase.
 export const SPEAKING_PROMPTS: Record<string, { korean: string; romanisation: string }[]> = {
-  foundation: [
+  hangul: [
     { korean: "안녕하세요.", romanisation: "an-nyeong-ha-se-yo" },
     { korean: "감사합니다.", romanisation: "gam-sa-ham-ni-da" },
     { korean: "저는 학생이에요.", romanisation: "jeo-neun hak-saeng-i-e-yo" },
     { korean: "이름이 뭐예요?", romanisation: "i-reum-i mwo-ye-yo" },
     { korean: "만나서 반갑습니다.", romanisation: "man-na-seo ban-gap-seum-ni-da" },
   ],
-  level_1: [
+  l1: [
     { korean: "오늘 날씨가 좋아요.", romanisation: "o-neul nal-ssi-ga jo-a-yo" },
     { korean: "저는 한국어를 배우고 있어요.", romanisation: "jeo-neun han-gu-geo-reul bae-u-go i-sseo-yo" },
     { korean: "커피 한 잔 주세요.", romanisation: "keo-pi han jan ju-se-yo" },
     { korean: "지금 어디에 가요?", romanisation: "ji-geum eo-di-e ga-yo" },
     { korean: "오늘 많이 피곤해요.", romanisation: "o-neul ma-ni pi-gon-hae-yo" },
   ],
-  level_2: [
+  l2: [
     { korean: "비가 오니까 우산을 가져가세요.", romanisation: "bi-ga o-ni-kka u-sa-neul ga-jyeo-ga-se-yo" },
     { korean: "한국 음식을 좋아해서 자주 먹어요.", romanisation: "han-guk eum-si-geul jo-a-hae-seo ja-ju meo-geo-yo" },
     { korean: "도서관에서 공부해야 해요.", romanisation: "do-seo-gwa-ne-seo gong-bu-hae-ya hae-yo" },
     { korean: "이번 주말에 영화 보러 갈 거예요.", romanisation: "i-beon ju-ma-re yeong-hwa bo-reo gal geo-ye-yo" },
     { korean: "어제 친구를 만났는데 정말 즐거웠어요.", romanisation: "eo-je chin-gu-reul man-nan-neun-de jeong-mal jeul-geo-wo-sseo-yo" },
   ],
-  level_3: [
+  l3: [
     { korean: "환경 문제에 더 관심을 가져야 할 것 같아요.", romanisation: "hwan-gyeong mun-je-e deo gwan-si-meul ga-jyeo-ya hal geot ga-ta-yo" },
     { korean: "경험이 많을수록 더 현명한 결정을 내릴 수 있어요.", romanisation: "gyeong-heo-mi ma-neul-su-rok deo hyeon-myeong-han gyeol-jeong-eul nae-ril su i-sseo-yo" },
     { korean: "스마트폰을 지나치게 사용하는 게 건강에 좋지 않아요.", romanisation: "seu-ma-teu-po-neul ji-na-chi-ge sa-yong-ha-neun ge geon-gang-e jo-chi a-na-yo" },
     { korean: "요즘 바쁜 바람에 운동을 못 하고 있어요.", romanisation: "yo-jeum ba-ppeun ba-ra-me un-dong-eul mot ha-go i-sseo-yo" },
     { korean: "그 결정이 어떤 영향을 미칠지 생각해 봐야 해요.", romanisation: "geu gyeol-jeong-i eo-tteon yeong-hyang-eul mi-chil-ji saeng-ga-kae bwa-ya hae-yo" },
   ],
-  level_5: [
+  l5: [
     { korean: "인공지능 발전이 노동 시장에 미치는 영향은 다각적으로 분석되어야 합니다.", romanisation: "in-gong-ji-neung bal-jeo-ni no-dong si-jang-e mi-chi-neun yeong-hyang-eun da-gak-jeo-geu-ro bun-seok-doe-eo-ya ham-ni-da" },
     { korean: "글로벌 공급망 불안정으로 인해 물가 상승 압력이 높아지고 있습니다.", romanisation: "geul-lo-beol gong-geup-mang bu-ran-jeong-eu-ro in-hae mul-ga sang-seung am-nyeo-gi no-pa-ji-go it-seum-ni-da" },
     { korean: "이 정책의 실효성을 높이려면 국민적 합의가 선행되어야 합니다.", romanisation: "i jeong-chae-gui sil-hyo-seong-eul no-pi-ryeo-myeon guk-min-jeok ha-bui-ga seon-haeng-doe-eo-ya ham-ni-da" },
@@ -407,7 +407,7 @@ export interface SubTestQuestion {
 }
 
 export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
-  foundation: [
+  hangul: [
     {
       audio: "저는 선생님이에요.",
       question: "What is the speaker's job?",
@@ -444,7 +444,7 @@ export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "이름이 뭐예요? = What is your name? 저는 민준이에요 = I am Minjun.",
     },
   ],
-  level_1: [
+  l1: [
     {
       audio: "저는 어제 도서관에서 공부했어요. 그리고 친구를 만났어요.",
       question: "Where did the speaker study yesterday?",
@@ -481,7 +481,7 @@ export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "수업 = class. 3시에 끝나요 = ends at 3 o'clock. 4시 is when they get home.",
     },
   ],
-  level_2: [
+  l2: [
     {
       audio: "버스가 30분 뒤에 와요. 지하철을 타는 게 더 빠를 것 같아요.",
       question: "Why is the subway recommended?",
@@ -518,7 +518,7 @@ export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "노래를 잘 해요 = sings well. 그래서 = therefore. 노래방 = karaoke room.",
     },
   ],
-  level_3: [
+  l3: [
     {
       audio: "최근 연구에 따르면, 하루에 7-8시간 수면이 집중력과 기억력에 직접적인 영향을 미친다고 합니다.",
       question: "What does the research suggest?",
@@ -555,7 +555,7 @@ export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "경향이 있다 = tend to. 결혼보다 개인 생활을 더 중요하게 = value personal life more than marriage.",
     },
   ],
-  level_5: [
+  l5: [
     {
       audio: "이번 발표에서는 디지털 전환이 노동 시장 구조에 미치는 영향을 다각도에서 검토해 보겠습니다.",
       question: "What will the presentation examine?",
@@ -598,7 +598,7 @@ export const LISTENING_EXAM: Record<string, SubTestQuestion[]> = {
 // 5 level-matched questions per band. Passage displayed → MCQ comprehension.
 
 export const READING_EXAM: Record<string, SubTestQuestion[]> = {
-  foundation: [
+  hangul: [
     {
       passage: "저는 이민준이에요. 저는 학생이에요. 학교는 서울에 있어요.",
       question: "Where is the school?",
@@ -635,7 +635,7 @@ export const READING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "내일 = tomorrow. 친구 생일 = friend's birthday. The cake is for tomorrow's birthday.",
     },
   ],
-  level_1: [
+  l1: [
     {
       passage: "저는 매일 아침 7시에 일어나요. 아침을 먹고 지하철을 타요. 회사는 9시에 시작해요.",
       question: "How does the speaker commute to work?",
@@ -672,7 +672,7 @@ export const READING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "부모님을 만나러 = to meet parents. -러 가다 = go in order to.",
     },
   ],
-  level_2: [
+  l2: [
     {
       passage: "저는 요즘 바빠서 운동을 못 하고 있어요. 그래서 건강이 걱정돼요. 다음 달부터 헬스장에 등록하려고 해요.",
       question: "What is the speaker planning to do next month?",
@@ -709,7 +709,7 @@ export const READING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "나이가 많은 사람 = older people. 처음 만나는 사람 = people you meet for the first time. Both require 존댓말.",
     },
   ],
-  level_3: [
+  l3: [
     {
       passage: "현대 사회에서 사람들은 점점 더 바쁜 생활을 하고 있습니다. 이로 인해 가족과 보내는 시간이 줄고 있으며, 이는 가족 관계에도 영향을 미치고 있습니다.",
       question: "What negative effect of modern busyness is mentioned?",
@@ -746,7 +746,7 @@ export const READING_EXAM: Record<string, SubTestQuestion[]> = {
       explanation: "취업을 준비하는 청년들 = young people preparing for employment. 직업 훈련 = vocational training.",
     },
   ],
-  level_5: [
+  l5: [
     {
       passage: "인공지능 기술의 급속한 발전으로 의료, 금융, 교육 등 다양한 분야에서 패러다임의 전환이 이루어지고 있다. 이에 따라 기존 직업의 상당수가 대체될 것이라는 전망과 함께, 새로운 형태의 직업이 창출될 것이라는 기대도 공존하고 있다.",
       question: "What dual outlook exists about AI's effect on the workforce?",
@@ -819,15 +819,15 @@ export function computePlacementResult(answers: Record<number, number>): Placeme
   let bandMax: number;
 
   if (score <= 6) {
-    levelKey = "foundation"; levelLabel = "Hangul Foundation"; bandMin = 0; bandMax = 6;
+    levelKey = "hangul"; levelLabel = "Hangul Foundation"; bandMin = 0; bandMax = 6;
   } else if (score <= 12) {
-    levelKey = "level_1"; levelLabel = "Level 1 (A1 / TOPIK 1)"; bandMin = 7; bandMax = 12;
+    levelKey = "l1"; levelLabel = "Level 1 (A1 / TOPIK 1)"; bandMin = 7; bandMax = 12;
   } else if (score <= 18) {
-    levelKey = "level_2"; levelLabel = "Level 2 (A2 / TOPIK 2)"; bandMin = 13; bandMax = 18;
+    levelKey = "l2"; levelLabel = "Level 2 (A2 / TOPIK 2)"; bandMin = 13; bandMax = 18;
   } else if (score <= 24) {
-    levelKey = "level_3"; levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)"; bandMin = 19; bandMax = 24;
+    levelKey = "l3"; levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)"; bandMin = 19; bandMax = 24;
   } else {
-    levelKey = "level_5"; levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)"; bandMin = 25; bandMax = 30;
+    levelKey = "l5"; levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)"; bandMin = 25; bandMax = 30;
   }
 
   // Within 1 of the upper boundary → close to the next level
@@ -849,31 +849,31 @@ export interface RoadmapWeek {
 }
 
 export const STUDY_ROADMAPS: Record<string, RoadmapWeek[]> = {
-  foundation: [
+  hangul: [
     { week: 1, title: "Master the Korean alphabet", tasks: ["Learn 14 basic consonants (ㄱ ㄴ ㄷ ㄹ …)", "Learn 10 basic vowels (ㅏ ㅑ ㅓ ㅕ …)", "Practice reading syllable blocks aloud"] },
     { week: 2, title: "Pronunciation & syllable rules", tasks: ["Understand batchim (final consonants)", "Practice liaison & nasalisation rules", "Read simple syllables at speed (가나다라…)"] },
     { week: 3, title: "Core greetings & self-introduction", tasks: ["안녕하세요 · 감사합니다 · 미안합니다", "Introduce yourself: 저는 [name]입니다", "Numbers 1–10 in both counting systems"] },
     { week: 4, title: "Everyday basics", tasks: ["Days of the week & months", "Common classroom phrases", "Start Klovers Foundation class"] },
   ],
-  level_1: [
+  l1: [
     { week: 1, title: "Sentence structure & particles", tasks: ["Subject particle 이/가, object particle 을/를", "Topic particle 은/는 vs subject particle", "Build 5 simple Subject–Verb sentences daily"] },
     { week: 2, title: "Core verbs & adjectives", tasks: ["가다·오다·먹다·마시다·보다", "좋다·싫다·크다·작다 (descriptive verbs)", "Conjugate into formal polite -ㅂ니다/습니다"] },
     { week: 3, title: "Present, past & future tense", tasks: ["Present: -아요/어요", "Past: -았어요/었어요", "Future: -(으)ㄹ 거예요"] },
     { week: 4, title: "Daily conversation practice", tasks: ["Ordering food at a café", "Asking for prices & locations", "Start Klovers Level 1 class"] },
   ],
-  level_2: [
+  l2: [
     { week: 1, title: "Connectors & reasons", tasks: ["Reason: -아서/어서 and -니까", "Sequence: -고 (and then)", "Practice writing 5 linked sentences per day"] },
     { week: 2, title: "Expressing desire & ability", tasks: ["-고 싶다 (want to)", "-(으)ㄹ 수 있다/없다 (can/cannot)", "Polite requests: -아/어 주세요"] },
     { week: 3, title: "Conditionals & time", tasks: ["If/when: -(으)면", "While: -는 동안", "Duration: -동안 vs -후에"] },
     { week: 4, title: "Reading short Korean texts", tasks: ["Read one Korean children's book passage weekly", "Expand vocabulary to 500+ words", "Start Klovers Level 2 class"] },
   ],
-  level_3: [
+  l3: [
     { week: 1, title: "Advanced grammar patterns", tasks: ["-더라고요 (past personal observation)", "-는 바람에 (unintended negative cause)", "-(으)ㄹ 뻔했다 (almost did)"] },
     { week: 2, title: "Indirect speech & nuance", tasks: ["Indirect speech: -다고 하다 / -라고 하다", "Quoted commands: -(으)라고 하다", "Distinguish formal & informal registers"] },
     { week: 3, title: "Intermediate reading comprehension", tasks: ["Read Korean news headlines daily", "Summarise articles in Korean (3–5 sentences)", "Learn 20 new TOPIK 3 vocabulary words per week"] },
     { week: 4, title: "Natural speech & idioms", tasks: ["Watch 1 Korean drama episode with Korean subtitles", "Shadow native speakers for pronunciation", "Start Klovers Level 3–4 class"] },
   ],
-  level_5: [
+  l5: [
     { week: 1, title: "Advanced grammar nuance", tasks: ["-(으)ㄴ/는 셈이다 (amounts to / practically)", "-기는커녕 (far from, let alone)", "모순·영향·논쟁 — C1 vocabulary lists"] },
     { week: 2, title: "Academic & professional Korean", tasks: ["Write a 200-word opinion paragraph in Korean", "Learn formal writing endings (-ㄴ바, -인즉)", "Study Korean business email patterns"] },
     { week: 3, title: "TOPIK II writing practice", tasks: ["Practice 200-word descriptive essays (설명문)", "Practice 700-word argumentative essays (논설문)", "Review past TOPIK II writing prompts"] },

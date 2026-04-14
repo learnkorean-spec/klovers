@@ -128,7 +128,7 @@ const EnrollNowPage = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(p("groupId") || null);
   const [selectedGroupName, setSelectedGroupName] = useState<string>(p("groupName"));
 
-  // Korean level selection — selectedLevel stores the DB key (e.g. "foundation", "level_1")
+  // Korean level selection — selectedLevel stores the canonical DB key (e.g. "hangul", "l1")
   const [selectedLevel, setSelectedLevel] = useState(p("level"));
 
   // Student preference for scheduling

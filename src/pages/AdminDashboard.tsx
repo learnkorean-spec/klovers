@@ -1865,13 +1865,9 @@ const AdminDashboard = () => {
                 <SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— Not set —</SelectItem>
-                  <SelectItem value="foundation">Foundation</SelectItem>
-                  <SelectItem value="level_1">Level 1</SelectItem>
-                  <SelectItem value="level_2">Level 2</SelectItem>
-                  <SelectItem value="level_3">Level 3</SelectItem>
-                  <SelectItem value="level_4">Level 4</SelectItem>
-                  <SelectItem value="level_5">Level 5</SelectItem>
-                  <SelectItem value="level_6">Level 6</SelectItem>
+                  {LEVEL_SELECT_OPTIONS.map((l) => (
+                    <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                  ))}
                   <SelectItem value="A2 Elementary">A2 Elementary</SelectItem>
                 </SelectContent>
               </Select>

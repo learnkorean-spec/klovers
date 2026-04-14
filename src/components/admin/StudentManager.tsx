@@ -1133,7 +1133,7 @@ const StudentManager = () => {
             </div>
             <div className="space-y-1">
               <Label>Level</Label>
-              <Input value={enrollForm.level} onChange={e => setEnrollForm(f => ({ ...f, level: e.target.value }))} placeholder="e.g. level_1" />
+              <Input value={enrollForm.level} onChange={e => setEnrollForm(f => ({ ...f, level: e.target.value }))} placeholder="e.g. l1" />
             </div>
             <div className="space-y-1">
               <Label>Sessions included</Label>

@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, Circle, AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 
 interface ChecklistItem {
   key: string;
@@ -38,11 +39,10 @@ const TIMEZONES = [
   "Australia/Sydney",
 ];
 
-const LEVELS = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
-];
+// Korean course levels — sourced from the canonical single source of truth
+// in @/constants/levels so writes to profiles.level always use the short keys
+// (hangul, l1 … l6) that match schedule_packages / enrollments / placement_tests.
+const LEVELS = LEVEL_SELECT_OPTIONS;
 
 const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, autoFocusField }: RegistrationChecklistProps) => {
   const navigate = useNavigate();

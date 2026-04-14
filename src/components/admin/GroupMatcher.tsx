@@ -9,7 +9,7 @@ import { Users, CalendarDays, Clock, Globe, Plus, Loader2, Lightbulb, CheckCircl
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { normalizeLevel } from "@/constants/levels";
+import { normalizeLevel, getLevelShortLabel } from "@/constants/levels";
 
 interface UnmatchedEnrollment {
   id: string;
@@ -910,7 +910,7 @@ const GroupMatcher = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <Lightbulb className="h-4 w-4 text-primary" />
-                  Suggested new slots for <Badge variant="outline">{createdGroup.level.replace(/_/g, " ")}</Badge>
+                  Suggested new slots for <Badge variant="outline">{getLevelShortLabel(createdGroup.level)}</Badge>
                 </div>
                 <div className="grid gap-2">
                   {suggestedSlots.map((slot) => {
@@ -1046,7 +1046,7 @@ const GroupMatcher = () => {
                               {m.timezone?.replace(/_/g, " ") || "—"}
                             </span>
                             {m.level && (
-                              <Badge variant="outline" className="text-xs">{m.level.replace(/_/g, " ")}</Badge>
+                              <Badge variant="outline" className="text-xs">{getLevelShortLabel(m.level)}</Badge>
                             )}
                             <button
                               onClick={() => handleViewReceipt(m.receipt_url, m.name)}
@@ -1144,7 +1144,7 @@ const GroupMatcher = () => {
                           <span>{Math.round(item.enrollment.amount).toLocaleString()} {item.enrollment.currency || "USD"}</span>
                         )}
                         {item.enrollment.level && (
-                          <Badge variant="outline" className="text-xs">{item.enrollment.level.replace(/_/g, " ")}</Badge>
+                          <Badge variant="outline" className="text-xs">{getLevelShortLabel(item.enrollment.level)}</Badge>
                         )}
                         {item.enrollment.preferred_day && (
                           <span>Day: {item.enrollment.preferred_day}</span>
@@ -1254,7 +1254,7 @@ const GroupMatcher = () => {
                             </span>
                           )}
                           {m.level ? (
-                            <Badge variant="outline" className="text-xs">{m.level.replace(/_/g, " ")}</Badge>
+                            <Badge variant="outline" className="text-xs">{getLevelShortLabel(m.level)}</Badge>
                           ) : null}
                           <button
                             onClick={() => handleViewReceipt(m.receipt_url, m.name)}
@@ -1449,7 +1449,7 @@ const GroupMatcher = () => {
                           </div>
                           <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
                             <Badge variant="outline" className="text-[10px]">{m.plan_type}</Badge>
-                            {m.level && <Badge variant="outline" className="text-[10px]">{m.level.replace(/_/g, " ")}</Badge>}
+                            {m.level && <Badge variant="outline" className="text-[10px]">{getLevelShortLabel(m.level)}</Badge>}
                             {m.slot_rejection_at && (
                               <span>Rejected {new Date(m.slot_rejection_at).toLocaleString()}</span>
                             )}

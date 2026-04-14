@@ -14,16 +14,18 @@ export interface GroupData {
   package_id: string;
 }
 
-const LEVEL_LABELS: Record<string, string> = {
-  beginner_1: "Korean Level 1",
-  beginner_2: "Korean Level 2",
-  intermediate_1: "Intermediate 1",
-  intermediate_2: "Intermediate 2",
-  advanced: "Advanced",
-};
+// Delegate to the canonical level registry so marketing copy always matches
+// what students see in the intake and admin. Falls back to a prettified form
+// for any unknown legacy values (beginner_1, etc.) during the transition.
+import { getLevelShortLabel } from "@/constants/levels";
 
 export function getLevelLabel(level: string): string {
-  return LEVEL_LABELS[level] || level.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  if (!level) return "";
+  const mapped = getLevelShortLabel(level);
+  // If still the raw key (unrecognised), apply title case for readability.
+  return mapped === level
+    ? level.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : mapped;
 }
 
 export function getUrgencyLabel(seatsLeft: number): GroupData["urgency_label"] {

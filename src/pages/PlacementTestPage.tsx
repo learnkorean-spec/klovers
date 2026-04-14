@@ -33,19 +33,19 @@ const formatTime = (s: number) => {
 
 // Keys match levelKey values returned by computePlacementResult
 const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
-  foundation: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words.", nextLabel: "Level 1" },
-  level_1:    { emoji: "🌿", tagline: "Beginner (A1)", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
-  level_2:    { emoji: "📚", tagline: "Elementary (A2)", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3–4", prevLabel: "Level 1" },
-  level_3:    { emoji: "🎯", tagline: "Intermediate (B1–B2)", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech.", nextLabel: "Level 5–6", prevLabel: "Level 2" },
-  level_5:    { emoji: "🏆", tagline: "Advanced (C1–C2)", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II.", prevLabel: "Level 3–4" },
+  hangul: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words.", nextLabel: "Level 1" },
+  l1:    { emoji: "🌿", tagline: "Beginner (A1)", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
+  l2:    { emoji: "📚", tagline: "Elementary (A2)", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3–4", prevLabel: "Level 1" },
+  l3:    { emoji: "🎯", tagline: "Intermediate (B1–B2)", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech.", nextLabel: "Level 5–6", prevLabel: "Level 2" },
+  l5:    { emoji: "🏆", tagline: "Advanced (C1–C2)", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II.", prevLabel: "Level 3–4" },
 };
 
 const LEVEL_META_AR: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
-  foundation: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "أنت في البداية. صفنا التأسيسي سيعلمك الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
-  level_1:    { emoji: "🌿", tagline: "مبتدئ (A1)", description: "تعرف الأساسيات. صفنا مستوى 1 يبني جملاً بسيطة وأرقاماً ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
-  level_2:    { emoji: "📚", tagline: "ابتدائي (A2)", description: "تستطيع التعامل مع المحادثات البسيطة. صفنا مستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
-  level_3:    { emoji: "🎯", tagline: "متوسط (B1–B2)", description: "أنت مرتاح مع الكورية. صفنا مستوى 3–4 يتعمق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
-  level_5:    { emoji: "🏆", tagline: "متقدم (C1–C2)", description: "تتحدث الكورية بطلاقة. صفنا مستوى 5–6 يصقل الكورية الأكاديمية والمهنية لـ TOPIK II.", prevLabel: "مستوى 3–4" },
+  hangul: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "أنت في البداية. صفنا التأسيسي سيعلمك الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
+  l1:    { emoji: "🌿", tagline: "مبتدئ (A1)", description: "تعرف الأساسيات. صفنا مستوى 1 يبني جملاً بسيطة وأرقاماً ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
+  l2:    { emoji: "📚", tagline: "ابتدائي (A2)", description: "تستطيع التعامل مع المحادثات البسيطة. صفنا مستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
+  l3:    { emoji: "🎯", tagline: "متوسط (B1–B2)", description: "أنت مرتاح مع الكورية. صفنا مستوى 3–4 يتعمق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
+  l5:    { emoji: "🏆", tagline: "متقدم (C1–C2)", description: "تتحدث الكورية بطلاقة. صفنا مستوى 5–6 يصقل الكورية الأكاديمية والمهنية لـ TOPIK II.", prevLabel: "مستوى 3–4" },
 };
 
 const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
@@ -68,35 +68,35 @@ const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5
 const BAND_LABELS_AR = ["تأسيس", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
 
 const JOURNEY_MESSAGES: Record<string, string> = {
-  foundation: "Most Foundation students reach Level 1 in just 8 weeks with Klovers",
-  level_1:    "Most Level 1 students reach Level 2 in 12 weeks with Klovers",
-  level_2:    "Most Level 2 students reach Level 3–4 in 20 weeks with Klovers",
-  level_3:    "Advanced fluency typically takes 6–12 more months of focused practice",
-  level_5:    "You're already advanced — refine your Korean for TOPIK 5–6 certification",
+  hangul: "Most Foundation students reach Level 1 in just 8 weeks with Klovers",
+  l1:    "Most Level 1 students reach Level 2 in 12 weeks with Klovers",
+  l2:    "Most Level 2 students reach Level 3–4 in 20 weeks with Klovers",
+  l3:    "Advanced fluency typically takes 6–12 more months of focused practice",
+  l5:    "You're already advanced — refine your Korean for TOPIK 5–6 certification",
 };
 
 const JOURNEY_MESSAGES_AR: Record<string, string> = {
-  foundation: "معظم طلاب التأسيس يصلون للمستوى 1 في 8 أسابيع فقط مع Klovers",
-  level_1:    "معظم طلاب المستوى 1 يصلون للمستوى 2 في 12 أسبوعاً مع Klovers",
-  level_2:    "معظم طلاب المستوى 2 يصلون للمستوى 3–4 في 20 أسبوعاً مع Klovers",
-  level_3:    "الطلاقة المتقدمة تستغرق عادة 6–12 شهراً إضافية من التمرين المركز",
-  level_5:    "أنت متقدم بالفعل — صقّل كوريتك لشهادة TOPIK 5–6",
+  hangul: "معظم طلاب التأسيس يصلون للمستوى 1 في 8 أسابيع فقط مع Klovers",
+  l1:    "معظم طلاب المستوى 1 يصلون للمستوى 2 في 12 أسبوعاً مع Klovers",
+  l2:    "معظم طلاب المستوى 2 يصلون للمستوى 3–4 في 20 أسبوعاً مع Klovers",
+  l3:    "الطلاقة المتقدمة تستغرق عادة 6–12 شهراً إضافية من التمرين المركز",
+  l5:    "أنت متقدم بالفعل — صقّل كوريتك لشهادة TOPIK 5–6",
 };
 
 const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
-  foundation: { quote: "Starting from zero was scary, but Klovers made Hangul so easy. Best decision I made!", author: "Yasmine H., Alexandria" },
-  level_1:    { quote: "I could hold basic conversations in Korean after just 8 weeks. The classes are amazing!", author: "Ahmed K., Cairo" },
-  level_2:    { quote: "My pronunciation improved so much — my K-drama friends say I sound like a native now.", author: "Nour M., Cairo" },
-  level_3:    { quote: "I passed TOPIK II after studying with Klovers for 6 months. Highly recommend!", author: "Sara L., Giza" },
-  level_5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
+  hangul: { quote: "Starting from zero was scary, but Klovers made Hangul so easy. Best decision I made!", author: "Yasmine H., Alexandria" },
+  l1:    { quote: "I could hold basic conversations in Korean after just 8 weeks. The classes are amazing!", author: "Ahmed K., Cairo" },
+  l2:    { quote: "My pronunciation improved so much — my K-drama friends say I sound like a native now.", author: "Nour M., Cairo" },
+  l3:    { quote: "I passed TOPIK II after studying with Klovers for 6 months. Highly recommend!", author: "Sara L., Giza" },
+  l5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
 };
 
 const SOCIAL_PROOF_AR: Record<string, { quote: string; author: string }> = {
-  foundation: { quote: "البدء من الصفر كان مخيفاً، لكن Klovers جعلت الهانغول سهلاً جداً. أفضل قرار اتخذته!", author: "ياسمين ح.، الإسكندرية" },
-  level_1:    { quote: "استطعت إجراء محادثات بسيطة بالكورية بعد 8 أسابيع فقط. الحصص مذهلة!", author: "أحمد ك.، القاهرة" },
-  level_2:    { quote: "نطقي تحسن كثيراً — أصدقائي يقولون أنني أبدو كأهل اللغة الآن.", author: "نور م.، القاهرة" },
-  level_3:    { quote: "اجتزت TOPIK II بعد الدراسة مع Klovers لمدة 6 أشهر. أنصح بشدة!", author: "سارة ل.، الجيزة" },
-  level_5:    { quote: "الصف المتقدم ساعدني في الحصول على وظيفة في شركة كورية في مصر. غيّر حياتي!", author: "عمر ف.، القاهرة" },
+  hangul: { quote: "البدء من الصفر كان مخيفاً، لكن Klovers جعلت الهانغول سهلاً جداً. أفضل قرار اتخذته!", author: "ياسمين ح.، الإسكندرية" },
+  l1:    { quote: "استطعت إجراء محادثات بسيطة بالكورية بعد 8 أسابيع فقط. الحصص مذهلة!", author: "أحمد ك.، القاهرة" },
+  l2:    { quote: "نطقي تحسن كثيراً — أصدقائي يقولون أنني أبدو كأهل اللغة الآن.", author: "نور م.، القاهرة" },
+  l3:    { quote: "اجتزت TOPIK II بعد الدراسة مع Klovers لمدة 6 أشهر. أنصح بشدة!", author: "سارة ل.، الجيزة" },
+  l5:    { quote: "الصف المتقدم ساعدني في الحصول على وظيفة في شركة كورية في مصر. غيّر حياتي!", author: "عمر ف.، القاهرة" },
 };
 
 function subTestSummary(correct: number, total: number, skill: string, isAr = false): string {
@@ -559,7 +559,7 @@ const PlacementTestPage = () => {
 
   // ── Listening exam screen ───────────────────────────────────
   if (phase === "listening_test" && result) {
-    const questions = LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"];
+    const questions = LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["hangul"];
     const q = questions[listeningIndex];
     const isLast = listeningIndex === questions.length - 1;
     return (
@@ -655,7 +655,7 @@ const PlacementTestPage = () => {
 
   // ── Reading exam screen ──────────────────────────────────────
   if (phase === "reading_test" && result) {
-    const questions = READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"];
+    const questions = READING_EXAM[result.levelKey] ?? READING_EXAM["hangul"];
     const q = questions[readingIndex];
     const isLast = readingIndex === questions.length - 1;
     return (
@@ -742,7 +742,7 @@ const PlacementTestPage = () => {
 
   // ── Speaking test screen ────────────────────────────────────
   if (phase === "speaking_test" && result) {
-    const prompts = SPEAKING_PROMPTS[result.levelKey] ?? SPEAKING_PROMPTS["foundation"];
+    const prompts = SPEAKING_PROMPTS[result.levelKey] ?? SPEAKING_PROMPTS["hangul"];
     const currentPrompt = prompts[speakingIndex];
     return (
       <div className="min-h-screen flex flex-col">
@@ -1115,9 +1115,9 @@ const PlacementTestPage = () => {
                   <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 space-y-1">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                       <Volume2 className="h-3.5 w-3.5 text-blue-600" />
-                      {isAr ? "الاستماع:" : "Listening:"} {listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length}/{listeningAnswers.length}
+                      {isAr ? "الاستماع:" : "Listening:"} {listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["hangul"])[i]?.correctIndex).length}/{listeningAnswers.length}
                     </p>
-                    <p className="text-xs text-muted-foreground">{subTestSummary(listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["foundation"])[i]?.correctIndex).length, listeningAnswers.length, isAr ? "الاستماع" : "Listening", isAr)}</p>
+                    <p className="text-xs text-muted-foreground">{subTestSummary(listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["hangul"])[i]?.correctIndex).length, listeningAnswers.length, isAr ? "الاستماع" : "Listening", isAr)}</p>
                   </div>
                 )}
 
@@ -1138,9 +1138,9 @@ const PlacementTestPage = () => {
                   <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3 space-y-1">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                       <BookOpen className="h-3.5 w-3.5 text-green-700" />
-                      {isAr ? "القراءة:" : "Reading:"} {readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length}/{readingAnswers.length}
+                      {isAr ? "القراءة:" : "Reading:"} {readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["hangul"])[i]?.correctIndex).length}/{readingAnswers.length}
                     </p>
-                    <p className="text-xs text-muted-foreground">{subTestSummary(readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["foundation"])[i]?.correctIndex).length, readingAnswers.length, isAr ? "القراءة" : "Reading", isAr)}</p>
+                    <p className="text-xs text-muted-foreground">{subTestSummary(readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["hangul"])[i]?.correctIndex).length, readingAnswers.length, isAr ? "القراءة" : "Reading", isAr)}</p>
                   </div>
                 )}
 

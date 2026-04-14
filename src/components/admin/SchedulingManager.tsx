@@ -23,7 +23,7 @@ import { getSuggestedPackages, type SuggestedPackage, formatSuggestion } from "@
 import { useAuth } from "@/hooks/useAuth";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-import { LEVEL_KEYS, mapLegacyLevel } from "@/constants/levels";
+import { LEVEL_KEYS, mapLegacyLevel, getLevelShortLabel, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { formatTime } from "@/lib/admin-utils";
 import type { PkgGroup } from "@/types/admin";
 const LEVELS = LEVEL_KEYS;
@@ -153,7 +153,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
 
   const openEdit = (p: Package) => {
     setEditing(p);
-    // Normalize legacy level keys (e.g. "beginner_1" → "level_1")
+    // Normalize legacy level keys (e.g. "beginner_1" or "level_1" → "l1")
     const resolvedLevel = LEVELS.includes(p.level) ? p.level : (mapLegacyLevel(p.level)?.key ?? p.level);
     setFLevel(resolvedLevel); setFDay(p.day_of_week); setFTime(p.start_time.slice(0, 5));
     setFDuration(p.duration_min); setFTimezone(p.timezone); setFCapacity(p.capacity); setFActive(p.is_active); setFCourseType(p.course_type || "group");
@@ -241,7 +241,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
 
         toast({
           title: "Slot already exists",
-          description: `A slot for "${fLevel.replace("_", " ")}" at ${fTime} already exists on ${DAY_NAMES[fDay]}.${
+          description: `A slot for "${getLevelShortLabel(fLevel)}" at ${fTime} already exists on ${DAY_NAMES[fDay]}.${
             availableDays.length > 0
               ? ` Available days: ${availableDays.join(", ")}.`
               : " All days are taken for this level and time."
@@ -281,7 +281,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
       toast({ title: "Group already exists", description: "This package already has an active group.", variant: "destructive" });
       return;
     }
-    const defaultName = `${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)}`;
+    const defaultName = `${getLevelShortLabel(p.level)} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)}`;
     const { error } = await supabase.from("pkg_groups").insert({
       package_id: p.id,
       name: defaultName,
@@ -296,7 +296,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
   };
 
   const handleDeletePackage = async (p: Package) => {
-    if (!confirm(`Delete this slot? (${p.level.replace("_", " ")} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)})\n\nThis will also deactivate any groups linked to it.`)) return;
+    if (!confirm(`Delete this slot? (${getLevelShortLabel(p.level)} – ${DAY_NAMES[p.day_of_week]} ${formatTime(p.start_time)})\n\nThis will also deactivate any groups linked to it.`)) return;
     // Deactivate linked groups first
     await supabase.from("pkg_groups").update({ is_active: false }).eq("package_id", p.id);
     const { error } = await supabase.from("schedule_packages").delete().eq("id", p.id);
@@ -383,7 +383,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Levels</SelectItem>
-            {LEVELS.map((l) => <SelectItem key={l} value={l}>{l.replace("_", " ")}</SelectItem>)}
+            {LEVEL_SELECT_OPTIONS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterActive} onValueChange={setFilterActive}>
@@ -454,7 +454,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
                 const needsGroup = (p.waitlist_count ?? 0) > 0 || seatsLeft <= 0;
                 return (
                 <TableRow key={p.id}>
-                  <TableCell><Badge variant="outline">{p.level.replace("_", " ")}</Badge></TableCell>
+                  <TableCell><Badge variant="outline">{getLevelShortLabel(p.level)}</Badge></TableCell>
                   <TableCell><Badge variant={p.course_type === "private" ? "destructive" : "secondary"}>{p.course_type || "group"}</Badge></TableCell>
                   <TableCell>{DAY_NAMES[p.day_of_week]}</TableCell>
                   <TableCell>{formatTime(p.start_time)}</TableCell>
@@ -534,7 +534,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
               <Label>Level</Label>
               <Select value={fLevel} onValueChange={setFLevel}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{LEVELS.map((l) => <SelectItem key={l} value={l}>{l.replace("_", " ")}</SelectItem>)}</SelectContent>
+                <SelectContent>{LEVEL_SELECT_OPTIONS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -857,7 +857,7 @@ const GroupsManager = () => {
       return;
     }
     const pkg = packages.find((p) => p.id === addPkgId);
-    const name = addName.trim() || (pkg ? `${pkg.level.replace("_", " ")} – ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}` : "New Group");
+    const name = addName.trim() || (pkg ? `${getLevelShortLabel(pkg.level)} – ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}` : "New Group");
     const { error } = await supabase.from("pkg_groups").insert({
       package_id: addPkgId,
       name,
@@ -1049,7 +1049,7 @@ const GroupsManager = () => {
 
                   {/* Badges row */}
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline" className="text-xs capitalize">{g.level.replace(/_/g, " ")}</Badge>
+                    <Badge variant="outline" className="text-xs capitalize">{getLevelShortLabel(g.level)}</Badge>
                     <Badge variant={g.course_type === "private" ? "destructive" : "secondary"} className="text-xs">{g.course_type}</Badge>
                     <span className="text-xs text-muted-foreground">
                       {DAY_NAMES[g.day_of_week]} · {formatTime(g.start_time)}
@@ -1140,7 +1140,7 @@ const GroupsManager = () => {
                 <SelectContent>
                   {packages.filter((p) => p.is_active && !groups.some((g) => g.package_id === p.id)).map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.level.replace("_", " ")} · {DAY_NAMES[p.day_of_week]} {formatTime(p.start_time)} ({p.course_type})
+                      {getLevelShortLabel(p.level)} · {DAY_NAMES[p.day_of_week]} {formatTime(p.start_time)} ({p.course_type})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1335,7 +1335,7 @@ const WaitlistManager = () => {
             </div>
             {r.preferredPackage && (
               <p className="text-xs text-muted-foreground">
-                Preferred: {r.preferredPackage.level.replace("_", " ")} · {DAY_NAMES[r.preferredPackage.day_of_week]} {formatTime(r.preferredPackage.start_time)} (Full)
+                Preferred: {getLevelShortLabel(r.preferredPackage.level)} · {DAY_NAMES[r.preferredPackage.day_of_week]} {formatTime(r.preferredPackage.start_time)} (Full)
               </p>
             )}
             {r.alternatives && r.alternatives.length > 0 && (
@@ -1344,7 +1344,7 @@ const WaitlistManager = () => {
                 {r.alternatives.map((alt) => (
                   <div key={alt.id} className="flex items-center justify-between p-2 rounded border bg-muted/30">
                     <span className="text-xs text-foreground">
-                      {alt.level.replace("_", " ")} · {DAY_NAMES[alt.day_of_week]} {formatTime(alt.start_time)}
+                      {getLevelShortLabel(alt.level)} · {DAY_NAMES[alt.day_of_week]} {formatTime(alt.start_time)}
                       <span className="text-muted-foreground ml-1">({alt.capacity - (alt.member_count || 0)} seats)</span>
                     </span>
                     <Button

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getLevelShortLabel } from "@/constants/levels";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -73,17 +74,10 @@ export function nextDateForDayOfWeek(dayOfWeek: number): string {
 
 function levelLabel(level: string): string {
   if (!level) return "Korean Class";
-  const map: Record<string, string> = {
-    beginner_1: "Beginner Level 1",
-    beginner_2: "Beginner Level 2",
-    elementary_1: "Elementary Level 1",
-    elementary_2: "Elementary Level 2",
-    intermediate_1: "Intermediate Level 1",
-    intermediate_2: "Intermediate Level 2",
-    upper_intermediate: "Upper Intermediate",
-    advanced: "Advanced",
-  };
-  return map[level] || level.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const mapped = getLevelShortLabel(level);
+  return mapped === level
+    ? level.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : mapped;
 }
 
 function derivePostType(slot: TeacherAvailabilitySlot & { seatsAvailable?: number; packageId?: string; dayOfWeek: number }): PostType {

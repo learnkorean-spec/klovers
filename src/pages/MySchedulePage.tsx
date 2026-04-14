@@ -11,6 +11,7 @@ import SchedulePicker from "@/components/SchedulePicker";
 import { ArrowLeft, CalendarDays, Clock, Users, AlertTriangle, CheckCircle2, Loader2, RefreshCw, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
+import { getLevelShortLabel } from "@/constants/levels";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -237,7 +238,7 @@ const MySchedulePage = () => {
       await (supabase as any).rpc("assign_student_to_pkg_group", { _user_id: userId, _enrollment_id: (enr as any).id });
     }
     await (supabase as any).from("admin_notifications").insert({
-      message: `Waitlisted student moved to alternative: ${pkg.level.replace("_", " ")} ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}`,
+      message: `Waitlisted student moved to alternative: ${getLevelShortLabel(pkg.level)} ${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)}`,
       type: "STUDENT_CHANGED_SLOT",
       related_user_id: userId,
     });
@@ -295,7 +296,7 @@ const MySchedulePage = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap gap-3">
-                  <Badge variant="outline" className="text-sm">{packageDetails.level.replace("_", " ")}</Badge>
+                  <Badge variant="outline" className="text-sm">{getLevelShortLabel(packageDetails.level)}</Badge>
                   <span className="text-sm text-foreground font-medium">{DAY_NAMES[packageDetails.day_of_week]}</span>
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" /> {formatTime(packageDetails.start_time)} · {packageDetails.duration_min}min

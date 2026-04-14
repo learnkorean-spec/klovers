@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getLevelShortLabel } from "@/constants/levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -353,7 +354,7 @@ const BulkEmailManager = () => {
           const enrolled = memberCounts.get(g.id) || 0;
           const spotsLeft = g.capacity - enrolled;
           if (!pkg) return null;
-          const lvl = pkg.level.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+          const lvl = getLevelShortLabel(pkg.level);
           const day = dayNames[pkg.day_of_week] || "TBD";
           const time = pkg.start_time?.slice(0, 5) || "TBD";
           const type = pkg.course_type === "private" ? "🔒 Private" : "👥 Group";

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { getLevelShortLabel } from "@/constants/levels";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -1178,7 +1179,7 @@ const GroupAttendanceManager = ({
                               <p className="font-semibold text-foreground truncate">{g.name}</p>
                               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                 {g.level && (
-                                  <Badge variant="secondary" className="text-[10px]">{g.level.replace(/_/g, " ")}</Badge>
+                                  <Badge variant="secondary" className="text-[10px]">{getLevelShortLabel(g.level)}</Badge>
                                 )}
                                 <Badge variant={g.course_type === "private" ? "destructive" : "outline"} className="text-[10px]">
                                   {g.course_type}

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, ArrowRight } from "lucide-react";
+import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 
 const COUNTRIES = [
   "Egypt", "Saudi Arabia", "UAE", "Kuwait", "Qatar", "Bahrain", "Oman",
@@ -23,14 +24,13 @@ const COUNTRIES = [
   "Canada", "Australia", "Other",
 ];
 
+// Level options — uses the canonical short keys (hangul, l1…l6) from the
+// single source of truth in @/constants/levels. Two extra "starting point"
+// options are kept for users who can't self-assess to a TOPIK band yet.
 const LEVELS = [
   { value: "absolute_beginner", label: "Absolute Beginner (never studied Korean)" },
   { value: "beginner", label: "Beginner (knows Hangul)" },
-  { value: "level_1", label: "Level 1 — Basic phrases & introductions" },
-  { value: "level_2", label: "Level 2 — Simple conversations" },
-  { value: "level_3", label: "Level 3 — Intermediate" },
-  { value: "level_4", label: "Level 4 — Upper intermediate" },
-  { value: "level_5", label: "Level 5 — Advanced" },
+  ...LEVEL_SELECT_OPTIONS,
 ];
 
 const GOALS = [
