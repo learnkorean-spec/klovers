@@ -409,7 +409,7 @@ const GroupMatcher = () => {
 
       const updatePayload: Record<string, any> = isPaymentReject
         ? { approval_status: "REJECTED", enrollment_status: "cancelled", payment_status: "UNPAID" }
-        : { slot_rejection_reason: fullNote, slot_rejection_at: new Date().toISOString() };
+        : { approval_status: "REJECTED", slot_rejection_reason: fullNote, slot_rejection_at: new Date().toISOString() };
 
       const { error } = await supabase
         .from("enrollments")
@@ -475,6 +475,7 @@ const GroupMatcher = () => {
             slot_rejection_at: null,
           }
         : {
+            approval_status: "APPROVED",
             slot_rejection_reason: null,
             slot_rejection_at: null,
             matched_at: null,
