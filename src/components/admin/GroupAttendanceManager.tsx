@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { getLevelShortLabel } from "@/constants/levels";
+import { getLevelShortLabel, LEVEL_SELECT_OPTIONS, LEVEL_KEYS } from "@/constants/levels";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -60,7 +60,9 @@ interface StudentProfile {
 }
 
 const STATUS_OPTIONS = ["present", "absent", "late", "excused"] as const;
-const LEVELS = ["Beginner", "Elementary", "Intermediate", "Advanced"];
+// Canonical course levels — writes to student_groups.level must match the
+// short keys used by schedule_packages / enrollments (hangul, l1…l6).
+const LEVELS = LEVEL_KEYS;
 
 function nextOccurrenceOf(dayOfWeek: number): Date {
   const today = new Date();
@@ -349,7 +351,6 @@ const GroupAttendanceManager = ({
 
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const [adminWeekdays, setAdminWeekdays] = useState<string[]>([]);
-  const [adminTimes, setAdminTimes] = useState<string[]>([]);
 
   const fetchGroups = async () => {
     // Fetch active pkg_groups with schedule info from schedule_packages
@@ -378,7 +379,7 @@ const GroupAttendanceManager = ({
     }
   };
 
-  // Fetch available days from schedule_packages + time windows from schedule_options
+  // Fetch available days from schedule_packages
   useEffect(() => {
     supabase
       .from("schedule_packages")
@@ -388,16 +389,6 @@ const GroupAttendanceManager = ({
         const rows = data ?? [];
         const uniqueDays = [...new Set(rows.map((r) => r.day_of_week))].sort();
         setAdminWeekdays(uniqueDays.map(n => DAY_NAMES[n]));
-      });
-    supabase
-      .from("schedule_options")
-      .select("label, sort_order")
-      .eq("is_active", true)
-      .eq("category", "time_window")
-      .order("sort_order")
-      .then(({ data }) => {
-        const rows = data ?? [];
-        setAdminTimes(rows.map(r => r.label));
       });
   }, []);
 
@@ -1301,7 +1292,7 @@ const GroupAttendanceManager = ({
               <Select value={editLevel} onValueChange={setEditLevel}>
                 <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
                 <SelectContent>
-                  {LEVELS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  {LEVEL_SELECT_OPTIONS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -1321,16 +1312,7 @@ const GroupAttendanceManager = ({
               </div>
               <div className="space-y-1">
                 <Label>Time</Label>
-                {adminTimes.length > 0 ? (
-                  <Select value={editTime} onValueChange={setEditTime}>
-                    <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
-                    <SelectContent>
-                      {adminTimes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
-                )}
+                <Input value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
               </div>
             </div>
             <div className="space-y-1">

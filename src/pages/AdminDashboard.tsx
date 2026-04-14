@@ -43,7 +43,6 @@ const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
 const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
 const BulkEmailManager = lazy(() => import("@/components/admin/BulkEmailManager"));
-const ScheduleOptionsManager = lazy(() => import("@/components/admin/ScheduleOptionsManager"));
 const SchedulingManager = lazy(() => import("@/components/admin/SchedulingManager"));
 const AdminSettings = lazy(() => import("@/components/admin/AdminSettings"));
 const PlacementTestsManager = lazy(() => import("@/components/admin/PlacementTestsManager"));
@@ -1641,17 +1640,6 @@ const AdminDashboard = () => {
                   <CardContent>
                     <TabErrorBoundary name="Scheduling Manager">
                       <SchedulingManager />
-                    </TabErrorBoundary>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-2xl">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-base">Schedule Preference Options</CardTitle>
-                    <p className="text-sm text-muted-foreground">Edit the weekdays, time windows, and start date options shown to students during enrollment.</p>
-                  </CardHeader>
-                  <CardContent>
-                    <TabErrorBoundary name="Schedule Options">
-                      <ScheduleOptionsManager />
                     </TabErrorBoundary>
                   </CardContent>
                 </Card>

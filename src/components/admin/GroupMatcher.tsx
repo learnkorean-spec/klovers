@@ -691,7 +691,7 @@ const GroupMatcher = () => {
 
   const openNameDialog = (cluster: Cluster) => {
     const dayName = DAY_NAMES[cluster.packageDay] || "Unknown";
-    const levelLabel = cluster.packageLevel.replace(/_/g, " ");
+    const levelLabel = getLevelShortLabel(cluster.packageLevel);
     const defaultName = `${levelLabel} – ${dayName} ${cluster.packageTime}`;
     setGroupNameInput(defaultName);
     setNameDialogCluster(cluster);
@@ -974,7 +974,7 @@ const GroupMatcher = () => {
             {clusters.map((cluster) => {
               const isReady = cluster.members.length >= 3;
               const dayName = DAY_NAMES[cluster.packageDay] || "Unknown";
-              const levelLabel = cluster.packageLevel.replace(/_/g, " ");
+              const levelLabel = getLevelShortLabel(cluster.packageLevel);
               return (
                 <Card key={cluster.key} className={isReady ? "border-primary/50 bg-primary/5" : ""}>
                   <CardHeader className="pb-3">
@@ -1284,11 +1284,9 @@ const GroupMatcher = () => {
                           </div>
                         ) : null}
 
-                        {/* Time / start / timezone */}
-                        {(m.preferred_time || m.preferred_start || m.timezone) && (
+                        {/* Timezone */}
+                        {m.timezone && (
                           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
-                            {m.preferred_time && <span>⏰ Time: <span className="font-medium text-foreground">{m.preferred_time}</span></span>}
-                            {m.preferred_start && <span>📅 Start: <span className="font-medium text-foreground">{m.preferred_start}</span></span>}
                             {m.timezone && <span>🌍 <span className="font-medium text-foreground">{m.timezone}</span></span>}
                           </div>
                         )}

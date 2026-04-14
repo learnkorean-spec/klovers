@@ -45,7 +45,6 @@ const egpPrices: Record<ClassType, Record<Duration, number>> = {
 
 const durationClasses = DURATION_CLASSES;
 
-  // Schedule options are fetched dynamically from DB; no hardcoded fallbacks
 
 const EnrollNowPage = () => {
   useSEO({ title: "Enroll Now | Klovers Korean Academy", description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.", canonical: "https://kloversegy.com/enroll-now" });
@@ -120,9 +119,6 @@ const EnrollNowPage = () => {
     const d = p("days") || p("day");
     return d ? d.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
   });
-  const [preferredTime, setPreferredTime] = useState(p("time"));
-  const [startOption, setStartOption] = useState(p("start"));
-  const [specificDate, setSpecificDate] = useState(p("date"));
 
   // Schedule slot selection
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(p("groupId") || null);
@@ -147,10 +143,6 @@ const EnrollNowPage = () => {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
 
-  // Dynamic schedule options from DB — no hardcoded fallbacks
-  const [timeWindows, setTimeWindows] = useState<string[]>([]);
-  const [startOptions, setStartOptions] = useState<string[]>([]);
-  const [optionsLoaded, setOptionsLoaded] = useState(false);
   // Level-specific slot days+times from schedule_packages (includes packageId)
   const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string; seatsLeft: number }[]>([]);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(p("packageId") || null);
@@ -170,26 +162,6 @@ const EnrollNowPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentional: run once on mount to rehydrate from URL
 
-  useEffect(() => {
-    const fetchScheduleOptions = async () => {
-      const { data, error } = await supabase
-        .from("schedule_options")
-        .select("category, label, sort_order")
-        .eq("is_active", true)
-        .not("category", "eq", "weekday") // weekdays come from schedule_packages
-        .order("sort_order");
-      if (error) {
-        toast({ title: "Failed to load schedule options", description: error.message, variant: "destructive" });
-      }
-      const items = (data as any[]) || [];
-      const tw = items.filter((i: any) => i.category === "time_window").map((i: any) => i.label);
-      const so = items.filter((i: any) => i.category === "start_option").map((i: any) => i.label);
-      setTimeWindows(tw);
-      setStartOptions(so);
-      setOptionsLoaded(true);
-    };
-    fetchScheduleOptions();
-  }, []);
 
   // Day names indexed by day_of_week number
   // Track whether this is the initial load (to avoid clearing rehydrated preferredDays)
@@ -386,9 +358,6 @@ const EnrollNowPage = () => {
     if (duration) params.set("duration", String(duration));
     params.set("step", String(targetStep));
     if (preferredDays.length) params.set("days", preferredDays.join(","));
-    if (preferredTime) params.set("time", preferredTime);
-    if (startOption) params.set("start", startOption);
-    if (specificDate) params.set("date", specificDate);
     if (timezone) params.set("tz", timezone);
     if (selectedGroupId) params.set("groupId", selectedGroupId);
     if (selectedGroupName) params.set("groupName", selectedGroupName);
@@ -404,9 +373,6 @@ const EnrollNowPage = () => {
     if (selectedCountry) draftData.country = selectedCountry;
     if (duration) draftData.duration = String(duration);
     if (preferredDays.length) draftData.days = preferredDays.join(",");
-    if (preferredTime) draftData.time = preferredTime;
-    if (startOption) draftData.start = startOption;
-    if (specificDate) draftData.date = specificDate;
     if (timezone) draftData.tz = timezone;
     if (selectedGroupId) draftData.groupId = selectedGroupId;
     if (selectedGroupName) draftData.groupName = selectedGroupName;
@@ -428,9 +394,7 @@ const EnrollNowPage = () => {
     setStep(3);
   };
 
-  // preferredTime is only required if the admin has configured time window options
-  // Only require preferredTime if admin has configured time windows; only require startOption if admin has configured start options
-  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && (timeWindows.length === 0 || !!preferredTime) && (startOptions.length === 0 || (!!startOption && (startOption !== "Specific date" || !!specificDate)));
+  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0;
 
   const handleEgyptOrder = async () => {
     if (!duration) return;
@@ -468,8 +432,6 @@ const EnrollNowPage = () => {
           schedPrefs.preferred_day = preferredDays[0];
         }
         if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedPrefs.package_id = selectedPackageId;
-        if (preferredTime) schedPrefs.preferred_time = preferredTime;
-        if (startOption) schedPrefs.preferred_start = startOption === "Specific date" ? specificDate : startOption;
         if (timezone) schedPrefs.timezone = timezone;
         // Always write level to enrollment (triggers sync to profile via DB trigger)
         if (selectedLevel) schedPrefs.level = normalizeLevel(selectedLevel);
@@ -498,10 +460,10 @@ const EnrollNowPage = () => {
           email: email.trim().toLowerCase(),
           country: selectedCountry,
           level: selectedLevel ? normalizeLevel(selectedLevel) : "",
-          goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")} ${preferredTime}, tz:${timezone}`,
+          goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")}, tz:${timezone}`,
           plan_type: classType,
           duration: `${duration}mo`,
-          schedule: `${preferredDays.join("/")} ${preferredTime}`,
+          schedule: preferredDays.join("/"),
           timezone: timezone,
           source: isEgypt ? "egypt" : "stripe",
           user_id: userId || undefined,
@@ -616,7 +578,6 @@ const EnrollNowPage = () => {
         status: "PENDING_PAYMENT",
       };
       if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedFields.package_id = selectedPackageId;
-      if (preferredTime) schedFields.preferred_time = preferredTime;
       if (preferredDays.length > 0) schedFields.preferred_days = preferredDays;
       // Add student preference for scheduling (from step 3)
       if (preferredDayOfWeek !== null) schedFields.preferred_day_of_week = preferredDayOfWeek;
@@ -646,8 +607,6 @@ const EnrollNowPage = () => {
           schedule: {
             timezone,
             preferred_days: preferredDays,
-            preferred_time: preferredTime,
-            preferred_start: startOption === "Specific date" ? specificDate : startOption,
           },
         },
       });
@@ -934,56 +893,6 @@ const EnrollNowPage = () => {
                 )}
               </div>
 
-              {/* Time Window — only shown if admin configured options */}
-              {timeWindows.length > 0 && (
-                <div className="space-y-2">
-                  <Label>{t("enrollNow.preferredTime")}</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {timeWindows.map((tw) => (
-                      <button
-                        type="button"
-                        key={tw}
-                        onClick={() => setPreferredTime(tw)}
-                        className={`p-3 rounded-lg border-2 text-sm transition-all text-center ${
-                          preferredTime === tw ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <span className="text-foreground font-medium">{tw}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Start Date — only shown if admin configured options */}
-              {startOptions.length > 0 && (
-                <div className="space-y-2">
-                  <Label>{t("enrollNow.preferredStartDate")}</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {startOptions.map((opt) => (
-                      <button
-                        type="button"
-                        key={opt}
-                        onClick={() => setStartOption(opt)}
-                        className={`p-2 rounded-lg border-2 text-sm transition-all text-center ${
-                          startOption === opt ? "border-primary bg-accent" : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <span className="text-foreground font-medium">{opt}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {startOption === "Specific date" && (
-                    <Input
-                      type="date"
-                      value={specificDate}
-                      onChange={(e) => setSpecificDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                  )}
-                </div>
-              )}
-
               <p className="text-xs text-muted-foreground text-center">
                 {t("enrollNow.scheduleConfirmNote")}
               </p>
@@ -997,10 +906,6 @@ const EnrollNowPage = () => {
                     ? t("enrollNow.selectLevelError")
                     : preferredDays.length === 0
                     ? t("enrollNow.selectDayError")
-                    : timeWindows.length > 0 && !preferredTime
-                    ? t("enrollNow.selectTimeError")
-                    : startOptions.length > 0 && !startOption
-                    ? t("enrollNow.selectStartError")
                     : ""}
                 </p>
               )}
@@ -1173,8 +1078,6 @@ const EnrollNowPage = () => {
                 <p className="text-sm font-medium text-foreground">{t("enrollNow.schedulePreferencesSummary")}</p>
                 <p className="text-xs text-muted-foreground">{t("enrollNow.level")}: {selectedLevel}</p>
                 <p className="text-xs text-muted-foreground">{t("enrollNow.days")}: {preferredDays.join(", ")}</p>
-                <p className="text-xs text-muted-foreground">{t("enrollNow.time")}: {preferredTime}</p>
-                <p className="text-xs text-muted-foreground">{t("enrollNow.start")}: {startOption === "Specific date" ? specificDate : startOption}</p>
                 <p className="text-xs text-muted-foreground">{t("enrollNow.timezone")}: {timezone}</p>
               </div>
 
