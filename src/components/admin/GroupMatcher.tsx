@@ -162,6 +162,7 @@ const GroupMatcher = () => {
   const [markingAssigned, setMarkingAssigned] = useState<string | null>(null);
   const [sendingReminder, setSendingReminder] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<UnmatchedEnrollment | null>(null);
+  const [rejectResubmitId, setRejectResubmitId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("no_slots");
   const [rejectNote, setRejectNote] = useState("");
   const [rejecting, setRejecting] = useState(false);
@@ -309,10 +310,11 @@ const GroupMatcher = () => {
       .order("start_time");
     setTeacherSlots((availability || []).map((a: any) => ({ day: a.day_of_week, time: a.start_time })));
 
-    // Fetch schedule resubmission requests (pending + recently completed)
+    // Fetch schedule resubmission requests (pending + recently completed, exclude rejected)
     const { data: resubmits } = await supabase
       .from("schedule_resubmission_requests")
       .select("id, email, enrollment_id, status, created_at, expires_at")
+      .neq("status", "rejected")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -418,6 +420,14 @@ const GroupMatcher = () => {
         await supabase.from("enrollments")
           .update({ matched_at: null } as any)
           .eq("id", rejectTarget.id);
+      }
+
+      // Mark the resubmission request as rejected so it disappears from the list
+      if (rejectResubmitId) {
+        await supabase.from("schedule_resubmission_requests")
+          .update({ status: "rejected" } as any)
+          .eq("id", rejectResubmitId);
+        setRejectResubmitId(null);
       }
 
       // Send notification email
@@ -839,6 +849,7 @@ const GroupMatcher = () => {
                             created_at: r.created_at,
                             receipt_url: null,
                           });
+                          setRejectResubmitId(r.id);
                           setRejectReason(isExpired ? "no_slots" : "other");
                           setRejectNote("");
                         }}
