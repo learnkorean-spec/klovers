@@ -272,10 +272,10 @@ const LeadsPanel: React.FC = () => {
             </SelectContent>
           </Select>
           {uniqueSources.length > 0 && (
-            <Select value={leadsSourceFilter} onValueChange={(v) => { setLeadsSourceFilter(v); setLeadsPage(0); }}>
+            <Select value={leadsSourceFilter || "__all__"} onValueChange={(v) => { setLeadsSourceFilter(v === "__all__" ? "" : v); setLeadsPage(0); }}>
               <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="All sources" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All sources</SelectItem>
+                <SelectItem value="__all__">All sources</SelectItem>
                 {uniqueSources.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
               </SelectContent>
             </Select>
