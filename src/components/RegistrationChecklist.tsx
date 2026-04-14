@@ -74,9 +74,17 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
   const handleSaveProfile = async (field: string, value: string) => {
     if (!value.trim()) return;
     setSaving(true);
+    // The checklist "Korean level" picker only lists canonical course keys
+    // (hangul, l1…l6). Course logic reads profiles.course_level_key, so write
+    // there whenever the admin is setting a course level — keep the free-form
+    // self-assessment column (profiles.level) for any other field.
+    const payload: Record<string, string> =
+      field === "level"
+        ? { course_level_key: value.trim(), level: value.trim() }
+        : { [field]: value.trim() };
     const { error } = await supabase
       .from("profiles")
-      .update({ [field]: value.trim() })
+      .update(payload as any)
       .eq("user_id", userId);
     setSaving(false);
     if (error) {

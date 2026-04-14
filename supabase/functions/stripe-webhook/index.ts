@@ -306,11 +306,15 @@ serve(async (req) => {
         currency: session.currency?.toUpperCase() || "USD",
       }).select("id").single();
 
-      // Save level to profile if provided
+      // Save level to profile if provided.
+      // Stripe metadata carries the canonical course key (hangul, l1..l6)
+      // produced by LEVEL_SELECT_OPTIONS at checkout, so it belongs in
+      // profiles.course_level_key (the column course logic reads).
+      // profiles.level stays a free-form self-assessment label.
       if (level) {
         await supabaseAdmin
           .from("profiles")
-          .update({ level })
+          .update({ course_level_key: level })
           .eq("user_id", userId);
       }
 

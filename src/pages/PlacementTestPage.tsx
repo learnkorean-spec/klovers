@@ -315,7 +315,10 @@ const PlacementTestPage = () => {
         user_id: userId, score: res.score, level: res.levelKey,
       });
       if (!error) {
-        await supabase.from("profiles").update({ level: res.levelKey }).eq("user_id", userId);
+        // Placement result is a machine-computed canonical key → store in
+        // course_level_key. The free-form self-assessment column (profiles.level)
+        // is left untouched so any user-reported label the learner set stays intact.
+        await supabase.from("profiles").update({ course_level_key: res.levelKey } as any).eq("user_id", userId);
       }
       setSubmitting(false);
     }

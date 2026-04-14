@@ -32,7 +32,9 @@ export async function fetchEnrollmentChecklists(): Promise<EnrollmentChecklist[]
   // Single batch fetch — no N+1
   const [enrollRes, profilesRes, prefsRes, slotsRes, emailsRes, batchRes] = await Promise.all([
     supabase.from("enrollments").select("id, user_id, plan_type, duration, sessions_remaining, sessions_total, amount, currency, status, payment_status, approval_status, created_at, preferred_days, preferred_time, timezone, level, package_id, admin_notes").order("created_at", { ascending: false }),
-    supabase.from("profiles").select("user_id, name, email, country, level, avatar_url"),
+    // course_level_key is the source of truth for course logic. level is
+    // retained only for display as the learner's free-form self-assessment.
+    supabase.from("profiles").select("user_id, name, email, country, course_level_key, level, avatar_url"),
     supabase.from("student_slot_preferences").select("enrollment_id, slot_id, preferred_day, preferred_time"),
     supabase.from("matching_slots").select("id, day_of_week, time_slot, teacher_id, is_available"),
     supabase.from("email_sends").select("user_id, status, sent_at"),
@@ -221,7 +223,8 @@ export async function fetchEnrollmentChecklists(): Promise<EnrollmentChecklist[]
         priority: "WARN",
       });
 
-      const pLevel = profile?.level || "";
+      // Level-match check compares canonical keys → use course_level_key.
+      const pLevel = (profile as any)?.course_level_key || profile?.level || "";
       if (pLevel) {
         items.push({
           key: "level_match", label: "Level matches slot",

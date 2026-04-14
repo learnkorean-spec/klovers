@@ -85,18 +85,21 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
 
     const userIds = [...new Set((prefs).map((p: any) => p.user_id))];
 
+    // Course logic reads profiles.course_level_key (canonical). The legacy
+    // profiles.level column is kept as a free-form self-assessment fallback
+    // for rows that have not been migrated yet.
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, name, email, level")
+      .select("user_id, name, email, course_level_key, level")
       .in("user_id", userIds);
 
     const enriched: SlotMember[] = userIds.map((uid) => {
-      const profile = (profiles || []).find((p) => p.user_id === uid);
+      const profile = (profiles || []).find((p: any) => p.user_id === uid);
       return {
         user_id: uid,
         name: profile?.name || "Unknown",
         email: profile?.email || "",
-        level: profile?.level || slotInfo.level,
+        level: (profile as any)?.course_level_key || profile?.level || slotInfo.level,
       };
     });
 

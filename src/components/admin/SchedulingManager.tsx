@@ -1237,13 +1237,16 @@ const WaitlistManager = () => {
     if (wl.length === 0) { setRows([]); setLoading(false); return; }
 
     const userIds = wl.map((r) => r.user_id);
+    // Course logic must read profiles.course_level_key (canonical), NOT
+    // profiles.level (free-form self-assessment). See migration
+    // profiles.course_level_key in Supabase.
     const [profilesRes, prefsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, name, email, level").in("user_id", userIds),
+      supabase.from("profiles").select("user_id, name, email, course_level_key, level").in("user_id", userIds),
       supabase.from("student_package_preferences").select("user_id, package_id, level").in("user_id", userIds),
     ]);
 
-    const profMap: Record<string, { user_id: string; name: string; email: string; level: string }> = {};
-    (profilesRes.data || []).forEach((p) => { profMap[p.user_id] = p; });
+    const profMap: Record<string, { user_id: string; name: string; email: string; course_level_key: string | null; level: string }> = {};
+    (profilesRes.data || []).forEach((p: any) => { profMap[p.user_id] = p; });
     const prefMap: Record<string, { user_id: string; package_id: string | null; level: string }> = {};
     (prefsRes.data || []).forEach((p) => { prefMap[p.user_id] = p; });
 
@@ -1273,7 +1276,11 @@ const WaitlistManager = () => {
       const profile = profMap[r.user_id];
       const pref = prefMap[r.user_id];
       const preferredPkg = pref?.package_id ? pkgsWithSeats.find((p: Package) => p.id === pref.package_id) || null : null;
-      const level = profile?.level || pref?.level || "";
+      // Matcher pairs students to packages by canonical course key.
+      // Prefer profiles.course_level_key (source of truth for course logic).
+      // Fallback to the waitlist preference, then the legacy self-assessment
+      // column (pre-migration rows) as a last resort.
+      const level = profile?.course_level_key || pref?.level || profile?.level || "";
       const alternatives = pkgsWithSeats.filter((p: Package) =>
         p.level === level && (p.member_count || 0) < p.capacity && p.id !== pref?.package_id
       ).slice(0, 4);
