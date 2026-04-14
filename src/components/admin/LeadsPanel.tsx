@@ -175,7 +175,22 @@ const LeadsPanel: React.FC = () => {
     for (const lead of unlinked) {
       const userId = profileByEmail[(lead.email || "").toLowerCase().trim()];
       if (userId) {
-        try { await updateLeadViaFn(lead.id, { user_id: userId }); linked++; } catch { /* skip */ }
+        try {
+          await updateLeadViaFn(lead.id, { user_id: userId });
+          // Enrich empty profile fields from lead data
+          if (lead.country || lead.level) {
+            const { data: prof } = await supabase.from("profiles").select("country, level").eq("user_id", userId).single();
+            if (prof) {
+              const updates: Record<string, string> = {};
+              if (lead.country && (!prof.country || prof.country === "")) updates.country = lead.country;
+              if (lead.level && (!prof.level || prof.level === "")) updates.level = lead.level;
+              if (Object.keys(updates).length > 0) {
+                await supabase.from("profiles").update(updates).eq("user_id", userId);
+              }
+            }
+          }
+          linked++;
+        } catch { /* skip */ }
       }
     }
     toast({ title: `Linked ${linked} lead(s)`, description: `${unlinked.length - linked} remain unlinked.` });

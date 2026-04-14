@@ -243,7 +243,7 @@ const GroupMatcher = () => {
     // Fetch rejected enrollments (either fully rejected, or slot-rejected)
     const { data: rawRejected } = await supabase
       .from("enrollments")
-      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url, slot_rejection_reason, slot_rejection_at")
+      .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, sessions_total, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url, slot_rejection_reason, slot_rejection_at")
       .or("approval_status.eq.REJECTED,slot_rejection_reason.not.is.null")
       .order("slot_rejection_at", { ascending: false, nullsFirst: false })
       .limit(50);
@@ -422,8 +422,8 @@ const GroupMatcher = () => {
       const isPaymentReject = rejectReason === "payment_issue";
 
       const updatePayload: Record<string, any> = isPaymentReject
-        ? { approval_status: "REJECTED", enrollment_status: "cancelled", payment_status: "UNPAID" }
-        : { approval_status: "REJECTED", slot_rejection_reason: fullNote, slot_rejection_at: new Date().toISOString() };
+        ? { approval_status: "REJECTED", enrollment_status: "cancelled", payment_status: "UNPAID", sessions_remaining: 0 }
+        : { approval_status: "REJECTED", slot_rejection_reason: fullNote, slot_rejection_at: new Date().toISOString(), sessions_remaining: 0 };
 
       const { error } = await supabase
         .from("enrollments")
@@ -480,20 +480,15 @@ const GroupMatcher = () => {
   ) => {
     setUnrejecting(enrollment.id);
     try {
-      const isFullReject = enrollment.approval_status === "REJECTED";
-      const updatePayload: Record<string, any> = isFullReject
-        ? {
-            approval_status: "APPROVED",
-            enrollment_status: null,
-            slot_rejection_reason: null,
-            slot_rejection_at: null,
-          }
-        : {
-            approval_status: "APPROVED",
-            slot_rejection_reason: null,
-            slot_rejection_at: null,
-            matched_at: null,
-          };
+      // Restore sessions_remaining from sessions_total (or classes_included)
+      const sessions = (enrollment as any).sessions_total || (enrollment as any).classes_included || 0;
+      const updatePayload: Record<string, any> = {
+        approval_status: "APPROVED",
+        slot_rejection_reason: null,
+        slot_rejection_at: null,
+        matched_at: null,
+        sessions_remaining: sessions,
+      };
       const { error } = await supabase
         .from("enrollments")
         .update(updatePayload as any)
