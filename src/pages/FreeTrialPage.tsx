@@ -12,6 +12,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { track } from "@/lib/tracking";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const LEVELS = [
   { value: "A0 – Complete Beginner", label: "A0 – Complete Beginner (I know nothing)" },
@@ -30,6 +31,8 @@ const GOALS = [
   "Study in Korea / TOPIK exam",
   "Talk with Korean friends or family",
 ];
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const PERKS = [
   { icon: Gift, text: "100% free — no credit card" },
@@ -89,6 +92,7 @@ const FreeTrialPage = () => {
 
   const [step, setStep] = useState<"form" | "success">("form");
   const [loading, setLoading] = useState(false);
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -103,8 +107,8 @@ const FreeTrialPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.level) {
-      toast({ title: "Please fill in all required fields", variant: "destructive" });
+    if (!form.name || !form.email || !form.level || selectedDays.length === 0) {
+      toast({ title: "Please fill in all required fields", description: selectedDays.length === 0 ? "Please select at least one preferred day" : undefined, variant: "destructive" });
       return;
     }
 
@@ -122,6 +126,7 @@ const FreeTrialPage = () => {
         country: form.country || "Unknown",
         level: form.level,
         goal: goalWithPhone,
+        schedule: selectedDays.join(", "),
         source: "free-trial-page",
       },
     });
@@ -139,7 +144,7 @@ const FreeTrialPage = () => {
 
   if (step === "success") {
     const waMsg = encodeURIComponent(
-      `Hi! I just booked a free trial class on the Klovers website.\nName: ${form.name}\nLevel: ${form.level}\nGoal: ${form.goal}`
+      `Hi! I just booked a free trial class on the Klovers website.\nName: ${form.name}\nLevel: ${form.level}\nGoal: ${form.goal}\nPreferred day(s): ${selectedDays.join(", ")}`
     );
     return (
       <div className="min-h-screen bg-background">
@@ -291,6 +296,30 @@ const FreeTrialPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Preferred day(s) */}
+                <div className="space-y-1.5">
+                  <Label>Preferred day(s) for trial <span className="text-destructive">*</span></Label>
+                  <ToggleGroup
+                    type="multiple"
+                    value={selectedDays}
+                    onValueChange={setSelectedDays}
+                    className="flex flex-wrap gap-2 justify-start"
+                  >
+                    {DAYS.map((day) => (
+                      <ToggleGroupItem
+                        key={day}
+                        value={day}
+                        className="rounded-full px-4 py-2 text-sm font-medium border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                      >
+                        {day}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                  <p className="text-xs text-muted-foreground">
+                    Select one or more days that work for you
+                  </p>
                 </div>
 
                 <Button
