@@ -509,6 +509,7 @@ const AdminDashboard = () => {
       const v = (x: typeof a) =>
         studentSort.col === "sessions_remaining" ? x.sessions_remaining
         : studentSort.col === "amount_due" ? x.amount_due
+        : studentSort.col === "remaining_balance" ? x.remaining_balance
         : studentSort.col === "joined_at" ? new Date(x.joined_at).getTime()
         : studentSort.col === "attendance_pct" ? (x.sessions_total > 0 ? (x.sessions_total - x.sessions_remaining) / x.sessions_total : -1)
         : 0;
@@ -888,6 +889,12 @@ const AdminDashboard = () => {
                           >
                             Amount Due {studentSort.col === "amount_due" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
                           </TableHead>
+                          <TableHead
+                            className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary"
+                            onClick={() => setStudentSort(s => ({ col: "remaining_balance", dir: s.col === "remaining_balance" && s.dir === "asc" ? "desc" : "asc" }))}
+                          >
+                            Balance {studentSort.col === "remaining_balance" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
+                          </TableHead>
                           <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
                           <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Source</TableHead>
                           <TableHead
@@ -958,6 +965,13 @@ const AdminDashboard = () => {
                                     <TooltipContent>Send payment request email</TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
+                              ) : "—"}
+                            </TableCell>
+                            <TableCell className="py-3 px-3 text-right font-mono">
+                              {u.remaining_balance > 0 ? (
+                                <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                                  {u.currency === "EGP" ? "LE" : "$"}{u.remaining_balance.toFixed(2)}
+                                </span>
                               ) : "—"}
                             </TableCell>
                             <TableCell className="py-3 px-3">

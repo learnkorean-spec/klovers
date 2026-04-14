@@ -86,6 +86,7 @@ export interface OverviewRow {
   unit_price: number | null;
   negative_sessions: number;
   amount_due: number;
+  remaining_balance: number;
   [key: string]: unknown;
 }
 

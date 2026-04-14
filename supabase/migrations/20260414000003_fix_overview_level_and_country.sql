@@ -70,7 +70,20 @@ SELECT
     ELSE '—'
   END AS source_label,
   GREATEST(0, -COALESCE(le.sessions_remaining, 0)) AS negative_sessions,
-  GREATEST(0, -COALESCE(le.sessions_remaining, 0)) * COALESCE(le.unit_price, 0) AS amount_due
+  CASE
+    WHEN COALESCE(le.sessions_remaining, 0) < 0 THEN
+      GREATEST(0, -le.sessions_remaining) *
+      CASE WHEN COALESCE(le.sessions_total, 0) > 0
+           THEN le.amount / le.sessions_total
+           ELSE COALESCE(le.unit_price, 0)
+      END
+    ELSE 0
+  END AS amount_due,
+  CASE
+    WHEN COALESCE(le.sessions_remaining, 0) > 0 AND COALESCE(le.sessions_total, 0) > 0 THEN
+      ROUND((le.amount / le.sessions_total) * le.sessions_remaining, 2)
+    ELSE 0
+  END AS remaining_balance
 FROM public.profiles p
 LEFT JOIN LATERAL (
   SELECT *
