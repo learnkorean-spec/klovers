@@ -214,15 +214,17 @@ const GroupMatcher = () => {
       .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "group")
-      .is("matched_at", null);
+      .is("matched_at", null)
+      .is("slot_rejection_reason", null);
 
-    // Fetch unmatched private enrollments
+    // Fetch unmatched private enrollments (exclude slot-rejected)
     const { data: rawPrivateEnrollments, error: privateError } = await supabase
       .from("enrollments")
       .select("id, user_id, plan_type, preferred_day, preferred_days, preferred_start, preferred_time, timezone, duration, level, package_id, amount, currency, classes_included, payment_method, payment_provider, payment_status, approval_status, created_at, receipt_url")
       .eq("approval_status", "APPROVED")
       .eq("plan_type", "private")
-      .is("matched_at", null);
+      .is("matched_at", null)
+      .is("slot_rejection_reason", null);
 
     // Fetch already-assigned private enrollments (matched_at set)
     const { data: rawMatchedPrivate } = await supabase
