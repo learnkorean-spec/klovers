@@ -70,10 +70,10 @@ const PAGE_SIZE = 25;
 // Error boundary for lazy-loaded tab components
 class TabErrorBoundary extends Component<
   { name: string; children: ReactNode },
-  { error: boolean }
+  { error: boolean; errorMsg: string }
 > {
-  state = { error: false };
-  static getDerivedStateFromError() { return { error: true }; }
+  state = { error: false, errorMsg: "" };
+  static getDerivedStateFromError(error: Error) { return { error: true, errorMsg: error?.message || "Unknown error" }; }
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error(`[TabErrorBoundary] ${this.props.name} crashed:`, error, errorInfo);
   }
@@ -86,7 +86,10 @@ class TabErrorBoundary extends Component<
             <p className="text-sm text-muted-foreground">
               Failed to load <strong>{this.props.name}</strong>.
             </p>
-            <Button variant="outline" size="sm" onClick={() => this.setState({ error: false })}>
+            <p className="text-xs text-destructive/80 font-mono max-w-md mx-auto break-all">
+              {this.state.errorMsg}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => this.setState({ error: false, errorMsg: "" })}>
               Retry
             </Button>
           </CardContent>
