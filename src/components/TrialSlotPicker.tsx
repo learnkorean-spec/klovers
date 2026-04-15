@@ -31,7 +31,7 @@ interface TrialSlotPickerProps {
 // The production get_trial_availability() RPC returns a capacity per slot
 // (see migration 20260416000000_trial_slots_table.sql) and already filters
 // full slots out server-side.
-const DEFAULT_CAPACITY = 3;
+const DEFAULT_CAPACITY = 6;
 
 const TrialSlotPicker = ({ onSelect, onBack }: TrialSlotPickerProps) => {
   const [slots, setSlots] = useState<TrialSlot[]>([]);

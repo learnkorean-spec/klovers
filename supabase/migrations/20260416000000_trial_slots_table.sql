@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.trial_slots (
   start_time    text NOT NULL,                                -- 'HH:MM' 24-h
   duration_min  int  NOT NULL DEFAULT 30,
   timezone      text NOT NULL DEFAULT 'Africa/Cairo',
-  capacity      int  NOT NULL DEFAULT 3 CHECK (capacity > 0),
+  capacity      int  NOT NULL DEFAULT 6 CHECK (capacity > 0),
   is_active     boolean NOT NULL DEFAULT true,
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
@@ -76,9 +76,18 @@ CREATE TRIGGER trg_trial_slots_updated_at
 -- ── 2. Seed the two approved trial slots ──────────────────────
 INSERT INTO public.trial_slots (day_of_week, start_time, duration_min, timezone, capacity, is_active)
 VALUES
-  (3, '17:30', 30, 'Africa/Cairo', 3, true),   -- Wednesday 5:30 PM Cairo
-  (0, '18:30', 30, 'Africa/Cairo', 3, true)    -- Sunday    6:30 PM Cairo
+  (3, '17:30', 30, 'Africa/Cairo', 6, true),   -- Wednesday 5:30 PM Cairo
+  (0, '18:30', 30, 'Africa/Cairo', 6, true)    -- Sunday    6:30 PM Cairo
 ON CONFLICT (day_of_week, start_time, timezone) DO NOTHING;
+
+-- Idempotent capacity bump for any row already present from a previous
+-- run with the old default of 3.
+UPDATE public.trial_slots
+   SET capacity = 6
+ WHERE capacity < 6
+   AND day_of_week IN (3, 0)
+   AND start_time  IN ('17:30', '18:30')
+   AND timezone    = 'Africa/Cairo';
 
 -- ── 3. New Level 2 group package: Wed 18:00 Cairo 90 min ──────
 INSERT INTO public.schedule_packages
