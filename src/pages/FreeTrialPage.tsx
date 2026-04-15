@@ -5,33 +5,14 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
-import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift, CalendarPlus, MessageCircle } from "lucide-react";
+import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift, CalendarPlus, MessageCircle, ArrowLeft } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { track } from "@/lib/tracking";
 import TrialSlotPicker from "@/components/TrialSlotPicker";
 import { DAY_NAMES, formatTime12h } from "@/lib/calendarUrl";
-
-const LEVELS = [
-  { value: "A0 – Complete Beginner", label: "A0 – Complete Beginner (I know nothing)" },
-  { value: "A1 – TOPIK 1", label: "A1 – TOPIK 1 (Basic words)" },
-  { value: "A2 – TOPIK 2", label: "A2 – TOPIK 2 (Simple sentences)" },
-  { value: "B1 – TOPIK 3", label: "B1 – TOPIK 3 (Everyday conversation)" },
-  { value: "B2 – TOPIK 4", label: "B2 – TOPIK 4 (Intermediate)" },
-  { value: "C1+", label: "C1+ (Advanced)" },
-];
-
-const GOALS = [
-  "Watch K-Dramas without subtitles",
-  "Travel to Korea",
-  "Connect with Korean culture & K-Pop",
-  "Business / Work",
-  "Study in Korea / TOPIK exam",
-  "Talk with Korean friends or family",
-];
 
 const PERKS = [
   { icon: Gift, text: "100% free — no credit card" },
@@ -98,48 +79,56 @@ const FreeTrialPage = () => {
     }
   }, [referredBy]);
 
-  const [step, setStep] = useState<"form" | "pick_slot" | "success">("form");
+  // New flow: pick_slot → contact → success
+  //   - No upfront form. Students choose their trial day FIRST.
+  //   - Then enter the minimum contact info needed to confirm the booking
+  //     (name + WhatsApp; email optional). Level & learning goal are gathered
+  //     as an optional follow-up after booking, not as a gate to booking.
+  const [step, setStep] = useState<"pick_slot" | "contact" | "success">("pick_slot");
   const [loading, setLoading] = useState(false);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
+  const [pickedSlot, setPickedSlot] = useState<{ dayOfWeek: number; startTime: string } | null>(null);
   const [form, setForm] = useState({
     name: "",
-    email: "",
     phone: "",
-    level: "",
-    goal: "",
-    country: "",
+    email: "",
   });
 
   const set = (k: keyof typeof form, v: string) =>
     setForm((prev) => ({ ...prev, [k]: v }));
 
-  /** Step 1 → Step 2: validate form, move to slot picker */
-  const handleFormSubmit = (e: React.FormEvent) => {
+  /** Step 1 → Step 2: student picked a trial slot, now collect contact */
+  const handleSlotPicked = (dayOfWeek: number, startTime: string) => {
+    setPickedSlot({ dayOfWeek, startTime });
+    setStep("contact");
+  };
+
+  /** Step 2 → Step 3: submit booking with minimal contact details */
+  const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.level) {
+    if (!pickedSlot) return;
+    if (!form.name.trim() || !form.phone.trim()) {
       toast({
-        title: "Please fill in all required fields",
+        title: "Please enter your name and WhatsApp number",
         variant: "destructive",
       });
       return;
     }
-    setStep("pick_slot");
-  };
 
-  /** Step 2 → Step 3: book the selected slot */
-  const handleSlotSelect = async (dayOfWeek: number, startTime: string) => {
     setLoading(true);
     try {
+      // Email is optional — generate a placeholder so the backend's
+      // email field stays populated without asking the student for it.
+      const emailValue = form.email.trim().toLowerCase()
+        || `${form.phone.replace(/\D/g, "")}@trial.kloversegy.com`;
+
       const { data, error } = await supabase.functions.invoke("book-trial", {
         body: {
-          name: form.name,
-          email: form.email.trim().toLowerCase(),
-          phone: form.phone || undefined,
-          country: form.country || "Unknown",
-          level: form.level,
-          goal: form.goal || undefined,
-          day_of_week: dayOfWeek,
-          start_time: startTime,
+          name: form.name.trim(),
+          email: emailValue,
+          phone: form.phone.trim(),
+          day_of_week: pickedSlot.dayOfWeek,
+          start_time: pickedSlot.startTime,
           referrer_id: referredBy || undefined,
         },
       });
@@ -231,8 +220,11 @@ const FreeTrialPage = () => {
     );
   }
 
-  // ── Slot Picker Screen (Step 2) ─────────────────────────────────────────────
-  if (step === "pick_slot") {
+  // ── Step 2: Minimal Contact Form ────────────────────────────────────────────
+  if (step === "contact" && pickedSlot) {
+    const dayName = DAY_NAMES[pickedSlot.dayOfWeek] ?? `Day ${pickedSlot.dayOfWeek}`;
+    const timeLabel = formatTime12h(pickedSlot.startTime);
+
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -240,10 +232,12 @@ const FreeTrialPage = () => {
           <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
             <div className="container mx-auto px-4 text-center max-w-3xl">
               <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-3">
-                Pick your trial time
+                Almost done!
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Choose an available time slot for your free 45-minute class.
+                Confirming your trial for{" "}
+                <span className="font-semibold text-foreground">{dayName} at {timeLabel}</span>{" "}
+                (Cairo time). We just need a way to reach you.
               </p>
             </div>
           </section>
@@ -251,17 +245,74 @@ const FreeTrialPage = () => {
           <section className="py-12 pb-24">
             <div className="container mx-auto px-4">
               <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">Booking your class...</p>
+                <form onSubmit={handleBooking} className="space-y-5">
+                  {/* Name */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name">Your name <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="name"
+                      placeholder="e.g. Sara Ahmed"
+                      value={form.name}
+                      onChange={(e) => set("name", e.target.value)}
+                      required
+                    />
                   </div>
-                ) : (
-                  <TrialSlotPicker
-                    onSelect={handleSlotSelect}
-                    onBack={() => setStep("form")}
-                  />
-                )}
+
+                  {/* WhatsApp */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone">WhatsApp number <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+20 100 000 0000"
+                      value={form.phone}
+                      onChange={(e) => set("phone", e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Email — optional */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email">
+                      Email <span className="text-muted-foreground text-xs">(optional)</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="sara@example.com"
+                      value={form.email}
+                      onChange={(e) => set("email", e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={loading}
+                    className="w-full gap-2 text-base font-bold h-13 mt-2"
+                  >
+                    {loading ? "Booking..." : (
+                      <>
+                        Confirm my trial
+                        <ArrowRight className="h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setStep("pick_slot")}
+                    className="w-full gap-1"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Pick a different time
+                  </Button>
+
+                  <p className="text-xs text-muted-foreground text-center">
+                    No payment. No spam. We'll message you on WhatsApp to confirm.
+                  </p>
+                </form>
               </div>
             </div>
           </section>
@@ -271,7 +322,7 @@ const FreeTrialPage = () => {
     );
   }
 
-  // ── Form Screen (Step 1) ────────────────────────────────────────────────────
+  // ── Step 1: Slot Picker (default landing) ───────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -287,7 +338,7 @@ const FreeTrialPage = () => {
               Try Korean for <span className="text-primary text-outlined-lg">Free</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
-              One live class. Real teacher. No credit card. See why 1,000+ students chose Klovers.
+              One live class. Real teacher. No credit card. Just pick a time.
             </p>
 
             {/* Perks */}
@@ -304,121 +355,31 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* Form */}
+        {/* Slot picker */}
         <section className="py-12 pb-24">
           <div className="container mx-auto px-4">
             <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
-              <h2 className="text-2xl font-bold text-foreground mb-1">Book your free class</h2>
-              <p className="text-sm text-muted-foreground mb-8">Takes 30 seconds. Pick your info, then choose a time.</p>
+              <h2 className="text-2xl font-bold text-foreground mb-1">Pick your trial time</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Choose the day that works for you. All times are in Cairo (Africa/Cairo).
+              </p>
 
-              <form onSubmit={handleFormSubmit} className="space-y-5">
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="name">Your name <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g. Sara Ahmed"
-                    value={form.name}
-                    onChange={(e) => set("name", e.target.value)}
-                    required
-                  />
+              <TrialSlotPicker
+                onSelect={handleSlotPicked}
+                onBack={() => navigate("/")}
+              />
+
+              {/* Social proof */}
+              <div className="flex items-center justify-center gap-2 pt-6 border-t border-border mt-6">
+                <div className="flex -space-x-1.5">
+                  {["N","M","H","Y","J"].map((l) => (
+                    <div key={l} className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[9px] font-bold text-primary">{l}</div>
+                  ))}
                 </div>
-
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email address <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="sara@example.com"
-                    value={form.email}
-                    onChange={(e) => set("email", e.target.value)}
-                    required
-                  />
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone">WhatsApp number <span className="text-muted-foreground text-xs">(recommended)</span></Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+20 100 000 0000"
-                    value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                  />
-                </div>
-
-                {/* Country */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    placeholder="e.g. Egypt"
-                    value={form.country}
-                    onChange={(e) => set("country", e.target.value)}
-                  />
-                </div>
-
-                {/* Level */}
-                <div className="space-y-1.5">
-                  <Label>Current Korean level <span className="text-destructive">*</span></Label>
-                  <Select value={form.level} onValueChange={(v) => set("level", v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEVELS.map((l) => (
-                        <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Goal */}
-                <div className="space-y-1.5">
-                  <Label>Learning goal</Label>
-                  <Select value={form.goal} onValueChange={(v) => set("goal", v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Why are you learning Korean?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {GOALS.map((g) => (
-                        <SelectItem key={g} value={g}>{g}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Trial day is picked in Step 2 (TrialSlotPicker) from the
-                    backend-approved trial slots only (Wed 5:30 PM / Sun 6:30 PM
-                    Cairo). No free-form day toggle here. */}
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full gap-2 text-base font-bold h-13 mt-2"
-                >
-                  Choose a Time Slot
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  No payment. No spam. Pick your time on the next step.
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">14 students</span> booked this week
                 </p>
-
-                {/* Social proof nudge */}
-                <div className="flex items-center justify-center gap-2 pt-1">
-                  <div className="flex -space-x-1.5">
-                    {["N","M","H","Y","J"].map((l) => (
-                      <div key={l} className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[9px] font-bold text-primary">{l}</div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">14 students</span> booked this week
-                  </p>
-                </div>
-              </form>
+              </div>
             </div>
           </div>
         </section>
