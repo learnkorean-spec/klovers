@@ -2,41 +2,62 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, CalendarDays, ArrowLeft } from "lucide-react";
-import { DAY_NAMES, DAY_ABBREV_TO_INDEX, formatTime12h } from "@/lib/calendarUrl";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, CalendarDays } from "lucide-react";
+import { DAY_NAMES, formatTime12h } from "@/lib/calendarUrl";
 
 interface TrialSlot {
   day_of_week: number;
   start_time: string;
   booked_count: number;
+  capacity: number | null;     // nullable for back-compat; falls back to DEFAULT_CAPACITY
+  duration_min: number | null;
+  timezone: string | null;
 }
 
 interface TrialSlotPickerProps {
-  selectedDays: string[]; // ["Mon", "Tue", "Thu"]
   onSelect: (dayOfWeek: number, startTime: string) => void;
   onBack: () => void;
 }
 
-const MAX_TRIALS_PER_SLOT = 3;
+// Fallback only used if the backend row doesn't expose a capacity.
+// The production get_trial_availability() RPC returns a capacity per slot
+// (see migration 20260416000000_trial_slots_table.sql) and already filters
+// full slots out server-side.
+const DEFAULT_CAPACITY = 3;
 
-const TrialSlotPicker = ({ selectedDays, onSelect, onBack }: TrialSlotPickerProps) => {
+const TrialSlotPicker = ({ onSelect, onBack }: TrialSlotPickerProps) => {
   const [slots, setSlots] = useState<TrialSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<{ day: number; time: string } | null>(null);
-
-  const dayIndices = selectedDays.map((d) => DAY_ABBREV_TO_INDEX[d]).filter((v) => v !== undefined);
+  const [selectedKey, setSelectedKey] = useState<string>("");
 
   useEffect(() => {
     const fetchSlots = async () => {
       setLoading(true);
       setError(null);
       try {
-        const { data, error: rpcError } = await supabase.rpc("get_trial_availability");
+        const { data, error: rpcError } = await supabase.rpc(
+          "get_trial_availability" as any,
+        );
         if (rpcError) throw rpcError;
-        // Filter to only the days the student selected
-        const filtered = (data || []).filter((s: TrialSlot) => dayIndices.includes(s.day_of_week));
-        setSlots(filtered);
+        const rows = (data || []) as any[];
+        const normalised: TrialSlot[] = rows.map((s) => ({
+          day_of_week: s.day_of_week,
+          start_time: s.start_time,
+          booked_count: Number(s.booked_count ?? 0),
+          capacity: s.capacity ?? null,
+          duration_min: s.duration_min ?? null,
+          timezone: s.timezone ?? null,
+        }));
+        setSlots(normalised);
       } catch (err: any) {
         console.error("Failed to fetch trial slots:", err);
         setError("Could not load available times. Please try again.");
@@ -45,9 +66,14 @@ const TrialSlotPicker = ({ selectedDays, onSelect, onBack }: TrialSlotPickerProp
       }
     };
     fetchSlots();
-  }, [selectedDays.join(",")]);
+  }, []);
 
-  const availableSlots = slots.filter((s) => s.booked_count < MAX_TRIALS_PER_SLOT);
+  // Server-side RPC already hides full slots (see migration), but keep a
+  // defensive client filter using per-row capacity + DEFAULT_CAPACITY fallback.
+  const availableSlots = slots.filter((s) => {
+    const cap = s.capacity ?? DEFAULT_CAPACITY;
+    return s.booked_count < cap;
+  });
 
   if (loading) {
     return (
@@ -57,9 +83,7 @@ const TrialSlotPicker = ({ selectedDays, onSelect, onBack }: TrialSlotPickerProp
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
         </div>
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-12 w-full rounded-xl" />
       </div>
     );
   }
@@ -80,21 +104,31 @@ const TrialSlotPicker = ({ selectedDays, onSelect, onBack }: TrialSlotPickerProp
       <div className="text-center py-8 space-y-3">
         <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          No available slots on your selected days. Please go back and try different days.
+          All trial sessions are currently full. Please check back soon or contact us on WhatsApp.
         </p>
         <Button variant="outline" size="sm" onClick={onBack} className="gap-1">
-          <ArrowLeft className="h-4 w-4" /> Choose different days
+          <ArrowLeft className="h-4 w-4" /> Go back
         </Button>
       </div>
     );
   }
 
-  // Group by day
-  const byDay: Record<number, TrialSlot[]> = {};
-  availableSlots.forEach((s) => {
-    if (!byDay[s.day_of_week]) byDay[s.day_of_week] = [];
-    byDay[s.day_of_week].push(s);
-  });
+  const labelFor = (s: TrialSlot) => {
+    const day = DAY_NAMES[s.day_of_week] ?? `Day ${s.day_of_week}`;
+    const time = formatTime12h(s.start_time);
+    const cap = s.capacity ?? DEFAULT_CAPACITY;
+    const spotsLeft = cap - s.booked_count;
+    return `${day} at ${time} — ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`;
+  };
+
+  const keyFor = (s: TrialSlot) => `${s.day_of_week}|${s.start_time}`;
+
+  const commit = () => {
+    if (!selectedKey) return;
+    const [dStr, time] = selectedKey.split("|");
+    const day = Number(dStr);
+    onSelect(day, time);
+  };
 
   return (
     <div className="space-y-4">
@@ -102,65 +136,37 @@ const TrialSlotPicker = ({ selectedDays, onSelect, onBack }: TrialSlotPickerProp
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
-        <p className="text-sm text-muted-foreground">Pick a time for your free class</p>
+        <p className="text-sm text-muted-foreground">Pick your trial day</p>
       </div>
 
-      {Object.entries(byDay)
-        .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([dayStr, daySlots]) => {
-          const day = Number(dayStr);
-          return (
-            <div key={day}>
-              <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-primary" />
-                {DAY_NAMES[day]}
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {daySlots
-                  .sort((a, b) => a.start_time.localeCompare(b.start_time))
-                  .map((slot) => {
-                    const isSelected = selected?.day === day && selected?.time === slot.start_time;
-                    const spotsLeft = MAX_TRIALS_PER_SLOT - Number(slot.booked_count);
-                    return (
-                      <button
-                        key={`${day}-${slot.start_time}`}
-                        type="button"
-                        onClick={() => setSelected({ day, time: slot.start_time })}
-                        className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 text-sm transition-all hover:border-primary/60 ${
-                          isSelected
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                            : "border-border bg-card hover:bg-accent/50"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5 font-semibold">
-                          <Clock className="h-3.5 w-3.5" />
-                          {formatTime12h(slot.start_time)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left
-                        </span>
-                      </button>
-                    );
-                  })}
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-2">
+        <Label htmlFor="trial-day">Trial Day</Label>
+        <Select value={selectedKey} onValueChange={setSelectedKey}>
+          <SelectTrigger id="trial-day" className="w-full">
+            <SelectValue placeholder="Choose a trial session" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableSlots.map((s) => (
+              <SelectItem key={keyFor(s)} value={keyFor(s)}>
+                {labelFor(s)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        All times are in Cairo time (GMT+2)
+        All times are in Cairo (Africa/Cairo)
       </p>
 
       <Button
         type="button"
         size="lg"
         className="w-full gap-2 text-base font-bold h-13 mt-2"
-        disabled={!selected}
-        onClick={() => selected && onSelect(selected.day, selected.time)}
+        disabled={!selectedKey}
+        onClick={commit}
       >
-        {selected
-          ? `Book ${DAY_NAMES[selected.day]} at ${formatTime12h(selected.time)}`
-          : "Select a time slot"}
+        {selectedKey ? "Book this trial" : "Select a trial day"}
       </Button>
     </div>
   );

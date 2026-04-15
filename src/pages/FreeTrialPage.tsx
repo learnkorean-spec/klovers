@@ -12,7 +12,6 @@ import { useSEO } from "@/hooks/useSEO";
 import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift, CalendarPlus, MessageCircle } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { track } from "@/lib/tracking";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import TrialSlotPicker from "@/components/TrialSlotPicker";
 import { DAY_NAMES, formatTime12h } from "@/lib/calendarUrl";
 
@@ -33,8 +32,6 @@ const GOALS = [
   "Study in Korea / TOPIK exam",
   "Talk with Korean friends or family",
 ];
-
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const PERKS = [
   { icon: Gift, text: "100% free — no credit card" },
@@ -103,7 +100,6 @@ const FreeTrialPage = () => {
 
   const [step, setStep] = useState<"form" | "pick_slot" | "success">("form");
   const [loading, setLoading] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [form, setForm] = useState({
     name: "",
@@ -120,10 +116,9 @@ const FreeTrialPage = () => {
   /** Step 1 → Step 2: validate form, move to slot picker */
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.level || selectedDays.length === 0) {
+    if (!form.name || !form.email || !form.level) {
       toast({
         title: "Please fill in all required fields",
-        description: selectedDays.length === 0 ? "Please select at least one preferred day" : undefined,
         variant: "destructive",
       });
       return;
@@ -263,7 +258,6 @@ const FreeTrialPage = () => {
                   </div>
                 ) : (
                   <TrialSlotPicker
-                    selectedDays={selectedDays}
                     onSelect={handleSlotSelect}
                     onBack={() => setStep("form")}
                   />
@@ -396,29 +390,9 @@ const FreeTrialPage = () => {
                   </Select>
                 </div>
 
-                {/* Preferred day(s) */}
-                <div className="space-y-1.5">
-                  <Label>Preferred day(s) for trial <span className="text-destructive">*</span></Label>
-                  <ToggleGroup
-                    type="multiple"
-                    value={selectedDays}
-                    onValueChange={setSelectedDays}
-                    className="flex flex-wrap gap-2 justify-start"
-                  >
-                    {DAYS.map((day) => (
-                      <ToggleGroupItem
-                        key={day}
-                        value={day}
-                        className="rounded-full px-4 py-2 text-sm font-medium border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                      >
-                        {day}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                  <p className="text-xs text-muted-foreground">
-                    Select one or more days that work for you
-                  </p>
-                </div>
+                {/* Trial day is picked in Step 2 (TrialSlotPicker) from the
+                    backend-approved trial slots only (Wed 5:30 PM / Sun 6:30 PM
+                    Cairo). No free-form day toggle here. */}
 
                 <Button
                   type="submit"
