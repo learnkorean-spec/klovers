@@ -12,25 +12,26 @@ select count(*) as whatsapp_clickers_signed_up
 from lead_funnel
 where clicked_whatsapp and signup_completed;
 
--- 3. Trial-booked conversion by first touchpoint
+-- 3. Signup conversion by first touchpoint
 select touchpoints[1] as first_touch,
-       count(*) filter (where trial_booked) as booked,
+       count(*) filter (where signup_completed) as signups,
        count(*) as total,
-       round(100.0 * count(*) filter (where trial_booked) / nullif(count(*), 0), 1) as pct
+       round(100.0 * count(*) filter (where signup_completed) / nullif(count(*), 0), 1) as pct
 from lead_funnel
 group by 1
 order by total desc;
 
 -- 4. Full funnel (all-time)
+-- Note: trial_booked / enrollment_completed columns omitted from the
+-- production view because trial_bookings/profiles lack an email column to
+-- join on. Add them back once that schema gap is closed.
 select
   count(*)                                          as sessions,
   count(*) filter (where clicked_whatsapp)          as whatsapp_clicks,
   count(*) filter (where started_placement)         as placement_starts,
   count(*) filter (where clicked_free_trial)        as free_trial_clicks,
   count(*) filter (where viewed_pricing_cta)        as pricing_views,
-  count(*) filter (where signup_completed)          as signups,
-  count(*) filter (where trial_booked)              as trials,
-  count(*) filter (where enrollment_completed)      as enrollments
+  count(*) filter (where signup_completed)          as signups
 from lead_funnel;
 
 -- 5. WhatsApp click breakdown by source page (which buttons get used)
