@@ -17,6 +17,7 @@ import { PLACEMENT_QUESTIONS, SPEAKING_PROMPTS, LISTENING_EXAM, READING_EXAM, co
 import { useSpeech } from "@/hooks/useSpeech";
 import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
 import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin, Volume2, Square, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -170,6 +171,7 @@ const PlacementTestPage = () => {
   const startTimeRef    = useRef<number | null>(null);
   const finalTimeRef    = useRef(0);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { logLeadEvent({ source_type: "placement_test", cta_label: "test_started" }); }, []);
   useEffect(() => { skippedRef.current = skipped; }, [skipped]);
   useEffect(() => { autoAdvanceRef.current = autoAdvance; }, [autoAdvance]);
   // Cleanup advance timer when page or phase changes
@@ -342,7 +344,7 @@ const PlacementTestPage = () => {
 
   const handleWhatsApp = (res: PlacementResult) => {
     const text = encodeURIComponent(`I scored ${res.score}/30 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
-    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+    trackAndOpenWhatsApp(`https://wa.me/?text=${text}`, { cta_label: "placement_share", metadata: { level: res.levelKey, score: res.score } });
   };
 
   const handleDownloadCard = (res: PlacementResult) => {
@@ -364,7 +366,7 @@ const PlacementTestPage = () => {
 
   const handleWhatsAppEnroll = (res: PlacementResult) => {
     const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى وحصلت على ${res.score}/30. مستواي: ${res.levelLabel}. هل يمكنني الحجز؟`);
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank", "noopener,noreferrer");
+    trackAndOpenWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, { cta_label: "placement_enroll", metadata: { level: res.levelKey, score: res.score } });
   };
 
   const handleDownloadCertificate = (res: PlacementResult) => {

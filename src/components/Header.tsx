@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Globe, UserCircle, ChevronDown, LogOut, LayoutDashboard, CalendarDays, Zap, Brain, Sun, Moon, Settings } from "lucide-react";
+import { Menu, X, Globe, UserCircle, ChevronDown, LogOut, LayoutDashboard, CalendarDays, Zap, Brain, Sun, Moon, Settings, Gift } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { logLeadEvent } from "@/lib/leadTracking";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -123,7 +124,10 @@ const Header = () => {
 
             {!user && (
               <Button size="sm" variant="outline" asChild className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
-                <Link to="/free-trial">
+                <Link
+                  to="/free-trial"
+                  onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "header_free_trial" }); } catch {} }}
+                >
                   🎁 {isAr ? "حصة مجانية" : "Free Trial"}
                 </Link>
               </Button>
@@ -152,6 +156,10 @@ const Header = () => {
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     {isAr ? "لوحة التحكم" : "My Dashboard"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/trial-booking")}>
+                    <Gift className="h-4 w-4 mr-2" />
+                    {isAr ? "احجز حصة مجانية" : "Book Free Trial"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <Settings className="h-4 w-4 mr-2" />

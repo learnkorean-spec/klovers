@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Lock, GraduationCap } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 type Status = "loading" | "unauthenticated" | "enrolled" | "not_enrolled";
 
@@ -74,6 +75,13 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
 
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi! I'd like to enroll in a Korean course.")}`}
+              onClick={(e) => {
+                e.preventDefault();
+                trackAndOpenWhatsApp(
+                  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi! I'd like to enroll in a Korean course.")}`,
+                  { cta_label: "enroll_gate" },
+                );
+              }}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"

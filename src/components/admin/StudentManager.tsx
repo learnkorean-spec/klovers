@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LEVEL_SELECT_OPTIONS_WITH_SPECIAL } from "@/constants/levels";
+import { LEVEL_SELECT_OPTIONS_WITH_SPECIAL, LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1133,7 +1133,15 @@ const StudentManager = () => {
             </div>
             <div className="space-y-1">
               <Label>Level</Label>
-              <Input value={enrollForm.level} onChange={e => setEnrollForm(f => ({ ...f, level: e.target.value }))} placeholder="e.g. l1" />
+              <Select value={enrollForm.level || "__none__"} onValueChange={v => setEnrollForm(f => ({ ...f, level: v === "__none__" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Not set —</SelectItem>
+                  {LEVEL_SELECT_OPTIONS.map(l => (
+                    <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>Sessions included</Label>

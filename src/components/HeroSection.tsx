@@ -4,6 +4,7 @@ import { ArrowRight, DollarSign, Gift, Users, Star, Globe } from "lucide-react";
 import heroPoster from "@/assets/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
+import { logLeadEvent } from "@/lib/leadTracking";
 
 const useCountUp = (target: number, duration = 1800) => {
   const [count, setCount] = useState(0);
@@ -180,7 +181,10 @@ const HeroSection = () => {
               asChild
               className="gap-2.5 text-base font-bold px-10 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
             >
-              <Link to="/free-trial">
+              <Link
+                to="/free-trial"
+                onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "homepage_hero_free_trial" }); } catch {} }}
+              >
                 <Gift className="h-5 w-5" />
                 Free Trial Class
               </Link>

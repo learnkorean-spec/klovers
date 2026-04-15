@@ -11,6 +11,7 @@ import { MessageCircle, Send, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 const WA_DIRECT = `${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I'm interested in learning Korean with Klovers. Can you tell me more?")}`;
 const WA_GROUP = "https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq";
@@ -51,6 +52,7 @@ const ContactPage = () => {
               {/* ── Primary: Direct WhatsApp DM ── */}
               <a
                 href={WA_DIRECT}
+                onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WA_DIRECT, { cta_label: "contact_direct" }); }}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-6 py-5 shadow-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
@@ -68,6 +70,7 @@ const ContactPage = () => {
               {/* ── Secondary: Join WhatsApp group ── */}
               <a
                 href={WA_GROUP}
+                onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WA_GROUP, { cta_label: "contact_group" }); }}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 bg-card border border-border hover:border-[#25D366]/50 rounded-2xl px-6 py-4 transition-all hover:shadow-md"

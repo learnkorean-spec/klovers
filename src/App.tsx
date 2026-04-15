@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { attachLeadToUser } from "@/lib/attachLeadToUser";
+import { attachSessionToUser } from "@/lib/attachSessionToUser";
+import { captureUtmFromUrl } from "@/lib/leadSession";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import WhatsAppButton from "./components/WhatsAppButton";
 
@@ -52,6 +54,7 @@ const DailyQuizPage = lazy(() => import("./pages/DailyQuizPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const CompleteProfilePage = lazy(() => import("./pages/CompleteProfilePage"));
 const FreeTrialPage = lazy(() => import("./pages/FreeTrialPage"));
+const TrialBookingPage = lazy(() => import("./pages/TrialBookingPage"));
 const ProgressReportPage = lazy(() => import("./pages/ProgressReportPage"));
 const CertificatePage = lazy(() => import("./pages/CertificatePage"));
 const AffiliatePage = lazy(() => import("./pages/AffiliatePage"));
@@ -77,9 +80,11 @@ const queryClient = new QueryClient({
 
 const AppInner = () => {
   useEffect(() => {
+    captureUtmFromUrl();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         attachLeadToUser(session.user);
+        attachSessionToUser();
       }
     });
     return () => subscription.unsubscribe();
@@ -136,6 +141,7 @@ const App = () => (
                 <Route path="/profile" element={<AuthProtectedRoute><ProfilePage /></AuthProtectedRoute>} />
                 <Route path="/complete-profile" element={<CompleteProfilePage />} />
                 <Route path="/free-trial" element={<FreeTrialPage />} />
+                <Route path="/trial-booking" element={<AuthProtectedRoute><TrialBookingPage /></AuthProtectedRoute>} />
                 <Route path="/progress-report" element={<AuthProtectedRoute><ProgressReportPage /></AuthProtectedRoute>} />
                 <Route path="/certificate" element={<AuthProtectedRoute><CertificatePage /></AuthProtectedRoute>} />
                 <Route path="/affiliate" element={<AffiliatePage />} />

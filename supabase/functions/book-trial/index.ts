@@ -93,11 +93,45 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, email, phone, country, level, goal, day_of_week, start_time, referrer_id } = body;
+    const { name, email, phone, country, level, goal, day_of_week, start_time, referrer_id, authed } = body;
 
-    // Validation
+    // ── Authenticated path: derive identity from JWT, skip placeholder hacks ──
+    // When the client passes `authed: true` AND a valid Authorization bearer
+    // token, we trust the JWT-resolved profile instead of the body fields.
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    let resolvedUserId: string | null = null;
+    let resolvedEmail: string | null = null;
+    let resolvedName: string | null = null;
+    if (authed) {
+      const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+      const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+      if (token) {
+        const { data: userData } = await supabase.auth.getUser(token);
+        if (userData?.user) {
+          resolvedUserId = userData.user.id;
+          resolvedEmail = userData.user.email ?? null;
+          // Pull the name from profiles for nicer display
+          const { data: profileRow } = await supabase
+            .from("profiles")
+            .select("name, email")
+            .eq("user_id", resolvedUserId)
+            .maybeSingle();
+          if (profileRow) {
+            resolvedName = profileRow.name ?? null;
+            if (!resolvedEmail && profileRow.email) resolvedEmail = profileRow.email;
+          }
+        }
+      }
+    }
+
+    // Validation — accept email from JWT in the authed path
+    const effectiveEmail = resolvedEmail ?? email;
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    if (!email || !emailRegex.test(email)) {
+    if (!effectiveEmail || !emailRegex.test(effectiveEmail)) {
       return new Response(
         JSON.stringify({ error: "Invalid email address." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -118,15 +152,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const resolvedName = name?.trim() || email.split("@")[0];
-    const normalizedEmail = email.trim().toLowerCase();
+    const finalName = (resolvedName || name || "").trim() || effectiveEmail.split("@")[0];
+    const normalizedEmail = effectiveEmail.trim().toLowerCase();
     const trialDate = nextDateForDay(day_of_week);
     const timezone = "Africa/Cairo";
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
 
     // 1. Upsert lead
     const goalWithPhone = [
@@ -149,25 +178,27 @@ Deno.serve(async (req) => {
       await supabase
         .from("leads")
         .update({
-          name: resolvedName,
+          name: finalName,
           country: country?.trim() || undefined,
           level: level?.trim() || undefined,
           goal: goalWithPhone,
           schedule: scheduleStr,
-          source: "free-trial-page",
+          source: authed ? "trial-booking-authed" : "free-trial-page",
           status: "trial_booked",
+          ...(resolvedUserId ? { user_id: resolvedUserId } : {}),
         })
         .eq("id", existingLead.id);
     } else {
       await supabase.from("leads").insert({
-        name: resolvedName,
+        name: finalName,
         email: normalizedEmail,
         country: country?.trim() || "Unknown",
         level: level?.trim() || "",
         goal: goalWithPhone,
         schedule: scheduleStr,
-        source: "free-trial-page",
+        source: authed ? "trial-booking-authed" : "free-trial-page",
         status: "trial_booked",
+        ...(resolvedUserId ? { user_id: resolvedUserId } : {}),
       });
     }
 
@@ -175,7 +206,7 @@ Deno.serve(async (req) => {
     const { data: booking, error: bookingError } = await supabase
       .from("trial_bookings")
       .insert({
-        name: resolvedName,
+        name: finalName,
         email: normalizedEmail,
         phone: phone?.trim() || null,
         level: level?.trim() || null,
@@ -185,6 +216,7 @@ Deno.serve(async (req) => {
         trial_date: trialDate,
         timezone,
         status: "pending",
+        ...(resolvedUserId ? { user_id: resolvedUserId } : {}),
       })
       .select("id")
       .single();
@@ -202,7 +234,7 @@ Deno.serve(async (req) => {
 
     // 3. Notify admin
     await supabase.from("admin_notifications").insert({
-      message: `New trial booking: ${resolvedName} (${normalizedEmail}) — ${dayName} ${formatTime12h(start_time)}, Level: ${level || "Unknown"}`,
+      message: `New trial booking: ${finalName} (${normalizedEmail}) — ${dayName} ${formatTime12h(start_time)}, Level: ${level || "Unknown"}`,
       type: "trial",
     }).catch(() => {}); // non-critical
 

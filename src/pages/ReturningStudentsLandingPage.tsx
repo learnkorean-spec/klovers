@@ -27,6 +27,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import { RETURNING_STUDENT_CODE, WHATSAPP_BASE, SITE_URL } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 const STEP_ICONS = [ShoppingCart, Tag, GraduationCap];
 const REFERRAL_ICONS = [UserPlus, Share2, Shield];
@@ -133,7 +134,7 @@ const ReturningStudentsLandingPage = () => {
         ? `عرض حصري للطلاب العائدين في Klovers! خصم 20% 🎉\n${shareUrl}`
         : `Exclusive offer for returning Klovers students! 20% off 🎉\n${shareUrl}`
     );
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
+    trackAndOpenWhatsApp(`https://wa.me/?text=${msg}`, { cta_label: "returning_share" });
   };
 
   const handleNativeShare = async () => {
@@ -555,7 +556,12 @@ const ReturningStudentsLandingPage = () => {
                 asChild
                 className="gap-2 h-13 px-8 text-base font-medium border-white/40 text-white hover:bg-white/10"
               >
-                <a href={WHATSAPP_BASE} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={WHATSAPP_BASE}
+                  onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "returning_final_cta" }); }}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MessageCircle className="h-5 w-5" />
                   {t("welcomeBack.finalCta.whatsapp")}
                 </a>

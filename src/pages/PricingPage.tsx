@@ -9,6 +9,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import StickyEnrollBar from "@/components/StickyEnrollBar";
 import { ChevronDown, X } from "lucide-react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
 
 const faqs = [
   {
@@ -105,6 +106,7 @@ const ExitNudge = () => {
         <div className="flex items-center gap-2 flex-shrink-0">
           <a
             href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I need help choosing a Klovers plan.")}`}
+            onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I need help choosing a Klovers plan.")}`, { cta_label: "pricing_help" }); }}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-black text-primary text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-black/80 transition-colors"
@@ -122,6 +124,8 @@ const ExitNudge = () => {
 
 const PricingPage = () => {
   useSEO({ title: "Pricing & Plans", description: "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.", canonical: "https://kloversegy.com/pricing" });
+
+  useEffect(() => { logLeadEvent({ source_type: "pricing", cta_label: "page_view" }); }, []);
 
   useEffect(() => {
     const el = document.createElement("script");

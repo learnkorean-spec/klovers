@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchPrivateAvailability } from "@/lib/privateAvailability";
 import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
 import { type TierKey, type ClassType, type Duration, tierPrices, tierCountries, DURATION_CLASSES } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -442,6 +443,7 @@ const EnrollNowPage = () => {
         // Level sync to profile is handled by DB trigger on enrollments.level
       }
       track.initiateCheckout({ value: finalPrice ?? 0, currency: selectedCountry === "Egypt" ? "EGP" : "USD" });
+      logLeadEvent({ source_type: "enroll", cta_label: "checkout", metadata: { value: finalPrice ?? 0, country: selectedCountry } });
       nav(`/pay/${enrollmentId}`);
     } catch (err: any) {
       toast({ title: "Order error", description: err.message, variant: "destructive" });
@@ -1175,6 +1177,7 @@ const EnrollNowPage = () => {
                 Need help enrolling?{" "}
                 <a
                   href={WHATSAPP_BASE}
+                  onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "enroll_help" }); }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-600 font-semibold hover:underline"
@@ -1193,6 +1196,7 @@ const EnrollNowPage = () => {
       {/* Sticky WhatsApp help pill — shown during checkout */}
       <a
         href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I have a question before enrolling in Klovers.")}`}
+        onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I have a question before enrolling in Klovers.")}`, { cta_label: "enroll_questions_pill" }); }}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-[#1ebe5d] transition-colors"

@@ -13,6 +13,7 @@ import { Copy, Upload, CheckCircle, Clock, Wallet, Eye, RefreshCw, AlertTriangle
 import { Progress } from "@/components/ui/progress";
 import { track } from "@/lib/tracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 const METHOD_DETAILS: Record<string, { label: string; value: string }> = {
   vodafone_cash: { label: "Send to Vodafone Cash number", value: "+201010003084" },
@@ -258,6 +259,7 @@ const PaymentForm = ({
             <p className="text-xs text-muted-foreground">Contact us on WhatsApp to get bank transfer details</p>
             <a
               href={WHATSAPP_BASE}
+              onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "egypt_payment_bank_transfer" }); }}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2 rounded-lg transition-colors w-full justify-center"
@@ -564,6 +566,7 @@ const EgyptPaymentPage = () => {
                       <div className="flex flex-wrap gap-2">
                         <a
                           href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I just enrolled in a group class and I'm interested in upgrading to private sessions. Can you tell me more?")}`}
+                          onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I just enrolled in a group class and I'm interested in upgrading to private sessions. Can you tell me more?")}`, { cta_label: "egypt_payment_upgrade_private" }); }}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-sm font-semibold bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
@@ -589,6 +592,7 @@ const EgyptPaymentPage = () => {
               <p className="text-muted-foreground">Please contact support for assistance.</p>
               <a
                 href={WHATSAPP_BASE}
+                onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "egypt_payment_rejected" }); }}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-4 py-2 rounded-lg transition-colors"
@@ -619,6 +623,7 @@ const EgyptPaymentPage = () => {
           Having trouble?{" "}
           <a
             href={WHATSAPP_BASE}
+            onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "egypt_payment_help" }); }}
             target="_blank"
             rel="noopener noreferrer"
             className="text-green-600 font-semibold hover:underline"

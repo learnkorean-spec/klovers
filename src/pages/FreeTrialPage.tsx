@@ -1,18 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
-import { CheckCircle2, Star, Users, Clock, ArrowRight, Gift, CalendarPlus, MessageCircle, ArrowLeft } from "lucide-react";
-import { WHATSAPP_BASE } from "@/lib/siteConfig";
-import { track } from "@/lib/tracking";
-import TrialSlotPicker from "@/components/TrialSlotPicker";
-import { DAY_NAMES, formatTime12h } from "@/lib/calendarUrl";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { logLeadEvent } from "@/lib/leadTracking";
+import { Star, Users, Clock, ArrowRight, Gift, CalendarDays } from "lucide-react";
 
 const PERKS = [
   { icon: Gift, text: "100% free — no credit card" },
@@ -21,15 +16,10 @@ const PERKS = [
   { icon: Star, text: "Personalised level assessment" },
 ];
 
-interface BookingResult {
-  trial_date: string;
-  day_name: string;
-  start_time: string;
-  start_time_12h: string;
-  duration_min: number;
-  timezone: string;
-  calendar_url: string;
-}
+const SLOT_HIGHLIGHTS = [
+  { day: "Wednesday", time: "5:30 PM" },
+  { day: "Sunday",    time: "6:30 PM" },
+];
 
 const FreeTrialPage = () => {
   useSEO({
@@ -50,286 +40,59 @@ const FreeTrialPage = () => {
       "provider": {
         "@type": "Organization",
         "name": "Klovers Korean Academy",
-        "url": "https://kloversegy.com"
+        "url": "https://kloversegy.com",
       },
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD",
-        "category": "Free Trial"
+        "category": "Free Trial",
       },
       "inLanguage": "ko",
-      "url": "https://kloversegy.com/free-trial"
+      "url": "https://kloversegy.com/free-trial",
     });
     document.head.appendChild(el);
     return () => { el.remove(); };
   }, []);
 
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const referredBy = searchParams.get("ref") || "";
 
+  // Preserve the existing referral-tracking behaviour from the previous
+  // version of this page so referrer attribution keeps working.
   useEffect(() => {
     if (referredBy) {
-      localStorage.setItem("referrer_id", referredBy);
+      try { localStorage.setItem("referrer_id", referredBy); } catch {}
       supabase.functions.invoke("track-referral-click", {
         body: { referrerId: referredBy },
       }).catch(() => {});
     }
   }, [referredBy]);
 
-  // New flow: pick_slot → contact → success
-  //   - No upfront form. Students choose their trial day FIRST.
-  //   - Then enter the minimum contact info needed to confirm the booking
-  //     (name + WhatsApp; email optional). Level & learning goal are gathered
-  //     as an optional follow-up after booking, not as a gate to booking.
-  const [step, setStep] = useState<"pick_slot" | "contact" | "success">("pick_slot");
-  const [loading, setLoading] = useState(false);
-  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
-  const [pickedSlot, setPickedSlot] = useState<{ dayOfWeek: number; startTime: string } | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-  });
-
-  const set = (k: keyof typeof form, v: string) =>
-    setForm((prev) => ({ ...prev, [k]: v }));
-
-  /** Step 1 → Step 2: student picked a trial slot, now collect contact */
-  const handleSlotPicked = (dayOfWeek: number, startTime: string) => {
-    setPickedSlot({ dayOfWeek, startTime });
-    setStep("contact");
-  };
-
-  /** Step 2 → Step 3: submit booking with minimal contact details */
-  const handleBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pickedSlot) return;
-    if (!form.name.trim() || !form.phone.trim()) {
-      toast({
-        title: "Please enter your name and WhatsApp number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Email is optional — generate a placeholder so the backend's
-      // email field stays populated without asking the student for it.
-      const emailValue = form.email.trim().toLowerCase()
-        || `${form.phone.replace(/\D/g, "")}@trial.kloversegy.com`;
-
-      const { data, error } = await supabase.functions.invoke("book-trial", {
-        body: {
-          name: form.name.trim(),
-          email: emailValue,
-          phone: form.phone.trim(),
-          day_of_week: pickedSlot.dayOfWeek,
-          start_time: pickedSlot.startTime,
-          referrer_id: referredBy || undefined,
-        },
-      });
-
-      if (error) throw error;
-      if (data?.error) {
-        toast({ title: "Booking failed", description: data.error, variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-
-      setBookingResult(data.booking);
-      track.lead({ content_name: "free-trial" });
-      setStep("success");
-    } catch (err: any) {
-      toast({ title: "Something went wrong", description: err.message || "Please try again.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ── Success Screen ──────────────────────────────────────────────────────────
-  if (step === "success" && bookingResult) {
-    const formattedDate = new Date(bookingResult.trial_date + "T00:00:00").toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
+  const handleBookCta = async () => {
+    // Fire-and-forget lead event so we know which CTA brought them in.
+    logLeadEvent({
+      source_type: "free_trial",
+      cta_label: "free_trial_landing_primary",
     });
 
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-16 flex items-center justify-center min-h-screen">
-          <div className="max-w-lg mx-auto px-4 py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-            </div>
-            <h1 className="text-3xl font-black text-foreground mb-3">Your trial is booked! 🎉</h1>
+    if (loading) return;
+    if (user) {
+      navigate("/trial-booking");
+    } else {
+      navigate(`/signup?redirect=${encodeURIComponent("/trial-booking")}`);
+    }
+  };
 
-            {/* Booking details card */}
-            <div className="bg-card border border-border rounded-2xl p-6 text-left mb-6 space-y-2">
-              <div className="flex items-center gap-3">
-                <CalendarPlus className="h-5 w-5 text-primary shrink-0" />
-                <div>
-                  <p className="font-bold text-foreground">{formattedDate}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {bookingResult.start_time_12h} · {bookingResult.duration_min} min · Cairo time
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-muted-foreground mb-6">
-              A teacher will confirm your class within a few hours. You'll receive a confirmation email with a calendar invite.
-            </p>
-
-            {/* Add to Calendar */}
-            <a
-              href={bookingResult.calendar_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.02] text-base mb-4"
-            >
-              <CalendarPlus className="h-5 w-5" />
-              Add to Google Calendar
-            </a>
-
-            {/* Secondary: WhatsApp */}
-            <div className="mt-6 pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground mb-2">Have questions?</p>
-              <a
-                href={`${WHATSAPP_BASE}?text=${encodeURIComponent(`Hi! I just booked a free trial class for ${formattedDate} at ${bookingResult.start_time_12h}. I have a question.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-[#25D366] hover:underline font-medium"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Message us on WhatsApp
-              </a>
-            </div>
-
-            <Button variant="outline" className="mt-6" onClick={() => navigate("/")}>
-              Back to Home
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // ── Step 2: Minimal Contact Form ────────────────────────────────────────────
-  if (step === "contact" && pickedSlot) {
-    const dayName = DAY_NAMES[pickedSlot.dayOfWeek] ?? `Day ${pickedSlot.dayOfWeek}`;
-    const timeLabel = formatTime12h(pickedSlot.startTime);
-
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-16">
-          <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
-            <div className="container mx-auto px-4 text-center max-w-3xl">
-              <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-3">
-                Almost done!
-              </h1>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Confirming your trial for{" "}
-                <span className="font-semibold text-foreground">{dayName} at {timeLabel}</span>{" "}
-                (Cairo time). We just need a way to reach you.
-              </p>
-            </div>
-          </section>
-
-          <section className="py-12 pb-24">
-            <div className="container mx-auto px-4">
-              <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
-                <form onSubmit={handleBooking} className="space-y-5">
-                  {/* Name */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="name">Your name <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="name"
-                      placeholder="e.g. Sara Ahmed"
-                      value={form.name}
-                      onChange={(e) => set("name", e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* WhatsApp */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="phone">WhatsApp number <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+20 100 000 0000"
-                      value={form.phone}
-                      onChange={(e) => set("phone", e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Email — optional */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email">
-                      Email <span className="text-muted-foreground text-xs">(optional)</span>
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="sara@example.com"
-                      value={form.email}
-                      onChange={(e) => set("email", e.target.value)}
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={loading}
-                    className="w-full gap-2 text-base font-bold h-13 mt-2"
-                  >
-                    {loading ? "Booking..." : (
-                      <>
-                        Confirm my trial
-                        <ArrowRight className="h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setStep("pick_slot")}
-                    className="w-full gap-1"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Pick a different time
-                  </Button>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    No payment. No spam. We'll message you on WhatsApp to confirm.
-                  </p>
-                </form>
-              </div>
-            </div>
-          </section>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // ── Step 1: Slot Picker (default landing) ───────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-16">
 
         {/* Hero */}
-        <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-background to-background">
           <div className="container mx-auto px-4 text-center max-w-3xl">
             <span className="inline-block bg-primary text-black text-xs font-black tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5">
               Free Trial
@@ -337,12 +100,25 @@ const FreeTrialPage = () => {
             <h1 className="text-4xl md:text-6xl font-black text-foreground tracking-tight mb-5 leading-[1.05]">
               Try Korean for <span className="text-primary text-outlined-lg">Free</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
-              One live class. Real teacher. No credit card. Just pick a time.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-8">
+              One live class. Real teacher. No credit card. Pick a time that works for you.
+            </p>
+
+            <Button
+              size="lg"
+              onClick={handleBookCta}
+              className="gap-2 text-base font-bold h-14 px-8 shadow-xl hover:scale-[1.02] transition-transform"
+            >
+              Book Your Free Korean Class
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+
+            <p className="text-xs text-muted-foreground mt-3">
+              {user ? "You're signed in — pick a slot on the next page." : "Takes 30 seconds. We'll create your account so you can manage your bookings."}
             </p>
 
             {/* Perks */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
               {PERKS.map(({ icon: Icon, text }) => (
                 <div key={text} className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4">
                   <div className="w-10 h-10 rounded-xl bg-primary border border-black/25 flex items-center justify-center">
@@ -355,19 +131,35 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* Slot picker */}
-        <section className="py-12 pb-24">
-          <div className="container mx-auto px-4">
-            <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
-              <h2 className="text-2xl font-bold text-foreground mb-1">Pick your trial time</h2>
+        {/* When do trials run */}
+        <section className="py-12 pb-20">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <div className="bg-card border border-border rounded-3xl p-8 shadow-xl text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/15 mb-3">
+                <CalendarDays className="h-6 w-6 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">When do trials run?</h2>
               <p className="text-sm text-muted-foreground mb-6">
-                Choose the day that works for you. All times are in Cairo (Africa/Cairo).
+                We run two free trial sessions every week. All times are in Cairo (Africa/Cairo).
               </p>
 
-              <TrialSlotPicker
-                onSelect={handleSlotPicked}
-                onBack={() => navigate("/")}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                {SLOT_HIGHLIGHTS.map((s) => (
+                  <div key={s.day} className="rounded-2xl border border-border bg-background/60 p-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{s.day}</p>
+                    <p className="text-2xl font-black text-foreground mt-1">{s.time}</p>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                size="lg"
+                onClick={handleBookCta}
+                className="w-full sm:w-auto gap-2 text-base font-bold h-13 px-8"
+              >
+                Book Your Free Korean Class
+                <ArrowRight className="h-5 w-5" />
+              </Button>
 
               {/* Social proof */}
               <div className="flex items-center justify-center gap-2 pt-6 border-t border-border mt-6">

@@ -12,6 +12,7 @@ import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight, Share2,
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 interface BlogPost {
   id: string;
@@ -504,6 +505,7 @@ const BlogPostPage = () => {
             </button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(post.title + " — " + window.location.href)}`}
+              onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`https://wa.me/?text=${encodeURIComponent(post.title + " — " + window.location.href)}`, { cta_label: "blog_share", metadata: { slug: post.slug } }); }}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-green-200 bg-green-50 hover:bg-green-100 transition-colors text-green-700"

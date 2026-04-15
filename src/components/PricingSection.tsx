@@ -13,6 +13,7 @@ import {
 import { Check, MapPin, Star, Crown, Globe, Sparkles, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
+import { logLeadEvent } from "@/lib/leadTracking";
 
 type TierKey = "local" | "regional" | "global";
 
@@ -351,6 +352,11 @@ const PricingSection = () => {
                       variant={isActive ? "default" : "outline"}
                       size="lg"
                       onClick={() => {
+                        logLeadEvent({
+                          source_type: "pricing",
+                          cta_label: "tier_get_started",
+                          metadata: { classType, country: selectedCountry || null },
+                        });
                         const params = new URLSearchParams({
                           classType,
                           country: selectedCountry || "",

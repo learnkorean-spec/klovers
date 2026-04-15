@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { type TierKey, type ClassType, type Duration, tierPrices, getTierForCountry, DURATION_CLASSES } from "@/lib/stripePrices";
 import { track } from "@/lib/tracking";
 
@@ -238,7 +239,13 @@ const EnrollPage = () => {
 
                 <p className="text-xs text-center text-muted-foreground">
                   Need help?{" "}
-                  <a href={WHATSAPP_BASE} target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold hover:underline">
+                  <a
+                    href={WHATSAPP_BASE}
+                    onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "enroll_form_help" }); }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 font-semibold hover:underline"
+                  >
                     💬 WhatsApp us
                   </a>
                 </p>
