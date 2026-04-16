@@ -1600,66 +1600,118 @@ const TRIAL_STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-500",
 };
 
+interface TrialSlot {
+  day_of_week: number;
+  start_time: string;
+  capacity: number;
+  is_active: boolean;
+}
+
 const TrialBookingsManager = () => {
   const [bookings, setBookings] = useState<TrialBooking[]>([]);
+  const [slots, setSlots] = useState<TrialSlot[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchBookings = async () => {
+  const fetchData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("trial_bookings")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-    setBookings((data as TrialBooking[] | null) || []);
+    const [bookingsRes, slotsRes] = await Promise.all([
+      supabase.from("trial_bookings").select("*").order("created_at", { ascending: false }),
+      supabase.from("trial_slots").select("day_of_week, start_time, capacity, is_active").eq("is_active", true),
+    ]);
+    if (bookingsRes.error) toast({ title: "Error", description: bookingsRes.error.message, variant: "destructive" });
+    setBookings((bookingsRes.data as TrialBooking[] | null) || []);
+    setSlots((slotsRes.data as TrialSlot[] | null) || []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchBookings(); }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  // Count active (non-cancelled) bookings per slot for next 7 days
+  const now = new Date();
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const slotBookedCounts: Record<string, number> = {};
+  bookings.forEach((b) => {
+    if (b.status === "cancelled") return;
+    const d = new Date(b.trial_date);
+    if (d >= now && d <= nextWeek) {
+      const key = `${b.day_of_week}-${b.start_time}`;
+      slotBookedCounts[key] = (slotBookedCounts[key] || 0) + 1;
+    }
+  });
 
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading trial bookings...</p>;
-  if (bookings.length === 0) return <p className="text-muted-foreground text-center py-8">No trial bookings yet.</p>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{bookings.length} trial request(s)</p>
-        <Button variant="outline" size="sm" onClick={fetchBookings}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-        </Button>
+    <div className="space-y-6">
+      {/* Slot availability */}
+      <div>
+        <h3 className="text-sm font-semibold mb-3">Trial Slot Availability (next 7 days)</h3>
+        <div className="flex flex-wrap gap-3">
+          {slots.map((s) => {
+            const key = `${s.day_of_week}-${s.start_time}`;
+            const booked = slotBookedCounts[key] || 0;
+            const spotsLeft = Math.max(0, s.capacity - booked);
+            return (
+              <Card key={key} className="min-w-[180px]">
+                <CardContent className="pt-4 pb-3">
+                  <p className="font-medium text-sm">{DAY_NAMES[s.day_of_week]} {formatTime(s.start_time)}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-muted-foreground">{booked}/{s.capacity} booked</span>
+                    <Badge variant={spotsLeft === 0 ? "destructive" : "secondary"} className="text-xs">
+                      {spotsLeft === 0 ? "Full" : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+          {slots.length === 0 && <p className="text-sm text-muted-foreground">No trial slots configured.</p>}
+        </div>
       </div>
 
-      <div className="rounded-md border overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bookings.map((b) => (
-              <TableRow key={b.id}>
-                <TableCell className="font-medium">{b.name || "—"}</TableCell>
-                <TableCell className="text-xs">{b.email || "—"}</TableCell>
-                <TableCell className="text-xs">{b.phone || "—"}</TableCell>
-                <TableCell>
-                  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${TRIAL_STATUS_COLORS[b.status] || "bg-gray-100 text-gray-600"}`}>
-                    {(b.status || "unknown").replace("_", " ")}
-                  </span>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {new Date(b.created_at).toLocaleDateString()}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Bookings list */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold">{bookings.length} Trial Request(s)</h3>
+          <Button variant="outline" size="sm" onClick={fetchData}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+        </div>
+
+        {bookings.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No trial bookings yet.</p>
+        ) : (
+          <div className="rounded-md border overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((b) => (
+                  <TableRow key={b.id}>
+                    <TableCell className="font-medium">{b.name || "—"}</TableCell>
+                    <TableCell className="text-xs">{b.email || "—"}</TableCell>
+                    <TableCell className="text-xs">{b.phone || "—"}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${TRIAL_STATUS_COLORS[b.status] || "bg-gray-100 text-gray-600"}`}>
+                        {(b.status || "unknown").replace("_", " ")}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(b.created_at).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </div>
   );
