@@ -17,7 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight, UserPlus, Search, Lightbulb } from "lucide-react";
+import { Plus, Pencil, Users, Trash2, Bell, RefreshCw, ArrowRight, AlertTriangle, Check, X, ChevronDown, ChevronRight, UserPlus, Search, Lightbulb, CheckCircle, XCircle } from "lucide-react";
 import AdminNotifications from "./AdminNotifications";
 import { getSuggestedPackages, type SuggestedPackage, formatSuggestion } from "@/lib/scheduleAutomation";
 import { useAuth } from "@/hooks/useAuth";
@@ -1611,6 +1611,7 @@ const TrialBookingsManager = () => {
   const [bookings, setBookings] = useState<TrialBooking[]>([]);
   const [slots, setSlots] = useState<TrialSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actioningId, setActioningId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -1625,6 +1626,106 @@ const TrialBookingsManager = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const handleConfirm = async (booking: TrialBooking) => {
+    setActioningId(booking.id);
+    try {
+      // 1. Update trial booking status
+      const { error: tbErr } = await supabase
+        .from("trial_bookings")
+        .update({ status: "confirmed", confirmed_at: new Date().toISOString() } as any)
+        .eq("id", booking.id);
+      if (tbErr) throw tbErr;
+
+      // 2. Update matching lead (best effort)
+      const { data: lead } = await supabase
+        .from("leads")
+        .select("id")
+        .eq("email", booking.email.toLowerCase())
+        .maybeSingle();
+      if (lead?.id) {
+        await supabase.functions.invoke("admin-update-lead", {
+          body: { id: lead.id, status: "confirmed" },
+        });
+      }
+
+      // 3. Send confirmation email (best effort)
+      try {
+        const [h, m] = (booking.start_time || "18:00").split(":").map(Number);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const h12 = h % 12 || 12;
+        const time12 = `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+        const tz = booking.timezone || "Africa/Cairo";
+        const dateClean = (booking.trial_date || "").replace(/-/g, "");
+        const start = `${dateClean}T${String(h).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
+        const endH = h + Math.floor((m + 45) / 60);
+        const endM = (m + 45) % 60;
+        const end = `${dateClean}T${String(endH).padStart(2, "0")}${String(endM).padStart(2, "0")}00`;
+        const calParams = new URLSearchParams({
+          action: "TEMPLATE",
+          text: "Free Korean Trial Class — Klovers Academy",
+          dates: `${start}/${end}`,
+          details: `Level: ${booking.level || "Beginner"}`,
+          ctz: tz,
+        });
+        const calendarUrl = `https://calendar.google.com/calendar/render?${calParams.toString()}`;
+        const trialDateFormatted = new Date(booking.trial_date + "T00:00:00").toLocaleDateString("en-US", {
+          weekday: "long", month: "long", day: "numeric",
+        });
+        await supabase.functions.invoke("send-confirmation-email", {
+          body: {
+            template: "trial_confirmed",
+            email: booking.email,
+            name: booking.name || booking.email,
+            level: booking.level,
+            trial_date: trialDateFormatted,
+            trial_time: time12,
+            trial_timezone: tz,
+            calendar_url: calendarUrl,
+            language: "ar",
+          },
+        });
+      } catch (emailErr) {
+        console.error("send-confirmation-email failed:", emailErr);
+      }
+
+      toast({ title: "Trial confirmed", description: `${booking.name} has been notified.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleReject = async (booking: TrialBooking) => {
+    setActioningId(booking.id);
+    try {
+      const { error: tbErr } = await supabase
+        .from("trial_bookings")
+        .update({ status: "cancelled" } as any)
+        .eq("id", booking.id);
+      if (tbErr) throw tbErr;
+
+      const { data: lead } = await supabase
+        .from("leads")
+        .select("id")
+        .eq("email", booking.email.toLowerCase())
+        .maybeSingle();
+      if (lead?.id) {
+        await supabase.functions.invoke("admin-update-lead", {
+          body: { id: lead.id, status: "rejected" },
+        });
+      }
+
+      toast({ title: "Trial cancelled", description: `${booking.name}'s trial has been cancelled.` });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setActioningId(null);
+    }
+  };
 
   // Group active (non-cancelled) bookings per slot for next 7 days
   const now = new Date();
@@ -1662,14 +1763,38 @@ const TrialBookingsManager = () => {
                     </Badge>
                   </div>
                   {students.length > 0 ? (
-                    <ul className="space-y-1">
+                    <ul className="space-y-2">
                       {students.map((st) => (
                         <li key={st.id} className="flex items-center gap-2 text-xs">
                           <Users className="h-3 w-3 text-muted-foreground shrink-0" />
-                          <span className="font-medium truncate">{st.name || "—"}</span>
-                          <span className={`ml-auto inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${TRIAL_STATUS_COLORS[st.status] || "bg-gray-100 text-gray-600"}`}>
+                          <span className="font-medium truncate flex-1">{st.name || "—"}</span>
+                          <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${TRIAL_STATUS_COLORS[st.status] || "bg-gray-100 text-gray-600"}`}>
                             {st.status.replace("_", " ")}
                           </span>
+                          {st.status === "pending" && (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 w-6 p-0"
+                                title="Confirm"
+                                disabled={actioningId === st.id}
+                                onClick={() => handleConfirm(st)}
+                              >
+                                <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 w-6 p-0"
+                                title="Reject"
+                                disabled={actioningId === st.id}
+                                onClick={() => handleReject(st)}
+                              >
+                                <XCircle className="h-3.5 w-3.5 text-red-600" />
+                              </Button>
+                            </div>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -1705,6 +1830,7 @@ const TrialBookingsManager = () => {
                   <TableHead>Phone</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1720,6 +1846,32 @@ const TrialBookingsManager = () => {
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(b.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {b.status === "pending" ? (
+                        <div className="flex gap-1 justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7"
+                            disabled={actioningId === b.id}
+                            onClick={() => handleConfirm(b)}
+                          >
+                            <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-600" /> Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7"
+                            disabled={actioningId === b.id}
+                            onClick={() => handleReject(b)}
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1 text-red-600" /> Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
