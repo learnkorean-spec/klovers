@@ -222,11 +222,18 @@ Deno.serve(async (req) => {
       .single();
 
     if (bookingError) {
-      // Unique constraint: user already has an active trial
+      // Unique constraint: user already has an active booking for this slot
+      // Return HTTP 200 with ok:false so supabase.functions.invoke() delivers
+      // the friendly message to the frontend's `if (data?.error)` handler
+      // instead of throwing a FunctionsHttpError on non-2xx.
       if (bookingError.code === "23505") {
         return new Response(
-          JSON.stringify({ error: "You already have a trial class booked. Check your email for details." }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({
+            ok: false,
+            success: false,
+            error: "You already have a trial class booked. Check your email for details.",
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       throw bookingError;
