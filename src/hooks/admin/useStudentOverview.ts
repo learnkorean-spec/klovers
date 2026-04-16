@@ -13,6 +13,7 @@ export function useStudentOverview() {
       const { data, error } = await supabase
         .from("admin_student_overview")
         .select("*")
+        .order("created_at", { ascending: false })
         .limit(2000);
       if (error) throw error;
       return (data ?? []) as OverviewRow[];

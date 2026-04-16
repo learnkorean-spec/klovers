@@ -145,7 +145,7 @@ const AdminDashboard = () => {
   const [rejecting, setRejecting] = useState(false);
   const [studentFilter, setStudentFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
-  const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "", dir: "asc" });
+  const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "joined_at", dir: "desc" });
   const [studentPage, setStudentPage] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [showLegacyEnrollments, setShowLegacyEnrollments] = useState(false);
