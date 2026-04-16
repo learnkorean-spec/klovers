@@ -792,6 +792,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_events: {
+        Row: {
+          campaign: string | null
+          created_at: string
+          cta_label: string | null
+          id: string
+          metadata: Json | null
+          referrer: string | null
+          session_id: string
+          source_page: string
+          source_type: string
+          user_id: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          campaign?: string | null
+          created_at?: string
+          cta_label?: string | null
+          id?: string
+          metadata?: Json | null
+          referrer?: string | null
+          session_id: string
+          source_page: string
+          source_type: string
+          user_id?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          campaign?: string | null
+          created_at?: string
+          cta_label?: string | null
+          id?: string
+          metadata?: Json | null
+          referrer?: string | null
+          session_id?: string
+          source_page?: string
+          source_type?: string
+          user_id?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       lesson_dialogues: {
         Row: {
           english: string
@@ -2184,6 +2232,21 @@ export type Database = {
       }
     }
     Views: {
+      lead_funnel: {
+        Row: {
+          clicked_free_trial: boolean | null
+          clicked_whatsapp: boolean | null
+          first_seen: string | null
+          last_seen: string | null
+          session_id: string | null
+          signup_completed: boolean | null
+          started_placement: boolean | null
+          touchpoints: string[] | null
+          user_id: string | null
+          viewed_pricing_cta: boolean | null
+        }
+        Relationships: []
+      }
       admin_student_overview: {
         Row: {
           amount: number | null
@@ -2252,6 +2315,10 @@ export type Database = {
       }
     }
     Functions: {
+      attach_session_to_user: {
+        Args: { p_session: string }
+        Returns: undefined
+      }
       add_credits: {
         Args: { _amount: number; _user_id: string }
         Returns: number
