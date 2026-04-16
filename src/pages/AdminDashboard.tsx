@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2, Image, Trophy } from "lucide-react";
+import { LogOut, Search, Download, Trash2, Check, X, Eye, Undo2, AlertCircle, Bell, ChevronLeft, ChevronRight, Pencil, Mail, Eraser, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Copy, Clock, Tag, UserPlus, Loader2, Image, Trophy, TrendingUp } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -54,6 +54,7 @@ const SeoOrchestrationPanel = lazy(() => import("@/components/admin/SeoOrchestra
 const ImageAuditPanel = lazy(() => import("@/components/admin/ImageAuditPanel"));
 const LeadsPanel = lazy(() => import("@/components/admin/LeadsPanel").catch(() => import("@/components/admin/LeadsPanel")));
 const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"));
+const LeadFunnelPanel = lazy(() => import("@/components/admin/LeadFunnelPanel"));
 
 const TabLoader = () => (
   <div className="flex items-center justify-center py-20">
@@ -709,6 +710,9 @@ const AdminDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="leads" className={TAB_CLS}>
                   <Users className="h-3.5 w-3.5" /> CRM Leads
+                </TabsTrigger>
+                <TabsTrigger value="lead-funnel" className={TAB_CLS}>
+                  <TrendingUp className="h-3.5 w-3.5" /> Lead Funnel
                 </TabsTrigger>
                 <TabsTrigger value="manage" className={TAB_CLS}>Manage</TabsTrigger>
                 <TabsTrigger value="sales" className={TAB_CLS}>
@@ -1501,6 +1505,15 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="Leads">
                 <Suspense fallback={<TabLoader />}>
                   <LeadsPanel />
+                </Suspense>
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* LEAD FUNNEL TAB */}
+            <TabsContent value="lead-funnel">
+              <TabErrorBoundary name="Lead Funnel">
+                <Suspense fallback={<TabLoader />}>
+                  <LeadFunnelPanel />
                 </Suspense>
               </TabErrorBoundary>
             </TabsContent>
