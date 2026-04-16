@@ -62,6 +62,22 @@ interface WaitlistRow {
   alternatives?: Package[];
 }
 
+interface TrialBooking {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  level: string | null;
+  goal: string | null;
+  day_of_week: number;
+  start_time: string;
+  trial_date: string;
+  timezone: string;
+  status: string;
+  confirmed_at: string | null;
+  created_at: string;
+}
+
 // ─── Packages Manager ────────────────────────────────────────────────────────
 
 const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }) => {
@@ -1574,6 +1590,154 @@ const PrivateTimeConfig = () => {
   );
 };
 
+// ─── Trial Bookings Manager ──────────────────────────────────────────────────
+
+const TRIAL_STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  confirmed: "bg-blue-100 text-blue-800",
+  completed: "bg-green-100 text-green-800",
+  no_show: "bg-red-100 text-red-800",
+  cancelled: "bg-gray-100 text-gray-500",
+};
+
+const TrialBookingsManager = () => {
+  const [bookings, setBookings] = useState<TrialBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("trial_bookings")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+    setBookings((data as TrialBooking[] | null) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchBookings(); }, []);
+
+  const filtered = bookings.filter((b) => {
+    if (statusFilter !== "all" && b.status !== statusFilter) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      return (
+        (b.name || "").toLowerCase().includes(q) ||
+        (b.email || "").toLowerCase().includes(q) ||
+        (b.phone || "").toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  const statusCounts = bookings.reduce<Record<string, number>>((acc, b) => {
+    acc[b.status] = (acc[b.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  if (loading) return <p className="text-muted-foreground text-center py-8">Loading trial bookings...</p>;
+
+  return (
+    <div className="space-y-4">
+      {/* Summary cards */}
+      <div className="flex flex-wrap gap-3">
+        <Card className="flex-1 min-w-[120px]">
+          <CardContent className="pt-4 pb-3 text-center">
+            <p className="text-2xl font-bold">{bookings.length}</p>
+            <p className="text-xs text-muted-foreground">Total</p>
+          </CardContent>
+        </Card>
+        {["pending", "confirmed", "completed", "no_show", "cancelled"].map((s) => (
+          <Card key={s} className="flex-1 min-w-[120px]">
+            <CardContent className="pt-4 pb-3 text-center">
+              <p className="text-2xl font-bold">{statusCounts[s] || 0}</p>
+              <p className="text-xs text-muted-foreground capitalize">{s.replace("_", " ")}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="no_show">No Show</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={fetchBookings}>
+          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+        </Button>
+      </div>
+
+      <p className="text-sm text-muted-foreground">{filtered.length} booking(s)</p>
+
+      {filtered.length === 0 ? (
+        <p className="text-muted-foreground text-center py-8">No trial bookings found.</p>
+      ) : (
+        <div className="rounded-md border overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead>Day</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Trial Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Submitted</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell className="font-medium">{b.name || "—"}</TableCell>
+                  <TableCell className="text-xs">{b.email || "—"}</TableCell>
+                  <TableCell className="text-xs">{b.phone || "—"}</TableCell>
+                  <TableCell className="text-xs">{b.level || "—"}</TableCell>
+                  <TableCell className="text-xs">{DAY_NAMES[b.day_of_week] || "—"}</TableCell>
+                  <TableCell className="text-xs">{formatTime(b.start_time)}</TableCell>
+                  <TableCell className="text-xs">{b.trial_date || "—"}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${TRIAL_STATUS_COLORS[b.status] || "bg-gray-100 text-gray-600"}`}>
+                      {(b.status || "unknown").replace("_", " ")}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {new Date(b.created_at).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const SchedulingManager = () => {
@@ -1585,12 +1749,14 @@ const SchedulingManager = () => {
         <TabsTrigger value="groups">Groups</TabsTrigger>
         <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
         <TabsTrigger value="config">Private Config</TabsTrigger>
+        <TabsTrigger value="trials">Trial Bookings</TabsTrigger>
         <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" /> Notifications</TabsTrigger>
       </TabsList>
       <TabsContent value="packages"><PackagesManager onSwitchToGroups={() => setActiveTab("groups")} /></TabsContent>
       <TabsContent value="groups"><GroupsManager /></TabsContent>
       <TabsContent value="waitlist"><WaitlistManager /></TabsContent>
       <TabsContent value="config"><PrivateTimeConfig /></TabsContent>
+      <TabsContent value="trials"><TrialBookingsManager /></TabsContent>
       <TabsContent value="notifications"><AdminNotifications /></TabsContent>
     </Tabs>
   );
