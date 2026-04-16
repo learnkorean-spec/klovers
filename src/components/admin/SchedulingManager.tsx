@@ -1626,16 +1626,17 @@ const TrialBookingsManager = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Count active (non-cancelled) bookings per slot for next 7 days
+  // Group active (non-cancelled) bookings per slot for next 7 days
   const now = new Date();
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const slotBookedCounts: Record<string, number> = {};
+  const slotStudents: Record<string, TrialBooking[]> = {};
   bookings.forEach((b) => {
     if (b.status === "cancelled") return;
     const d = new Date(b.trial_date);
     if (d >= now && d <= nextWeek) {
       const key = `${b.day_of_week}-${b.start_time}`;
-      slotBookedCounts[key] = (slotBookedCounts[key] || 0) + 1;
+      if (!slotStudents[key]) slotStudents[key] = [];
+      slotStudents[key].push(b);
     }
   });
 
@@ -1649,18 +1650,32 @@ const TrialBookingsManager = () => {
         <div className="flex flex-wrap gap-3">
           {slots.map((s) => {
             const key = `${s.day_of_week}-${s.start_time}`;
-            const booked = slotBookedCounts[key] || 0;
-            const spotsLeft = Math.max(0, s.capacity - booked);
+            const students = slotStudents[key] || [];
+            const spotsLeft = Math.max(0, s.capacity - students.length);
             return (
-              <Card key={key} className="min-w-[180px]">
+              <Card key={key} className="min-w-[220px] flex-1">
                 <CardContent className="pt-4 pb-3">
-                  <p className="font-medium text-sm">{DAY_NAMES[s.day_of_week]} {formatTime(s.start_time)}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground">{booked}/{s.capacity} booked</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium text-sm">{DAY_NAMES[s.day_of_week]} {formatTime(s.start_time)}</p>
                     <Badge variant={spotsLeft === 0 ? "destructive" : "secondary"} className="text-xs">
-                      {spotsLeft === 0 ? "Full" : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+                      {spotsLeft === 0 ? "Full" : `${spotsLeft}/${s.capacity} left`}
                     </Badge>
                   </div>
+                  {students.length > 0 ? (
+                    <ul className="space-y-1">
+                      {students.map((st) => (
+                        <li key={st.id} className="flex items-center gap-2 text-xs">
+                          <Users className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="font-medium truncate">{st.name || "—"}</span>
+                          <span className={`ml-auto inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${TRIAL_STATUS_COLORS[st.status] || "bg-gray-100 text-gray-600"}`}>
+                            {st.status.replace("_", " ")}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No bookings yet</p>
+                  )}
                 </CardContent>
               </Card>
             );
