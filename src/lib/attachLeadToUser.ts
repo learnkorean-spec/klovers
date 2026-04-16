@@ -1,30 +1,18 @@
-import { supabase } from "@/integrations/supabase/client";
+import { attachSessionToUser } from "@/lib/attachSessionToUser";
 
 /**
- * Links an existing lead record to the authenticated user via user_id.
- * Called once after login/signup. Safe to call multiple times (idempotent).
+ * Links anonymous lead_events to the authenticated user.
+ *
+ * This is a thin wrapper around attachSessionToUser() kept for backward
+ * compatibility — App.tsx calls both attachLeadToUser and attachSessionToUser
+ * on auth state change. The real work happens in attachSessionToUser which
+ * calls the attach_session_to_user RPC to backfill user_id on all
+ * lead_events rows that share the current localStorage session id.
  */
-export async function attachLeadToUser(user: { id: string; email?: string }) {
-  if (!user.email) return;
-  const email = user.email.toLowerCase().trim();
-
-  try {
-    // Find lead with matching email that has no user_id yet
-    const { data: lead } = await supabase
-      .from("leads")
-      .select("id")
-      .ilike("email", email)
-      .is("user_id", null)
-      .limit(1)
-      .maybeSingle();
-
-    if (lead?.id) {
-      await supabase
-        .from("leads")
-        .update({ user_id: user.id })
-        .eq("id", lead.id);
+export async function attachLeadToUser(_user: { id: string; email?: string }) {
+    try {
+          await attachSessionToUser();
+    } catch {
+          /* swallow — never block auth flow */
     }
-  } catch (err) {
-    console.error("attachLeadToUser error:", err);
-  }
 }
