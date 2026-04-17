@@ -3,12 +3,21 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import TrialSlotPicker from "@/components/TrialSlotPicker";
 import { logLeadEvent } from "@/lib/leadTracking";
+import { LEVEL_SELECT_OPTIONS, getLevelShortLabel } from "@/constants/levels";
 import { CheckCircle2, CalendarPlus, ArrowRight, GraduationCap, LayoutDashboard } from "lucide-react";
 
 interface BookingResult {
@@ -31,7 +40,9 @@ const TrialBookingPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ name: string | null; email: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ name: string | null; email: string | null; level: string | null } | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
 
@@ -39,17 +50,43 @@ const TrialBookingPage = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("name, email")
+      .select("name, email, level")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data) setProfile(data as any);
+        // Fall back to level captured at signup (user_metadata) if profile is empty —
+        // covers the email-confirmation flow where signup couldn't write to profiles.
+        const profileLevel = (data as any)?.level?.trim();
+        const metaLevel = (user.user_metadata?.level as string | undefined)?.trim();
+        if (profileLevel) {
+          setSelectedLevel(profileLevel);
+        } else if (metaLevel) {
+          setSelectedLevel(metaLevel);
+        }
+        setProfileLoaded(true);
       });
   }, [user]);
+
+  // True when neither profile nor user_metadata has a level — we need to ask.
+  const needsLevel =
+    profileLoaded &&
+    !(profile?.level?.trim()) &&
+    !((user?.user_metadata?.level as string | undefined)?.trim());
 
   const handleSlotPicked = async (dayOfWeek: number, startTime: string) => {
     if (!user) {
       navigate(`/signup?redirect=${encodeURIComponent("/trial-booking")}`);
+      return;
+    }
+
+    // If we still don't have a level (profile empty + dropdown untouched), ask for it.
+    if (needsLevel && !selectedLevel) {
+      toast({
+        title: "Please pick your Korean level",
+        description: "Just one quick question so we match you with the right teacher.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -66,6 +103,21 @@ const TrialBookingPage = () => {
         try { return localStorage.getItem("referrer_id") || undefined; } catch { return undefined; }
       })();
 
+      const effectiveLevel =
+        profile?.level?.trim() ||
+        (user.user_metadata?.level as string | undefined)?.trim() ||
+        selectedLevel ||
+        "";
+
+      // If the user picked a level here (and profile was empty), persist it so
+      // we don't ask again on future flows.
+      if (needsLevel && selectedLevel) {
+        await supabase
+          .from("profiles")
+          .update({ level: selectedLevel })
+          .eq("user_id", user.id);
+      }
+
       const { data, error } = await supabase.functions.invoke("book-trial", {
         body: {
           // Authenticated path: server pulls name/email/user_id from JWT.
@@ -73,6 +125,7 @@ const TrialBookingPage = () => {
           // for the first few sessions until book-trial is fully migrated.
           name: profile?.name || user.email?.split("@")[0] || "Student",
           email: user.email,
+          level: effectiveLevel || undefined,
           day_of_week: dayOfWeek,
           start_time: startTime,
           referrer_id: referrerId,
@@ -130,18 +183,8 @@ const TrialBookingPage = () => {
             </div>
 
             <p className="text-muted-foreground mb-6">
-              A teacher will confirm your class within a few hours. Add it to your calendar so you don't miss it.
+              A teacher will confirm your class within a few hours. You'll receive a confirmation email with a calendar link once it's approved.
             </p>
-
-            <a
-              href={bookingResult.calendar_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.02] text-base mb-6"
-            >
-              <CalendarPlus className="h-5 w-5" />
-              Add to Google Calendar
-            </a>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
               <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2">
@@ -183,6 +226,37 @@ const TrialBookingPage = () => {
               <p className="text-sm text-muted-foreground mb-6">
                 All times are in Cairo (Africa/Cairo). Confirm and we'll book you in instantly.
               </p>
+
+              {/* Inline level dropdown — only shown when profile/user_metadata has no level */}
+              {needsLevel && (
+                <div className="mb-6 space-y-2">
+                  <Label htmlFor="trial-level" className="text-sm font-medium">
+                    Your Korean level
+                  </Label>
+                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                    <SelectTrigger id="trial-level">
+                      <SelectValue placeholder="Pick your level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEVEL_SELECT_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    We'll match you with the right teacher. You can change this later in your profile.
+                  </p>
+                </div>
+              )}
+
+              {/* Show the existing level (read-only) when we already have it */}
+              {!needsLevel && profileLoaded && selectedLevel && (
+                <p className="text-xs text-muted-foreground mb-4">
+                  Your level: <span className="font-medium text-foreground">{getLevelShortLabel(selectedLevel)}</span>
+                </p>
+              )}
 
               <TrialSlotPicker
                 onSelect={handleSlotPicked}
