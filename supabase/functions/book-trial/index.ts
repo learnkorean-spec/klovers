@@ -106,6 +106,7 @@ Deno.serve(async (req) => {
     let resolvedUserId: string | null = null;
     let resolvedEmail: string | null = null;
     let resolvedName: string | null = null;
+    let resolvedLevel: string | null = null;
     if (authed) {
       const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
       const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -114,15 +115,21 @@ Deno.serve(async (req) => {
         if (userData?.user) {
           resolvedUserId = userData.user.id;
           resolvedEmail = userData.user.email ?? null;
-          // Pull the name from profiles for nicer display
+          // Capture level from user_metadata as a fallback for email-confirmation
+          // signups where the profile row hasn't been updated yet.
+          const metaLevel = (userData.user.user_metadata?.level as string | undefined)?.trim();
+          if (metaLevel) resolvedLevel = metaLevel;
+          // Pull the name + level from profiles for nicer display
           const { data: profileRow } = await supabase
             .from("profiles")
-            .select("name, email")
+            .select("name, email, level")
             .eq("user_id", resolvedUserId)
             .maybeSingle();
           if (profileRow) {
             resolvedName = profileRow.name ?? null;
             if (!resolvedEmail && profileRow.email) resolvedEmail = profileRow.email;
+            const profileLevel = (profileRow.level as string | undefined)?.trim();
+            if (profileLevel) resolvedLevel = profileLevel;
           }
         }
       }

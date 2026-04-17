@@ -5,17 +5,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { track } from "@/lib/tracking";
+import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 
 const SignUpPage = () => {
   useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [level, setLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -40,11 +49,19 @@ const SignUpPage = () => {
     }
     setLoading(true);
 
+    // Treat "not_sure" as no level — we'll prompt again on the trial booking page.
+    const persistedLevel = level && level !== "not_sure" ? level : "";
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
-        data: { full_name: name.trim() },
+        data: {
+          full_name: name.trim(),
+          // Stored in user_metadata so it survives email-confirmation flows
+          // where there's no immediate session to update profiles directly.
+          ...(persistedLevel ? { level: persistedLevel } : {}),
+        },
         emailRedirectTo: redirectTo
           ? `${window.location.origin}${redirectTo}`
           : `${window.location.origin}/dashboard`,
@@ -66,6 +83,16 @@ const SignUpPage = () => {
     // Save redirect for after login
     if (redirectTo) {
       localStorage.setItem("enroll_redirect", redirectTo);
+    }
+
+    // Persist Korean level to profile when we have a session (auto-confirm path).
+    // For email-confirmation flows the level is preserved in user_metadata and
+    // synced on first authenticated load.
+    if (persistedLevel && data.session && data.user) {
+      await supabase
+        .from("profiles")
+        .update({ level: persistedLevel })
+        .eq("user_id", data.user.id);
     }
 
     track.completeRegistration();
@@ -153,6 +180,19 @@ const SignUpPage = () => {
                 required
                 minLength={6}
               />
+              <Select value={level} onValueChange={setLevel}>
+                <SelectTrigger>
+                  <SelectValue placeholder={isAr ? "مستوى اللغة الكورية (اختياري)" : "Korean level (optional)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="not_sure">{isAr ? "لست متأكدًا" : "Not sure yet"}</SelectItem>
+                  {LEVEL_SELECT_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (t("auth.creatingAccount") || "Creating account...") : (t("auth.signUp") || "Sign Up")}
               </Button>
