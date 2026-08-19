@@ -1,0 +1,135 @@
+name: SEO check (production)
+
+# Verifies the live site the way a search engine sees it: plain HTTP, no
+# JavaScript. This exists because the SEO invariants A1 guarantees can only be
+# fully checked against a real deployment - dist/ mode in ci.yml catches
+# regressions before merge, this catches anything that only shows up in
+# production (a bad rewrite, an expired env var, a sitemap that stops building).
+
+on:
+  # Manual "Run workflow" button on the Actions tab.
+  workflow_dispatch:
+  # Every Monday at 06:00 UTC. Scheduled runs only fire from the default
+  # branch, so this starts working once the workflow is merged to main.
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+# One production check at a time; a queued run waits rather than overlapping.
+concurrency:
+  group: seo-check-prod
+  cancel-in-progress: false
+
+jobs:
+  seo-check:
+    name: Check kloversegy.com
+    runs-on: ubuntu-latest
+    env:
+      SITE: https://kloversegy.com
+      # An Arabic post. Arabic slugs are not <loc> entries in the sitemap by
+      # design - they appear as xhtml:link hreflang="ar" alternates. This one is
+      # the declared Arabic partner of /blog/korean-numbers-guide below, so the
+      # two lines in the report can be read against each other.
+      AR_POST: /blog/korean-numbers-guide-ar
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+        # No npm install: scripts/seo-check.mjs uses only Node built-ins (fs,
+        # path) and global fetch. Skipping the install keeps this job at a few
+        # seconds and immune to dependency breakage.
+
+      - name: Prepare report directory
+        run: mkdir -p seo-report
+
+      # continue-on-error so the diagnostics below still run and upload when
+      # this fails - a failed check is exactly when you want the curl output.
+      # The job is failed deliberately in the last step.
+      - name: Run seo-check against production
+        id: seocheck
+        continue-on-error: true
+        run: |
+          node scripts/seo-check.mjs --base "$SITE" 2>&1 | tee seo-report/seo-check.txt
+
+      - name: Fetch key pages without JavaScript
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          check() {
+            url="${SITE}$1"
+            body="$(mktemp)"
+            status="$(curl -sS -o "$body" -w '%{http_code}' --max-time 30 "$url" 2>/dev/null || echo 000)"
+            location="$(curl -sS -o /dev/null -D - --max-time 30 "$url" 2>/dev/null | grep -i '^location:' | head -1 | tr -d '\r' || true)"
+
+            title="$(grep -o '<title>[^<]*</title>' "$body" | head -1 | sed -e 's|<title>||' -e 's|</title>||')"
+            canonical="$(grep -o 'rel="canonical" href="[^"]*"' "$body" | head -1 | sed -e 's|.*href="||' -e 's|"$||')"
+            robots="$(grep -o 'name="robots" content="[^"]*"' "$body" | head -1 | sed -e 's|.*content="||' -e 's|"$||')"
+
+            echo "── ${url}"
+            echo "   HTTP status : ${status}"
+            [ -n "$location" ] && echo "   ${location}"
+            echo "   title       : ${title:-(none)}"
+            echo "   canonical   : ${canonical:-(none)}"
+            echo "   robots meta : ${robots:-(none)}"
+            echo
+            rm -f "$body"
+          }
+
+          {
+            echo "Plain-HTTP checks (no JavaScript executed)"
+            echo "Run at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo
+            check "/blog/korean-conditional-sentences-guide"
+            check "/blog/korean-numbers-guide"
+            check "$AR_POST"
+            check "/this-page-does-not-exist"
+            check "/login"
+            echo "Note: /this-page-does-not-exist returning 200 is expected."
+            echo "A Vite SPA on Vercel cannot emit a real 404 - the server replies"
+            echo "before the app knows the route is unknown. The page carries no"
+            echo "canonical, so it makes no duplicate-content claim. Tracked as a"
+            echo "known limitation until Option B (see docs/SEO_MIGRATION.md)."
+          } 2>&1 | tee seo-report/curl-checks.txt
+
+      # Puts both reports on the run's summary page, so they can be read without
+      # opening the raw log.
+      - name: Publish to run summary
+        if: always()
+        run: |
+          {
+            echo "## seo-check — production"
+            echo
+            echo '```'
+            cat seo-report/seo-check.txt 2>/dev/null || echo "(seo-check produced no output)"
+            echo '```'
+            echo
+            echo "## Key pages, fetched without JavaScript"
+            echo
+            echo '```'
+            cat seo-report/curl-checks.txt 2>/dev/null || echo "(no curl output)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-check-production
+          path: seo-report/
+          retention-days: 30
+
+      # The gate. Kept last so the report is always produced and uploaded first.
+      - name: Fail if seo-check failed
+        if: steps.seocheck.outcome == 'failure'
+        run: |
+          echo "::error::seo-check failed against ${SITE}. See the run summary or the seo-check-production artifact."
+          exit 1
