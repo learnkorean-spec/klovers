@@ -43,6 +43,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # BLOCKING. Asserts the SEO invariants A1 guarantees against the freshly
+      # built dist/: every route has a title, no route reuses the homepage
+      # title, every canonical is self-referencing and unique, and robots.txt
+      # names exactly one sitemap. A regression here silently de-ranks pages,
+      # which is exactly the class of bug that goes unnoticed for months.
+      - name: SEO check
+        run: npm run seo:check
+
       # Advisory only: the codebase currently has 22 pre-existing eslint errors
       # and ~579 warnings, so this must not block merges yet. Remove
       # continue-on-error once those are cleaned up to make lint a hard gate.
