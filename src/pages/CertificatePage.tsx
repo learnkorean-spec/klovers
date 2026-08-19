@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSEO } from "@/hooks/useSEO";
 
 const LEVEL_LABELS: Record<string, string> = {
   "A0": "Complete Beginner",
@@ -22,6 +23,10 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 const CertificatePage = () => {
+  // Transactional page: real content for the signed-in user, nothing a
+  // search result should land on. Mirrors the Disallow in robots.txt.
+  useSEO({ title: "Your Certificate", description: "Your Klovers course completion certificate.", noindex: true });
+
   const { t } = useLanguage();
   const [params] = useSearchParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
 /* ─── Brand tokens ─────────────────────────────── */
 const Y   = "#FFFF00";
@@ -991,6 +992,10 @@ function TrialJoinEn() {
    MAIN COMPONENT
 ══════════════════════════════════════════════════ */
 export default function TrialBookPage() {
+  // Transactional page: real content for the signed-in user, nothing a
+  // search result should land on. Mirrors the Disallow in robots.txt.
+  useSEO({ title: "Book Your Trial", description: "Book your Klovers free trial class.", noindex: true });
+
   const [preview, setPreview] = useState<Lang>("ar");
   const [access, setAccess] = useState<"loading" | "granted" | "denied">("loading");
   const navigate = useNavigate();

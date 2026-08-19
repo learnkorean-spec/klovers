@@ -2,6 +2,7 @@ import { useState, useEffect, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
 /* ─── Brand tokens ─────────────────────────────── */
 const Y    = "#FFFF00";   // yellow — thin accent lines only
@@ -4627,6 +4628,10 @@ function Certificate({ lang }: { lang: Lang }) {
    MAIN
 ══════════════════════════════════════════════════ */
 export default function HangulBookPage() {
+  // Transactional page: real content for the signed-in user, nothing a
+  // search result should land on. Mirrors the Disallow in robots.txt.
+  useSEO({ title: "Your Hangul Book", description: "Your Klovers Hangul workbook.", noindex: true });
+
   const [preview, setPreview] = useState<Lang>("ar");
   const [access, setAccess] = useState<"loading" | "granted" | "denied">("loading");
   const navigate = useNavigate();

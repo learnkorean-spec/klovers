@@ -1,6 +1,11 @@
 import { useSearchParams } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
 
 export default function RsvpConfirmationPage() {
+  // Transactional page: real content for the signed-in user, nothing a
+  // search result should land on. Mirrors the Disallow in robots.txt.
+  useSEO({ title: "RSVP Confirmation", description: "Confirm your attendance for your Klovers class.", noindex: true });
+
   const [params] = useSearchParams();
   const r    = params.get("r");     // "yes" | "no"
   const name = params.get("name") || "there";

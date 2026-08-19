@@ -32,6 +32,17 @@
   },
   "redirects": [
     {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.kloversegy.com"
+        }
+      ],
+      "destination": "https://kloversegy.com/$1",
+      "permanent": true
+    },
+    {
       "source": "/hangul-guide",
       "destination": "/blog/learn-korean-alphabet-hangul-guide",
       "permanent": true
@@ -136,5 +147,6 @@
         }
       ]
     }
-  ]
+  ],
+  "trailingSlash": false
 }
