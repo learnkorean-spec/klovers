@@ -1,8 +1,12 @@
 /**
  * ping-search-engines
  *
- * Notifies Google, Bing, and all IndexNow-compatible engines
+ * Notifies Bing and all IndexNow-compatible engines
  * (Yandex, Naver, Seznam, Yahoo) whenever content changes.
+ *
+ * Google is deliberately absent: its ?sitemap= ping endpoint was retired in
+ * June 2023. Google discovery now happens via the sitemap referenced in
+ * robots.txt plus Search Console.
  *
  * Called by:
  *  - pg_cron daily schedule
@@ -61,17 +65,7 @@ Deno.serve(async (req) => {
 
     const allUrls = [...STATIC_URLS, ...blogUrls];
 
-    // ── 2. Ping Google with sitemap URL ────────────────────────────────
-    try {
-      const googleRes = await fetch(
-        `https://www.google.com/ping?sitemap=${encodeURIComponent(SITEMAP_URL)}`
-      );
-      results.google = googleRes.ok ? "✅ pinged" : `⚠️ ${googleRes.status}`;
-    } catch (e) {
-      results.google = `❌ ${(e as Error).message}`;
-    }
-
-    // ── 3. Ping Bing with sitemap URL ──────────────────────────────────
+    // ── 2. Ping Bing with sitemap URL ──────────────────────────────────
     try {
       const bingRes = await fetch(
         `https://www.bing.com/ping?sitemap=${encodeURIComponent(SITEMAP_URL)}`
@@ -81,7 +75,7 @@ Deno.serve(async (req) => {
       results.bing_sitemap = `❌ ${(e as Error).message}`;
     }
 
-    // ── 4. Submit all URLs via IndexNow (Bing + Yandex + Naver + more) ─
+    // ── 3. Submit all URLs via IndexNow (Bing + Yandex + Naver + more) ─
     try {
       const indexNowPayload = {
         host:    "kloversegy.com",
@@ -103,7 +97,7 @@ Deno.serve(async (req) => {
       results.indexnow = `❌ ${(e as Error).message}`;
     }
 
-    // ── 5. Also submit to Bing IndexNow endpoint directly ──────────────
+    // ── 4. Also submit to Bing IndexNow endpoint directly ──────────────
     try {
       const bingIndexNowRes = await fetch(
         `https://www.bing.com/indexnow?url=${encodeURIComponent(SITE_URL)}&key=${INDEXNOW_KEY}`
