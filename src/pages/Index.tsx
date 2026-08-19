@@ -83,23 +83,11 @@ const SectionFallback = () => (
 const Index = () => {
   useSEO({ title: "Korean Classes in Arabic | Klovers Academy", description: "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.", canonical: "https://kloversegy.com/" });
 
-  // Hreflang alternates for EN / AR homepage
-  useEffect(() => {
-    const addAlt = (hreflang: string, href: string) => {
-      const el = document.createElement("link");
-      el.setAttribute("rel", "alternate");
-      el.setAttribute("hreflang", hreflang);
-      el.setAttribute("href", href);
-      el.id = `hreflang-${hreflang}`;
-      document.head.appendChild(el);
-    };
-    addAlt("en", "https://kloversegy.com/");
-    addAlt("ar", "https://kloversegy.com/?lang=ar");
-    addAlt("x-default", "https://kloversegy.com/");
-    return () => {
-      ["en", "ar", "x-default"].forEach(hl => document.getElementById(`hreflang-${hl}`)?.remove());
-    };
-  }, []);
+  // No hreflang on the homepage: ?lang=ar is a query parameter on the same
+  // document, not an Arabic URL, and it canonicalises back to / - which
+  // invalidates the whole annotation cluster. Marketing pages get hreflang
+  // once Arabic has real URLs of its own (Option B).
+  // See docs/DECISIONS.md 2026-08-19 (hreflang).
 
   useEffect(() => {
     const schema = {

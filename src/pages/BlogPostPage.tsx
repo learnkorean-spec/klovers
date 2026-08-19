@@ -68,6 +68,8 @@ const BlogPostPage = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // Slug of the EN<->AR partner post, or null when this post has no partner.
+  const [partnerSlug, setPartnerSlug] = useState<string | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Pick<BlogPost, "id"|"title"|"slug"|"description"|"hero_image"|"hero_alt"|"article_type"|"author"|"published_at"|"created_at">[]>([]);
   const { language } = useLanguage();
   const isAr = language === "ar";
@@ -159,6 +161,27 @@ const BlogPostPage = () => {
     fetchPost();
   }, [slug, language]);
 
+  // Resolve the EN<->AR partner post, so hreflang is only emitted for a pair
+  // that really exists. Arabic slugs use a `-ar` suffix or a legacy `ar-` prefix.
+  useEffect(() => {
+    if (!post) { setPartnerSlug(null); return; }
+    let cancelled = false;
+    const base = post.slug.startsWith("ar-") ? post.slug.slice(3) : post.slug.replace(/-ar$/, "");
+    const candidates = post.lang === "ar" ? [base] : [`${base}-ar`, `ar-${base}`];
+
+    (async () => {
+      const { data } = await supabase
+        .from("blog_posts")
+        .select("slug")
+        .in("slug", candidates)
+        .eq("published", true)
+        .limit(1);
+      if (!cancelled) setPartnerSlug(data?.[0]?.slug ?? null);
+    })();
+
+    return () => { cancelled = true; };
+  }, [post]);
+
   // Dynamic SEO meta tags
   useEffect(() => {
     if (!post) return;
@@ -238,12 +261,18 @@ const BlogPostPage = () => {
       el.setAttribute("href", href);
       document.head.appendChild(el);
     };
+    // Only annotate when the partner document actually exists. The Arabic
+    // partner uses either a `-ar` suffix or a legacy `ar-` prefix, and not
+    // every post has one - pointing hreflang at a URL that 404s invalidates
+    // the whole cluster. partnerSlug is resolved from the database below.
     const base = post.slug.startsWith("ar-") ? post.slug.slice(3) : post.slug.replace(/-ar$/, "");
-    const enUrl = `https://kloversegy.com/blog/${base}`;
-    const arUrl = `https://kloversegy.com/blog/${base}-ar`;
-    addAlt("en", enUrl);
-    addAlt("ar", arUrl);
-    addAlt("x-default", enUrl);
+    if (partnerSlug) {
+      const enUrl = `https://kloversegy.com/blog/${base}`;
+      const arUrl = `https://kloversegy.com/blog/${post.lang === "ar" ? post.slug : partnerSlug}`;
+      addAlt("en", enUrl);
+      addAlt("ar", arUrl);
+      addAlt("x-default", enUrl);
+    }
 
     // JSON-LD: BlogPosting with enhanced metadata
     let jsonLd = document.getElementById("blog-jsonld");
@@ -341,7 +370,7 @@ const BlogPostPage = () => {
       document.querySelectorAll('meta[property="article:tag"]').forEach((el) => el.remove());
       document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
     };
-  }, [post]);
+  }, [post, partnerSlug]);
 
   const readingTime = post?.content ? Math.max(1, Math.ceil(post.content.split(/\s+/).length / 200)) : null;
   const isRtl = post?.lang === "ar";

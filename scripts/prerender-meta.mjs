@@ -244,31 +244,156 @@ try {
   }
 }
 
+
+// ── Head construction ───────────────────────────────────────────────────────
+
 const routes = [...MARKETING_ROUTES, ...blogRoutes];
+
+// Slug bases, used to decide whether an EN<->AR partner really exists.
+// Arabic posts use either a `-ar` suffix (90 of them) or a legacy `ar-` prefix (10).
+const publishedSlugs = new Set(blogRoutes.map((r) => r.post.slug));
+const baseOf = (slug) =>
+  slug.startsWith("ar-") ? slug.slice(3) : slug.replace(/-ar$/, "");
+
+/**
+ * Resolve the EN and AR URLs for a post, but only where the partner document
+ * actually exists. Emitting an alternate for a URL that 404s invalidates the
+ * whole annotation cluster, so a missing partner means no hreflang at all.
+ */
+function hreflangFor(slug) {
+  const base = baseOf(slug);
+  const enSlug = publishedSlugs.has(base) ? base : null;
+  const arSlug = publishedSlugs.has(`${base}-ar`)
+    ? `${base}-ar`
+    : publishedSlugs.has(`ar-${base}`)
+      ? `ar-${base}`
+      : null;
+  if (!enSlug || !arSlug) return null;          // no honest pair -> no tags
+  return {
+    en: `${BASE_URL}/blog/${enSlug}`,
+    ar: `${BASE_URL}/blog/${arSlug}`,
+  };
+}
+
+/**
+ * Open Graph and Twitter require absolute URLs. 78 of the 200 hero_image values
+ * are root-relative ("/assets/..."), which social scrapers and Google Images
+ * cannot resolve, so promote them to absolute here.
+ */
+function absoluteUrl(u) {
+  if (!u) return DEFAULT_IMAGE;
+  if (/^https?:\/\//i.test(u)) return u;
+  return `${BASE_URL}${u.startsWith("/") ? "" : "/"}${u}`;
+}
+
+const jsonLd = (obj) =>
+  `  <script type="application/ld+json">\n${JSON.stringify(obj, null, 2)
+    .split("\n")
+    .map((l) => "  " + l)
+    .join("\n")}\n  </script>`;
+
+function buildHeadTags(route) {
+  const isHome = route.path === "/";
+  const isPost = Boolean(route.post);
+  const url = `${BASE_URL}${isHome ? "" : route.path}`;
+  const fullTitle = route.title.includes(SITE_NAME)
+    ? route.title
+    : `${route.title} | ${SITE_NAME}`;
+  const description = route.description || "";
+  const image = absoluteUrl(isPost ? route.post.heroImage : null);
+  const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : SITE_NAME;
+
+  const tags = [
+    `  <link rel="canonical" href="${attr(url)}" />`,
+    `  <meta property="og:type" content="${isPost ? "article" : "website"}" />`,
+    `  <meta property="og:url" content="${attr(url)}" />`,
+    `  <meta property="og:image" content="${attr(image)}" />`,
+    `  <meta property="og:image:alt" content="${attr(imageAlt)}" />`,
+    `  <meta name="twitter:card" content="summary_large_image" />`,
+    `  <meta name="twitter:image" content="${attr(image)}" />`,
+  ];
+
+  if (isPost) {
+    const p = route.post;
+    if (p.publishedAt)
+      tags.push(`  <meta property="article:published_time" content="${attr(p.publishedAt)}" />`);
+    if (p.updatedAt)
+      tags.push(`  <meta property="article:modified_time" content="${attr(p.updatedAt)}" />`);
+
+    const alts = hreflangFor(p.slug);
+    if (alts) {
+      tags.push(`  <link rel="alternate" hreflang="en" href="${attr(alts.en)}" />`);
+      tags.push(`  <link rel="alternate" hreflang="ar" href="${attr(alts.ar)}" />`);
+      tags.push(`  <link rel="alternate" hreflang="x-default" href="${attr(alts.en)}" />`);
+    }
+
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "@id": url,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        headline: route.title,
+        description,
+        image: [image],
+        inLanguage: p.lang === "ar" ? "ar" : "en",
+        ...(p.articleType ? { articleSection: p.articleType } : {}),
+        ...(p.publishedAt ? { datePublished: p.publishedAt } : {}),
+        ...(p.updatedAt ? { dateModified: p.updatedAt } : {}),
+        author: { "@type": "Organization", name: p.author || SITE_NAME, url: BASE_URL },
+        publisher: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: BASE_URL,
+          logo: { "@type": "ImageObject", url: DEFAULT_IMAGE },
+        },
+      })
+    );
+
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
+          { "@type": "ListItem", position: 3, name: route.title, item: url },
+        ],
+      })
+    );
+  }
+
+  return tags.join("\n");
+}
 
 // ── Emit ────────────────────────────────────────────────────────────────────
 
 const baseHTML = readFileSync(join(DIST, "index.html"), "utf-8");
 
+// The organisation-level JSON-LD in index.html describes the business and the
+// site as a whole. Repeating it on 218 subpages is duplicate entity markup, so
+// it is kept on the homepage only and stripped everywhere else.
+const baseWithoutOrgJsonLd = baseHTML.replace(
+  /[ \t]*<!-- JSON-LD[^>]*-->\s*<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/g,
+  ""
+);
+
 let created = 0;
+let withHreflang = 0;
 
 for (const route of routes) {
+  const isHome = route.path === "/";
   const fullTitle = route.title.includes(SITE_NAME)
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
-  const canonicalUrl = `${BASE_URL}${route.path === "/" ? "" : route.path}`;
   const description = route.description || "";
 
-  let html = baseHTML;
+  let html = isHome ? baseHTML : baseWithoutOrgJsonLd;
 
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${attr(fullTitle)}</title>`);
   html = html.replace(
     /<meta name="description" content="[^"]*"\s*\/?>/,
     `<meta name="description" content="${attr(description)}" />`
-  );
-  html = html.replace(
-    "</head>",
-    `  <link rel="canonical" href="${canonicalUrl}" />\n  </head>`
   );
   html = html.replace(
     /<meta property="og:title" content="[^"]*"\s*\/?>/,
@@ -279,10 +404,6 @@ for (const route of routes) {
     `<meta property="og:description" content="${attr(description)}" />`
   );
   html = html.replace(
-    /<meta property="og:url" content="[^"]*"\s*\/?>/,
-    `<meta property="og:url" content="${canonicalUrl}" />`
-  );
-  html = html.replace(
     /<meta name="twitter:title" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:title" content="${attr(fullTitle)}" />`
   );
@@ -291,10 +412,21 @@ for (const route of routes) {
     `<meta name="twitter:description" content="${attr(description)}" />`
   );
 
-  const filePath =
-    route.path === "/"
-      ? join(DIST, "index.html")
-      : join(DIST, route.path.slice(1), "index.html");
+  // Drop the placeholders that the base document ships with, so the values
+  // written below are the only ones present.
+  html = html.replace(/[ \t]*<meta property="og:type" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta property="og:image" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta name="twitter:card" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta name="twitter:image" content="[^"]*"\s*\/?>\n?/g, "");
+
+  html = html.replace("</head>", `${buildHeadTags(route)}\n  </head>`);
+
+  if (route.post && hreflangFor(route.post.slug)) withHreflang++;
+
+  const filePath = isHome
+    ? join(DIST, "index.html")
+    : join(DIST, route.path.slice(1), "index.html");
 
   const dir = dirname(filePath);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -306,5 +438,6 @@ for (const route of routes) {
 console.log(
   `\n✅ Prerendered ${created} routes ` +
     `(${MARKETING_ROUTES.length} marketing + ${blogRoutes.length} blog` +
-    `${usedCache ? ", FROM CACHE" : ""}).\n`
+    `${usedCache ? ", FROM CACHE" : ""}).`
 );
+console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.\n`);
