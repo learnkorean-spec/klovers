@@ -18,6 +18,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SITE_URL    = "https://kloversegy.com";
 const INDEXNOW_KEY = "8f8e25f6c4d7b10abab899f355a7e529";
+// /sitemap.xml is now the dynamic serverless sitemap (rewritten to
+// api/sitemap.xml.js in vercel.json). The static public/sitemap.xml that used
+// to answer this URL has been deleted. See docs/DECISIONS.md 2026-08-19.
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 
 const corsHeaders = {

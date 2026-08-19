@@ -1,328 +1,480 @@
 /**
- * prerender-meta.mjs
+ * prerender-meta.mjs — Option A1
  *
- * Post-build script that creates route-specific HTML files in dist/
- * with proper <title>, <meta description>, <link canonical>, and OG tags.
+ * Post-build script that creates route-specific HTML files in dist/ with a
+ * fully-populated <head>: title, description, canonical, Open Graph, Twitter
+ * card and JSON-LD.
  *
  * Vercel serves static files BEFORE applying rewrites, so dist/courses/index.html
- * is served instead of the generic dist/index.html for /courses.
+ * is served for /courses instead of the SPA shell.
  *
- * This solves the #1 SEO problem: Googlebot seeing empty/generic meta tags
- * because all metadata was only set client-side via JavaScript.
+ * The blog route list is READ FROM SUPABASE AT BUILD TIME. It used to be a
+ * hand-maintained array of 30 slugs, which meant any post published after that
+ * array was last edited was served the site-wide default title and description
+ * (docs/SEO_DIAGNOSIS.md, finding #2).
+ *
+ * If the Supabase query fails, the last successful route list is reused from
+ * scripts/prerender-routes.cache.json and a loud warning is printed. If there is
+ * no cache either, the build FAILS rather than silently emitting only the
+ * marketing routes — a near-empty prerender is worse than no deploy, because it
+ * would quietly de-list every blog post.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname, join } from "path";
+import { createClient } from "@supabase/supabase-js";
 
 const DIST = join(process.cwd(), "dist");
+const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
 const BASE_URL = "https://kloversegy.com";
 const SITE_NAME = "Klovers";
 const DEFAULT_IMAGE = `${BASE_URL}/klovers-logo.jpg`;
 
-// Route -> SEO metadata map
-const routes = [
+// Build-time credentials. Vercel already defines the VITE_* pair for the app
+// itself, so the non-prefixed names are only an override for local runs.
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+/** Escape a string for safe use inside a double-quoted HTML attribute. */
+const attr = (s) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+// ── Marketing routes ────────────────────────────────────────────────────────
+// Hand-maintained on purpose: these are static pages, not database rows.
+const MARKETING_ROUTES = [
   {
     path: "/",
     title: "Learn Korean Online",
-    description: "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.",
+    description:
+      "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.",
   },
   {
     path: "/courses",
     title: "Korean Courses",
-    description: "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.",
+    description:
+      "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.",
   },
   {
     path: "/pricing",
     title: "Pricing & Plans",
-    description: "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.",
+    description:
+      "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.",
   },
   {
     path: "/about",
     title: "About Us",
-    description: "Meet the Klovers team. Our certified teachers bring years of experience teaching Korean to students worldwide.",
+    description:
+      "Meet the Klovers team. Our certified teachers bring years of experience teaching Korean to students worldwide.",
   },
   {
     path: "/contact",
     title: "Contact Us",
-    description: "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.",
+    description:
+      "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.",
   },
   {
     path: "/faq",
     title: "FAQ",
-    description: "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.",
+    description:
+      "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.",
   },
   {
     path: "/enroll-now",
     title: "Enroll Now | Klovers Korean Academy",
-    description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.",
+    description:
+      "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.",
   },
   {
     path: "/enroll",
     title: "Enroll Now",
-    description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.",
+    description:
+      "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.",
   },
   {
     path: "/placement-test",
     title: "Korean Placement Test",
-    description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.",
+    description:
+      "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.",
   },
   {
     path: "/games",
     title: "Korean Learning Games",
-    description: "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.",
+    description:
+      "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.",
   },
   {
     path: "/free-trial",
     title: "Free Trial",
-    description: "Try a free Korean lesson at Klovers. Experience interactive learning, certified teachers, and our gamified curriculum with no commitment.",
+    description:
+      "Try a free Korean lesson at Klovers. Experience interactive learning, certified teachers, and our gamified curriculum with no commitment.",
   },
   {
     path: "/affiliate",
     title: "Affiliate Program",
-    description: "Join the Klovers affiliate program. Earn commissions by referring students to our Korean language courses.",
+    description:
+      "Join the Klovers affiliate program. Earn commissions by referring students to our Korean language courses.",
   },
   {
     path: "/blog",
     title: "Blog",
-    description: "Read the latest articles about learning Korean, K-culture, TOPIK preparation, and language tips on the Klovers blog.",
+    description:
+      "Read the latest articles about learning Korean, K-culture, TOPIK preparation, and language tips on the Klovers blog.",
   },
   {
     path: "/learn-korean-arabic-speakers",
     title: "Learn Korean for Arabic Speakers",
-    description: "Korean courses designed for Arabic speakers. Learn Korean with explanations in Arabic, cultural context, and certified bilingual teachers.",
+    description:
+      "A Korean course built for Arabic speakers. Contrastive grammar, Arabic-to-Korean explanations, and a realistic 8-month timeline.",
   },
   {
     path: "/topik-exam-preparation",
-    title: "TOPIK Exam Preparation",
-    description: "Prepare for the TOPIK exam with Klovers. Practice tests, vocabulary lists, grammar drills, and expert guidance for TOPIK I and II.",
+    title: "TOPIK Exam Preparation 2026",
+    description:
+      "Prepare for the TOPIK exam with Klovers. 2026 exam dates, level breakdown, scoring, and an 8-12 week study plan.",
   },
   {
     path: "/learn-korean-kdramas",
     title: "Learn Korean Through K-Dramas",
-    description: "Learn real Korean from your favorite K-Dramas. Vocabulary, phrases, and cultural insights from popular Korean dramas.",
+    description:
+      "Learn Korean with K-dramas using the 4-watch method. Drama recommendations by level and a 30-day habit-building guide.",
   },
-  // Blog Posts
+  // Added in A1 — live routes that were missing from the prerender list.
   {
-    path: "/blog/learn-korean-alphabet-hangul-guide",
-    title: "Learn the Korean Alphabet (Hangul): Complete Guide",
-    description: "Master the Korean alphabet (Hangul) with this step-by-step guide. Learn all 40 letters, pronunciation, stroke order, and start reading Korean today.",
-  },
-  {
-    path: "/blog/50-essential-korean-words-beginners",
-    title: "50 Essential Korean Words for Beginners",
-    description: "Learn the 50 most important Korean words every beginner should know. Start building your Korean vocabulary today with Klovers.",
+    path: "/interview-training",
+    title: "Korean Interview Training — AI-Powered | Klovers",
+    description:
+      "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",
   },
   {
-    path: "/blog/kdrama-korean-phrases-beginners",
-    title: "K-Drama Korean Phrases for Beginners",
-    description: "Learn popular Korean phrases from K-Dramas. Common expressions, greetings, and slang used in your favorite Korean dramas.",
+    path: "/welcome-back",
+    title: "Welcome Back — Returning Students Offer",
+    description:
+      "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
   },
   {
-    path: "/blog/how-long-to-learn-korean-arabic-speakers",
-    title: "How Long Does It Take to Learn Korean for Arabic Speakers?",
-    description: "Find out how long it takes Arabic speakers to learn Korean. Timeline, difficulty comparison, and tips to learn faster.",
-  },
-  {
-    path: "/blog/how-to-learn-korean-faster",
-    title: "How to Learn Korean Faster",
-    description: "Proven tips and strategies to learn Korean faster. Study methods, immersion techniques, and resources to accelerate your learning.",
-  },
-  {
-    path: "/blog/best-free-resources-learn-korean-online-2026",
-    title: "Best Free Resources to Learn Korean Online (2026)",
-    description: "The best free Korean learning resources in 2026. Apps, websites, YouTube channels, and tools to learn Korean for free.",
-  },
-  {
-    path: "/blog/korean-body-language-social-etiquette",
-    title: "Korean Body Language & Social Etiquette",
-    description: "Understand Korean body language, bowing culture, and social etiquette. Essential cultural knowledge for Korean learners.",
-  },
-  {
-    path: "/blog/korean-songs-to-learn-korean-2026",
-    title: "Korean Songs to Learn Korean (2026)",
-    description: "Learn Korean through K-Pop songs. Vocabulary, grammar, and pronunciation practice from popular Korean songs in 2026.",
-  },
-  {
-    path: "/blog/korean-family-terms-relationships-guide",
-    title: "Korean Family Terms & Relationships Guide",
-    description: "Complete guide to Korean family terms and relationship vocabulary. Learn how Koreans address family members.",
-  },
-  {
-    path: "/blog/korean-skincare-kbeauty-routine-guide",
-    title: "Korean Skincare & K-Beauty Routine Guide",
-    description: "Learn Korean skincare vocabulary and K-Beauty terms. Explore the famous Korean 10-step skincare routine in Korean.",
-  },
-  {
-    path: "/blog/korean-traditional-holidays-chuseok-seollal",
-    title: "Korean Traditional Holidays: Chuseok & Seollal",
-    description: "Learn about Korean traditional holidays Chuseok and Seollal. Vocabulary, customs, and cultural significance explained.",
-  },
-  {
-    path: "/blog/korean-easier-than-japanese-chinese",
-    title: "Is Korean Easier Than Japanese and Chinese?",
-    description: "Compare Korean, Japanese, and Chinese difficulty. Why Korean might be easier to learn and which language to choose.",
-  },
-  {
-    path: "/blog/learn-korean-through-kpop-bts-blackpink",
-    title: "Learn Korean Through K-Pop: BTS & BLACKPINK",
-    description: "Learn Korean vocabulary and phrases from BTS and BLACKPINK songs. Fun K-Pop-based Korean learning for beginners.",
-  },
-  {
-    path: "/blog/topik-1-vocabulary-list-800-words",
-    title: "TOPIK 1 Vocabulary List: 800 Essential Words",
-    description: "Complete TOPIK 1 vocabulary list with 800 essential Korean words. Study guide for TOPIK I exam preparation.",
-  },
-  {
-    path: "/blog/korean-for-arabic-speakers-difficulty-guide",
-    title: "Korean for Arabic Speakers: Difficulty Guide",
-    description: "How hard is Korean for Arabic speakers? A detailed guide comparing grammar, pronunciation, and writing systems.",
-  },
-  {
-    path: "/blog/korean-workplace-business-culture",
-    title: "Korean Workplace & Business Culture",
-    description: "Understand Korean workplace culture, business etiquette, and office vocabulary. Essential for working in Korea.",
-  },
-  {
-    path: "/blog/korean-pronunciation-guide-beginners",
-    title: "Korean Pronunciation Guide for Beginners",
-    description: "Master Korean pronunciation with this beginner guide. Vowels, consonants, sound changes, and tips for natural speech.",
-  },
-  {
-    path: "/blog/korean-age-system-explained",
-    title: "Korean Age System Explained",
-    description: "Understand the Korean age system. How Korean age differs from international age and how to calculate yours.",
-  },
-  {
-    path: "/blog/korean-speech-levels-honorifics-guide",
-    title: "Korean Speech Levels & Honorifics Guide",
-    description: "Master Korean speech levels and honorifics. When to use formal, polite, and casual speech in Korean.",
-  },
-  {
-    path: "/blog/learn-korean-3-months-study-method",
-    title: "Learn Korean in 3 Months: Study Method",
-    description: "A practical 3-month Korean study plan. Daily schedule, resources, and milestones to reach conversational Korean.",
-  },
-  {
-    path: "/blog/korean-grammar-particles",
-    title: "Korean Grammar Particles Guide",
-    description: "Complete guide to Korean grammar particles. Learn subject, object, topic markers, and other essential Korean particles.",
-  },
-  {
-    path: "/blog/korean-daily-greetings",
-    title: "Korean Daily Greetings",
-    description: "Essential Korean greetings for daily life. Morning greetings, goodbyes, and polite expressions used every day in Korea.",
-  },
-  {
-    path: "/blog/korean-food-vocabulary",
-    title: "Korean Food Vocabulary",
-    description: "Learn Korean food vocabulary. Names of dishes, ingredients, and useful phrases for ordering at Korean restaurants.",
-  },
-  {
-    path: "/blog/hanbok-korean-traditional-clothing",
-    title: "Hanbok: Korean Traditional Clothing",
-    description: "Learn about Hanbok, traditional Korean clothing. History, types, vocabulary, and when Koreans wear traditional dress.",
-  },
-  {
-    path: "/blog/topik-exam-guide",
-    title: "TOPIK Exam Guide",
-    description: "Complete guide to the TOPIK exam. Registration, format, scoring, preparation tips, and study resources.",
-  },
-  {
-    path: "/blog/seoul-travel-korean-phrases",
-    title: "Seoul Travel Korean Phrases",
-    description: "Essential Korean phrases for traveling in Seoul. Directions, transportation, shopping, and emergency vocabulary.",
-  },
-  {
-    path: "/blog/korean-numbers-guide",
-    title: "Korean Numbers Guide",
-    description: "Learn Korean numbers — both native Korean and Sino-Korean counting systems. When to use each and practice exercises.",
-  },
-  {
-    path: "/blog/korean-slang-words",
-    title: "Korean Slang Words",
-    description: "Popular Korean slang words and internet expressions. Modern Korean slang used by native speakers and in K-culture.",
-  },
-  {
-    path: "/blog/study-korean-kdramas-method",
-    title: "Study Korean with K-Dramas Method",
-    description: "A proven method to learn Korean through K-Dramas. Step-by-step guide for using Korean dramas as study material.",
-  },
-  {
-    path: "/blog/korean-cafe-coffee-culture",
-    title: "Korean Cafe & Coffee Culture",
-    description: "Explore Korean cafe culture and coffee vocabulary. Learn how to order coffee in Korean and discover Seoul cafe trends.",
+    path: "/hangul-starter",
+    title: "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
+    description:
+      "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
   },
 ];
 
-// Read the base index.html built by Vite
-const baseHTML = readFileSync(join(DIST, "index.html"), "utf-8");
+// ── Blog routes, from the database ──────────────────────────────────────────
 
-let created = 0;
+/** Fetch every published post. Same filter as api/sitemap.xml.js. */
+async function fetchPublishedPosts() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error(
+      "SUPABASE_URL / SUPABASE_ANON_KEY not set (VITE_SUPABASE_URL and " +
+        "VITE_SUPABASE_ANON_KEY are also accepted)"
+    );
+  }
 
-for (const route of routes) {
-  const fullTitle = route.title.includes("Klovers")
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select(
+      "slug, title, description, lang, hero_image, hero_alt, article_type, author, published_at, updated_at"
+    )
+    .eq("published", true)
+    .order("published_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("query returned zero published posts");
+  return data;
+}
+
+/** Turn a post row into a route entry. */
+const postToRoute = (p) => ({
+  path: `/blog/${p.slug}`,
+  title: p.title,
+  description: p.description,
+  post: {
+    slug: p.slug,
+    lang: p.lang || "en",
+    heroImage: p.hero_image || null,
+    heroAlt: p.hero_alt || null,
+    articleType: p.article_type || null,
+    author: p.author || SITE_NAME,
+    publishedAt: p.published_at || null,
+    updatedAt: p.updated_at || p.published_at || null,
+  },
+});
+
+let blogRoutes;
+let usedCache = false;
+
+try {
+  const posts = await fetchPublishedPosts();
+  blogRoutes = posts.map(postToRoute);
+  writeFileSync(
+    CACHE_FILE,
+    JSON.stringify({ generatedAt: new Date().toISOString(), routes: blogRoutes }, null, 2),
+    "utf-8"
+  );
+  console.log(`\nFetched ${blogRoutes.length} published blog posts from Supabase.`);
+} catch (err) {
+  console.error("\n" + "!".repeat(72));
+  console.error("!! PRERENDER WARNING: could not read blog posts from Supabase.");
+  console.error(`!! Reason: ${err.message}`);
+
+  if (existsSync(CACHE_FILE)) {
+    const cache = JSON.parse(readFileSync(CACHE_FILE, "utf-8"));
+    blogRoutes = cache.routes || [];
+    usedCache = true;
+    console.error(`!! Falling back to scripts/prerender-routes.cache.json`);
+    console.error(`!! Cache written at: ${cache.generatedAt}`);
+    console.error(`!! Using ${blogRoutes.length} cached blog routes.`);
+    console.error("!! Posts published since then will NOT have prerendered meta.");
+    console.error("!".repeat(72) + "\n");
+  } else {
+    console.error("!! No cache file exists to fall back to.");
+    console.error("!! Refusing to emit marketing routes only — that would silently");
+    console.error("!! de-list every blog post. Failing the build instead.");
+    console.error("!".repeat(72) + "\n");
+    process.exit(1);
+  }
+}
+
+
+// ── Head construction ───────────────────────────────────────────────────────
+
+const routes = [...MARKETING_ROUTES, ...blogRoutes];
+
+// Slug bases, used to decide whether an EN<->AR partner really exists.
+// Arabic posts use either a `-ar` suffix (90 of them) or a legacy `ar-` prefix (10).
+const publishedSlugs = new Set(blogRoutes.map((r) => r.post.slug));
+const baseOf = (slug) =>
+  slug.startsWith("ar-") ? slug.slice(3) : slug.replace(/-ar$/, "");
+
+/**
+ * Resolve the EN and AR URLs for a post, but only where the partner document
+ * actually exists. Emitting an alternate for a URL that 404s invalidates the
+ * whole annotation cluster, so a missing partner means no hreflang at all.
+ */
+function hreflangFor(slug) {
+  const base = baseOf(slug);
+  const enSlug = publishedSlugs.has(base) ? base : null;
+  const arSlug = publishedSlugs.has(`${base}-ar`)
+    ? `${base}-ar`
+    : publishedSlugs.has(`ar-${base}`)
+      ? `ar-${base}`
+      : null;
+  if (!enSlug || !arSlug) return null;          // no honest pair -> no tags
+  return {
+    en: `${BASE_URL}/blog/${enSlug}`,
+    ar: `${BASE_URL}/blog/${arSlug}`,
+  };
+}
+
+/**
+ * Open Graph and Twitter require absolute URLs. 78 of the 200 hero_image values
+ * are root-relative ("/assets/..."), which social scrapers and Google Images
+ * cannot resolve, so promote them to absolute here.
+ */
+function absoluteUrl(u) {
+  if (!u) return DEFAULT_IMAGE;
+  if (/^https?:\/\//i.test(u)) return u;
+  return `${BASE_URL}${u.startsWith("/") ? "" : "/"}${u}`;
+}
+
+const jsonLd = (obj) =>
+  `  <script type="application/ld+json">\n${JSON.stringify(obj, null, 2)
+    .split("\n")
+    .map((l) => "  " + l)
+    .join("\n")}\n  </script>`;
+
+function buildHeadTags(route) {
+  const isHome = route.path === "/";
+  const isPost = Boolean(route.post);
+  // Root keeps its slash - "/" IS the path. Sub-paths never get a trailing
+  // slash. This must match api/sitemap.xml.js exactly or the canonical and
+  // the sitemap entry disagree.
+  const url = `${BASE_URL}${isHome ? "/" : route.path}`;
+  const fullTitle = route.title.includes(SITE_NAME)
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
-  const canonicalUrl = `${BASE_URL}${route.path === "/" ? "" : route.path}`;
-  const description = route.description;
+  const description = route.description || "";
+  const image = absoluteUrl(isPost ? route.post.heroImage : null);
+  const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : SITE_NAME;
 
-  let html = baseHTML;
+  const tags = [
+    `  <link rel="canonical" href="${attr(url)}" />`,
+    `  <meta property="og:type" content="${isPost ? "article" : "website"}" />`,
+    `  <meta property="og:url" content="${attr(url)}" />`,
+    `  <meta property="og:image" content="${attr(image)}" />`,
+    `  <meta property="og:image:alt" content="${attr(imageAlt)}" />`,
+    `  <meta name="twitter:card" content="summary_large_image" />`,
+    `  <meta name="twitter:image" content="${attr(image)}" />`,
+  ];
 
-  // 1. Replace <title>
-  html = html.replace(
-    /<title>[^<]*<\/title>/,
-    `<title>${fullTitle}</title>`
-  );
+  if (isPost) {
+    const p = route.post;
+    if (p.publishedAt)
+      tags.push(`  <meta property="article:published_time" content="${attr(p.publishedAt)}" />`);
+    if (p.updatedAt)
+      tags.push(`  <meta property="article:modified_time" content="${attr(p.updatedAt)}" />`);
 
-  // 2. Replace meta description
+    const alts = hreflangFor(p.slug);
+    if (alts) {
+      tags.push(`  <link rel="alternate" hreflang="en" href="${attr(alts.en)}" />`);
+      tags.push(`  <link rel="alternate" hreflang="ar" href="${attr(alts.ar)}" />`);
+      tags.push(`  <link rel="alternate" hreflang="x-default" href="${attr(alts.en)}" />`);
+    }
+
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "@id": url,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        headline: route.title,
+        description,
+        image: [image],
+        inLanguage: p.lang === "ar" ? "ar" : "en",
+        ...(p.articleType ? { articleSection: p.articleType } : {}),
+        ...(p.publishedAt ? { datePublished: p.publishedAt } : {}),
+        ...(p.updatedAt ? { dateModified: p.updatedAt } : {}),
+        author: { "@type": "Organization", name: p.author || SITE_NAME, url: BASE_URL },
+        publisher: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: BASE_URL,
+          logo: { "@type": "ImageObject", url: DEFAULT_IMAGE },
+        },
+      })
+    );
+
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
+          { "@type": "ListItem", position: 3, name: route.title, item: url },
+        ],
+      })
+    );
+  }
+
+  return tags.join("\n");
+}
+
+// ── Emit ────────────────────────────────────────────────────────────────────
+
+const baseHTML = readFileSync(join(DIST, "index.html"), "utf-8");
+
+// The organisation-level JSON-LD in index.html describes the business and the
+// site as a whole. Repeating it on 218 subpages is duplicate entity markup, so
+// it is kept on the homepage only and stripped everywhere else.
+const baseWithoutOrgJsonLd = baseHTML.replace(
+  /[ \t]*<!-- JSON-LD[^>]*-->\s*<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/g,
+  ""
+);
+
+let created = 0;
+let withHreflang = 0;
+
+for (const route of routes) {
+  const isHome = route.path === "/";
+  const fullTitle = route.title.includes(SITE_NAME)
+    ? route.title
+    : `${route.title} | ${SITE_NAME}`;
+  const description = route.description || "";
+
+  let html = isHome ? baseHTML : baseWithoutOrgJsonLd;
+
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${attr(fullTitle)}</title>`);
   html = html.replace(
     /<meta name="description" content="[^"]*"\s*\/?>/,
-    `<meta name="description" content="${description}" />`
+    `<meta name="description" content="${attr(description)}" />`
   );
-
-  // 3. Add canonical link (insert before </head>)
-  html = html.replace(
-    "</head>",
-    `  <link rel="canonical" href="${canonicalUrl}" />\n  </head>`
-  );
-
-  // 4. Replace OG tags
   html = html.replace(
     /<meta property="og:title" content="[^"]*"\s*\/?>/,
-    `<meta property="og:title" content="${fullTitle}" />`
+    `<meta property="og:title" content="${attr(fullTitle)}" />`
   );
   html = html.replace(
     /<meta property="og:description" content="[^"]*"\s*\/?>/,
-    `<meta property="og:description" content="${description}" />`
+    `<meta property="og:description" content="${attr(description)}" />`
   );
-  html = html.replace(
-    /<meta property="og:url" content="[^"]*"\s*\/?>/,
-    `<meta property="og:url" content="${canonicalUrl}" />`
-  );
-
-  // 5. Replace Twitter tags
   html = html.replace(
     /<meta name="twitter:title" content="[^"]*"\s*\/?>/,
-    `<meta name="twitter:title" content="${fullTitle}" />`
+    `<meta name="twitter:title" content="${attr(fullTitle)}" />`
   );
   html = html.replace(
     /<meta name="twitter:description" content="[^"]*"\s*\/?>/,
-    `<meta name="twitter:description" content="${description}" />`
+    `<meta name="twitter:description" content="${attr(description)}" />`
   );
 
-  // 6. Write the file
-  const filePath =
-    route.path === "/"
-      ? join(DIST, "index.html")
-      : join(DIST, route.path.slice(1), "index.html");
+  // Drop the placeholders that the base document ships with, so the values
+  // written below are the only ones present.
+  html = html.replace(/[ \t]*<meta property="og:type" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta property="og:image" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta name="twitter:card" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta name="twitter:image" content="[^"]*"\s*\/?>\n?/g, "");
+
+  html = html.replace("</head>", `${buildHeadTags(route)}\n  </head>`);
+
+  if (route.post && hreflangFor(route.post.slug)) withHreflang++;
+
+  const filePath = isHome
+    ? join(DIST, "index.html")
+    : join(DIST, route.path.slice(1), "index.html");
 
   const dir = dirname(filePath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
   writeFileSync(filePath, html, "utf-8");
   created++;
 }
 
-console.log(`\n\u2705 Prerendered SEO meta tags for ${created} routes.\n`);
+// ── Neutral SPA shell ───────────────────────────────────────────────────────
+//
+// dist/index.html is BOTH the homepage and, via the rewrite in vercel.json, the
+// document served for any route without a prerendered file. Those two jobs
+// conflict: an unknown URL used to be served the homepage's title and the
+// homepage's canonical, so every stray URL declared itself a copy of the
+// homepage.
+//
+// Split them. index.html keeps the real homepage head; app.html is a neutral
+// shell with a generic title and NO canonical, and vercel.json points the
+// rewrite at it. The app still boots identically - it is the same bundle.
+//
+// The shell is deliberately not noindex: real app routes are served through it
+// and manage their own robots meta via useSEO({ noindex: true }), and a blanket
+// noindex here would be invisible to those pages but fatal if a marketing route
+// ever fell through.
+
+const shellHTML = baseWithoutOrgJsonLd
+  .replace(/<title>[^<]*<\/title>/, `<title>${SITE_NAME}</title>`)
+  .replace(
+    /<meta name="description" content="[^"]*"\s*\/?>/,
+    `<meta name="description" content="Klovers Korean Lovers Academy." />`
+  )
+  // No canonical, no og:url, no og:title: an unknown route must not claim to be
+  // any particular page.
+  .replace(/[ \t]*<meta property="og:title" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta property="og:description" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta name="twitter:title" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta name="twitter:description" content="[^"]*"\s*\/?>\n?/g, "");
+
+writeFileSync(join(DIST, "app.html"), shellHTML, "utf-8");
+console.log("   Wrote dist/app.html (neutral shell for unmatched routes).");
+
+console.log(
+  `\n✅ Prerendered ${created} routes ` +
+    `(${MARKETING_ROUTES.length} marketing + ${blogRoutes.length} blog` +
+    `${usedCache ? ", FROM CACHE" : ""}).`
+);
+console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.\n`);

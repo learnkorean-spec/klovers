@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
 
 type PageState = "loading" | "success" | "already" | "error";
 
 const TrialConfirmPage = () => {
+  // Transactional page: real content for the signed-in user, nothing a
+  // search result should land on. Mirrors the Disallow in robots.txt.
+  useSEO({ title: "Trial Confirmation", description: "Confirm your Klovers free trial booking.", noindex: true });
+
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id") ?? "";
   const token = searchParams.get("token") ?? "";

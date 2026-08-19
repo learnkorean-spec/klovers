@@ -118,10 +118,14 @@ interface BookingResult {
 
 const TrialBookingPage = () => {
   const { t, language } = useLanguage();
+  // Transactional page behind auth: a real page for the signed-in user, but
+  // nothing a search result should land on. Mirrors the Disallow in robots.txt.
+  // The canonical is dropped with it - a noindex page should not nominate
+  // itself as the preferred version of anything.
   useSEO({
     title: "Pick Your Free Trial Slot | Klovers Academy",
     description: "Confirm your free Korean trial class. Pick a day and time that works for you.",
-    canonical: "https://kloversegy.com/trial-booking",
+    noindex: true,
   });
 
   const navigate = useNavigate();

@@ -24,4 +24,29 @@ Disallow: /textbook/
 Disallow: /review
 Disallow: /daily-quiz
 
+# Transactional / per-user flows — real pages, but nothing a search result
+# should ever land on. Each also sets noindex client-side.
+Disallow: /complete-profile
+Disallow: /trial-confirm
+Disallow: /rsvp
+Disallow: /trial-booking
+Disallow: /progress-report
+Disallow: /certificate
+Disallow: /hangul-book
+Disallow: /trial-book
+Disallow: /enrollment-status
+
+# AI crawlers — explicitly allowed. Klovers wants to be citable in AI answers.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
 Sitemap: https://kloversegy.com/sitemap.xml

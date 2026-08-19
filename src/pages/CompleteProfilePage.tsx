@@ -17,6 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSEO } from "@/hooks/useSEO";
 
 const COUNTRIES = [
   "Egypt", "Saudi Arabia", "UAE", "Kuwait", "Qatar", "Bahrain", "Oman",
@@ -26,6 +27,10 @@ const COUNTRIES = [
 ];
 
 const CompleteProfilePage = () => {
+  // Transactional page: real content for the signed-in user, nothing a
+  // search result should land on. Mirrors the Disallow in robots.txt.
+  useSEO({ title: "Complete Your Profile", description: "Finish setting up your Klovers account.", noindex: true });
+
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const emailFromUrl = searchParams.get("email") || "";
