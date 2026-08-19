@@ -295,7 +295,10 @@ const jsonLd = (obj) =>
 function buildHeadTags(route) {
   const isHome = route.path === "/";
   const isPost = Boolean(route.post);
-  const url = `${BASE_URL}${isHome ? "" : route.path}`;
+  // Root keeps its slash - "/" IS the path. Sub-paths never get a trailing
+  // slash. This must match api/sitemap.xml.js exactly or the canonical and
+  // the sitemap entry disagree.
+  const url = `${BASE_URL}${isHome ? "/" : route.path}`;
   const fullTitle = route.title.includes(SITE_NAME)
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
@@ -434,6 +437,40 @@ for (const route of routes) {
   writeFileSync(filePath, html, "utf-8");
   created++;
 }
+
+// ── Neutral SPA shell ───────────────────────────────────────────────────────
+//
+// dist/index.html is BOTH the homepage and, via the rewrite in vercel.json, the
+// document served for any route without a prerendered file. Those two jobs
+// conflict: an unknown URL used to be served the homepage's title and the
+// homepage's canonical, so every stray URL declared itself a copy of the
+// homepage.
+//
+// Split them. index.html keeps the real homepage head; app.html is a neutral
+// shell with a generic title and NO canonical, and vercel.json points the
+// rewrite at it. The app still boots identically - it is the same bundle.
+//
+// The shell is deliberately not noindex: real app routes are served through it
+// and manage their own robots meta via useSEO({ noindex: true }), and a blanket
+// noindex here would be invisible to those pages but fatal if a marketing route
+// ever fell through.
+
+const shellHTML = baseWithoutOrgJsonLd
+  .replace(/<title>[^<]*<\/title>/, `<title>${SITE_NAME}</title>`)
+  .replace(
+    /<meta name="description" content="[^"]*"\s*\/?>/,
+    `<meta name="description" content="Klovers Korean Lovers Academy." />`
+  )
+  // No canonical, no og:url, no og:title: an unknown route must not claim to be
+  // any particular page.
+  .replace(/[ \t]*<meta property="og:title" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta property="og:description" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta name="twitter:title" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(/[ \t]*<meta name="twitter:description" content="[^"]*"\s*\/?>\n?/g, "");
+
+writeFileSync(join(DIST, "app.html"), shellHTML, "utf-8");
+console.log("   Wrote dist/app.html (neutral shell for unmatched routes).");
 
 console.log(
   `\n✅ Prerendered ${created} routes ` +
