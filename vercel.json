@@ -49,6 +49,10 @@
   ],
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap.xml"
+    },
+    {
       "source": "/((?!api|assets|videos|klovers-logo\\.jpg|klovers-mascot\\.svg|instagram-posts\\.html|favicon\\.ico|placeholder\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|sw\\.js|app\\.html|8f8e25f6c4d7b10abab899f355a7e529\\.txt).*)",
       "destination": "/app.html"
     }
