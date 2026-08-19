@@ -21,7 +21,7 @@
  *   3. canonical is present and equals the page's own URL
  *   4. no two routes share a canonical
  *   5. robots.txt names exactly one sitemap, and it is the expected URL
- *   6. www 301s to the apex                        (live only)
+ *   6. www permanently redirects (301 or 308) to the apex  (live only)
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
@@ -159,7 +159,11 @@ if (MODE === "live") {
   try {
     const r = await fetch(`https://www.kloversegy.com/`, { redirect: "manual" });
     const loc = r.headers.get("location") || "";
-    wwwOk = r.status === 301 && loc.startsWith(BASE_URL);
+    // Vercel answers `"permanent": true` with 308, not 301. Both are permanent
+    // redirects and Google treats them identically for consolidation; 308 also
+    // preserves the request method. Accept either, reject 302/307.
+    const permanent = r.status === 301 || r.status === 308;
+    wwwOk = permanent && loc.startsWith(BASE_URL);
     wwwDetail = `${r.status} -> ${loc || "(no Location)"}`;
   } catch (e) {
     wwwOk = false;
@@ -182,7 +186,7 @@ const summary = [
   ["canonical == own URL", `${results.filter((r) => r.canonicalOk).length}/${results.length}`, tick(results.every((r) => r.canonicalOk))],
   ["canonical is unique", `${results.filter((r) => r.canonicalUnique).length}/${results.length}`, tick(results.every((r) => r.canonicalUnique))],
   ["robots.txt names 1 sitemap", robotsErr ? `error: ${robotsErr}` : robotsSitemaps.join(", ") || "(none)", tick(robotsOk)],
-  ["www 301 -> apex", wwwDetail, tick(wwwOk)],
+  ["www 301/308 -> apex", wwwDetail, tick(wwwOk)],
 ];
 
 const w0 = Math.max(...summary.map((r) => r[0].length));
