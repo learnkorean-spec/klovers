@@ -1,0 +1,3006 @@
+{
+ "generatedAt": "2026-08-19T11:30:00.000Z",
+ "note": "Seed cache committed to git so the fallback has a route list to use on a fresh Vercel checkout. Rewritten on every successful build.",
+ "routes": [
+  {
+   "path": "/blog/korean-conditional-sentences-guide",
+   "title": "Korean Conditional Sentences: How to Use -으면 and -다면",
+   "description": "Learn Korean conditional sentences with -으면 and -다면 — the two most common ways to say \"if\" in Korean, with tables, examples, and common mistakes to avoid.",
+   "post": {
+    "slug": "korean-conditional-sentences-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
+    "heroAlt": "Student writing Korean grammar notes about conditional sentences",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-07-03T16:12:00+00:00",
+    "updatedAt": "2026-08-18T08:26:31.413125+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-conditional-sentences-guide-ar",
+   "title": "جمل الشرط الكورية: كيف تستخدم -으면 و -다면",
+   "description": "دليلك الكامل لجمل الشرط في اللغة الكورية باستخدام -으면 و -다면 مع جداول وأمثلة والأخطاء الشائعة التي يجب تجنبها لإتقان القواعد الكورية.",
+   "post": {
+    "slug": "korean-conditional-sentences-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
+    "heroAlt": "طالبة تكتب ملاحظات عن قواعد جمل الشرط الكورية",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-07-01T23:24:00+00:00",
+    "updatedAt": "2026-07-05T16:49:10.443003+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-irregular-verbs-guide",
+   "title": "Korean Irregular Verbs: ㅂ, ㄷ, 르, ㅅ Conjugation Rules Explained",
+   "description": "Master Korean irregular verbs — ㅂ, ㄷ, 르, and ㅅ irregular conjugation — with clear tables, real examples, and the false friends that trip up beginners.",
+   "post": {
+    "slug": "korean-irregular-verbs-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-verbs.jpg",
+    "heroAlt": "Notebook page showing Korean irregular verb conjugation practice",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-30T06:36:00+00:00",
+    "updatedAt": "2026-08-18T08:17:50.950042+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-irregular-verbs-guide-ar",
+   "title": "الأفعال الكورية غير المنتظمة: قواعد تصريف ㅂ و ㄷ و 르 و ㅅ",
+   "description": "تعلم قواعد الأفعال الكورية غير المنتظمة ㅂ و ㄷ و 르 و ㅅ بجداول واضحة وأمثلة حقيقية والاستثناءات التي تربك المبتدئين.",
+   "post": {
+    "slug": "korean-irregular-verbs-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-verbs.jpg",
+    "heroAlt": "دفتر يعرض تدريبات تصريف الأفعال الكورية غير المنتظمة",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-28T13:48:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-connectors-conjunctions-guide",
+   "title": "Korean Connectors: 그런데, 그래서, 하지만 and More Sentence Linkers",
+   "description": "Learn the Korean connectors and conjunctions you need for natural conversation — 그런데, 그래서, 하지만, 그리고, 그러면 — with meanings, examples, and usage tips.",
+   "post": {
+    "slug": "korean-connectors-conjunctions-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=1200&q=80",
+    "heroAlt": "Korean sentence connectors written on a whiteboard",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-26T21:00:00+00:00",
+    "updatedAt": "2026-08-15T08:19:31.815481+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-connectors-conjunctions-guide-ar",
+   "title": "أدوات الربط الكورية: 그런데 و 그래서 و 하지만 وغيرها من روابط الجمل",
+   "description": "تعلم أدوات الربط الكورية الأساسية للمحادثة الطبيعية — 그런데، 그래서، 하지만، 그리고، 그러면 — مع المعاني والأمثلة ونصائح الاستخدام.",
+   "post": {
+    "slug": "korean-connectors-conjunctions-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=1200&q=80",
+    "heroAlt": "أدوات ربط الجمل الكورية مكتوبة على سبورة",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-25T04:12:00+00:00",
+    "updatedAt": "2026-07-05T16:49:10.443003+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-proverbs-idioms-guide",
+   "title": "Korean Proverbs and Four-Character Idioms Every Learner Should Know",
+   "description": "Discover essential Korean proverbs (속담) and four-character idioms (사자성어) with meanings, literal translations, and how native speakers actually use them.",
+   "post": {
+    "slug": "korean-proverbs-idioms-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1480694313141-fce5e697ee25?w=1200&q=80",
+    "heroAlt": "Traditional Korean calligraphy representing proverbs and idioms",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-23T11:24:00+00:00",
+    "updatedAt": "2026-08-15T08:19:41.394868+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-proverbs-idioms-guide-ar",
+   "title": "الأمثال الكورية والتعابير المكونة من أربعة أحرف التي يجب أن يعرفها كل متعلم",
+   "description": "تعرّف على أهم الأمثال الكورية (속담) والتعابير المكونة من أربعة أحرف (사자성어) بمعانيها الحرفية والحقيقية وكيف يستخدمها الناطقون الأصليون فعلياً.",
+   "post": {
+    "slug": "korean-proverbs-idioms-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1480694313141-fce5e697ee25?w=1200&q=80",
+    "heroAlt": "خط كوري تقليدي يمثل الأمثال والتعابير الكورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-21T18:36:00+00:00",
+    "updatedAt": "2026-07-05T16:49:10.443003+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-animal-vocabulary-sounds",
+   "title": "Korean Animal Vocabulary and the Sounds They Make",
+   "description": "Learn Korean animal names and the fun onomatopoeia Koreans use for animal sounds — from 멍멍 (woof) to 야옹 (meow) — with a full vocabulary table and example sentences.",
+   "post": {
+    "slug": "korean-animal-vocabulary-sounds",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-onomatopoeia.jpg",
+    "heroAlt": "Illustrated animals with Korean vocabulary labels",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-20T01:48:00+00:00",
+    "updatedAt": "2026-07-22T17:41:40.584409+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-animal-vocabulary-sounds-ar",
+   "title": "مفردات الحيوانات الكورية والأصوات التي تصدرها",
+   "description": "تعلم أسماء الحيوانات بالكورية والألفاظ الطريفة التي يستخدمها الكوريون لأصوات الحيوانات — من 멍멍 (نباح) إلى 야옹 (مواء) — مع جدول مفردات كامل وأمثلة.",
+   "post": {
+    "slug": "korean-animal-vocabulary-sounds-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-onomatopoeia.jpg",
+    "heroAlt": "رسوم حيوانات مع تسميات مفردات كورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-18T09:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-color-vocabulary-guide",
+   "title": "Korean Color Vocabulary: Names, Shades and Cultural Meaning",
+   "description": "Learn Korean color names from basic hues to shades, plus the cultural meaning of colors like red, white, and gold in Korean tradition and everyday life.",
+   "post": {
+    "slug": "korean-color-vocabulary-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-colors.jpg",
+    "heroAlt": "Color swatches with Korean color vocabulary labels",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-16T16:12:00+00:00",
+    "updatedAt": "2026-08-18T08:26:10.353946+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-color-vocabulary-guide-ar",
+   "title": "مفردات الألوان الكورية: الأسماء والدرجات والمعنى الثقافي",
+   "description": "تعلم أسماء الألوان بالكورية من الدرجات الأساسية إلى التفاصيل، بالإضافة إلى المعنى الثقافي لألوان مثل الأحمر والأبيض والذهبي في التراث الكوري.",
+   "post": {
+    "slug": "korean-color-vocabulary-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-colors.jpg",
+    "heroAlt": "عينات ألوان مع تسميات مفردات كورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-14T23:24:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-body-parts-vocabulary",
+   "title": "Korean Body Parts Vocabulary: The Complete Illustrated List",
+   "description": "Learn Korean body parts vocabulary from head to toe, plus how to describe pain and symptoms at a Korean pharmacy or doctor's office, with a full table and examples.",
+   "post": {
+    "slug": "korean-body-parts-vocabulary",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1200&q=80",
+    "heroAlt": "Diagram of the human body labeled with Korean vocabulary",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-13T06:36:00+00:00",
+    "updatedAt": "2026-07-05T16:51:40.275012+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-body-parts-vocabulary-ar",
+   "title": "مفردات أعضاء الجسم بالكورية: القائمة المصورة الكاملة",
+   "description": "تعلم مفردات أعضاء الجسم بالكورية من الرأس حتى القدم، وكيف تصف الألم والأعراض في صيدلية أو عيادة كورية، مع جدول كامل وأمثلة عملية.",
+   "post": {
+    "slug": "korean-body-parts-vocabulary-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1200&q=80",
+    "heroAlt": "رسم لجسم الإنسان موضح عليه المفردات الكورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-11T13:48:00+00:00",
+    "updatedAt": "2026-07-05T16:51:40.275012+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-clothing-fashion-vocabulary",
+   "title": "Korean Clothing and Fashion Vocabulary Guide",
+   "description": "Learn essential Korean clothing and fashion vocabulary for shopping, describing outfits, and talking about K-fashion trends, with a full vocabulary table and phrases.",
+   "post": {
+    "slug": "korean-clothing-fashion-vocabulary",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-streetwear.jpg",
+    "heroAlt": "Korean clothing items labeled with vocabulary for learners",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-09T21:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-clothing-fashion-vocabulary-ar",
+   "title": "دليل مفردات الملابس والموضة بالكورية",
+   "description": "تعلم أهم مفردات الملابس والموضة الكورية للتسوق ووصف الإطلالات ومتابعة صيحات الموضة الكورية K-fashion، مع جدول مفردات كامل وعبارات عملية.",
+   "post": {
+    "slug": "korean-clothing-fashion-vocabulary-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-streetwear.jpg",
+    "heroAlt": "قطع ملابس كورية موضح عليها المفردات للمتعلمين",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-08T04:12:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-transportation-guide-seoul",
+   "title": "Getting Around Seoul: Korean Transportation Vocabulary and Phrases",
+   "description": "Learn the Korean transportation vocabulary and phrases you need to navigate Seoul's subway, buses, and taxis like a local, with a full vocabulary table and travel tips.",
+   "post": {
+    "slug": "korean-transportation-guide-seoul",
+    "lang": "en",
+    "heroImage": "/assets/blog/jeju-travel.jpg",
+    "heroAlt": "Seoul subway platform with Korean signage",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-06T11:24:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-transportation-guide-seoul-ar",
+   "title": "التنقل في سيول: مفردات وعبارات المواصلات الكورية",
+   "description": "تعلم مفردات وعبارات المواصلات الكورية التي تحتاجها للتنقل في مترو وحافلات وتاكسي سيول مثل السكان المحليين، مع جدول مفردات كامل ونصائح سفر.",
+   "post": {
+    "slug": "korean-transportation-guide-seoul-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/jeju-travel.jpg",
+    "heroAlt": "رصيف مترو سيول مع لافتات كورية",
+    "articleType": "howto",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-04T18:36:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-telling-time-dates-guide",
+   "title": "How to Tell Time and Dates in Korean (Native vs Sino-Korean Numbers)",
+   "description": "Learn how to tell time and dates in Korean using both native Korean and Sino-Korean number systems, with clear rules, tables, and example sentences.",
+   "post": {
+    "slug": "korean-telling-time-dates-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1200&q=80",
+    "heroAlt": "Clock and calendar with Korean time vocabulary",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-06-03T01:48:00+00:00",
+    "updatedAt": "2026-08-16T08:01:29.351713+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-telling-time-dates-guide-ar",
+   "title": "كيف تخبر الوقت والتاريخ بالكورية (الأرقام الأصلية مقابل الصينية-الكورية)",
+   "description": "تعلم كيفية قول الوقت والتاريخ بالكورية باستخدام نظامي الأرقام الأصلي والصيني-الكوري، مع قواعد واضحة وجداول وأمثلة عملية.",
+   "post": {
+    "slug": "korean-telling-time-dates-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1200&q=80",
+    "heroAlt": "ساعة وتقويم مع مفردات الوقت الكورية",
+    "articleType": "howto",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-06-01T09:00:00+00:00",
+    "updatedAt": "2026-07-05T16:51:40.275012+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-hobbies-free-time-vocabulary",
+   "title": "Korean Hobbies and Free Time Vocabulary",
+   "description": "Learn how to talk about hobbies and free time in Korean, with vocabulary for sports, reading, gaming, and music, plus example sentences using 취미.",
+   "post": {
+    "slug": "korean-hobbies-free-time-vocabulary",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
+    "heroAlt": "People enjoying hobbies with Korean vocabulary labels",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-30T16:12:00+00:00",
+    "updatedAt": "2026-07-05T16:54:27.005479+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-hobbies-free-time-vocabulary-ar",
+   "title": "مفردات الهوايات ووقت الفراغ بالكورية",
+   "description": "تعلم كيف تتحدث عن الهوايات ووقت الفراغ بالكورية، مع مفردات الرياضة والقراءة والألعاب والموسيقى، وأمثلة جمل باستخدام كلمة 취미.",
+   "post": {
+    "slug": "korean-hobbies-free-time-vocabulary-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
+    "heroAlt": "أشخاص يمارسون هوايات مع تسميات مفردات كورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-28T23:24:00+00:00",
+    "updatedAt": "2026-07-05T16:54:27.005479+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-idol-fandom-glossary",
+   "title": "K-Pop Fandom Glossary: Bias, Maknae, Comeback and More Explained",
+   "description": "Decode K-pop fandom slang with this complete glossary — bias, maknae, comeback, stan, and more — explained in plain English with real Korean terms behind them.",
+   "post": {
+    "slug": "korean-idol-fandom-glossary",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-slang.jpg",
+    "heroAlt": "K-pop concert lightsticks representing fandom culture",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-27T06:36:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-idol-fandom-glossary-ar",
+   "title": "معجم مصطلحات معجبي الكيبوب: Bias و Maknae و Comeback وأكثر",
+   "description": "افهم مصطلحات عالم معجبي الكيبوب بهذا المعجم الشامل — بايس وماكناي وكامباك وستان وأكثر — مشروحة ببساطة مع الكلمات الكورية الحقيقية وراءها.",
+   "post": {
+    "slug": "korean-idol-fandom-glossary-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-slang.jpg",
+    "heroAlt": "أضواء حفل كيبوب ترمز لثقافة المعجبين",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-25T13:48:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-military-service-explained",
+   "title": "Korean Military Service Explained: Why K-Pop Idols and Actors Enlist",
+   "description": "Understand South Korea's mandatory military service system, why K-pop idols and actors enlist mid-career, and the Korean vocabulary around 입대 and 군대.",
+   "post": {
+    "slug": "korean-military-service-explained",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-military.jpg",
+    "heroAlt": "Korean flag representing national military service tradition",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-23T21:00:00+00:00",
+    "updatedAt": "2026-08-06T11:48:53.555414+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-military-service-explained-ar",
+   "title": "الخدمة العسكرية الكورية: لماذا يلتحق نجوم الكيبوب والممثلون بالجيش",
+   "description": "افهم نظام الخدمة العسكرية الإلزامية في كوريا الجنوبية، ولماذا يلتحق نجوم الكيبوب والممثلون بالجيش في منتصف مسيرتهم، والمفردات الكورية حول 입대 و 군대.",
+   "post": {
+    "slug": "korean-military-service-explained-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-military.jpg",
+    "heroAlt": "العلم الكوري يرمز لتقليد الخدمة العسكرية الوطنية",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-22T04:12:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-education-system-hagwon-culture",
+   "title": "Korean Education System and Hagwon Culture Explained",
+   "description": "Understand South Korea's intense education system and the hagwon (private academy) culture that shapes daily life for millions of Korean students.",
+   "post": {
+    "slug": "korean-education-system-hagwon-culture",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-education.jpg",
+    "heroAlt": "Korean students studying, representing hagwon academy culture",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-20T11:24:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-education-system-hagwon-culture-ar",
+   "title": "نظام التعليم الكوري وثقافة الهاغوون (المعاهد الخاصة) بالشرح",
+   "description": "افهم نظام التعليم المكثف في كوريا الجنوبية وثقافة الهاغوون (المعاهد الخاصة) التي تشكّل الحياة اليومية لملايين الطلاب الكوريين.",
+   "post": {
+    "slug": "korean-education-system-hagwon-culture-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-education.jpg",
+    "heroAlt": "طلاب كوريون يدرسون، يمثلون ثقافة معاهد الهاغوون",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-18T18:36:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-wedding-traditions-guide",
+   "title": "Korean Wedding Traditions: Modern and Traditional Customs",
+   "description": "Explore Korean wedding traditions from the modern Western-style ceremony to the traditional Pyebaek ritual, with key vocabulary and cultural meaning explained.",
+   "post": {
+    "slug": "korean-wedding-traditions-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-wedding.jpg",
+    "heroAlt": "Traditional Korean wedding hanbok and pyebaek ceremony setting",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-17T01:48:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-wedding-traditions-guide-ar",
+   "title": "تقاليد الزفاف الكورية: العادات الحديثة والتقليدية",
+   "description": "استكشف تقاليد الزفاف الكورية من الحفل الحديث بالطراز الغربي إلى طقس البييباك التقليدي، مع أهم المفردات والمعنى الثقافي وراءها.",
+   "post": {
+    "slug": "korean-wedding-traditions-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-wedding.jpg",
+    "heroAlt": "هانبوك زفاف كوري تقليدي وطقس البييباك",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-15T09:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-drinking-culture-soju-etiquette",
+   "title": "Korean Drinking Culture: Soju Etiquette and Rules Every Beginner Should Know",
+   "description": "Learn the unwritten rules of Korean drinking culture and soju etiquette — pouring, turning away to drink, and the vocabulary you need for a night out in Korea.",
+   "post": {
+    "slug": "korean-drinking-culture-soju-etiquette",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-soju.jpg",
+    "heroAlt": "Soju bottles and glasses representing Korean drinking culture",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-13T16:12:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-drinking-culture-soju-etiquette-ar",
+   "title": "ثقافة الشرب الكورية: آداب السوجو والقواعد التي يجب أن يعرفها كل مبتدئ",
+   "description": "تعرّف على القواعد غير المكتوبة لثقافة الشرب الكورية وآداب السوجو — الصب والاستدارة عند الشرب والمفردات التي تحتاجها لسهرة في كوريا.",
+   "post": {
+    "slug": "korean-drinking-culture-soju-etiquette-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-soju.jpg",
+    "heroAlt": "زجاجات وكؤوس سوجو ترمز لثقافة الشرب الكورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-11T23:24:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-street-food-guide",
+   "title": "Korean Street Food Guide: Must-Try Dishes and Vocabulary",
+   "description": "Explore Korea's best street food dishes, from tteokbokki to hotteok, with the Korean vocabulary and phrases you need to order confidently at any pojangmacha.",
+   "post": {
+    "slug": "korean-street-food-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/tteokbokki.jpg",
+    "heroAlt": "Korean street food stall with tteokbokki and skewers",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-10T06:36:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-street-food-guide-ar",
+   "title": "دليل أكل الشارع الكوري: أطباق ومفردات يجب تجربتها",
+   "description": "استكشف أفضل أطباق أكل الشارع الكوري، من التوكبوكي إلى الهوتوك، مع المفردات والعبارات الكورية التي تحتاجها للطلب بثقة في أي عربة طعام.",
+   "post": {
+    "slug": "korean-street-food-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/tteokbokki.jpg",
+    "heroAlt": "عربة أكل شارع كورية تعرض التوكبوكي والأسياخ",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-08T13:48:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-convenience-store-culture",
+   "title": "Korean Convenience Store Culture: A Guide to Pyeoneuijeom (편의점)",
+   "description": "Discover why Korean convenience stores (편의점) are a cultural institution, from instant meals to outdoor seating, with vocabulary for your next visit.",
+   "post": {
+    "slug": "korean-convenience-store-culture",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-food-culture.jpg",
+    "heroAlt": "Korean convenience store storefront at night",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-06T21:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-convenience-store-culture-ar",
+   "title": "ثقافة المتاجر الكورية الصغيرة: دليل بيونويجوم (편의점)",
+   "description": "اكتشف لماذا تُعد متاجر الراحة الكورية (편의점) مؤسسة ثقافية حقيقية، من الوجبات السريعة إلى الجلسات الخارجية، مع مفردات لزيارتك القادمة.",
+   "post": {
+    "slug": "korean-convenience-store-culture-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-food-culture.jpg",
+    "heroAlt": "واجهة متجر كوري صغير مضاء ليلاً",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-05T04:12:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-housing-terms-explained",
+   "title": "Korean Housing Terms Explained: Jeonse, Wolse and Officetel",
+   "description": "Understand Korea's unique housing system — jeonse, wolse, and officetel — with clear explanations and the vocabulary you need if you ever rent in Korea.",
+   "post": {
+    "slug": "korean-housing-terms-explained",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80",
+    "heroAlt": "Seoul apartment buildings representing Korean housing system",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-05-03T11:24:00+00:00",
+    "updatedAt": "2026-07-05T16:57:13.233136+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-housing-terms-explained-ar",
+   "title": "مصطلحات السكن الكورية بالشرح: جونسيه وولسيه وأوفيستيل",
+   "description": "افهم نظام السكن الكوري الفريد — الجونسيه والولسيه والأوفيستيل — بشرح واضح والمفردات التي ستحتاجها إذا استأجرت سكناً في كوريا يوماً ما.",
+   "post": {
+    "slug": "korean-housing-terms-explained-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80",
+    "heroAlt": "مبانٍ سكنية في سيول تمثل نظام السكن الكوري",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-05-01T18:36:00+00:00",
+    "updatedAt": "2026-07-05T16:57:13.233136+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-future-tense-plans-guide",
+   "title": "Korean Future Tense: How to Talk About Plans and Intentions",
+   "description": "Learn how to express the future in Korean using -을/ㄹ 거예요 and -겠어요, with clear rules, tables, and examples for talking about plans and intentions.",
+   "post": {
+    "slug": "korean-future-tense-plans-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=1200&q=80",
+    "heroAlt": "Calendar and planner representing Korean future tense grammar",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-30T01:48:00+00:00",
+    "updatedAt": "2026-07-05T16:57:13.233136+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-passive-voice-grammar",
+   "title": "Korean Passive Voice: How to Use -이/히/리/기 Verbs",
+   "description": "Learn the Korean passive voice with -이/히/리/기 verb endings — how they form, what they mean, and how they differ from the -아/어지다 passive pattern.",
+   "post": {
+    "slug": "korean-passive-voice-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80",
+    "heroAlt": "Notebook showing Korean passive voice verb conjugation",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-24T16:12:00+00:00",
+    "updatedAt": "2026-07-11T13:45:27.579628+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-shamanism-mudang-kdrama-tradition",
+   "title": "Korean Shamanism (Mudang): The Spiritual Tradition Behind",
+   "description": "A clear intro to korean shamanism and the mudang — rituals, gut ceremonies, K-drama references, and why this 5,000-year-old tradition is trending again.",
+   "post": {
+    "slug": "korean-shamanism-mudang-kdrama-tradition",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-shamanism-mudang-kdrama-tradition-1776781586881.jpg",
+    "heroAlt": "Korean shaman (mudang) performing a gut ritual",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:04.010904+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-myths-legends-stories-kdrama-fans",
+   "title": "Korean Myths and Legends: 10 Stories Every K-Drama Fan",
+   "description": "Discover 10 essential korean myths and legends — from the Nine-Tailed Fox to Dokkaebi and Dangun — the stories behind every K-drama plot twist.",
+   "post": {
+    "slug": "korean-myths-legends-stories-kdrama-fans",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-myths-legends-stories-kdrama-fans-1776781573675.jpg",
+    "heroAlt": "Korean mythology and legendary creatures illustration",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-30T12:24:08.991724+00:00"
+   }
+  },
+  {
+   "path": "/blog/jeoseung-saja-korean-grim-reaper-symbolism",
+   "title": "Jeoseung Saja: The Korean Grim Reaper Story and Symbolism",
+   "description": "Meet the jeoseung saja korean grim reaper — origin, duties, K-drama icons, and how three reapers guide each soul in Korean folklore.",
+   "post": {
+    "slug": "jeoseung-saja-korean-grim-reaper-symbolism",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-jeoseung-saja-korean-grim-reaper-symbolism-1776781577047.jpg",
+    "heroAlt": "Jeoseung Saja Korean Grim Reaper in black hanbok",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:04.813666+00:00"
+   }
+  },
+  {
+   "path": "/blog/gumiho-nine-tailed-fox-korean-folklore",
+   "title": "Gumiho Explained: The Nine-Tailed Fox in Korean Folklore",
+   "description": "Everything about the gumiho nine-tailed fox — origin, legends, K-drama adaptations, and why this 1,000-year-old myth still hypnotizes modern audiences.",
+   "post": {
+    "slug": "gumiho-nine-tailed-fox-korean-folklore",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-gumiho-nine-tailed-fox-korean-folklore-1776781575020.jpg",
+    "heroAlt": "Gumiho nine-tailed fox in Korean folklore",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-05-22T06:31:18.75516+00:00"
+   }
+  },
+  {
+   "path": "/blog/dokkaebi-korean-goblin-myth-kdrama",
+   "title": "Dokkaebi: The Korean Goblin Myth Behind the Hit K-Drama",
+   "description": "The complete dokkaebi korean goblin guide — origins, powers, symbolism, buckwheat lore, and how the 2016 K-drama Goblin made Dokkaebi a global icon.",
+   "post": {
+    "slug": "dokkaebi-korean-goblin-myth-kdrama",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-dokkaebi-korean-goblin-myth-kdrama-1776781575921.jpg",
+    "heroAlt": "Dokkaebi Korean goblin from folklore",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-05-22T06:31:18.739784+00:00"
+   }
+  },
+  {
+   "path": "/blog/what-is-jeong-korean-untranslatable-concept",
+   "title": "What Is Jeong (정)? The Korean Concept You Cannot Translate",
+   "description": "Explore jeong — the untranslatable Korean emotion of deep attachment, why it shapes every K-drama, and how to recognize and build jeong in daily life.",
+   "post": {
+    "slug": "what-is-jeong-korean-untranslatable-concept",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-what-is-jeong-korean-untranslatable-concept-1776781578949.jpg",
+    "heroAlt": "Korean family sharing food, expressing jeong",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-08-15T03:59:43.723244+00:00"
+   }
+  },
+  {
+   "path": "/blog/nunchi-korean-social-superpower-guide",
+   "title": "Nunchi: The Korean Social Superpower (And How to Learn It)",
+   "description": "Master nunchi — the Korean art of reading the room. Practical steps, K-drama examples, and daily habits to build social intuition like a native Korean.",
+   "post": {
+    "slug": "nunchi-korean-social-superpower-guide",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-nunchi-korean-social-superpower-guide-1776781629064.jpg",
+    "heroAlt": "Nunchi — the Korean social superpower of reading the room",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-08-09T22:47:25.112247+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-ghost-stories-chilling-legends",
+   "title": "Korean Ghost Stories: 7 Chilling Legends From Old Korea",
+   "description": "Read 7 famous korean ghost stories — virgin ghosts, water spirits, Gwishin legends that inspired horror K-dramas from The Cursed to Gonjiam.",
+   "post": {
+    "slug": "korean-ghost-stories-chilling-legends",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-ghost-stories-chilling-legends-1776781581841.png",
+    "heroAlt": "Korean ghost stories and legendary gwishin spirits",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-30T12:18:07.263518+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-superstitions-beliefs-daily-life",
+   "title": "Korean Superstitions: 12 Beliefs That Still Shape Daily Life",
+   "description": "Learn 12 korean superstitions Koreans still practice in 2026 — fan death, red ink, number 4, crow calls, and the cultural stories behind each belief.",
+   "post": {
+    "slug": "korean-superstitions-beliefs-daily-life",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-superstitions-beliefs-daily-life-1776781584257.jpg",
+    "heroAlt": "Korean superstitions and daily life beliefs",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-07-31T07:17:15.166194+00:00"
+   }
+  },
+  {
+   "path": "/blog/seollal-korean-lunar-new-year-guide-2026",
+   "title": "Seollal: How Koreans Celebrate Lunar New Year (2026 Guide)",
+   "description": "Complete seollal korean lunar new year guide — dates, rituals, hanbok, tteokguk, sebae bowing, and how to join the 2026 celebrations as a foreigner.",
+   "post": {
+    "slug": "seollal-korean-lunar-new-year-guide-2026",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-seollal-korean-lunar-new-year-guide-2026-1776781585509.jpg",
+    "heroAlt": "Seollal Korean Lunar New Year with hanbok and tteokguk",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-08-15T03:57:44.829056+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-myths-legends-stories-kdrama-fans-ar",
+   "title": "الأساطير والأساطير الكورية: 10 قصص يجب أن يعرفها كل محبي",
+   "description": "الأساطير والأساطير الكورية — اكتشف 10 أساطير وأساطير كورية أساسية - بدءًا من الثعلب ذو الذيول التسعة وحتى Dokkaebi وDangun - والقصص الكامنة وراء كل تطور في…",
+   "post": {
+    "slug": "korean-myths-legends-stories-kdrama-fans-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-myths-legends-stories-kdrama-fans-1776781573675.jpg",
+    "heroAlt": "الأساطير الكورية والمخلوقات الأسطورية التوضيح",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:09.213002+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-shamanism-mudang-kdrama-tradition-ar",
+   "title": "الشامانية الكورية (مودانغ): التقليد الروحي وراء الدراما",
+   "description": "الشامانية الكورية — مقدمة واضحة للشامانية الكورية وطقوس مودانج، واحتفالات القناة الهضمية، ومراجع الدراما الكورية، ولماذا عاد هذا التقليد البالغ من العمر 5000…",
+   "post": {
+    "slug": "korean-shamanism-mudang-kdrama-tradition-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-shamanism-mudang-kdrama-tradition-1776781586881.jpg",
+    "heroAlt": "الشامان الكوري (مودانغ) يؤدي طقوس الأمعاء",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:08.868669+00:00"
+   }
+  },
+  {
+   "path": "/blog/what-is-jeong-korean-untranslatable-concept-ar",
+   "title": "jeong: ما هو جيونغ (정)؟ المفهوم الكوري الذي لا يمكنك ترجمته",
+   "description": "jeong — اكتشف جيونغ - المشاعر الكورية غير القابلة للترجمة للارتباط العميق، ولماذا تشكل كل الدراما الكورية، وكيفية التعرف على جيونغ وبناءه في الحياة اليومية.",
+   "post": {
+    "slug": "what-is-jeong-korean-untranslatable-concept-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-what-is-jeong-korean-untranslatable-concept-1776781578949.jpg",
+    "heroAlt": "عائلة كورية تتقاسم الطعام وتعبر عن جيونج",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:00.946685+00:00"
+   }
+  },
+  {
+   "path": "/blog/seollal-korean-lunar-new-year-guide-2026-ar",
+   "title": "seollal — السولال — Klovers Korean",
+   "description": "seollal — الدليل الكامل للعام القمري الكوري الجديد - التواريخ والطقوس والهانبوك والتيتوكغوك والانحناء السيباي وكيفية الانضمام إلى احتفالات 2026 كأجنبي.",
+   "post": {
+    "slug": "seollal-korean-lunar-new-year-guide-2026-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-seollal-korean-lunar-new-year-guide-2026-1776781585509.jpg",
+    "heroAlt": "Seollal السنة القمرية الكورية الجديدة مع الهانبوك والتيتوكغوك",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-08-16T08:18:48.941964+00:00"
+   }
+  },
+  {
+   "path": "/blog/nunchi-korean-social-superpower-guide-ar",
+   "title": "النونتشي: القوة الاجتماعية الكورية العظمى (وكيفية تعلمها)",
+   "description": "سيد نونتشي - الفن الكوري لقراءة الغرفة. خطوات عملية وأمثلة من الدراما الكورية والعادات اليومية لبناء الحدس الاجتماعي مثل المواطن الكوري الأصلي.",
+   "post": {
+    "slug": "nunchi-korean-social-superpower-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-nunchi-korean-social-superpower-guide-1776781629064.jpg",
+    "heroAlt": "نونتشي - القوة الاجتماعية الكورية العظمى في قراءة الغرفة",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:07.267271+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-superstitions-beliefs-daily-life-ar",
+   "title": "الخرافات الكورية: 12 معتقدًا لا تزال تشكل الحياة اليومية",
+   "description": "الخرافات الكورية — تعرف على 12 خرافة كورية لا يزال الكوريون يمارسونها في عام 2026 - موت المعجبين، والحبر الأحمر، والرقم 4، ونداءات الغربان، والقصص الثقافية…",
+   "post": {
+    "slug": "korean-superstitions-beliefs-daily-life-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-superstitions-beliefs-daily-life-1776781584257.jpg",
+    "heroAlt": "الخرافات الكورية ومعتقدات الحياة اليومية",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-30T12:22:06.874854+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-ghost-stories-chilling-legends-ar",
+   "title": "قصص الأشباح الكورية: 7 أساطير تقشعر لها الأبدان من كوريا",
+   "description": "قصص الأشباح الكورية — اقرأ 7 قصص أشباح كورية شهيرة - أشباح عذراء، وأرواح مائية، وأساطير غويشين التي ألهمت درامات الرعب الكورية من The Cursed إلى Gonjiam.",
+   "post": {
+    "slug": "korean-ghost-stories-chilling-legends-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-ghost-stories-chilling-legends-1776781581841.png",
+    "heroAlt": "قصص الأشباح الكورية وأرواح جويشين الأسطورية",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:07.945591+00:00"
+   }
+  },
+  {
+   "path": "/blog/jeoseung-saja-korean-grim-reaper-symbolism-ar",
+   "title": "جيوسيونغ ساجا — Jeoseung Saja — Klovers Korean",
+   "description": "جيوسيونغ ساجا — تعرف على حاصد الأرواح الكوري jeoseung saja - أصله وواجباته وأيقونات الدراما الكورية وكيف يرشد ثلاثة حاصدين كل روح في الفولكلور الكوري.",
+   "post": {
+    "slug": "jeoseung-saja-korean-grim-reaper-symbolism-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-jeoseung-saja-korean-grim-reaper-symbolism-1776781577047.jpg",
+    "heroAlt": "جيوسونغ ساجا حاصد الأرواح الكوري يرتدي الهانبوك الأسود",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:13.470208+00:00"
+   }
+  },
+  {
+   "path": "/blog/gumiho-nine-tailed-fox-korean-folklore-ar",
+   "title": "وأوضح جوميهو: الثعلب ذو الذيول التسعة في الفولكلور الكوري",
+   "description": "جوميهو — كل شيء عن ثعلب غوميهو ذو الذيول التسعة - أصله، وأساطيره، وتعديلات الدراما الكورية، ولماذا لا تزال هذه الأسطورة التي يبلغ عمرها 1000 عام تنوم…",
+   "post": {
+    "slug": "gumiho-nine-tailed-fox-korean-folklore-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-gumiho-nine-tailed-fox-korean-folklore-1776781575020.jpg",
+    "heroAlt": "غوميهو ثعلب ذو تسعة ذيول في الفولكلور الكوري",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:06.242053+00:00"
+   }
+  },
+  {
+   "path": "/blog/dokkaebi-korean-goblin-myth-kdrama-ar",
+   "title": "dokkaebi — دوكايبي — Klovers Korean",
+   "description": "dokkaebi — دليل عفريت دوكايبي الكوري الكامل - الأصول، والقوى، والرمزية، وتقاليد الحنطة السوداء، وكيف جعلت الدراما الكورية عفريت عام 2016 من دوكايبي رمزًا…",
+   "post": {
+    "slug": "dokkaebi-korean-goblin-myth-kdrama-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-dokkaebi-korean-goblin-myth-kdrama-1776781575921.jpg",
+    "heroAlt": "عفريت Dokkaebi الكوري من الفولكلور",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T14:27:26.074353+00:00",
+    "updatedAt": "2026-04-21T18:23:06.694196+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-egypt-best-classes-2026",
+   "title": "korean classes in egypt — Best Korean Language Classes in Eg",
+   "description": "Compare the best korean classes in egypt 2026 — online, in Cairo, and Alexandria. Pricing, curriculum, native tutors, and results ranked side by side.",
+   "post": {
+    "slug": "learn-korean-egypt-best-classes-2026",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-learn-korean-egypt-best-classes-2026-1776775015465.jpg",
+    "heroAlt": "Seoul skyline viewed from Namsan tower",
+    "articleType": "review",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-07-24T23:57:47.142417+00:00"
+   }
+  },
+  {
+   "path": "/blog/how-to-introduce-yourself-in-korean",
+   "title": "How to Introduce Yourself in Korean: Complete Beginner Guide",
+   "description": "Learn how to introduce yourself in Korean step by step, from annyeonghaseyo to your name, age, and job — perfect for K-drama fans and beginners.",
+   "post": {
+    "slug": "how-to-introduce-yourself-in-korean",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-how-to-introduce-yourself-in-korean-1776775380340.jpg",
+    "heroAlt": "People wearing Hanbok, ready to introduce themselves in Korean",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-08-19T11:08:18.71697+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-restaurant-ordering-phrases-guide",
+   "title": "Korean Restaurant Phrases: Order Food Like a Local",
+   "description": "Master 60+ essential korean restaurant phrases to order food, ask for the bill, and handle spicy requests in Seoul with confidence.",
+   "post": {
+    "slug": "korean-restaurant-ordering-phrases-guide",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-restaurant-ordering-phrases-guide-1776775009062.jpg",
+    "heroAlt": "Traditional Korean dishes served on a restaurant table",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:03.657863+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-shopping-phrases-complete-guide",
+   "title": "50 Korean Shopping Phrases You Need in Seoul",
+   "description": "Master 50+ essential korean shopping phrases for Myeongdong, Dongdaemun, and online stores — bargain, ask sizes, and pay like a local.",
+   "post": {
+    "slug": "korean-shopping-phrases-complete-guide",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-shopping-phrases-complete-guide-1776775010366.jpg",
+    "heroAlt": "Myeongdong shopping district in Seoul at night",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-07-28T05:56:59.886395+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-weather-seasons-vocabulary",
+   "title": "Korean Weather Vocabulary: 100+ Words for All Seasons",
+   "description": "Build a solid korean weather vocabulary with 100+ words, seasonal phrases, and K-drama weather lines — ideal for beginners and intermediate learners.",
+   "post": {
+    "slug": "korean-weather-seasons-vocabulary",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-weather-seasons-vocabulary-1776775012185.jpg",
+    "heroAlt": "Cherry blossoms in full bloom during Korean spring",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:05.092394+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-past-tense-conjugation-guide",
+   "title": "Korean Past Tense Conjugation: Complete Grammar Guide",
+   "description": "Master korean past tense conjugation with clear rules, vowel harmony charts, irregular verbs, and 30+ examples for beginner to intermediate learners.",
+   "post": {
+    "slug": "korean-past-tense-conjugation-guide",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-past-tense-conjugation-guide-1776775383824.jpg",
+    "heroAlt": "Statue of Sejong the Great, creator of Hangul",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:05.432256+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-sentence-structure-word-order-guide",
+   "title": "Korean Sentence Structure: SOV Word Order Explained",
+   "description": "Learn korean sentence structure clearly — SOV word order, topic vs subject, particles, and 20+ examples for Arabic-speaking beginners.",
+   "post": {
+    "slug": "korean-sentence-structure-word-order-guide",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-sentence-structure-word-order-guide-1776775065314.jpg",
+    "heroAlt": "Korean grammar and sentence word order",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:06.127942+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-question-words-guide",
+   "title": "Korean Question Words: 누가, 뭐, 어디, 언제, 왜, 어떻게",
+   "description": "Master korean question words — who, what, where, when, why, how — with 50+ real example sentences and K-drama lines for fluent daily talk.",
+   "post": {
+    "slug": "korean-question-words-guide",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-question-words-guide-1776775382424.jpg",
+    "heroAlt": "Gyeongbokgung palace — where every Korean visitor asks questions",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:06.58373+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-dating-phrases-kdrama-lines",
+   "title": "Korean Dating Phrases and Romantic K-Drama Lines",
+   "description": "Learn 40+ korean dating phrases and iconic K-drama romance lines — from asking someone out to confessing feelings like Goblin or Crash Landing on You.",
+   "post": {
+    "slug": "korean-dating-phrases-kdrama-lines",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-dating-phrases-kdrama-lines-1776775019777.jpg",
+    "heroAlt": "Namsan Tower with romantic love padlocks",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:07.719705+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-adjectives-100-examples-beginners",
+   "title": "100 Essential Korean Adjectives With Example Sentences",
+   "description": "Master 100 essential korean adjectives with romanization and example sentences — describe people, food, weather, and emotions like a native speaker.",
+   "post": {
+    "slug": "korean-adjectives-100-examples-beginners",
+    "lang": "en",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-adjectives-100-examples-beginners-1776775020782.jpg",
+    "heroAlt": "Traditional Korean kimchi with colorful banchan",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-07-15T22:02:18.507358+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-restaurant-ordering-phrases-guide-ar",
+   "title": "عبارات المطاعم الكورية: اطلب الطعام مثل السكان المحليين",
+   "description": "عبارات المطاعم الكورية — أتقن أكثر من 60 عبارة أساسية عن المطاعم الكورية لطلب الطعام وطلب الفاتورة والتعامل مع الطلبات الحارة في سيول بثقة.",
+   "post": {
+    "slug": "korean-restaurant-ordering-phrases-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-restaurant-ordering-phrases-guide-1776775009062.jpg",
+    "heroAlt": "يتم تقديم الأطباق الكورية التقليدية على طاولة المطعم",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:11.075171+00:00"
+   }
+  },
+  {
+   "path": "/blog/how-to-introduce-yourself-in-korean-ar",
+   "title": "كيف تقدم نفسك باللغة الكورية: دليل المبتدئين الكامل",
+   "description": "كيف تقدم نفسك باللغة الكورية — تعرف على كيفية تقديم نفسك باللغة الكورية خطوة بخطوة، بدءًا من annyeonghaseyo وحتى اسمك وعمرك ووظيفتك - وهو مثالي لمحبي الدراما…",
+   "post": {
+    "slug": "how-to-introduce-yourself-in-korean-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-how-to-introduce-yourself-in-korean-1776775380340.jpg",
+    "heroAlt": "الأشخاص الذين يرتدون الهانبوك، على استعداد لتقديم أنفسهم باللغة الكورية",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:09.594101+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-adjectives-100-examples-beginners-ar",
+   "title": "100 الصفات الكورية الأساسية مع الجمل سبيل المثال",
+   "description": "أتقن 100 من الصفات الكورية الأساسية مع الكتابة بالحروف اللاتينية والجمل سبيل المثال - قم بوصف الأشخاص والطعام والطقس والعواطف مثل المتحدث الأصلي.",
+   "post": {
+    "slug": "korean-adjectives-100-examples-beginners-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-adjectives-100-examples-beginners-1776775020782.jpg",
+    "heroAlt": "الكيمتشي الكوري التقليدي مع البانشان الملون",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:09.818523+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-egypt-best-classes-2026-ar",
+   "title": "أفضل دروس اللغة الكورية في مصر 2026: التصنيف",
+   "description": "قارن بين أفضل دروس اللغة الكورية في مصر 2026 - عبر الإنترنت، في القاهرة والإسكندرية. تم تصنيف الأسعار والمناهج الدراسية والمدرسين الأصليين والنتائج جنبًا إلى…",
+   "post": {
+    "slug": "learn-korean-egypt-best-classes-2026-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-learn-korean-egypt-best-classes-2026-1776775015465.jpg",
+    "heroAlt": "أفق سيول ينظر إليه من برج نامسان",
+    "articleType": "review",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:10.043171+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-question-words-guide-ar",
+   "title": "كلمات السؤال الكورية: 누가، 뭐، 어디، 언제، 왜، 어떻게",
+   "description": "كلمات السؤال الكورية — أتقن كلمات الأسئلة الكورية - من وماذا وأين ومتى ولماذا وكيف - مع أكثر من 50 جملة أمثلة حقيقية وسطور الدراما الكورية للحديث اليومي بطلاقة.",
+   "post": {
+    "slug": "korean-question-words-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-question-words-guide-1776775382424.jpg",
+    "heroAlt": "قصر جيونج بوكجيونج - حيث يطرح كل زائر كوري الأسئلة",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:10.282695+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-past-tense-conjugation-guide-ar",
+   "title": "الزمن الماضي الكوري — تصريف الفعل الماضي الكوري",
+   "description": "الزمن الماضي الكوري — أتقن تصريف الأفعال الكورية الماضية بقواعد واضحة، ومخططات تناغم حروف العلة، والأفعال الشاذة، وأكثر من 30 مثالًا للمتعلمين المبتدئين…",
+   "post": {
+    "slug": "korean-past-tense-conjugation-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-past-tense-conjugation-guide-1776775383824.jpg",
+    "heroAlt": "تمثال سيجونغ العظيم، مؤسس الهانغول",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:10.62159+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-dating-phrases-kdrama-lines-ar",
+   "title": "عبارات التعارف الكورية — عبارات المواعدة الكورية وخطوط الدرا",
+   "description": "عبارات التعارف الكورية — تعلم أكثر من 40 عبارة مواعدة كورية وخطوط الدراما الكورية الشهيرة - بدءًا من مطالبة شخص ما بالخروج إلى الاعتراف بمشاعر مثل Goblin أو…",
+   "post": {
+    "slug": "korean-dating-phrases-kdrama-lines-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-dating-phrases-kdrama-lines-1776775019777.jpg",
+    "heroAlt": "برج نامسان مع أقفال الحب الرومانسية",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:10.851266+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-shopping-phrases-complete-guide-ar",
+   "title": "عبارات التسوق الكورية: 50 عبارة تسوق كورية تحتاجها في سيول",
+   "description": "عبارات التسوق الكورية — أتقن أكثر من 50 عبارة تسوق كورية أساسية لميونغدونغ ودونغدايمون والمتاجر عبر الإنترنت - المساومة، واسأل عن الأحجام، وادفع مثل السكان…",
+   "post": {
+    "slug": "korean-shopping-phrases-complete-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-shopping-phrases-complete-guide-1776775010366.jpg",
+    "heroAlt": "منطقة التسوق ميونغ دونغ في سيول في الليل",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:11.306714+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-sentence-structure-word-order-guide-ar",
+   "title": "هيكل الجملة الكورية — بنية الجملة الكورية",
+   "description": "هيكل الجملة الكورية — تعلم بنية الجملة الكورية بوضوح - ترتيب الكلمات SOV، والموضوع مقابل الموضوع، والجسيمات، وأكثر من 20 مثالًا للمبتدئين الناطقين بالعربية.",
+   "post": {
+    "slug": "korean-sentence-structure-word-order-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-sentence-structure-word-order-guide-1776775065314.jpg",
+    "heroAlt": "قواعد اللغة الكورية وترتيب الكلمات الجملة",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:11.418419+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-weather-seasons-vocabulary-ar",
+   "title": "مفردات الطقس الكورية: أكثر من 100 كلمة لجميع الفصول",
+   "description": "مفردات الطقس الكورية — قم ببناء مفردات طقس كورية قوية تحتوي على أكثر من 100 كلمة، وعبارات موسمية، وخطوط طقس الدراما الكورية - مثالية للمبتدئين والمتعلمين…",
+   "post": {
+    "slug": "korean-weather-seasons-vocabulary-ar",
+    "lang": "ar",
+    "heroImage": "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/blog-images/hero-korean-weather-seasons-vocabulary-1776775012185.jpg",
+    "heroAlt": "أزهار الكرز تتفتح بالكامل خلال فصل الربيع الكوري",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T12:25:06.987315+00:00",
+    "updatedAt": "2026-04-21T18:23:11.767327+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-causative-verbs-grammar",
+   "title": "Korean Causative Verbs: Making Someone Do Something",
+   "description": "Learn Korean causative verbs — how to say you made or let someone do something using -이/히/리/기/우 suffixes and the -게 하다 pattern.",
+   "post": {
+    "slug": "korean-causative-verbs-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80",
+    "heroAlt": "Teacher and student illustrating causative action in Korean",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-21T06:36:00+00:00",
+    "updatedAt": "2026-07-11T13:45:27.579628+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-comparative-superlative-guide",
+   "title": "Korean Comparatives and Superlatives: 더, 제일, 가장 Explained",
+   "description": "Learn how to compare things in Korean using 더 (more), 제일 and 가장 (most), and the -보다 particle, with clear tables and example sentences.",
+   "post": {
+    "slug": "korean-comparative-superlative-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80",
+    "heroAlt": "Scale comparing two objects representing Korean comparative grammar",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-17T21:00:00+00:00",
+    "updatedAt": "2026-07-11T13:45:27.579628+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-negation-grammar-guide",
+   "title": "Korean Negation: 안 vs 못 vs -지 않다 vs -지 못하다",
+   "description": "Learn the four main ways to say no or express inability in Korean — 안, 못, -지 않다, and -지 못하다 — with clear rules and example sentences.",
+   "post": {
+    "slug": "korean-negation-grammar-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80",
+    "heroAlt": "Crossed-out symbol representing Korean negation grammar",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-14T11:24:00+00:00",
+    "updatedAt": "2026-07-11T13:45:27.579628+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-negation-grammar-guide-ar",
+   "title": "النفي في الكورية: 안 مقابل 못 مقابل -지 않다 مقابل -지 못하다",
+   "description": "تعلم الطرق الأربع الرئيسية للنفي أو التعبير عن العجز في الكورية — 안 و못 و-지 않다 و-지 못하다 — مع قواعد واضحة وأمثلة عملية.",
+   "post": {
+    "slug": "korean-negation-grammar-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80",
+    "heroAlt": "رمز مشطوب يرمز لقواعد النفي في الكورية",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-12T18:36:00+00:00",
+    "updatedAt": "2026-07-11T13:45:27.579628+00:00"
+   }
+  },
+  {
+   "path": "/blog/best-kdrama-learn-korean-difficulty-ranked-ar",
+   "title": "أفضل 15 دراما كورية مرتبة حسب صعوبة التعلم: شاهد واتعلم كوري",
+   "description": "دراما كورية — شاهد الدراما الكورية وأنت بتتعلم اللغة. رتبنا 15 دراما شهيرة حسب مستوى الصعوبة — من المبتدئين للمتقدمين، مع مفردات كل دراما ونصائح مشاهدة.",
+   "post": {
+    "slug": "best-kdrama-learn-korean-difficulty-ranked-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-listening.jpg",
+    "heroAlt": "مجموعة أغلفة درامات كورية شهيرة",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-11T07:14:31.168751+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-learning-apps-comparison-2026-ar",
+   "title": "تطبيقات تعلم كوري — أفضل تطبيقات تعلم الكورية 2026",
+   "description": "تطبيقات تعلم كوري — مقارنة شاملة لتطبيقات تعلم الكورية. قارن Duolingo وRosetta Stone وBabbel وMemrise وKlovers — مع الأسعار والمميزات والعيوب وأفضل تطبيق حسب…",
+   "post": {
+    "slug": "korean-learning-apps-comparison-2026-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1200&q=80",
+    "heroAlt": "هاتف ذكي يعرض تطبيقات تعلم لغات متعددة",
+    "articleType": "review",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-11T07:14:31.168751+00:00",
+    "updatedAt": "2026-04-21T18:23:01.897472+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-honorifics-formality-levels-grammar-ar",
+   "title": "احترام كوري — مستويات الاحترام والرسمية في الكورية",
+   "description": "احترام كوري — أتقن أنماط الكلام الرسمي وغير الرسمي في الكورية. اتعلم إمتى تستخدم 존댓말 و반말 والألقاب الاحترامية — مع حوارات تمرين وأمثلة من الدراما.",
+   "post": {
+    "slug": "korean-honorifics-formality-levels-grammar-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80",
+    "heroAlt": "مجموعة أشخاص يظهرون الاحترام بالانحناء في سياق كوري تقليدي",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-11T07:14:31.168751+00:00",
+    "updatedAt": "2026-04-21T18:23:01.775337+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-pronunciation-guide-speaking-ar",
+   "title": "نطق كوري: دليل النطق الكوري: اتقن الكلام من اليوم الأول",
+   "description": "نطق كوري — اتعلم قواعد النطق الكوري وبنية المقاطع والأخطاء الشائعة. أتقن الحروف الساكنة والمتحركة مع تمارين يومية ونصائح خاصة للمتحدثين بالعربية.",
+   "post": {
+    "slug": "korean-pronunciation-guide-speaking-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
+    "heroAlt": "تعلم النطق الكوري الصحيح للمتحدثين بالعربية",
+    "articleType": "howto",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-11T07:14:31.168751+00:00",
+    "updatedAt": "2026-04-21T18:23:02.133215+00:00"
+   }
+  },
+  {
+   "path": "/blog/topik-exam-preparation-complete-guide-2026-ar",
+   "title": "دليل تحضير اختبار TOPIK 2026: خطة دراسة شاملة واستراتيجيات",
+   "description": "أتقن اختبار TOPIK مع دليلنا الشامل لـ 2026. تعرف على شكل الاختبار والدرجات ومواعيد التسجيل وخطة دراسة 12 أسبوع واستراتيجيات مثبتة للنجاح.",
+   "post": {
+    "slug": "topik-exam-preparation-complete-guide-2026-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=1200&q=80",
+    "heroAlt": "مواد دراسية وبطاقات وكتب كورية على مكتب للتحضير لاختبار TOPIK",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-11T07:14:31.168751+00:00",
+    "updatedAt": "2026-04-21T18:23:02.25615+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-imperative-suggestion-grammar",
+   "title": "Korean Imperatives and Suggestions: -세요, -자, -ㅂ시다",
+   "description": "Learn how to give commands and make suggestions in Korean using -세요, -자, and -ㅂ시다, with politeness levels and example sentences explained.",
+   "post": {
+    "slug": "korean-imperative-suggestion-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?w=1200&q=80",
+    "heroAlt": "Two people conversing, representing Korean imperative and suggestion forms",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-11T01:48:00+00:00",
+    "updatedAt": "2026-07-11T13:45:27.579628+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-pronunciation-guide-speaking",
+   "title": "Korean Pronunciation Guide: Master Speaking From Day 1",
+   "description": "Master Korean pronunciation from day one. Learn consonants, vowels, sound change rules, and a 4-week practice routine — with special tips for Arabic speakers…",
+   "post": {
+    "slug": "korean-pronunciation-guide-speaking",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&q=80",
+    "heroAlt": "Person practicing Korean pronunciation with headphones and study materials",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T17:46:53+00:00",
+    "updatedAt": "2026-04-21T18:24:19.348518+00:00"
+   }
+  },
+  {
+   "path": "/blog/best-kdrama-learn-korean-difficulty-ranked",
+   "title": "Top 15 K-Dramas Ranked by Learning Difficulty: Watch &",
+   "description": "15 popular K-dramas ranked by difficulty level for Korean learners. From beginner-friendly to advanced — with vocabulary cheat sheets, watching strategies,…",
+   "post": {
+    "slug": "best-kdrama-learn-korean-difficulty-ranked",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-listening.jpg",
+    "heroAlt": "Stack of Korean drama DVD covers and remote control on colorful background",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T17:46:53+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-honorifics-formality-levels-grammar",
+   "title": "Korean Honorifics and Formality Levels: Complete Grammar",
+   "description": "Complete guide to Korean honorifics and formality levels. Learn 존댓말, 반말, and when to use each speech level — with practice dialogues, K-Drama examples, and a…",
+   "post": {
+    "slug": "korean-honorifics-formality-levels-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80",
+    "heroAlt": "Group of people bowing and showing respect in traditional Korean setting",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T17:46:53+00:00",
+    "updatedAt": "2026-06-20T03:33:36.145741+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-learning-apps-comparison-2026-duolingo-rosetta-stone",
+   "title": "Best Korean Learning Apps Compared 2026: Duolingo vs",
+   "description": "Comprehensive 2026 comparison of Korean learning apps. Duolingo, Rosetta Stone, Memrise, Babbel, and Klovers reviewed across 12 criteria — with pricing,…",
+   "post": {
+    "slug": "korean-learning-apps-comparison-2026-duolingo-rosetta-stone",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80",
+    "heroAlt": "Smartphone showing multiple language learning apps open simultaneously",
+    "articleType": "review",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T17:46:53+00:00",
+    "updatedAt": "2026-08-17T16:54:24.446774+00:00"
+   }
+  },
+  {
+   "path": "/blog/topik-exam-preparation-complete-guide-2026",
+   "title": "TOPIK Exam Preparation 2026: Complete Study Guide and Test",
+   "description": "Complete TOPIK exam guide for 2026. Test format, scoring, registration dates, 12-week study plan, writing tips, vocabulary lists by level, and proven…",
+   "post": {
+    "slug": "topik-exam-preparation-complete-guide-2026",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&q=80",
+    "heroAlt": "Study materials, flashcards, and Korean textbooks arranged on desk for TOPIK exam prep",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T17:46:53+00:00",
+    "updatedAt": "2026-08-17T04:01:14.103986+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+   "title": "تطبيقات تعلم اللغة الكورية — أفضل تطبيقات التعلم الكورية مقا",
+   "description": "مقارنة شاملة 2026 لتطبيقات تعلم اللغة الكورية. تمت مراجعة Duolingo وRosetta Stone وMemrise وBabbel وKlovers عبر 12 معيارًا - مع التسعير والإيجابيات/السلبيات…",
+   "post": {
+    "slug": "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80",
+    "heroAlt": "هاتف ذكي يعرض تطبيقات متعددة لتعلم اللغات مفتوحة في وقت واحد",
+    "articleType": "review",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T17:46:53+00:00",
+    "updatedAt": "2026-05-12T12:13:24.570558+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-job-interview-phrases",
+   "title": "Korean Job Interview Phrases: How to Ace Your Interview",
+   "description": "korean job interview — Preparing for a job interview in Korean? Learn essential interview vocabulary, common questions and answers, and professional Korean…",
+   "post": {
+    "slug": "korean-job-interview-phrases",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-business.jpg",
+    "heroAlt": "Professional interview setting in Korean office",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T16:46:14+00:00",
+    "updatedAt": "2026-08-15T18:08:29.052486+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-job-interview-phrases-ar",
+   "title": "عبارات مقابلة العمل الكورية: كيف تتقن مقابلتك",
+   "description": "مقابلة العمل الكورية — التحضير لمقابلة عمل باللغة الكورية؟ تعلم مفردات المقابلة الأساسية والأسئلة والأجوبة الشائعة وآداب السلوك الكورية المهنية.",
+   "post": {
+    "slug": "korean-job-interview-phrases-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-business.jpg",
+    "heroAlt": "إعداد المقابلة المهنية في المكتب الكوري",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T16:46:14+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-reported-speech-grammar",
+   "title": "Korean Reported Speech: -다고, -냐고, -라고, -자고 Explained",
+   "description": "Learn how to report what someone said in Korean using -다고, -냐고, -라고, and -자고, with tables covering statements, questions, commands, and suggestions.",
+   "post": {
+    "slug": "korean-reported-speech-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=80",
+    "heroAlt": "Two speech bubbles representing reported speech in Korean",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T16:12:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-drama-vocabulary-advanced",
+   "title": "kdrama vocabulary — Advanced K-Drama Vocabulary",
+   "description": "kdrama vocabulary — Level up your Korean with 60 advanced vocabulary words commonly used in popular K-dramas. Organized by genre with context and example…",
+   "post": {
+    "slug": "korean-drama-vocabulary-advanced",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80",
+    "heroAlt": "K-drama scene on TV screen",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T14:46:14+00:00",
+    "updatedAt": "2026-06-20T16:13:14.527989+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-drama-vocabulary-advanced-ar",
+   "title": "المفردات الدراما — مفردات الدراما الكورية المتقدمة",
+   "description": "المفردات الدراما — ارفع مستوى لغتك الكورية باستخدام 60 كلمة من المفردات المتقدمة شائعة الاستخدام في الأعمال الدرامية الكورية الشهيرة. نظمت حسب النوع مع…",
+   "post": {
+    "slug": "korean-drama-vocabulary-advanced-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80",
+    "heroAlt": "مشهد الدراما الكورية على شاشة التلفزيون",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T14:46:14+00:00",
+    "updatedAt": "2026-04-21T18:24:19.348518+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-texting-slang-internet-2026",
+   "title": "Korean Texting Slang & Internet Abbreviations (2026 Edition)",
+   "description": "Decode Korean text messages and online comments! The ultimate guide to Korean texting abbreviations, emoticons, and internet culture for 2026.",
+   "post": {
+    "slug": "korean-texting-slang-internet-2026",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-texting.jpg",
+    "heroAlt": "Person texting in Korean on smartphone",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T12:45:24+00:00",
+    "updatedAt": "2026-08-15T03:59:40.916748+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-texting-slang-internet-2026-ar",
+   "title": "الرسائل النصية الكورية — اللغة العامية للرسائل النصية الكوري",
+   "description": "فك رموز الرسائل النصية الكورية والتعليقات عبر الإنترنت! الدليل النهائي لاختصارات الرسائل النصية الكورية والرموز وثقافة الإنترنت لعام 2026.",
+   "post": {
+    "slug": "korean-texting-slang-internet-2026-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-texting.jpg",
+    "heroAlt": "شخص يرسل رسائل نصية باللغة الكورية على الهاتف الذكي",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T12:45:24+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-counting-units-classifiers",
+   "title": "korean counters — Korean Counting Units (Classifiers)",
+   "description": "korean counters — Korean uses special counter words when counting objects. Learn the 20 most common Korean classifiers with rules, examples, and practice…",
+   "post": {
+    "slug": "korean-counting-units-classifiers",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-counters.jpg",
+    "heroAlt": "Counting items in a Korean market",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T10:45:24+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-counting-units-classifiers-ar",
+   "title": "عدادات كورية: وحدات العد الكورية (المصنفات): الدليل الكامل",
+   "description": "عدادات كورية — تستخدم اللغة الكورية كلمات مضادة خاصة عند عد الأشياء. تعلم أكثر 20 مصنفًا كوريًا شيوعًا مع القواعد والأمثلة والتمارين التدريبية.",
+   "post": {
+    "slug": "korean-counting-units-classifiers-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-counters.jpg",
+    "heroAlt": "عد العناصر في السوق الكورية",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T10:45:24+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-verb-conjugation-guide",
+   "title": "korean verbs — Korean Verb Conjugation Made Easy",
+   "description": "korean verbs — Korean verb conjugation does not have to be scary. This guide breaks down present, past, and future tenses with simple rules and plenty of…",
+   "post": {
+    "slug": "korean-verb-conjugation-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80",
+    "heroAlt": "Korean grammar notebook with verb conjugation notes",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T08:45:24+00:00",
+    "updatedAt": "2026-06-19T22:13:11.750013+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-verb-conjugation-guide-ar",
+   "title": "الأفعال الكورية — أصبح تصريف الفعل الكوري سهلاً",
+   "description": "الأفعال الكورية — لا يجب أن يكون تصريف الفعل الكوري مخيفًا. يكسر هذا الدليل الأزمنة الحالية والماضية والمستقبلية بقواعد بسيطة والكثير من الأمثلة.",
+   "post": {
+    "slug": "korean-verb-conjugation-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80",
+    "heroAlt": "دفتر قواعد اللغة الكورية مع ملاحظات تصريف الأفعال",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-07T08:45:24+00:00",
+    "updatedAt": "2026-04-21T18:24:19.348518+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-reported-speech-grammar-ar",
+   "title": "الكلام المنقول في الكورية: شرح -다고 و-냐고 و-라고 و-자고",
+   "description": "تعلم كيف تنقل ما قاله شخص آخر بالكورية باستخدام -다고 و-냐고 و-라고 و-자고، مع جداول تغطي الجمل الخبرية والأسئلة والأوامر والاقتراحات.",
+   "post": {
+    "slug": "korean-reported-speech-grammar-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=80",
+    "heroAlt": "فقاعتا حوار ترمزان للكلام المنقول في الكورية",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-04-05T23:24:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-purpose-intention-grammar",
+   "title": "Korean Purpose and Intention: -려고 and -기 위해서",
+   "description": "Learn how to say you're doing something in order to achieve a goal in Korean using -려고 and -기 위해서, with clear rules and comparison examples.",
+   "post": {
+    "slug": "korean-purpose-intention-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1200&q=80",
+    "heroAlt": "Arrow pointing toward a target representing purpose grammar in Korean",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-04-04T06:36:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-ability-expressions-grammar",
+   "title": "Korean Ability Expressions: -을 수 있다/없다",
+   "description": "Learn how to express ability and inability in Korean using -을/ㄹ 수 있다 and -을/ㄹ 수 없다, with tables, examples, and common usage tips.",
+   "post": {
+    "slug": "korean-ability-expressions-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80",
+    "heroAlt": "Person lifting weights representing ability grammar in Korean",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-31T21:00:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-korean-grammar-particles",
+   "title": "قواعد كورية: دليل أدوات الربط للمبتدئين",
+   "description": "قواعد كورية — تعلم أهم أدوات الربط في الكورية (جوسا) — الفاعل والمفعول والموضوع والمكان — مع أمثلة عملية للناطقين بالعربية.",
+   "post": {
+    "slug": "ar-korean-grammar-particles",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-particles.jpg",
+    "heroAlt": "كتاب قواعد اللغة الكورية مفتوح",
+    "articleType": "howto",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-29T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-past-experience-grammar",
+   "title": "Korean Past Experience Grammar: -아/어 본 적 있다",
+   "description": "Learn how to talk about past experiences in Korean using -아/어 본 적 있다 and -아/어 본 적 없다, with tables, examples, and common mistakes.",
+   "post": {
+    "slug": "korean-past-experience-grammar",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=1200&q=80",
+    "heroAlt": "Passport and travel photos representing past experience grammar in Korean",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-28T11:24:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-seoul-travel-korean-phrases",
+   "title": "سفر كوريا: سيول: دليل العبارات الكورية للمسافرين",
+   "description": "سفر كوريا — استعد لرحلتك إلى سيول بهذه العبارات الكورية الأساسية للمواصلات والفنادق والتسوق والطوارئ — بالنطق والترجمة. — تعلم المزيد مع أكاديمية كلوفرز للغة...",
+   "post": {
+    "slug": "ar-seoul-travel-korean-phrases",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1546874177-9e664107314e?w=1200&q=80",
+    "heroAlt": "معبد كوري تقليدي في سيول مع أشجار الكرز المزهرة في الخلفية",
+    "articleType": "howto",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-28T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:03.884762+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-study-korean-kdramas-method",
+   "title": "تعلم الكورية من الدراما: طريقة المسلسلات",
+   "description": "تعلم الكورية من الدراما — تعلم الكورية أثناء مشاهدة K-Drama بهذه الطريقة المجربة — كيف تستفيد من المسلسلات لتحسين الاستماع والمفردات والنطق.",
+   "post": {
+    "slug": "ar-study-korean-kdramas-method",
+    "lang": "ar",
+    "heroImage": "/assets/blog/kdrama-vocabulary.jpg",
+    "heroAlt": "مشاهدة دراما كورية على الشاشة",
+    "articleType": "howto",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-27T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-korean-cafe-culture",
+   "title": "مقاهي كوريا: ثقافة القهوة الأكثر إبداعاً",
+   "description": "مقاهي كوريا — اكتشف عالم المقاهي الكورية المبهر — من مقاهي القطط والجمل إلى لاتيه الفن الإبداعي. دليل شامل لثقافة القهوة في كوريا.",
+   "post": {
+    "slug": "ar-korean-cafe-culture",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-cafe.jpg",
+    "heroAlt": "مقهى كوري عصري مع ديكور أنيق ومشروبات كورية تقليدية",
+    "articleType": "longform",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-26T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-korean-slang-words",
+   "title": "عامية كورية: أهم الكلمات العصرية",
+   "description": "تعلم 35 كلمة وعبارة عامية كورية تسمعها في K-Drama وK-Pop، مع معناها وكيفية استخدامها في المحادثة. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. دروس مباشرة ...",
+   "post": {
+    "slug": "ar-korean-slang-words",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-drama.jpg",
+    "heroAlt": "شباب كوريون يتحدثون ويضحكون باستخدام عبارات عامية كورية",
+    "articleType": "listicle",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-25T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-directions-location-vocabulary",
+   "title": "Korean Directions and Location Vocabulary (And How to Ask)",
+   "description": "Learn Korean directions and location vocabulary — left, right, straight, above, below — plus the exact phrases you need to ask for and give directions.",
+   "post": {
+    "slug": "korean-directions-location-vocabulary",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=1200&q=80",
+    "heroAlt": "Street signpost representing Korean directions vocabulary",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-25T01:48:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-korean-food-vocabulary",
+   "title": "طعام كوري: مفردات الطعام الأساسية",
+   "description": "طعام كوري — تعلم 60 كلمة ومصطلح في عالم الطعام الكوري — من البيبيمباب إلى التيبوكي — مع النطق والأمثلة العملية. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية...",
+   "post": {
+    "slug": "ar-korean-food-vocabulary",
+    "lang": "ar",
+    "heroImage": "/assets/blog/bibimbap.jpg",
+    "heroAlt": "طاولة طعام كورية تقليدية مليئة بأطباق متنوعة من الكيمتشي والأرز",
+    "articleType": "listicle",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-24T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-topik-exam-guide",
+   "title": "اختبار توبيك: TOPIK: دليل شامل لاجتياز الاختبار",
+   "description": "اختبار توبيك — دليل شامل لاختبار TOPIK الكوري: الفرق بين TOPIK I وII، كيفية التسجيل، نصائح الدراسة، ومصادر التحضير للناطقين بالعربية.",
+   "post": {
+    "slug": "ar-topik-exam-guide",
+    "lang": "ar",
+    "heroImage": "/assets/blog/topik-test.jpg",
+    "heroAlt": "طالب يجلس على مكتب مع مواد دراسية للاستعداد لاختبار التوبيك الكوري",
+    "articleType": "longform",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-23T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-directions-location-vocabulary-ar",
+   "title": "مفردات الاتجاهات والمواقع بالكورية (وكيف تسأل عنها)",
+   "description": "تعلم مفردات الاتجاهات والمواقع بالكورية — يسار ويمين ومستقيم وفوق وتحت — بالإضافة إلى العبارات الدقيقة التي تحتاجها للسؤال عن الاتجاهات وإعطائها.",
+   "post": {
+    "slug": "korean-directions-location-vocabulary-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=1200&q=80",
+    "heroAlt": "لافتة شارع ترمز لمفردات الاتجاهات الكورية",
+    "articleType": "howto",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-03-23T09:00:00+00:00",
+    "updatedAt": "2026-07-11T13:47:43.187831+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-speech-levels-honorifics-guide",
+   "title": "Korean Speech Levels and Honorifics Guide",
+   "description": "Learn how Korean speech levels work — formal, polite, and casual. Understand when to use each level and avoid embarrassing mistakes in Korean conversation.",
+   "post": {
+    "slug": "korean-speech-levels-honorifics-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-honorifics.jpg",
+    "heroAlt": "Korean business professionals bowing respectfully showing formal speech level usage",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-23T02:13:54.904+00:00",
+    "updatedAt": "2026-08-15T04:00:12.770214+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-age-system-explained",
+   "title": "Korean Age System Explained Simply",
+   "description": "Confused by Korean age? Learn how the Korean age system works, why Koreans are always one or two years older, and how to calculate your Korean age.",
+   "post": {
+    "slug": "korean-age-system-explained",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-age-system.jpg",
+    "heroAlt": "Traditional Korean birthday celebration with colorful rice cakes",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-23T02:13:54.763+00:00",
+    "updatedAt": "2026-08-15T18:18:59.078799+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-pronunciation-guide-beginners",
+   "title": "Korean Pronunciation Guide for Beginners",
+   "description": "Master Korean pronunciation from scratch. Learn the sounds that trip up beginners, common mistakes Arabic speakers make, and drills to sound natural fast.",
+   "post": {
+    "slug": "korean-pronunciation-guide-beginners",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=1200&q=80",
+    "heroAlt": "Student practicing Korean pronunciation with headphones and language textbook open",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-23T02:13:54.555+00:00",
+    "updatedAt": "2026-04-21T18:23:12.337375+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-korean-numbers-guide",
+   "title": "أرقام كورية: نظاما العد وكيفية استخدامهما",
+   "description": "أرقام كورية — تعلم نظامي الأرقام الكوريين: الأرقام الكورية الأصيلة والأرقام الصينية-الكورية، متى تستخدم كلاً منهما مع أمثلة عملية.",
+   "post": {
+    "slug": "ar-korean-numbers-guide",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-numbers.jpg",
+    "heroAlt": "أرقام كورية مكتوبة على سبورة بيضاء لتعلم نظام العد الكوري",
+    "articleType": "howto",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-22T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-workplace-business-culture",
+   "title": "Korean Workplace Culture: Business Etiquette",
+   "description": "Essential guide to Korean workplace culture — hierarchy, work hours, business etiquette, and the Korean phrases you need for professional life.",
+   "post": {
+    "slug": "korean-workplace-business-culture",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-work-culture.jpg",
+    "heroAlt": "Modern Korean office building in Seoul business district",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-22T02:13:55.63+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-for-arabic-speakers-difficulty-guide",
+   "title": "Korean for Arabic Speakers: Difficulty Guide",
+   "description": "korean for arabic speakers — An honest, detailed analysis of learning Korean as an Arabic speaker. What is easy, what is hard, and how long it really takes f...",
+   "post": {
+    "slug": "korean-for-arabic-speakers-difficulty-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80&auto=format&fit=crop",
+    "heroAlt": "Student studying Korean language with Arabic notes beside them",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-22T02:13:55.014+00:00",
+    "updatedAt": "2026-08-15T04:00:15.365149+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-money-banking-vocabulary",
+   "title": "Korean Money and Banking Vocabulary",
+   "description": "Learn essential Korean money and banking vocabulary — currency exchange, ATMs, bank accounts, and payment phrases — for living in or visiting Korea.",
+   "post": {
+    "slug": "korean-money-banking-vocabulary",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1546874177-9e664107314e?w=1200&q=80",
+    "heroAlt": "Korean won banknotes and coins representing money vocabulary",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T16:12:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-korean-daily-greetings",
+   "title": "تحيات كورية: عبارات يومية لا غنى عنها",
+   "description": "تحيات كورية — تعلم أهم 40 تحية وعبارة يومية باللغة الكورية مع النطق الصحيح والأمثلة العملية — مثالي للمبتدئين الناطقين بالعربية.",
+   "post": {
+    "slug": "ar-korean-daily-greetings",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?w=1200&q=80",
+    "heroAlt": "أشخاص كوريون يتبادلون التحيات اليومية مع ابتسامات ودية",
+    "articleType": "listicle",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-21T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:12.226289+00:00"
+   }
+  },
+  {
+   "path": "/blog/topik-1-vocabulary-list-800-words",
+   "title": "topik vocabulary — TOPIK 1 Vocabulary",
+   "description": "topik vocabulary — Complete TOPIK I vocabulary guide for beginners. Master the 800 essential Korean words tested on the TOPIK beginner exam and learn the pro...",
+   "post": {
+    "slug": "topik-1-vocabulary-list-800-words",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=1200&q=80",
+    "heroAlt": "Student preparing for Korean language exam",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T02:13:55.328+00:00",
+    "updatedAt": "2026-07-30T11:23:01.031506+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-through-kpop-bts-blackpink",
+   "title": "Learn Korean Through KPop Music and Songs",
+   "description": "learn korean through kpop — Millions of K-Pop fans are accidentally learning Korean. Here is how to turn your K-Pop obsession into real Korean fluency — spec...",
+   "post": {
+    "slug": "learn-korean-through-kpop-bts-blackpink",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-music.jpg",
+    "heroAlt": "Concert stage with colorful lights and a massive crowd of fans",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T01:57:00.077+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-easier-than-japanese-chinese",
+   "title": "Korean vs Japanese: Which Is Easier to Learn",
+   "description": "korean vs japanese — The honest linguistic comparison: why Korean is the most accessible for Arabic and English speakers, backed by data and real learning ex...",
+   "post": {
+    "slug": "korean-easier-than-japanese-chinese",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80&auto=format&fit=crop",
+    "heroAlt": "Language learning books and notebooks on a clean desk",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T01:56:59.948+00:00",
+    "updatedAt": "2026-05-24T01:21:19.048672+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-traditional-holidays-chuseok-seollal",
+   "title": "Korean Holidays: Chuseok and Seollal Guide",
+   "description": "chuseok — Explore Korea's two most important traditional holidays. Learn the traditions, foods, and Korean words every learner should know.",
+   "post": {
+    "slug": "korean-traditional-holidays-chuseok-seollal",
+    "lang": "en",
+    "heroImage": "/assets/blog/seollal-new-year.jpg",
+    "heroAlt": "Colorful Korean traditional Chuseok harvest festival table with rice cakes and fruit",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T01:56:59.843+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-3-months-study-method",
+   "title": "learn korean fast — Learn Korean in 3 Months",
+   "description": "learn korean fast — A practical, science-backed method to reach conversational Korean in 90 days. No apps, no gimmicks — the structured approach that works f...",
+   "post": {
+    "slug": "learn-korean-3-months-study-method",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-study-desk.jpg",
+    "heroAlt": "Person studying Korean with notebooks and flashcards at a desk",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T01:56:59.698+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-skincare-kbeauty-routine-guide",
+   "title": "Korean Skincare: K-Beauty Routine Guide",
+   "description": "Discover the legendary 10-step Korean skincare routine that transformed global beauty standards. Learn the science, products, and cultural philosophy behind ...",
+   "post": {
+    "slug": "korean-skincare-kbeauty-routine-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-skincare.jpg",
+    "heroAlt": "Korean skincare products arranged on a white surface",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-21T01:56:59.378+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-numbers-guide",
+   "title": "Korean Numbers: Complete Guide to Both Systems",
+   "description": "korean numbers — Master both Korean number systems — Sino-Korean and Native Korean — with this complete guide. Learn when to use each system, counting rules,...",
+   "post": {
+    "slug": "korean-numbers-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-numbers.jpg",
+    "heroAlt": "Korean number system written on whiteboard showing native and Sino-Korean numbers",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-08-12T12:53:54.448978+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-daily-greetings",
+   "title": "40 Essential Korean Greetings and Daily Phrases You Need...",
+   "description": "Learn the 40 most essential Korean greetings and daily phrases used by native speakers. From hello to goodbye, formal to casual — master Korean conversation ...",
+   "post": {
+    "slug": "korean-daily-greetings",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?w=1200&q=80",
+    "heroAlt": "People bowing as a Korean greeting",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-08-15T05:02:08.419877+00:00"
+   }
+  },
+  {
+   "path": "/blog/hanbok-korean-traditional-clothing",
+   "title": "Hanbok: Everything You Need to Know About Korean...",
+   "description": "Discover the world of Hanbok — Korea's stunning traditional clothing. Learn vocabulary, history, where to rent it in Seoul, and how it reflects Korean cultur...",
+   "post": {
+    "slug": "hanbok-korean-traditional-clothing",
+    "lang": "en",
+    "heroImage": "/assets/blog/hanbok-fashion.jpg",
+    "heroAlt": "Traditional Korean Hanbok dress",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-food-vocabulary",
+   "title": "Korean Food Vocabulary: 60 Essential Words for Ordering...",
+   "description": "Learn 60 essential Korean food vocabulary words to confidently order at Korean restaurants, navigate menus, and discuss Korean cuisine like a native speaker.",
+   "post": {
+    "slug": "korean-food-vocabulary",
+    "lang": "en",
+    "heroImage": "/assets/blog/bibimbap.jpg",
+    "heroAlt": "Colorful Korean food spread on a table",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-08-17T20:55:09.573156+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-cafe-coffee-culture",
+   "title": "Korean Cafe Culture: Why Korea Has the World's Most...",
+   "description": "korean cafe culture — Explore Korea's incredible cafe culture — from themed cafes to specialty coffee. Learn essential Korean cafe vocabulary and phrases to ...",
+   "post": {
+    "slug": "korean-cafe-coffee-culture",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&q=80",
+    "heroAlt": "Aesthetic Korean cafe interior",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-04-21T18:23:10.963116+00:00"
+   }
+  },
+  {
+   "path": "/blog/topik-exam-guide",
+   "title": "TOPIK Exam Guide: How to Pass TOPIK I and II as an...",
+   "description": "Complete TOPIK exam guide for Arabic speakers — structure, scoring, preparation strategies, and study tips to pass TOPIK I (beginner) or TOPIK II (intermedia...",
+   "post": {
+    "slug": "topik-exam-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/topik-test.jpg",
+    "heroAlt": "Student sitting at desk with TOPIK study materials preparing for Korean proficiency exam",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-07-31T01:15:52.88033+00:00"
+   }
+  },
+  {
+   "path": "/blog/study-korean-kdramas-method",
+   "title": "Learn Korean with KDramas: Study Method",
+   "description": "learn korean with kdramas — Learn Korean through K-dramas with this proven study method. Discover active watching techniques, vocabulary mining, and the best...",
+   "post": {
+    "slug": "study-korean-kdramas-method",
+    "lang": "en",
+    "heroImage": "/assets/blog/kdrama-vocabulary.jpg",
+    "heroAlt": "TV remote pointed at screen showing Korean drama subtitles for language learning",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-08-15T22:02:58.090115+00:00"
+   }
+  },
+  {
+   "path": "/blog/seoul-travel-korean-phrases",
+   "title": "Seoul Travel Guide: Essential Korean Phrases for...",
+   "description": "seoul travel guide — Planning a trip to Seoul? This guide gives you all the Korean phrases you need for transportation, food, shopping, hotels, and emergenci...",
+   "post": {
+    "slug": "seoul-travel-korean-phrases",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&q=80",
+    "heroAlt": "Seoul city skyline with Namsan Tower",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-07-22T14:25:59.167859+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-slang-words",
+   "title": "35 Korean Slang Words Every K-Drama Fan Needs to Know in...",
+   "description": "Learn 35 popular Korean slang words heard in K-dramas, K-pop, and everyday conversation. From 대박 to 핵인싸, these modern expressions will level up your Korean.",
+   "post": {
+    "slug": "korean-slang-words",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-drama.jpg",
+    "heroAlt": "Young Koreans chatting with slang expressions",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-07-20T08:21:06.160964+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-grammar-particles",
+   "title": "Korean Particles Guide: Master 조사 and Unlock Korean Grammar",
+   "description": "Korean particles (조사) are the key to understanding Korean grammar. This complete guide explains subject, object, topic, and location particles with clear exa...",
+   "post": {
+    "slug": "korean-grammar-particles",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-particles.jpg",
+    "heroAlt": "Open Korean grammar textbook",
+    "articleType": "howto",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T18:02:16.545892+00:00",
+    "updatedAt": "2026-08-15T03:57:51.554721+00:00"
+   }
+  },
+  {
+   "path": "/blog/how-to-learn-korean-faster",
+   "title": "10 Proven Ways to Learn Korean Faster (That Actually Work)",
+   "description": "10 research-backed strategies to learn Korean faster. Proven tips for beginners and intermediate learners — with a 30-day kickstart challenge and daily study…",
+   "post": {
+    "slug": "how-to-learn-korean-faster",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
+    "heroAlt": "Laptop with study materials and coffee",
+    "articleType": "listicle",
+    "author": "Reham El-Sharkawi",
+    "publishedAt": "2026-03-20T12:00:00+00:00",
+    "updatedAt": "2026-07-16T10:41:56.997795+00:00"
+   }
+  },
+  {
+   "path": "/blog/50-essential-korean-words-beginners",
+   "title": "Korean Words for Beginners: 50 Essential Terms",
+   "description": "korean words for beginners — The 50 most important Korean words for absolute beginners. Master these first and you will understand the basics of everyday…",
+   "post": {
+    "slug": "50-essential-korean-words-beginners",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1200&q=80",
+    "heroAlt": "Notebook with vocabulary words and pen",
+    "articleType": "listicle",
+    "author": "Reham El-Sharkawi",
+    "publishedAt": "2026-03-20T11:00:00+00:00",
+    "updatedAt": "2026-07-27T19:55:29.345658+00:00"
+   }
+  },
+  {
+   "path": "/blog/kdrama-korean-phrases-beginners",
+   "title": "KDrama Korean Phrases for Beginners Guide",
+   "description": "kdrama korean phrases — Learn the most common Korean phrases heard in K-dramas. From greetings to dramatic confessions — 30 phrases with pronunciation,…",
+   "post": {
+    "slug": "kdrama-korean-phrases-beginners",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80",
+    "heroAlt": "Korean drama scene on a TV screen",
+    "articleType": "listicle",
+    "author": "Reham El-Sharkawi",
+    "publishedAt": "2026-03-20T10:00:00+00:00",
+    "updatedAt": "2026-07-13T17:10:48.259361+00:00"
+   }
+  },
+  {
+   "path": "/blog/ar-learn-korean-alphabet-hangul",
+   "title": "تعلم الكورية: الأبجدية هانغول في يوم واحد",
+   "description": "تعلم الكورية — تعلم الأبجدية الكورية هانغول بسهولة في يوم واحد. دليل خطوة بخطوة لجميع الحروف والنطق لمتحدثي اللغة العربية.",
+   "post": {
+    "slug": "ar-learn-korean-alphabet-hangul",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
+    "heroAlt": "أحرف الهانغول الكورية مكتوبة بخط جميل على ورق تقليدي",
+    "articleType": "howto",
+    "author": "فريق كلوفرز",
+    "publishedAt": "2026-03-20T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:07.832997+00:00"
+   }
+  },
+  {
+   "path": "/blog/how-long-to-learn-korean-arabic-speakers",
+   "title": "How Long to Learn Korean as Arabic Speaker",
+   "description": "how long to learn korean — How long does it really take to learn Korean? Realistic timeline for Arabic speakers — from complete beginner to conversational…",
+   "post": {
+    "slug": "how-long-to-learn-korean-arabic-speakers",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80",
+    "heroAlt": "Students studying together at a table",
+    "articleType": "longform",
+    "author": "Reham El-Sharkawi",
+    "publishedAt": "2026-03-20T09:00:00+00:00",
+    "updatedAt": "2026-08-08T01:23:43.487816+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-alphabet-hangul-guide",
+   "title": "Learn the Korean Alphabet (Hangul) in One Day: Complete...",
+   "description": "Master the Korean alphabet (Hangul) in one day with this step-by-step guide. Learn all 40 letters, pronunciation, stroke order, and start reading Korean…",
+   "post": {
+    "slug": "learn-korean-alphabet-hangul-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/hangul-science.jpg",
+    "heroAlt": "Korean Hangul characters written on paper",
+    "articleType": "howto",
+    "author": "Reham El-Sharkawi",
+    "publishedAt": "2026-03-20T08:00:00+00:00",
+    "updatedAt": "2026-08-15T04:00:17.25957+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-family-terms-relationships-guide",
+   "title": "Korean Family Words and Relationship Terms",
+   "description": "korean family words — Learn all Korean family vocabulary with pronunciation, usage, and cultural context. Understand why Korean has different words depending...",
+   "post": {
+    "slug": "korean-family-terms-relationships-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-family.jpg",
+    "heroAlt": "Multi-generational Korean family gathered together showing warmth and connection",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T02:13:55.425+00:00",
+    "updatedAt": "2026-07-13T12:49:01.136164+00:00"
+   }
+  },
+  {
+   "path": "/blog/best-free-resources-learn-korean-online-2026",
+   "title": "free korean learning resources — Best Free Resources to Lear",
+   "description": "The definitive list of free Korean learning resources in 2026 — apps, YouTube channels, podcasts, websites, and communities ranked by effectiveness.",
+   "post": {
+    "slug": "best-free-resources-learn-korean-online-2026",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80&auto=format&fit=crop",
+    "heroAlt": "Person learning Korean on a laptop with headphones and notes",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-20T02:13:55.122+00:00",
+    "updatedAt": "2026-08-16T08:16:35.228763+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-body-language-social-etiquette",
+   "title": "korean etiquette — Korean Body Language and Social Etiquette",
+   "description": "korean etiquette — Master Korean social customs, body language, and unwritten rules that textbooks skip. From bowing correctly to understanding age hierarchy...",
+   "post": {
+    "slug": "korean-body-language-social-etiquette",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80",
+    "heroAlt": "People bowing and greeting in Korean style",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-19T02:13:55.226+00:00",
+    "updatedAt": "2026-08-10T11:18:48.394767+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-weather-small-talk-phrases",
+   "title": "Korean Weather Small Talk: Phrases for Everyday Conversation",
+   "description": "Learn natural Korean phrases for weather small talk — beyond vocabulary lists — the exact sentences Koreans actually use to chat about the weather.",
+   "post": {
+    "slug": "korean-weather-small-talk-phrases",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1549924231-f129b911e442?w=1200&q=80",
+    "heroAlt": "Person checking weather on phone representing Korean small talk",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-18T06:36:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-songs-to-learn-korean-2026",
+   "title": "Korean Songs to Learn Korean Effectively",
+   "description": "korean songs to learn korean — Ten carefully selected Korean songs for language learning — chosen for clear pronunciation, everyday vocabulary, and emotional...",
+   "post": {
+    "slug": "korean-songs-to-learn-korean-2026",
+    "lang": "en",
+    "heroImage": "/assets/blog/kpop-lyrics-study.jpg",
+    "heroAlt": "K-Pop concert with colorful lights",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-17T02:13:55.526+00:00",
+    "updatedAt": "2026-08-15T08:19:29.50523+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-weather-small-talk-phrases-ar",
+   "title": "أحاديث الطقس الكورية القصيرة: عبارات للمحادثة اليومية",
+   "description": "تعلم عبارات كورية طبيعية للحديث القصير عن الطقس — أبعد من قوائم المفردات — الجمل الحقيقية التي يستخدمها الكوريون فعلياً للحديث عن الطقس.",
+   "post": {
+    "slug": "korean-weather-small-talk-phrases-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1549924231-f129b911e442?w=1200&q=80",
+    "heroAlt": "شخص يتحقق من الطقس على هاتفه يرمز للحديث القصير الكوري",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-03-16T13:48:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-phone-texting-etiquette",
+   "title": "Korean Phone Call and Texting Etiquette",
+   "description": "Learn the unwritten rules of Korean phone and texting etiquette — how to answer calls, when to call versus text, and the phrases you need for both.",
+   "post": {
+    "slug": "korean-phone-texting-etiquette",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80",
+    "heroAlt": "Person holding phone representing Korean phone etiquette",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-14T21:00:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-phone-texting-etiquette-ar",
+   "title": "آداب المكالمات والرسائل الهاتفية الكورية",
+   "description": "تعلم القواعد غير المكتوبة لآداب الهاتف والرسائل النصية الكورية — كيف ترد على المكالمات، ومتى تتصل بدلاً من إرسال رسالة، والعبارات التي تحتاجها لكليهما.",
+   "post": {
+    "slug": "korean-phone-texting-etiquette-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80",
+    "heroAlt": "شخص يحمل هاتفاً يرمز لآداب الهاتف الكورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-03-13T04:12:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-zodiac-fortune-telling-guide",
+   "title": "Korean Zodiac and Fortune Telling: Saju, Tti, and Gunghap Explained",
+   "description": "Discover Korea's zodiac and fortune-telling traditions — saju, the 12 animal signs (tti), and gunghap compatibility readings — and the vocabulary behind them.",
+   "post": {
+    "slug": "korean-zodiac-fortune-telling-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-superstitions.jpg",
+    "heroAlt": "Traditional Korean zodiac animal illustrations representing fortune telling",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-11T11:24:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-zodiac-fortune-telling-guide-ar",
+   "title": "الأبراج والتنجيم في الكورية: شرح ساجو وتّي وغونغهاب",
+   "description": "اكتشف تقاليد الأبراج والتنجيم الكورية — الساجو، والحيوانات الاثني عشرية (تّي)، وقراءات التوافق غونغهاب — والمفردات وراءها.",
+   "post": {
+    "slug": "korean-zodiac-fortune-telling-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-superstitions.jpg",
+    "heroAlt": "رسوم حيوانات الأبراج الكورية التقليدية ترمز للتنجيم",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-03-09T18:36:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-tattoo-culture-guide",
+   "title": "Korean Tattoo Culture: History, Stigma, and Modern Change",
+   "description": "Explore Korean tattoo culture — why tattoos were historically stigmatized, the legal gray area artists work in, and how attitudes are changing among younger generations.",
+   "post": {
+    "slug": "korean-tattoo-culture-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&q=80",
+    "heroAlt": "Tattoo artist at work representing Korean tattoo culture",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-08T01:48:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-tattoo-culture-guide-ar",
+   "title": "ثقافة الوشم في كوريا: التاريخ والوصمة والتغيير الحديث",
+   "description": "استكشف ثقافة الوشم في كوريا — لماذا كان الوشم موصوماً تاريخياً، والمنطقة الرمادية القانونية التي يعمل فيها الفنانون، وكيف تتغير النظرة بين الأجيال الشابة.",
+   "post": {
+    "slug": "korean-tattoo-culture-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&q=80",
+    "heroAlt": "فنان وشم أثناء العمل يرمز لثقافة الوشم الكورية",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-03-06T09:00:00+00:00",
+    "updatedAt": "2026-07-11T13:50:03.350925+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-webtoon-reading-guide",
+   "title": "Korean Webtoons: A Beginner's Guide to Reading and Vocabulary",
+   "description": "Discover Korean webtoons — the vertical-scroll digital comics behind hits like Solo Leveling and True Beauty — plus the vocabulary you need to start reading them.",
+   "post": {
+    "slug": "korean-webtoon-reading-guide",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-reading.jpg",
+    "heroAlt": "Phone screen showing a Korean webtoon representing digital comics",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-04T16:12:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-webtoon-reading-guide-ar",
+   "title": "الويبتون الكوري: دليل المبتدئين للقراءة والمفردات",
+   "description": "اكتشف الويبتون الكوري — القصص المصورة الرقمية ذات التمرير العمودي وراء أعمال مثل Solo Leveling وTrue Beauty — بالإضافة إلى المفردات التي تحتاجها لبدء قراءتها.",
+   "post": {
+    "slug": "korean-webtoon-reading-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-reading.jpg",
+    "heroAlt": "شاشة هاتف تعرض ويبتون كورياً يرمز للقصص المصورة الرقمية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-03-02T23:24:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-gaming-culture-pcbang",
+   "title": "Korean Gaming Culture: PC Bang and Esports Vocabulary",
+   "description": "Explore Korean gaming culture — PC bangs, professional esports, and the Korean vocabulary gamers actually use, from StarCraft's legacy to today's LoL scene.",
+   "post": {
+    "slug": "korean-gaming-culture-pcbang",
+    "lang": "en",
+    "heroImage": "/assets/blog/korean-esports.jpg",
+    "heroAlt": "Rows of gaming computers representing a Korean PC bang",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-03-01T06:36:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-funeral-traditions-guide",
+   "title": "Korean Funeral Traditions and Etiquette Explained",
+   "description": "Learn about Korean funeral traditions, mourning etiquette, and the key vocabulary — from the three-day funeral (samil-jang) to proper condolence phrases.",
+   "post": {
+    "slug": "korean-funeral-traditions-guide",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?w=1200&q=80",
+    "heroAlt": "White chrysanthemums representing Korean funeral traditions",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-02-25T21:00:00+00:00",
+    "updatedAt": "2026-07-11T13:52:27.936211+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-funeral-traditions-guide-ar",
+   "title": "تقاليد وآداب الجنازات الكورية بالشرح",
+   "description": "تعرّف على تقاليد الجنازات الكورية وآداب الحداد والمفردات الأساسية — من جنازة الأيام الثلاثة (ساميلجانغ) إلى عبارات التعزية الصحيحة.",
+   "post": {
+    "slug": "korean-funeral-traditions-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?w=1200&q=80",
+    "heroAlt": "زهور أقحوان بيضاء ترمز لتقاليد الجنازات الكورية",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-02-24T04:12:00+00:00",
+    "updatedAt": "2026-07-11T13:52:27.936211+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-first-birthday-dol-traditions",
+   "title": "Korean First Birthday (Doljanchi) Traditions Explained",
+   "description": "Discover doljanchi, Korea's elaborate first-birthday celebration, including the doljabi fortune-telling tradition where babies pick their future from a table of objects.",
+   "post": {
+    "slug": "korean-first-birthday-dol-traditions",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1200&q=80",
+    "heroAlt": "Traditional Korean first birthday table setting representing doljanchi",
+    "articleType": "longform",
+    "author": "Klovers Team",
+    "publishedAt": "2026-02-22T11:24:00+00:00",
+    "updatedAt": "2026-07-11T13:52:27.936211+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-first-birthday-dol-traditions-ar",
+   "title": "تقاليد عيد الميلاد الأول الكوري (دولجانتشي) بالشرح",
+   "description": "اكتشف دولجانتشي، احتفال عيد الميلاد الأول المفصّل في كوريا، بما في ذلك تقليد دولجابي للتنجيم حيث يختار الطفل مستقبله من طاولة أغراض.",
+   "post": {
+    "slug": "korean-first-birthday-dol-traditions-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1200&q=80",
+    "heroAlt": "طاولة احتفال عيد الميلاد الأول الكوري التقليدي ترمز لدولجانتشي",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2026-02-20T18:36:00+00:00",
+    "updatedAt": "2026-07-11T13:52:27.936211+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-compliment-praise-phrases",
+   "title": "Korean Compliment and Praise Phrases You'll Actually Use",
+   "description": "Learn natural Korean compliment and praise phrases for appearance, skill, and personality, plus how to respond humbly when someone compliments you.",
+   "post": {
+    "slug": "korean-compliment-praise-phrases",
+    "lang": "en",
+    "heroImage": "https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=1200&q=80",
+    "heroAlt": "Two friends smiling representing Korean compliment culture",
+    "articleType": "listicle",
+    "author": "Klovers Team",
+    "publishedAt": "2026-02-19T01:48:00+00:00",
+    "updatedAt": "2026-07-11T13:52:27.936211+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-workplace-business-culture-ar",
+   "title": "ثقافة العمل الكورية: دليل بيئة الشركات",
+   "description": "ثقافة العمل الكوري — دليل شامل لثقافة العمل في كوريا الجنوبية. من التسلسل الهرمي إلى ثقافة العمل الجماعي وعادات بيئة العمل.",
+   "post": {
+    "slug": "korean-workplace-business-culture-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-work-culture.jpg",
+    "heroAlt": "ثقافة العمل والأعمال الكورية",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-06-15T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-songs-to-learn-korean-2026-ar",
+   "title": "أغاني كورية للتعلم: أفضل 10 أغاني في 2026",
+   "description": "أغاني كورية للتعلم — قائمة منتقاة من أفضل الأغاني الكورية لتعلم اللغة. من البوب إلى الكلاسيكي، أغاني تعلمك مفردات حقيقية.",
+   "post": {
+    "slug": "korean-songs-to-learn-korean-2026-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/kpop-lyrics-study.jpg",
+    "heroAlt": "حفل كيبوب مع أضواء ملونة",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-06-10T10:00:00+00:00",
+    "updatedAt": "2026-08-16T08:16:35.446505+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-family-terms-relationships-guide-ar",
+   "title": "أسماء أسرة كورية: دليل العلاقات العائلية",
+   "description": "أسماء أسرة كورية — دليل شامل لأسماء أفراد الأسرة الكورية. لماذا للكورية 40+ كلمة مختلفة لتسمية الأقارب وكيف تستخدمها. — تعلم المزيد مع أكاديمية كلوفرز للغة ا...",
+   "post": {
+    "slug": "korean-family-terms-relationships-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-family.jpg",
+    "heroAlt": "عائلة كورية كبيرة متعددة الأجيال تجتمع معًا بدفء ومحبة",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-06-05T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/topik-1-vocabulary-list-800-words-ar",
+   "title": "مفردات TOPIK 1: أهم 800 كلمة كورية",
+   "description": "مفردات TOPIK 1 — القائمة الكاملة لأهم 800 كلمة كورية لاجتياز TOPIK I. مصنفة حسب الموضوع مع الترجمة والنطق. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. درو...",
+   "post": {
+    "slug": "topik-1-vocabulary-list-800-words-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80",
+    "heroAlt": "طالبة تستعد لامتحان التوبيك",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-06-01T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:11.878439+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-body-language-social-etiquette-ar",
+   "title": "آداب كورية: لغة الجسد الكورية وآداب السلوك الاجتماعي",
+   "description": "آداب كورية — تعلم الآداب الاجتماعية وقواعد السلوك في كوريا. من تقديم البطاقة لتناول الطعام - كيف تتصرف بشكل صحيح. — تعلم المزيد مع أكاديمية كلوفرز للغة الكور...",
+   "post": {
+    "slug": "korean-body-language-social-etiquette-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=80",
+    "heroAlt": "الآداب الاجتماعية في كوريا",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-05-25T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:02.719986+00:00"
+   }
+  },
+  {
+   "path": "/blog/best-free-resources-learn-korean-online-2026-ar",
+   "title": "مصادر مجانية لتعلم الكورية أونلاين 2026",
+   "description": "مصادر مجانية لتعلم الكورية — قائمة شاملة بأفضل التطبيقات والمواقع والقنوات المجانية لتعلم اللغة الكورية في 2026. اختار الأنسب لمستواك.",
+   "post": {
+    "slug": "best-free-resources-learn-korean-online-2026-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
+    "heroAlt": "شاشة كمبيوتر تعرض موارد تعلم اللغة الكورية المجانية على الإنترنت",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-05-20T10:00:00+00:00",
+    "updatedAt": "2026-08-16T05:25:14.736697+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-for-arabic-speakers-difficulty-guide-ar",
+   "title": "الكورية للعرب: هل هي صعبة؟ الإجابة الصريحة",
+   "description": "الكورية للعرب — دراسة مقارنة بين العربية والكورية من منظور لغوي. ما الصعوبات الحقيقية وما المفاجآت الإيجابية التي ستجدها.",
+   "post": {
+    "slug": "korean-for-arabic-speakers-difficulty-guide-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=1200&q=80",
+    "heroAlt": "شخص يتحدث ويتدرب على النطق الكوري",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-05-15T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:01.180737+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-speech-levels-honorifics-guide-ar",
+   "title": "مجاملة كورية: مستويات الكلام السبعة",
+   "description": "مجاملة كورية — تعلم مستويات الكلام الكورية السبعة وكيفية استخدامها. متى تتكلم رسمياً ومتى تكون عادياً في المجتمع الكوري.",
+   "post": {
+    "slug": "korean-speech-levels-honorifics-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-honorifics.jpg",
+    "heroAlt": "محترفون كوريون ينحنون باحترام يظهرون مستويات الكلام الرسمي",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-05-10T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-age-system-explained-ar",
+   "title": "نظام العمر الكوري: كيف يحسب الكوريون",
+   "description": "نظام العمر الكوري — شرح مفصل لنظام الأعمار الكوري الفريد. كيف يُحسب عمرك في كوريا ولماذا اختلف الكوريون عن بقية العالم. — تعلم المزيد مع أكاديمية كلوفرز للغة...",
+   "post": {
+    "slug": "korean-age-system-explained-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-age-system.jpg",
+    "heroAlt": "عائلة كورية متعددة الأجيال تجلس معًا توضح نظام العمر الكوري",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-05-05T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-pronunciation-guide-beginners-ar",
+   "title": "نطق كوري: دليل المبتدئين للنطق الصحيح",
+   "description": "نطق كوري — تعلم قواعد النطق الكوري التي يتجاهلها معظم المبتدئين. كيف تنطق الكورية بشكل طبيعي وتبدو كناطق أصلي. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية....",
+   "post": {
+    "slug": "korean-pronunciation-guide-beginners-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1200&q=80",
+    "heroAlt": "طالب يتدرب على النطق الكوري بسماعات رأس وكتاب لغة مفتوح",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-05-01T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:06.351994+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-through-kpop-bts-blackpink-ar",
+   "title": "كيبوب وتعلم الكورية: طريقة مجربة وفعالة",
+   "description": "كيبوب وتعلم الكورية — تعلم كيف تستخدم موسيقى الكيبوب كأداة فعالة لتعلم اللغة الكورية. طرق عملية لتحويل حبك للكيبوب إلى كفاءة لغوية.",
+   "post": {
+    "slug": "learn-korean-through-kpop-bts-blackpink-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-music.jpg",
+    "heroAlt": "ميكروفون على مسرح حفل موسيقى كيبوب مع أضواء ملونة",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-04-25T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-easier-than-japanese-chinese-ar",
+   "title": "الكورية vs اليابانية: أسهل لغة آسيوية",
+   "description": "الكورية vs اليابانية — مقارنة شاملة بين الكورية واليابانية والصينية من منظور متعلم عربي. اكتشف لماذا الكورية هي الخيار الأذكى للعرب.",
+   "post": {
+    "slug": "korean-easier-than-japanese-chinese-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=1200&q=80",
+    "heroAlt": "مقارنة اللغات الآسيوية",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-04-20T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:10.15832+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-traditional-holidays-chuseok-seollal-ar",
+   "title": "أعياد كورية: تشوسوك وسولال والتقاليد",
+   "description": "تعرف على أهم عيدين في الثقافة الكورية. تشوسوك وسيولال: تاريخهما وتقاليدهما والطعام الخاص بهما وكيف يحتفل الكوريون. — تعلم المزيد مع أكاديمية كلوفرز للغة الكو...",
+   "post": {
+    "slug": "korean-traditional-holidays-chuseok-seollal-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/seollal-new-year.jpg",
+    "heroAlt": "مائدة عيد تشوسوك الكوري التقليدي مع كعك الأرز والفواكه الملونة",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-04-15T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-3-months-study-method-ar",
+   "title": "تعلم الكورية 3 أشهر: تعلم الكورية في 3 أشهر: خطة دراسية",
+   "description": "تعلم الكورية 3 أشهر — هل يمكن تعلم الكورية في 3 أشهر؟ نعم! اكتشف الخطة المفصلة التي توصلك لمستوى محادثة حقيقي في 90 يوماً.",
+   "post": {
+    "slug": "learn-korean-3-months-study-method-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-study-desk.jpg",
+    "heroAlt": "خطة تعلم الكورية في 3 أشهر",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-04-10T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-skincare-kbeauty-routine-guide-ar",
+   "title": "روتين بشرة كوري: خطوات العناية بالبشرة",
+   "description": "روتين بشرة كوري — اكتشف أسرار روتين العناية بالبشرة الكوري المكون من 10 خطوات. لماذا تمتلك الكوريات أجمل بشرة في العالم وكيف تحاكيهن.",
+   "post": {
+    "slug": "korean-skincare-kbeauty-routine-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-skincare.jpg",
+    "heroAlt": "منتجات العناية بالبشرة الكورية",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-04-05T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-grammar-particles-ar",
+   "title": "دليل جسيمات الكورية (조사): أتقنها وافتح أسرار قواعد الكورية",
+   "description": "قواعد الكورية — تعلم حروف الجر الكورية (جسيمات) وكيفية استخدامها. شرح مبسط للمبتدئين مع أمثلة عملية لكل جسيم. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. ...",
+   "post": {
+    "slug": "korean-grammar-particles-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-particles.jpg",
+    "heroAlt": "صفحات كتاب قواعد اللغة الكورية مع شرح الجسيمات النحوية",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-04-01T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/seoul-travel-korean-phrases-ar",
+   "title": "سفر إلى سيول: سيول: عبارات كورية أساسية للسياح",
+   "description": "سفر إلى سيول — استعد لرحلتك إلى سيول مع أهم العبارات الكورية للسفر. من المطار والفندق إلى المطاعم والمترو، كل ما تحتاجه.",
+   "post": {
+    "slug": "seoul-travel-korean-phrases-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80",
+    "heroAlt": "أفق مدينة سيول مع برج نامسان",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-03-25T10:00:00+00:00",
+    "updatedAt": "2026-08-16T08:16:38.865914+00:00"
+   }
+  },
+  {
+   "path": "/blog/hanbok-korean-traditional-clothing-ar",
+   "title": "هانبوك: الزي التقليدي الكوري الجميل",
+   "description": "تعرف على الهانبوك، الزي الكوري التقليدي. تاريخه، أنواعه، مناسبات ارتدائه، وكيف أصبح رمزاً ثقافياً عالمياً. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. درو...",
+   "post": {
+    "slug": "hanbok-korean-traditional-clothing-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/hanbok-fashion.jpg",
+    "heroAlt": "الزي التقليدي الكوري الهانبوك",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-03-20T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-numbers-guide-ar",
+   "title": "أرقام كورية: نظاما العد في اللغة الكورية",
+   "description": "أرقام كورية — دليل شامل لنظامَي الأرقام في اللغة الكورية. اكتشف متى تستخدم كل نظام ولماذا الكوريون لديهم طريقتان للعد. — تعلم المزيد مع أكاديمية كلوفرز للغة ...",
+   "post": {
+    "slug": "korean-numbers-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-numbers.jpg",
+    "heroAlt": "أرقام ورموز رياضية على السبورة",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-03-15T10:00:00+00:00",
+    "updatedAt": "2026-08-15T23:07:39.665114+00:00"
+   }
+  },
+  {
+   "path": "/blog/topik-exam-guide-ar",
+   "title": "امتحان TOPIK: TOPIK: دليل اجتياز اختبار الكورية",
+   "description": "دليل شامل لاجتياز امتحان TOPIK للمتحدثين بالعربية. تعرف على هيكل الامتحان والاستراتيجيات والموارد اللازمة للنجاح. — تعلم المزيد مع أكاديمية كلوفرز للغة الكور...",
+   "post": {
+    "slug": "topik-exam-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/topik-test.jpg",
+    "heroAlt": "كتب ودفاتر دراسية مفتوحة على مكتب للتحضير لاختبار التوبيك",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-03-10T10:00:00+00:00",
+    "updatedAt": "2026-08-03T04:48:18.183993+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-food-vocabulary-ar",
+   "title": "مفردات طعام كوري: طعام كوري: 60 كلمة مفردات أساسية",
+   "description": "مفردات طعام كوري — تعلم 60 مفردة كورية خاصة بالطعام والمطاعم. من أسماء الأكلات الشهيرة إلى عبارات الطلب في المطعم، كل ما تحتاجه.",
+   "post": {
+    "slug": "korean-food-vocabulary-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/bibimbap.jpg",
+    "heroAlt": "مائدة طعام كوري متنوعة",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-03-05T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-daily-greetings-ar",
+   "title": "تحيات كورية: 40 عبارة للاستخدام اليومي",
+   "description": "تحيات كورية — تعلم 40 تحية وعبارة يومية كورية مع النطق والاستخدام الصحيح. من الصباح حتى المساء، احتل محادثاتك الكورية بثقة.",
+   "post": {
+    "slug": "korean-daily-greetings-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1200&q=80",
+    "heroAlt": "أشخاص يتبادلون التحية بالطريقة الكورية",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-03-01T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:12.45445+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-slang-words-ar",
+   "title": "عامية كورية: 35 كلمة يجب أن تعرفها",
+   "description": "عامية كورية — تعلم أشهر الكلمات العامية الكورية المستخدمة في الدراما ووسائل التواصل مع شرح معانيها الحقيقية وكيفية استخدامها.",
+   "post": {
+    "slug": "korean-slang-words-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/korean-drama.jpg",
+    "heroAlt": "Young Koreans chatting with slang expressions",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-02-20T10:00:00+00:00",
+    "updatedAt": "2026-08-15T04:00:49.196508+00:00"
+   }
+  },
+  {
+   "path": "/blog/korean-cafe-coffee-culture-ar",
+   "title": "مقاهي كورية: لماذا هي الأكثر إبداعاً؟",
+   "description": "مقاهي كورية — اكتشف عالم المقاهي الكورية المبهر! من مقاهي القطط إلى مقاهي الألواح الرسومية، تعرف على ثقافة القهوة المتفردة في كوريا.",
+   "post": {
+    "slug": "korean-cafe-coffee-culture-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1200&q=80",
+    "heroAlt": "مقهى كوري بتصميم جميل",
+    "articleType": "longform",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-02-15T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:07.492004+00:00"
+   }
+  },
+  {
+   "path": "/blog/study-korean-kdramas-method-ar",
+   "title": "طريقة تعلم الكورية من الدراما: كيف تدرس أثناء مشاهدة التلفاز",
+   "description": "تعلم الكورية من الدراما — اكتشف الطريقة العلمية لتعلم الكورية من خلال مشاهدة الدراما الكورية. خطوات عملية لتحويل وقت ترفيهك إلى جلسات تعلم فعالة.",
+   "post": {
+    "slug": "study-korean-kdramas-method-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/kdrama-vocabulary.jpg",
+    "heroAlt": "جهاز تحكم تلفزيون موجه نحو شاشة تعرض مسلسلًا كوريًا مع ترجمة",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-02-10T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/kdrama-korean-phrases-beginners-ar",
+   "title": "عبارات كورية من الدراما: 30 عبارة أساسية",
+   "description": "عبارات كورية من الدراما — تعلم 30 عبارة كورية شائعة في الدراما الكورية مع معانيها الحقيقية وكيفية استخدامها في الحياة اليومية.",
+   "post": {
+    "slug": "kdrama-korean-phrases-beginners-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80",
+    "heroAlt": "مشهد من مسلسل كوري درامي مع ترجمة عربية لتعلم العبارات الكورية",
+    "articleType": "listicle",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-02-05T10:00:00+00:00",
+    "updatedAt": "2026-08-16T08:17:17.544168+00:00"
+   }
+  },
+  {
+   "path": "/blog/learn-korean-alphabet-hangul-guide-ar",
+   "title": "تعلم الأبجدية الكورية (هانغول) في يوم واحد: الدليل الكامل",
+   "description": "دليل شامل لتعلم الهانغول في يوم واحد. تعرف على الحروف الساكنة والمتحركة وكيفية تركيبها لقراءة الكورية من الصفر. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية...",
+   "post": {
+    "slug": "learn-korean-alphabet-hangul-guide-ar",
+    "lang": "ar",
+    "heroImage": "/assets/blog/hangul-science.jpg",
+    "heroAlt": "حروف الهانغول مكتوبة على ورقة",
+    "articleType": "howto",
+    "author": "فريق كي لوفرز",
+    "publishedAt": "2025-02-01T10:00:00+00:00",
+    "updatedAt": "2026-07-11T14:18:07.311317+00:00"
+   }
+  },
+  {
+   "path": "/blog/how-to-learn-korean-faster-ar",
+   "title": "تعلم كوري أسرع — 10 طرق مثبتة علمياً لتعلم الكورية أسرع (بتش",
+   "description": "تعلم كوري أسرع — 10 استراتيجيات مدعومة بالأبحاث لتعلم الكورية بشكل أسرع. سواء كنت مبتدئ أو متوسط، النصائح دي هتسرع تقدمك — مع تحدي 30 يوم.",
+   "post": {
+    "slug": "how-to-learn-korean-faster-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
+    "heroAlt": "طالب يدرس بكفاءة مع ملاحظات ولابتوب",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2025-01-25T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:09.707967+00:00"
+   }
+  },
+  {
+   "path": "/blog/50-essential-korean-words-beginners-ar",
+   "title": "كلمات كورية — 50 كلمة كورية أساسية لازم كل مبتدئ يتعلمها الأ",
+   "description": "كلمات كورية — أهم 50 كلمة كورية للمبتدئين. اتعلمها الأول وهتفهم أساسيات المحادثة الكورية اليومية — مع جمل أمثلة وخطة حفظ في 5 أيام.",
+   "post": {
+    "slug": "50-essential-korean-words-beginners-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
+    "heroAlt": "دفتر مفتوح مكتوب فيه كلمات كورية",
+    "articleType": "listicle",
+    "author": "فريق Klovers",
+    "publishedAt": "2025-01-20T10:00:00+00:00",
+    "updatedAt": "2026-08-15T03:57:50.009399+00:00"
+   }
+  },
+  {
+   "path": "/blog/how-long-to-learn-korean-arabic-speakers-ar",
+   "title": "كم يستغرق تعلم الكورية — كم من الوقت يستغرق تعلم اللغة الكور",
+   "description": "كم يستغرق تعلم الكورية فعلاً؟ جدول زمني واقعي للمتحدثين بالعربية — من الصفر للمحادثة، مع خطة دراسة شهرية ومراحل تقدم واضحة.",
+   "post": {
+    "slug": "how-long-to-learn-korean-arabic-speakers-ar",
+    "lang": "ar",
+    "heroImage": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80",
+    "heroAlt": "طالب يدرس اللغة الكورية على مكتب مع كتب",
+    "articleType": "longform",
+    "author": "فريق Klovers",
+    "publishedAt": "2025-01-15T10:00:00+00:00",
+    "updatedAt": "2026-04-21T18:23:02.974711+00:00"
+   }
+  }
+ ]
+}
