@@ -45,7 +45,7 @@ jobs:
         id: pr
         run: |
           set -euo pipefail
-          pr=$(gh pr list --head "$BRANCH" --state open --json number,headRefOid,isDraft,mergeable --jq '.[0] // empty')
+          pr=$(gh pr list --head "$BRANCH" --state open --json number,headRefOid,isDraft,mergeable,labels --jq '.[0] // empty')
           if [ -z "$pr" ]; then
             echo "No open PR for $BRANCH - nothing to merge."
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -56,6 +56,29 @@ jobs:
           head=$(echo "$pr" | jq -r .headRefOid)
           draft=$(echo "$pr" | jq -r .isDraft)
           mergeable=$(echo "$pr" | jq -r .mergeable)
+
+          # An explicit hold always wins. This is checked before anything else
+          # is touched - in particular before the un-draft below, so a held PR
+          # is left exactly as the author left it.
+          # Label names are normalised (lowercased, spaces and underscores
+          # folded to hyphens) so "Do Not Merge", "do_not_merge" and
+          # "do-not-merge" all count. Anything in this list holds the PR.
+          held=$(echo "$pr" | jq -r '
+            [ .labels[].name
+              | ascii_downcase
+              | gsub("[ _]"; "-")
+            ]
+            | map(select(IN(
+                "hold", "on-hold", "do-not-merge", "dont-merge",
+                "do-not-auto-merge", "blocked", "wip"
+              )))
+            | length')
+          if [ "$held" -gt 0 ]; then
+            names=$(echo "$pr" | jq -r '[ .labels[].name ] | join(", ")')
+            echo "::notice::PR #$number is labelled '$names' - auto-merge is holding off."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           if [ "$head" != "$TESTED_SHA" ]; then
             echo "PR #$number moved on since CI ran - a newer CI run will handle it."
