@@ -1,10 +1,25 @@
--- Restore ayaaraffaa@gmail.com credits to 20 — confirmed paid by admin (markus).
--- The extra 16 credits above her 4-class enrollment were from a separate
--- arrangement recorded outside the enrollments table.
+-- NEUTRALISED 2026-08-21 — see docs/MIGRATION_TRIAGE.md
+--
+-- This migration was a one-off correction for a single student's credit
+-- balance on 2026-04-23. It carried no schema change at all.
+--
+-- The removed statements were:
+--
+--     ALTER TABLE public.profiles DISABLE TRIGGER protect_profile_fields_trigger;
+--     UPDATE public.profiles SET credits = 20 WHERE user_id = '846805ef-...';
+--     ALTER TABLE public.profiles ENABLE TRIGGER protect_profile_fields_trigger;
+--
+-- Two reasons it must not replay:
+--
+--   1. It hard-sets one live account's balance to a value decided in April.
+--      That account currently holds 20 credits, so it is a no-op today, but
+--      it would silently overwrite any legitimate change made since.
+--   2. It disables protect_profile_fields_trigger for the duration. If the
+--      UPDATE fails, the migration aborts between DISABLE and ENABLE and
+--      the protection trigger stays off across the whole profiles table.
+--
+-- A per-user data correction does not belong in the migration chain. The
+-- file is kept as a no-op so the version stays contiguous and the history
+-- stays readable; the intent is recorded here rather than executed.
 
-ALTER TABLE public.profiles DISABLE TRIGGER protect_profile_fields_trigger;
-
-UPDATE public.profiles SET credits = 20
-WHERE user_id = '846805ef-fe6e-4670-8f7c-88f2a4b232f7';
-
-ALTER TABLE public.profiles ENABLE TRIGGER protect_profile_fields_trigger;
+SELECT 1;
