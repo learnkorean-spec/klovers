@@ -70,9 +70,9 @@ jobs:
             status="$(curl -sS -o "$body" -w '%{http_code}' --max-time 30 "$url" 2>/dev/null || echo 000)"
             location="$(curl -sS -o /dev/null -D - --max-time 30 "$url" 2>/dev/null | grep -i '^location:' | head -1 | tr -d '\r' || true)"
 
-            title="$(grep -o '<title>[^<]*</title>' "$body" | head -1 | sed -e 's|<title>||' -e 's|</title>||')"
-            canonical="$(grep -o 'rel="canonical" href="[^"]*"' "$body" | head -1 | sed -e 's|.*href="||' -e 's|"$||')"
-            robots="$(grep -o 'name="robots" content="[^"]*"' "$body" | head -1 | sed -e 's|.*content="||' -e 's|"$||')"
+            title="$(grep -o '<title>[^<]*</title>' "$body" | head -1 | sed -e 's|<title>||' -e 's|</title>||' || true)"
+            canonical="$(grep -o 'rel="canonical" href="[^"]*"' "$body" | head -1 | sed -e 's|.*href="||' -e 's|"$||' || true)"
+            robots="$(grep -o 'name="robots" content="[^"]*"' "$body" | head -1 | sed -e 's|.*content="||' -e 's|"$||' || true)"
 
             echo "── ${url}"
             echo "   HTTP status : ${status}"
