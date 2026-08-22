@@ -190,10 +190,12 @@ jobs:
 
           # The direct host is IPv6-only for many projects and GitHub runners are
           # IPv4-only, so probe the IPv4 poolers first and fall back to direct.
+          # aws-1 is this project's pooler, per the URL the CLI resolved and
+          # cached in supabase/.temp/pooler-url; the others are fallbacks.
           DBHOST=""; DBUSER=""
           for cand in \
-            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
             "aws-1-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
             "db.$PROJECT_REF.supabase.co|postgres" ; do
             host="${cand%%|*}"; user="${cand##*|}"
             if psql -h "$host" -p 5432 -U "$user" -d postgres -tAc 'SELECT 1' >/dev/null 2>&1; then
