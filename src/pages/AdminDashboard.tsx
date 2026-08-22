@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Clock, Tag, Loader2, Image, Trophy, TrendingUp, Link, BookOpen } from "lucide-react";
+import { LogOut, Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Clock, Tag, Loader2, Image, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Package } from "lucide-react";
 import {
@@ -44,6 +44,7 @@ const AdminNotifications = lazy(() => import("@/components/admin/AdminNotificati
 const AdminAttendancePanel = lazy(() => import("@/components/admin/AdminAttendancePanel"));
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
+const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
 const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
 const BulkEmailManager = lazy(() => import("@/components/admin/BulkEmailManager"));
 const SchedulingManager = lazy(() => import("@/components/admin/SchedulingManager"));
@@ -1067,7 +1068,7 @@ const AdminDashboard = () => {
 
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "manage", "sales", "promos"] },
-    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["group-attendance", "group-matcher", "placement-tests", "session-attendance", "availability", "preferences", "league-users", "books", "trial-books"] },
+    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["group-attendance", "group-matcher", "placement-tests", "session-attendance", "my-students", "availability", "preferences", "league-users", "books", "trial-books"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "availability", "settings"] },
   ];
@@ -1461,9 +1462,14 @@ const AdminDashboard = () => {
                 {inActiveGroup("scheduling") && (
                   <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
                 )}
+                {inActiveGroup("my-students") && (
+                  <TabsTrigger value="my-students" className={TAB_CLS}>
+                    <GraduationCap className="h-3.5 w-3.5" /> My Students
+                  </TabsTrigger>
+                )}
                 {inActiveGroup("availability") && (
                   <TabsTrigger value="availability" className={TAB_CLS}>
-                    <Clock className="h-3.5 w-3.5" /> Availability
+                    <Clock className="h-3.5 w-3.5" /> Group Availability
                   </TabsTrigger>
                 )}
                 {inActiveGroup("settings") && (
@@ -1737,7 +1743,17 @@ const AdminDashboard = () => {
               </TabErrorBoundary>
             </TabsContent>
 
-            {/* TEACHER AVAILABILITY TAB */}
+            {/* MY STUDENTS TAB — Re's ongoing 1:1 students. Their classes block
+                trial times automatically. Distinct from the Students tab, which
+                lists people registered on the site. */}
+            <TabsContent value="my-students">
+              <TabErrorBoundary name="My Students">
+                <MyStudentsManager />
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* GROUP AVAILABILITY TAB — feeds the group-course matcher via the
+                teacher_availability table. Unrelated to trial availability. */}
             <TabsContent value="availability">
               <TabErrorBoundary name="Teacher Availability">
                 <TeacherAvailabilityManager />
