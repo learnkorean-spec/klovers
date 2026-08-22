@@ -633,8 +633,11 @@ function buildPaymentMethodReminderEmail(name: string, enrollmentId: string, lan
 
 function buildTrialConfirmedEmail(p: EmailPayload) {
   const isAr = p.language === "ar";
-  const tz = (p.trial_timezone || "Africa/Cairo").replace(/_/g, " ");
-  const tzIana = p.trial_timezone || "Africa/Cairo";
+  // Trial slots are stored in the teacher's own zone. This fallback only fires
+  // if a caller omits trial_timezone; it used to be Africa/Cairo, which
+  // mislabelled a Malaysia-time slot by five hours.
+  const tz = (p.trial_timezone || "Asia/Kuala_Lumpur").replace(/_/g, " ");
+  const tzIana = p.trial_timezone || "Asia/Kuala_Lumpur";
   const durationMin = p.trial_duration_min || 30;
 
   // Generate ICS attachment when we have enough data
@@ -961,7 +964,8 @@ function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
   const isAr = p.language === "ar";
   const confirmUrl = `https://kloversegy.com/trial-confirm?id=${p.booking_id || ""}&token=${p.confirmation_token || ""}`;
   const classLink = p.class_link_url || p.meeting_url || null;
-  const tzIana = p.trial_timezone || "Africa/Cairo";
+  const tzIana = p.trial_timezone || "Asia/Kuala_Lumpur";
+  const tzLabel = tzIana.replace(/_/g, " ");
   const durationMin = p.trial_duration_min || 30;
 
   let icsAttachment: { filename: string; content: string; content_type: string } | undefined;
@@ -1064,6 +1068,7 @@ function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         ${brandTable([
           ["📅 التاريخ", p.trial_date || ""],
           ["⏰ الوقت", p.trial_time || ""],
+          ["🌍 التوقيت", tzLabel],
         ])}
         <div style="margin: 24px 0; text-align: center;">
           <a href="${confirmUrl}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ أكّد حضوري</a>
@@ -1095,6 +1100,7 @@ function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
       ${brandTable([
         ["📅 Date", p.trial_date || ""],
         ["⏰ Time", p.trial_time || ""],
+        ["🌍 Timezone", tzLabel],
       ])}
       <div style="margin: 24px 0; text-align: center;">
         <a href="${confirmUrl}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ Confirm My Attendance</a>
@@ -1123,7 +1129,7 @@ function buildTrialGroupFullEmail(p: EmailPayload) {
   const isAr = p.language === "ar";
   const isArabicClass = p.class_language === "arabic";
   const dayDate = [p.trial_day_name, p.trial_date].filter(Boolean).join(" ");
-  const tzLabel = (p.trial_timezone || "Asia/Ho_Chi_Minh").replace(/_/g, " ");
+  const tzLabel = (p.trial_timezone || "Asia/Kuala_Lumpur").replace(/_/g, " ");
   const count = p.confirmed_count ?? 4;
 
   if (isAr) {

@@ -20,6 +20,7 @@ import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, Chev
 import { formatTime, convertDateTimeToTimezone } from "@/lib/admin-utils";
 import { getAdminTimezone } from "@/lib/viewerTimezone";
 import { getLevelShortLabel } from "@/constants/levels";
+import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
 import { TrialSlotRow } from "@/types/trial-admin";
@@ -91,6 +92,7 @@ interface TrialSlot {
   trial_date?: string | null;
   meeting_url?: string | null;
   class_language?: string | null;
+  timezone?: string | null;
 }
 
 type TimeFilter = "all" | "upcoming" | "past";
@@ -163,7 +165,7 @@ const TrialClassesManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trial_slots")
-        .select("day_of_week, start_time, is_active, trial_date, meeting_url, class_language")
+        .select("day_of_week, start_time, is_active, trial_date, meeting_url, class_language, timezone")
         .eq("is_active", true);
       if (error) throw error;
       return (data as TrialSlot[] | null) ?? [];
@@ -234,7 +236,7 @@ const TrialClassesManager = () => {
       // booking date).
       const { data: slotByDate } = await supabase
         .from("trial_slots")
-        .select("meeting_url, class_language")
+        .select("meeting_url, class_language, timezone")
         .eq("trial_date", date)
         .eq("start_time", time)
         .maybeSingle();
@@ -242,7 +244,7 @@ const TrialClassesManager = () => {
         ? { data: null }
         : await supabase
             .from("trial_slots")
-            .select("meeting_url, class_language")
+            .select("meeting_url, class_language, timezone")
             .eq("day_of_week", Number(dowStr))
             .eq("start_time", time)
             .eq("is_active", true)
@@ -268,7 +270,11 @@ const TrialClassesManager = () => {
         language: emailLang,
         trial_date: date,
         trial_time: time,
-        trial_timezone: "Africa/Cairo",
+        // The slot's own stored zone — trial_time above is a naive local time
+        // and is meaningless without it. This used to be hard-coded to
+        // Africa/Cairo, which labelled a 22:00 Malaysia slot as 22:00 Cairo:
+        // five hours wrong in the student's inbox.
+        trial_timezone: (effectiveSlot as any)?.timezone ?? ADMIN_TIMEZONE,
         level: booking.level?.trim() || "",
       };
       if (meetingUrl) emailBody.class_link_url = meetingUrl;
@@ -397,7 +403,7 @@ const TrialClassesManager = () => {
           available_slots: langSlots.map((s) => ({
             day_of_week: s.day_of_week,
             start_time: s.start_time,
-            timezone: "Africa/Cairo",
+            timezone: s.timezone ?? ADMIN_TIMEZONE,
             date: s.trial_date,
           })),
         },
@@ -447,7 +453,7 @@ const TrialClassesManager = () => {
           .map((s) => ({
             day_of_week: s.day_of_week,
             start_time: s.start_time,
-            timezone: "Africa/Cairo",
+            timezone: s.timezone ?? ADMIN_TIMEZONE,
             date: s.trial_date,
           }));
         const { error: emailErr } = await supabase.functions.invoke("send-confirmation-email", {
@@ -615,7 +621,7 @@ const TrialClassesManager = () => {
     try {
       const { data: slotRow } = await supabase
         .from("trial_slots")
-        .select("meeting_url, class_language")
+        .select("meeting_url, class_language, timezone")
         .eq("trial_date", booking.trial_date ?? "")
         .eq("start_time", booking.start_time ?? "")
         .maybeSingle();
