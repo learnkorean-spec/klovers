@@ -39,3 +39,10 @@ dist-ssr
 
 # Supabase CLI scratch state - regenerated on every CLI invocation
 supabase/.temp/
+
+# Migration runbook workflow scratch output
+/migration-list.txt
+/migration-list-after.txt
+/pending.txt
+/pending-after.txt
+/verification.txt
