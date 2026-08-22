@@ -106,7 +106,7 @@ BEGIN
   -- A paused or ended student blocks nothing, so their class cannot collide.
   -- Reactivating them is guarded separately, on students.
   IF NOT EXISTS (
-    SELECT 1 FROM public.students st
+    SELECT 1 FROM public.teacher_students st
      WHERE st.id = NEW.student_id AND st.status = 'active'
   ) THEN
     RETURN NEW;
@@ -138,16 +138,16 @@ BEGIN
 END;
 $function$;
 
-DROP TRIGGER IF EXISTS trg_student_class_no_booking_conflict ON public.student_class_schedules;
+DROP TRIGGER IF EXISTS trg_student_class_no_booking_conflict ON public.teacher_student_classes;
 CREATE TRIGGER trg_student_class_no_booking_conflict
-  BEFORE INSERT OR UPDATE ON public.student_class_schedules
+  BEFORE INSERT OR UPDATE ON public.teacher_student_classes
   FOR EACH ROW EXECUTE FUNCTION public.tg_student_class_no_booking_conflict();
 
 -- ---------------------------------------------------------------------------
 -- The other route in: reactivating a paused student whose classes have since
 -- been booked over. Same refusal, same reason.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.tg_student_activate_no_booking_conflict()
+CREATE OR REPLACE FUNCTION public.tg_teacher_student_activate_no_booking_conflict()
  RETURNS trigger
  LANGUAGE plpgsql
  SET search_path TO 'public', 'pg_catalog'
@@ -163,7 +163,7 @@ BEGIN
 
   FOR rec IN
     SELECT sc.weekday, sc.start_time, sc.duration_minutes, sc.effective_from, sc.effective_to
-      FROM public.student_class_schedules sc
+      FROM public.teacher_student_classes sc
      WHERE sc.student_id = NEW.id
   LOOP
     SELECT v_total + count(*), LEAST(COALESCE(v_first_at, 'infinity'::timestamptz), COALESCE(min(c.starts_at), 'infinity'::timestamptz))
@@ -185,9 +185,9 @@ BEGIN
 END;
 $function$;
 
-DROP TRIGGER IF EXISTS trg_students_activate_no_booking_conflict ON public.students;
-CREATE TRIGGER trg_students_activate_no_booking_conflict
-  BEFORE INSERT OR UPDATE OF status ON public.students
-  FOR EACH ROW EXECUTE FUNCTION public.tg_student_activate_no_booking_conflict();
+DROP TRIGGER IF EXISTS trg_teacher_students_activate_no_booking_conflict ON public.teacher_students;
+CREATE TRIGGER trg_teacher_students_activate_no_booking_conflict
+  BEFORE INSERT OR UPDATE OF status ON public.teacher_students
+  FOR EACH ROW EXECUTE FUNCTION public.tg_teacher_student_activate_no_booking_conflict();
 
 COMMIT;
