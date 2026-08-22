@@ -33,8 +33,20 @@ jobs:
             echo "No hold file; proceeding."
           fi
 
+  # Reports whether the repo has migrations the database has not got, and fails
+  # if it does. It deliberately does NOT apply them.
+  #
+  # `supabase db push` cannot run against this project: 112 versions in the
+  # remote history have no local migration file - the hand-applied ones
+  # catalogued in docs/MIGRATION_TRIAGE.md - and push refuses outright in that
+  # state. Applying migrations is therefore a deliberate, manually dispatched
+  # act: see .github/workflows/apply-migrations.yml and
+  # docs/APPLYING_MIGRATIONS.md.
+  #
+  # Green means the repo and the database agree. Red means someone added a
+  # migration file that has not been applied, and the message says what to do.
   migrate:
-    name: Run DB Migrations
+    name: Check migration state
     runs-on: ubuntu-latest
     needs: guard
     if: needs.guard.outputs.held != 'true'
@@ -56,16 +68,58 @@ jobs:
       - name: Install Supabase CLI
         run: npx supabase@latest --version
 
+      - name: Self-test the migration-list parser
+        run: |
+          set -euo pipefail
+          python3 scripts/test-migration-parser.py
+
       - name: Link project
         run: npx supabase@latest link --project-ref $SUPABASE_PROJECT_REF
 
-      - name: Push schema migrations
-        run: npx supabase@latest db push
+      - name: Assert no migrations are pending
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list.txt
 
+          # Every local migration file must appear in the list, so the parser is
+          # told how many to expect: a short parse means the output format moved
+          # and the count cannot be trusted.
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          echo "local migration files: ${local_migrations}"
+          python3 scripts/parse-migration-list.py migration-list.txt \
+            --min-rows "$local_migrations" | tee pending.txt
+
+          pending=$(grep -oP '(?<=^pending_count=)\d+' pending.txt)
+          if [ "$pending" != "0" ]; then
+            {
+              echo "## Migrations pending"
+              echo
+              echo "${pending} migration(s) exist in supabase/migrations but have not"
+              echo "been applied to the database. This job does not apply them."
+              echo
+              echo '```'
+              grep '^pending=' pending.txt || true
+              echo '```'
+              echo
+              echo "Apply them with the Apply Migrations workflow (Actions ->"
+              echo "Apply Migrations -> Run workflow), or see docs/APPLYING_MIGRATIONS.md."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::${pending} migration(s) pending and NOT applied. Run the Apply Migrations workflow - see docs/APPLYING_MIGRATIONS.md."
+            grep '^pending=' pending.txt || true
+            exit 1
+          fi
+          echo "No migrations pending - the repo and the database agree."
+
+  # Independent of the migration check. A migration question must not be able to
+  # block shipping edge functions again: that coupling kept four months of
+  # function work undeployed behind a failing db push. `needs: guard` and the
+  # `if` below are what keep the hold file working for this job - they used to
+  # be inherited through `needs: migrate`.
   deploy-functions:
     name: Deploy Edge Functions
     runs-on: ubuntu-latest
-    needs: migrate
+    needs: guard
+    if: needs.guard.outputs.held != 'true'
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
