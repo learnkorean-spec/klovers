@@ -1,13 +1,19 @@
 User-agent: *
 Allow: /
 
-# Auth pages — no value indexing these
-Disallow: /login
-Disallow: /signup
-Disallow: /forgot-password
-Disallow: /reset-password
+# Auth pages — deliberately crawlable.
+# These carry `X-Robots-Tag: noindex, nofollow` from vercel.json, which is now
+# the enforcement mechanism. A Disallow here would be counter-productive: a
+# crawler that obeys it never fetches the page, so it never sees the noindex,
+# and any URL already in the index stays there as a bare link (see
+# docs/SEO_DIAGNOSIS.md section 9). Allowing the crawl is what lets Google read
+# the header and drop them.
 
-# Admin area
+# Admin area — fully blocked, /admin/login included. Unlike the auth pages
+# above there is nothing to deindex here: it was never in the index, so
+# inviting a crawl buys nothing. It still carries the same
+# `X-Robots-Tag: noindex, nofollow` header as defence in depth, for anything
+# that reaches it without consulting robots.txt.
 Disallow: /admin
 Disallow: /admin/
 
