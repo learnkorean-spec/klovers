@@ -14,6 +14,14 @@
 -- between the two, so editing a class changes availability by construction --
 -- there is no sync job that can drift.
 --
+-- Not the `students` table
+-- ------------------------
+-- public.students already exists and is the billing and enrolment record (9 live
+-- rows, read by StudentManager and GroupAttendanceManager). It is NOT touched by
+-- this migration. These are the teacher's private students, hence the
+-- teacher_ prefix matching teacher_availability_rules. Merging the two is a
+-- later, separate decision.
+--
 -- Deliberately thin
 -- -----------------
 -- `students` carries only what the calendar needs today: who they are, what they
@@ -33,9 +41,54 @@
 BEGIN;
 
 -- ---------------------------------------------------------------------------
+-- 0. Refuse to adopt somebody else's table.
+--
+-- This migration previously used CREATE TABLE IF NOT EXISTS on a table named
+-- `students`. A `students` table already existed -- the billing and enrolment
+-- record, 9 live rows -- so the create silently skipped and the migration went
+-- on to comment on, add triggers to, and enable RLS on the wrong table before
+-- failing at the first column that did not exist. The transaction rolled it all
+-- back, but only because the file happens to manage its own transaction.
+--
+-- IF NOT EXISTS is what turned a missing check into a silent adoption. These
+-- guards make a name collision fail loudly and immediately instead: if a table
+-- of our name exists without the column we expect, it is not ours, and we stop.
+--
+-- Re-running our own migration is still safe -- the guards pass, and the
+-- CREATE TABLE IF NOT EXISTS below is a no-op.
+-- ---------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF to_regclass('public.teacher_students') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name   = 'teacher_students'
+          AND column_name  = 'subject'
+     ) THEN
+    RAISE EXCEPTION
+      'name_collision: public.teacher_students already exists and is not the table this migration creates (no "subject" column). Refusing to adopt it. Investigate the existing table before re-running.'
+      USING ERRCODE = '42P07';
+  END IF;
+
+  IF to_regclass('public.teacher_student_classes') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name   = 'teacher_student_classes'
+          AND column_name  = 'duration_minutes'
+     ) THEN
+    RAISE EXCEPTION
+      'name_collision: public.teacher_student_classes already exists and is not the table this migration creates (no "duration_minutes" column). Refusing to adopt it. Investigate the existing table before re-running.'
+      USING ERRCODE = '42P07';
+  END IF;
+END
+$$;
+
+-- ---------------------------------------------------------------------------
 -- 1. Students.
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.students (
+CREATE TABLE IF NOT EXISTS public.teacher_students (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name   text NOT NULL,
   subject     text NOT NULL,
@@ -43,22 +96,22 @@ CREATE TABLE IF NOT EXISTS public.students (
   note        text,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT students_full_name_check CHECK (length(btrim(full_name)) > 0),
+  CONSTRAINT teacher_students_full_name_check CHECK (length(btrim(full_name)) > 0),
   -- What the student is learning. Distinct from trial_slots.class_language,
   -- which is the language a trial is *conducted* in -- a student can learn
   -- Korean through Arabic. Conflating the two would have been expensive later.
-  CONSTRAINT students_subject_check CHECK (subject IN ('korean', 'english')),
-  CONSTRAINT students_status_check  CHECK (status IN ('active', 'paused', 'ended'))
+  CONSTRAINT teacher_students_subject_check CHECK (subject IN ('korean', 'english')),
+  CONSTRAINT teacher_students_status_check  CHECK (status IN ('active', 'paused', 'ended'))
 );
 
-COMMENT ON TABLE public.students IS
+COMMENT ON TABLE public.teacher_students IS
   'Re''s ongoing 1:1 students. Deliberately minimal: contact details, levels and '
   'billing are a later phase and hang off this id without restructuring.';
-COMMENT ON COLUMN public.students.subject IS
+COMMENT ON COLUMN public.teacher_students.subject IS
   'What the student learns (korean|english). NOT the language of instruction — '
   'that is trial_slots.class_language and is a separate concept.';
 
-CREATE OR REPLACE FUNCTION public.tg_students_touch()
+CREATE OR REPLACE FUNCTION public.tg_teacher_students_touch()
  RETURNS trigger
  LANGUAGE plpgsql
  SET search_path TO 'public', 'pg_catalog'
@@ -69,17 +122,17 @@ BEGIN
 END;
 $function$;
 
-DROP TRIGGER IF EXISTS trg_students_touch ON public.students;
-CREATE TRIGGER trg_students_touch
-  BEFORE INSERT OR UPDATE ON public.students
-  FOR EACH ROW EXECUTE FUNCTION public.tg_students_touch();
+DROP TRIGGER IF EXISTS trg_teacher_students_touch ON public.teacher_students;
+CREATE TRIGGER trg_teacher_students_touch
+  BEFORE INSERT OR UPDATE ON public.teacher_students
+  FOR EACH ROW EXECUTE FUNCTION public.tg_teacher_students_touch();
 
 -- ---------------------------------------------------------------------------
 -- 2. Their weekly classes.
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.student_class_schedules (
+CREATE TABLE IF NOT EXISTS public.teacher_student_classes (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id       uuid NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  student_id       uuid NOT NULL REFERENCES public.teacher_students(id) ON DELETE CASCADE,
   weekday          smallint NOT NULL,
   start_time       time NOT NULL,
   duration_minutes integer NOT NULL DEFAULT 90,
@@ -89,30 +142,30 @@ CREATE TABLE IF NOT EXISTS public.student_class_schedules (
   note             text,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT student_class_schedules_weekday_check
+  CONSTRAINT teacher_student_classes_weekday_check
     CHECK (weekday BETWEEN 0 AND 6),
   -- Capped at 24h so a typo cannot block days at a time. A class may run past
   -- midnight; it may not run past the following midnight.
-  CONSTRAINT student_class_schedules_duration_check
+  CONSTRAINT teacher_student_classes_duration_check
     CHECK (duration_minutes > 0 AND duration_minutes <= 1440),
-  CONSTRAINT student_class_schedules_effective_check
+  CONSTRAINT teacher_student_classes_effective_check
     CHECK (effective_to IS NULL OR effective_to >= effective_from)
 );
 
-COMMENT ON TABLE public.student_class_schedules IS
+COMMENT ON TABLE public.teacher_student_classes IS
   'One row per weekly class. start_time + duration_minutes rather than '
   'start/end, so a class crossing midnight stays a single row.';
 
-CREATE INDEX IF NOT EXISTS idx_student_class_schedules_weekday
-  ON public.student_class_schedules (weekday, effective_from);
-CREATE INDEX IF NOT EXISTS idx_student_class_schedules_student
-  ON public.student_class_schedules (student_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_student_classes_weekday
+  ON public.teacher_student_classes (weekday, effective_from);
+CREATE INDEX IF NOT EXISTS idx_teacher_student_classes_student
+  ON public.teacher_student_classes (student_id);
 
 -- Reuses the Phase 2 trigger: validates the timezone against pg_timezone_names
 -- and stamps updated_at.
-DROP TRIGGER IF EXISTS trg_student_class_schedules_touch ON public.student_class_schedules;
-CREATE TRIGGER trg_student_class_schedules_touch
-  BEFORE INSERT OR UPDATE ON public.student_class_schedules
+DROP TRIGGER IF EXISTS trg_teacher_student_classes_touch ON public.teacher_student_classes;
+CREATE TRIGGER trg_teacher_student_classes_touch
+  BEFORE INSERT OR UPDATE ON public.teacher_student_classes
   FOR EACH ROW EXECUTE FUNCTION public.tg_teacher_availability_touch();
 
 -- ---------------------------------------------------------------------------
@@ -122,19 +175,19 @@ CREATE TRIGGER trg_student_class_schedules_touch
 -- SECURITY DEFINER and returns instants only, so it can read these rows on an
 -- anonymous caller's behalf without exposing any of them.
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.students               ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.student_class_schedules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.teacher_students               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.teacher_student_classes ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Admins manage students" ON public.students;
-CREATE POLICY "Admins manage students"
-  ON public.students
+DROP POLICY IF EXISTS "Admins manage teacher_students" ON public.teacher_students;
+CREATE POLICY "Admins manage teacher_students"
+  ON public.teacher_students
   FOR ALL TO authenticated
   USING      (public.has_role((SELECT auth.uid()), 'admin'::public.app_role))
   WITH CHECK (public.has_role((SELECT auth.uid()), 'admin'::public.app_role));
 
-DROP POLICY IF EXISTS "Admins manage student_class_schedules" ON public.student_class_schedules;
-CREATE POLICY "Admins manage student_class_schedules"
-  ON public.student_class_schedules
+DROP POLICY IF EXISTS "Admins manage teacher_student_classes" ON public.teacher_student_classes;
+CREATE POLICY "Admins manage teacher_student_classes"
+  ON public.teacher_student_classes
   FOR ALL TO authenticated
   USING      (public.has_role((SELECT auth.uid()), 'admin'::public.app_role))
   WITH CHECK (public.has_role((SELECT auth.uid()), 'admin'::public.app_role));
@@ -145,7 +198,7 @@ CREATE POLICY "Admins manage student_class_schedules"
 -- Subjects confirmed by Re on 2026-08-22. Menna was labelled "(English)" in the
 -- previous seed; that label was outdated and she is a Korean student.
 -- ---------------------------------------------------------------------------
-INSERT INTO public.students (full_name, subject, status)
+INSERT INTO public.teacher_students (full_name, subject, status)
 SELECT v.full_name, v.subject, 'active'
 FROM (VALUES
   ('Menna',  'korean'),
@@ -155,10 +208,10 @@ FROM (VALUES
   ('Solafa', 'english')
 ) AS v(full_name, subject)
 WHERE NOT EXISTS (
-  SELECT 1 FROM public.students s WHERE lower(s.full_name) = lower(v.full_name)
+  SELECT 1 FROM public.teacher_students s WHERE lower(s.full_name) = lower(v.full_name)
 );
 
-INSERT INTO public.student_class_schedules
+INSERT INTO public.teacher_student_classes
   (student_id, weekday, start_time, duration_minutes, timezone)
 SELECT s.id, v.weekday, v.start_time, v.duration_minutes, 'Asia/Kuala_Lumpur'
 FROM (VALUES
@@ -173,9 +226,9 @@ FROM (VALUES
   ('Solafa', 3, TIME '22:00', 90),
   ('Solafa', 4, TIME '22:00', 90)
 ) AS v(full_name, weekday, start_time, duration_minutes)
-JOIN public.students s ON lower(s.full_name) = lower(v.full_name)
+JOIN public.teacher_students s ON lower(s.full_name) = lower(v.full_name)
 WHERE NOT EXISTS (
-  SELECT 1 FROM public.student_class_schedules sc
+  SELECT 1 FROM public.teacher_student_classes sc
    WHERE sc.student_id = s.id
      AND sc.weekday    = v.weekday
      AND sc.start_time = v.start_time
@@ -285,8 +338,8 @@ AS $function$
       -- today, and one that started yesterday and runs past midnight.
       EXISTS (
         SELECT 1
-          FROM public.student_class_schedules sc
-          JOIN public.students st ON st.id = sc.student_id
+          FROM public.teacher_student_classes sc
+          JOIN public.teacher_students st ON st.id = sc.student_id
          WHERE st.status = 'active'
            AND (
              (    sc.weekday = EXTRACT(DOW FROM gr.slot_day)::int

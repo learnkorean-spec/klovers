@@ -2,7 +2,7 @@
  * Data access for Re's ongoing 1:1 students and their weekly classes.
  *
  * Editing a class here changes trial availability immediately: the availability
- * engine reads student_class_schedules directly as a source of blocks, so there
+ * engine reads teacher_student_classes directly as a source of blocks, so there
  * is nothing to sync and nothing that can drift out of step.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,11 +32,11 @@ export function useMyStudents() {
       const [{ data: students, error: sErr }, { data: classes, error: cErr }] =
         await Promise.all([
           supabase
-            .from("students")
+            .from("teacher_students")
             .select("id, full_name, subject, status, note, created_at, updated_at")
             .order("full_name"),
           supabase
-            .from("student_class_schedules")
+            .from("teacher_student_classes")
             .select("id, student_id, weekday, start_time, duration_minutes, timezone, effective_from, effective_to, note")
             .is("effective_to", null)
             .order("weekday")
@@ -74,7 +74,7 @@ export function useCreateStudent() {
   return useMutation({
     mutationFn: async (input: StudentInput) => {
       const { data, error } = await supabase
-        .from("students")
+        .from("teacher_students")
         .insert({ ...input, full_name: input.full_name.trim() })
         .select("id")
         .single();
@@ -90,7 +90,7 @@ export function useUpdateStudent() {
   return useMutation({
     mutationFn: async ({ id, ...input }: StudentInput & { id: string }) => {
       const { error } = await supabase
-        .from("students")
+        .from("teacher_students")
         .update({ ...input, full_name: input.full_name.trim() })
         .eq("id", id);
       if (error) throw error;
@@ -107,7 +107,7 @@ export function useDeleteStudent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("students").delete().eq("id", id);
+      const { error } = await supabase.from("teacher_students").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateStudentsAndAvailability(qc),
@@ -157,14 +157,14 @@ export function useUpsertClass() {
     mutationFn: async ({ id, ...input }: ClassInput & { id?: string }) => {
       if (id) {
         const { error } = await supabase
-          .from("student_class_schedules")
+          .from("teacher_student_classes")
           .update(input)
           .eq("id", id);
         if (error) throw error;
         return;
       }
       const { error } = await supabase
-        .from("student_class_schedules")
+        .from("teacher_student_classes")
         .insert({ ...input, timezone: "Asia/Kuala_Lumpur" });
       if (error) throw error;
     },
@@ -176,7 +176,7 @@ export function useDeleteClass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("student_class_schedules").delete().eq("id", id);
+      const { error } = await supabase.from("teacher_student_classes").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateStudentsAndAvailability(qc),
