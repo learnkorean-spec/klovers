@@ -46,3 +46,4 @@ supabase/.temp/
 /pending.txt
 /pending-after.txt
 /verification.txt
+/db-push-dry-run.txt
