@@ -138,12 +138,13 @@ for (const r of results) r.canonicalUnique = !r.canonical || canonCount.get(r.ca
 // robots.txt
 let robotsSitemaps = [];
 let robotsErr = null;
+let robotsTxt = "";
 try {
-  const txt =
+  robotsTxt =
     MODE === "dist"
       ? readFileSync(join("public", "robots.txt"), "utf-8")
       : await (await fetch(`${ROOT}/robots.txt`)).text();
-  robotsSitemaps = txt
+  robotsSitemaps = robotsTxt
     .split("\n")
     .filter((l) => /^\s*sitemap:/i.test(l))
     .map((l) => l.split(/:\s*/).slice(1).join(":").trim());
@@ -171,6 +172,60 @@ if (MODE === "live") {
   }
 }
 
+// Auth routes must stay crawlable in robots.txt.
+//
+// The noindex for these routes is carried by the X-Robots-Tag response header
+// (see below). A header can only be obeyed by a crawler that actually fetches
+// the URL, so a Disallow here would silently defeat it — and would strand any
+// URL already in the index, because Google could never re-crawl it to discover
+// the noindex. That is the trap described in docs/SEO_DIAGNOSIS.md section 9.
+//
+// This check exists so the two mechanisms cannot drift apart: re-adding a
+// Disallow for one of these paths fails the build. It reads robots.txt from
+// public/ in dist mode, so it runs in CI too, not just against production.
+
+/** Allow/Disallow rules for the `User-agent: *` group only. */
+function starGroupRules(txt) {
+  const rules = [];
+  let inStar = false;
+  for (const raw of txt.split("\n")) {
+    const line = raw.replace(/#.*$/, "").trim();
+    if (!line) continue;
+    const m = line.match(/^([A-Za-z-]+)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const value = m[2].trim();
+    if (key === "user-agent") {
+      inStar = value === "*";
+      continue;
+    }
+    if (!inStar) continue;
+    if (key === "allow" || key === "disallow") rules.push({ type: key, path: value });
+  }
+  return rules;
+}
+
+/**
+ * Google's precedence: the longest matching path wins, and Allow beats Disallow
+ * on an equal-length tie. Literal prefixes only — this robots.txt uses no `*`
+ * or `$` wildcards, and a rule using one would need this extended.
+ */
+function isCrawlable(path, rules) {
+  let best = null;
+  for (const r of rules) {
+    if (!r.path) continue; // `Disallow:` with an empty value means "allow all"
+    if (!path.startsWith(r.path)) continue;
+    if (
+      !best ||
+      r.path.length > best.path.length ||
+      (r.path.length === best.path.length && r.type === "allow")
+    ) {
+      best = r;
+    }
+  }
+  return !best || best.type === "allow";
+}
+
 // X-Robots-Tag on auth-only routes (live only).
 //
 // These routes also set <meta name="robots" content="noindex, nofollow"> from
@@ -188,6 +243,17 @@ const NOINDEX_ROUTES = [
   "/reset-password",
   "/admin/login",
 ];
+
+const robotsRules = robotsErr ? [] : starGroupRules(robotsTxt);
+const blockedAuthRoutes = robotsErr
+  ? []
+  : NOINDEX_ROUTES.filter((r) => !isCrawlable(r, robotsRules));
+const crawlableOk = robotsErr ? false : blockedAuthRoutes.length === 0;
+const crawlableDetail = robotsErr
+  ? `error: ${robotsErr}`
+  : crawlableOk
+    ? `${NOINDEX_ROUTES.length}/${NOINDEX_ROUTES.length} routes`
+    : `blocked by robots.txt: ${blockedAuthRoutes.join(", ")}`;
 let noindexOk = null;
 let noindexDetail = "skipped (needs live HTTP)";
 const noindexFailures = [];
@@ -227,6 +293,7 @@ const summary = [
   ["canonical is unique", `${results.filter((r) => r.canonicalUnique).length}/${results.length}`, tick(results.every((r) => r.canonicalUnique))],
   ["robots.txt names 1 sitemap", robotsErr ? `error: ${robotsErr}` : robotsSitemaps.join(", ") || "(none)", tick(robotsOk)],
   ["www 301/308 -> apex", wwwDetail, tick(wwwOk)],
+  ["auth routes crawlable in robots.txt", crawlableDetail, tick(crawlableOk)],
   ["auth routes: X-Robots-Tag noindex", noindexDetail, tick(noindexOk)],
 ];
 
@@ -258,6 +325,7 @@ if (failures.length) {
   if (failures.length > 25) console.log(`  ... and ${failures.length - 25} more`);
 }
 
-const ok = failures.length === 0 && robotsOk && wwwOk !== false && noindexOk !== false;
+const ok =
+  failures.length === 0 && robotsOk && crawlableOk && wwwOk !== false && noindexOk !== false;
 console.log(ok ? "\nseo-check: PASS\n" : "\nseo-check: FAIL\n");
 process.exit(ok ? 0 : 1);
