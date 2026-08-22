@@ -1,0 +1,240 @@
+# TEMPORARY — delete once the migration triage runbook has been executed.
+#
+# Runs the runbook from docs/MIGRATION_TRIAGE.md against production, in two
+# manually-dispatched stages with a human gate between them.
+#
+#   stage=repair  Records the 44 already-applied / must-not-replay versions in
+#                 supabase_migrations.schema_migrations. Runs NO migration SQL
+#                 and changes NO application data. Prints the migration list and
+#                 the resulting pending count, then stops.
+#
+#   stage=push    Applies the 3 genuinely-pending migrations and prints the
+#                 verification table. Only dispatch this after stage 1 has
+#                 reported a pending count of exactly 3.
+#
+# This workflow deliberately does NOT honour supabase/MIGRATIONS_HOLD. That file
+# guards deploy-functions.yml, whose db push fires automatically on every push to
+# main. This workflow is workflow_dispatch-only and is the sanctioned way to run
+# the migrations by hand while that automatic path stays held.
+
+name: Migration Runbook (temporary)
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Which stage to run"
+        required: true
+        type: choice
+        options:
+          - repair
+          - push
+
+# Read-only checkout; this workflow pushes nothing back to the repo.
+permissions:
+  contents: read
+
+# Never let two stages overlap against the same database.
+concurrency:
+  group: migration-runbook
+  cancel-in-progress: false
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'ewtdgpbybkceokfohhyg' }}
+
+jobs:
+  # ── Stage 1 ────────────────────────────────────────────────────────────────
+  repair:
+    name: Stage 1 - record the 44 already-applied versions
+    if: inputs.stage == 'repair'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Supabase CLI
+        run: npx supabase@latest --version
+
+      - name: Verify the CLI authenticates
+        run: |
+          set -euo pipefail
+          echo "::group::supabase link"
+          npx supabase@latest link --project-ref "$PROJECT_REF"
+          echo "::endgroup::"
+          echo "Link succeeded - the access token is valid."
+
+      - name: Record the 44 already-applied / must-not-replay versions
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration repair --status applied \
+            20260421120000 20260421130000 20260421130001 20260421140000 \
+            20260421200000 20260421210000 20260423000001 20260423000002 \
+            20260423000003 20260423000004 20260423000005 20260423000006 \
+            20260423000007 20260423000008 20260423000009 20260424000000 \
+            20260424000001 20260424000002 20260424000003 20260424000004 \
+            20260424000005 20260424000006 20260424000007 20260424000008 \
+            20260424000009 20260424000010 20260424100000 20260425000001 \
+            20260427000000 20260427010000 20260501150000 20260511000001 \
+            20260511000002 20260511000003 20260511000004 20260511000005 \
+            20260512000001 20260517000001 20260517000002 20260517000003 \
+            20260519000001 20260528000001 20260819113000 20260819122000
+
+      - name: Print the migration list and the pending count
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list.txt
+
+          # Parse by COLUMN, not by counting ids on the line. The table has three
+          # columns - LOCAL | REMOTE | TIME - and a row is pending only when LOCAL
+          # holds a version and REMOTE is blank. Remote-only rows (the ~100 hand-
+          # applied versions that have no local file) also carry a single id, so
+          # counting ids per line would report them as pending. It does not.
+          python3 - <<'PY' | tee pending.txt
+          import re
+          pending, both, remote_only = [], 0, 0
+          for line in open("migration-list.txt", encoding="utf-8", errors="replace"):
+              parts = re.split(r"[\u2502|]", line)
+              if len(parts) < 3:
+                  continue
+              local, remote = parts[0].strip(), parts[1].strip()
+              local_ok = bool(re.fullmatch(r"\d{14}", local))
+              remote_ok = bool(re.fullmatch(r"\d{14}", remote))
+              if local_ok and not remote_ok:
+                  pending.append(local)
+              elif local_ok and remote_ok:
+                  both += 1
+              elif remote_ok:
+                  remote_only += 1
+          print(f"applied_both_sides={both}")
+          print(f"remote_only={remote_only}")
+          print(f"pending_count={len(pending)}")
+          for v in pending:
+              print(f"pending={v}")
+          PY
+
+          count=$(grep -oP '(?<=^pending_count=)\d+' pending.txt)
+          {
+            echo "## Stage 1 complete"
+            echo
+            echo "Pending migrations after repair: **${count}**"
+            echo
+            echo '```'
+            grep '^pending=' pending.txt || echo "(none)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "-----------------------------------------------------------"
+          echo "Pending migrations after repair: ${count}"
+          echo "-----------------------------------------------------------"
+          if [ "$count" != "3" ]; then
+            echo "::error::Expected exactly 3 pending migrations, found ${count}. STOP - do not dispatch stage 2; re-triage first."
+            exit 1
+          fi
+          echo "Expected 3 pending. Stopping here - dispatch stage=push only after a human confirms this."
+
+  # ── Stage 2 ────────────────────────────────────────────────────────────────
+  push:
+    name: Stage 2 - apply the 3 pending migrations
+    if: inputs.stage == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Supabase CLI
+        run: npx supabase@latest --version
+
+      - name: Link project
+        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+
+      - name: Apply the pending migrations
+        run: |
+          set -euo pipefail
+          npx supabase@latest db push
+
+      - name: Post-push migration list
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list-after.txt
+          python3 - <<'PY'
+          import re
+          pending = []
+          for line in open("migration-list-after.txt", encoding="utf-8", errors="replace"):
+              parts = re.split(r"[\u2502|]", line)
+              if len(parts) < 3:
+                  continue
+              local, remote = parts[0].strip(), parts[1].strip()
+              if re.fullmatch(r"\d{14}", local) and not re.fullmatch(r"\d{14}", remote):
+                  pending.append(local)
+          print(f"pending_after_push={len(pending)}")
+          for v in pending:
+              print(f"still_pending={v}")
+          PY
+
+      - name: Verify data and schema
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          # The direct host is IPv6-only for many projects and GitHub runners are
+          # IPv4-only, so probe the IPv4 poolers first and fall back to direct.
+          DBHOST=""; DBUSER=""
+          for cand in \
+            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "aws-1-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "db.$PROJECT_REF.supabase.co|postgres" ; do
+            host="${cand%%|*}"; user="${cand##*|}"
+            if psql -h "$host" -p 5432 -U "$user" -d postgres -tAc 'SELECT 1' >/dev/null 2>&1; then
+              DBHOST="$host"; DBUSER="$user"; break
+            fi
+            echo "Could not connect via ${host} - trying next candidate."
+          done
+          if [ -z "$DBHOST" ]; then
+            echo "::error::Could not reach the database on any candidate host. db push already succeeded - verify by hand before lifting the hold."
+            exit 1
+          fi
+          echo "Connected via ${DBHOST}."
+
+          psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -v ON_ERROR_STOP=1 <<'SQL' | tee verification.txt
+          \pset border 2
+          \echo '=== schema objects the 3 migrations were meant to create ==='
+          SELECT to_regclass('public.admin_error_log') IS NOT NULL              AS admin_error_log,
+                 EXISTS(SELECT 1 FROM information_schema.columns
+                        WHERE table_schema='public' AND table_name='trial_bookings'
+                          AND column_name='trial_days')                        AS trial_days,
+                 EXISTS(SELECT 1 FROM pg_trigger
+                        WHERE tgname='trg_trial_bookings_track_change_cancel')  AS change_cancel_trigger;
+
+          \echo '=== trial_bookings must be unchanged: 75 total / 59 pending+is_tba / 16 cancelled ==='
+          SELECT status, is_tba, count(*) FROM public.trial_bookings GROUP BY 1,2 ORDER BY 1,2;
+          SELECT count(*) AS trial_bookings_total FROM public.trial_bookings;
+
+          \echo '=== credits for 846805ef must still be 20 ==='
+          SELECT credits FROM public.profiles
+           WHERE user_id='846805ef-fe6e-4670-8f7c-88f2a4b232f7';
+
+          \echo '=== migration history ==='
+          SELECT count(*) AS schema_migrations_rows,
+                 max(version) AS latest_version
+            FROM supabase_migrations.schema_migrations;
+          SQL
+
+          {
+            echo "## Stage 2 complete"
+            echo
+            echo '```'
+            cat verification.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
