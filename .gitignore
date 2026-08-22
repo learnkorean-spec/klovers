@@ -36,3 +36,6 @@ dist-ssr
 .claude/settings.local.json
 .claude/worktrees/
 /klovers/
+
+# Supabase CLI scratch state - regenerated on every CLI invocation
+supabase/.temp/
