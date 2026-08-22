@@ -114,6 +114,35 @@ export function useDeleteStudent() {
   });
 }
 
+/** A live trial booking that a proposed class time would collide with. */
+export interface ClassConflict {
+  booking_id: string;
+  booked_name: string;
+  booked_email: string;
+  starts_at: string;
+}
+
+/**
+ * Which booked trials would this class time run over?
+ *
+ * Called before saving so the admin sees a readable message naming the
+ * booking, rather than the database exception. The database refuses the write
+ * regardless — this is the courtesy, not the guarantee.
+ */
+export async function checkClassConflicts(input: {
+  weekday: number;
+  start_time: string;
+  duration_minutes: number;
+}): Promise<ClassConflict[]> {
+  const { data, error } = await supabase.rpc("fn_student_class_conflicts", {
+    p_weekday: input.weekday,
+    p_start_time: input.start_time,
+    p_duration_minutes: input.duration_minutes,
+  });
+  if (error) throw error;
+  return (data ?? []) as ClassConflict[];
+}
+
 export interface ClassInput {
   student_id: string;
   weekday: number;

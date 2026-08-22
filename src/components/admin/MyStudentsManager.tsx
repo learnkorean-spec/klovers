@@ -27,11 +27,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Clock, Loader2, GraduationCap } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Loader2, GraduationCap, AlertTriangle } from "lucide-react";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import {
   useMyStudents, useCreateStudent, useUpdateStudent, useDeleteStudent,
-  useUpsertClass, useDeleteClass,
+  useUpsertClass, useDeleteClass, checkClassConflicts, type ClassConflict,
 } from "@/hooks/admin/useMyStudents";
 import {
   DAY_NAMES, STATUS_LABEL, STUDENT_STATUSES, STUDENT_SUBJECTS, SUBJECT_LABEL,
@@ -79,6 +79,10 @@ const MyStudentsManager = () => {
   const [studentDraft, setStudentDraft] = useState<StudentDraft | null>(null);
   const [classDraft, setClassDraft] = useState<ClassDraft | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MyStudentWithClasses | null>(null);
+  // Trial bookings the pending class time would run over. Non-empty blocks the
+  // save: Re resolves the trial first, then moves the class.
+  const [conflicts, setConflicts] = useState<ClassConflict[]>([]);
+  const [checking, setChecking] = useState(false);
 
   const totals = useMemo(() => {
     const active = students.filter(s => s.status === "active");
@@ -110,7 +114,21 @@ const MyStudentsManager = () => {
 
   const saveClass = async () => {
     if (!classDraft) return;
+    setConflicts([]);
     try {
+      setChecking(true);
+      const found = await checkClassConflicts({
+        weekday: classDraft.weekday,
+        start_time: classDraft.start_time,
+        duration_minutes: classDraft.duration_minutes,
+      });
+      setChecking(false);
+      if (found.length > 0) {
+        // Refused, not warned. The database enforces this too; stopping here
+        // just means Re reads a sentence instead of a Postgres exception.
+        setConflicts(found);
+        return;
+      }
       await upsertClass.mutateAsync(classDraft);
       toast({
         title: classDraft.id ? "Class updated" : "Class added",
@@ -118,9 +136,18 @@ const MyStudentsManager = () => {
       });
       setClassDraft(null);
     } catch (e) {
+      setChecking(false);
       toast({ title: "Could not save class", description: (e as Error).message, variant: "destructive" });
     }
   };
+
+  const closeClassDialog = () => { setClassDraft(null); setConflicts([]); };
+
+  const formatConflict = (c: ClassConflict) =>
+    new Date(c.starts_at).toLocaleString("en-GB", {
+      weekday: "short", day: "numeric", month: "short",
+      hour: "2-digit", minute: "2-digit", timeZone: ADMIN_TIMEZONE,
+    });
 
   const removeClass = async (c: StudentClassSchedule) => {
     try {
@@ -327,7 +354,7 @@ const MyStudentsManager = () => {
       </Dialog>
 
       {/* Class dialog */}
-      <Dialog open={!!classDraft} onOpenChange={o => !o && setClassDraft(null)}>
+      <Dialog open={!!classDraft} onOpenChange={o => !o && closeClassDialog()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{classDraft?.id ? "Edit class" : "Add a class"}</DialogTitle>
@@ -341,7 +368,7 @@ const MyStudentsManager = () => {
                 <Label>Day</Label>
                 <Select
                   value={String(classDraft.weekday)}
-                  onValueChange={v => setClassDraft({ ...classDraft, weekday: Number(v) })}
+                  onValueChange={v => { setConflicts([]); setClassDraft({ ...classDraft, weekday: Number(v) }); }}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -354,7 +381,7 @@ const MyStudentsManager = () => {
                   <Label>Starts</Label>
                   <Select
                     value={classDraft.start_time}
-                    onValueChange={v => setClassDraft({ ...classDraft, start_time: v })}
+                    onValueChange={v => { setConflicts([]); setClassDraft({ ...classDraft, start_time: v }); }}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent className="max-h-64">
@@ -366,7 +393,7 @@ const MyStudentsManager = () => {
                   <Label>Length</Label>
                   <Select
                     value={String(classDraft.duration_minutes)}
-                    onValueChange={v => setClassDraft({ ...classDraft, duration_minutes: Number(v) })}
+                    onValueChange={v => { setConflicts([]); setClassDraft({ ...classDraft, duration_minutes: Number(v) }); }}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -388,13 +415,42 @@ const MyStudentsManager = () => {
                   </span>
                 )}
               </div>
+
+              {conflicts.length > 0 && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 space-y-2">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    This time is already booked for a trial
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {conflicts.length === 1
+                      ? "A student has booked a trial that this class would run over."
+                      : `${conflicts.length} students have booked trials that this class would run over.`}{" "}
+                    Reschedule or cancel {conflicts.length === 1 ? "it" : "them"} in the Trials tab first —
+                    so the student is told — then move the class.
+                  </p>
+                  <ul className="space-y-1">
+                    {conflicts.slice(0, 6).map(c => (
+                      <li key={c.booking_id} className="text-xs">
+                        <strong>{formatConflict(c)}</strong> — {c.booked_name}{" "}
+                        <span className="text-muted-foreground">({c.booked_email})</span>
+                      </li>
+                    ))}
+                    {conflicts.length > 6 && (
+                      <li className="text-xs text-muted-foreground">
+                        …and {conflicts.length - 6} more
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setClassDraft(null)}>Cancel</Button>
-            <Button onClick={saveClass} disabled={upsertClass.isPending}>
-              {upsertClass.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              Save
+            <Button variant="outline" onClick={closeClassDialog}>Cancel</Button>
+            <Button onClick={saveClass} disabled={upsertClass.isPending || checking || conflicts.length > 0}>
+              {(upsertClass.isPending || checking) && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              {conflicts.length > 0 ? "Resolve the trial first" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
