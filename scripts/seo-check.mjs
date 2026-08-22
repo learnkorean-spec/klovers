@@ -171,6 +171,46 @@ if (MODE === "live") {
   }
 }
 
+// X-Robots-Tag on auth-only routes (live only).
+//
+// These routes also set <meta name="robots" content="noindex, nofollow"> from
+// JavaScript via useSEO({ noindex: true }). That meta tag only exists after the
+// SPA bundle runs, so a crawler that reads the raw response never sees it. The
+// response header carries the same instruction with no JS execution required,
+// which is the point of adding it — and the point of asserting it here.
+//
+// Header-only, so it cannot be checked from dist/; skipped in dist mode exactly
+// like the www redirect above.
+const NOINDEX_ROUTES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/admin/login",
+];
+let noindexOk = null;
+let noindexDetail = "skipped (needs live HTTP)";
+const noindexFailures = [];
+if (MODE === "live") {
+  for (const path of NOINDEX_ROUTES) {
+    try {
+      // redirect: manual — a redirect away from the route would hide a missing
+      // header behind a 3xx, and that is exactly the case worth failing on.
+      const r = await fetch(`${ROOT}${path}`, { redirect: "manual" });
+      const tag = (r.headers.get("x-robots-tag") || "").toLowerCase();
+      if (!(tag.includes("noindex") && tag.includes("nofollow"))) {
+        noindexFailures.push(`${path} [${r.status}] -> ${tag || "(no X-Robots-Tag)"}`);
+      }
+    } catch (e) {
+      noindexFailures.push(`${path} -> error: ${e.message}`);
+    }
+  }
+  noindexOk = noindexFailures.length === 0;
+  noindexDetail = noindexOk
+    ? `${NOINDEX_ROUTES.length}/${NOINDEX_ROUTES.length} routes`
+    : noindexFailures.join("; ");
+}
+
 // ── report ──────────────────────────────────────────────────────────────────
 
 const failures = results.filter(
@@ -187,6 +227,7 @@ const summary = [
   ["canonical is unique", `${results.filter((r) => r.canonicalUnique).length}/${results.length}`, tick(results.every((r) => r.canonicalUnique))],
   ["robots.txt names 1 sitemap", robotsErr ? `error: ${robotsErr}` : robotsSitemaps.join(", ") || "(none)", tick(robotsOk)],
   ["www 301/308 -> apex", wwwDetail, tick(wwwOk)],
+  ["auth routes: X-Robots-Tag noindex", noindexDetail, tick(noindexOk)],
 ];
 
 const w0 = Math.max(...summary.map((r) => r[0].length));
@@ -217,6 +258,6 @@ if (failures.length) {
   if (failures.length > 25) console.log(`  ... and ${failures.length - 25} more`);
 }
 
-const ok = failures.length === 0 && robotsOk && wwwOk !== false;
+const ok = failures.length === 0 && robotsOk && wwwOk !== false && noindexOk !== false;
 console.log(ok ? "\nseo-check: PASS\n" : "\nseo-check: FAIL\n");
 process.exit(ok ? 0 : 1);
