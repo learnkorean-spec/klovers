@@ -152,10 +152,92 @@ jobs:
       - name: Link project
         run: npx supabase@latest link --project-ref "$PROJECT_REF"
 
-      - name: Apply the pending migrations
+      - name: Resolve the database connection
         run: |
           set -euo pipefail
-          npx supabase@latest db push
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          # The direct host is IPv6-only for many projects and GitHub runners are
+          # IPv4-only, so probe the IPv4 poolers first and fall back to direct.
+          # aws-1 is this project's pooler, per the URL the CLI resolved and
+          # cached in supabase/.temp/pooler-url; the others are fallbacks.
+          DBHOST=""; DBUSER=""
+          for cand in \
+            "aws-1-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "db.$PROJECT_REF.supabase.co|postgres" ; do
+            host="${cand%%|*}"; user="${cand##*|}"
+            if psql -h "$host" -p 5432 -U "$user" -d postgres -tAc 'SELECT 1' >/dev/null 2>&1; then
+              DBHOST="$host"; DBUSER="$user"; break
+            fi
+            echo "Could not connect via ${host} - trying next candidate."
+          done
+          if [ -z "$DBHOST" ]; then
+            echo "::error::Could not reach the database on any candidate host. Nothing has been applied."
+            exit 1
+          fi
+          echo "Connected via ${DBHOST}."
+          echo "DBHOST=$DBHOST" >> "$GITHUB_ENV"
+          echo "DBUSER=$DBUSER" >> "$GITHUB_ENV"
+
+      - name: Diagnostic - what db push would do
+        run: |
+          set -uo pipefail
+          # Read-only. Expected to report "Remote migration versions not found in
+          # local migrations directory" for as long as the remote history holds
+          # the ~109 hand-applied versions that have no local file. Kept because
+          # the day that stops being true, db push becomes usable again and this
+          # step is how we will notice. Never fails the job.
+          npx supabase@latest db push --dry-run 2>&1 | tee db-push-dry-run.txt || true
+          echo "--- diagnostic only; the apply step below does not depend on this ---"
+
+      - name: Apply the 3 pending migrations
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          # `db push` refuses to run while the remote history holds versions with
+          # no local file, so the three are applied directly, in version order.
+          # The repair --status reverted that the CLI suggests would delete the
+          # history rows for ~109 migrations that really were applied, so it is
+          # deliberately not used. The next step records these three through the
+          # CLI's own writer.
+          MIGRATIONS="
+          supabase/migrations/20260422120000_admin_error_log.sql
+          supabase/migrations/20260423000000_trial_bookings_trial_days.sql
+          supabase/migrations/20260522000000_trial_booking_change_cancel_tracking.sql
+          "
+
+          # Fail before touching the database if any file is missing or renamed.
+          for f in $MIGRATIONS; do
+            [ -f "$f" ] || { echo "::error::Missing migration file: $f"; exit 1; }
+          done
+
+          for f in $MIGRATIONS; do
+            echo "::group::apply $(basename "$f")"
+            # A file that opens its own transaction manages it. Anything else is
+            # wrapped in one, so a mid-file failure cannot leave a migration
+            # half-applied. errexit aborts the loop on the first failure, leaving
+            # later migrations untouched.
+            if grep -qiE '^[[:space:]]*BEGIN[[:space:]]*;' "$f"; then
+              echo "(file manages its own transaction)"
+              psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres \
+                   -v ON_ERROR_STOP=1 -f "$f"
+            else
+              psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres \
+                   -v ON_ERROR_STOP=1 --single-transaction -f "$f"
+            fi
+            echo "::endgroup::"
+            echo "applied: $(basename "$f")"
+          done
+
+      - name: Record the 3 migrations as applied
+        run: |
+          set -euo pipefail
+          # The CLI's own writer, so these rows match the 44 stage 1 wrote rather
+          # than anything hand-rolled into schema_migrations.
+          npx supabase@latest migration repair --status applied \
+            20260422120000 20260423000000 20260522000000
 
       - name: Post-push migration list
         run: |
