@@ -1,0 +1,209 @@
+# The sanctioned way to apply migrations to production.
+#
+# `supabase db push` cannot be used against this project. 112 versions in the
+# remote history have no local migration file - the hand-applied ones
+# catalogued in docs/MIGRATION_TRIAGE.md - and db push refuses to run at all
+# while that is true. The alternative it suggests, `migration repair --status
+# reverted` on those versions, would delete the record of migrations that
+# really were applied, so it is not used either.
+#
+# Instead this workflow applies each pending migration directly with psql and
+# then records it through the CLI's own writer, which is what db push would
+# have done minus the consistency check it cannot satisfy.
+#
+# Two modes, dispatched by hand:
+#   plan   (default)  list what would be applied, change nothing
+#   apply             apply them, record them, verify none remain
+#
+# See docs/APPLYING_MIGRATIONS.md.
+
+name: Apply Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan lists what would be applied; apply actually applies it"
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  contents: read
+
+# Never let two runs touch the database at once.
+concurrency:
+  group: apply-migrations
+  cancel-in-progress: false
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'ewtdgpbybkceokfohhyg' }}
+
+jobs:
+  apply:
+    name: ${{ inputs.mode == 'apply' && 'Apply pending migrations' || 'Plan (no changes)' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Supabase CLI
+        run: npx supabase@latest --version
+
+      - name: Self-test the migration-list parser
+        run: |
+          set -euo pipefail
+          # Runs before anything touches the database: if the parser cannot read
+          # a known-good migration list, the pending list it produces below is
+          # meaningless and the run should stop here.
+          python3 scripts/test-migration-parser.py
+
+      - name: Link project
+        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+
+      - name: Work out what is pending
+        id: plan
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list.txt
+
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          echo "local migration files: ${local_migrations}"
+          python3 scripts/parse-migration-list.py migration-list.txt \
+            --min-rows "$local_migrations" | tee pending.txt
+
+          count=$(grep -oP '(?<=^pending_count=)\d+' pending.txt)
+          grep '^pending=' pending.txt | sed 's/^pending=//' | sort > pending-versions.txt || true
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Pending migrations: ${count}"
+            echo
+            echo '```'
+            cat pending-versions.txt || echo "(none)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "-----------------------------------------------------------"
+          echo "Pending migrations: ${count}"
+          cat pending-versions.txt || true
+          echo "-----------------------------------------------------------"
+
+      - name: Stop here (plan mode)
+        if: inputs.mode != 'apply'
+        run: |
+          set -euo pipefail
+          echo "Plan mode - nothing was applied."
+          echo "Re-run with mode=apply to apply the ${{ steps.plan.outputs.count }} migration(s) listed above."
+
+      - name: Resolve the database connection
+        if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          # The direct host is IPv6-only for many projects and GitHub runners are
+          # IPv4-only, so probe the IPv4 poolers first and fall back to direct.
+          DBHOST=""; DBUSER=""
+          for cand in \
+            "aws-1-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "db.$PROJECT_REF.supabase.co|postgres" ; do
+            host="${cand%%|*}"; user="${cand##*|}"
+            if psql -h "$host" -p 5432 -U "$user" -d postgres -tAc 'SELECT 1' >/dev/null 2>&1; then
+              DBHOST="$host"; DBUSER="$user"; break
+            fi
+            echo "Could not connect via ${host} - trying next candidate."
+          done
+          if [ -z "$DBHOST" ]; then
+            echo "::error::Could not reach the database on any candidate host. Nothing has been applied."
+            exit 1
+          fi
+          echo "Connected via ${DBHOST}."
+          echo "DBHOST=$DBHOST" >> "$GITHUB_ENV"
+          echo "DBUSER=$DBUSER" >> "$GITHUB_ENV"
+
+      - name: Apply the pending migrations
+        if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          # Version order, which is the order the filenames sort in.
+          while read -r version; do
+            [ -n "$version" ] || continue
+            f=$(find supabase/migrations -maxdepth 1 -name "${version}_*.sql" | head -1)
+            if [ -z "$f" ]; then
+              echo "::error::No local file found for pending version ${version}."
+              exit 1
+            fi
+            echo "::group::apply $(basename "$f")"
+            # A file that opens its own transaction manages it. Anything else is
+            # wrapped in one, so a mid-file failure cannot leave a migration
+            # half-applied. errexit aborts on the first failure, leaving later
+            # migrations untouched.
+            if grep -qiE '^[[:space:]]*BEGIN[[:space:]]*;' "$f"; then
+              echo "(file manages its own transaction)"
+              psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres \
+                   -v ON_ERROR_STOP=1 -f "$f"
+            else
+              psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres \
+                   -v ON_ERROR_STOP=1 --single-transaction -f "$f"
+            fi
+            echo "::endgroup::"
+            echo "applied: $(basename "$f")"
+          done < pending-versions.txt
+
+      - name: Record them as applied
+        if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          # The CLI's own writer, so these rows match every other row in
+          # supabase_migrations.schema_migrations rather than a hand-rolled insert.
+          # shellcheck disable=SC2046
+          npx supabase@latest migration repair --status applied $(tr '\n' ' ' < pending-versions.txt)
+
+      - name: Verify nothing is pending and print the state
+        if: inputs.mode == 'apply'
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          npx supabase@latest migration list | tee migration-list-after.txt
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          python3 scripts/parse-migration-list.py migration-list-after.txt \
+            --min-rows "$local_migrations" | tee pending-after.txt
+
+          remaining=$(grep -oP '(?<=^pending_count=)\d+' pending-after.txt)
+          echo "Pending after apply: ${remaining}"
+          if [ "$remaining" != "0" ]; then
+            echo "::error::Expected 0 pending migrations after applying, found ${remaining}."
+            grep '^pending=' pending-after.txt || true
+            exit 1
+          fi
+
+          if [ -n "${DBHOST:-}" ]; then
+            psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -v ON_ERROR_STOP=1 <<'SQL' | tee verification.txt
+          \pset border 2
+          SELECT count(*) AS schema_migrations_rows,
+                 max(version) AS latest_version
+            FROM supabase_migrations.schema_migrations;
+          SQL
+            {
+              echo "## Applied - migration history"
+              echo
+              echo '```'
+              cat verification.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

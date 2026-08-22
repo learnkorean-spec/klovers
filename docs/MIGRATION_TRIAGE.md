@@ -261,9 +261,12 @@ not analysed in this document.
 
 Two structural issues remain open, both out of scope here:
 
-1. **`deploy-functions` has `needs: migrate`.** A migration failure blocks all
-   edge function deploys. A commit in April (`ci: decouple edge function deploy
-   from migration job`) removed this coupling; it has since returned.
+1. ~~**`deploy-functions` has `needs: migrate`.**~~ Resolved. The coupling is
+   gone: `deploy-functions` now depends on the hold guard directly, so a
+   migration question cannot block shipping edge functions. The migrate job no
+   longer runs `db push` either - it reports whether anything is pending and
+   fails if so. Applying migrations is a deliberate, manually dispatched act:
+   see [APPLYING_MIGRATIONS.md](./APPLYING_MIGRATIONS.md).
 2. **Nothing prevents the lineages diverging again.** Hand-applying SQL to
    production without a matching migration file is what produced these 47. A
    check that fails CI when local and remote histories drift would catch the
