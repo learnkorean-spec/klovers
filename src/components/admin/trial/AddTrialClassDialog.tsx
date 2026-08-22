@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Loader2, Pencil } from 'lucide-react';
 import { useUpdateTrialSlot } from '@/hooks/useTrialAdmin';
 import { TrialSlotRow } from '@/types/trial-admin';
+import { ADMIN_TIMEZONE } from '@/constants/scheduling';
 
 const KEYS = {
   upcomingSlots: ['trial-admin', 'upcoming-slots'] as const,
@@ -41,7 +42,7 @@ const defaultForm = (): Form => ({
   durationMin: 30,
   capacity: 15,
   minToRun: '',
-  timezone: 'Asia/Ho_Chi_Minh',
+  timezone: ADMIN_TIMEZONE,
   classLanguage: 'arabic',
   sessionPeriod: 'morning',
   meetingUrl: '',
@@ -284,15 +285,30 @@ export default function AddTrialClassDialog({
             </div>
           </div>
 
+          {/* Timezone is not editable. It used to be a free-text box defaulting to
+              Asia/Ho_Chi_Minh, which meant a slot typed as 22:00 was stored as
+              22:00 Vietnam time and actually ran at 23:00 the teacher's time.
+              New slots are always in ADMIN_TIMEZONE; the start time above is
+              simply read as the teacher's own clock. */}
           <div className="space-y-1.5">
-            <Label htmlFor="trial-tz">Timezone</Label>
-            <Input
-              id="trial-tz"
-              type="text"
-              value={form.timezone}
-              onChange={(e) => setForm({ ...form, timezone: e.target.value })}
-              placeholder="Asia/Ho_Chi_Minh"
-            />
+            <Label>Timezone</Label>
+            <div className="rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
+              {form.timezone === ADMIN_TIMEZONE ? (
+                <span>
+                  Your time — {ADMIN_TIMEZONE.replace(/_/g, ' ')}
+                  <span className="block text-xs text-muted-foreground">
+                    The start time above is in your own timezone. Students always see it converted to theirs.
+                  </span>
+                </span>
+              ) : (
+                <span>
+                  {form.timezone.replace(/_/g, ' ')}
+                  <span className="block text-xs text-muted-foreground">
+                    Legacy timezone kept from this slot. New classes use {ADMIN_TIMEZONE.replace(/_/g, ' ')}.
+                  </span>
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">

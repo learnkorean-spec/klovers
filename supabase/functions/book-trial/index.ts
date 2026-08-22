@@ -222,7 +222,10 @@ Deno.serve(async (req) => {
       .eq("start_time", start_time)
       .maybeSingle();
     const _slot = slotTzRow as { timezone?: string | null; duration_min?: number | null; meeting_url?: string | null } | null;
-    const timezone: string = _slot?.timezone || "Asia/Ho_Chi_Minh";
+    // Fallback matches the trial_slots column default and ADMIN_TIMEZONE: the
+    // teacher's own zone. It was Asia/Ho_Chi_Minh, an hour off, which put every
+    // slot an hour later for her and an hour earlier for the student.
+    const timezone: string = _slot?.timezone || "Asia/Kuala_Lumpur";
     const slotDurationMin: number = _slot?.duration_min ?? 30;
     const meetingUrl: string | null = _slot?.meeting_url ?? null;
 
