@@ -62,6 +62,14 @@ jobs:
       - name: Install Supabase CLI
         run: npx supabase@latest --version
 
+      - name: Self-test the migration-list parser
+        run: |
+          set -euo pipefail
+          # Runs before anything touches the database: if the parser cannot read
+          # a known-good migration list, the pending count it produces later is
+          # meaningless and the run should stop here.
+          python3 scripts/test-migration-parser.py
+
       - name: Verify the CLI authenticates
         run: |
           set -euo pipefail
@@ -91,33 +99,13 @@ jobs:
           set -euo pipefail
           npx supabase@latest migration list | tee migration-list.txt
 
-          # Parse by COLUMN, not by counting ids on the line. The table has three
-          # columns - LOCAL | REMOTE | TIME - and a row is pending only when LOCAL
-          # holds a version and REMOTE is blank. Remote-only rows (the ~100 hand-
-          # applied versions that have no local file) also carry a single id, so
-          # counting ids per line would report them as pending. It does not.
-          python3 - <<'PY' | tee pending.txt
-          import re
-          pending, both, remote_only = [], 0, 0
-          for line in open("migration-list.txt", encoding="utf-8", errors="replace"):
-              parts = re.split(r"[\u2502|]", line)
-              if len(parts) < 3:
-                  continue
-              local, remote = parts[0].strip(), parts[1].strip()
-              local_ok = bool(re.fullmatch(r"\d{14}", local))
-              remote_ok = bool(re.fullmatch(r"\d{14}", remote))
-              if local_ok and not remote_ok:
-                  pending.append(local)
-              elif local_ok and remote_ok:
-                  both += 1
-              elif remote_ok:
-                  remote_only += 1
-          print(f"applied_both_sides={both}")
-          print(f"remote_only={remote_only}")
-          print(f"pending_count={len(pending)}")
-          for v in pending:
-              print(f"pending={v}")
-          PY
+          # Every local migration file must appear in the list, so the parser is
+          # told how many to expect: a short parse means the format changed and
+          # the count cannot be trusted.
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          echo "local migration files: ${local_migrations}"
+          python3 scripts/parse-migration-list.py migration-list.txt \
+            --min-rows "$local_migrations" | tee pending.txt
 
           count=$(grep -oP '(?<=^pending_count=)\d+' pending.txt)
           {
@@ -156,6 +144,11 @@ jobs:
       - name: Install Supabase CLI
         run: npx supabase@latest --version
 
+      - name: Self-test the migration-list parser
+        run: |
+          set -euo pipefail
+          python3 scripts/test-migration-parser.py
+
       - name: Link project
         run: npx supabase@latest link --project-ref "$PROJECT_REF"
 
@@ -168,20 +161,18 @@ jobs:
         run: |
           set -euo pipefail
           npx supabase@latest migration list | tee migration-list-after.txt
-          python3 - <<'PY'
-          import re
-          pending = []
-          for line in open("migration-list-after.txt", encoding="utf-8", errors="replace"):
-              parts = re.split(r"[\u2502|]", line)
-              if len(parts) < 3:
-                  continue
-              local, remote = parts[0].strip(), parts[1].strip()
-              if re.fullmatch(r"\d{14}", local) and not re.fullmatch(r"\d{14}", remote):
-                  pending.append(local)
-          print(f"pending_after_push={len(pending)}")
-          for v in pending:
-              print(f"still_pending={v}")
-          PY
+
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          python3 scripts/parse-migration-list.py migration-list-after.txt \
+            --min-rows "$local_migrations" | tee pending-after.txt
+
+          remaining=$(grep -oP '(?<=^pending_count=)\d+' pending-after.txt)
+          echo "Pending after push: ${remaining}"
+          if [ "$remaining" != "0" ]; then
+            echo "::error::Expected 0 pending migrations after db push, found ${remaining}."
+            grep '^pending=' pending-after.txt || true
+            exit 1
+          fi
 
       - name: Verify data and schema
         run: |
