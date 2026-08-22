@@ -23,6 +23,7 @@ Apply Migrations workflow (per `docs/APPLYING_MIGRATIONS.md`) — never `db push
 | 7 | **Availability floor is 08:00 MYT.** Trials bookable outside the Mon–Fri 10:00–19:00 block, within **08:00–24:00 MYT daily**, last start 23:30. | Re |
 | 8 | **Pilot approved:** 10–12 students next week on the existing September slots, repo code only. Full campaign for the rest after Phases 5–7. | Re |
 | 9 | Build order: **Phase 1 and Phase 5a first**, each its own PR, with confirmation at every gate. | Re |
+| 10 | **Google Calendar sync added as Phase 4.5** — busy-sync in, bookings out. Google is an additional blocking layer, never the source of truth; if sync breaks, booking must still work safely. See §9. | Re |
 
 ---
 
@@ -155,9 +156,18 @@ without any code change.
 | `class_language` | `text` null | null = both |
 | `note` | `text` null | admin-only |
 
-The timezone validation is deliberate: a CHECK against `pg_timezone_names` makes
-`Asia/Ho_Chi_Minh`-by-accident impossible to store again at the database level, not
-just discouraged in the UI.
+The timezone validation is deliberate: it makes `Asia/Ho_Chi_Minh`-by-accident
+impossible to store again at the database level, not just discouraged in the UI.
+
+*Implementation note (Phase 2, as built):* this is enforced by a **trigger**, not a
+`CHECK` constraint. A `CHECK` cannot contain a subquery, and any function reading
+`pg_timezone_names` is `STABLE` at best — marking one `IMMUTABLE` to satisfy a `CHECK`
+would be a lie that breaks when the zone database is updated. Same guarantee, honest
+mechanism.
+
+*Also as built:* `slot_range` on `trial_bookings` is maintained by a trigger rather
+than being a `GENERATED` column, because `timestamptz + interval` is `STABLE` rather
+than `IMMUTABLE` and Postgres rejects a non-immutable generation expression.
 
 ### 4.2 `teacher_availability_exceptions` — one-off changes
 
@@ -303,6 +313,22 @@ anything goes live.
 
 ---
 
+### Phase 4.5 — Google Calendar sync *(two sub-phases, see §9)*
+
+Two-way sync between Re's Google Calendar and the trial system:
+
+- **4.5a — busy in.** Anything marked busy in her Google Calendar also blocks that
+  time on the site. Ships after Phase 4.
+- **4.5b — bookings out.** Every confirmed trial appears as an event in her calendar.
+  Ships after Phase 7, since it needs bookings on the new `starts_at` model.
+
+Google is an **additional blocking layer only** — never the source of truth. Full
+design, feasibility findings and failure analysis in §9.
+
+**Effort:** ~4 days total · **Risk:** medium (external dependency)
+
+---
+
 ### Phase 5 — Recover the orphaned functions *(two PRs)*
 
 **PR 5a — recover verbatim.** Pull all nine into `supabase/functions/` exactly as
@@ -441,13 +467,15 @@ protected.**
 | 2 Availability tables | migration | 1 d | — |
 | 3 Availability engine | migration | 1.5 d | 2 |
 | 4 Admin page | code | 2 d | 3 |
+| 4.5a Google busy-sync in | code + migration | 2.5 d | 4 |
+| 4.5b Google bookings out | code + migration | 1.5 d | 7 |
 | 5a Recover orphans | code | 0.5 d | — |
 | 5b Fix orphans | code | 0.5 d | 5a |
 | 6 Student booking | code | 1.5 d | 3 |
 | 7 Emails on `starts_at` | code | 1 d | 6 |
 | 8 Retire old machinery | migration | 0.5 d | 6, 7 |
 | 9 Full campaign | ops | 0.5 d | 5, 7 |
-| | **Total** | **~10 days** | |
+| | **Total** | **~14 days** | |
 
 Roughly **3–4 calendar weeks** at a sustainable pace with confirmation between phases.
 
@@ -474,6 +502,153 @@ Still open, each at its own gate:
 
 Any Korean or Arabic content in the emails will be flagged for review before it
 changes — no wording is altered without Re seeing it first.
+
+---
+
+## 9. Phase 4.5 — Google Calendar sync
+
+Requested by Re, 2026-08-22. **Design only — nothing built.**
+
+> **Design constraint (Re's words):** Google is an additional blocking layer on top of
+> the rules/exceptions tables, never the single source of truth. If sync breaks,
+> booking must still work safely.
+
+That constraint is the right one, and it shapes every decision below.
+
+### 9.1 Feasibility findings
+
+Four things were checked against Google's documentation rather than assumed. Two of
+them change the obvious approach.
+
+**① `freebusy.query` returns busy blocks only — no titles, no details.**
+This is the ideal fit. The site learns *when* Re is busy and never sees *what* she is
+doing. Her lecture titles, doctor's appointments and private events stay private, and
+there is no personal data to protect in our database beyond start/end times. The
+endpoint caps at 50 calendars per query, far beyond what we need.
+
+**② Push notifications are the wrong mechanism here.** Google Calendar watch channels
+have a **maximum TTL of two days** (default: two hours) and there is **no automatic
+renewal** — you must re-register before expiry. That means a public webhook endpoint,
+plus a renewal cron, plus the failure mode that if renewal ever lapses the site
+silently stops learning about her calendar. **Recommendation: poll instead.** A cron
+calling `freebusy.query` every 15 minutes is stateless, self-healing, and costs
+96 calls a day, which is negligible against Google's quotas.
+
+**③ A service account will not work.** Domain-wide delegation only works for Google
+Workspace domains, not personal `@gmail.com` accounts. Re's calendar is on a personal
+account, so this needs **OAuth 2.0 with her one-time consent** and a stored refresh
+token.
+
+**④ The OAuth app must be published to "Production", not left in "Testing".** In
+Testing status with an External consent screen, Google **expires refresh tokens after
+seven days**. Sync would break every week, silently. Publishing to Production removes
+that expiry. An unverified app in Production shows a one-time "unverified app" warning
+at the consent screen and is capped at ~100 users — irrelevant for a single user.
+Full verification is only needed to remove that warning. *The exact verification
+requirement for these scopes should be re-confirmed at implementation time, since
+Google's policy here has moved before.*
+
+### 9.2 Design — 4.5a, busy in
+
+```
+  Google Calendar ──freebusy.query──▶ google-calendar-sync   (cron, every 15 min)
+                                              │
+                                              ▼
+                                    teacher_calendar_busy    (cached busy blocks)
+                                              │
+                                              ▼
+     get_trial_availability_v2:  rules − blocked − exceptions − bookings − BUSY − lead time
+```
+
+**New table `teacher_calendar_busy`** — a cache, not a source: `busy_start`,
+`busy_end`, `source`, `synced_at`. Each successful sync atomically replaces the rows
+for the window it queried.
+
+**New table `teacher_calendar_sync_state`** — `last_success_at`, `last_error`,
+`consecutive_failures`. This is what the admin screen reads to show honesty about
+staleness.
+
+**Phase 3's availability function gains one more subtraction step.** That is the whole
+integration: one more thing removed from the candidate list.
+
+### 9.3 What happens when sync breaks — the important part
+
+The failure analysis is what makes this design safe, so it is worth being explicit.
+
+| Failure | Effect | Safe? |
+|---|---|---|
+| Sync stops running | Cached busy blocks remain and keep blocking | ✅ Stale data keeps blocking; it never *un*blocks |
+| Google API down / token revoked | Same — last known busy blocks stand | ✅ Booking continues on rules + exceptions |
+| Re adds a lecture, sync hasn't run yet | Up to 15 minutes where that slot is still offered | ⚠️ Residual risk, see below |
+| Our own reverse-sync events read back as busy | Would block the slot the booking already occupies | ✅ Solved by design, see §9.4 |
+
+**Because Google can only ever *add* blocks, a sync failure can never cancel or lose a
+booking.** The worst case is an over-booking: a student takes a slot Re has since
+filled in Google. And even that is bounded, because **her regular lectures are already
+blocked by the Mon–Fri 10:00–19:00 rule** — Google sync is a safety net for the
+irregular stuff (a lecture moved to Saturday, an evening commitment), not the primary
+defence.
+
+**Deliberately not doing:** blocking all bookings when sync is stale. That would
+violate the design constraint — a Google outage would take the booking page down with
+it. Instead the admin screen shows *"Google Calendar last synced 3 hours ago"* in
+plain language when it falls behind, and Re can add a normal block herself.
+
+### 9.4 Design — 4.5b, bookings out
+
+**The feedback-loop problem.** An event we create for a booking will show as busy in
+the next `freebusy` query, blocking the slot that booking already occupies. Harmless
+in itself, but if a booking is later cancelled and the event deletion fails, the block
+would persist with nothing to explain it.
+
+**The fix: a dedicated "Klovers Trials" calendar.** `freebusy.query` takes an explicit
+list of calendar IDs, so we query her personal calendars and simply never ask about
+the Klovers one. The loop cannot form. It also gives her a colour-coded, separately
+toggleable layer in her own calendar app.
+
+**Writes never block a booking.** A small outbox table `trial_booking_calendar_sync`
+(`booking_id`, `action`, `status`, `attempts`, `last_error`) is written in the same
+transaction as the booking; the cron drains it. If Google is unreachable the booking
+still succeeds and the event appears later. A calendar write must never be able to
+fail a student's booking.
+
+Cancellations and reschedules enqueue `delete` / `update` the same way.
+`trial_bookings` gains `google_event_id`.
+
+### 9.5 Setup this needs from Re (one-time)
+
+1. A Google Cloud project with the Calendar API enabled.
+2. An OAuth client, consent screen **published to Production** (see finding ④).
+3. Scopes: `calendar.freebusy` for reading busy blocks, `calendar.events` for writing
+   trial events — the narrowest pair that does the job.
+4. One authorisation click by Re, which yields the refresh token.
+5. Three Supabase secrets: client ID, client secret, refresh token.
+
+**A simpler alternative, considered and not recommended:** Google exposes a secret
+iCal (`.ics`) feed URL per calendar, which needs no OAuth at all. It is rejected
+because Google caches those feeds and they can lag by hours — unacceptable when the
+entire purpose is preventing a clash — and because it is read-only, so it cannot do
+4.5b at all.
+
+### 9.6 Effort
+
+| Piece | Work | Estimate |
+|---|---|---|
+| OAuth setup, secrets, one-time consent | Google Cloud config + token capture | 0.5 d |
+| 4.5a — table, sync function, cron, engine integration | | 1.5 d |
+| 4.5a — admin staleness indicator | | 0.5 d |
+| 4.5b — Klovers calendar, outbox table, insert/update/delete | | 1.5 d |
+| | **Total** | **~4 days** |
+
+### 9.7 Sequencing
+
+- **4.5a after Phase 4.** It needs `get_trial_availability_v2` (Phase 3) to hook into
+  and the admin page (Phase 4) to report staleness.
+- **4.5b after Phase 7.** It needs confirmed bookings carrying `starts_at`, and the
+  email/calendar work in Phase 7 covers the same ground.
+
+Splitting it this way means the protective half — stopping clashes — lands early,
+while the convenience half waits for the model it depends on.
 
 ---
 
