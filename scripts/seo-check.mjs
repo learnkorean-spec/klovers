@@ -172,17 +172,23 @@ if (MODE === "live") {
   }
 }
 
-// Auth routes must stay crawlable in robots.txt.
+// robots.txt must match the noindex strategy, which differs by route.
 //
-// The noindex for these routes is carried by the X-Robots-Tag response header
-// (see below). A header can only be obeyed by a crawler that actually fetches
-// the URL, so a Disallow here would silently defeat it — and would strand any
-// URL already in the index, because Google could never re-crawl it to discover
-// the noindex. That is the trap described in docs/SEO_DIAGNOSIS.md section 9.
+// The four public auth pages must stay CRAWLABLE. Their noindex is carried by
+// the X-Robots-Tag response header (see below), and a header can only be obeyed
+// by a crawler that actually fetches the URL. A Disallow would silently defeat
+// it — and would strand any URL already in the index, because Google could
+// never re-crawl it to discover the noindex. That is the trap described in
+// docs/SEO_DIAGNOSIS.md section 9.
 //
-// This check exists so the two mechanisms cannot drift apart: re-adding a
-// Disallow for one of these paths fails the build. It reads robots.txt from
-// public/ in dist mode, so it runs in CI too, not just against production.
+// /admin/login must stay BLOCKED. Nothing of it was ever in the index, so there
+// is nothing to deindex and no reason to invite a crawl. It still gets the
+// header as defence in depth, for anything that reaches it without consulting
+// robots.txt — which is why it stays in NOINDEX_ROUTES below.
+//
+// This check exists so the two mechanisms cannot drift apart in either
+// direction. It reads robots.txt from public/ in dist mode, so it runs in CI
+// too, not just against production.
 
 /** Allow/Disallow rules for the `User-agent: *` group only. */
 function starGroupRules(txt) {
@@ -244,16 +250,23 @@ const NOINDEX_ROUTES = [
   "/admin/login",
 ];
 
+// Public auth pages: must NOT be disallowed.
+const MUST_CRAWL = NOINDEX_ROUTES.filter((r) => !r.startsWith("/admin"));
+// Admin login: must stay disallowed.
+const MUST_BLOCK = NOINDEX_ROUTES.filter((r) => r.startsWith("/admin"));
+
 const robotsRules = robotsErr ? [] : starGroupRules(robotsTxt);
-const blockedAuthRoutes = robotsErr
-  ? []
-  : NOINDEX_ROUTES.filter((r) => !isCrawlable(r, robotsRules));
-const crawlableOk = robotsErr ? false : blockedAuthRoutes.length === 0;
+const wronglyBlocked = robotsErr ? [] : MUST_CRAWL.filter((r) => !isCrawlable(r, robotsRules));
+const wronglyOpen = robotsErr ? [] : MUST_BLOCK.filter((r) => isCrawlable(r, robotsRules));
+const crawlableOk = robotsErr ? false : wronglyBlocked.length === 0 && wronglyOpen.length === 0;
 const crawlableDetail = robotsErr
   ? `error: ${robotsErr}`
   : crawlableOk
-    ? `${NOINDEX_ROUTES.length}/${NOINDEX_ROUTES.length} routes`
-    : `blocked by robots.txt: ${blockedAuthRoutes.join(", ")}`;
+    ? `${MUST_CRAWL.length} crawlable, ${MUST_BLOCK.length} blocked`
+    : [
+        wronglyBlocked.length && `must be crawlable but is disallowed: ${wronglyBlocked.join(", ")}`,
+        wronglyOpen.length && `must be disallowed but is crawlable: ${wronglyOpen.join(", ")}`,
+      ].filter(Boolean).join("; ");
 let noindexOk = null;
 let noindexDetail = "skipped (needs live HTTP)";
 const noindexFailures = [];
@@ -293,7 +306,7 @@ const summary = [
   ["canonical is unique", `${results.filter((r) => r.canonicalUnique).length}/${results.length}`, tick(results.every((r) => r.canonicalUnique))],
   ["robots.txt names 1 sitemap", robotsErr ? `error: ${robotsErr}` : robotsSitemaps.join(", ") || "(none)", tick(robotsOk)],
   ["www 301/308 -> apex", wwwDetail, tick(wwwOk)],
-  ["auth routes crawlable in robots.txt", crawlableDetail, tick(crawlableOk)],
+  ["robots.txt matches noindex strategy", crawlableDetail, tick(crawlableOk)],
   ["auth routes: X-Robots-Tag noindex", noindexDetail, tick(noindexOk)],
 ];
 

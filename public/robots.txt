@@ -9,10 +9,11 @@ Allow: /
 # docs/SEO_DIAGNOSIS.md section 9). Allowing the crawl is what lets Google read
 # the header and drop them.
 
-# Admin area — stays blocked, except the login screen, which is handled the
-# same way as the other auth pages. Google resolves conflicting rules by
-# longest match, so this Allow beats `Disallow: /admin` for that one path.
-Allow: /admin/login
+# Admin area — fully blocked, /admin/login included. Unlike the auth pages
+# above there is nothing to deindex here: it was never in the index, so
+# inviting a crawl buys nothing. It still carries the same
+# `X-Robots-Tag: noindex, nofollow` header as defence in depth, for anything
+# that reaches it without consulting robots.txt.
 Disallow: /admin
 Disallow: /admin/
 
