@@ -89,3 +89,148 @@ export function getTierForCountry(country: string): TierKey | null {
 export { DURATION_CLASSES };
 
 export type { TierKey, ClassType, Duration, PriceInfo };
+
+// ---------------------------------------------------------------------------
+// Local-currency prices per country.
+//
+// Moved here from PricingSection.tsx so the public pricing page and the admin
+// bundle picker read one table. A second copy would have drifted the first time
+// a price changed, and the whole point of country pricing is that a student in
+// Cairo and a student in Riyadh see different, correct numbers.
+//
+// Rates are approximate, May 2026. Lebanon, Syria, Sudan, Yemen and Argentina
+// appear in tierCountries but deliberately have no local row (unstable
+// currencies); callers fall back to the USD tier price.
+// ---------------------------------------------------------------------------
+
+/** [1 month, 3 months, 6 months] — matching DURATION_CLASSES of 4 / 12 / 24. */
+type PriceTriple = [number, number, number];
+
+interface CountryLocal {
+  currency: string;
+  group: PriceTriple;
+  private: PriceTriple;
+}
+
+const COUNTRY_LOCAL_PRICES: Record<string, CountryLocal> = {
+  // Local tier
+  "Egypt":   { currency: "EGP", group: [1200,   3300,    6100],    private: [2350,    6600,   11750] },
+  "Morocco": { currency: "MAD", group: [250,     700,    1300],    private: [500,     1400,    2500] },
+  "Tunisia": { currency: "TND", group: [78,      217,     403],    private: [155,      435,     775] },
+  "Algeria": { currency: "DZD", group: [3400,   9500,   17500],    private: [6750,   18900,   33750] },
+  "Libya":   { currency: "LYD", group: [122,     343,     637],    private: [245,      686,    1225] },
+  "Jordan":  { currency: "JOD", group: [18,       50,      92],    private: [36,        99,     178] },
+  "Iraq":    { currency: "IQD", group: [32750, 91700,  170300],    private: [65500, 183400,  327500] },
+
+  // Regional tier
+  "Malaysia":    { currency: "MYR", group: [175,     485,     880],    private: [350,     970,    1672] },
+  "Indonesia":   { currency: "IDR", group: [648000, 1782000, 3240000], private: [1296000, 3564000, 6156000] },
+  "Thailand":    { currency: "THB", group: [1320,   3630,    6600],    private: [2640,    7260,   12540] },
+  "Vietnam":     { currency: "VND", group: [1016000, 2794000, 5080000], private: [2032000, 5588000, 9652000] },
+  "Philippines": { currency: "PHP", group: [2240,   6160,   11200],    private: [4480,   12320,   21280] },
+  "India":       { currency: "INR", group: [3360,   9240,   16800],    private: [6720,   18480,   31920] },
+  "Pakistan":    { currency: "PKR", group: [11160, 30690,   55800],    private: [22320,  61380,  106020] },
+  "Brazil":      { currency: "BRL", group: [228,    627,    1140],     private: [456,    1254,    2166] },
+  "Mexico":      { currency: "MXN", group: [680,   1870,    3400],     private: [1360,   3740,    6460] },
+  "Colombia":    { currency: "COP", group: [168000, 462000,  840000],  private: [336000,  924000, 1596000] },
+  "Turkey":      { currency: "TRY", group: [1520,  4180,    7600],     private: [3040,   8360,   14440] },
+
+  // Global tier
+  "UAE":            { currency: "AED", group: [220,     624,    1100],   private: [440,    1210,    2130] },
+  "Saudi Arabia":   { currency: "SAR", group: [225,     638,    1125],   private: [450,    1238,    2175] },
+  "Qatar":          { currency: "QAR", group: [218,     619,    1092],   private: [436,    1200,    2110] },
+  "Bahrain":        { currency: "BHD", group: [22.6,   63.9,   112.8],  private: [45.1,   124.6,   218.5] },
+  "Oman":           { currency: "OMR", group: [23.1,   65.5,   115.5],  private: [46.2,   127,     223] },
+  "Kuwait":         { currency: "KWD", group: [18.4,   52.2,    92.1],  private: [36.8,   101.3,   178] },
+  "United Kingdom": { currency: "GBP", group: [47,     134,     237],   private: [95,     261,     458] },
+  "Germany":        { currency: "EUR", group: [55,     156,     276],   private: [110,    304,     534] },
+  "France":         { currency: "EUR", group: [55,     156,     276],   private: [110,    304,     534] },
+  "Canada":         { currency: "CAD", group: [83,     235,     414],   private: [165,    455,     800] },
+  "Australia":      { currency: "AUD", group: [93,     264,     465],   private: [186,    512,     899] },
+  "Japan":          { currency: "JPY", group: [8940,  25330,  44700],   private: [17880, 49170,   86420] },
+  "South Korea":    { currency: "KRW", group: [82500, 233750, 412500],  private: [165000, 453750, 797500] },
+  "China":          { currency: "CNY", group: [436,   1236,    2181],   private: [872,   2399,    4217] },
+};
+
+const DURATIONS: Duration[] = [1, 3, 6];
+
+/** Every country that has a price, local or otherwise, sorted for a picker. */
+export const PRICED_COUNTRIES: string[] = (Object.values(tierCountries) as string[][])
+  .flat()
+  .sort((a, b) => a.localeCompare(b));
+
+/**
+ * The currency a country pays in, or null where no local row exists.
+ * Callers default to USD; the student's stored currency always wins over this.
+ */
+export function getCurrencyForCountry(country: string | null | undefined): string | null {
+  return country ? COUNTRY_LOCAL_PRICES[country]?.currency ?? null : null;
+}
+
+/** Shape PricingSection renders. Kept identical to what it built inline. */
+export interface LocalPriceRow { duration: string; classes: string; local: number; currency: string }
+
+const DURATION_ROWS: Array<{ duration: string; classes: string }> = [
+  { duration: "1 Month",  classes: "4 classes"  },
+  { duration: "3 Months", classes: "12 classes" },
+  { duration: "6 Months", classes: "24 classes" },
+];
+
+/** Rebuilds the exact map PricingSection used to define for itself. */
+export function buildCountryLocalPrices(): Record<string, { group: LocalPriceRow[]; private: LocalPriceRow[] }> {
+  return Object.fromEntries(
+    Object.entries(COUNTRY_LOCAL_PRICES).map(([country, row]) => [
+      country,
+      {
+        group:   DURATION_ROWS.map((d, i) => ({ ...d, local: row.group[i],   currency: row.currency })),
+        private: DURATION_ROWS.map((d, i) => ({ ...d, local: row.private[i], currency: row.currency })),
+      },
+    ])
+  );
+}
+
+/** One purchasable bundle: a class count for a price, in a currency. */
+export interface BundleOption {
+  /** Stable identity, "<country>|<group|private>|<months>". */
+  key: string;
+  classType: ClassType;
+  months: Duration;
+  classes: number;
+  price: number;
+  currency: string;
+  /** False when this fell back to the USD tier price for want of a local row. */
+  isLocal: boolean;
+  label: string;
+}
+
+/**
+ * The six catalogue bundles for a country, priced in its own currency where one
+ * exists and in USD where it does not. Returns [] for an unknown country, which
+ * is how the picker ends up offering Custom only.
+ */
+export function getBundleOptions(country: string | null | undefined): BundleOption[] {
+  if (!country) return [];
+  const tier = getTierForCountry(country);
+  if (!tier) return [];
+  const local = COUNTRY_LOCAL_PRICES[country];
+
+  return (["group", "private"] as ClassType[]).flatMap(classType =>
+    DURATIONS.map(months => {
+      const price = local ? local[classType][DURATIONS.indexOf(months)] : tierPrices[tier][classType][months];
+      const currency = local?.currency ?? "USD";
+      const classes = DURATION_CLASSES[months];
+      const noun = classType === "group" ? "Group" : "Private";
+      const period = months === 1 ? "1 month" : `${months} months`;
+      return {
+        key: `${country}|${classType}|${months}`,
+        classType,
+        months,
+        classes,
+        price,
+        currency,
+        isLocal: !!local,
+        label: `${noun} · ${period} · ${classes} classes`,
+      };
+    })
+  );
+}
