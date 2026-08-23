@@ -13,9 +13,11 @@
 import { describe, it, expect } from "vitest";
 import {
   buildCountryLocalPrices,
+  currencyChoicesFor,
   getBundleOptions,
   getCurrencyForCountry,
   tierCountries,
+  COMMON_CURRENCIES,
   PRICED_COUNTRIES,
 } from "@/lib/stripePrices";
 
@@ -170,5 +172,56 @@ describe("PRICED_COUNTRIES", () => {
   it("lists every country from every tier, sorted", () => {
     const expected = Object.values(ORIGINAL_TIER_COUNTRIES).flat().sort((a, b) => a.localeCompare(b));
     expect(PRICED_COUNTRIES).toEqual(expected);
+  });
+});
+
+describe("currencyChoicesFor", () => {
+  it("always offers the currencies Klovers actually takes", () => {
+    for (const c of COMMON_CURRENCIES) {
+      expect(currencyChoicesFor("Egypt")).toContain(c);
+    }
+    expect(COMMON_CURRENCIES).toEqual(["EGP", "USD", "SAR", "AED", "MYR", "EUR"]);
+  });
+
+  it("does not duplicate a common currency that is also the country's", () => {
+    const out = currencyChoicesFor("Egypt");
+    expect(out.filter(c => c === "EGP")).toHaveLength(1);
+    expect(new Set(out).size).toBe(out.length);
+  });
+
+  it("adds the country's own currency when it is outside the common list", () => {
+    // The catalogue can price a Japanese bundle in JPY; a picker that could not
+    // show JPY would drop the value rather than prevent a typo.
+    expect(currencyChoicesFor("Japan")).toContain("JPY");
+    expect(currencyChoicesFor("Morocco")).toContain("MAD");
+    expect(currencyChoicesFor("Indonesia")).toContain("IDR");
+  });
+
+  it("keeps whatever is already selected, so an existing bundle never loses its currency", () => {
+    expect(currencyChoicesFor("Egypt", "KWD")).toContain("KWD");
+    expect(currencyChoicesFor(null, "BHD")).toContain("BHD");
+  });
+
+  it("ignores a malformed current value rather than offering it", () => {
+    expect(currencyChoicesFor("Egypt", "egp")).not.toContain("egp");
+    expect(currencyChoicesFor("Egypt", "")).toEqual([...COMMON_CURRENCIES]);
+    expect(currencyChoicesFor("Egypt", null)).toEqual([...COMMON_CURRENCIES]);
+  });
+
+  it("falls back to the common list for a country with no local currency", () => {
+    // United States is priced in USD, which is already common.
+    expect(currencyChoicesFor("United States")).toEqual([...COMMON_CURRENCIES]);
+    expect(currencyChoicesFor("Atlantis")).toEqual([...COMMON_CURRENCIES]);
+  });
+
+  it("offers a currency for every country the catalogue can price", () => {
+    // Guards the picker against a country whose bundle currency it cannot show.
+    for (const country of PRICED_COUNTRIES) {
+      const options = getBundleOptions(country);
+      const choices = currencyChoicesFor(country);
+      for (const o of options) {
+        expect(choices).toContain(o.currency);
+      }
+    }
   });
 });

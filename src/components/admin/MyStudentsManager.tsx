@@ -47,8 +47,9 @@ import {
   type StudentClassSchedule, type StudentStatus, type StudentSubject,
 } from "@/types/students";
 import {
-  PRICED_COUNTRIES, getBundleOptions, getCurrencyForCountry, type BundleOption,
+  getBundleOptions, getCurrencyForCountry, currencyChoicesFor, type BundleOption,
 } from "@/lib/stripePrices";
+import { CountryCombobox } from "@/components/admin/CountryCombobox";
 
 const SUBJECT_BADGE: Record<StudentSubject, string> = {
   korean: "bg-yellow-100 text-yellow-900 border-yellow-300",
@@ -905,12 +906,12 @@ const MyStudentsManager = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Country</Label>
-                  <Select
-                    value={studentDraft.country || "none"}
-                    onValueChange={v => {
-                      const country = v === "none" ? "" : v;
-                      // The country sets the currency only when Re has not
+                  <Label htmlFor="student-country">Country</Label>
+                  <CountryCombobox
+                    id="student-country"
+                    value={studentDraft.country}
+                    onChange={country => {
+                      // The country fills the currency only when Re has not
                       // chosen one; what they pay in is an agreement, not a lookup.
                       const suggested = getCurrencyForCountry(country) ?? "";
                       setStudentDraft({
@@ -919,22 +920,22 @@ const MyStudentsManager = () => {
                         currency: studentDraft.currency || suggested,
                       });
                     }}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
-                    <SelectContent className="max-h-64">
-                      <SelectItem value="none">Not set</SelectItem>
-                      {PRICED_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="student-currency">Currency</Label>
-                  <Input
-                    id="student-currency" value={studentDraft.currency}
-                    onChange={e => setStudentDraft({ ...studentDraft, currency: e.target.value.toUpperCase().slice(0, 3) })}
-                    placeholder="EGP"
-                    className="uppercase"
-                  />
+                  <Label>Currency</Label>
+                  <Select
+                    value={studentDraft.currency || "none"}
+                    onValueChange={v => setStudentDraft({ ...studentDraft, currency: v === "none" ? "" : v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not set</SelectItem>
+                      {currencyChoicesFor(studentDraft.country, studentDraft.currency).map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground">What they pay in.</p>
                 </div>
               </div>
@@ -1134,12 +1135,18 @@ const MyStudentsManager = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="bundle-currency">Currency</Label>
-                    <Input
-                      id="bundle-currency" value={bundleDraft.currency} className="uppercase"
-                      onChange={e => editBundleField({ currency: e.target.value.toUpperCase().slice(0, 3) })}
-                      placeholder="EGP"
-                    />
+                    <Label>Currency</Label>
+                    <Select
+                      value={bundleDraft.currency}
+                      onValueChange={v => editBundleField({ currency: v })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {currencyChoicesFor(student?.country, bundleDraft.currency).map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
