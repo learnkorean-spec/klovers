@@ -269,6 +269,15 @@ function hreflangFor(slug) {
       ? `ar-${base}`
       : null;
   if (!enSlug || !arSlug) return null;          // no honest pair -> no tags
+
+  // Eight English posts have TWO published Arabic translations, `<base>-ar` and
+  // legacy `ar-<base>`. Only one can be the `hreflang="ar"` target, and the
+  // suffix form wins above — which left the runner-up emitting a cluster that
+  // did not contain its own URL. Every member of a cluster has to name every
+  // member including itself, so a page that is not in its own cluster gets no
+  // tags at all rather than a set Google will discard.
+  if (slug !== enSlug && slug !== arSlug) return null;
+
   return {
     en: `${BASE_URL}/blog/${enSlug}`,
     ar: `${BASE_URL}/blog/${arSlug}`,
