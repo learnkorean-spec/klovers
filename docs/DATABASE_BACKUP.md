@@ -30,38 +30,117 @@ empty, the run **fails** and the artifact is not to be trusted.
 | `BACKUP_ENCRYPTION_PASSPHRASE` | **new** — must be created before the first run |
 
 Generate the passphrase with `openssl rand -base64 32` and store it in a
-password manager. **If it is lost, every backup taken with it is unreadable.**
-It is not recoverable from GitHub — secrets are write-only once saved.
+password manager before saving it into GitHub.
+
+### If the passphrase is lost
+
+**Every backup encrypted with it becomes permanently unreadable. There is no
+recovery, no reset, and no support path.**
+
+Concretely, this is what "lost" means:
+
+- GitHub will not show it back to you. Actions secrets are write-only: once
+  saved, the value can be replaced but never read, not by Re, not by an admin,
+  not by GitHub support.
+- The encryption is AES-256 with no key escrow and no recovery key. Nobody —
+  not Anthropic, not GitHub, not Supabase — can open the files without the
+  passphrase. This was tested: a wrong passphrase is refused outright.
+- Every `.gpg` artifact already stored becomes a permanently unopenable file.
+  A year of weekly backups turns into a year of useless blobs in one step.
+- The database itself is untouched and still running. Losing the passphrase
+  does not break production — it removes the safety net without any warning
+  sign. **Nothing fails, nothing turns red, and nobody finds out until the day
+  a restore is actually needed.** That is what makes it dangerous.
+
+Recovery, if it happens: set a **new** passphrase, run the workflow manually,
+and treat every older artifact as gone. The gap between the last readable
+backup and that new run is data with no protection at all.
+
+**Therefore:** store it in a password manager AND in one place that survives
+losing the password manager. Rotating it is safe as long as the old value is
+kept for as long as artifacts encrypted with it still exist.
 
 ## RPO / RTO — the honest numbers
+
+These are measured, not estimated. A rehearsal was run against a database
+built to match production's shape and size (77 tables, 16,632 rows, 17 MB).
+
+| | Measured |
+|---|---|
+| Plain dump | 4.3 MB |
+| **Encrypted artifact** | **~0.9 MB** |
+| pg_dump | 0.2 s |
+| Compress + encrypt | 0.9 s |
+| Decrypt + unpack | 0.2 s |
+| **Restore into Postgres** | **0.6 s** |
+| **Total data restore** | **0.8 s** |
 
 **RPO (how much data a failure can destroy): up to 7 days.**
 Backups are weekly. A database lost on a Saturday loses six days of bookings,
 enrolments, leads and profile changes — permanently. There is no PITR to fall
 back on and no transaction log shipping. Running the workflow by hand before
 any risky change is what shrinks this window, and it is the reason the manual
-dispatch exists.
+dispatch exists. See "Weekly or daily" below.
 
-**RTO (how long a restore actually takes): 2–4 hours, and it is not one click.**
+**RTO: the data comes back in under a second. Everything around it takes 2-4 hours.**
+
+This is the number that surprises people, so it is worth stating precisely:
+restoring the *data* is trivially fast. The hours are spent on everything that
+is not the data.
 
 1. Download the artifact — minutes, and only within the retention window.
-2. Decrypt and unpack — minutes.
+2. Decrypt, unpack, restore — **under a second**, measured above.
 3. Provision a target. Restoring *over* a live Supabase project is not
-   supported cleanly; in practice this means a new project, which changes the
-   project ref — so Vercel env vars, edge-function secrets and any hardcoded
-   URL all have to be repointed. This is the slow part.
-4. Restore `public` and `supabase_migrations`, then re-run migrations if needed.
+   supported cleanly; in practice this means a **new project**, which changes
+   the project ref — so Vercel env vars, edge-function secrets and any
+   hardcoded URL all have to be repointed. **This is the slow part, and it is
+   almost all of the 2-4 hours.**
+4. Re-run migrations if the restored history is behind the repo.
 5. `auth` and `storage` restore only if the dump captured them. **Auth users may
    have to be recreated**, which means password resets for everyone.
 6. Storage *objects* (uploaded files) are **not** in this backup at all — only
    their metadata rows. Receipt images and any uploaded file are lost.
 
-**What this backup does not cover:** storage objects, edge-function source
-(that lives in the repo), Vercel configuration, and anything written in the
-days since the last run.
+**What this backup does not cover:**
 
-**The real fix is Supabase Pro** (daily backups + 7-day PITR), which turns the
-RPO from 7 days into minutes. This workflow is the stopgap, not the answer.
+- Storage objects (uploaded files, receipt images).
+- Edge-function source — that lives in the repo, which is its own backup.
+- Vercel configuration and environment variables.
+- Anything written since the last run.
+- **Corruption that gets backed up before anyone notices it.** This is the
+  quiet one. The counter-inflation bug is exactly this shape: a faithful backup
+  of already-wrong data is still wrong data. Backups protect against loss, not
+  against being wrong. Only the row-count history in `ROW-COUNTS.txt` gives any
+  hint, and only for deletions, not for bad values.
+
+## Weekly or daily?
+
+**Recommendation: switch to daily once the trial pilot starts taking real
+bookings.** The workflow ships weekly because that was the approved scope; the
+change is one line (`cron: "17 2 * * *"`).
+
+The reason is that weekly and daily cost almost the same and are not close in
+what they protect:
+
+| | Weekly | Daily |
+|---|---|---|
+| Worst-case data loss | **7 days** | **24 hours** |
+| Artifact storage at 90-day retention | ~13 MB | ~90 MB |
+| Actions minutes per month | ~25 | ~150 |
+
+GitHub's free tier for a private repo is 500 MB of artifact storage and 2,000
+Actions minutes a month. Daily backups use roughly **18% of the storage** and
+**8% of the minutes**. The measured artifact is under 1 MB, so this stays cheap
+even as the database grows several times over.
+
+Against that: the 59 waiting students are about to start booking, and a
+confirmed booking is not something that can be reconstructed from memory. Losing
+a week of them is a real business loss; losing a day is an annoyance. There is
+no meaningful saving being bought by the extra six days of exposure.
+
+**Until the switch:** run the workflow by hand before anything risky — a
+migration, a bulk edit, an admin action that deletes. That is what turns a
+7-day window into a few minutes, and it costs one click.
 
 ## Restoring
 
