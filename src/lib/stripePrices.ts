@@ -234,3 +234,32 @@ export function getBundleOptions(country: string | null | undefined): BundleOpti
     })
   );
 }
+
+/**
+ * The currencies Klovers actually takes money in, offered first in any picker.
+ *
+ * Not the whole set: the country table prices in 25 currencies, and a bundle can
+ * legitimately be in any of them. This is the shortlist that covers almost every
+ * real student, which is why callers append the student's own currency rather
+ * than treating this as exhaustive — see currencyChoicesFor.
+ */
+export const COMMON_CURRENCIES = ["EGP", "USD", "SAR", "AED", "MYR", "EUR"] as const;
+
+/**
+ * What a currency picker should offer for one student: the common list, plus
+ * their country's currency, plus whatever is already selected.
+ *
+ * The last two matter. Choosing "Japan · Private · 3 months" sets JPY, and a
+ * picker that could not show JPY would either look broken or silently drop the
+ * value — turning a typo-proofing change into a data-loss one.
+ */
+export function currencyChoicesFor(
+  country: string | null | undefined,
+  current?: string | null,
+): string[] {
+  const out = [...COMMON_CURRENCIES] as string[];
+  for (const extra of [getCurrencyForCountry(country), current]) {
+    if (extra && /^[A-Z]{3}$/.test(extra) && !out.includes(extra)) out.push(extra);
+  }
+  return out;
+}

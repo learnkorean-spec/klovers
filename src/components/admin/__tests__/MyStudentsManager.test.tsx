@@ -285,3 +285,68 @@ describe("country and currency", () => {
     expect(screen.getByText("Egypt · EGP")).toBeInTheDocument();
   });
 });
+
+describe("currency and country cannot be mistyped", () => {
+  it("offers currency as a dropdown in the bundle dialog, not a text field", () => {
+    balances = new Map();
+    draw();
+    click(screen.getByRole("button", { name: /Add bundle/i }));
+
+    const dialog = screen.getByRole("dialog");
+    // The old free-text field was a textbox; Classes, Total price and the
+    // optional name are the only ones that should remain.
+    const textboxNames = within(dialog).getAllByRole("textbox")
+      .map(el => el.getAttribute("id"));
+    expect(textboxNames).not.toContain("bundle-currency");
+    expect(textboxNames).toContain("bundle-classes");
+    expect(textboxNames).toContain("bundle-price");
+  });
+
+  it("preselects the currency implied by the student's country", () => {
+    balances = new Map();
+    draw();
+    click(screen.getByRole("button", { name: /Add bundle/i }));
+
+    // Solafa is Egypt/EGP, so the dropdown opens on EGP rather than blank —
+    // which is what caught the near-miss on her bundle.
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByText("EGP").length).toBeGreaterThan(0);
+  });
+
+  it("offers country as a searchable combobox in the student dialog", () => {
+    const { baseElement } = draw();
+    click(screen.getByRole("button", { name: /Add student/i }));
+
+    const country = baseElement.querySelector("#student-country")!;
+    expect(country).toBeTruthy();
+    expect(country.getAttribute("role")).toBe("combobox");
+
+    // No free-text country or currency field left to mistype into.
+    const ids = within(screen.getByRole("dialog"))
+      .getAllByRole("textbox").map(el => el.getAttribute("id"));
+    expect(ids).not.toContain("student-country");
+    expect(ids).not.toContain("student-currency");
+  });
+
+  it("filters the country list as you type", () => {
+    const { baseElement } = draw();
+    click(screen.getByRole("button", { name: /Add student/i }));
+    click(baseElement.querySelector("#student-country")!);
+
+    const search = screen.getByPlaceholderText(/Search countries/i);
+    fireEvent.change(search, { target: { value: "egy" } });
+
+    expect(screen.getByText("Egypt")).toBeInTheDocument();
+    expect(screen.queryByText("Indonesia")).not.toBeInTheDocument();
+  });
+
+  it("shows each country's currency in the list, so the implication is visible", () => {
+    const { baseElement } = draw();
+    click(screen.getByRole("button", { name: /Add student/i }));
+    click(baseElement.querySelector("#student-country")!);
+
+    fireEvent.change(screen.getByPlaceholderText(/Search countries/i), { target: { value: "Saudi" } });
+    const row = screen.getByText("Saudi Arabia").closest("[cmdk-item]")!;
+    expect(row.textContent).toContain("SAR");
+  });
+});
