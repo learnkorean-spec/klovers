@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prerender-meta.mjs",
+    "content-audit": "node scripts/content-audit.mjs",
     "seo:check": "node scripts/seo-check.mjs --dist dist",
     "seo:check:live": "node scripts/seo-check.mjs --base https://kloversegy.com",
     "build:dev": "vite build --mode development",
