@@ -47,6 +47,21 @@ const attr = (s) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+/** Escape a string for safe use as HTML text content. */
+const text = (s) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+/** Trim to a whole word near `max` characters, for the listing excerpts. */
+const excerpt = (s, max = 160) => {
+  const clean = String(s ?? "").replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max);
+  return `${cut.slice(0, cut.lastIndexOf(" ")) || cut}…`;
+};
+
 // ── Marketing routes ────────────────────────────────────────────────────────
 // Hand-maintained on purpose: these are static pages, not database rows.
 const MARKETING_ROUTES = [
@@ -286,6 +301,59 @@ function absoluteUrl(u) {
   return `${BASE_URL}${u.startsWith("/") ? "" : "/"}${u}`;
 }
 
+/**
+ * A real, server-visible list of every published article, written into the
+ * prerendered /blog document.
+ *
+ * Before this, /blog served an empty <div id="root"> to anything that does not
+ * run JavaScript, which meant there was no crawlable path from the blog index to
+ * a single article. The sitemap listed the URLs, but nothing on the site linked
+ * to them, so every article was an orphan.
+ *
+ * This markup goes INSIDE #root. src/main.tsx mounts with `createRoot`, not
+ * `hydrateRoot`, so React empties the container and renders over it — there is
+ * no hydration to mismatch. Until the bundle arrives the reader sees a plain
+ * list of links instead of the blank screen they see today, which on a slow
+ * Egyptian mobile connection is the better of the two.
+ *
+ * Not paginated, deliberately. 200 links on one page is well within what a
+ * crawler will follow, and the alternative would mean inventing /blog/page/2
+ * URLs that prerender fine but that the SPA has no route for — a reader who
+ * clicked one would land on the app's not-found page.
+ */
+function buildBlogIndexHtml(routes) {
+  const groups = [
+    { lang: "en", dir: "ltr", heading: "All articles", rows: routes.filter((r) => r.post.lang !== "ar") },
+    { lang: "ar", dir: "rtl", heading: "كل المقالات", rows: routes.filter((r) => r.post.lang === "ar") },
+  ];
+
+  const sections = groups
+    .filter((g) => g.rows.length)
+    .map((g) => {
+      const items = g.rows
+        .map(
+          (r) => `        <li>
+          <a href="${attr(r.path)}">${text(r.title)}</a>
+          <p>${text(excerpt(r.description))}</p>
+        </li>`
+        )
+        .join("\n");
+      return `      <section lang="${g.lang}" dir="${g.dir}">
+        <h2>${text(g.heading)} (${g.rows.length})</h2>
+        <ul>
+${items}
+        </ul>
+      </section>`;
+    })
+    .join("\n");
+
+  return `<div id="blog-index-prerendered">
+      <h1>Klovers Korean blog</h1>
+      <p>Guides to Korean grammar, vocabulary, TOPIK and Korean culture, in English and Arabic.</p>
+${sections}
+    </div>`;
+}
+
 const jsonLd = (obj) =>
   `  <script type="application/ld+json">\n${JSON.stringify(obj, null, 2)
     .split("\n")
@@ -381,8 +449,12 @@ const baseWithoutOrgJsonLd = baseHTML.replace(
   ""
 );
 
+/** The SPA mount point, as vite emits it. */
+const ROOT_DIV = '<div id="root"></div>';
+
 let created = 0;
 let withHreflang = 0;
+let blogIndexLinks = 0;
 
 for (const route of routes) {
   const isHome = route.path === "/";
@@ -424,6 +496,22 @@ for (const route of routes) {
   html = html.replace(/[ \t]*<meta name="twitter:image" content="[^"]*"\s*\/?>\n?/g, "");
 
   html = html.replace("</head>", `${buildHeadTags(route)}\n  </head>`);
+
+  // The blog index is the one route whose <body> has to carry real content:
+  // it is the only page that can make the articles reachable by a crawler.
+  if (route.path === "/blog") {
+    const before = html;
+    html = html.replace(ROOT_DIV, `<div id="root">${buildBlogIndexHtml(blogRoutes)}</div>`);
+    if (html === before) {
+      // A vite upgrade that renames or reformats the mount point would leave
+      // /blog silently empty again, which is the exact regression this change
+      // exists to fix. Fail the build instead of shipping it.
+      throw new Error(
+        `could not find ${ROOT_DIV} in dist/index.html — the blog index links were not written`
+      );
+    }
+    blogIndexLinks = blogRoutes.length;
+  }
 
   if (route.post && hreflangFor(route.post.slug)) withHreflang++;
 
@@ -477,4 +565,5 @@ console.log(
     `(${MARKETING_ROUTES.length} marketing + ${blogRoutes.length} blog` +
     `${usedCache ? ", FROM CACHE" : ""}).`
 );
-console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.\n`);
+console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.`);
+console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.\n`);
