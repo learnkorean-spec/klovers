@@ -31,7 +31,17 @@ jobs:
   merge:
     name: Merge if CI passed
     runs-on: ubuntu-latest
+    # DISABLED 2026-08-24. Measured against real deployment history: a
+    # bot-merged PR (merged_by = github-actions[bot], same mechanism this job
+    # uses) blocked the Vercel production deploy 4 times out of 9, with no
+    # warning - readyState BLOCKED, errorLink pointing at Vercel's
+    # project-collaboration doc. A human-merged commit was 20/20 clean over
+    # the same period. That intermittent, silent failure mode is not
+    # something to tune around; it is a reason to stop auto-merging.
+    # Everything below is left as-is. To re-enable, delete this line and the
+    # `false &&` below - nothing else needs to change.
     if: >-
+      false &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       startsWith(github.event.workflow_run.head_branch, 'claude/')
