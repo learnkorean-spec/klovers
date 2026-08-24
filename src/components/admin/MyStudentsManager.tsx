@@ -75,7 +75,11 @@ type StudentDraft = {
   id?: string; full_name: string; subject: StudentSubject; status: StudentStatus; note: string;
   meeting_url: string; country: string; currency: string;
 };
-type ClassDraft = { id?: string; student_id: string; weekday: number; start_time: string; duration_minutes: number };
+type ClassDraft = {
+  id?: string; student_id: string; weekday: number; start_time: string; duration_minutes: number;
+  /** "YYYY-MM-DD". Defaults to today for a new class, matching the column default. */
+  effective_from: string;
+};
 
 const emptyStudent = (): StudentDraft => ({
   full_name: "", subject: "korean", status: "active", note: "",
@@ -810,21 +814,28 @@ const MyStudentsManager = () => {
                       // so it never reads as two separate classes.
                       <Badge variant="outline" className="text-[10px]">runs past midnight</Badge>
                     )}
+                    {/* Surfaced here, not only inside the dialog — a wrong start
+                        date silently empties the confirm strip, so it has to be
+                        visible at a glance rather than found by opening Edit. */}
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                      since {formatSessionDate(c.effective_from)}
+                    </Badge>
                   </span>
                   <span className="flex gap-1">
                     <Button
-                      variant="ghost" size="sm"
+                      variant="ghost" size="sm" aria-label="Edit class"
                       onClick={() => setClassDraft({
                         id: c.id,
                         student_id: student.id,
                         weekday: c.weekday,
                         start_time: trimSeconds(c.start_time),
                         duration_minutes: c.duration_minutes,
+                        effective_from: c.effective_from,
                       })}
                     >
                       <Pencil className="h-3 w-3" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => removeClass(c)}>
+                    <Button variant="ghost" size="sm" aria-label="Remove class" onClick={() => removeClass(c)}>
                       <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
                   </span>
@@ -834,6 +845,7 @@ const MyStudentsManager = () => {
                 variant="outline" size="sm"
                 onClick={() => setClassDraft({
                   student_id: student.id, weekday: 1, start_time: "19:00", duration_minutes: 90,
+                  effective_from: localDateKey(new Date(), ADMIN_TIMEZONE),
                 })}
               >
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add a class
@@ -1021,6 +1033,20 @@ const MyStudentsManager = () => {
                     This class runs past midnight. It stays one class — you don't need to add a second one.
                   </span>
                 )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="class-start-date">Start date</Label>
+                <Input
+                  id="class-start-date" type="date"
+                  value={classDraft.effective_from}
+                  onChange={e => setClassDraft({ ...classDraft, effective_from: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Catch up will not suggest any date before this. Set it to when this class
+                  actually started — in the past for one that has been running a while, or in
+                  the future for a schedule change that has not started yet.
+                </p>
               </div>
 
               {conflicts.length > 0 && (
