@@ -56,6 +56,46 @@
       "source": "/topik-guide",
       "destination": "/topik-exam-preparation",
       "permanent": true
+    },
+    {
+      "source": "/blog/ar-korean-daily-greetings",
+      "destination": "/blog/korean-daily-greetings-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-korean-food-vocabulary",
+      "destination": "/blog/korean-food-vocabulary-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-korean-grammar-particles",
+      "destination": "/blog/korean-grammar-particles-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-korean-numbers-guide",
+      "destination": "/blog/korean-numbers-guide-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-korean-slang-words",
+      "destination": "/blog/korean-slang-words-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-seoul-travel-korean-phrases",
+      "destination": "/blog/seoul-travel-korean-phrases-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-study-korean-kdramas-method",
+      "destination": "/blog/study-korean-kdramas-method-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-topik-exam-guide",
+      "destination": "/blog/topik-exam-guide-ar",
+      "permanent": true
     }
   ],
   "rewrites": [
