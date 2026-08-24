@@ -20,8 +20,9 @@
  *   2. every page has a title, and only the homepage has the homepage title
  *   3. canonical is present and equals the page's own URL
  *   4. no two routes share a canonical
- *   5. robots.txt names exactly one sitemap, and it is the expected URL
- *   6. www permanently redirects (301 or 308) to the apex  (live only)
+ *   5. /blog links to articles in its raw HTML, with no JavaScript run
+ *   6. robots.txt names exactly one sitemap, and it is the expected URL
+ *   7. www permanently redirects (301 or 308) to the apex  (live only)
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
@@ -134,6 +135,26 @@ for (const r of results) {
   canonCount.set(r.canonical, (canonCount.get(r.canonical) || 0) + 1);
 }
 for (const r of results) r.canonicalUnique = !r.canonical || canonCount.get(r.canonical) === 1;
+
+// The blog index must link to articles in its RAW HTML.
+//
+// /blog is the only page that can make the articles reachable by a crawler that
+// does not run JavaScript. It used to serve an empty <div id="root">, so there
+// was no crawlable path from the index to a single one of the 200 articles —
+// they were listed in the sitemap and linked from nowhere.
+//
+// Counted from the same bytes a crawler receives, which is what makes this
+// meaningful: in dist mode that is the prerendered file, and in live mode the
+// raw response, neither of which has executed any JavaScript.
+const MIN_BLOG_INDEX_LINKS = 20;
+const blogIndexPage = pages.find((p) => p.url === `${BASE_URL}/blog`);
+const blogIndexLinks = blogIndexPage
+  ? new Set([...blogIndexPage.html.matchAll(/href="\/blog\/([^"#?]+)"/g)].map((m) => m[1])).size
+  : 0;
+const blogIndexOk = blogIndexLinks >= MIN_BLOG_INDEX_LINKS;
+const blogIndexDetail = !blogIndexPage
+  ? "/blog was not collected"
+  : `${blogIndexLinks} article links (min ${MIN_BLOG_INDEX_LINKS})`;
 
 // robots.txt
 let robotsSitemaps = [];
@@ -304,6 +325,7 @@ const summary = [
   ["title differs from homepage", `${results.filter((r) => r.titleUnique).length}/${results.length}`, tick(results.every((r) => r.titleUnique))],
   ["canonical == own URL", `${results.filter((r) => r.canonicalOk).length}/${results.length}`, tick(results.every((r) => r.canonicalOk))],
   ["canonical is unique", `${results.filter((r) => r.canonicalUnique).length}/${results.length}`, tick(results.every((r) => r.canonicalUnique))],
+  ["/blog links to articles in raw HTML", blogIndexDetail, tick(blogIndexOk)],
   ["robots.txt names 1 sitemap", robotsErr ? `error: ${robotsErr}` : robotsSitemaps.join(", ") || "(none)", tick(robotsOk)],
   ["www 301/308 -> apex", wwwDetail, tick(wwwOk)],
   ["robots.txt matches noindex strategy", crawlableDetail, tick(crawlableOk)],
@@ -339,6 +361,11 @@ if (failures.length) {
 }
 
 const ok =
-  failures.length === 0 && robotsOk && crawlableOk && wwwOk !== false && noindexOk !== false;
+  failures.length === 0 &&
+  blogIndexOk &&
+  robotsOk &&
+  crawlableOk &&
+  wwwOk !== false &&
+  noindexOk !== false;
 console.log(ok ? "\nseo-check: PASS\n" : "\nseo-check: FAIL\n");
 process.exit(ok ? 0 : 1);
