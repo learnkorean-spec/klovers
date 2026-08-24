@@ -1,15 +1,15 @@
 # Duplicate Arabic slugs — findings and content comparison
 
-**Date:** 2026-08-24, corrected 2026-08-24
+**Date:** 2026-08-24, corrected 2026-08-24, corrected again 2026-08-24
 **Scope:** the blocker Re raised on Fix 1 (`fix/sitemap-arabic-loc`) — before that
-PR can be merged, the 8 duplicate Arabic articles need a canonical URL and a
-redirect, or the sitemap change would deliberately submit 8 duplicate Arabic
-URLs to Google.
+PR can be merged, the duplicate Arabic articles need a canonical URL and a
+redirect, or the sitemap change would deliberately submit duplicate Arabic
+URLs to Google. **10 pairs, not 8** — see the second correction below.
 
 Everything below was checked directly against the live database
 (`ewtdgpbybkceokfohhyg`, read-only `SELECT` only).
 
-> **Correction.** The first version of this document measured "are these
+> **Correction 1.** The first version of this document measured "are these
 > duplicates" by Hangul-vocabulary overlap between the two article bodies, and
 > concluded some pairs were only loosely related because that overlap was low.
 > That was the wrong test. Two articles can each choose 40 different example
@@ -20,14 +20,30 @@ Everything below was checked directly against the live database
 > decision below is unaffected. **The decision was already correct; the
 > justification is now fixed.**
 
+> **Correction 2.** The section below originally titled "the two posts that
+> are NOT duplicates" was wrong. `ar-korean-cafe-culture` and
+> `ar-learn-korean-alphabet-hangul` **are** duplicates — pairs #9 and #10 —
+> of two Arabic posts that already existed
+> (`korean-cafe-coffee-culture-ar`, `learn-korean-alphabet-hangul-guide-ar`).
+> The original check confirmed each `ar-` post had a real English partner, but
+> never checked whether an Arabic post already existed at that partner's
+> correctly suffixed slug before proposing to rename onto it — one did, both
+> times. Caught before any rename ran, by confirming the redirects live in
+> production per the required sequence: both resolved to the
+> already-existing survivor's own content, which is only possible because
+> that survivor already existed. No rename was ever executed for these two.
+> Full detail in the section below, kept rather than deleted so the mistake
+> stays visible.
+
 ---
 
-## The 8 duplicate pairs — same intent, same keyword, different vocabulary
+## The 10 duplicate pairs — same intent, same keyword, different vocabulary
 
-Eight English articles each ended up with two published Arabic translations —
+Ten English articles each ended up with two published Arabic translations —
 one written in 2025 using the `<base>-ar` suffix, one written in 2026 (a later
 re-run of the article generator that did not know the 2025 version existed)
-using the legacy `ar-<base>` prefix.
+using the legacy `ar-<base>` prefix. (Pairs #9 and #10 were found late — see
+Correction 2 above — which is why the two tables below list 8 then add 2.)
 
 Verified directly against `title` and `keywords`, not slug similarity:
 
@@ -41,6 +57,8 @@ Verified directly against `title` and `keywords`, not slug similarity:
 | korean-grammar-particles | "دليل جسيمات الكورية (조사)" — `قواعد الكورية` | "قواعد كورية: دليل أدوات الربط للمبتدئين" — `قواعد كورية` |
 | seoul-travel-korean-phrases | "سفر إلى سيول: عبارات كورية أساسية للسياح" — `سفر إلى سيول` | "سفر كوريا: سيول: دليل العبارات الكورية للمسافرين" — `سفر كوريا` |
 | study-korean-kdramas-method | "طريقة تعلم الكورية من الدراما" — `تعلم الكورية من الدراما` | "تعلم الكورية من الدراما: طريقة المسلسلات" — `تعلم الكورية من الدراما` |
+| korean-cafe-coffee-culture | "مقاهي كورية: لماذا هي الأكثر إبداعاً؟" — `مقاهي كورية` | "مقاهي كوريا: ثقافة القهوة الأكثر إبداعاً" — `مقاهي كوريا` |
+| learn-korean-alphabet-hangul-guide | "تعلم الأبجدية الكورية (هانغول) في يوم واحد: الدليل الكامل" — `هانغول` | "تعلم الكورية: الأبجدية هانغول في يوم واحد" — `تعلم الكورية` |
 
 Every single pair targets the same topic and the same (or a one-word variant
 of the same) primary keyword phrase — `أرقام كورية` against `أرقام كورية`,
@@ -60,14 +78,16 @@ conclusion from a different angle:
 | korean-food-vocabulary | 12+3 | 12+3 |
 | korean-slang-words | 13+26 | 13+3 |
 | seoul-travel-korean-phrases | 12+3 | 11+4 |
+| korean-cafe-coffee-culture | 13+11 | 12+10 |
+| learn-korean-alphabet-hangul-guide | 14+9 | 13+3 |
 
-Same H2 count on three of four — the same outline, filled in with different
+Same H2 count on several — the same outline, filled in with different
 example sentences. That is consistent with two independent passes at
 answering the *same* content brief, which is exactly what keyword
 cannibalisation looks like: not a copy-paste, but two solutions to one
 assignment.
 
-**All 8 duplicates carry zero lifetime views.** All 26 views across these
+**All 10 duplicates carry zero lifetime views.** All 30 views across these
 topics belong to the 2025 `-ar` survivor — the strongest reason to keep the
 `-ar` suffix as canonical for every pair: it is the older, more-linked
 convention, and it is the version real readers have actually been finding.
@@ -76,17 +96,18 @@ convention, and it is the version real readers have actually been finding.
 
 The two versions of each pair genuinely do use different Korean example
 phrases (confirmed by direct Hangul-vocabulary comparison, 0% to 67% overlap
-across the 8 pairs) — that part of the original analysis was accurate, it was
-only being used to answer the wrong question. Restated correctly: **each
-retired article is a second, independently-written pass at the same brief,
-which means it contains teaching material the surviving article does not.**
-That is exactly the resource Gate 2 needs. See the backlog item below.
+across the first 8 pairs checked this way) — that part of the original
+analysis was accurate, it was only being used to answer the wrong question.
+Restated correctly: **each retired article is a second, independently-written
+pass at the same brief, which means it contains teaching material the
+surviving article does not.** That is exactly the resource Gate 2 needs. See
+the backlog item below.
 
 ---
 
 ## Gate 2 backlog — merge, don't discard (NOT executed here)
 
-**For each of the 8 pairs:** harvest the unique Korean examples, sections and
+**For each of the 10 pairs:** harvest the unique Korean examples, sections and
 FAQ entries from the retired 2026 version into the surviving 2025 article,
 de-duplicating overlapping items and keeping the surviving article's voice
 consistent.
@@ -98,99 +119,80 @@ independent ~40-phrase article into one article with something like 60-70
 non-overlapping phrases — reference-grade, for the cost of an edit pass rather
 than new writing. This is precisely the "expand thin articles" objective from
 the original session brief, achieved without writing anything new for at least
-these 8 topics.
+these 10 topics.
 
 **Nothing about this is executed by this branch or any other Gate 1 PR.** It
 is a content write against `blog_posts.content`, and per Gate 1 Part 2
 (`docs/SEO_GATE1_REPORT.md`) that needs the approved backup/rollback mechanism
-plus Re's separate yes. The 8 retired rows are untouched by the redirect —
-they still exist in the database after Fix 1 merges, so there is no urgency
-and nothing is lost by waiting.
+plus Re's separate yes. The 10 retired rows are untouched by the redirect —
+they still exist in the database, so there is no urgency and nothing is lost
+by waiting.
 
 ---
 
-## The two posts that are NOT duplicates — decision made, sequencing below
+## Pairs #9 and #10 — how "not duplicates" turned out to be wrong
 
-`ar-korean-cafe-culture` and `ar-learn-korean-alphabet-hangul` looked like more
-duplicates at first pass (same `ar-` prefix, same publish wave as the other
-eight), but they are each the **only** Arabic translation of their English
-article — just published under a slug that doesn't match their partner's base.
+*(Superseded by Correction 2 above. Kept in full, not deleted, so the mistake
+and how it was caught stay visible.)*
 
-Verified by reading both sides' title, description and opening paragraph, not
-by string-matching the slug:
+`ar-korean-cafe-culture` and `ar-learn-korean-alphabet-hangul` looked like
+unique content on first check: each is the **only** `ar-` prefix post whose
+base slug (`korean-cafe-culture`, `learn-korean-alphabet-hangul`) doesn't
+match any English post — the real partners are `korean-cafe-coffee-culture`
+and `learn-korean-alphabet-hangul-guide`, one and two words longer. That check
+was real (confirmed by reading both sides' opening paragraphs, not slug
+matching) but incomplete: it never asked whether an Arabic post **already
+existed** at the correctly-suffixed slug before proposing to rename onto it.
 
-| Arabic slug | Arabic title (translated) | Confirmed English partner | Evidence |
-|---|---|---|---|
-| `ar-korean-cafe-culture` | "Korea's cafes: the most creative coffee culture" | `korean-cafe-coffee-culture` | Both open on Korea's cafe density and themed cafes (cat cafes named specifically on both sides); no other English post is about cafes. |
-| `ar-learn-korean-alphabet-hangul` | "Learn Korean: the Hangul alphabet in one day" | `learn-korean-alphabet-hangul-guide` | Both open with "created in 1443 by King Sejong the Great" and the "readable within 24 hours" claim, nearly verbatim; no other English post is about Hangul. |
+It did, both times:
 
-**Decision: Option 1.** Rename both to the suffix convention —
-`korean-cafe-coffee-culture-ar` and `learn-korean-alphabet-hangul-guide-ar`.
-A slug rename on two rows loses no content and is reversible by renaming back;
-it does not need the Gate 1 Part 2 bulk-edit tooling, which exists for
-200-row content edits, not a two-row identifier change.
+| Arabic slug | Exists already? | Published | Views |
+|---|---|---|---:|
+| `korean-cafe-coffee-culture-ar` | **Yes** — a separate, live, published row | 2025-02-15 | 2 |
+| `ar-korean-cafe-culture` | (the one under discussion) | 2026-03-26 | 0 |
+| `learn-korean-alphabet-hangul-guide-ar` | **Yes** — a separate, live, published row | 2025-02-01 | 2 |
+| `ar-learn-korean-alphabet-hangul` | (the one under discussion) | 2026-03-20 | 0 |
 
-### Required sequence — redirect must exist and be confirmed live before the rename
+Same shape as the other 8 pairs exactly: a 2025 `-ar` suffix original with
+real views, a 2026 `ar-` prefix duplicate with zero. The planned rename —
+`update blog_posts set slug = 'korean-cafe-coffee-culture-ar' where slug =
+'ar-korean-cafe-culture'` — would have tried to write a slug value that
+another live row already had.
 
-1. Re merges this PR (`fix/duplicate-arabic-slugs`, #85).
-2. **Confirm the two new 301 redirects are actually live in production** —
-   fetch both old URLs and check for a 301 to the new slug. Deploy logs are
-   not evidence; the live HTTP response is.
-3. **Only then** run the two slug renames.
+**Caught before it ran.** The required sequence (redirect must exist and be
+confirmed live in production *before* anything else happens) is what created
+the check that caught this: confirming the two redirects meant fetching their
+destination URLs, and both resolved to the **already-existing** survivor's
+own self-referencing canonical, OG tags and JSON-LD `@id` — content that could
+only appear if that survivor already existed. Cross-checked directly against
+the database immediately after. No rename was ever executed for either post.
 
-Renaming before the redirects are confirmed live would break both URLs for
-the interval in between: the old slug would 404 (no row), and there would be
-no redirect yet to carry a visitor or a crawler to the new one.
-
-**This PR now ships those two redirects** (`/blog/ar-korean-cafe-culture` →
-`/blog/korean-cafe-coffee-culture-ar`, `/blog/ar-learn-korean-alphabet-hangul`
-→ `/blog/learn-korean-alphabet-hangul-guide-ar`), alongside the 8 duplicate
-redirects, so step 2 has something to confirm. **This does create a
-transient gap once deployed and before the rename runs**: the destination
-slugs (`korean-cafe-coffee-culture-ar`, `learn-korean-alphabet-hangul-guide-ar`)
-do not exist as rows yet, so between merge and rename these two redirects
-point at a URL that 404s inside the SPA, and — because the sitemap excludes
-any slug carrying a live redirect — neither the old nor the new slug appears
-in the sitemap during that window. The gap closes the moment the rename runs,
-which is why step 3 says "only then," immediately following step 2's
-confirmation, not on a delay.
-
-### Rollback for the rename, recorded now so it never needs reconstructing
-
-```sql
--- Forward (run once redirects are confirmed live in production):
-update blog_posts set slug = 'korean-cafe-coffee-culture-ar'
-  where slug = 'ar-korean-cafe-culture';
-update blog_posts set slug = 'learn-korean-alphabet-hangul-guide-ar'
-  where slug = 'ar-learn-korean-alphabet-hangul';
-
--- Rollback (exact inverse, run if anything looks wrong):
-update blog_posts set slug = 'ar-korean-cafe-culture'
-  where slug = 'korean-cafe-coffee-culture-ar';
-update blog_posts set slug = 'ar-learn-korean-alphabet-hangul'
-  where slug = 'learn-korean-alphabet-hangul-guide-ar';
-```
-
-Each statement is a single-column `UPDATE` on one row matched by its current
-`slug`, so the rollback is the forward statement with the two literals
-swapped — no reconstruction from memory, no ambiguity about which value was
-live before.
+**Current state, and it needs no further action:** the `vercel.json` redirects
+this repo already shipped for these two
+(`/blog/ar-korean-cafe-culture` → `/blog/korean-cafe-coffee-culture-ar`,
+`/blog/ar-learn-korean-alphabet-hangul` → `/blog/learn-korean-alphabet-hangul-guide-ar`)
+turn out to already be exactly correct — they were built to point at a slug a
+rename would create, and it turns out that slug already existed for an
+unrelated reason. Nothing needs to change in `vercel.json`. Both are now
+listed as pairs #9 and #10 in `RETIRED_ARABIC_SLUGS` alongside the original 8,
+verified live in production (see the fetch results above), no rename pending
+or ever executed.
 
 ---
 
-## What this branch does
+## What shipped, across both PRs
 
-- Adds `scripts/lib/retired-arabic-slugs.mjs` — the one list of which slugs are
-  retired and where they now point, for both the 8 confirmed duplicates and
-  the 2 pending renames.
-- Adds **10** permanent (301) redirects to `vercel.json`: 8 for the confirmed
-  duplicates, plus 2 for the pending renames (see the sequencing above — the
-  redirects are shipped ahead of the rename on purpose, so step 2 can confirm
-  them live before step 3 executes).
-- A test (`scripts/retired-arabic-slugs.test.mjs`) that fails if the redirect
-  list and `vercel.json` ever drift apart — vercel.json is static JSON and
-  cannot import the module, so nothing else would catch that.
-- `fix/sitemap-arabic-loc` is rebased on top of this branch: the sitemap
-  generator excludes every slug carrying a live redirect from getting its own
-  `<loc>` — all 10, not just the 8 duplicates — so the sitemap never submits a
-  URL that immediately 301s.
+**`fix/duplicate-arabic-slugs` (#85, merged):**
+- `scripts/lib/retired-arabic-slugs.mjs` — the one list of which slugs are
+  retired and where they now point.
+- 10 permanent (301) redirects in `vercel.json` (8 confirmed duplicates + 2
+  that were, at the time, believed to be pending renames — see below).
+- A test that fails if the redirect list and `vercel.json` ever drift apart.
+- `fix/sitemap-arabic-loc`, stacked on top: the sitemap generator excludes
+  every slug carrying a live redirect from getting its own `<loc>`.
+
+**This follow-up (`fix/two-more-arabic-duplicates`):**
+- Corrects the categorisation of pairs #9 and #10 from "pending rename" to
+  "confirmed duplicate" — no code behaviour changes (the redirects were
+  already correct), only the module's own record of what they mean and why.
+- No rename was ever executed, and none is pending any more.
