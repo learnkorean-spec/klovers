@@ -389,6 +389,49 @@ describe("the class start date", () => {
     expect(input.value).toBe("2026-08-23");
   });
 
+  it("does not offer to apply the date elsewhere when the student has only one class", () => {
+    students = [solafa({ classes: [solafa().classes[0]] })];
+    draw();
+    click(screen.getAllByRole("button", { name: "Edit class" })[0]);
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("offers to apply the date to the student's other classes, off by default", () => {
+    draw();
+    click(screen.getAllByRole("button", { name: "Edit class" })[0]);
+    expect(screen.getByText(/other 3 classes too/i)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+  });
+
+  it("leaves the other classes alone when the checkbox is not ticked", async () => {
+    draw();
+    click(screen.getAllByRole("button", { name: "Edit class" })[0]);
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-09-01" } });
+    click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(upsertClassMutate).toHaveBeenCalledTimes(1));
+    expect(upsertClassMutate).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the corrected date to every other class when ticked, keeping each one's own time", async () => {
+    draw();
+    click(screen.getAllByRole("button", { name: "Edit class" })[0]);   // c1, Monday
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-08-17" } });
+    click(screen.getByRole("checkbox"));
+    click(screen.getByRole("button", { name: "Save" }));
+
+    // c1 itself, plus c2/c3/c4 (Tue/Wed/Thu) — 4 calls total.
+    await waitFor(() => expect(upsertClassMutate).toHaveBeenCalledTimes(4));
+    for (const call of upsertClassMutate.mock.calls) {
+      expect(call[0].effective_from).toBe("2026-08-17");
+    }
+    const otherIds = upsertClassMutate.mock.calls.map(c => c[0].id).sort();
+    expect(otherIds).toEqual(["c1", "c2", "c3", "c4"]);
+    // Each other class keeps its own weekday — the checkbox moves the date, not the schedule.
+    const c2Call = upsertClassMutate.mock.calls.find(c => c[0].id === "c2")![0];
+    expect(c2Call).toMatchObject({ weekday: 2, start_time: "22:00", duration_minutes: 90 });
+  });
+
   it("ACCEPTANCE — after Re sets the real start date, Catch up shows the 4 real occurrences and ticking moves the badge to 4 used / 12 left", () => {
     // Reproduces the actual bug: all 4 weekly classes carry the seed
     // migration's effective_from (22 Aug 2026), which is AFTER every

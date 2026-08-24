@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -336,6 +337,9 @@ const MyStudentsManager = () => {
 
   const [studentDraft, setStudentDraft] = useState<StudentDraft | null>(null);
   const [classDraft, setClassDraft] = useState<ClassDraft | null>(null);
+  // Off by default: a class added later has a genuinely later start, so this
+  // has to be an explicit choice each time, not a remembered preference.
+  const [applyDateToAll, setApplyDateToAll] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<MyStudentWithClasses | null>(null);
   // Trial bookings the pending class time would run over. Non-empty blocks the
   // save: Re resolves the trial first, then moves the class.
@@ -444,11 +448,35 @@ const MyStudentsManager = () => {
         return;
       }
       await upsertClass.mutateAsync(classDraft);
+
+      // Applying to the rest of the student's classes only ever touches
+      // effective_from -- their own weekday/time/duration are untouched, so
+      // this skips checkClassConflicts, which exists for time-slot changes.
+      let otherCount = 0;
+      if (applyDateToAll) {
+        const student = students.find(s => s.id === classDraft.student_id);
+        const others = (student?.classes ?? []).filter(c => c.id !== classDraft.id);
+        otherCount = others.length;
+        for (const c of others) {
+          await upsertClass.mutateAsync({
+            id: c.id,
+            student_id: classDraft.student_id,
+            weekday: c.weekday,
+            start_time: trimSeconds(c.start_time),
+            duration_minutes: c.duration_minutes,
+            effective_from: classDraft.effective_from,
+          });
+        }
+      }
+
       toast({
         title: classDraft.id ? "Class updated" : "Class added",
-        description: "Trial availability has been updated to match.",
+        description: otherCount > 0
+          ? `Trial availability has been updated to match. Start date applied to ${otherCount} other class${otherCount === 1 ? "" : "es"} too.`
+          : "Trial availability has been updated to match.",
       });
       setClassDraft(null);
+      setApplyDateToAll(false);
     } catch (e) {
       setChecking(false);
       toast({ title: "Could not save class", description: (e as Error).message, variant: "destructive" });
@@ -622,7 +650,7 @@ const MyStudentsManager = () => {
     }
   };
 
-  const closeClassDialog = () => { setClassDraft(null); setConflicts([]); };
+  const closeClassDialog = () => { setClassDraft(null); setConflicts([]); setApplyDateToAll(false); };
 
   const formatConflict = (c: ClassConflict) =>
     new Date(c.starts_at).toLocaleString("en-GB", {
@@ -824,14 +852,17 @@ const MyStudentsManager = () => {
                   <span className="flex gap-1">
                     <Button
                       variant="ghost" size="sm" aria-label="Edit class"
-                      onClick={() => setClassDraft({
-                        id: c.id,
-                        student_id: student.id,
-                        weekday: c.weekday,
-                        start_time: trimSeconds(c.start_time),
-                        duration_minutes: c.duration_minutes,
-                        effective_from: c.effective_from,
-                      })}
+                      onClick={() => {
+                        setApplyDateToAll(false);
+                        setClassDraft({
+                          id: c.id,
+                          student_id: student.id,
+                          weekday: c.weekday,
+                          start_time: trimSeconds(c.start_time),
+                          duration_minutes: c.duration_minutes,
+                          effective_from: c.effective_from,
+                        });
+                      }}
                     >
                       <Pencil className="h-3 w-3" />
                     </Button>
@@ -843,10 +874,13 @@ const MyStudentsManager = () => {
               ))}
               <Button
                 variant="outline" size="sm"
-                onClick={() => setClassDraft({
-                  student_id: student.id, weekday: 1, start_time: "19:00", duration_minutes: 90,
-                  effective_from: localDateKey(new Date(), ADMIN_TIMEZONE),
-                })}
+                onClick={() => {
+                  setApplyDateToAll(false);
+                  setClassDraft({
+                    student_id: student.id, weekday: 1, start_time: "19:00", duration_minutes: 90,
+                    effective_from: localDateKey(new Date(), ADMIN_TIMEZONE),
+                  });
+                }}
               >
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add a class
               </Button>
@@ -1048,6 +1082,24 @@ const MyStudentsManager = () => {
                   the future for a schedule change that has not started yet.
                 </p>
               </div>
+
+              {(() => {
+                const otherClasses = (students.find(s => s.id === classDraft.student_id)?.classes ?? [])
+                  .filter(c => c.id !== classDraft.id);
+                if (otherClasses.length === 0) return null;
+                return (
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <Checkbox
+                      className="mt-0.5"
+                      checked={applyDateToAll}
+                      onCheckedChange={v => setApplyDateToAll(v === true)}
+                    />
+                    <span>
+                      Apply this start date to this student's other {otherClasses.length === 1 ? "class" : `${otherClasses.length} classes`} too
+                    </span>
+                  </label>
+                );
+              })()}
 
               {conflicts.length > 0 && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 space-y-2">

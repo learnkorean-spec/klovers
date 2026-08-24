@@ -94,6 +94,32 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+          # The filename list above says WHAT is pending, never WHAT IT DOES -
+          # a reviewer approving an apply run had no way to see the SQL short of
+          # someone pasting the file by hand. This reads the repo checkout the
+          # job already has - no DB connection, so it changes nothing about
+          # plan mode never touching the database - and prints each pending
+          # file in full so the plan output is the review, not a pointer to one.
+          if [ "$count" != "0" ]; then
+            {
+              echo
+              echo "## Pending migration SQL"
+            } >> "$GITHUB_STEP_SUMMARY"
+            while read -r version; do
+              [ -n "$version" ] || continue
+              f=$(find supabase/migrations -maxdepth 1 -name "${version}_*.sql" | head -1)
+              {
+                echo
+                echo "### ${f:-"(no local file found for ${version})"}"
+                if [ -n "$f" ]; then
+                  echo '```sql'
+                  cat "$f"
+                  echo '```'
+                fi
+              } >> "$GITHUB_STEP_SUMMARY"
+            done < pending-versions.txt
+          fi
+
           echo "-----------------------------------------------------------"
           echo "Pending migrations: ${count}"
           cat pending-versions.txt || true
