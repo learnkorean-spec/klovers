@@ -12,17 +12,64 @@ Grep for the symbol name, the UI string, and the column name before writing code
 
 ## Git workflow
 
-- Branch as `claude/<short-description>`. The `claude/` prefix is what the
-  auto-merge workflow matches on — any other prefix will never merge itself.
-- Open a PR. Draft is fine; the automation marks it ready before merging.
-- `.github/workflows/ci.yml` runs `npm test` and `npm run build` against the
-  **merge result** (not the branch), then `.github/workflows/auto-merge.yml`
-  squash-merges it into `main`.
-- Vercel deploys `main` to kloversegy.com automatically. Supabase migrations and
-  edge functions deploy via `deploy-functions.yml`.
+- Branch as `claude/<short-description>` for normal work, or `fix/`/`feat/`/
+  `docs/`/`chore/` when a session's own working rules say `claude/` must be
+  avoided (that prefix's auto-merge behavior is disabled as of 2026-08-24 —
+  see "Merge safety net" below — but the prefix itself may still carry other
+  meaning to tooling, so don't assume it's inert).
+- Open a PR. `.github/workflows/ci.yml` runs `npm test` and `npm run build`
+  against the **merge result** (not the branch).
+- **All merges are manual.** Re signs in as `learnkorean-spec` specifically
+  (not her day-to-day `rehamelshrkawy-coder` account) and clicks **"Create a
+  merge commit"** — never squash, never rebase. `.github/workflows/auto-merge.yml`
+  used to squash-merge `claude/*` branches automatically; it is now permanently
+  disabled (PR #91, 2026-08-24) because it silently left production undeployed
+  on a real, measured fraction of its own merges — see below.
+- Vercel deploys `main` to kloversegy.com automatically, but **only from a
+  commit authored by the `learnkorean-spec` GitHub account** (Vercel Hobby-plan
+  constraint) — this is why the account distinction above isn't cosmetic.
+  Supabase migrations and edge functions deploy via `deploy-functions.yml`.
 - **Do not leave a PR open.** Anything sitting more than about a week against a
   moving `main` should be closed and rebuilt, not reconciled. Stale PRs here have
   a track record of being actively harmful, not merely useless.
+
+## Merge safety net — read this before touching merge automation or settings
+
+Two gaps, found and documented 2026-08-24, that make merging riskier than it
+looks:
+
+**1. `main` currently has no branch protection requiring `CI / Build & Test`.**
+Evidence: every PR read via the GitHub API that day reported
+`mergeable_state: "unstable"`, never `"blocked"` — including while Build & Test
+was still `in_progress` or outright red. GitHub's `"blocked"` state is what a
+*required* status check produces when it hasn't passed; `"unstable"` means
+something is failing but isn't gating the merge button. Nothing currently stops
+a red or half-finished PR from being merged by hand. This is exactly why a
+branch protection rule requiring `CI / Build & Test` (and *only* that check —
+never the Netlify integration, which is permanently red and not a real signal)
+needs to exist before relying on any auto-merge mechanism, native or custom.
+
+**2. `ci.yml` does not re-run on a base-branch change alone.** It triggers on
+`pull_request: [opened, synchronize, reopened, ready_for_review]` and on
+`push: main` — not on a PR's base branch being edited or recomputed via the
+API. Concretely: if `main` advances after a PR's last real CI run, that PR's
+green checkmark still describes the *old* merge result, not the current one.
+Forcing GitHub to recompute a PR's diff/base SHA (e.g. via the API) does
+**not** get you a fresh CI run — only an actual new commit pushed to the PR
+branch does (merging current `main` into the branch and pushing is the
+reliable way to force one). Don't trust a green checkmark on a PR that's been
+open while `main` kept moving without checking the run's timestamp against
+`main`'s last-push time.
+
+**Also, from a parallel investigation (PR #91, merged 2026-08-24):** the old
+`auto-merge.yml`'s bot-driven merges (`merged_by: github-actions[bot]`) left
+Vercel's production deploy **`BLOCKED`** (not just wrong-author — an explicit
+`"team-configuration"` error from Vercel's own API) on 4 of 9 sampled merges,
+with no identified trigger pattern. 20 of 20 human-merged commits over the same
+window deployed clean. If any future automation reintroduces bot-driven merging
+(native GitHub auto-merge included), verify a real Vercel `READY` production
+deployment on the actual merge commit — author metadata alone was not a
+sufficient signal here.
 
 ## One PR, one concern
 
