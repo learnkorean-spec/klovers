@@ -399,6 +399,28 @@ Deno.serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      // Exclusion constraint: somebody else holds this exact slot.
+      //
+      // 23P01 only became reachable once upsert_trial_booking started writing
+      // starts_at — before that slot_range was always NULL and
+      // trial_bookings_no_overlap never applied to a single row, so two
+      // students could book the same half hour and neither would be told.
+      // This is a race the student can act on, so it reads as "gone" rather
+      // than as an error they caused.
+      if (
+        bookingError?.code === "23P01" ||
+        bookingError?.message?.includes("trial_bookings_no_overlap")
+      ) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            success: false,
+            error: "Sorry — that time was just taken. Please pick another slot.",
+            error_code: "slot_taken",
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       // Conflict trigger: trial time overlaps an existing enrolled class
       if (bookingError?.code === "23514" || bookingError?.message?.includes("trial_booking_conflict")) {
         return new Response(

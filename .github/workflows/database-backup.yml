@@ -1,0 +1,338 @@
+# Daily encrypted logical backup of the production database.
+#
+# Why this exists: the Supabase project is on the FREE plan, which has no PITR
+# and no automated backups. Until this workflow, the only restore path was a
+# single logical dump taken by hand on 22 Aug 2026, living on one laptop.
+#
+# What it does, once a day and on demand:
+#   pg_dump (schema + data) -> tar -> gpg AES-256 -> workflow artifact
+#
+# Daily rather than weekly: the trial pilot is about to start taking real
+# bookings, and a measured run against a production-sized database (77
+# tables, 16,632 rows) produced a ~0.9 MB encrypted artifact - daily use is
+# well within GitHub's free artifact-storage and Actions-minutes quota for a
+# private repo. See docs/DATABASE_BACKUP.md for the numbers.
+#
+# The dump is NEVER uploaded unencrypted, and the connection string is never
+# echoed. The passphrase lives only in BACKUP_ENCRYPTION_PASSPHRASE.
+#
+# It also proves the backup is restorable: every run restores the artifact it
+# just produced into a throwaway Postgres 17 and compares row counts against
+# production. A backup that has never been restored is a wish, not a backup.
+#
+# See docs/DATABASE_BACKUP.md for the restore runbook and the RPO/RTO reality.
+
+name: Database Backup
+
+on:
+  schedule:
+    # Daily, 02:17 UTC. Off-peak for Egypt (04:17/05:17 local) and Malaysia.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: "How many days GitHub keeps this artifact"
+        required: false
+        default: "90"
+        type: string
+
+permissions:
+  contents: read
+
+# One backup at a time. Two concurrent pg_dumps would only add load.
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+env:
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'ewtdgpbybkceokfohhyg' }}
+  BACKUP_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+  # Schemas that MUST dump, or the run fails.
+  REQUIRED_SCHEMAS: "public supabase_migrations"
+  # Schemas dumped best-effort; a permission refusal is reported, not fatal.
+  OPTIONAL_SCHEMAS: "auth storage"
+
+jobs:
+  backup:
+    name: Dump, encrypt, verify restore
+    runs-on: ubuntu-latest
+    # Never run from a fork: it has no secrets and would only fail noisily.
+    if: github.repository == 'learnkorean-spec/klovers'
+
+    services:
+      # Throwaway target for the restore verification below. Must match the
+      # production major version (Postgres 17) or pg_restore/psql will balk.
+      verifydb:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: verify-only-not-a-secret
+          POSTGRES_DB: verify
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Check the secrets are present
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "${SUPABASE_DB_PASSWORD:-}" ] || missing="$missing SUPABASE_DB_PASSWORD"
+          [ -n "${BACKUP_PASSPHRASE:-}" ]    || missing="$missing BACKUP_ENCRYPTION_PASSPHRASE"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):${missing}. Add them under Settings > Secrets and variables > Actions. Nothing was dumped."
+            exit 1
+          fi
+          # Length only - never the value.
+          echo "Secrets present. Passphrase length: ${#BACKUP_PASSPHRASE} characters."
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          set -euo pipefail
+          # Ubuntu runners ship an older client, and pg_dump refuses to dump a
+          # server newer than itself. Production is Postgres 17.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+            https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Resolve the database connection
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          # Unlike apply-migrations.yml, the DIRECT host is tried first: it is
+          # the cleanest path for pg_dump's snapshot. It is usually IPv6-only
+          # and GitHub runners are IPv4-only, so in practice this falls through
+          # to the poolers. Port 5432 on the pooler is session mode, which
+          # pg_dump needs; transaction mode (6543) would break the snapshot.
+          DBHOST=""; DBUSER=""
+          for cand in \
+            "db.$PROJECT_REF.supabase.co|postgres" \
+            "aws-1-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" ; do
+            host="${cand%%|*}"; user="${cand##*|}"
+            if psql -h "$host" -p 5432 -U "$user" -d postgres -tAc 'SELECT 1' >/dev/null 2>&1; then
+              DBHOST="$host"; DBUSER="$user"; break
+            fi
+            echo "Could not connect via ${host} - trying next candidate."
+          done
+          if [ -z "$DBHOST" ]; then
+            echo "::error::Could not reach the database on any candidate host. Nothing was dumped."
+            exit 1
+          fi
+          echo "Connected via ${DBHOST}."
+          echo "DBHOST=$DBHOST" >> "$GITHUB_ENV"
+          echo "DBUSER=$DBUSER" >> "$GITHUB_ENV"
+
+      - name: Record production row counts
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          # Captured before the dump so the restore can be checked against it.
+          psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -tAF'|' -v ON_ERROR_STOP=1 <<'SQL' > prod-counts.txt
+          SELECT c.relname, (xpath('/row/c/text()',
+                   query_to_xml(format('SELECT count(*) AS c FROM public.%I', c.relname),
+                                false, true, '')))[1]::text::bigint
+            FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+           WHERE n.nspname = 'public' AND c.relkind = 'r'
+           ORDER BY c.relname;
+          SQL
+          echo "Tables in public: $(wc -l < prod-counts.txt)"
+          echo "Total rows: $(awk -F'|' '{s+=$2} END {print s+0}' prod-counts.txt)"
+
+      - name: Dump the database
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          mkdir -p dump
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+
+          dump_schema() {
+            local schema="$1" required="$2"
+            echo "::group::pg_dump ${schema}"
+            # Faithful dump: owners and grants are kept, because a real restore
+            # into a fresh Supabase project needs them. The verify step below
+            # pre-creates the roles so this still restores into plain Postgres.
+            if pg_dump -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres \
+                 --schema="$schema" --no-publications --no-subscriptions \
+                 --quote-all-identifiers -f "dump/${schema}.sql" 2> "dump/${schema}.err"; then
+              echo "ok: ${schema} ($(wc -c < "dump/${schema}.sql") bytes)"
+            else
+              # stderr may name objects; it is kept in the encrypted archive
+              # rather than printed to the public log.
+              if [ "$required" = "required" ]; then
+                echo "::error::pg_dump failed for required schema ${schema}. Nothing is uploaded."
+                exit 1
+              fi
+              echo "::warning::pg_dump could not read optional schema ${schema} - continuing without it."
+              rm -f "dump/${schema}.sql"
+              echo "$schema" >> dump/SKIPPED.txt
+            fi
+            echo "::endgroup::"
+          }
+
+          for s in $REQUIRED_SCHEMAS; do dump_schema "$s" required; done
+          for s in $OPTIONAL_SCHEMAS; do dump_schema "$s" optional; done
+
+          cp prod-counts.txt dump/ROW-COUNTS.txt
+          {
+            echo "project_ref: $PROJECT_REF"
+            echo "taken_at_utc: $stamp"
+            echo "postgres: $(psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -tAc 'SHOW server_version')"
+            echo "schemas: $(cd dump && ls -1 *.sql | sed 's/\.sql$//' | tr '\n' ' ')"
+            echo "commit: $GITHUB_SHA"
+          } > dump/MANIFEST.txt
+          cat dump/MANIFEST.txt
+
+          tar -czf "klovers-backup-${stamp}.tar.gz" -C dump .
+          echo "archive bytes: $(wc -c < "klovers-backup-${stamp}.tar.gz")"
+
+      - name: Encrypt the archive
+        run: |
+          set -euo pipefail
+          # Written to a file rather than passed on the command line, where it
+          # would be visible in the process list.
+          umask 077
+          printf '%s' "$BACKUP_PASSPHRASE" > pass.txt
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+              --pinentry-mode loopback --passphrase-file pass.txt \
+              -o "klovers-backup-${STAMP}.tar.gz.gpg" "klovers-backup-${STAMP}.tar.gz"
+          shred -u pass.txt
+
+          size=$(wc -c < "klovers-backup-${STAMP}.tar.gz.gpg")
+          echo "encrypted bytes: ${size}"
+          # A dump of this database is comfortably over 100 KB; anything under
+          # that is a failed dump wearing the right filename.
+          if [ "$size" -lt 102400 ]; then
+            echo "::error::Encrypted backup is only ${size} bytes - treating as a failed dump. Nothing is uploaded."
+            exit 1
+          fi
+          # The plaintext must not survive into the artifact.
+          shred -u "klovers-backup-${STAMP}.tar.gz"
+
+      - name: Verify the backup actually restores
+        env:
+          PGPASSWORD: verify-only-not-a-secret
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$BACKUP_PASSPHRASE" > pass.txt
+          gpg --batch --yes --decrypt --pinentry-mode loopback \
+              --passphrase-file pass.txt \
+              -o restore.tar.gz "klovers-backup-${STAMP}.tar.gz.gpg"
+          shred -u pass.txt
+          mkdir -p restore && tar -xzf restore.tar.gz -C restore
+
+          PSQL="psql -h localhost -p 5433 -U postgres -d verify"
+
+          # Supabase's roles do not exist in a vanilla Postgres, and the dump
+          # grants to them. Create them so the restore is a real test of the
+          # data rather than a test of role names.
+          $PSQL -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE r text;
+          BEGIN
+            FOREACH r IN ARRAY ARRAY[
+              'anon','authenticated','service_role','authenticator',
+              'supabase_admin','supabase_auth_admin','supabase_storage_admin',
+              'supabase_read_only_user','supabase_replication_admin',
+              'dashboard_user','pgbouncer'
+            ] LOOP
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+                EXECUTE format('CREATE ROLE %I NOLOGIN', r);
+              END IF;
+            END LOOP;
+          END $$;
+          SQL
+
+          # ON_ERROR_STOP is off on purpose: Supabase-only extensions cannot
+          # install here and their errors are noise. The assertions below are
+          # what decides whether the restore worked.
+          for f in restore/public.sql restore/supabase_migrations.sql; do
+            [ -f "$f" ] || { echo "::error::${f} missing from the archive."; exit 1; }
+            echo "::group::restore $(basename "$f")"
+            # stdout is pg_dump's own SET/set_config chatter; only stderr matters.
+            $PSQL -q -f "$f" > /dev/null 2> "$(basename "$f").err" || true
+            # "schema public already exists" is expected and harmless; the row
+            # counts below, not this number, decide whether the restore worked.
+            echo "psql errors: $(grep -c '^psql:' "$(basename "$f").err" || true)"
+            echo "::endgroup::"
+          done
+
+          $PSQL -tAF'|' -c "
+            SELECT c.relname, (xpath('/row/c/text()',
+                     query_to_xml(format('SELECT count(*) AS c FROM public.%I', c.relname),
+                                  false, true, '')))[1]::text::bigint
+              FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+             WHERE n.nspname='public' AND c.relkind='r' ORDER BY c.relname;" > restored-counts.txt
+
+          python3 - <<'PY' | tee verify-report.txt
+          def load(p):
+              d = {}
+              for line in open(p):
+                  line = line.strip()
+                  if not line or '|' not in line: continue
+                  t, c = line.rsplit('|', 1)
+                  d[t] = int(c)
+              return d
+
+          prod = load('restore/ROW-COUNTS.txt')
+          got  = load('restored-counts.txt')
+
+          missing = sorted(t for t in prod if t not in got)
+          # Fatal: production had rows and the restore has none.
+          empty   = sorted(t for t, n in prod.items() if n > 0 and got.get(t, 0) == 0)
+          # Not fatal: production is live, so a write during the dump can move
+          # a count by a row or two. Reported so it never passes unnoticed.
+          drift   = sorted((t, prod[t], got[t]) for t in prod
+                           if t in got and got[t] and prod[t] != got[t])
+
+          print(f"tables in production : {len(prod)}")
+          print(f"tables restored      : {len(got)}")
+          print(f"rows in production   : {sum(prod.values())}")
+          print(f"rows restored        : {sum(got.values())}")
+          if missing: print("MISSING TABLES: " + ", ".join(missing))
+          if empty:   print("EMPTY AFTER RESTORE: " + ", ".join(empty))
+          for t, a, b in drift: print(f"drift: {t} production={a} restored={b}")
+
+          if missing or empty:
+              raise SystemExit("::error::Restore verification FAILED - the backup is not trustworthy.")
+          print("RESTORE VERIFIED: every production table came back with its rows.")
+          PY
+
+      - name: Upload the encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: klovers-db-backup-${{ env.STAMP }}
+          path: klovers-backup-${{ env.STAMP }}.tar.gz.gpg
+          retention-days: ${{ inputs.retention_days || '90' }}
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Backup ${STAMP:-(not taken)}"
+            echo
+            echo '```'
+            cat verify-report.txt 2>/dev/null || echo "(verification did not run)"
+            echo '```'
+            echo
+            echo "Retention: ${{ inputs.retention_days || '90' }} days. Encrypted with AES-256."
+            echo "Restore runbook: docs/DATABASE_BACKUP.md"
+          } >> "$GITHUB_STEP_SUMMARY"
