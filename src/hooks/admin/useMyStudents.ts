@@ -159,6 +159,8 @@ export interface ClassInput {
   /** "HH:MM" from the time input. */
   start_time: string;
   duration_minutes: number;
+  /** "YYYY-MM-DD". Catch up and the confirm strip never offer a date before this. */
+  effective_from: string;
 }
 
 export function useUpsertClass() {

@@ -10,13 +10,14 @@
  * migration PR.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { render, screen, within, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { BundleBalance, MyStudentWithClasses, StudentClassSession } from "@/types/students";
 
 const confirmMutate = vi.fn().mockResolvedValue(undefined);
 const unconfirmMutate = vi.fn().mockResolvedValue(undefined);
 const addBundleMutate = vi.fn().mockResolvedValue(undefined);
+const upsertClassMutate = vi.fn().mockResolvedValue(undefined);
 
 let students: MyStudentWithClasses[] = [];
 let balances = new Map<string, BundleBalance>();
@@ -27,7 +28,7 @@ vi.mock("@/hooks/admin/useMyStudents", () => ({
   useCreateStudent: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useUpdateStudent: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useDeleteStudent: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useUpsertClass: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpsertClass: () => ({ mutateAsync: upsertClassMutate, isPending: false }),
   useDeleteClass: () => ({ mutateAsync: vi.fn(), isPending: false }),
   checkClassConflicts: vi.fn().mockResolvedValue([]),
   useBundleBalances: () => ({ data: balances }),
@@ -99,6 +100,7 @@ const click = (el: Element) => { fireEvent.click(el); };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  upsertClassMutate.mockResolvedValue(undefined);
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(NOW);
   students = [solafa()];
@@ -348,5 +350,83 @@ describe("currency and country cannot be mistyped", () => {
     fireEvent.change(screen.getByPlaceholderText(/Search countries/i), { target: { value: "Saudi" } });
     const row = screen.getByText("Saudi Arabia").closest("[cmdk-item]")!;
     expect(row.textContent).toContain("SAR");
+  });
+});
+
+describe("the class start date", () => {
+  it("is shown on the class row itself, not only inside the dialog", () => {
+    draw();
+    // Solafa's fixture classes all carry effective_from: "2026-01-01".
+    expect(screen.getAllByText(/since Thu 1 Jan/i).length).toBeGreaterThan(0);
+  });
+
+  it("prefills the dialog with the class's own start date when editing", () => {
+    draw();
+    click(screen.getAllByRole("button", { name: "Edit class" })[0]);
+    const input = screen.getByLabelText("Start date") as HTMLInputElement;
+    expect(input.value).toBe("2026-01-01");
+  });
+
+  it("saves whatever start date Re sets, past or future", async () => {
+    draw();
+    click(screen.getAllByRole("button", { name: "Edit class" })[0]);
+    const input = screen.getByLabelText("Start date") as HTMLInputElement;
+
+    fireEvent.change(input, { target: { value: "2026-09-01" } });   // future
+    click(screen.getByRole("button", { name: "Save" }));
+
+    // saveClass awaits checkClassConflicts before it ever calls upsertClass,
+    // so the mutate call lands a microtask after the click, not inside it.
+    await waitFor(() => expect(upsertClassMutate).toHaveBeenCalledTimes(1));
+    expect(upsertClassMutate.mock.calls[0][0]).toMatchObject({ effective_from: "2026-09-01" });
+  });
+
+  it("defaults a new class's start date to today", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Add a class/i }));
+    const input = screen.getByLabelText("Start date") as HTMLInputElement;
+    // NOW is 2026-08-23 in Asia/Kuala_Lumpur.
+    expect(input.value).toBe("2026-08-23");
+  });
+
+  it("ACCEPTANCE — after Re sets the real start date, Catch up shows the 4 real occurrences and ticking moves the badge to 4 used / 12 left", () => {
+    // Reproduces the actual bug: all 4 weekly classes carry the seed
+    // migration's effective_from (22 Aug 2026), which is AFTER every
+    // occurrence in the 14-day window, so nothing survives the filter.
+    const wronglyDated = solafa({
+      classes: [1, 2, 3, 4].map(w => ({
+        id: `c${w}`, student_id: "solafa", weekday: w,
+        start_time: "22:00:00", duration_minutes: 90, timezone: TZ,
+        effective_from: "2026-08-22", effective_to: null, note: null,
+      })),
+    });
+    students = [wronglyDated];
+    draw();
+    expect(screen.queryByText("To confirm")).not.toBeInTheDocument();
+
+    // Re corrects it via the dialog (simulating what the Start date field
+    // now lets her do) — these classes genuinely started the week of 17 Aug,
+    // so only that week's 4 occurrences should appear, not the week before.
+    const corrected = solafa({
+      classes: wronglyDated.classes.map(c => ({ ...c, effective_from: "2026-08-17" })),
+    });
+    students = [corrected];
+    const { unmount } = draw();
+
+    const strip = screen.getByText("To confirm").closest("div")!.parentElement!;
+    // Mon 17 - Thu 20 Aug, all four, now inside the window.
+    expect(within(strip).getAllByRole("button", { name: /Class done/i })).toHaveLength(4);
+
+    for (const btn of within(strip).getAllByRole("button", { name: /Class done/i })) {
+      click(btn);
+    }
+    expect(confirmMutate).toHaveBeenCalledTimes(4);
+    unmount();
+
+    // The resulting balance the card would show once those 4 are counted.
+    balances = new Map([["solafa", balance({ used_classes: 4, remaining_classes: 12 })]]);
+    draw();
+    expect(screen.getByText("4 of 16 used")).toBeInTheDocument();
+    expect(screen.getByText("12 left")).toBeInTheDocument();
   });
 });
