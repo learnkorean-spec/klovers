@@ -96,6 +96,16 @@
       "source": "/blog/ar-topik-exam-guide",
       "destination": "/blog/topik-exam-guide-ar",
       "permanent": true
+    },
+    {
+      "source": "/blog/ar-korean-cafe-culture",
+      "destination": "/blog/korean-cafe-coffee-culture-ar",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ar-learn-korean-alphabet-hangul",
+      "destination": "/blog/learn-korean-alphabet-hangul-guide-ar",
+      "permanent": true
     }
   ],
   "rewrites": [

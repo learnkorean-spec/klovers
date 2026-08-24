@@ -1,6 +1,6 @@
 # Duplicate Arabic slugs — findings and content comparison
 
-**Date:** 2026-08-24
+**Date:** 2026-08-24, corrected 2026-08-24
 **Scope:** the blocker Re raised on Fix 1 (`fix/sitemap-arabic-loc`) — before that
 PR can be merged, the 8 duplicate Arabic articles need a canonical URL and a
 redirect, or the sitemap change would deliberately submit 8 duplicate Arabic
@@ -9,67 +9,107 @@ URLs to Google.
 Everything below was checked directly against the live database
 (`ewtdgpbybkceokfohhyg`, read-only `SELECT` only).
 
+> **Correction.** The first version of this document measured "are these
+> duplicates" by Hangul-vocabulary overlap between the two article bodies, and
+> concluded some pairs were only loosely related because that overlap was low.
+> That was the wrong test. Two articles can each choose 40 different example
+> phrases for the same topic and score near-zero vocabulary overlap while still
+> being exact duplicates in the sense that matters for search: same topic, same
+> search intent, same target keyword, same structure. This is keyword
+> cannibalisation — two URLs competing for one query — and the redirect
+> decision below is unaffected. **The decision was already correct; the
+> justification is now fixed.**
+
 ---
 
-## The 8 duplicate pairs
+## The 8 duplicate pairs — same intent, same keyword, different vocabulary
 
 Eight English articles each ended up with two published Arabic translations —
 one written in 2025 using the `<base>-ar` suffix, one written in 2026 (a later
 re-run of the article generator that did not know the 2025 version existed)
 using the legacy `ar-<base>` prefix.
 
-| English base | 2025 `-ar` (survives) | views | 2026 `ar-` (retired) | views | shared Hangul terms |
-|---|---|---:|---|---:|---:|
-| korean-daily-greetings | `korean-daily-greetings-ar` | 2 | `ar-korean-daily-greetings` | 0 | 16 / 74 |
-| korean-food-vocabulary | `korean-food-vocabulary-ar` | 1 | `ar-korean-food-vocabulary` | 0 | 20 / 80 |
-| korean-grammar-particles | `korean-grammar-particles-ar` | 1 | `ar-korean-grammar-particles` | 0 | 21 / 88 |
-| korean-numbers-guide | `korean-numbers-guide-ar` | 3 | `ar-korean-numbers-guide` | 0 | 42 / 63 |
-| korean-slang-words | `korean-slang-words-ar` | 4 | `ar-korean-slang-words` | 0 | 7 / 64 |
-| seoul-travel-korean-phrases | `seoul-travel-korean-phrases-ar` | 4 | `ar-seoul-travel-korean-phrases` | 0 | 27 / 91 |
-| study-korean-kdramas-method | `study-korean-kdramas-method-ar` | 3 | `ar-study-korean-kdramas-method` | 0 | 3 / 19 |
-| topik-exam-guide | `topik-exam-guide-ar` | **8** | `ar-topik-exam-guide` | 0 | 0 / 14 |
+Verified directly against `title` and `keywords`, not slug similarity:
 
-"Shared Hangul terms" is `shared / (2025 terms + 2026 terms − shared)` —
-distinct Hangul words appearing in both versions, out of the union of both
-vocabularies. **This confirms Re's framing: these are not the same lesson
-published twice.** Every pair was independently written. Overlap ranges from
-0% (`topik-exam-guide`, the two versions share not one Hangul word) to about
-67% (`korean-numbers-guide`, where both sides teach the same native/Sino-Korean
-number system and necessarily reuse the numerals).
+| English base | Title & top keyword — 2025 (survives) | Title & top keyword — 2026 (retired) |
+|---|---|---|
+| korean-numbers-guide | "أرقام كورية: نظاما العد في اللغة الكورية" — `أرقام كورية` | "أرقام كورية: نظاما العد وكيفية استخدامهما" — `أرقام كورية` |
+| topik-exam-guide | "امتحان TOPIK: TOPIK: دليل اجتياز اختبار الكورية" — `امتحان TOPIK` | "اختبار توبيك: TOPIK: دليل شامل لاجتياز الاختبار" — `اختبار توبيك` |
+| korean-daily-greetings | "تحيات كورية: **40** عبارة للاستخدام اليومي" — `تحيات كورية` | "تحيات كورية: عبارات يومية لا غنى عنها" — `تحيات كورية` |
+| korean-slang-words | "عامية كورية: **35** كلمة يجب أن تعرفها" — `عامية كورية` | "عامية كورية: أهم الكلمات العصرية" — `عامية كورية` |
+| korean-food-vocabulary | "مفردات طعام كوري: طعام كوري: **60** كلمة" — `مفردات طعام كوري` | "طعام كوري: مفردات الطعام الأساسية" — `طعام كوري` |
+| korean-grammar-particles | "دليل جسيمات الكورية (조사)" — `قواعد الكورية` | "قواعد كورية: دليل أدوات الربط للمبتدئين" — `قواعد كورية` |
+| seoul-travel-korean-phrases | "سفر إلى سيول: عبارات كورية أساسية للسياح" — `سفر إلى سيول` | "سفر كوريا: سيول: دليل العبارات الكورية للمسافرين" — `سفر كوريا` |
+| study-korean-kdramas-method | "طريقة تعلم الكورية من الدراما" — `تعلم الكورية من الدراما` | "تعلم الكورية من الدراما: طريقة المسلسلات" — `تعلم الكورية من الدراما` |
+
+Every single pair targets the same topic and the same (or a one-word variant
+of the same) primary keyword phrase — `أرقام كورية` against `أرقام كورية`,
+`تحيات كورية` against `تحيات كورية`, `عامية كورية` against `عامية كورية`, and
+so on down the list. Four pairs even converge on close to the same title
+pattern. **This is what makes them duplicates for SEO purposes: two URLs
+targeting the same search intent split whatever ranking signal the topic
+earns between them, and Google may show only one — or neither reliably —
+instead of consolidating authority onto one strong page.**
+
+Structural signals — heading count especially — corroborate the same
+conclusion from a different angle:
+
+| Pair (base) | 2025 headings (H2+H3) | 2026 headings (H2+H3) |
+|---|---:|---:|
+| korean-daily-greetings | 12+3 | 12+3 |
+| korean-food-vocabulary | 12+3 | 12+3 |
+| korean-slang-words | 13+26 | 13+3 |
+| seoul-travel-korean-phrases | 12+3 | 11+4 |
+
+Same H2 count on three of four — the same outline, filled in with different
+example sentences. That is consistent with two independent passes at
+answering the *same* content brief, which is exactly what keyword
+cannibalisation looks like: not a copy-paste, but two solutions to one
+assignment.
 
 **All 8 duplicates carry zero lifetime views.** All 26 views across these
-topics belong to the 2025 `-ar` survivor. This matches Re's summary exactly and
-is the strongest single reason to keep the `-ar` suffix as canonical for every
-pair — it is not just the older, more-linked convention, it is also the version
-real readers have actually been finding.
+topics belong to the 2025 `-ar` survivor — the strongest reason to keep the
+`-ar` suffix as canonical for every pair: it is the older, more-linked
+convention, and it is the version real readers have actually been finding.
 
-### Which version has the better body content, per pair
+### The vocabulary difference is real — and is the opportunity, not a reason to doubt the merge
 
-Per the brief: character count, heading count (H2 + H3), FAQ section, whether
-the Korean examples differ. **Every one of the 16 articles has an FAQ
-section** — it is not a differentiator for any pair.
-
-| Pair (base) | 2025 chars / headings | 2026 chars / headings | Read |
-|---|---|---|---|
-| daily-greetings | 4,893 / 12+3 | 5,252 / 12+3 | Close. 2026 is longer but covers different ground (restaurant, emergency phrases) rather than covering the same ground better; 2025 uses Arabic-script pronunciation throughout (아니용하세요 → "أنيونغ هاسيو"), which is arguably more accessible to a reader who doesn't read Latin transliteration. **No case for moving content.** |
-| food-vocabulary | 4,962 / 12+3 | 4,968 / 12+3 | Essentially identical on every structural measure. **No case either way.** |
-| grammar-particles | 4,904 / 9+8 | 5,028 / 16+3 | Mixed: 2026 has almost double the H2 sections (16 vs 9), 2025 goes deeper under fewer headings (8 H3 vs 3). Neither is unambiguously more thorough. **Worth a manual read before any decision, not a clear case for moving 2026's text.** |
-| numbers-guide | 4,655 / 9+3 | 4,566 / 12+5 | 2026 is shorter but more subdivided (17 headings vs 12) on the topic with the highest content overlap of the eight. Mixed, not decisive. |
-| slang-words | **5,552 / 13+26** | 5,062 / 13+3 | 2025 is clearly the more thorough treatment — 26 H3 subsections breaking down individual slang terms vs 3 in the 2026 version, and it's longer. **No case for moving 2026's text; if anything this is the strongest case for keeping 2025 as-is.** |
-| seoul-travel-phrases | 5,177 / 12+3 | 5,092 / 11+4 | Essentially identical. **No case either way.** |
-| study-korean-kdramas | 5,445 / 11+9 | 5,283 / 13+8 | Close; 2026 has marginally more H2 sections, 2025 is marginally longer. Not decisive. |
-| topik-exam-guide | 5,141 / 10+9 | 5,329 / 13+10 | 2026 is longer and more subdivided, but **2025 is the only one of the 8 pairs with real traffic (8 views)** and the two share zero Hangul vocabulary — they read as two different TOPIK-prep articles, not one better-written and one worse-written. **This is the one pair worth a dedicated manual read before deciding anything**, given it is the only pair where a live audience has already voted with clicks. |
-
-**Overall: no pair shows the 2026 duplicate clearly and decisively surpassing
-the 2025 survivor.** Two pairs (`grammar-particles`, `topik-exam-guide`)
-are close enough, or important enough given real traffic, to warrant a human
-read before any text is touched. Per your instruction, **no content move is
-proposed or executed** — this table is the evidence for that judgment call,
-not an action.
+The two versions of each pair genuinely do use different Korean example
+phrases (confirmed by direct Hangul-vocabulary comparison, 0% to 67% overlap
+across the 8 pairs) — that part of the original analysis was accurate, it was
+only being used to answer the wrong question. Restated correctly: **each
+retired article is a second, independently-written pass at the same brief,
+which means it contains teaching material the surviving article does not.**
+That is exactly the resource Gate 2 needs. See the backlog item below.
 
 ---
 
-## The two posts that are NOT duplicates
+## Gate 2 backlog — merge, don't discard (NOT executed here)
+
+**For each of the 8 pairs:** harvest the unique Korean examples, sections and
+FAQ entries from the retired 2026 version into the surviving 2025 article,
+de-duplicating overlapping items and keeping the surviving article's voice
+consistent.
+
+Why this beats "pick a winner": the two versions are different vocabulary sets
+on the same topic, not a better and a worse draft of the same one. Merging the
+greetings pair, for example, turns a ~40-phrase article and a second,
+independent ~40-phrase article into one article with something like 60-70
+non-overlapping phrases — reference-grade, for the cost of an edit pass rather
+than new writing. This is precisely the "expand thin articles" objective from
+the original session brief, achieved without writing anything new for at least
+these 8 topics.
+
+**Nothing about this is executed by this branch or any other Gate 1 PR.** It
+is a content write against `blog_posts.content`, and per Gate 1 Part 2
+(`docs/SEO_GATE1_REPORT.md`) that needs the approved backup/rollback mechanism
+plus Re's separate yes. The 8 retired rows are untouched by the redirect —
+they still exist in the database after Fix 1 merges, so there is no urgency
+and nothing is lost by waiting.
+
+---
+
+## The two posts that are NOT duplicates — decision made, sequencing below
 
 `ar-korean-cafe-culture` and `ar-learn-korean-alphabet-hangul` looked like more
 duplicates at first pass (same `ar-` prefix, same publish wave as the other
@@ -84,39 +124,73 @@ by string-matching the slug:
 | `ar-korean-cafe-culture` | "Korea's cafes: the most creative coffee culture" | `korean-cafe-coffee-culture` | Both open on Korea's cafe density and themed cafes (cat cafes named specifically on both sides); no other English post is about cafes. |
 | `ar-learn-korean-alphabet-hangul` | "Learn Korean: the Hangul alphabet in one day" | `learn-korean-alphabet-hangul-guide` | Both open with "created in 1443 by King Sejong the Great" and the "readable within 24 hours" claim, nearly verbatim; no other English post is about Hangul. |
 
-Proposed new slugs, once the rename below is approved: `korean-cafe-coffee-culture-ar`
-and `learn-korean-alphabet-hangul-guide-ar` — matching the suffix convention and
-their confirmed partner's base exactly.
+**Decision: Option 1.** Rename both to the suffix convention —
+`korean-cafe-coffee-culture-ar` and `learn-korean-alphabet-hangul-guide-ar`.
+A slug rename on two rows loses no content and is reversible by renaming back;
+it does not need the Gate 1 Part 2 bulk-edit tooling, which exists for
+200-row content edits, not a two-row identifier change.
 
-### This is not executed yet, and needs your separate yes
+### Required sequence — redirect must exist and be confirmed live before the rename
 
-Converting these two slugs requires an `UPDATE` to the `slug` column of two live,
-published rows. `blog_posts` has no revision history (Gate 1 Part 2,
-`docs/SEO_GATE1_REPORT.md`) — there is currently no built, tested rollback for a
-production data write, and this session's rules are explicit that nothing gets
-deployed without your yes. This branch ships the redirect and sitemap-exclusion
-*infrastructure* for the 8 confirmed duplicates only. The two renames, and their
-redirects, are scaffolded in `scripts/lib/retired-arabic-slugs.mjs` as
-`PENDING_SLUG_RENAMES` — ready to wire in the moment the rename itself is
-approved and done.
+1. Re merges this PR (`fix/duplicate-arabic-slugs`, #85).
+2. **Confirm the two new 301 redirects are actually live in production** —
+   fetch both old URLs and check for a 301 to the new slug. Deploy logs are
+   not evidence; the live HTTP response is.
+3. **Only then** run the two slug renames.
 
-**What I need from you:** should I execute the two-row slug rename now via a
-direct, logged database update (each one individually reversible — I would
-rename it right back if anything looks wrong), or would you rather this wait
-for the backup/rollback tooling from Gate 1 Part 2 to be built and approved
-first?
+Renaming before the redirects are confirmed live would break both URLs for
+the interval in between: the old slug would 404 (no row), and there would be
+no redirect yet to carry a visitor or a crawler to the new one.
+
+**This PR now ships those two redirects** (`/blog/ar-korean-cafe-culture` →
+`/blog/korean-cafe-coffee-culture-ar`, `/blog/ar-learn-korean-alphabet-hangul`
+→ `/blog/learn-korean-alphabet-hangul-guide-ar`), alongside the 8 duplicate
+redirects, so step 2 has something to confirm. **This does create a
+transient gap once deployed and before the rename runs**: the destination
+slugs (`korean-cafe-coffee-culture-ar`, `learn-korean-alphabet-hangul-guide-ar`)
+do not exist as rows yet, so between merge and rename these two redirects
+point at a URL that 404s inside the SPA, and — because the sitemap excludes
+any slug carrying a live redirect — neither the old nor the new slug appears
+in the sitemap during that window. The gap closes the moment the rename runs,
+which is why step 3 says "only then," immediately following step 2's
+confirmation, not on a delay.
+
+### Rollback for the rename, recorded now so it never needs reconstructing
+
+```sql
+-- Forward (run once redirects are confirmed live in production):
+update blog_posts set slug = 'korean-cafe-coffee-culture-ar'
+  where slug = 'ar-korean-cafe-culture';
+update blog_posts set slug = 'learn-korean-alphabet-hangul-guide-ar'
+  where slug = 'ar-learn-korean-alphabet-hangul';
+
+-- Rollback (exact inverse, run if anything looks wrong):
+update blog_posts set slug = 'ar-korean-cafe-culture'
+  where slug = 'korean-cafe-coffee-culture-ar';
+update blog_posts set slug = 'ar-learn-korean-alphabet-hangul'
+  where slug = 'learn-korean-alphabet-hangul-guide-ar';
+```
+
+Each statement is a single-column `UPDATE` on one row matched by its current
+`slug`, so the rollback is the forward statement with the two literals
+swapped — no reconstruction from memory, no ambiguity about which value was
+live before.
 
 ---
 
 ## What this branch does
 
 - Adds `scripts/lib/retired-arabic-slugs.mjs` — the one list of which slugs are
-  retired and where they now point.
-- Adds 8 permanent (301) redirects to `vercel.json`, `/blog/ar-<slug>` →
-  `/blog/<slug>-ar`, for the 8 confirmed duplicates only.
+  retired and where they now point, for both the 8 confirmed duplicates and
+  the 2 pending renames.
+- Adds **10** permanent (301) redirects to `vercel.json`: 8 for the confirmed
+  duplicates, plus 2 for the pending renames (see the sequencing above — the
+  redirects are shipped ahead of the rename on purpose, so step 2 can confirm
+  them live before step 3 executes).
 - A test (`scripts/retired-arabic-slugs.test.mjs`) that fails if the redirect
   list and `vercel.json` ever drift apart — vercel.json is static JSON and
   cannot import the module, so nothing else would catch that.
 - `fix/sitemap-arabic-loc` is rebased on top of this branch: the sitemap
-  generator now excludes every retired slug from getting its own `<loc>`,
-  so the sitemap never submits a URL that immediately 301s.
+  generator excludes every slug carrying a live redirect from getting its own
+  `<loc>` — all 10, not just the 8 duplicates — so the sitemap never submits a
+  URL that immediately 301s.
