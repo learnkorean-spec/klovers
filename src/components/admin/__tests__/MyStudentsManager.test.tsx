@@ -473,3 +473,92 @@ describe("the class start date", () => {
     expect(screen.getByText("12 left")).toBeInTheDocument();
   });
 });
+
+describe("the catch-up queue has no expiry", () => {
+  // One Sunday 09:00 class since 3 May 2026. Against NOW (Sun 23 Aug, noon),
+  // this produces exactly 17 unconfirmed Sundays: the 9 from 28 Jun onward sit
+  // inside the 60-day recent window, the 8 before that sit behind "show older".
+  // Chosen so the split is exact and independently countable, not approximate.
+  const sundayStudent = (over: Partial<MyStudentWithClasses> = {}): MyStudentWithClasses => solafa({
+    id: "sunday-student",
+    full_name: "Sunday Student",
+    classes: [{
+      id: "sun-1", student_id: "sunday-student", weekday: 0,
+      start_time: "09:00:00", duration_minutes: 60, timezone: TZ,
+      effective_from: "2026-05-03", effective_to: null, note: null,
+    }],
+    ...over,
+  });
+
+  beforeEach(() => {
+    students = [sundayStudent()];
+    balances = new Map([["sunday-student", balance({ student_id: "sunday-student" })]]);
+  });
+
+  it("counts the full backlog on the Catch up button, not a recent slice", () => {
+    draw();
+    expect(screen.getByRole("button", { name: "Catch up (17)" })).toBeInTheDocument();
+  });
+
+  it("shows the recent window by default and offers the rest behind a count, never silently", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+
+    const dialog = screen.getByRole("dialog");
+    // 9 recent rows rendered; the older 8 are named, not hidden without a count.
+    expect(within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""))).toHaveLength(9);
+    expect(within(dialog).getByText("8 older unconfirmed classes — show them")).toBeInTheDocument();
+  });
+
+  it("reveals the older rows on request, and only then can they be confirmed", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+    click(screen.getByText("8 older unconfirmed classes — show them"));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""))).toHaveLength(17);
+    expect(within(dialog).queryByText(/older unconfirmed/)).not.toBeInTheDocument();
+
+    click(within(dialog).getByRole("button", { name: /^Confirm$/i }));
+    expect(confirmMutate).toHaveBeenCalledTimes(1);
+    expect(confirmMutate.mock.calls[0][0]).toHaveLength(17);
+  });
+
+  it("never writes off a row that was never shown — confirming the default view only touches what was rendered", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+    // Confirm immediately, without expanding "show older".
+    click(screen.getByRole("button", { name: /^Confirm$/i }));
+
+    expect(confirmMutate).toHaveBeenCalledTimes(1);
+    const rows = confirmMutate.mock.calls[0][0];
+    // Exactly the 9 visible rows — the 8 older ones are untouched, not recorded
+    // as cancelled_no_charge, and stay in the queue for a later visit.
+    expect(rows).toHaveLength(9);
+    expect(rows.every((r: { outcome: string }) => r.outcome === "attended")).toBe(true);
+  });
+
+  it("D3 — states exactly what Confirm will write, naming the not-held date rather than only counting it", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+
+    const dialog = screen.getByRole("dialog");
+    const rows = within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""));
+    click(rows[0]);   // untick the most recent (Sun 23 Aug)
+
+    // Text is split across <strong> tags, so match on the normalised whole
+    // paragraph rather than a single text node.
+    const summary = dialog.textContent!.replace(/\s+/g, " ");
+    expect(summary).toContain("8 classes will be recorded as held");
+    expect(summary).toContain("1 will be recorded as NOT held (no credit used): Sun 23 Aug");
+  });
+
+  it("only claims nothing is waiting when the whole queue is empty, not just the visible page", () => {
+    // A student with a bundle but zero classes: the queue really is empty.
+    students = [sundayStudent({ id: "empty", full_name: "Empty Student", classes: [] })];
+    balances = new Map([["empty", balance({ student_id: "empty" })]]);
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+    expect(screen.getByText("Nothing waiting — every class is confirmed.")).toBeInTheDocument();
+  });
+});

@@ -52,22 +52,30 @@ const SUNDAY_NOON = new Date("2026-08-23T04:00:00Z");
 
 describe("buildExpectedSessions", () => {
   it("only produces occurrences on the class's own weekday", () => {
-    const out = buildExpectedSessions([cls()], [], { days: 14, timeZone: TZ, now: SUNDAY_NOON });
+    // effective_from bounds the window to isolate exactly two Mondays.
+    const out = buildExpectedSessions(
+      [cls({ effective_from: "2026-08-05" })], [], { timeZone: TZ, now: SUNDAY_NOON },
+    );
     expect(out).toHaveLength(2);                       // Mon 17 and Mon 10 Aug
     expect(out.map(o => o.session_date)).toEqual(["2026-08-17", "2026-08-10"]);
   });
 
   it("returns newest first", () => {
     const out = buildExpectedSessions(
-      [cls({ id: "a", weekday: 1 }), cls({ id: "b", weekday: 4 })],
-      [], { days: 7, timeZone: TZ, now: SUNDAY_NOON },
+      [
+        cls({ id: "a", weekday: 1, effective_from: "2026-08-17" }),
+        cls({ id: "b", weekday: 4, effective_from: "2026-08-17" }),
+      ],
+      [], { timeZone: TZ, now: SUNDAY_NOON },
     );
     const dates = out.map(o => o.session_date);
     expect(dates).toEqual([...dates].sort().reverse());
   });
 
   it("pairs a confirmation with its occurrence and leaves the rest unconfirmed", () => {
-    const out = buildExpectedSessions([cls()], [session()], { days: 14, timeZone: TZ, now: SUNDAY_NOON });
+    const out = buildExpectedSessions(
+      [cls({ effective_from: "2026-08-05" })], [session()], { timeZone: TZ, now: SUNDAY_NOON },
+    );
     const [recent, older] = out;
     expect(recent.session_date).toBe("2026-08-17");
     expect(recent.confirmed?.outcome).toBe("attended");
@@ -76,9 +84,9 @@ describe("buildExpectedSessions", () => {
 
   it("matches a confirmation even though Postgres returns HH:MM:SS", () => {
     const out = buildExpectedSessions(
-      [cls()],
+      [cls({ effective_from: "2026-08-17" })],
       [session({ start_time: "22:00:00" })],
-      { days: 14, timeZone: TZ, now: SUNDAY_NOON },
+      { timeZone: TZ, now: SUNDAY_NOON },
     );
     expect(out[0].confirmed).not.toBeNull();
     expect(out[0].start_time).toBe("22:00");
@@ -88,8 +96,8 @@ describe("buildExpectedSessions", () => {
     // Sunday 09:00 local; a Sunday 23:00 class is still hours away.
     const sundayMorning = new Date("2026-08-23T01:00:00Z");
     const out = buildExpectedSessions(
-      [cls({ weekday: 0, start_time: "23:00:00" })],
-      [], { days: 1, timeZone: TZ, now: sundayMorning },
+      [cls({ weekday: 0, start_time: "23:00:00", effective_from: "2026-08-23" })],
+      [], { timeZone: TZ, now: sundayMorning },
     );
     expect(out).toHaveLength(0);
   });
@@ -97,8 +105,8 @@ describe("buildExpectedSessions", () => {
   it("does offer a class that already finished today", () => {
     // Sunday 12:00 local; a Sunday 09:00 class is done.
     const out = buildExpectedSessions(
-      [cls({ weekday: 0, start_time: "09:00:00" })],
-      [], { days: 1, timeZone: TZ, now: SUNDAY_NOON },
+      [cls({ weekday: 0, start_time: "09:00:00", effective_from: "2026-08-23" })],
+      [], { timeZone: TZ, now: SUNDAY_NOON },
     );
     expect(out).toHaveLength(1);
     expect(out[0].session_date).toBe("2026-08-23");
@@ -107,15 +115,15 @@ describe("buildExpectedSessions", () => {
   it("ignores occurrences before the class started", () => {
     const out = buildExpectedSessions(
       [cls({ effective_from: "2026-08-15" })],
-      [], { days: 21, timeZone: TZ, now: SUNDAY_NOON },
+      [], { timeZone: TZ, now: SUNDAY_NOON },
     );
     expect(out.map(o => o.session_date)).toEqual(["2026-08-17"]);
   });
 
   it("ignores occurrences after the class ended", () => {
     const out = buildExpectedSessions(
-      [cls({ effective_to: "2026-08-12" })],
-      [], { days: 21, timeZone: TZ, now: SUNDAY_NOON },
+      [cls({ effective_from: "2026-08-01", effective_to: "2026-08-12" })],
+      [], { timeZone: TZ, now: SUNDAY_NOON },
     );
     expect(out.map(o => o.session_date)).toEqual(["2026-08-10", "2026-08-03"]);
   });
@@ -124,8 +132,8 @@ describe("buildExpectedSessions", () => {
     // Rynad: Sunday 23:00 + 90 min. It belongs to Sunday, not Monday.
     const mondayNoon = new Date("2026-08-24T04:00:00Z");
     const out = buildExpectedSessions(
-      [cls({ weekday: 0, start_time: "23:00:00", duration_minutes: 90 })],
-      [], { days: 3, timeZone: TZ, now: mondayNoon },
+      [cls({ weekday: 0, start_time: "23:00:00", duration_minutes: 90, effective_from: "2026-08-22" })],
+      [], { timeZone: TZ, now: mondayNoon },
     );
     expect(out).toHaveLength(1);
     expect(out[0].session_date).toBe("2026-08-23");
@@ -134,15 +142,43 @@ describe("buildExpectedSessions", () => {
 
   it("handles several classes a week for one student", () => {
     // Solafa: Mon-Thu 22:00.
-    const classes = [1, 2, 3, 4].map(w => cls({ id: `c${w}`, weekday: w }));
-    const out = buildExpectedSessions(classes, [], { days: 7, timeZone: TZ, now: SUNDAY_NOON });
+    const classes = [1, 2, 3, 4].map(w => cls({ id: `c${w}`, weekday: w, effective_from: "2026-08-17" }));
+    const out = buildExpectedSessions(classes, [], { timeZone: TZ, now: SUNDAY_NOON });
     expect(out.map(o => o.session_date)).toEqual([
       "2026-08-20", "2026-08-19", "2026-08-18", "2026-08-17",
     ]);
   });
 
   it("returns nothing when the student has no classes", () => {
-    expect(buildExpectedSessions([], [], { days: 14, timeZone: TZ, now: SUNDAY_NOON })).toEqual([]);
+    expect(buildExpectedSessions([], [], { timeZone: TZ, now: SUNDAY_NOON })).toEqual([]);
+  });
+
+  it("is a queue, not a recent-activity list — offers every occurrence back to effective_from, however far", () => {
+    // The exact real-world case: a Sunday class running since 19 Jul must not
+    // be truncated to a recent slice once its start date is set correctly.
+    // 19:00 today (Sun 23 Aug) has not happened yet at SUNDAY_NOON, so it is
+    // correctly excluded — five past occurrences, not today's.
+    const out = buildExpectedSessions(
+      [cls({ weekday: 0, start_time: "19:00:00", effective_from: "2026-07-19" })],
+      [], { timeZone: TZ, now: SUNDAY_NOON },
+    );
+    expect(out.map(o => o.session_date)).toEqual([
+      "2026-08-16", "2026-08-09", "2026-08-02", "2026-07-26", "2026-07-19",
+    ]);
+  });
+
+  it("walks back to the EARLIEST effective_from across several classes, not just one", () => {
+    const out = buildExpectedSessions(
+      [
+        cls({ id: "old", weekday: 1, effective_from: "2026-07-27" }),   // Monday
+        cls({ id: "new", weekday: 4, effective_from: "2026-08-20" }),   // Thursday
+      ],
+      [], { timeZone: TZ, now: SUNDAY_NOON },
+    );
+    // Mondays from Jul27 plus the one Thursday on/after Aug20.
+    expect(out.map(o => o.session_date)).toEqual([
+      "2026-08-20", "2026-08-17", "2026-08-10", "2026-08-03", "2026-07-27",
+    ]);
   });
 
   it("reads the date in the teacher's zone, not the browser's", () => {
