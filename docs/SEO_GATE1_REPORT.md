@@ -220,13 +220,26 @@ per article touched.
 
 ## What needs a decision
 
-1. **Eight Arabic articles are duplicates.** Eight English articles have two
-   published Arabic translations each — one `<base>-ar` and one legacy
-   `ar-<base>`. All ten legacy-prefix articles have zero lifetime views. Two of
-   them (`ar-korean-cafe-culture`, `ar-learn-korean-alphabet-hangul`) are not
-   duplicates but orphaned translations whose slug does not match their English
-   original. Fix 1 lists all of them in the sitemap and gives the `hreflang`
-   cluster to the `-ar` form; which copy to keep is a content decision.
+1. **Resolved — eight Arabic articles are duplicates by search intent, not by
+   vocabulary.** Eight English articles have two published Arabic translations
+   each — one `<base>-ar` and one legacy `ar-<base>`. All eight 2026 duplicates
+   have zero lifetime views; the corresponding 2025 `-ar` version carries all
+   26. Every pair targets the same topic and the same (or a near-identical)
+   primary keyword — verified against `title` and `keywords`, not slug
+   similarity — which is what makes them duplicates for search purposes
+   (keyword cannibalisation) regardless of how different their example
+   sentences are. A dedicated PR, `fix/duplicate-arabic-slugs`, redirects the
+   8 confirmed duplicates to their `-ar` survivor and must merge before this
+   report's Fix 1 (`fix/sitemap-arabic-loc`), which is now stacked on it. Full
+   per-pair evidence and the Gate 2 plan to merge each retired version's
+   unique examples into its survivor: `docs/SEO_GATE1_DUPLICATE_SLUGS.md`.
+
+   Two further `ar-` prefix posts (`ar-korean-cafe-culture`,
+   `ar-learn-korean-alphabet-hangul`) are NOT duplicates — each is the only
+   Arabic translation of its article, just slugged inconsistently. Decision:
+   rename both to the suffix convention once their redirect (shipped in the
+   same PR) is confirmed live in production. Exact rollback SQL is recorded in
+   the same doc.
 
 2. **Whether to approve the topic cluster map** produced by
    `npm run content-audit`, which is what a later gate would use to decide which
