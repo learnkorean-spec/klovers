@@ -64,6 +64,13 @@ that is a Supabase-restore question, not a data-presence question, and is
 untested. Sessions being invalidated on a restore is expected regardless;
 users needing fresh logins because the rows never made it across would not be.
 
+**This is a known gap, tracked as its own follow-up item** — the same status
+as the storage-objects gap below — not something this PR closes: rehearse an
+`auth.users` restore into an actual scratch Supabase project and write down
+whether logins survive it. Having the rows is not the same claim as having a
+working restore, and that gap is exactly the distinction this item exists to
+close.
+
 ## Required secrets
 
 | Secret | Notes |
@@ -199,3 +206,22 @@ The workflow proves restorability on every run, but it restores into an empty
 Postgres, not into a Supabase project. Before relying on this in an emergency,
 do one full rehearsal into a scratch Supabase project and write down what broke.
 An untested restore path is an assumption, not a plan.
+
+## Known follow-ups (not fixed in this PR)
+
+Two gaps identified while building this backup, deliberately left out of scope
+here and tracked as their own items rather than folded into this one:
+
+1. **Does an `auth.users` restore actually work in a new Supabase project?**
+   Verified that the rows are captured (see "Does the backup include login
+   accounts" above) — not verified that dropping them into a fresh project's
+   `auth` schema produces working logins, given that project seeds its own
+   auth rows on creation. "We have the rows" and "we can log people back in"
+   are different claims; only the first one is proven today.
+2. **Backup for uploaded files** (receipt images, any file a student or admin
+   uploads). This workflow captures `storage.objects` — the *metadata rows*
+   describing those files — but not the files themselves. A separate backup
+   covering actual file content is needed to close this.
+
+Both are real gaps, not hypothetical ones, and both should become their own
+PRs once queued.
