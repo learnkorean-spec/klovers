@@ -92,11 +92,13 @@ const trimSeconds = (t: string) => t.slice(0, 5);
 
 
 /**
- * How far back the confirm strip and catch-up look. Long enough to cover a busy
- * fortnight, short enough that the list stays readable; older sessions are added
- * from the student's history.
+ * The Catch up dialog's default RENDER window, not an expiry. An unconfirmed
+ * class never ages out of the queue -- everything back to effective_from stays
+ * reachable and counted -- this only controls how much of it is shown before
+ * she has to ask for the rest, so the common case (a recent day missed) stays
+ * a short list instead of a scroll through months of history.
  */
-const CATCH_UP_DAYS = 14;
+const CATCH_UP_RECENT_DAYS = 60;
 
 type BundleDraft = {
   student_id: string;
@@ -325,10 +327,15 @@ const MyStudentsManager = () => {
   const upsertClass = useUpsertClass();
   const deleteClass = useDeleteClass();
 
-  // Credits. The window is fixed at mount so the query key stays stable while
-  // the tab is open rather than changing at midnight mid-session.
-  const [since] = useState(() =>
-    localDateKey(new Date(Date.now() - CATCH_UP_DAYS * 86400000), ADMIN_TIMEZONE));
+  // The confirmed-sessions fetch has to reach back at least as far as the
+  // earliest effective_from among every student's classes, or a confirmation
+  // older than that boundary would not be fetched and its occurrence would
+  // wrongly look unconfirmed. Derived from students, not a fixed cutoff, so
+  // correcting a class's start date widens this the moment it is saved.
+  const since = useMemo(() => {
+    const dates = students.flatMap(s => s.classes.map(c => c.effective_from)).filter(Boolean);
+    return dates.length ? dates.reduce((min, d) => (d < min ? d : min)) : localDateKey(new Date(), ADMIN_TIMEZONE);
+  }, [students]);
   const { data: balances } = useBundleBalances();
   const { data: recentSessions = [] } = useRecentSessions(since);
   const addBundle = useAddBundle();
@@ -348,6 +355,10 @@ const MyStudentsManager = () => {
   const [bundleDraft, setBundleDraft] = useState<BundleDraft | null>(null);
   const [catchUpFor, setCatchUpFor] = useState<MyStudentWithClasses | null>(null);
   const [catchUpPicked, setCatchUpPicked] = useState<Set<string>>(new Set());
+  // Off by default each time the dialog opens: the recent window is enough for
+  // the common case, and a large backlog is something she chooses to open, not
+  // something dumped on her.
+  const [catchUpShowOlder, setCatchUpShowOlder] = useState(false);
   const [historyFor, setHistoryFor] = useState<MyStudentWithClasses | null>(null);
 
   const totals = useMemo(() => {
@@ -367,7 +378,7 @@ const MyStudentsManager = () => {
       map.set(student.id, buildExpectedSessions(
         student.classes,
         recentSessions.filter(r => r.student_id === student.id),
-        { days: CATCH_UP_DAYS, timeZone: ADMIN_TIMEZONE },
+        { timeZone: ADMIN_TIMEZONE },
       ));
     }
     return map;
@@ -393,6 +404,23 @@ const MyStudentsManager = () => {
 
   const unconfirmedCount = (studentId: string) =>
     (expectedByStudent.get(studentId) ?? []).filter(o => !o.confirmed).length;
+
+  /**
+   * The Catch up dialog's full queue for whoever it is open for, split into
+   * what is rendered by default (the last CATCH_UP_RECENT_DAYS) and what is
+   * held back behind "show older". `shown` is the single source of truth for
+   * both what the dialog renders AND what saveCatchUp writes -- an item that
+   * was never shown must never be written as not-held, so the write path has
+   * to use exactly the same set the render path used, not the full queue.
+   */
+  const catchUpQueue = useMemo(() => {
+    const pending = (expectedByStudent.get(catchUpFor?.id ?? "") ?? []).filter(o => !o.confirmed);
+    const cutoff = localDateKey(new Date(Date.now() - CATCH_UP_RECENT_DAYS * 86400000), ADMIN_TIMEZONE);
+    const visible = pending.filter(o => o.session_date >= cutoff);
+    const older = pending.filter(o => o.session_date < cutoff);
+    const shown = catchUpShowOlder ? pending : visible;
+    return { pending, visible, older, shown };
+  }, [catchUpFor, expectedByStudent, catchUpShowOlder]);
 
   const saveStudent = async () => {
     if (!studentDraft) return;
@@ -523,25 +551,43 @@ const MyStudentsManager = () => {
   };
 
   const openCatchUp = (student: MyStudentWithClasses) => {
-    // Everything unconfirmed starts ticked: the common case is "these all
-    // happened, I just did not click at the time".
+    // Everything shown starts ticked: the common case is "these all happened,
+    // I just did not click at the time". Only what is initially visible (the
+    // recent window) is pre-ticked -- an older item she has not been shown yet
+    // must not already be armed to write off the moment she opens "show older".
     const unconfirmed = (expectedByStudent.get(student.id) ?? []).filter(o => !o.confirmed);
-    setCatchUpPicked(new Set(unconfirmed.map(o => `${o.session_date}|${o.start_time}`)));
+    const cutoff = localDateKey(new Date(Date.now() - CATCH_UP_RECENT_DAYS * 86400000), ADMIN_TIMEZONE);
+    const visible = unconfirmed.filter(o => o.session_date >= cutoff);
+    setCatchUpPicked(new Set(visible.map(o => `${o.session_date}|${o.start_time}`)));
+    setCatchUpShowOlder(false);
     setCatchUpFor(student);
+  };
+
+  /** Reveals the rest of the queue, pre-ticked the same way the visible window was. */
+  const showOlderInCatchUp = () => {
+    setCatchUpPicked(prev => {
+      const next = new Set(prev);
+      for (const o of catchUpQueue.older) next.add(`${o.session_date}|${o.start_time}`);
+      return next;
+    });
+    setCatchUpShowOlder(true);
   };
 
   /**
    * Batch confirm. Ticked rows count, unticked rows are recorded as not held so
    * they stop appearing. Both go in one insert, so the database refuses the whole
    * batch if any single day was already confirmed elsewhere.
+   *
+   * Only ever writes catchUpQueue.shown -- the set actually rendered -- never
+   * the full queue. An older item behind "show older" that she has not seen
+   * must never be silently recorded as not-held; it stays in the queue instead.
    */
   const saveCatchUp = async () => {
     if (!catchUpFor) return;
     const bundle = balances?.get(catchUpFor.id);
     if (!bundle) return;
 
-    const rows: ConfirmSessionInput[] = (expectedByStudent.get(catchUpFor.id) ?? [])
-      .filter(o => !o.confirmed)
+    const rows: ConfirmSessionInput[] = catchUpQueue.shown
       .map(o => ({
         student_id: catchUpFor.id,
         bundle_id: bundle.bundle_id,
@@ -1270,18 +1316,24 @@ const MyStudentsManager = () => {
             </DialogDescription>
           </DialogHeader>
           {catchUpFor && (() => {
-            const pending = (expectedByStudent.get(catchUpFor.id) ?? []).filter(o => !o.confirmed);
+            const { pending, shown, older } = catchUpQueue;
             const bundle = balances?.get(catchUpFor.id);
-            const picked = pending.filter(o => catchUpPicked.has(`${o.session_date}|${o.start_time}`)).length;
+            const shownKeys = shown.map(o => `${o.session_date}|${o.start_time}`);
+            const heldRows = shown.filter((o, i) => catchUpPicked.has(shownKeys[i]));
+            const notHeldRows = shown.filter((o, i) => !catchUpPicked.has(shownKeys[i]));
+            const picked = heldRows.length;
 
+            // Empty means the WHOLE queue is empty, not just what is rendered —
+            // this exact wording is what makes "nothing waiting" unrepresentable
+            // while real unconfirmed classes are still sitting further back.
             if (pending.length === 0) {
-              return <p className="text-sm text-muted-foreground py-2">Nothing waiting — every class in the last {CATCH_UP_DAYS} days is dealt with.</p>;
+              return <p className="text-sm text-muted-foreground py-2">Nothing waiting — every class is confirmed.</p>;
             }
 
             return (
               <div className="space-y-3">
                 <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
-                  {pending.map(o => {
+                  {shown.map(o => {
                     const key = `${o.session_date}|${o.start_time}`;
                     const on = catchUpPicked.has(key);
                     return (
@@ -1309,17 +1361,43 @@ const MyStudentsManager = () => {
                   })}
                 </div>
 
-                {bundle && (
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
-                    <strong>{picked}</strong> selected → {picked} {picked === 1 ? "credit" : "credits"}.{" "}
-                    Balance {bundle.remaining_classes} → <strong>{bundle.remaining_classes - picked}</strong>.
-                    {bundle.remaining_classes - picked < 0 && (
-                      <span className="block text-xs text-destructive pt-0.5">
-                        This takes them past the end of the bundle. That is allowed — the classes happened.
-                      </span>
-                    )}
-                  </div>
+                {!catchUpShowOlder && older.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={showOlderInCatchUp}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {older.length} older unconfirmed {older.length === 1 ? "class" : "classes"} — show {older.length === 1 ? "it" : "them"}
+                  </button>
                 )}
+
+                {/* Exactly what Confirm is about to write, named — not just
+                    counted — so unticking a day is never a silent write-off. */}
+                <div className="rounded-md bg-muted/50 px-3 py-2 text-sm space-y-1">
+                  <p>
+                    <strong>{heldRows.length}</strong> {heldRows.length === 1 ? "class" : "classes"} will be
+                    recorded as held
+                    {notHeldRows.length > 0 && (
+                      <>
+                        {" · "}
+                        <strong>{notHeldRows.length}</strong> will be recorded as{" "}
+                        <strong>NOT</strong> held (no credit used):{" "}
+                        {notHeldRows.map(o => formatSessionDate(o.session_date)).join(", ")}
+                      </>
+                    )}
+                    .
+                  </p>
+                  {bundle && (
+                    <p>
+                      Balance {bundle.remaining_classes} → <strong>{bundle.remaining_classes - picked}</strong>.
+                      {bundle.remaining_classes - picked < 0 && (
+                        <span className="block text-xs text-destructive pt-0.5">
+                          This takes them past the end of the bundle. That is allowed — the classes happened.
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
               </div>
             );
           })()}
@@ -1327,7 +1405,7 @@ const MyStudentsManager = () => {
             <Button variant="outline" onClick={() => setCatchUpFor(null)}>Cancel</Button>
             <Button
               onClick={saveCatchUp}
-              disabled={confirmSessions.isPending || (expectedByStudent.get(catchUpFor?.id ?? "") ?? []).filter(o => !o.confirmed).length === 0}
+              disabled={confirmSessions.isPending || catchUpQueue.shown.length === 0}
             >
               {confirmSessions.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
               Confirm

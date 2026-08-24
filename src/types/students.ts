@@ -226,9 +226,20 @@ export function localWeekday(d: Date, timeZone: string): number {
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
 }
 
+/** Whole calendar days between two "YYYY-MM-DD" keys, treated as plain dates. */
+function daysBetween(fromKey: string, toKey: string): number {
+  const [fy, fm, fd] = fromKey.split("-").map(Number);
+  const [ty, tm, td] = toKey.split("-").map(Number);
+  const diffMs = Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd);
+  return Math.max(0, Math.round(diffMs / 86400000));
+}
+
 /**
- * Every occurrence of a student's weekly classes over the last `days` days,
- * newest first, each paired with its confirmation if one exists.
+ * A queue, not a recent-activity list: every occurrence of a student's weekly
+ * classes from each class's own effective_from up to today, newest first, each
+ * paired with its confirmation if one exists. An occurrence never ages out —
+ * a class the schedule says happened stays in this list until it is answered,
+ * however far back effective_from goes.
  *
  * Only looks backwards, and never past today: a class that has not happened yet
  * cannot be marked as done. `now` is injected so this is testable without
@@ -237,11 +248,21 @@ export function localWeekday(d: Date, timeZone: string): number {
 export function buildExpectedSessions(
   classes: StudentClassSchedule[],
   confirmed: StudentClassSession[],
-  opts: { days: number; timeZone: string; now?: Date },
+  opts: { timeZone: string; now?: Date },
 ): ExpectedSession[] {
-  const { days, timeZone, now = new Date() } = opts;
+  const { timeZone, now = new Date() } = opts;
   const bySlot = new Map(confirmed.map(s => [`${s.session_date}|${s.start_time.slice(0, 5)}`, s]));
   const out: ExpectedSession[] = [];
+
+  // How far back to walk: the earliest effective_from among these classes, not
+  // a fixed cap. A class with no earlier sibling contributes nothing extra, so
+  // an empty classes list correctly walks back zero days.
+  const todayKey = localDateKey(now, timeZone);
+  const earliestFrom = classes.reduce<string | null>(
+    (min, c) => (c.effective_from && (!min || c.effective_from < min) ? c.effective_from : min),
+    null,
+  );
+  const days = earliestFrom ? daysBetween(earliestFrom, todayKey) + 1 : 0;
 
   for (let back = 0; back < days; back++) {
     const d = new Date(now.getTime() - back * 86400000);
