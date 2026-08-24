@@ -8,9 +8,9 @@ is the whole safety net.
 
 | | |
 |---|---|
-| Schedule | Sundays 02:17 UTC (04:17/05:17 Cairo, 10:17 Kuala Lumpur) |
+| Schedule | **Daily**, 02:17 UTC (04:17/05:17 Cairo, 10:17 Kuala Lumpur) |
 | On demand | Actions → **Database Backup** → *Run workflow* |
-| Contents | `public`, `supabase_migrations` (required) · `auth`, `storage` (best effort) |
+| Contents | `public`, `supabase_migrations` (required) · `auth`, `storage` (best effort — see below) |
 | Encryption | GPG symmetric, AES-256, passphrase from `BACKUP_ENCRYPTION_PASSPHRASE` |
 | Stored as | GitHub Actions artifact, 90-day retention by default |
 
@@ -20,6 +20,49 @@ leaves the job. The connection string is never echoed.
 Every run restores the artifact it just produced into a throwaway Postgres 17
 and compares row counts against production. If any table comes back missing or
 empty, the run **fails** and the artifact is not to be trusted.
+
+**Daily rather than weekly.** Measured against a database matching production's
+size (77 tables, 16,632 rows), the encrypted artifact is under 1 MB — daily
+backups cost roughly 18% of GitHub's free artifact-storage quota and 8% of its
+Actions-minutes quota for a private repo, so the extra safety is nearly free.
+The 59 students on the waiting list are about to start booking, and a
+confirmed booking cannot be reconstructed from memory the way most other data
+can — weekly would risk up to 7 days of them; daily caps it at 24 hours.
+
+### Does the backup include login accounts (`auth.users`)?
+
+**Yes — verified against production, not assumed.** `auth` is listed as
+"best effort" because *any* single unreadable object in a schema fails that
+schema's whole `pg_dump` call, and the workflow does not treat that as fatal
+for `auth`/`storage` the way it does for `public`. But the specific
+permission `pg_dump` needs — `SELECT` on every table — was checked directly
+against the role the workflow connects as (`postgres`), for **every table**
+in both schemas:
+
+```sql
+has_table_privilege('postgres', 'auth.users', 'SELECT')       -- true
+has_table_privilege('postgres', 'storage.objects', 'SELECT')  -- true
+-- and the same, individually, for all 23 auth.* and 8 storage.* tables: all true
+```
+
+So on the current permission grants, `auth` (including `users`, `identities`,
+`sessions`, `mfa_factors`) and `storage` (including `objects` — file
+*metadata*, not the files themselves) are expected to dump successfully, not
+silently skipped. This was checked with a live read-only query, not by
+running `pg_dump` itself — this session intentionally does not hold the
+database password. **The first manual run after merge is the actual proof**:
+its log will show either a successful dump of both schemas, or a named
+warning for whichever one failed.
+
+This changes what a restore actually means for logins: raw `auth.users` rows,
+including password hashes, are expected to be in the archive. What that does
+**not** guarantee is that dropping them into a *new* Supabase project's `auth`
+schema (the realistic restore scenario — see RTO below) works cleanly without
+conflicting with rows that project's own Auth service seeds on creation, or
+that existing sessions/refresh tokens stay valid against a new JWT secret —
+that is a Supabase-restore question, not a data-presence question, and is
+untested. Sessions being invalidated on a restore is expected regardless;
+users needing fresh logins because the rows never made it across would not be.
 
 ## Required secrets
 
@@ -46,7 +89,7 @@ Concretely, this is what "lost" means:
   not Anthropic, not GitHub, not Supabase — can open the files without the
   passphrase. This was tested: a wrong passphrase is refused outright.
 - Every `.gpg` artifact already stored becomes a permanently unopenable file.
-  A year of weekly backups turns into a year of useless blobs in one step.
+  Months of daily backups turn into useless blobs in one step.
 - The database itself is untouched and still running. Losing the passphrase
   does not break production — it removes the safety net without any warning
   sign. **Nothing fails, nothing turns red, and nobody finds out until the day
@@ -75,12 +118,12 @@ built to match production's shape and size (77 tables, 16,632 rows, 17 MB).
 | **Restore into Postgres** | **0.6 s** |
 | **Total data restore** | **0.8 s** |
 
-**RPO (how much data a failure can destroy): up to 7 days.**
-Backups are weekly. A database lost on a Saturday loses six days of bookings,
-enrolments, leads and profile changes — permanently. There is no PITR to fall
-back on and no transaction log shipping. Running the workflow by hand before
-any risky change is what shrinks this window, and it is the reason the manual
-dispatch exists. See "Weekly or daily" below.
+**RPO (how much data a failure can destroy): up to 24 hours.**
+Backups are daily. A database lost just before the next run loses most of a
+day's bookings, enrolments, leads and profile changes — permanently. There is
+no PITR to fall back on and no transaction log shipping. Running the workflow
+by hand before any risky change is what shrinks this window further, and it
+is the reason the manual dispatch exists.
 
 **RTO: the data comes back in under a second. Everything around it takes 2-4 hours.**
 
@@ -96,14 +139,17 @@ is not the data.
    hardcoded URL all have to be repointed. **This is the slow part, and it is
    almost all of the 2-4 hours.**
 4. Re-run migrations if the restored history is behind the repo.
-5. `auth` and `storage` restore only if the dump captured them. **Auth users may
-   have to be recreated**, which means password resets for everyone.
-6. Storage *objects* (uploaded files) are **not** in this backup at all — only
-   their metadata rows. Receipt images and any uploaded file are lost.
+5. `auth` and `storage` restore only if the dump captured them — see "Does the
+   backup include login accounts" above for what is actually expected to be
+   in there and what stays unverified about restoring it into a fresh project.
+6. Storage **objects** — the uploaded files themselves (receipt images, any
+   upload) — are **not** in this backup at all, only their metadata rows in
+   `storage.objects`. **This is a known gap, tracked as its own follow-up
+   item** (a separate backup for uploaded files), not something this PR fixes.
 
 **What this backup does not cover:**
 
-- Storage objects (uploaded files, receipt images).
+- Storage objects (uploaded files, receipt images) — see point 6 above.
 - Edge-function source — that lives in the repo, which is its own backup.
 - Vercel configuration and environment variables.
 - Anything written since the last run.
@@ -113,34 +159,9 @@ is not the data.
   against being wrong. Only the row-count history in `ROW-COUNTS.txt` gives any
   hint, and only for deletions, not for bad values.
 
-## Weekly or daily?
-
-**Recommendation: switch to daily once the trial pilot starts taking real
-bookings.** The workflow ships weekly because that was the approved scope; the
-change is one line (`cron: "17 2 * * *"`).
-
-The reason is that weekly and daily cost almost the same and are not close in
-what they protect:
-
-| | Weekly | Daily |
-|---|---|---|
-| Worst-case data loss | **7 days** | **24 hours** |
-| Artifact storage at 90-day retention | ~13 MB | ~90 MB |
-| Actions minutes per month | ~25 | ~150 |
-
-GitHub's free tier for a private repo is 500 MB of artifact storage and 2,000
-Actions minutes a month. Daily backups use roughly **18% of the storage** and
-**8% of the minutes**. The measured artifact is under 1 MB, so this stays cheap
-even as the database grows several times over.
-
-Against that: the 59 waiting students are about to start booking, and a
-confirmed booking is not something that can be reconstructed from memory. Losing
-a week of them is a real business loss; losing a day is an annoyance. There is
-no meaningful saving being bought by the extra six days of exposure.
-
-**Until the switch:** run the workflow by hand before anything risky — a
-migration, a bulk edit, an admin action that deletes. That is what turns a
-7-day window into a few minutes, and it costs one click.
+Run the workflow by hand before anything risky — a migration, a bulk edit, an
+admin action that deletes. That turns the 24-hour window into a few minutes,
+and it costs one click.
 
 ## Restoring
 

@@ -1,11 +1,17 @@
-# Weekly encrypted logical backup of the production database.
+# Daily encrypted logical backup of the production database.
 #
 # Why this exists: the Supabase project is on the FREE plan, which has no PITR
 # and no automated backups. Until this workflow, the only restore path was a
 # single logical dump taken by hand on 22 Aug 2026, living on one laptop.
 #
-# What it does, once a week and on demand:
+# What it does, once a day and on demand:
 #   pg_dump (schema + data) -> tar -> gpg AES-256 -> workflow artifact
+#
+# Daily rather than weekly: the trial pilot is about to start taking real
+# bookings, and a measured run against a production-sized database (77
+# tables, 16,632 rows) produced a ~0.9 MB encrypted artifact - daily use is
+# well within GitHub's free artifact-storage and Actions-minutes quota for a
+# private repo. See docs/DATABASE_BACKUP.md for the numbers.
 #
 # The dump is NEVER uploaded unencrypted, and the connection string is never
 # echoed. The passphrase lives only in BACKUP_ENCRYPTION_PASSPHRASE.
@@ -20,8 +26,8 @@ name: Database Backup
 
 on:
   schedule:
-    # Sundays 02:17 UTC. Off-peak for Egypt (04:17/05:17 local) and Malaysia.
-    - cron: "17 2 * * 0"
+    # Daily, 02:17 UTC. Off-peak for Egypt (04:17/05:17 local) and Malaysia.
+    - cron: "17 2 * * *"
   workflow_dispatch:
     inputs:
       retention_days:
