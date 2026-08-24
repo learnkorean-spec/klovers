@@ -11,6 +11,7 @@
 // rewrites, that stale file was the one being served while this function sat
 // unused at /api/sitemap.xml (docs/SEO_DIAGNOSIS.md, finding #4).
 import { createClient } from "@supabase/supabase-js";
+import { RETIRED_SLUGS } from "../scripts/lib/retired-arabic-slugs.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
@@ -109,7 +110,13 @@ export function pairPosts(posts) {
  * that tells search engines the page exists.
  */
 export function buildSitemap(posts, today) {
-  const { pairs, duplicateArabic } = pairPosts(posts);
+  // Confirmed duplicate Arabic translations (fix/duplicate-arabic-slugs) never
+  // reach pairPosts at all: they carry their own 301 in vercel.json, so giving
+  // them a <loc> here would submit a URL to Google that immediately redirects
+  // away. The demotion logic below stays as a second line of defence for any
+  // future duplicate that gets published before its redirect exists.
+  const live = posts.filter((p) => !RETIRED_SLUGS.has(p.slug));
+  const { pairs, duplicateArabic } = pairPosts(live);
   const demoted = new Set(duplicateArabic);
 
   const staticTags = STATIC_PAGES.map(
@@ -121,7 +128,7 @@ export function buildSitemap(posts, today) {
   </url>`
   );
 
-  const postTags = posts.map((p) => {
+  const postTags = live.map((p) => {
     const lastmod = (p.updated_at || p.published_at || today).split("T")[0];
     const url = `${BASE}/blog/${p.slug}`;
     const pair = pairs.get(baseOf(p.slug));

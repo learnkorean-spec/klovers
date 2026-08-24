@@ -145,3 +145,50 @@ describe("sitemap", () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
   });
 });
+
+describe("retired Arabic duplicates (fix/duplicate-arabic-slugs)", () => {
+  it("gives no <loc> to a slug that has its own 301 redirect", () => {
+    const posts = [
+      post("korean-daily-greetings-ar", "ar"), // survivor
+      post("ar-korean-daily-greetings", "ar"), // retired, has a 301
+      post("korean-daily-greetings", "en"),
+    ];
+    const { xml } = buildSitemap(posts, TODAY);
+    expect(locs(xml)).not.toContain("https://kloversegy.com/blog/ar-korean-daily-greetings");
+    expect(locs(xml)).toContain("https://kloversegy.com/blog/korean-daily-greetings-ar");
+  });
+
+  it("still emits a normal hreflang cluster once the retired slug is gone", () => {
+    const posts = [
+      post("korean-daily-greetings-ar", "ar"),
+      post("ar-korean-daily-greetings", "ar"),
+      post("korean-daily-greetings", "en"),
+    ];
+    const { xml } = buildSitemap(posts, TODAY);
+    expect(altsIn(blockFor(xml, "korean-daily-greetings"))).toEqual([
+      ["en", "https://kloversegy.com/blog/korean-daily-greetings"],
+      ["ar", "https://kloversegy.com/blog/korean-daily-greetings-ar"],
+      ["x-default", "https://kloversegy.com/blog/korean-daily-greetings"],
+    ]);
+  });
+
+  it("reports no duplicateArabic for a pair that is already fully retired", () => {
+    // Once the retired slug is filtered out before pairPosts runs, there is
+    // only one Arabic post left in this pair, so it is not a duplicate at all.
+    const posts = [post("korean-daily-greetings-ar", "ar"), post("ar-korean-daily-greetings", "ar")];
+    const { duplicateArabic } = buildSitemap(posts, TODAY);
+    expect(duplicateArabic).toEqual([]);
+  });
+
+  it("all 8 confirmed retired slugs are excluded from every build", () => {
+    const RETIRED = [
+      "ar-korean-daily-greetings", "ar-korean-food-vocabulary", "ar-korean-grammar-particles",
+      "ar-korean-numbers-guide", "ar-korean-slang-words", "ar-seoul-travel-korean-phrases",
+      "ar-study-korean-kdramas-method", "ar-topik-exam-guide",
+    ];
+    const posts = RETIRED.map((s) => post(s, "ar"));
+    const { xml } = buildSitemap(posts, TODAY);
+    const blogLocs = locs(xml).filter((u) => u.includes("/blog/"));
+    expect(blogLocs).toEqual([]);
+  });
+});
