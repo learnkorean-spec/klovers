@@ -144,6 +144,50 @@ The query already selects a `lang` column that is then never used. Filtering on
 
 ### 6. The publish trigger points crawlers at pages that are not ready
 
+> **Correction — 2026-08-24.** This finding was written from the migration file
+> and describes when the trigger *should* fire correctly, but it should not be
+> read as a live content-edit hazard: it does not fire on an ordinary content
+> edit, and Gate 1's own bulk-editing proposal
+> (`docs/SEO_GATE1_REPORT.md`, Part 2) depends on that being true. Re-verified
+> directly against the live objects with `pg_get_triggerdef` and
+> `pg_get_functiondef`:
+>
+> ```sql
+> CREATE TRIGGER on_blog_post_published
+>   AFTER INSERT OR UPDATE OF published ON public.blog_posts
+>   FOR EACH ROW EXECUTE FUNCTION notify_search_engines_on_publish()
+> ```
+>
+> `UPDATE OF published` is a column-scoped trigger: the row-level function body
+> only runs for an `UPDATE` statement whose column list includes `published` —
+> editing `content`, `title`, `keywords` or any other column does not fire it at
+> all. The function body then narrows further, guarding with
+> `if (new.published = true and (old.published is distinct from true))`, so even
+> an update that touches `published` alongside other columns only pings when
+> `published` actually flips to true. **A bulk content edit that leaves
+> `published` alone — the case Part 2 of the Gate 1 report proposes — does not
+> invoke this trigger at all.**
+>
+> The live function body has also diverged from *both* migration files in this
+> repo, which is worth recording precisely rather than left as the open
+> question below implies: neither
+> `20260320030001_auto_ping_search_engines.sql` (calls `net.http_post` directly
+> with `current_setting('app.supabase_url', true)`) nor
+> `20260421130000_harden_notify_search_engines_null_url.sql` (adds the NULL
+> guard around that same direct call) is what is actually live. The live body
+> instead calls `app_private.invoke_edge('ping-search-engines', jsonb_build_object('trigger', 'blog_publish', 'slug', new.slug))`
+> — a third implementation, routed through a helper function, present in
+> neither committed file. This is exactly the drift `CLAUDE.md` warns about
+> ("Local migration files and the remote migration history have diverged");
+> it is recorded here rather than fixed, since fixing it would mean writing a
+> migration against a live function whose exact current form is not fully
+> reconstructed from these two files.
+>
+> The `SET search_path` question below is resolved: the live function carries
+> `SET search_path TO 'pg_catalog', 'public'`, confirmed by the same
+> `pg_get_functiondef` read.
+
+
 `supabase/migrations/20260320030001_auto_ping_search_engines.sql` installs:
 
 - a pg_cron job at 08:00 UTC calling `ping-search-engines` daily, and
