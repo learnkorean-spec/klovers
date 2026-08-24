@@ -172,6 +172,22 @@ and it costs one click.
 
 ## Restoring
 
+> **Before you restore: this brings back rows, not files.**
+>
+> `storage.objects` is a table of **metadata rows** about uploaded files —
+> filename, path, size, who uploaded it. Those rows **are** in this backup and
+> **will** come back.
+>
+> The **file itself** — the actual receipt image someone uploaded — lives in a
+> Supabase Storage bucket, not in Postgres. `pg_dump` cannot reach it, so it is
+> **not** in this backup, full stop.
+>
+> **What this means in practice:** after a restore, the database will contain
+> rows that point at files that no longer exist there. Every receipt link
+> will look normal in the admin panel and then fail to open. This is not a
+> restore bug — it is a gap this backup does not close. See "Known follow-ups"
+> below.
+
 ```bash
 # 1. Download the artifact from the workflow run, then:
 gpg --batch --decrypt --pinentry-mode loopback \
@@ -207,21 +223,33 @@ Postgres, not into a Supabase project. Before relying on this in an emergency,
 do one full rehearsal into a scratch Supabase project and write down what broke.
 An untested restore path is an assumption, not a plan.
 
-## Known follow-ups (not fixed in this PR)
+## Repair-queue items opened by this PR
 
-Two gaps identified while building this backup, deliberately left out of scope
-here and tracked as their own items rather than folded into this one:
+Two gaps identified while building this backup. Both are out of scope **for
+this PR specifically** — neither is out of scope for the project. Each is
+registered here as its own standalone item, not left as a caveat buried in
+prose, and neither is answered or fixed here.
 
-1. **Does an `auth.users` restore actually work in a new Supabase project?**
-   Verified that the rows are captured (see "Does the backup include login
-   accounts" above) — not verified that dropping them into a fresh project's
-   `auth` schema produces working logins, given that project seeds its own
-   auth rows on creation. "We have the rows" and "we can log people back in"
-   are different claims; only the first one is proven today.
+1. **Does an `auth.users` restore actually work in a brand-new Supabase
+   project?** This PR only proves the rows are captured (see "Does the
+   backup include login accounts" above) — it does not prove they can be
+   dropped back in and produce working logins. A fresh Supabase project
+   seeds its own `auth` rows on creation, which can conflict with restored
+   ones; session/refresh tokens may not survive a new JWT secret either.
+   **"We have the rows" and "we can actually recover" are different claims.
+   Only the first one is proven today.**
+
+   **What would answer it:** a real restore rehearsal — take a backup, spin
+   up a throwaway Supabase project, restore `auth` into it, and attempt an
+   actual login with a real test account. Nothing short of that closes the
+   question; do not mark it resolved on reasoning alone.
+
 2. **Backup for uploaded files** (receipt images, any file a student or admin
    uploads). This workflow captures `storage.objects` — the *metadata rows*
-   describing those files — but not the files themselves. A separate backup
-   covering actual file content is needed to close this.
+   describing those files — but not the files themselves, which live in
+   Supabase Storage buckets, not in Postgres. `pg_dump` cannot reach them.
+   A restore today produces rows pointing at files that are gone. A separate
+   backup mechanism covering actual file content is needed to close this.
 
 Both are real gaps, not hypothetical ones, and both should become their own
 PRs once queued.
