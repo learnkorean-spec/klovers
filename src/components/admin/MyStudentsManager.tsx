@@ -30,22 +30,24 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, Clock, Loader2, GraduationCap, AlertTriangle,
-  Video, Copy, Check, CalendarCheck, X, Wallet, History,
+  Video, Copy, Check, CalendarCheck, X, Wallet, History, Ban, ShieldAlert,
 } from "lucide-react";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import {
   useMyStudents, useCreateStudent, useUpdateStudent, useDeleteStudent,
   useUpsertClass, useDeleteClass, checkClassConflicts, type ClassConflict,
   useBundleBalances, useRecentSessions, useAllStudentSessions, useStudentBundles,
-  useAddBundle, useConfirmSessions, useUnconfirmSession,
+  useAllBundles, useBundleEdits, useAddBundle, useUpdateBundle, useDeleteBundle,
+  useConfirmSessions, useUnconfirmSession,
   type ConfirmSessionInput,
 } from "@/hooks/admin/useMyStudents";
 import {
   DAY_NAMES, STATUS_LABEL, STUDENT_STATUSES, STUDENT_SUBJECTS, SUBJECT_LABEL,
   buildExpectedSessions, crossesMidnight, formatClassRange, formatMoney,
   formatSessionDate, formatWeeklySummary, localDateKey, pricePerClass, weeklyMinutes,
+  resolveBundleForDate,
   type BundleBalance, type ExpectedSession, type MyStudentWithClasses,
-  type StudentClassSchedule, type StudentStatus, type StudentSubject,
+  type StudentBundle, type StudentClassSchedule, type StudentStatus, type StudentSubject,
 } from "@/types/students";
 import {
   getBundleOptions, getCurrencyForCountry, currencyChoicesFor, type BundleOption,
@@ -101,6 +103,8 @@ const trimSeconds = (t: string) => t.slice(0, 5);
 const CATCH_UP_RECENT_DAYS = 60;
 
 type BundleDraft = {
+  /** Present only when editing an existing bundle. */
+  id?: string;
   student_id: string;
   mode: "catalog" | "custom";
   catalog_key: string | null;
@@ -109,7 +113,46 @@ type BundleDraft = {
   total_classes: string;
   total_price: string;
   currency: string;
+  purchased_on: string;
+  coverage_start: string;
 };
+
+type VoidDraft = { bundle: StudentBundle; reason: string };
+
+/**
+ * "Bundle 1", "Bundle 2"... per student, oldest first. Display-only, derived
+ * from coverage_start every render -- so Re can see at a glance how many
+ * times a student has re-purchased, without a column that could drift out of
+ * step with the ordering it is meant to describe.
+ */
+function numberBundles(bundles: StudentBundle[]): Map<string, number> {
+  const ordered = [...bundles].sort((a, b) =>
+    a.coverage_start.localeCompare(b.coverage_start) || a.purchased_on.localeCompare(b.purchased_on));
+  return new Map(ordered.map((b, i) => [b.id, i + 1]));
+}
+
+/**
+ * The bundle to open when a session has no bundle covering its date at all --
+ * the earliest one, since pulling ITS coverage_start further back is the fix
+ * that would actually reach the date. A voided bundle is skipped for the same
+ * reason resolveBundleForDate skips it: it was voided because it was wrong,
+ * so it is never the thing to widen. Falls back to the plain earliest if
+ * every bundle happens to be voided, so the fix is never a dead end.
+ */
+function earliestBundleToFix(bundles: StudentBundle[]): StudentBundle | null {
+  if (bundles.length === 0) return null;
+  const candidates = bundles.filter(b => b.status !== "cancelled");
+  const pool = candidates.length > 0 ? candidates : bundles;
+  return [...pool].sort((a, b) => a.coverage_start.localeCompare(b.coverage_start))[0];
+}
+
+/** "Start date filled in automatically — check it": the marker an auto-filled
+ * coverage_start must always carry until Re has actually reviewed it. */
+const UnreviewedBadge = ({ className = "" }: { className?: string }) => (
+  <Badge variant="outline" className={`text-[10px] border-amber-400 text-amber-700 ${className}`}>
+    <ShieldAlert className="h-3 w-3 mr-1" /> start date not reviewed
+  </Badge>
+);
 
 /** The stable meeting room for one student, with a one-click copy. */
 const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => void }) => {
@@ -163,9 +206,12 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
  * screen disagree with the week.
  */
 const BundleBox = ({
-  balance, onAdd, onCatchUp, onHistory, unconfirmedCount,
+  balance, bundleNumber, unreviewed, onAdd, onCatchUp, onHistory, unconfirmedCount,
 }: {
   balance: BundleBalance | undefined;
+  /** Undefined only when there is no active bundle, matching `balance`. */
+  bundleNumber: number | undefined;
+  unreviewed: boolean;
   onAdd: () => void;
   onCatchUp: () => void;
   onHistory: () => void;
@@ -192,12 +238,16 @@ const BundleBox = ({
   return (
     <div className={`rounded-md border px-3 py-2.5 space-y-2 ${out ? "border-destructive/50 bg-destructive/5" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-medium">{balance.label}</span>
+        <span className="text-sm font-medium">
+          {bundleNumber != null ? `Bundle ${bundleNumber} — ` : ""}{balance.label}
+        </span>
         <span className="text-xs text-muted-foreground">
           {formatMoney(balance.total_price, balance.currency)} ·{" "}
           {pricePerClass(balance.total_price, balance.total_classes, balance.currency)}
         </span>
       </div>
+
+      {unreviewed && <UnreviewedBadge />}
 
       <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div
@@ -247,6 +297,41 @@ const BundleBox = ({
 };
 
 
+/** The old→new diffs for one bundle, fetched only once expanded. */
+const BundleEditHistory = ({ bundleId }: { bundleId: string }) => {
+  const [open, setOpen] = useState(false);
+  const { data: edits = [] } = useBundleEdits(open ? bundleId : null);
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="text-[11px] text-primary hover:underline">
+        View edit history
+      </button>
+    );
+  }
+
+  if (edits.length === 0) {
+    return <p className="text-[11px] text-muted-foreground">Never edited since it was added.</p>;
+  }
+
+  return (
+    <div className="space-y-1">
+      {edits.map(e => (
+        <div key={e.id} className="text-[11px] text-muted-foreground">
+          {new Date(e.edited_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+          {" — "}
+          {Object.entries(e.changes).map(([field, { old, new: next }], i) => (
+            <span key={field}>
+              {i > 0 && ", "}
+              <strong>{field}</strong>: {String(old ?? "—")} → {String(next ?? "—")}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 /**
  * Everything ever confirmed for one student, plus the bundles they ran against.
  *
@@ -255,11 +340,15 @@ const BundleBox = ({
  * stored total to repair.
  */
 const StudentHistory = ({
-  studentId, onUndo, undoing,
+  studentId, onUndo, undoing, onEditBundle, onVoidBundle, onDeleteBundle, deletingBundleId,
 }: {
   studentId: string;
   onUndo: (sessionId: string) => void;
   undoing: boolean;
+  onEditBundle: (b: StudentBundle) => void;
+  onVoidBundle: (b: StudentBundle) => void;
+  onDeleteBundle: (b: StudentBundle) => void;
+  deletingBundleId: string | null;
 }) => {
   const { data: sessions = [], isLoading } = useAllStudentSessions(studentId);
   const { data: bundles = [] } = useStudentBundles(studentId);
@@ -272,22 +361,74 @@ const StudentHistory = ({
     );
   }
 
+  // Used/remaining computed here for EVERY bundle, not only the active one --
+  // this is the whole point: a negative balance on a superseded bundle used
+  // to be invisible outside a direct query. Counted sessions only; a
+  // not-held row never drew a credit from the bundle it is attached to.
+  const usedByBundle = new Map<string, number>();
+  for (const s of sessions) {
+    if (!s.counted) continue;
+    usedByBundle.set(s.bundle_id, (usedByBundle.get(s.bundle_id) ?? 0) + 1);
+  }
+  const bundleNumbers = numberBundles(bundles);
+
   return (
     <div className="space-y-4">
       {bundles.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bundles</p>
-          {bundles.map(b => (
-            <div key={b.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/30 px-3 py-2 text-sm">
-              <span>
-                {b.label}
-                <span className="text-muted-foreground"> · {formatMoney(b.total_price, b.currency)} · {b.total_classes} classes</span>
-              </span>
-              <Badge variant="outline" className="text-[10px] shrink-0">
-                {b.status === "active" ? "Active" : b.status === "completed" ? "Finished" : "Cancelled"}
-              </Badge>
-            </div>
-          ))}
+          {bundles.map(b => {
+            const used = usedByBundle.get(b.id) ?? 0;
+            const remaining = b.total_classes - used;
+            const sessionCount = sessions.filter(s => s.bundle_id === b.id).length;
+            return (
+              <div key={b.id} className="rounded-md bg-muted/30 px-3 py-2 text-sm space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span>
+                    Bundle {bundleNumbers.get(b.id)} — {b.label}
+                    <span className="text-muted-foreground"> · {formatMoney(b.total_price, b.currency)} · {b.total_classes} classes</span>
+                  </span>
+                  <Badge variant="outline" className="text-[10px] shrink-0">
+                    {b.status === "active" ? "Active" : b.status === "completed" ? "Finished" : "Cancelled"}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {remaining < 0 ? (
+                    <Badge className="bg-destructive text-destructive-foreground text-[10px]">
+                      {Math.abs(remaining)} over
+                    </Badge>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground">{remaining} left ({used} used)</span>
+                  )}
+                  {b.coverage_start_confirmed_at === null && <UnreviewedBadge />}
+                  {b.status === "cancelled" && b.voided_reason && (
+                    <span className="text-[11px] text-muted-foreground">Voided: {b.voided_reason}</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => onEditBundle(b)}>
+                    <Pencil className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                  {b.status !== "cancelled" && (
+                    sessionCount === 0 ? (
+                      <Button
+                        variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-destructive"
+                        disabled={deletingBundleId === b.id}
+                        onClick={() => onDeleteBundle(b)}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> Delete
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-destructive" onClick={() => onVoidBundle(b)}>
+                        <Ban className="h-3 w-3 mr-1" /> Void
+                      </Button>
+                    )
+                  )}
+                  <BundleEditHistory bundleId={b.id} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -338,7 +479,12 @@ const MyStudentsManager = () => {
   }, [students]);
   const { data: balances } = useBundleBalances();
   const { data: recentSessions = [] } = useRecentSessions(since);
+  // Every bundle, any status -- resolveBundleForDate needs the whole history
+  // per student, not just whichever one is currently active.
+  const { data: allBundles } = useAllBundles();
   const addBundle = useAddBundle();
+  const updateBundle = useUpdateBundle();
+  const deleteBundle = useDeleteBundle();
   const confirmSessions = useConfirmSessions();
   const unconfirmSession = useUnconfirmSession();
 
@@ -353,6 +499,8 @@ const MyStudentsManager = () => {
   const [conflicts, setConflicts] = useState<ClassConflict[]>([]);
   const [checking, setChecking] = useState(false);
   const [bundleDraft, setBundleDraft] = useState<BundleDraft | null>(null);
+  const [voidDraft, setVoidDraft] = useState<VoidDraft | null>(null);
+  const [confirmDeleteBundle, setConfirmDeleteBundle] = useState<StudentBundle | null>(null);
   const [catchUpFor, setCatchUpFor] = useState<MyStudentWithClasses | null>(null);
   const [catchUpPicked, setCatchUpPicked] = useState<Set<string>>(new Set());
   // Off by default each time the dialog opens: the recent window is enough for
@@ -386,24 +534,43 @@ const MyStudentsManager = () => {
 
   /**
    * The confirm strip: classes that have happened and not been dealt with.
-   * A student with no active bundle is skipped — there is nothing to draw a
-   * credit from, and nagging about it would not help.
+   * A student with no bundle at all is skipped — there is nothing to draw a
+   * credit from, and nagging about it would not help. Each row resolves its
+   * OWN bundle by date (resolveBundleForDate), not "whichever bundle is
+   * active right now" -- a batch spanning a bundle renewal must charge each
+   * date to the bundle actually in force on it.
    */
   const toConfirm = useMemo(() => {
-    const rows: Array<{ student: MyStudentWithClasses; occ: ExpectedSession }> = [];
+    const rows: Array<{ student: MyStudentWithClasses; occ: ExpectedSession; bundle: StudentBundle | null }> = [];
     for (const student of students) {
-      if (!balances?.get(student.id)) continue;
+      const studentBundles = allBundles?.get(student.id) ?? [];
+      if (studentBundles.length === 0) continue;
       for (const occ of expectedByStudent.get(student.id) ?? []) {
-        if (!occ.confirmed) rows.push({ student, occ });
+        if (!occ.confirmed) rows.push({ student, occ, bundle: resolveBundleForDate(studentBundles, occ.session_date) });
       }
     }
     return rows.sort((a, b) =>
       b.occ.session_date.localeCompare(a.occ.session_date) ||
       b.occ.start_time.localeCompare(a.occ.start_time));
-  }, [students, balances, expectedByStudent]);
+  }, [students, allBundles, expectedByStudent]);
 
   const unconfirmedCount = (studentId: string) =>
     (expectedByStudent.get(studentId) ?? []).filter(o => !o.confirmed).length;
+
+  /**
+   * Counted sessions per bundle, from the same recentSessions fetch that
+   * covers every student's full confirm window -- used only to word the
+   * "N left" toasts after a confirm; not the source of truth for balance
+   * (get_student_bundle_balances is, for the active bundle's own card).
+   */
+  const usedByBundle = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of recentSessions) {
+      if (!s.counted) continue;
+      map.set(s.bundle_id, (map.get(s.bundle_id) ?? 0) + 1);
+    }
+    return map;
+  }, [recentSessions]);
 
   /**
    * The Catch up dialog's full queue for whoever it is open for, split into
@@ -514,26 +681,32 @@ const MyStudentsManager = () => {
 
   // --- credits ---------------------------------------------------------------
 
-  /** One click on the strip. The bundle is resolved here so the row stays dumb. */
+  /**
+   * One click on the strip. The bundle is resolved BY DATE here so the row
+   * stays dumb -- resolveBundleForDate picks whichever of the student's
+   * bundles actually covers occ.session_date, not just whichever is active
+   * right now.
+   */
   const confirmOne = async (studentId: string, occ: ExpectedSession, outcome: "attended" | "cancelled_no_charge") => {
-    const bundle = balances?.get(studentId);
+    const bundle = resolveBundleForDate(allBundles?.get(studentId) ?? [], occ.session_date);
     if (!bundle) {
-      toast({ title: "No active bundle", description: "Add a bundle before counting classes.", variant: "destructive" });
+      toast({ title: "No bundle covers this date", description: "Add or fix a bundle's start date before counting this class.", variant: "destructive" });
       return;
     }
     try {
       await confirmSessions.mutateAsync([{
         student_id: studentId,
-        bundle_id: bundle.bundle_id,
+        bundle_id: bundle.id,
         class_id: occ.class_id,
         session_date: occ.session_date,
         start_time: occ.start_time,
         outcome,
       }]);
+      const remaining = bundle.total_classes - (usedByBundle.get(bundle.id) ?? 0) - (outcome === "attended" ? 1 : 0);
       toast({
         title: outcome === "attended" ? "Class counted" : "Marked as not held",
         description: outcome === "attended"
-          ? `${bundle.remaining_classes - 1} classes left.`
+          ? `${remaining} left on ${bundle.label}.`
           : "No credit was used.",
       });
     } catch (e) {
@@ -578,33 +751,54 @@ const MyStudentsManager = () => {
    * they stop appearing. Both go in one insert, so the database refuses the whole
    * batch if any single day was already confirmed elsewhere.
    *
+   * Each row resolves its OWN bundle by date -- a batch can legitimately span
+   * a bundle renewal, so this is never "the" bundle for the whole batch. If
+   * any shown row cannot resolve to a bundle at all, the WHOLE batch is
+   * refused client-side before the insert is attempted, same atomicity the
+   * database already gives the rest of this write.
+   *
    * Only ever writes catchUpQueue.shown -- the set actually rendered -- never
    * the full queue. An older item behind "show older" that she has not seen
    * must never be silently recorded as not-held; it stays in the queue instead.
    */
   const saveCatchUp = async () => {
     if (!catchUpFor) return;
-    const bundle = balances?.get(catchUpFor.id);
-    if (!bundle) return;
+    const studentBundles = allBundles?.get(catchUpFor.id) ?? [];
 
-    const rows: ConfirmSessionInput[] = catchUpQueue.shown
-      .map(o => ({
-        student_id: catchUpFor.id,
-        bundle_id: bundle.bundle_id,
-        class_id: o.class_id,
-        session_date: o.session_date,
-        start_time: o.start_time,
-        outcome: catchUpPicked.has(`${o.session_date}|${o.start_time}`)
-          ? ("attended" as const)
-          : ("cancelled_no_charge" as const),
-      }));
+    const resolved = catchUpQueue.shown.map(o => ({
+      occ: o,
+      bundle: resolveBundleForDate(studentBundles, o.session_date),
+    }));
+    const unresolved = resolved.filter(r => !r.bundle);
+    if (unresolved.length > 0) {
+      const earliest = unresolved.reduce(
+        (min, r) => (r.occ.session_date < min ? r.occ.session_date : min), unresolved[0].occ.session_date,
+      );
+      toast({
+        title: `${unresolved.length} ${unresolved.length === 1 ? "class has" : "classes have"} no bundle covering ${unresolved.length === 1 ? "it" : "them"}`,
+        description: `Earliest ${formatSessionDate(earliest)}. Fix a bundle's start date — marked in the list above — before confirming.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const rows: ConfirmSessionInput[] = resolved.map(({ occ: o, bundle }) => ({
+      student_id: catchUpFor.id,
+      bundle_id: bundle!.id,
+      class_id: o.class_id,
+      session_date: o.session_date,
+      start_time: o.start_time,
+      outcome: catchUpPicked.has(`${o.session_date}|${o.start_time}`)
+        ? ("attended" as const)
+        : ("cancelled_no_charge" as const),
+    }));
 
     try {
       await confirmSessions.mutateAsync(rows);
       const counted = rows.filter(r => r.outcome === "attended").length;
       toast({
         title: `${counted} ${counted === 1 ? "class" : "classes"} counted`,
-        description: `${bundle.remaining_classes - counted} left on ${catchUpFor.full_name}'s bundle.`,
+        description: `Recorded for ${catchUpFor.full_name} against ${new Set(rows.map(r => r.bundle_id)).size === 1 ? "their bundle" : "the bundles that covered each date"}.`,
       });
       setCatchUpFor(null);
     } catch (e) {
@@ -619,6 +813,7 @@ const MyStudentsManager = () => {
   // --- bundles ---------------------------------------------------------------
 
   const openBundleDialog = (student: MyStudentWithClasses) => {
+    const today = localDateKey(new Date(), ADMIN_TIMEZONE);
     setBundleDraft({
       student_id: student.id,
       mode: "custom",
@@ -627,6 +822,24 @@ const MyStudentsManager = () => {
       total_classes: "",
       total_price: "",
       currency: student.currency ?? getCurrencyForCountry(student.country) ?? "USD",
+      purchased_on: today,
+      coverage_start: today,
+    });
+  };
+
+  /** Edit an existing bundle. Prefilled from the live row, including dates. */
+  const openEditBundleDialog = (b: StudentBundle) => {
+    setBundleDraft({
+      id: b.id,
+      student_id: b.student_id,
+      mode: b.source,
+      catalog_key: b.catalog_key,
+      label: b.label,
+      total_classes: String(b.total_classes),
+      total_price: String(b.total_price),
+      currency: b.currency,
+      purchased_on: b.purchased_on,
+      coverage_start: b.coverage_start,
     });
   };
 
@@ -678,21 +891,77 @@ const MyStudentsManager = () => {
       toast({ title: "Pick a currency", variant: "destructive" });
       return;
     }
+    if (!bundleDraft.purchased_on || !bundleDraft.coverage_start) {
+      toast({ title: "Both dates are required", variant: "destructive" });
+      return;
+    }
+
+    const payload = {
+      student_id: bundleDraft.student_id,
+      source: bundleDraft.mode,
+      catalog_key: bundleDraft.mode === "catalog" ? bundleDraft.catalog_key : null,
+      label: bundleDraft.label.trim() || `${classes} classes`,
+      total_classes: classes,
+      total_price: price,
+      currency: bundleDraft.currency,
+      purchased_on: bundleDraft.purchased_on,
+      coverage_start: bundleDraft.coverage_start,
+    };
 
     try {
-      await addBundle.mutateAsync({
-        student_id: bundleDraft.student_id,
-        source: bundleDraft.mode,
-        catalog_key: bundleDraft.mode === "catalog" ? bundleDraft.catalog_key : null,
-        label: bundleDraft.label.trim() || `${classes} classes`,
-        total_classes: classes,
-        total_price: price,
-        currency: bundleDraft.currency,
-      });
-      toast({ title: "Bundle added", description: "Any previous bundle was closed off." });
+      if (bundleDraft.id) {
+        // Saving THIS dialog is what "reviewed" means -- unconditionally,
+        // regardless of whether the date's value actually changed, because
+        // the field was shown and she chose to save past it either way.
+        await updateBundle.mutateAsync({
+          id: bundleDraft.id, ...payload,
+          coverage_start_confirmed_at: new Date().toISOString(),
+        });
+        toast({ title: "Bundle updated" });
+      } else {
+        await addBundle.mutateAsync(payload);
+        toast({ title: "Bundle added", description: "Any previous bundle was closed off." });
+      }
       setBundleDraft(null);
     } catch (e) {
-      toast({ title: "Could not add bundle", description: (e as Error).message, variant: "destructive" });
+      toast({ title: "Could not save bundle", description: (e as Error).message, variant: "destructive" });
+    }
+  };
+
+  const saveVoid = async () => {
+    if (!voidDraft) return;
+    if (!voidDraft.reason.trim()) {
+      toast({ title: "A reason is required to void a bundle", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateBundle.mutateAsync({
+        id: voidDraft.bundle.id,
+        status: "cancelled",
+        voided_reason: voidDraft.reason.trim(),
+        voided_at: new Date().toISOString(),
+      });
+      toast({ title: "Bundle voided", description: "It stays in the history, marked with the reason." });
+      setVoidDraft(null);
+    } catch (e) {
+      toast({ title: "Could not void bundle", description: (e as Error).message, variant: "destructive" });
+    }
+  };
+
+  /**
+   * Deletes a bundle that has zero sessions on it. A bundle with sessions is
+   * refused by the database's own ON DELETE RESTRICT foreign key -- this is
+   * the confirm step for the zero-session case the UI already knows about,
+   * not a substitute for that guard.
+   */
+  const removeBundle = async () => {
+    if (!confirmDeleteBundle) return;
+    try {
+      await deleteBundle.mutateAsync(confirmDeleteBundle.id);
+      toast({ title: "Bundle deleted" });
+      setConfirmDeleteBundle(null);
+    } catch (e) {
+      toast({ title: "Could not delete bundle", description: (e as Error).message, variant: "destructive" });
     }
   };
 
@@ -772,35 +1041,57 @@ const MyStudentsManager = () => {
               Classes your schedule says have happened. Nothing is counted until you say so.
             </p>
             <div className="space-y-1">
-              {toConfirm.slice(0, 8).map(({ student, occ }) => (
+              {toConfirm.slice(0, 8).map(({ student, occ, bundle }) => (
                 <div
                   key={`${student.id}|${occ.session_date}|${occ.start_time}`}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-background px-3 py-2 text-sm"
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 flex-wrap">
                     <span className="text-muted-foreground w-24">{formatSessionDate(occ.session_date)}</span>
                     <span className="font-medium">{student.full_name}</span>
                     <span className="text-muted-foreground">
                       {formatClassRange(occ.start_time, occ.duration_minutes)}
                     </span>
+                    {/* A session is never silently charged against an unreviewed
+                        start date -- the warning shows up here, before the click,
+                        not only after opening the bundle. */}
+                    {bundle && bundle.coverage_start_confirmed_at === null && <UnreviewedBadge />}
                   </span>
-                  <span className="flex gap-1">
-                    <Button
-                      size="sm" variant="outline"
-                      disabled={confirmSessions.isPending}
-                      onClick={() => confirmOne(student.id, occ, "attended")}
-                    >
-                      <Check className="h-3.5 w-3.5 mr-1" /> Class done
-                    </Button>
-                    <Button
-                      size="sm" variant="ghost"
-                      title="Did not happen — no credit used"
-                      disabled={confirmSessions.isPending}
-                      onClick={() => confirmOne(student.id, occ, "cancelled_no_charge")}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  </span>
+                  {bundle ? (
+                    <span className="flex gap-1">
+                      <Button
+                        size="sm" variant="outline"
+                        disabled={confirmSessions.isPending}
+                        onClick={() => confirmOne(student.id, occ, "attended")}
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" /> Class done
+                      </Button>
+                      <Button
+                        size="sm" variant="ghost"
+                        title="Did not happen — no credit used"
+                        disabled={confirmSessions.isPending}
+                        onClick={() => confirmOne(student.id, occ, "cancelled_no_charge")}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </span>
+                  ) : (
+                    // The block names the fix, not just the problem, and gets
+                    // there in one click: opens the bundle whose start date
+                    // needs to move back to cover this session.
+                    <span className="flex items-center gap-1.5 text-xs text-destructive">
+                      No bundle covers this date
+                      <Button
+                        size="sm" variant="outline" className="h-6 text-xs"
+                        onClick={() => {
+                          const target = earliestBundleToFix(allBundles?.get(student.id) ?? []);
+                          if (target) openEditBundleDialog(target);
+                        }}
+                      >
+                        Fix start date
+                      </Button>
+                    </span>
+                  )}
                 </div>
               ))}
               {toConfirm.length > 8 && (
@@ -870,6 +1161,13 @@ const MyStudentsManager = () => {
 
             <BundleBox
               balance={balances?.get(student.id)}
+              bundleNumber={(() => {
+                const active = (allBundles?.get(student.id) ?? []).find(b => b.status === "active");
+                return active ? numberBundles(allBundles?.get(student.id) ?? []).get(active.id) : undefined;
+              })()}
+              unreviewed={(allBundles?.get(student.id) ?? []).some(
+                b => b.status === "active" && b.coverage_start_confirmed_at === null,
+              )}
               unconfirmedCount={unconfirmedCount(student.id)}
               onAdd={() => openBundleDialog(student)}
               onCatchUp={() => openCatchUp(student)}
@@ -1192,9 +1490,11 @@ const MyStudentsManager = () => {
       <Dialog open={!!bundleDraft} onOpenChange={o => !o && setBundleDraft(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add a bundle</DialogTitle>
+            <DialogTitle>{bundleDraft?.id ? "Edit bundle" : "Add a bundle"}</DialogTitle>
             <DialogDescription>
-              What they bought. Any bundle they are on now is closed off and kept as history.
+              {bundleDraft?.id
+                ? "Every change here is recorded — old value, new value, and when."
+                : "What they bought. Any bundle they are on now is closed off and kept as history."}
             </DialogDescription>
           </DialogHeader>
           {bundleDraft && (() => {
@@ -1283,6 +1583,29 @@ const MyStudentsManager = () => {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bundle-purchased-on">Purchased on</Label>
+                    <Input
+                      id="bundle-purchased-on" type="date" value={bundleDraft.purchased_on}
+                      onChange={e => setBundleDraft({ ...bundleDraft, purchased_on: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bundle-coverage-start">Covers from</Label>
+                    <Input
+                      id="bundle-coverage-start" type="date" value={bundleDraft.coverage_start}
+                      onChange={e => setBundleDraft({ ...bundleDraft, coverage_start: e.target.value })}
+                    />
+                  </div>
+                </div>
+                {bundleDraft.id && (
+                  <p className="text-xs text-muted-foreground -mt-1.5">
+                    Which date a session on-or-after this bundle's start actually draws against. Saving
+                    this dialog marks the date reviewed, whether or not you change it.
+                  </p>
+                )}
+
                 {perClass && (
                   <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
                     <strong>{perClass}</strong>
@@ -1297,9 +1620,42 @@ const MyStudentsManager = () => {
           })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setBundleDraft(null)}>Cancel</Button>
-            <Button onClick={saveBundle} disabled={addBundle.isPending}>
-              {addBundle.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              Add bundle
+            <Button onClick={saveBundle} disabled={addBundle.isPending || updateBundle.isPending}>
+              {(addBundle.isPending || updateBundle.isPending) && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              {bundleDraft?.id ? "Save changes" : "Add bundle"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Void bundle dialog */}
+      <Dialog open={!!voidDraft} onOpenChange={o => !o && setVoidDraft(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Void {voidDraft?.bundle.label}</DialogTitle>
+            <DialogDescription>
+              This bundle has classes recorded against it, so it cannot be deleted — voiding keeps the
+              row and its history visible, marked with why.
+            </DialogDescription>
+          </DialogHeader>
+          {voidDraft && (
+            <div className="space-y-1.5">
+              <Label htmlFor="void-reason">Reason</Label>
+              <Input
+                id="void-reason" value={voidDraft.reason} autoFocus
+                onChange={e => setVoidDraft({ ...voidDraft, reason: e.target.value })}
+                placeholder="e.g. created by mistake, duplicate of Bundle 2"
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVoidDraft(null)}>Cancel</Button>
+            <Button
+              variant="destructive" onClick={saveVoid}
+              disabled={updateBundle.isPending || !voidDraft?.reason.trim()}
+            >
+              {updateBundle.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              Void bundle
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1317,11 +1673,23 @@ const MyStudentsManager = () => {
           </DialogHeader>
           {catchUpFor && (() => {
             const { pending, shown, older } = catchUpQueue;
-            const bundle = balances?.get(catchUpFor.id);
-            const shownKeys = shown.map(o => `${o.session_date}|${o.start_time}`);
-            const heldRows = shown.filter((o, i) => catchUpPicked.has(shownKeys[i]));
-            const notHeldRows = shown.filter((o, i) => !catchUpPicked.has(shownKeys[i]));
+            const studentBundles = allBundles?.get(catchUpFor.id) ?? [];
+            const bundleFor = (o: ExpectedSession) => resolveBundleForDate(studentBundles, o.session_date);
+
+            // A row with no covering bundle cannot be written at all, held or
+            // not -- bundle_id is required either way -- so it is excluded from
+            // the held/not-held counts below and reported on its own.
+            const resolvedShown = shown.filter(o => !!bundleFor(o));
+            const unresolvedShown = shown.filter(o => !bundleFor(o));
+            const earliestUnresolved = unresolvedShown.length > 0
+              ? unresolvedShown.reduce((min, o) => (o.session_date < min ? o.session_date : min), unresolvedShown[0].session_date)
+              : null;
+
+            const shownKeys = resolvedShown.map(o => `${o.session_date}|${o.start_time}`);
+            const heldRows = resolvedShown.filter((o, i) => catchUpPicked.has(shownKeys[i]));
+            const notHeldRows = resolvedShown.filter((o, i) => !catchUpPicked.has(shownKeys[i]));
             const picked = heldRows.length;
+            const unreviewedCount = heldRows.filter(o => bundleFor(o)?.coverage_start_confirmed_at === null).length;
 
             // Empty means the WHOLE queue is empty, not just what is rendered —
             // this exact wording is what makes "nothing waiting" unrepresentable
@@ -1336,6 +1704,33 @@ const MyStudentsManager = () => {
                   {shown.map(o => {
                     const key = `${o.session_date}|${o.start_time}`;
                     const on = catchUpPicked.has(key);
+                    const rowBundle = bundleFor(o);
+
+                    // No bundle covers this date at all -- it cannot be written
+                    // as held OR not-held (bundle_id is required either way), so
+                    // it is not a toggle row. Named, with the one-click fix,
+                    // rather than a row that just refuses to respond.
+                    if (!rowBundle) {
+                      return (
+                        <div
+                          key={key}
+                          className="w-full flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm"
+                        >
+                          <span className="text-muted-foreground w-24">{formatSessionDate(o.session_date)}</span>
+                          <span className="text-destructive">no bundle covers this date</span>
+                          <Button
+                            size="sm" variant="outline" className="h-6 text-xs ml-auto"
+                            onClick={() => {
+                              const target = earliestBundleToFix(studentBundles);
+                              if (target) openEditBundleDialog(target);
+                            }}
+                          >
+                            Fix start date
+                          </Button>
+                        </div>
+                      );
+                    }
+
                     return (
                       <button
                         key={key} type="button"
@@ -1355,6 +1750,7 @@ const MyStudentsManager = () => {
                         </span>
                         <span className="text-muted-foreground w-24">{formatSessionDate(o.session_date)}</span>
                         <span>{formatClassRange(o.start_time, o.duration_minutes)}</span>
+                        {rowBundle.coverage_start_confirmed_at === null && <UnreviewedBadge className="ml-1" />}
                         {!on && <span className="ml-auto text-xs text-muted-foreground">did not happen</span>}
                       </button>
                     );
@@ -1369,6 +1765,25 @@ const MyStudentsManager = () => {
                   >
                     {older.length} older unconfirmed {older.length === 1 ? "class" : "classes"} — show {older.length === 1 ? "it" : "them"}
                   </button>
+                )}
+
+                {unresolvedShown.length > 0 && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm space-y-1.5">
+                    <p className="text-destructive">
+                      <strong>{unresolvedShown.length}</strong> {unresolvedShown.length === 1 ? "class" : "classes"} cannot
+                      be confirmed yet — no bundle covers {unresolvedShown.length === 1 ? "it" : "them"}, earliest{" "}
+                      {formatSessionDate(earliestUnresolved!)}.
+                    </p>
+                    <Button
+                      size="sm" variant="outline" className="h-6 text-xs"
+                      onClick={() => {
+                        const target = earliestBundleToFix(studentBundles);
+                        if (target) openEditBundleDialog(target);
+                      }}
+                    >
+                      Fix start date
+                    </Button>
+                  </div>
                 )}
 
                 {/* Exactly what Confirm is about to write, named — not just
@@ -1387,14 +1802,55 @@ const MyStudentsManager = () => {
                     )}
                     .
                   </p>
-                  {bundle && (
-                    <p>
-                      Balance {bundle.remaining_classes} → <strong>{bundle.remaining_classes - picked}</strong>.
-                      {bundle.remaining_classes - picked < 0 && (
-                        <span className="block text-xs text-destructive pt-0.5">
-                          This takes them past the end of the bundle. That is allowed — the classes happened.
-                        </span>
-                      )}
+                  {picked > 0 && (() => {
+                    const byBundle = new Map<string, { bundle: StudentBundle; count: number }>();
+                    for (const o of heldRows) {
+                      const b = bundleFor(o);
+                      if (!b) continue;
+                      const entry = byBundle.get(b.id) ?? { bundle: b, count: 0 };
+                      entry.count += 1;
+                      byBundle.set(b.id, entry);
+                    }
+                    const entries = [...byBundle.values()];
+
+                    // The common case: everything shown draws from one bundle,
+                    // so this reads exactly as it always has -- a single
+                    // before-and-after balance. Spanning a renewal (rare) falls
+                    // back to naming each bundle's own change instead.
+                    if (entries.length === 1) {
+                      const { bundle: b, count } = entries[0];
+                      const before = b.total_classes - (usedByBundle.get(b.id) ?? 0);
+                      const after = before - count;
+                      return (
+                        <p>
+                          Balance {before} → <strong>{after}</strong>.
+                          {after < 0 && (
+                            <span className="block text-xs text-destructive pt-0.5">
+                              This takes them past the end of the bundle. That is allowed — the classes happened.
+                            </span>
+                          )}
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <>
+                        <p>These dates span more than one bundle — each is charged to the one that covered it.</p>
+                        {entries.map(({ bundle: b, count }) => {
+                          const remaining = b.total_classes - (usedByBundle.get(b.id) ?? 0) - count;
+                          return (
+                            <p key={b.id} className={remaining < 0 ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
+                              {b.label}: {remaining < 0 ? `${Math.abs(remaining)} over — that is allowed, the classes happened.` : `${remaining} left.`}
+                            </p>
+                          );
+                        })}
+                      </>
+                    );
+                  })()}
+                  {unreviewedCount > 0 && (
+                    <p className="text-xs text-amber-700">
+                      {unreviewedCount} of these {unreviewedCount === 1 ? "draws" : "draw"} against a bundle whose
+                      start date has not been reviewed yet.
                     </p>
                   )}
                 </div>
@@ -1428,6 +1884,10 @@ const MyStudentsManager = () => {
               studentId={historyFor.id}
               undoing={unconfirmSession.isPending}
               onUndo={undoConfirm}
+              onEditBundle={openEditBundleDialog}
+              onVoidBundle={b => setVoidDraft({ bundle: b, reason: "" })}
+              onDeleteBundle={setConfirmDeleteBundle}
+              deletingBundleId={deleteBundle.isPending ? confirmDeleteBundle?.id ?? null : null}
             />
           )}
           <DialogFooter>
@@ -1449,6 +1909,21 @@ const MyStudentsManager = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={removeStudent}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!confirmDeleteBundle} onOpenChange={o => !o && setConfirmDeleteBundle(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {confirmDeleteBundle?.label}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It has no classes recorded against it, so nothing financial is lost. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={removeBundle}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
