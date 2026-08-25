@@ -23,6 +23,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { createClient } from "@supabase/supabase-js";
+import { baseOf, buildRelatedMap, RELATED_MIN } from "./lib/related-posts.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -197,7 +198,7 @@ async function fetchPublishedPosts() {
   const { data, error } = await supabase
     .from("blog_posts")
     .select(
-      "slug, title, description, lang, hero_image, hero_alt, article_type, author, published_at, updated_at"
+      "slug, title, description, keywords, lang, hero_image, hero_alt, article_type, author, published_at, updated_at"
     )
     .eq("published", true)
     .order("published_at", { ascending: false });
@@ -218,6 +219,7 @@ const postToRoute = (p) => ({
     heroImage: p.hero_image || null,
     heroAlt: p.hero_alt || null,
     articleType: p.article_type || null,
+    keywords: Array.isArray(p.keywords) ? p.keywords : [],
     author: p.author || SITE_NAME,
     publishedAt: p.published_at || null,
     updatedAt: p.updated_at || p.published_at || null,
@@ -266,9 +268,9 @@ const routes = [...MARKETING_ROUTES, ...blogRoutes];
 
 // Slug bases, used to decide whether an EN<->AR partner really exists.
 // Arabic posts use either a `-ar` suffix (90 of them) or a legacy `ar-` prefix (10).
+// `baseOf` is shared with the related-posts scoring so the two cannot drift
+// apart about what counts as the same topic.
 const publishedSlugs = new Set(blogRoutes.map((r) => r.post.slug));
-const baseOf = (slug) =>
-  slug.startsWith("ar-") ? slug.slice(3) : slug.replace(/-ar$/, "");
 
 /**
  * Resolve the EN and AR URLs for a post, but only where the partner document
@@ -297,6 +299,46 @@ function hreflangFor(slug) {
     en: `${BASE_URL}/blog/${enSlug}`,
     ar: `${BASE_URL}/blog/${arSlug}`,
   };
+}
+
+// ── Related articles ────────────────────────────────────────────────────────
+//
+// Every article page gets a block of links to other articles, written into the
+// raw HTML at build time. This is the only internal-linking mechanism that
+// reaches a crawler which does not execute JavaScript, and without it every one
+// of the 200 articles is an orphan: nothing on the site points at it.
+//
+// A client-side related-posts block already exists in src/pages/BlogPostPage.tsx
+// and is left alone. It is invisible to a raw fetch, and it groups posts by
+// `article_type`, which is a format rather than a topic. The scoring that
+// replaces it for the prerendered block lives in scripts/lib/related-posts.mjs,
+// where it can be unit tested.
+
+/**
+ * The block written into an article page's <body>.
+ *
+ * Title and description come from the same row that already fills the <head>,
+ * so a raw fetch gets a page that says what it is rather than a bare list of
+ * links floating on an otherwise blank document.
+ */
+function buildArticleBodyHtml(route, relatedSlugs, bySlug) {
+  const isAr = route.post.lang === "ar";
+  const items = relatedSlugs
+    .map((s) => bySlug.get(s))
+    .filter(Boolean)
+    .map((r) => `          <li><a href="${attr(r.path)}">${text(r.title)}</a></li>`)
+    .join("\n");
+
+  return `<div id="article-prerendered" lang="${isAr ? "ar" : "en"}" dir="${isAr ? "rtl" : "ltr"}">
+      <h1>${text(route.title)}</h1>
+      <p>${text(route.description)}</p>
+      <nav aria-labelledby="related-articles">
+        <h2 id="related-articles">${isAr ? "مقالات ذات صلة" : "Related articles"}</h2>
+        <ul>
+${items}
+        </ul>
+      </nav>
+    </div>`;
 }
 
 /**
@@ -461,9 +503,15 @@ const baseWithoutOrgJsonLd = baseHTML.replace(
 /** The SPA mount point, as vite emits it. */
 const ROOT_DIV = '<div id="root"></div>';
 
+const { related: relatedMap, inbound: inboundCount } = buildRelatedMap(
+  blogRoutes.map((r) => r.post)
+);
+const routeBySlug = new Map(blogRoutes.map((r) => [r.post.slug, r]));
+
 let created = 0;
 let withHreflang = 0;
 let blogIndexLinks = 0;
+let relatedLinksWritten = 0;
 
 for (const route of routes) {
   const isHome = route.path === "/";
@@ -522,6 +570,26 @@ for (const route of routes) {
     blogIndexLinks = blogRoutes.length;
   }
 
+  // Article pages carry their related-articles block in the raw HTML, for the
+  // crawlers that never run the client-side one.
+  if (route.post) {
+    const relatedSlugs = relatedMap.get(route.post.slug) || [];
+    if (relatedSlugs.length < RELATED_MIN) {
+      throw new Error(
+        `${route.path} has only ${relatedSlugs.length} related articles ` +
+          `(minimum ${RELATED_MIN}) — it would ship as an orphan`
+      );
+    }
+    const before = html;
+    html = html.replace(ROOT_DIV, `<div id="root">${buildArticleBodyHtml(route, relatedSlugs, routeBySlug)}</div>`);
+    if (html === before) {
+      throw new Error(
+        `could not find ${ROOT_DIV} in dist/index.html — ${route.path} got no related links`
+      );
+    }
+    relatedLinksWritten += relatedSlugs.length;
+  }
+
   if (route.post && hreflangFor(route.post.slug)) withHreflang++;
 
   const filePath = isHome
@@ -575,4 +643,14 @@ console.log(
     `${usedCache ? ", FROM CACHE" : ""}).`
 );
 console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.`);
-console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.\n`);
+console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.`);
+
+const orphans = blogRoutes.filter((r) => inboundCount.get(r.post.slug) === 0);
+console.log(
+  `   ${relatedLinksWritten} related-article links written across ${blogRoutes.length} articles ` +
+    `(${orphans.length} still have nothing pointing at them).`
+);
+if (orphans.length) {
+  console.log(`   orphans: ${orphans.map((r) => r.post.slug).join(", ")}`);
+}
+console.log("");
