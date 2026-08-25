@@ -741,3 +741,54 @@ describe("delete vs void", () => {
     });
   });
 });
+
+describe("a session with no bundle covering its date is a door, not a wall", () => {
+  // Solafa's classes run since 2026-01-01; a bundle that only reaches back to
+  // 20 Aug leaves everything before that unresolvable -- the real shape of
+  // what every existing bundle looks like the moment coverage_start ships,
+  // since the backfill sets it to purchased_on.
+  // Coverage_start deliberately set to tomorrow (relative to NOW, Sun 23 Aug)
+  // so nothing in Solafa's window resolves at all -- not even today's classes,
+  // which have not happened yet -- keeping this test unambiguous.
+  beforeEach(() => {
+    studentBundles = new Map([["solafa", [studentBundle({ coverage_start: "2026-08-24" })]]]);
+  });
+
+  it("blocks the to-confirm row with a named fix, not just a disabled button", () => {
+    draw();
+    const strip = screen.getByText("To confirm").closest("div")!.parentElement!;
+    expect(within(strip).getAllByText(/no bundle covers this date/i).length).toBeGreaterThan(0);
+    // The old disabled "Class done" affordance is gone for this row, not just inert.
+    expect(within(strip).queryAllByRole("button", { name: /Class done/i })).toHaveLength(0);
+  });
+
+  it("gets to the fix in one click, prefilled with the bundle that needs its start date moved back", () => {
+    draw();
+    const strip = screen.getByText("To confirm").closest("div")!.parentElement!;
+    click(within(strip).getAllByRole("button", { name: /Fix start date/i })[0]);
+
+    expect(screen.getByText("Edit bundle")).toBeInTheDocument();
+    expect(screen.getByLabelText("Covers from")).toHaveValue("2026-08-24");
+  });
+
+  it("names the count and earliest blocked date in the catch-up dialog, and refuses the batch until fixed", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+
+    const dialog = screen.getByRole("dialog");
+    const summary = dialog.textContent!.replace(/\s+/g, " ");
+    // Named with an actual count and an actual date, not a bare "some of these".
+    expect(summary).toMatch(/\d+ classes? cannot be confirmed yet — no bundle covers (it|them), earliest \w{3} \d{1,2} \w{3}\./i);
+
+    click(within(dialog).getByRole("button", { name: /^Confirm$/i }));
+    expect(confirmMutate).not.toHaveBeenCalled();
+  });
+
+  it("reaches the fix from inside the catch-up dialog too", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+    click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /Fix start date/i })[0]);
+
+    expect(screen.getByText("Edit bundle")).toBeInTheDocument();
+  });
+});

@@ -131,6 +131,21 @@ function numberBundles(bundles: StudentBundle[]): Map<string, number> {
   return new Map(ordered.map((b, i) => [b.id, i + 1]));
 }
 
+/**
+ * The bundle to open when a session has no bundle covering its date at all --
+ * the earliest one, since pulling ITS coverage_start further back is the fix
+ * that would actually reach the date. A voided bundle is skipped for the same
+ * reason resolveBundleForDate skips it: it was voided because it was wrong,
+ * so it is never the thing to widen. Falls back to the plain earliest if
+ * every bundle happens to be voided, so the fix is never a dead end.
+ */
+function earliestBundleToFix(bundles: StudentBundle[]): StudentBundle | null {
+  if (bundles.length === 0) return null;
+  const candidates = bundles.filter(b => b.status !== "cancelled");
+  const pool = candidates.length > 0 ? candidates : bundles;
+  return [...pool].sort((a, b) => a.coverage_start.localeCompare(b.coverage_start))[0];
+}
+
 /** "Start date filled in automatically — check it": the marker an auto-filled
  * coverage_start must always carry until Re has actually reviewed it. */
 const UnreviewedBadge = ({ className = "" }: { className?: string }) => (
@@ -756,9 +771,12 @@ const MyStudentsManager = () => {
     }));
     const unresolved = resolved.filter(r => !r.bundle);
     if (unresolved.length > 0) {
+      const earliest = unresolved.reduce(
+        (min, r) => (r.occ.session_date < min ? r.occ.session_date : min), unresolved[0].occ.session_date,
+      );
       toast({
-        title: "No bundle covers some of these dates",
-        description: `Fix a bundle's start date first: ${unresolved.map(r => formatSessionDate(r.occ.session_date)).join(", ")}.`,
+        title: `${unresolved.length} ${unresolved.length === 1 ? "class has" : "classes have"} no bundle covering ${unresolved.length === 1 ? "it" : "them"}`,
+        description: `Earliest ${formatSessionDate(earliest)}. Fix a bundle's start date — marked in the list above — before confirming.`,
         variant: "destructive",
       });
       return;
@@ -1039,24 +1057,41 @@ const MyStudentsManager = () => {
                         not only after opening the bundle. */}
                     {bundle && bundle.coverage_start_confirmed_at === null && <UnreviewedBadge />}
                   </span>
-                  <span className="flex gap-1">
-                    <Button
-                      size="sm" variant="outline"
-                      disabled={confirmSessions.isPending || !bundle}
-                      title={bundle ? undefined : "No bundle covers this date"}
-                      onClick={() => confirmOne(student.id, occ, "attended")}
-                    >
-                      <Check className="h-3.5 w-3.5 mr-1" /> Class done
-                    </Button>
-                    <Button
-                      size="sm" variant="ghost"
-                      title="Did not happen — no credit used"
-                      disabled={confirmSessions.isPending || !bundle}
-                      onClick={() => confirmOne(student.id, occ, "cancelled_no_charge")}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  </span>
+                  {bundle ? (
+                    <span className="flex gap-1">
+                      <Button
+                        size="sm" variant="outline"
+                        disabled={confirmSessions.isPending}
+                        onClick={() => confirmOne(student.id, occ, "attended")}
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" /> Class done
+                      </Button>
+                      <Button
+                        size="sm" variant="ghost"
+                        title="Did not happen — no credit used"
+                        disabled={confirmSessions.isPending}
+                        onClick={() => confirmOne(student.id, occ, "cancelled_no_charge")}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </span>
+                  ) : (
+                    // The block names the fix, not just the problem, and gets
+                    // there in one click: opens the bundle whose start date
+                    // needs to move back to cover this session.
+                    <span className="flex items-center gap-1.5 text-xs text-destructive">
+                      No bundle covers this date
+                      <Button
+                        size="sm" variant="outline" className="h-6 text-xs"
+                        onClick={() => {
+                          const target = earliestBundleToFix(allBundles?.get(student.id) ?? []);
+                          if (target) openEditBundleDialog(target);
+                        }}
+                      >
+                        Fix start date
+                      </Button>
+                    </span>
+                  )}
                 </div>
               ))}
               {toConfirm.length > 8 && (
@@ -1640,9 +1675,19 @@ const MyStudentsManager = () => {
             const { pending, shown, older } = catchUpQueue;
             const studentBundles = allBundles?.get(catchUpFor.id) ?? [];
             const bundleFor = (o: ExpectedSession) => resolveBundleForDate(studentBundles, o.session_date);
-            const shownKeys = shown.map(o => `${o.session_date}|${o.start_time}`);
-            const heldRows = shown.filter((o, i) => catchUpPicked.has(shownKeys[i]));
-            const notHeldRows = shown.filter((o, i) => !catchUpPicked.has(shownKeys[i]));
+
+            // A row with no covering bundle cannot be written at all, held or
+            // not -- bundle_id is required either way -- so it is excluded from
+            // the held/not-held counts below and reported on its own.
+            const resolvedShown = shown.filter(o => !!bundleFor(o));
+            const unresolvedShown = shown.filter(o => !bundleFor(o));
+            const earliestUnresolved = unresolvedShown.length > 0
+              ? unresolvedShown.reduce((min, o) => (o.session_date < min ? o.session_date : min), unresolvedShown[0].session_date)
+              : null;
+
+            const shownKeys = resolvedShown.map(o => `${o.session_date}|${o.start_time}`);
+            const heldRows = resolvedShown.filter((o, i) => catchUpPicked.has(shownKeys[i]));
+            const notHeldRows = resolvedShown.filter((o, i) => !catchUpPicked.has(shownKeys[i]));
             const picked = heldRows.length;
             const unreviewedCount = heldRows.filter(o => bundleFor(o)?.coverage_start_confirmed_at === null).length;
 
@@ -1660,6 +1705,32 @@ const MyStudentsManager = () => {
                     const key = `${o.session_date}|${o.start_time}`;
                     const on = catchUpPicked.has(key);
                     const rowBundle = bundleFor(o);
+
+                    // No bundle covers this date at all -- it cannot be written
+                    // as held OR not-held (bundle_id is required either way), so
+                    // it is not a toggle row. Named, with the one-click fix,
+                    // rather than a row that just refuses to respond.
+                    if (!rowBundle) {
+                      return (
+                        <div
+                          key={key}
+                          className="w-full flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm"
+                        >
+                          <span className="text-muted-foreground w-24">{formatSessionDate(o.session_date)}</span>
+                          <span className="text-destructive">no bundle covers this date</span>
+                          <Button
+                            size="sm" variant="outline" className="h-6 text-xs ml-auto"
+                            onClick={() => {
+                              const target = earliestBundleToFix(studentBundles);
+                              if (target) openEditBundleDialog(target);
+                            }}
+                          >
+                            Fix start date
+                          </Button>
+                        </div>
+                      );
+                    }
+
                     return (
                       <button
                         key={key} type="button"
@@ -1679,7 +1750,7 @@ const MyStudentsManager = () => {
                         </span>
                         <span className="text-muted-foreground w-24">{formatSessionDate(o.session_date)}</span>
                         <span>{formatClassRange(o.start_time, o.duration_minutes)}</span>
-                        {rowBundle?.coverage_start_confirmed_at === null && <UnreviewedBadge className="ml-1" />}
+                        {rowBundle.coverage_start_confirmed_at === null && <UnreviewedBadge className="ml-1" />}
                         {!on && <span className="ml-auto text-xs text-muted-foreground">did not happen</span>}
                       </button>
                     );
@@ -1694,6 +1765,25 @@ const MyStudentsManager = () => {
                   >
                     {older.length} older unconfirmed {older.length === 1 ? "class" : "classes"} — show {older.length === 1 ? "it" : "them"}
                   </button>
+                )}
+
+                {unresolvedShown.length > 0 && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm space-y-1.5">
+                    <p className="text-destructive">
+                      <strong>{unresolvedShown.length}</strong> {unresolvedShown.length === 1 ? "class" : "classes"} cannot
+                      be confirmed yet — no bundle covers {unresolvedShown.length === 1 ? "it" : "them"}, earliest{" "}
+                      {formatSessionDate(earliestUnresolved!)}.
+                    </p>
+                    <Button
+                      size="sm" variant="outline" className="h-6 text-xs"
+                      onClick={() => {
+                        const target = earliestBundleToFix(studentBundles);
+                        if (target) openEditBundleDialog(target);
+                      }}
+                    >
+                      Fix start date
+                    </Button>
+                  </div>
                 )}
 
                 {/* Exactly what Confirm is about to write, named — not just
