@@ -1,0 +1,404 @@
+{
+  "batchId": "2026-08-25T10-51-33-366Z",
+  "createdAt": "2026-08-25T10:51:33.366Z",
+  "source": "scripts/proposals/titles.mjs",
+  "description": "Gate 2 Step 1 — repair 42 published article titles (over 60 chars, ellipsis endings, stuffed keyword prefixes / repetition). title only, slug untouched.",
+  "editCount": 42,
+  "staleCount": 0,
+  "edits": [
+    {
+      "slug": "best-free-resources-learn-korean-online-2026",
+      "lang": "en",
+      "before": "free korean learning resources — Best Free Resources to Lear",
+      "after": "Best Free Resources to Learn Korean Online in 2026",
+      "reason": "Stuffed lowercase keyword prefix, and the title was truncated mid-word ('Lear'). Drops the prefix, completes the phrase.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-slang-words",
+      "lang": "en",
+      "before": "35 Korean Slang Words Every K-Drama Fan Needs to Know in...",
+      "after": "35 Korean Slang Words Every K-Drama Fan Should Know",
+      "reason": "Ended in an ellipsis (incomplete phrase). Completed and shortened to fit.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-alphabet-hangul-guide",
+      "lang": "en",
+      "before": "Learn the Korean Alphabet (Hangul) in One Day: Complete...",
+      "after": "Learn the Korean Alphabet (Hangul) in One Day",
+      "reason": "Ended in an ellipsis. The trailing 'Complete...' added nothing the rest of the title didn't already say — dropped rather than completed.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-food-vocabulary",
+      "lang": "en",
+      "before": "Korean Food Vocabulary: 60 Essential Words for Ordering...",
+      "after": "Korean Food Vocabulary: 60 Words for Ordering Food",
+      "reason": "Ended in an ellipsis. Completed as a full phrase, trimmed 'Essential' to fit.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "topik-exam-guide",
+      "lang": "en",
+      "before": "TOPIK Exam Guide: How to Pass TOPIK I and II as an...",
+      "after": "TOPIK Exam Guide: How to Pass TOPIK I and II",
+      "reason": "Ended in an ellipsis mid-sentence. Completed as a self-contained phrase.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "topik-1-vocabulary-list-800-words",
+      "lang": "en",
+      "before": "topik vocabulary — TOPIK 1 Vocabulary",
+      "after": "TOPIK 1 Vocabulary: 800 Essential Words to Know",
+      "reason": "Stuffed lowercase keyword prefix repeating 'topik vocabulary'. Drops the prefix, restores the '800 words' detail the slug promises.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "hanbok-korean-traditional-clothing",
+      "lang": "en",
+      "before": "Hanbok: Everything You Need to Know About Korean...",
+      "after": "Hanbok: Everything to Know About Korean Clothing",
+      "reason": "Ended in an ellipsis. Completed and trimmed to fit.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-body-language-social-etiquette",
+      "lang": "en",
+      "before": "korean etiquette — Korean Body Language and Social Etiquette",
+      "after": "Korean Body Language and Social Etiquette Guide",
+      "reason": "Stuffed lowercase keyword prefix repeating 'etiquette'. Drops the prefix.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-daily-greetings",
+      "lang": "en",
+      "before": "40 Essential Korean Greetings and Daily Phrases You Need...",
+      "after": "40 Essential Korean Greetings and Daily Phrases",
+      "reason": "Ended in an ellipsis. The trailing clause was cut off with nothing gained by finishing it — dropped instead.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-idol-fandom-glossary",
+      "lang": "en",
+      "before": "K-Pop Fandom Glossary: Bias, Maknae, Comeback and More Explained",
+      "after": "K-Pop Fandom Glossary: Bias, Maknae, and Comeback",
+      "reason": "64 characters, 4 over. Trimmed 'and More Explained' — the examples already signal it's a glossary of terms.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-verb-conjugation-guide",
+      "lang": "en",
+      "before": "korean verbs — Korean Verb Conjugation Made Easy",
+      "after": "Korean Verb Conjugation Made Easy",
+      "reason": "Stuffed lowercase keyword prefix repeating 'korean verbs'. Drops the prefix.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "seoul-travel-korean-phrases",
+      "lang": "en",
+      "before": "Seoul Travel Guide: Essential Korean Phrases for...",
+      "after": "Seoul Travel Guide: Essential Korean Phrases",
+      "reason": "Ended in an ellipsis. Completed as a self-contained phrase.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-drama-vocabulary-advanced",
+      "lang": "en",
+      "before": "kdrama vocabulary — Advanced K-Drama Vocabulary",
+      "after": "Advanced K-Drama Vocabulary for Korean Learners",
+      "reason": "Stuffed lowercase keyword prefix repeating 'vocabulary'. Drops the prefix, adds who it's for.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-counting-units-classifiers",
+      "lang": "en",
+      "before": "korean counters — Korean Counting Units (Classifiers)",
+      "after": "Korean Counting Units and Classifiers Explained",
+      "reason": "Stuffed lowercase keyword prefix repeating 'counters'/'counting'. Drops the prefix.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-egypt-best-classes-2026",
+      "lang": "en",
+      "before": "korean classes in egypt — Best Korean Language Classes in Eg",
+      "after": "Best Korean Language Classes in Egypt (2026)",
+      "reason": "Stuffed lowercase keyword prefix, and the title was truncated mid-word ('Eg'). Drops the prefix, completes the phrase.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-proverbs-idioms-guide",
+      "lang": "en",
+      "before": "Korean Proverbs and Four-Character Idioms Every Learner Should Know",
+      "after": "Korean Proverbs and Four-Character Idioms to Know",
+      "reason": "67 characters, 7 over. Trimmed 'Every Learner Should' to 'to'.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-telling-time-dates-guide",
+      "lang": "en",
+      "before": "How to Tell Time and Dates in Korean (Native vs Sino-Korean Numbers)",
+      "after": "Telling Time in Korean: Native vs Sino-Korean Numbers",
+      "reason": "68 characters, 8 over. Restructured to keep the native-vs-Sino-Korean distinction (the article's actual subject) rather than dropping it.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-3-months-study-method",
+      "lang": "en",
+      "before": "learn korean fast — Learn Korean in 3 Months",
+      "after": "How to Learn Korean in 3 Months",
+      "reason": "Stuffed lowercase keyword prefix repeating 'learn korean'. Drops the prefix.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-cafe-coffee-culture",
+      "lang": "en",
+      "before": "Korean Cafe Culture: Why Korea Has the World's Most...",
+      "after": "Korean Cafe Culture: Korea's Most Creative Cafes",
+      "reason": "Ended in an ellipsis. Completed as a full phrase using the article's own opening claim (themed/creative cafes).",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-irregular-verbs-guide",
+      "lang": "en",
+      "before": "Korean Irregular Verbs: ㅂ, ㄷ, 르, ㅅ Conjugation Rules Explained",
+      "after": "Korean Irregular Verbs: ㅂ, ㄷ, 르, ㅅ Conjugation Rules",
+      "reason": "62 characters, 2 over. Trimmed the redundant 'Explained'.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-transportation-guide-seoul",
+      "lang": "en",
+      "before": "Getting Around Seoul: Korean Transportation Vocabulary and Phrases",
+      "after": "Getting Around Seoul: Korean Transport Vocabulary",
+      "reason": "66 characters, 6 over. Shortened 'Transportation' to 'Transport', trimmed 'and Phrases'.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-zodiac-fortune-telling-guide",
+      "lang": "en",
+      "before": "Korean Zodiac and Fortune Telling: Saju, Tti, and Gunghap Explained",
+      "after": "Korean Zodiac and Fortune Telling Explained",
+      "reason": "67 characters, 7 over. Trimmed the three named terms — they're the article's own subheadings, not needed in the title to fit under 60.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-drinking-culture-soju-etiquette",
+      "lang": "en",
+      "before": "Korean Drinking Culture: Soju Etiquette and Rules Every Beginner Should Know",
+      "after": "Korean Drinking Culture: Soju Etiquette and Rules",
+      "reason": "76 characters, 16 over. Trimmed 'Every Beginner Should Know'.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-military-service-explained",
+      "lang": "en",
+      "before": "Korean Military Service Explained: Why K-Pop Idols and Actors Enlist",
+      "after": "Korean Military Service: Why K-Pop Idols Enlist",
+      "reason": "68 characters, 8 over. Trimmed the redundant 'Explained' and 'and Actors' (the article's own keywords name only idols).",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-convenience-store-culture",
+      "lang": "en",
+      "before": "Korean Convenience Store Culture: A Guide to Pyeoneuijeom (편의점)",
+      "after": "Korean Convenience Store Culture: A Guide to Pyeoneuijeom",
+      "reason": "63 characters, 3 over. Dropped the Hangul in parentheses from the title only — it stays in the article body.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-webtoon-reading-guide",
+      "lang": "en",
+      "before": "Korean Webtoons: A Beginner's Guide to Reading and Vocabulary",
+      "after": "Korean Webtoons: A Beginner's Guide to Reading",
+      "reason": "61 characters, 1 over. Trimmed 'and Vocabulary'.",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "topik-exam-guide-ar",
+      "lang": "ar",
+      "before": "امتحان TOPIK: TOPIK: دليل اجتياز اختبار الكورية",
+      "after": "امتحان TOPIK: دليل اجتياز اختبار اللغة الكورية",
+      "reason": "\"TOPIK\" literally repeated twice with a colon between. Removed the duplicate, added \"اللغة\" (language) for a more standard phrase.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "50-essential-korean-words-beginners-ar",
+      "lang": "ar",
+      "before": "كلمات كورية — 50 كلمة كورية أساسية لازم كل مبتدئ يتعلمها الأ",
+      "after": "50 كلمة كورية أساسية لكل مبتدئ",
+      "reason": "Stuffed prefix repeating 'كلمات كورية', and truncated mid-word. Also softened the colloquial 'لازم' (Egyptian colloquial 'has to') to the more standard 'لكل' — FLAG: if the site's voice is deliberately colloquial elsewhere, this register change may not be wanted; please check against the article's own tone.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "seoul-travel-korean-phrases-ar",
+      "lang": "ar",
+      "before": "سفر إلى سيول: سيول: عبارات كورية أساسية للسياح",
+      "after": "السفر إلى سيول: عبارات كورية أساسية للسياح",
+      "reason": "'سيول' (Seoul) literally repeated. Removed the duplicate, added the definite article for a more standard title form.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "how-long-to-learn-korean-arabic-speakers-ar",
+      "lang": "ar",
+      "before": "كم يستغرق تعلم الكورية — كم من الوقت يستغرق تعلم اللغة الكور",
+      "after": "كم يستغرق تعلم اللغة الكورية للناطقين بالعربية؟",
+      "reason": "'How long does it take' said twice, and truncated. FLAG: added a question mark, which I have not confirmed is consistent with this site's other Arabic titles — please check.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-3-months-study-method-ar",
+      "lang": "ar",
+      "before": "تعلم الكورية 3 أشهر: تعلم الكورية في 3 أشهر: خطة دراسية",
+      "after": "تعلم الكورية في 3 أشهر: خطة دراسية فعالة",
+      "reason": "'تعلم الكورية...3 أشهر' repeated almost verbatim. Kept one mention, added 'فعالة' (effective).",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-dating-phrases-kdrama-lines-ar",
+      "lang": "ar",
+      "before": "عبارات التعارف الكورية — عبارات المواعدة الكورية وخطوط الدرا",
+      "after": "عبارات المواعدة الكورية وأشهر خطوط الدراما",
+      "reason": "'عبارات' repeated, and 'التعارف' (getting acquainted) / 'المواعدة' (dating) are near-duplicate concepts stacked together, plus the title was truncated. FLAG: I chose 'المواعدة' over 'التعارف' based on the slug and keywords, but have not read the article body to confirm which concept it actually emphasizes — please check before approving.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-drinking-culture-soju-etiquette-ar",
+      "lang": "ar",
+      "before": "ثقافة الشرب الكورية: آداب السوجو والقواعد التي يجب أن يعرفها كل مبتدئ",
+      "after": "ثقافة الشرب الكورية: آداب السوجو لكل مبتدئ",
+      "reason": "69 characters, 9 over. Trimmed the relative clause 'والقواعد التي يجب أن يعرفها' (and the rules every beginner should know) to 'لكل مبتدئ' (for every beginner) — loses the explicit word 'rules' though 'etiquette' still carries that meaning.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+      "lang": "ar",
+      "before": "تطبيقات تعلم اللغة الكورية — أفضل تطبيقات التعلم الكورية مقا",
+      "after": "أفضل تطبيقات تعلم الكورية 2026: دولينجو مقابل روزيتا ستون",
+      "reason": "'تطبيقات' and 'الكورية' both repeated, and truncated. Replaced the generic repeated lead with the actual comparison named in the slug and keywords (Duolingo vs Rosetta Stone) — FLAG: please confirm the article is in fact a head-to-head comparison of exactly these two apps, not a broader list, before approving this framing.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-military-service-explained-ar",
+      "lang": "ar",
+      "before": "الخدمة العسكرية الكورية: لماذا يلتحق نجوم الكيبوب والممثلون بالجيش",
+      "after": "الخدمة العسكرية الكورية: لماذا يلتحق نجوم الكيبوب بالجيش؟",
+      "reason": "66 characters, 6 over. Trimmed 'والممثلون' (and actors) — the article's own keywords name only K-pop idols, not actors, so this narrows to what the keywords actually target rather than cutting arbitrarily.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-past-tense-conjugation-guide-ar",
+      "lang": "ar",
+      "before": "الزمن الماضي الكوري — تصريف الفعل الماضي الكوري",
+      "after": "تصريف الفعل الماضي في اللغة الكورية",
+      "reason": "'الماضي' (past) repeated. Kept one mention, standard grammar-guide phrasing.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-proverbs-idioms-guide-ar",
+      "lang": "ar",
+      "before": "الأمثال الكورية والتعابير المكونة من أربعة أحرف التي يجب أن يعرفها كل متعلم",
+      "after": "الأمثال الكورية والتعابير المكونة من أربعة أحرف",
+      "reason": "75 characters, 15 over. Dropped the trailing relative clause 'التي يجب أن يعرفها كل متعلم' (that every learner should know) entirely — it added length without adding meaning.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-sentence-structure-word-order-guide-ar",
+      "lang": "ar",
+      "before": "هيكل الجملة الكورية — بنية الجملة الكورية",
+      "after": "هيكل الجملة الكورية وترتيب الكلمات",
+      "reason": "This is the exact repetition pattern named in the Gate 2 brief: 'بنية' (structure) and 'هيكل' (structure) are near-synonyms, and 'الجملة الكورية' is repeated verbatim. Replaced 'بنية الجملة الكورية' with 'ترتيب الكلمات' (word order), which matches the article's own keyword and slug.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-telling-time-dates-guide-ar",
+      "lang": "ar",
+      "before": "كيف تخبر الوقت والتاريخ بالكورية (الأرقام الأصلية مقابل الصينية-الكورية)",
+      "after": "كيف تخبر الوقت والتاريخ بالكورية: الأرقام الأصلية والصينية",
+      "reason": "72 characters, 12 over. FLAG: shortened 'الصينية-الكورية' (Sino-Korean) to 'الصينية' (Chinese) to fit — on its own this could read as 'Chinese numbers' rather than 'Sino-Korean numbers' specifically, which is a real ambiguity risk in a grammar-teaching context. Please check whether this reads correctly or whether the fuller compound term needs to stay even at the cost of further trimming elsewhere.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-drama-vocabulary-advanced-ar",
+      "lang": "ar",
+      "before": "المفردات الدراما — مفردات الدراما الكورية المتقدمة",
+      "after": "مفردات الدراما الكورية المتقدمة",
+      "reason": "Stuffed prefix repeating 'الدراما', and the prefix itself ('المفردات الدراما') was grammatically awkward (mismatched definite article). Dropped it.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-food-vocabulary-ar",
+      "lang": "ar",
+      "before": "مفردات طعام كوري: طعام كوري: 60 كلمة مفردات أساسية",
+      "after": "مفردات الطعام الكوري: 60 كلمة أساسية",
+      "reason": "'طعام كوري' repeated with a colon between, and 'مفردات' also repeated later. Kept one mention of each, standard definite-article phrasing.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-ar",
+      "lang": "ar",
+      "before": "تطبيقات تعلم كوري — أفضل تطبيقات تعلم الكورية 2026",
+      "after": "أفضل تطبيقات تعلم اللغة الكورية 2026",
+      "reason": "'تطبيقات' and 'تعلم' both repeated. Kept one clean mention of each.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    }
+  ]
+}
