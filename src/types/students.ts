@@ -134,8 +134,23 @@ export interface StudentBundle {
   total_price: number;
   currency: string;
   purchased_on: string;
+  /** The first date this bundle covers. See resolveBundleForDate. */
+  coverage_start: string;
+  /** Null means coverage_start was backfilled and nobody has reviewed it yet. */
+  coverage_start_confirmed_at: string | null;
   status: BundleStatus;
+  voided_reason: string | null;
+  voided_at: string | null;
   note: string | null;
+}
+
+/** One row of student_bundle_edits — an old/new diff for a single changed column. */
+export interface BundleEdit {
+  id: string;
+  bundle_id: string;
+  edited_at: string;
+  edited_by: string;
+  changes: Record<string, { old: unknown; new: unknown }>;
 }
 
 /** One row of get_student_bundle_balances() — the active bundle plus its usage. */
@@ -304,4 +319,31 @@ export function formatSessionDate(dateKey: string): string {
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", {
     weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
   });
+}
+
+/**
+ * Which bundle a session on `dateKey` draws against: whichever of a student's
+ * bundles has the latest coverage_start on or before that date. Replaces "the
+ * active bundle", which had no notion of date at all -- confirming a batch of
+ * catch-up sessions charged every one of them to whatever was active at the
+ * moment of confirming, not to the bundle actually in force on each date.
+ *
+ * A voided bundle (status "cancelled") is never resolved to -- it was voided
+ * because it was wrong, so a date that would fall in its window is either
+ * covered by an earlier bundle or resolves to nothing, surfacing the gap
+ * instead of drawing against a bundle already flagged as a mistake.
+ *
+ * Returns null when no (non-voided) bundle covers the date at all.
+ */
+export function resolveBundleForDate(
+  bundles: StudentBundle[],
+  dateKey: string,
+): StudentBundle | null {
+  let best: StudentBundle | null = null;
+  for (const b of bundles) {
+    if (b.status === "cancelled") continue;
+    if (b.coverage_start > dateKey) continue;
+    if (!best || b.coverage_start > best.coverage_start) best = b;
+  }
+  return best;
 }

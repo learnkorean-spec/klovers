@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   BundleBalance,
+  BundleEdit,
   BundleSource,
   BundleStatus,
   MyStudent,
@@ -227,6 +228,10 @@ export function useBundleBalances() {
   });
 }
 
+const BUNDLE_COLUMNS =
+  "id, student_id, source, catalog_key, label, total_classes, total_price, currency, " +
+  "purchased_on, coverage_start, coverage_start_confirmed_at, status, voided_reason, voided_at, note";
+
 /** Every bundle a student has ever had, newest first — the payment history. */
 export function useStudentBundles(studentId: string | null) {
   return useQuery<StudentBundle[]>({
@@ -235,11 +240,52 @@ export function useStudentBundles(studentId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_bundles")
-        .select("id, student_id, source, catalog_key, label, total_classes, total_price, currency, purchased_on, status, note")
+        .select(BUNDLE_COLUMNS)
         .eq("student_id", studentId!)
         .order("purchased_on", { ascending: false });
       if (error) throw error;
       return (data ?? []) as StudentBundle[];
+    },
+  });
+}
+
+/**
+ * Every bundle for every student, any status, in one query — keyed by student.
+ * The confirm and catch-up flows resolve a session's bundle by date across a
+ * student's WHOLE bundle history (see resolveBundleForDate), not just the
+ * active one, so they need this rather than useBundleBalances.
+ */
+export function useAllBundles() {
+  return useQuery<Map<string, StudentBundle[]>>({
+    queryKey: [...BUNDLE_KEYS.balances, "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("student_bundles").select(BUNDLE_COLUMNS);
+      if (error) throw error;
+      const map = new Map<string, StudentBundle[]>();
+      for (const row of (data ?? []) as StudentBundle[]) {
+        const list = map.get(row.student_id) ?? [];
+        list.push(row);
+        map.set(row.student_id, list);
+      }
+      return map;
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+/** The audit trail for one bundle, newest edit first. */
+export function useBundleEdits(bundleId: string | null) {
+  return useQuery<BundleEdit[]>({
+    queryKey: [...BUNDLE_KEYS.balances, "edits", bundleId],
+    enabled: !!bundleId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_bundle_edits")
+        .select("id, bundle_id, edited_at, edited_by, changes")
+        .eq("bundle_id", bundleId!)
+        .order("edited_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as BundleEdit[];
     },
   });
 }
@@ -297,6 +343,8 @@ export interface BundleInput {
   total_classes: number;
   total_price: number;
   currency: string;
+  purchased_on: string;
+  coverage_start: string;
   note?: string | null;
 }
 
@@ -304,6 +352,11 @@ export interface BundleInput {
  * Adds a bundle. Any existing active bundle for that student is completed first,
  * because the database allows only one active at a time — doing it here means Re
  * adds a renewal without a separate "close the old one" step.
+ *
+ * coverage_start_confirmed_at is set to now() here, unconditionally: creating a
+ * bundle means typing or accepting its coverage_start in the form right now, so
+ * it is reviewed by definition. Only the migration's one-time historical
+ * backfill is allowed to leave this null.
  */
 export function useAddBundle() {
   const qc = useQueryClient();
@@ -316,19 +369,64 @@ export function useAddBundle() {
         .eq("status", "active");
       if (closeErr) throw closeErr;
 
-      const { error } = await supabase.from("student_bundles").insert(input);
+      const { error } = await supabase.from("student_bundles").insert({
+        ...input,
+        coverage_start_confirmed_at: new Date().toISOString(),
+      });
       if (error) throw error;
     },
     onSuccess: () => invalidateCredits(qc),
   });
 }
 
+/**
+ * Edits an existing bundle, or voids one (status: "cancelled" + voided_reason).
+ * The database's own audit trigger (trg_student_bundles_audit) writes the
+ * old/new diff; nothing here needs to.
+ *
+ * A plain passthrough update -- deliberately. Whether saving counts as
+ * reviewing coverage_start is a UI-workflow decision the caller (the edit
+ * dialog, vs. the void dialog) already knows and states explicitly in what
+ * it passes, rather than this hook inferring it from which fields happen to
+ * be present.
+ */
 export function useUpdateBundle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: Partial<BundleInput> & { id: string; status?: BundleStatus }) => {
+    mutationFn: async ({
+      id, ...input
+    }: Partial<BundleInput> & {
+      id: string;
+      status?: BundleStatus;
+      coverage_start_confirmed_at?: string | null;
+      voided_reason?: string | null;
+      voided_at?: string | null;
+    }) => {
       const { error } = await supabase.from("student_bundles").update(input).eq("id", id);
       if (error) throw error;
+    },
+    onSuccess: () => invalidateCredits(qc),
+  });
+}
+
+/**
+ * Deletes a bundle outright. Only succeeds when it has zero sessions on it —
+ * the database's ON DELETE RESTRICT foreign key refuses it otherwise (Postgres
+ * error 23503), which this translates into a message pointing at Void instead.
+ * The caller should already know the session count and offer Void directly in
+ * that case; this is the backstop, not the primary UX.
+ */
+export function useDeleteBundle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("student_bundles").delete().eq("id", id);
+      if (error) {
+        if (error.code === "23503") {
+          throw new Error("This bundle has classes recorded against it — void it instead of deleting it.");
+        }
+        throw error;
+      }
     },
     onSuccess: () => invalidateCredits(qc),
   });

@@ -14,6 +14,8 @@ import {
   localDateKey,
   localWeekday,
   pricePerClass,
+  resolveBundleForDate,
+  type StudentBundle,
   type StudentClassSchedule,
   type StudentClassSession,
 } from "@/types/students";
@@ -187,6 +189,58 @@ describe("buildExpectedSessions", () => {
     expect(localDateKey(lateSunday, TZ)).toBe("2026-08-24");
     expect(localWeekday(lateSunday, TZ)).toBe(1);
     expect(localDateKey(lateSunday, "UTC")).toBe("2026-08-23");
+  });
+});
+
+const bundle = (over: Partial<StudentBundle> = {}): StudentBundle => ({
+  id: "b1",
+  student_id: "solafa",
+  source: "custom",
+  catalog_key: null,
+  label: "16 classes",
+  total_classes: 16,
+  total_price: 6400,
+  currency: "EGP",
+  purchased_on: "2026-01-01",
+  coverage_start: "2026-01-01",
+  coverage_start_confirmed_at: "2026-01-01T00:00:00Z",
+  status: "active",
+  voided_reason: null,
+  voided_at: null,
+  note: null,
+  ...over,
+});
+
+describe("resolveBundleForDate", () => {
+  it("picks the bundle whose coverage_start is the latest one on or before the date", () => {
+    // The older one is "completed" once superseded, but stays a valid target
+    // for dates before the renewal -- status alone never disqualifies it.
+    const closed = bundle({ id: "older", coverage_start: "2026-01-01", status: "completed" });
+    const newer = bundle({ id: "newer", coverage_start: "2026-06-01", status: "active" });
+    expect(resolveBundleForDate([closed, newer], "2026-03-15")?.id).toBe("older");
+    expect(resolveBundleForDate([closed, newer], "2026-07-01")?.id).toBe("newer");
+  });
+
+  it("returns null when no bundle covers the date at all", () => {
+    const b = bundle({ coverage_start: "2026-06-01" });
+    expect(resolveBundleForDate([b], "2026-01-15")).toBeNull();
+    expect(resolveBundleForDate([], "2026-06-15")).toBeNull();
+  });
+
+  it("never resolves to a voided bundle, even if its window would otherwise cover the date", () => {
+    const voided = bundle({ id: "voided", coverage_start: "2026-01-01", status: "cancelled", voided_reason: "duplicate" });
+    const earlier = bundle({ id: "earlier", coverage_start: "2025-06-01", status: "completed" });
+    // Without the voided one, "earlier" is the only valid candidate.
+    expect(resolveBundleForDate([voided, earlier], "2026-03-01")?.id).toBe("earlier");
+    // With nothing else, a date only the voided bundle's window covers resolves to nothing.
+    expect(resolveBundleForDate([voided], "2026-03-01")).toBeNull();
+  });
+
+  it("picks the single latest coverage_start among several candidates, not just any match", () => {
+    const a = bundle({ id: "a", coverage_start: "2026-01-01" });
+    const b = bundle({ id: "b", coverage_start: "2026-04-01" });
+    const c = bundle({ id: "c", coverage_start: "2026-07-01" });
+    expect(resolveBundleForDate([a, b, c], "2026-05-15")?.id).toBe("b");
   });
 });
 
