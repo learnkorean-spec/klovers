@@ -33,6 +33,15 @@ jobs:
       # the declared Arabic partner of /blog/korean-numbers-guide below, so the
       # two lines in the report can be read against each other.
       AR_POST: /blog/korean-numbers-guide-ar
+      # A retired Arabic duplicate. PR #87 removed the legacy `ar-` prefixed
+      # posts from the sitemap as confirmed duplicates, so this slug must stay
+      # out of the sitemap while remaining reachable. Checking it by name keeps
+      # the retirement itself covered rather than assumed.
+      RETIRED_POST: /blog/ar-korean-numbers-guide
+      # Coverage floor for the live run. The page list comes from the production
+      # sitemap, so this is the number that makes a silent shrink loud. Lower it
+      # deliberately, in the same change that shrinks the catalogue.
+      MIN_PAGES: "200"
 
     steps:
       - name: Checkout repo
@@ -56,7 +65,7 @@ jobs:
         id: seocheck
         continue-on-error: true
         run: |
-          node scripts/seo-check.mjs --base "$SITE" 2>&1 | tee seo-report/seo-check.txt
+          node scripts/seo-check.mjs --base "$SITE" --min-pages "$MIN_PAGES" 2>&1 | tee seo-report/seo-check.txt
 
       - name: Fetch key pages without JavaScript
         if: always()
@@ -91,8 +100,13 @@ jobs:
             check "/blog/korean-conditional-sentences-guide"
             check "/blog/korean-numbers-guide"
             check "$AR_POST"
+            check "$RETIRED_POST"
             check "/this-page-does-not-exist"
             check "/login"
+            echo "Note: ${RETIRED_POST} is a retired Arabic duplicate. It is"
+            echo "deliberately absent from the sitemap but still served, so a 200"
+            echo "with its own canonical is the expected result."
+            echo
             echo "Note: /this-page-does-not-exist returning 200 is expected."
             echo "A Vite SPA on Vercel cannot emit a real 404 - the server replies"
             echo "before the app knows the route is unknown. The page carries no"

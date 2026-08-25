@@ -36,6 +36,12 @@ const argOf = (name) => {
   const i = argv.indexOf(name);
   return i === -1 ? null : argv[i + 1];
 };
+// Coverage floor. The live page list is whatever the production sitemap
+// contains, so coverage tracks the site automatically - but that also means a
+// sitemap that silently shrinks would be reported as a smaller, still-green
+// run. --min-pages turns a drop in coverage into a failure instead of a number
+// nobody looks at. See docs/SEO_MIGRATION.md.
+const MIN_PAGES = Number(argOf("--min-pages") ?? 0) || 0;
 const DIST = argOf("--dist");
 const BASE = argOf("--base");
 const MODE = DIST ? "dist" : "live";
@@ -318,8 +324,18 @@ const failures = results.filter(
 );
 
 const tick = (b) => (b === null ? "–" : b ? "PASS" : "FAIL");
+// Coverage floor verdict. Applies in whichever mode it is given a floor: live
+// mode counts sitemap URLs, dist mode counts prerendered files. The two are
+// different populations, so each caller passes its own number.
+const coverageOk = MIN_PAGES === 0 ? null : results.length >= MIN_PAGES;
+const coverageDetail =
+  MIN_PAGES === 0
+    ? "no floor set (--min-pages)"
+    : `${results.length} vs floor ${MIN_PAGES}`;
+
 const summary = [
   ["pages checked", String(results.length), "–"],
+  ["coverage floor", coverageDetail, tick(coverageOk)],
   ["HTTP 200", MODE === "live" ? `${results.filter((r) => r.statusOk).length}/${results.length}` : "skipped (dist mode)", MODE === "live" ? tick(results.every((r) => r.statusOk)) : "–"],
   ["has a title", `${results.filter((r) => r.hasTitle).length}/${results.length}`, tick(results.every((r) => r.hasTitle))],
   ["title differs from homepage", `${results.filter((r) => r.titleUnique).length}/${results.length}`, tick(results.every((r) => r.titleUnique))],
@@ -361,11 +377,21 @@ if (failures.length) {
 }
 
 const ok =
+  coverageOk !== false &&
   failures.length === 0 &&
   blogIndexOk &&
   robotsOk &&
   crawlableOk &&
   wwwOk !== false &&
   noindexOk !== false;
+if (coverageOk === false) {
+  console.log(
+    `\nCOVERAGE DROPPED: ${results.length} ` +
+      `${MODE === "live" ? "sitemap URLs" : "prerendered pages"}, below the floor ` +
+      `of ${MIN_PAGES}.\nEither coverage was lost, or the catalogue shrank ` +
+      `deliberately - if deliberate, lower --min-pages in the same change that ` +
+      `shrinks it.`
+  );
+}
 console.log(ok ? "\nseo-check: PASS\n" : "\nseo-check: FAIL\n");
 process.exit(ok ? 0 : 1);
