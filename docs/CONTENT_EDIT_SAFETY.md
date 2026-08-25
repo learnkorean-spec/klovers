@@ -67,11 +67,13 @@ silently on the first RLS-rejected write. The `service_role` key is
 deliberately not supported here — see "Not recommended" in
 `docs/SEO_GATE1_REPORT.md` Part 2.
 
-*(Separately, and not part of this mechanism: `scripts/deploy-lesson1.mjs`
-has a live Supabase secret key hardcoded in it. That key should be rotated —
-flagged here because this doc is where the "no service_role, no hardcoded
-secrets" rule for content edits is documented, not because that script uses
-this mechanism.)*
+*(Separately, and not part of this mechanism: `scripts/deploy-lesson1.mjs` used
+to have a live-looking Supabase secret key hardcoded in it, flagged here
+because this doc is where the "no service_role, no hardcoded secrets" rule for
+content edits is documented. Closed 2026-08-25 — the credential targeted a
+project abandoned the same day it was created, verified gone from the Supabase
+account entirely. No rotation was needed. Full trail:
+`docs/SECURITY_BACKLOG.md`.)*
 
 ## The local-Postgres rehearsal
 
