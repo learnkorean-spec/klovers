@@ -1,3 +1,4 @@
+
 # The sanctioned way to apply migrations to production.
 #
 # `supabase db push` cannot be used against this project. 112 versions in the
@@ -14,6 +15,19 @@
 # Two modes, dispatched by hand:
 #   plan   (default)  list what would be applied, change nothing
 #   apply             apply them, record them, verify none remain
+#
+# Two jobs, not one. `plan` is read-only (migration list + a dry SQL preview
+# in the step summary) and always runs so a reviewer has something to look
+# at. `apply` is the only job that touches the database, and it runs under
+# the `production-db-apply` GitHub Environment - if that environment has
+# Required reviewers configured, the job pauses and waits for one of them to
+# click Approve in the Actions UI before a single statement executes. Anyone
+# who can dispatch this workflow can still make the *request*; only a
+# required reviewer can make it actually run. If the environment does not
+# exist yet, or has no reviewers configured, this gate does nothing - GitHub
+# auto-creates an unprotected environment on first reference. Create it
+# first (Settings -> Environments -> New environment -> name it exactly
+# `production-db-apply` -> Required reviewers) for the gate to mean anything.
 #
 # See docs/APPLYING_MIGRATIONS.md.
 
@@ -45,9 +59,11 @@ env:
   PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'ewtdgpbybkceokfohhyg' }}
 
 jobs:
-  apply:
-    name: ${{ inputs.mode == 'apply' && 'Apply pending migrations' || 'Plan (no changes)' }}
+  plan:
+    name: ${{ inputs.mode == 'apply' && 'Plan (for review before apply)' || 'Plan (no changes)' }}
     runs-on: ubuntu-latest
+    outputs:
+      count: ${{ steps.plan.outputs.count }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
@@ -132,8 +148,65 @@ jobs:
           echo "Plan mode - nothing was applied."
           echo "Re-run with mode=apply to apply the ${{ steps.plan.outputs.count }} migration(s) listed above."
 
-      - name: Resolve the database connection
+      - name: What happens next (apply mode)
         if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          echo "This dispatch requested apply mode with ${{ steps.plan.outputs.count }} migration(s) pending."
+          echo "The apply job now waits on the production-db-apply environment's required reviewers."
+          echo "Nothing has been applied yet - check the job's Actions page for the Review deployments prompt."
+
+  apply:
+    name: Apply pending migrations
+    needs: plan
+    if: inputs.mode == 'apply' && needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    # This is the lock. A required reviewer on this environment must approve
+    # the run before any step below executes - see the note at the top of
+    # this file for what has to exist in repo Settings for that to be real.
+    environment: production-db-apply
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Supabase CLI
+        run: npx supabase@latest --version
+
+      - name: Link project
+        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+
+      - name: Re-confirm what is pending
+        id: replan
+        run: |
+          set -euo pipefail
+          # Re-derived now, on this job's own runner, against the database's
+          # CURRENT state - not copied from the plan job. Approval can sit
+          # for a while; re-reading here catches anything that changed what
+          # was pending between the plan a reviewer looked at and this
+          # actually running, rather than trusting a stale snapshot.
+          npx supabase@latest migration list | tee migration-list.txt
+
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          python3 scripts/parse-migration-list.py migration-list.txt \
+            --min-rows "$local_migrations" | tee pending.txt
+
+          count=$(grep -oP '(?<=^pending_count=)\d+' pending.txt)
+          grep '^pending=' pending.txt | sed 's/^pending=//' | sort > pending-versions.txt || true
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Pending at apply time: ${count}"
+          cat pending-versions.txt || true
+
+          if [ "$count" = "0" ]; then
+            echo "::notice::Nothing pending any more - the plan job's list was cleared by another apply run while this one waited for approval. Nothing to do."
+          fi
+
+      - name: Resolve the database connection
+        if: steps.replan.outputs.count != '0'
         run: |
           set -euo pipefail
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
@@ -160,7 +233,7 @@ jobs:
           echo "DBUSER=$DBUSER" >> "$GITHUB_ENV"
 
       - name: Apply the pending migrations
-        if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
+        if: steps.replan.outputs.count != '0'
         run: |
           set -euo pipefail
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
@@ -191,7 +264,7 @@ jobs:
           done < pending-versions.txt
 
       - name: Record them as applied
-        if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
+        if: steps.replan.outputs.count != '0'
         run: |
           set -euo pipefail
           # The CLI's own writer, so these rows match every other row in
@@ -200,7 +273,6 @@ jobs:
           npx supabase@latest migration repair --status applied $(tr '\n' ' ' < pending-versions.txt)
 
       - name: Verify nothing is pending and print the state
-        if: inputs.mode == 'apply'
         run: |
           set -euo pipefail
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
