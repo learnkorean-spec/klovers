@@ -1,9 +1,9 @@
 {
-  "batchId": "2026-08-25T10-51-33-366Z",
-  "createdAt": "2026-08-25T10:51:33.366Z",
+  "batchId": "2026-08-26T04-57-30-113Z",
+  "createdAt": "2026-08-26T04:57:30.130Z",
   "source": "scripts/proposals/titles.mjs",
   "description": "Gate 2 Step 1 — repair 42 published article titles (over 60 chars, ellipsis endings, stuffed keyword prefixes / repetition). title only, slug untouched.",
-  "editCount": 42,
+  "editCount": 53,
   "staleCount": 0,
   "edits": [
     {
@@ -397,6 +397,116 @@
       "after": "أفضل تطبيقات تعلم اللغة الكورية 2026",
       "reason": "'تطبيقات' and 'تعلم' both repeated. Kept one clean mention of each.",
       "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-adjectives-100-examples-beginners-ar",
+      "lang": "ar",
+      "before": "100 الصفات الكورية الأساسية مع الجمل سبيل المثال",
+      "after": "100 صفة كورية أساسية مع جمل توضيحية",
+      "reason": "Not a length or repetition defect — a genuinely ungrammatical string. 'سبيل المثال' ('by way of example') needs a preceding 'على' and appears bare with no connector after 'الجمل'; '100' directly before a definite plural noun is non-standard numeral-noun agreement. Reads as a machine-translation artefact, not a sentence a person wrote.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "seollal-korean-lunar-new-year-guide-2026-ar",
+      "lang": "ar",
+      "before": "seollal — السولال — Klovers Korean",
+      "after": "سولال: عيد رأس السنة القمرية الكورية",
+      "reason": "An untranslated English word, its transliteration, and the site's own name appended as if part of the title — not a title, a placeholder. THIS IS THE MOST-READ ARABIC ARTICLE ON THE SITE (10 views, highest of any Arabic page) — the worst title in the catalogue is the one Arabic article people actually reach.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "dokkaebi-korean-goblin-myth-kdrama-ar",
+      "lang": "ar",
+      "before": "dokkaebi — دوكايبي — Klovers Korean",
+      "after": "دوكايبي: أسطورة الغول الكوري في الدراما",
+      "reason": "Same placeholder pattern as the Seollal title: English word, transliteration, site name appended.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "jeoseung-saja-korean-grim-reaper-symbolism-ar",
+      "lang": "ar",
+      "before": "جيوسيونغ ساجا — Jeoseung Saja — Klovers Korean",
+      "after": "جيوسيونغ ساجا: رمزية ملاك الموت الكوري",
+      "reason": "Same placeholder pattern: transliteration, the English title repeated, site name appended.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "what-is-jeong-korean-untranslatable-concept-ar",
+      "lang": "ar",
+      "before": "jeong: ما هو جيونغ (정)؟ المفهوم الكوري الذي لا يمكنك ترجمته",
+      "after": "ما هو جيونغ (정)؟ المفهوم الكوري الذي لا يمكنك ترجمته",
+      "reason": "Opens with a bare lowercase English word ('jeong:') before the Arabic starts — same family as the placeholder titles above, though milder: the Arabic that follows is already a complete, correct sentence once the English lead-in is dropped.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-shopping-phrases-complete-guide-ar",
+      "lang": "ar",
+      "before": "عبارات التسوق الكورية: 50 عبارة تسوق كورية تحتاجها في سيول",
+      "after": "50 عبارة تسوق كورية أساسية تحتاجها في سيول",
+      "reason": "'التسوق'/'تسوق' and 'الكورية'/'كورية' repeated — missed by the original detector because it compared exact strings and never stripped the Arabic definite article 'ال', so 'التسوق' and 'تسوق' looked like different words. Dropped the redundant lead entirely.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-honorifics-formality-levels-grammar-ar",
+      "lang": "ar",
+      "before": "احترام كوري — مستويات الاحترام والرسمية في الكورية",
+      "after": "مستويات الاحترام والرسمية في اللغة الكورية",
+      "reason": "'احترام' (respect) and 'كوري/الكورية' (Korean) both repeated across the dash — same ال-stripping gap. Dropped the redundant lead.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-pronunciation-guide-speaking-ar",
+      "lang": "ar",
+      "before": "نطق كوري: دليل النطق الكوري: اتقن الكلام من اليوم الأول",
+      "after": "دليل النطق الكوري: اتقن الكلام من اليوم الأول",
+      "reason": "Two colons, and 'نطق'/'كوري' repeated in the first two segments — same ال-stripping gap. Dropped the redundant lead, kept the rest unchanged.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-counting-units-classifiers-ar",
+      "lang": "ar",
+      "before": "عدادات كورية: وحدات العد الكورية (المصنفات): الدليل الكامل",
+      "after": "وحدات العد والمصنفات الكورية: الدليل الكامل",
+      "reason": "'عدادات' and 'وحدات العد' are two different Arabic words for the same 'counting units' concept, stated back to back — a synonym-level duplication no exact-string test can catch. This is the Arabic sibling of 'korean-counting-units-classifiers' (English), already in this table for the identical underlying redundancy. FLAG: merges two near-synonymous terms into one — I could not check which term the article body itself actually uses.",
+      "confidence": "medium",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-body-language-social-etiquette-ar",
+      "lang": "ar",
+      "before": "آداب كورية: لغة الجسد الكورية وآداب السلوك الاجتماعي",
+      "after": "لغة الجسد الكورية وآداب السلوك الاجتماعي",
+      "reason": "'آداب' (etiquette) repeated — missed originally because the second occurrence carries the connector prefix 'و' ('وآداب'), which the detector didn't strip before comparing. This is the Arabic sibling of 'korean-body-language-social-etiquette' (English), already in this table for the same defect. Dropped the redundant lead.",
+      "confidence": "high",
+      "column": "title",
+      "stale": false
+    },
+    {
+      "slug": "korean-verb-conjugation-guide-ar",
+      "lang": "ar",
+      "before": "الأفعال الكورية — أصبح تصريف الفعل الكوري سهلاً",
+      "after": "تصريف الفعل الكوري أصبح سهلاً",
+      "reason": "'الأفعال' (verbs, plural) and 'الفعل' (verb, singular) — same root, different number, so exact-string matching missed it. This is the Arabic sibling of 'korean-verb-conjugation-guide' (English), already in this table for the same defect. Dropped the redundant lead, reordered slightly for natural flow.",
+      "confidence": "medium",
       "column": "title",
       "stale": false
     }
