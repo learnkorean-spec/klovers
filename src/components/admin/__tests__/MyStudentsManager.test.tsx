@@ -716,6 +716,23 @@ describe("delete vs void", () => {
     await waitFor(() => expect(deleteBundleMutate).toHaveBeenCalledWith("bundle-1"));
   });
 
+  it("names exactly what the delete confirm is about to remove — number, label, classes, price, currency, purchase date", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    const confirmDialog = screen.getByRole("alertdialog");
+    const text = confirmDialog.textContent!.replace(/\s+/g, " ");
+    expect(text).toContain("Bundle 1");
+    expect(text).toContain("16 English classes");
+    expect(text).toContain("16 classes");
+    expect(text).toMatch(/EGP\s*6,400/);
+    expect(text).toContain("purchased");
+    expect(text).toContain("Wed 12 Aug");
+  });
+
   it("offers Void instead of Delete once a bundle has sessions, and requires a reason", async () => {
     studentBundles = new Map([["solafa", [studentBundle()]]]);
     sessions = [{

@@ -254,12 +254,21 @@ export function useStudentBundles(studentId: string | null) {
  * The confirm and catch-up flows resolve a session's bundle by date across a
  * student's WHOLE bundle history (see resolveBundleForDate), not just the
  * active one, so they need this rather than useBundleBalances.
+ *
+ * Ordered even though resolveBundleForDate no longer depends on input order --
+ * an unordered SELECT feeding a resolver is a latent bug on its own, the exact
+ * shape of the one that mis-resolved a real session to a superseded bundle.
+ * The next person reading this should not have to know it is safe by
+ * accident.
  */
 export function useAllBundles() {
   return useQuery<Map<string, StudentBundle[]>>({
     queryKey: [...BUNDLE_KEYS.balances, "all"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("student_bundles").select(BUNDLE_COLUMNS);
+      const { data, error } = await supabase
+        .from("student_bundles")
+        .select(BUNDLE_COLUMNS)
+        .order("coverage_start", { ascending: false });
       if (error) throw error;
       const map = new Map<string, StudentBundle[]>();
       for (const row of (data ?? []) as StudentBundle[]) {

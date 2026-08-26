@@ -1994,9 +1994,27 @@ const MyStudentsManager = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {confirmDeleteBundle?.label}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              It has no classes recorded against it, so nothing financial is lost. This cannot be undone.
-            </AlertDialogDescription>
+            {/* The FK protects sessions from being orphaned; nothing protects the
+                bundle record itself from a plain click. This restates exactly
+                what is about to disappear -- the same "show what the click will
+                write" principle as the catch-up dialog's D3 summary -- since a
+                zero-session bundle passes the delete guard with nothing else in
+                the way. */}
+            {confirmDeleteBundle && (
+              <AlertDialogDescription asChild>
+                <div className="space-y-1">
+                  <p>
+                    Bundle {numberBundles(allBundles?.get(confirmDeleteBundle.student_id) ?? []).get(confirmDeleteBundle.id)}
+                    {" — "}
+                    <strong>{confirmDeleteBundle.label}</strong>
+                    {" · "}{confirmDeleteBundle.total_classes} classes
+                    {" · "}{formatMoney(confirmDeleteBundle.total_price, confirmDeleteBundle.currency)}
+                    {" · purchased "}{formatSessionDate(confirmDeleteBundle.purchased_on)}
+                  </p>
+                  <p>It has no classes recorded against it, so nothing financial is lost. This cannot be undone.</p>
+                </div>
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
