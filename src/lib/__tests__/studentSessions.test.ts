@@ -242,6 +242,41 @@ describe("resolveBundleForDate", () => {
     const c = bundle({ id: "c", coverage_start: "2026-07-01" });
     expect(resolveBundleForDate([a, b, c], "2026-05-15")?.id).toBe("b");
   });
+
+  describe("a tie on coverage_start", () => {
+    // The exact real-world case: a superseded, zero-price bundle and its live
+    // paid replacement shared the same backfilled coverage_start. The old
+    // implementation picked whichever came first in the input array -- an
+    // accident of unordered query results, not a rule -- and it happened to
+    // land on the superseded one. These assert the fix is a property of the
+    // data, not of array order: every case runs both ways round.
+    it("prefers the active bundle over a completed one on a tie, regardless of input order", () => {
+      const superseded = bundle({ id: "superseded", coverage_start: "2026-08-23", status: "completed", total_price: 0 });
+      const live = bundle({ id: "live", coverage_start: "2026-08-23", status: "active", total_price: 6400 });
+      expect(resolveBundleForDate([superseded, live], "2026-08-25")?.id).toBe("live");
+      expect(resolveBundleForDate([live, superseded], "2026-08-25")?.id).toBe("live");
+    });
+
+    it("falls back to the latest purchased_on when neither tied bundle is active", () => {
+      const older = bundle({ id: "older", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      const newer = bundle({ id: "newer", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-23" });
+      expect(resolveBundleForDate([older, newer], "2026-08-25")?.id).toBe("newer");
+      expect(resolveBundleForDate([newer, older], "2026-08-25")?.id).toBe("newer");
+    });
+
+    it("falls back to id as a final, stable tiebreak when status and purchased_on both tie", () => {
+      const x = bundle({ id: "xxxx", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      const y = bundle({ id: "yyyy", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      expect(resolveBundleForDate([x, y], "2026-08-25")?.id).toBe("xxxx");
+      expect(resolveBundleForDate([y, x], "2026-08-25")?.id).toBe("xxxx");
+    });
+
+    it("never lets a voided bundle win a tie via the active/purchased_on/id fallback", () => {
+      const voided = bundle({ id: "voided", coverage_start: "2026-08-23", status: "cancelled", voided_reason: "mistake", purchased_on: "2026-08-24" });
+      const completed = bundle({ id: "completed", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      expect(resolveBundleForDate([voided, completed], "2026-08-25")?.id).toBe("completed");
+    });
+  });
 });
 
 describe("money is shown as paid, never converted", () => {

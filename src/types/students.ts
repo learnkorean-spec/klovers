@@ -331,7 +331,23 @@ export function formatSessionDate(dateKey: string): string {
  * A voided bundle (status "cancelled") is never resolved to -- it was voided
  * because it was wrong, so a date that would fall in its window is either
  * covered by an earlier bundle or resolves to nothing, surfacing the gap
- * instead of drawing against a bundle already flagged as a mistake.
+ * instead of drawing against a bundle already flagged as a mistake. A
+ * completed bundle stays eligible -- a date genuinely inside a superseded
+ * bundle's own window must keep resolving there, which is the entire reason
+ * coverage_start exists.
+ *
+ * Two bundles can share the same coverage_start (same-day renewal, or two
+ * bundles both backfilled to the same purchased_on). A same-day production
+ * case did: a superseded, zero-price bundle and its live paid replacement
+ * both carried the same date, and picking "the latest coverage_start" alone
+ * left the choice between them to whatever order the caller's array happened
+ * to be in -- not a rule, an accident of how the data was fetched. This is a
+ * pure function of its inputs precisely so that can never happen again:
+ * among every eligible bundle sharing the true maximum coverage_start, ties
+ * break on (a) status "active" over anything else -- a live bundle must never
+ * lose to a superseded one for the same date -- then (b) the latest
+ * purchased_on, then (c) id, so there is always exactly one answer regardless
+ * of input order.
  *
  * Returns null when no (non-voided) bundle covers the date at all.
  */
@@ -339,11 +355,18 @@ export function resolveBundleForDate(
   bundles: StudentBundle[],
   dateKey: string,
 ): StudentBundle | null {
-  let best: StudentBundle | null = null;
-  for (const b of bundles) {
-    if (b.status === "cancelled") continue;
-    if (b.coverage_start > dateKey) continue;
-    if (!best || b.coverage_start > best.coverage_start) best = b;
-  }
-  return best;
+  const eligible = bundles.filter(b => b.status !== "cancelled" && b.coverage_start <= dateKey);
+  if (eligible.length === 0) return null;
+
+  const latestStart = eligible.reduce(
+    (max, b) => (b.coverage_start > max ? b.coverage_start : max), eligible[0].coverage_start,
+  );
+  const tied = eligible.filter(b => b.coverage_start === latestStart);
+  if (tied.length === 1) return tied[0];
+
+  return [...tied].sort((a, b) =>
+    (b.status === "active" ? 1 : 0) - (a.status === "active" ? 1 : 0)
+    || b.purchased_on.localeCompare(a.purchased_on)
+    || a.id.localeCompare(b.id),
+  )[0];
 }
