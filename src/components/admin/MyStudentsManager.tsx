@@ -206,14 +206,19 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
  * screen disagree with the week.
  */
 const BundleBox = ({
-  balance, bundleNumber, unreviewed, onAdd, onCatchUp, onHistory, unconfirmedCount,
+  balance, bundleNumber, bundleCount, unreviewed, onAdd, onCatchUp, onManageBundles, onHistory, unconfirmedCount,
 }: {
   balance: BundleBalance | undefined;
   /** Undefined only when there is no active bundle, matching `balance`. */
   bundleNumber: number | undefined;
+  /** Every bundle this student has ever had, any status -- shown on its own
+   * button so "how many times has this student re-purchased" is answered
+   * without opening anything. */
+  bundleCount: number;
   unreviewed: boolean;
   onAdd: () => void;
   onCatchUp: () => void;
+  onManageBundles: () => void;
   onHistory: () => void;
   unconfirmedCount: number;
 }) => {
@@ -223,9 +228,16 @@ const BundleBox = ({
         <span className="text-xs text-muted-foreground">
           No bundle — classes are not being counted for this student.
         </span>
-        <Button variant="outline" size="sm" onClick={onAdd}>
-          <Wallet className="h-3.5 w-3.5 mr-1" /> Add bundle
-        </Button>
+        <span className="flex flex-wrap gap-1.5">
+          {bundleCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={onManageBundles}>
+              Manage bundles ({bundleCount})
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={onAdd}>
+            <Wallet className="h-3.5 w-3.5 mr-1" /> Add bundle
+          </Button>
+        </span>
       </div>
     );
   }
@@ -285,9 +297,16 @@ const BundleBox = ({
           <CalendarCheck className="h-3.5 w-3.5 mr-1" />
           Catch up{unconfirmedCount > 0 ? ` (${unconfirmedCount})` : ""}
         </Button>
+        <Button variant="ghost" size="sm" onClick={onManageBundles}>
+          Manage bundles ({bundleCount})
+        </Button>
         <Button variant="ghost" size="sm" onClick={onHistory}>
           <History className="h-3.5 w-3.5 mr-1" /> History
         </Button>
+        {/* Kept on the card alongside Manage bundles, not folded in, while
+            historical entry is still happening -- moving this a click deeper
+            costs a repeated cost for a one-time tidiness win. Revisit once
+            the backfill is done; it also lives inside Manage bundles now. */}
         <Button variant="ghost" size="sm" onClick={onAdd}>
           <Wallet className="h-3.5 w-3.5 mr-1" /> New bundle
         </Button>
@@ -339,12 +358,18 @@ const BundleEditHistory = ({ bundleId }: { bundleId: string }) => {
  * put right. Undo deletes the row and the balance is recounted — there is no
  * stored total to repair.
  */
-const StudentHistory = ({
-  studentId, onUndo, undoing, onEditBundle, onVoidBundle, onDeleteBundle, deletingBundleId,
+/**
+ * Which bundles a student has, how many, and their state -- the single place
+ * that answers "how many times has this student re-purchased" and manages
+ * that history. Split out from what used to be one combined History dialog:
+ * Re went looking for Edit/Delete/Void on the card, where every other bundle
+ * action already lives, not one dialog deeper. This is that surface.
+ */
+const BundleManager = ({
+  studentId, onAddBundle, onEditBundle, onVoidBundle, onDeleteBundle, deletingBundleId,
 }: {
   studentId: string;
-  onUndo: (sessionId: string) => void;
-  undoing: boolean;
+  onAddBundle: () => void;
   onEditBundle: (b: StudentBundle) => void;
   onVoidBundle: (b: StudentBundle) => void;
   onDeleteBundle: (b: StudentBundle) => void;
@@ -356,7 +381,7 @@ const StudentHistory = ({
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading history…
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading bundles…
       </div>
     );
   }
@@ -373,10 +398,15 @@ const StudentHistory = ({
   const bundleNumbers = numberBundles(bundles);
 
   return (
-    <div className="space-y-4">
-      {bundles.length > 0 && (
+    <div className="space-y-3">
+      <Button variant="outline" size="sm" onClick={onAddBundle}>
+        <Wallet className="h-3.5 w-3.5 mr-1" /> New bundle
+      </Button>
+
+      {bundles.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">No bundles yet.</p>
+      ) : (
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bundles</p>
           {bundles.map(b => {
             const used = usedByBundle.get(b.id) ?? 0;
             const remaining = b.total_classes - used;
@@ -431,30 +461,51 @@ const StudentHistory = ({
           })}
         </div>
       )}
+    </div>
+  );
+};
 
-      <div className="space-y-1">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Confirmed classes ({sessions.filter(x => x.counted).length} counted)
-        </p>
-        {sessions.length === 0 && (
-          <p className="text-sm text-muted-foreground py-2">Nothing confirmed yet.</p>
-        )}
-        <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
-          {sessions.map(x => (
-            <div key={x.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/30 px-3 py-2 text-sm">
-              <span className="flex items-center gap-2">
-                <span className="text-muted-foreground w-24">{formatSessionDate(x.session_date)}</span>
-                <span>{x.start_time.slice(0, 5)}</span>
-                {x.counted
-                  ? <Badge variant="outline" className="text-[10px]">1 credit</Badge>
-                  : <Badge variant="outline" className="text-[10px] text-muted-foreground">not held</Badge>}
-              </span>
-              <Button variant="ghost" size="sm" disabled={undoing} onClick={() => onUndo(x.id)}>
-                Undo
-              </Button>
-            </div>
-          ))}
-        </div>
+/** The class-by-class confirmed-session ledger only -- bundles live in BundleManager now. */
+const SessionLedger = ({
+  studentId, onUndo, undoing,
+}: {
+  studentId: string;
+  onUndo: (sessionId: string) => void;
+  undoing: boolean;
+}) => {
+  const { data: sessions = [], isLoading } = useAllStudentSessions(studentId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading history…
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        Confirmed classes ({sessions.filter(x => x.counted).length} counted)
+      </p>
+      {sessions.length === 0 && (
+        <p className="text-sm text-muted-foreground py-2">Nothing confirmed yet.</p>
+      )}
+      <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+        {sessions.map(x => (
+          <div key={x.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/30 px-3 py-2 text-sm">
+            <span className="flex items-center gap-2">
+              <span className="text-muted-foreground w-24">{formatSessionDate(x.session_date)}</span>
+              <span>{x.start_time.slice(0, 5)}</span>
+              {x.counted
+                ? <Badge variant="outline" className="text-[10px]">1 credit</Badge>
+                : <Badge variant="outline" className="text-[10px] text-muted-foreground">not held</Badge>}
+            </span>
+            <Button variant="ghost" size="sm" disabled={undoing} onClick={() => onUndo(x.id)}>
+              Undo
+            </Button>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -508,6 +559,7 @@ const MyStudentsManager = () => {
   // something dumped on her.
   const [catchUpShowOlder, setCatchUpShowOlder] = useState(false);
   const [historyFor, setHistoryFor] = useState<MyStudentWithClasses | null>(null);
+  const [manageBundlesFor, setManageBundlesFor] = useState<MyStudentWithClasses | null>(null);
 
   const totals = useMemo(() => {
     const active = students.filter(s => s.status === "active");
@@ -1165,12 +1217,14 @@ const MyStudentsManager = () => {
                 const active = (allBundles?.get(student.id) ?? []).find(b => b.status === "active");
                 return active ? numberBundles(allBundles?.get(student.id) ?? []).get(active.id) : undefined;
               })()}
+              bundleCount={(allBundles?.get(student.id) ?? []).length}
               unreviewed={(allBundles?.get(student.id) ?? []).some(
                 b => b.status === "active" && b.coverage_start_confirmed_at === null,
               )}
               unconfirmedCount={unconfirmedCount(student.id)}
               onAdd={() => openBundleDialog(student)}
               onCatchUp={() => openCatchUp(student)}
+              onManageBundles={() => setManageBundlesFor(student)}
               onHistory={() => setHistoryFor(student)}
             />
 
@@ -1870,20 +1924,43 @@ const MyStudentsManager = () => {
         </DialogContent>
       </Dialog>
 
-      {/* History dialog */}
+      {/* History dialog — the class-by-class ledger only; bundles live in Manage bundles. */}
       <Dialog open={!!historyFor} onOpenChange={o => !o && setHistoryFor(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>History · {historyFor?.full_name}</DialogTitle>
             <DialogDescription>
-              Every class ever confirmed, and the bundles they ran against. Undo puts the credit back.
+              Every class ever confirmed. Undo puts the credit back.
             </DialogDescription>
           </DialogHeader>
           {historyFor && (
-            <StudentHistory
+            <SessionLedger
               studentId={historyFor.id}
               undoing={unconfirmSession.isPending}
               onUndo={undoConfirm}
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryFor(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage bundles dialog — which bundles this student has, how many, and
+          their state, in one place; the surface Re went looking for on the
+          card. New bundle lives here too, alongside Edit/Void/Delete. */}
+      <Dialog open={!!manageBundlesFor} onOpenChange={o => !o && setManageBundlesFor(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Manage bundles · {manageBundlesFor?.full_name}</DialogTitle>
+            <DialogDescription>
+              Every bundle this student has ever had, and what is left on each.
+            </DialogDescription>
+          </DialogHeader>
+          {manageBundlesFor && (
+            <BundleManager
+              studentId={manageBundlesFor.id}
+              onAddBundle={() => openBundleDialog(manageBundlesFor)}
               onEditBundle={openEditBundleDialog}
               onVoidBundle={b => setVoidDraft({ bundle: b, reason: "" })}
               onDeleteBundle={setConfirmDeleteBundle}
@@ -1891,7 +1968,7 @@ const MyStudentsManager = () => {
             />
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setHistoryFor(null)}>Close</Button>
+            <Button variant="outline" onClick={() => setManageBundlesFor(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
