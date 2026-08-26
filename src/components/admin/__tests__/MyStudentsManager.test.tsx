@@ -629,7 +629,7 @@ describe("the catch-up queue has no expiry", () => {
   });
 });
 
-describe("bundle numbering and negative balance in history", () => {
+describe("bundle numbering and negative balance in Manage bundles", () => {
   it("numbers bundles per student ordered by coverage_start, oldest first", () => {
     studentBundles = new Map([["solafa", [
       studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed" }),
@@ -637,7 +637,7 @@ describe("bundle numbering and negative balance in history", () => {
     ]]]);
     balances = new Map([["solafa", balance({ bundle_id: "b2", label: "Renewal" })]]);
     draw();
-    click(screen.getByRole("button", { name: /^History$/i }));
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText(/Bundle 1 —/)).toBeInTheDocument();
     expect(within(dialog).getByText(/Bundle 2 —/)).toBeInTheDocument();
@@ -656,7 +656,7 @@ describe("bundle numbering and negative balance in history", () => {
       outcome: "attended" as const, counted: true, confirmed_at: "2026-01-15T00:00:00Z", note: null,
     }));
     draw();
-    click(screen.getByRole("button", { name: /^History$/i }));
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
     expect(within(screen.getByRole("dialog")).getByText("1 over")).toBeInTheDocument();
   });
 });
@@ -689,7 +689,7 @@ describe("edit bundle", () => {
   it("prefills the dialog with the bundle's own dates and saves through useUpdateBundle, marking it reviewed", async () => {
     studentBundles = new Map([["solafa", [studentBundle()]]]);
     draw();
-    click(screen.getByRole("button", { name: /^History$/i }));
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
     click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Edit$/i }));
 
     expect(screen.getByLabelText("Purchased on")).toHaveValue("2026-08-12");
@@ -709,7 +709,7 @@ describe("delete vs void", () => {
     studentBundles = new Map([["solafa", [studentBundle()]]]);
     sessions = [];
     draw();
-    click(screen.getByRole("button", { name: /^History$/i }));
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
     click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
 
     click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }));
@@ -724,10 +724,10 @@ describe("delete vs void", () => {
       outcome: "attended", counted: true, confirmed_at: "2026-08-17T15:00:00Z", note: null,
     }];
     draw();
-    click(screen.getByRole("button", { name: /^History$/i }));
-    const historyDialog = screen.getByRole("dialog");
-    expect(within(historyDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
-    click(within(historyDialog).getByRole("button", { name: /^Void$/i }));
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    click(within(manageDialog).getByRole("button", { name: /^Void$/i }));
 
     const voidButton = screen.getByRole("button", { name: /Void bundle/i });
     expect(voidButton).toBeDisabled();
@@ -790,5 +790,35 @@ describe("a session with no bundle covering its date is a door, not a wall", () 
     click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /Fix start date/i })[0]);
 
     expect(screen.getByText("Edit bundle")).toBeInTheDocument();
+  });
+});
+
+describe("bundle actions live on the card, where Re looks — not a click deeper", () => {
+  it("shows the bundle count on the card itself, with no dialog open", () => {
+    studentBundles = new Map([["solafa", [
+      studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed" }),
+      studentBundle({ id: "b2", coverage_start: "2026-06-01", status: "active", label: "Renewal" }),
+    ]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", label: "Renewal" })]]);
+    draw();
+    // The count is answered by the button label alone -- no click, no scroll.
+    expect(screen.getByRole("button", { name: "Manage bundles (2)" })).toBeInTheDocument();
+  });
+
+  it("keeps New bundle on the card as well as inside Manage bundles, during the historical-entry period", () => {
+    draw();
+    expect(screen.getByRole("button", { name: /New bundle/i })).toBeInTheDocument();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: /New bundle/i })).toBeInTheDocument();
+  });
+
+  it("History no longer shows bundle actions — it is the class-by-class ledger only", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    draw();
+    click(screen.getByRole("button", { name: /^History$/i }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByRole("button", { name: /^Edit$/i })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: /New bundle/i })).not.toBeInTheDocument();
+    expect(within(dialog).queryByText(/16 English classes/)).not.toBeInTheDocument();
   });
 });
