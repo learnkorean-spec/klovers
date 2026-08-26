@@ -1,0 +1,414 @@
+
+# The sanctioned way to apply a reviewed content-edit proposal (title
+# rewrites, and every later Gate 2 step that reuses the same mechanism -
+# FAQ blocks, internal links, body expansion) to production.
+#
+# Mirrors .github/workflows/apply-migrations.yml's pattern on purpose: that
+# pattern has run thirteen times against production with no incident.
+# Dispatch plan, review the output, dispatch apply.
+#
+# Three modes, dispatched by hand:
+#   plan      (default)  print the proposal's full before/after table,
+#                         print the file's checksum, change nothing.
+#   apply                re-check the checksum against what plan printed,
+#                         then run `content:apply` against the same file.
+#   rollback              restore a batch from the backup artifact this
+#                         workflow uploaded on its apply run.
+#
+# `plan` needs no Supabase credential of any kind - everything it prints
+# comes from the proposal file already sitting in the repo (writeProposal()
+# wrote it before this workflow ever runs; nothing here re-derives it from a
+# live database read). `apply` and `rollback` are the only jobs that write,
+# and both run under the `production-content-apply` GitHub Environment - if
+# that environment has Required reviewers configured, the job pauses and
+# waits for one of them to click Approve in the Actions UI before
+# scripts/content-edit-cli.mjs ever runs. Anyone who can dispatch this
+# workflow can still make the *request*; only a required reviewer can make
+# it actually run. If the environment does not exist yet, or has no
+# reviewers configured, this gate does nothing - GitHub auto-creates an
+# unprotected environment on first reference. Create it first (Settings ->
+# Environments -> New environment -> name it exactly
+# `production-content-apply` -> Required reviewers) for the gate to mean
+# anything, same as `production-db-apply` for migrations.
+#
+# See docs/APPLYING_CONTENT_EDITS.md.
+
+name: Apply Content Edits
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan prints the table and a checksum; apply writes it; rollback undoes a prior apply"
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+          - rollback
+      proposal_path:
+        description: "content-edits/proposals/<batchId>.proposal.json — required for plan and apply"
+        required: false
+        type: string
+      expected_checksum:
+        description: "sha256 that the plan run printed for this exact file — required for apply"
+        required: false
+        type: string
+      backup_path:
+        description: "content-edits/backups/<batchId>.backup.json — required for rollback"
+        required: false
+        type: string
+      backup_run_id:
+        description: "rollback only: the Apply Content Edits run ID to pull the backup artifact from, if backup_path isn't committed to the repo yet"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Never let two runs touch the database at once.
+concurrency:
+  group: apply-content-edits
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan (no credential, no changes)
+    if: inputs.mode == 'plan'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate inputs
+        run: |
+          set -euo pipefail
+          if [ -z "${{ inputs.proposal_path }}" ]; then
+            echo "::error::proposal_path is required for mode=plan"
+            exit 1
+          fi
+          case "${{ inputs.proposal_path }}" in
+            content-edits/proposals/*.proposal.json) ;;
+            *) echo "::error::proposal_path must be content-edits/proposals/<batchId>.proposal.json"; exit 1 ;;
+          esac
+
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Self-test the summary renderer
+        run: npx vitest run scripts/render-proposal-summary.test.mjs
+
+      - name: Render the before/after table and checksum
+        env:
+          PROPOSAL_PATH: ${{ inputs.proposal_path }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$PROPOSAL_PATH" ]; then
+            echo "::error::$PROPOSAL_PATH does not exist in this checkout."
+            exit 1
+          fi
+
+          checksum=$(sha256sum "$PROPOSAL_PATH" | awk '{print $1}')
+          edit_count=$(jq -r '.editCount' "$PROPOSAL_PATH")
+          stale_count=$(jq -r '.staleCount' "$PROPOSAL_PATH")
+
+          {
+            echo "**File:** \`$PROPOSAL_PATH\`"
+            echo
+            echo "**sha256:** \`$checksum\`"
+            echo
+            echo "Copy this checksum into the apply dispatch's expected_checksum field — apply"
+            echo "refuses to run if it does not match this file at apply time."
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          node scripts/render-proposal-summary.mjs "$PROPOSAL_PATH" >> "$GITHUB_STEP_SUMMARY"
+
+          echo "-----------------------------------------------------------"
+          echo "Proposal: $PROPOSAL_PATH"
+          echo "Edits: $edit_count (stale: $stale_count)"
+          echo "sha256: $checksum"
+          echo "-----------------------------------------------------------"
+
+          if [ "$stale_count" != "0" ]; then
+            echo "::warning::$stale_count edit(s) are stale — apply will refuse to run this file as-is. See the stale section above."
+          fi
+
+          echo "Plan mode — nothing was written. Re-run this workflow with mode=apply, the same"
+          echo "proposal_path, and expected_checksum=$checksum to write it."
+
+  apply:
+    name: Apply (writes to production)
+    if: inputs.mode == 'apply'
+    runs-on: ubuntu-latest
+    # This is the lock. A required reviewer on this environment must approve
+    # the run before any step below executes — see the note at the top of
+    # this file for what has to exist in repo Settings for that to be real.
+    environment: production-content-apply
+    steps:
+      - name: Validate inputs
+        run: |
+          set -euo pipefail
+          if [ -z "${{ inputs.proposal_path }}" ] || [ -z "${{ inputs.expected_checksum }}" ]; then
+            echo "::error::proposal_path and expected_checksum are both required for mode=apply"
+            exit 1
+          fi
+          case "${{ inputs.proposal_path }}" in
+            content-edits/proposals/*.proposal.json) ;;
+            *) echo "::error::proposal_path must be content-edits/proposals/<batchId>.proposal.json"; exit 1 ;;
+          esac
+
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Verify the file matches the checksum a plan run reported
+        env:
+          PROPOSAL_PATH: ${{ inputs.proposal_path }}
+          EXPECTED_CHECKSUM: ${{ inputs.expected_checksum }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$PROPOSAL_PATH" ]; then
+            echo "::error::$PROPOSAL_PATH does not exist in this checkout."
+            exit 1
+          fi
+          actual=$(sha256sum "$PROPOSAL_PATH" | awk '{print $1}')
+          if [ "$actual" != "$EXPECTED_CHECKSUM" ]; then
+            echo "::error::Checksum mismatch. Expected $EXPECTED_CHECKSUM (from your plan run), got $actual."
+            echo "::error::The proposal file has changed since you last ran plan. Re-run plan, review the new table, and dispatch apply again with the new checksum."
+            exit 1
+          fi
+          echo "Checksum verified: $actual"
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Render the before/after table being applied, for the record
+        env:
+          PROPOSAL_PATH: ${{ inputs.proposal_path }}
+        run: |
+          set -euo pipefail
+          {
+            echo "# Applying — this is what is about to be written"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          node scripts/render-proposal-summary.mjs "$PROPOSAL_PATH" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apply the proposal
+        id: apply
+        env:
+          PROPOSAL_PATH: ${{ inputs.proposal_path }}
+          SUPABASE_URL: https://ewtdgpbybkceokfohhyg.supabase.co
+          # The anon/publishable key is not secret. It is already shipped in
+          # every visitor's JS bundle (src/integrations/supabase/client.ts)
+          # and is meaningless without an admin session — every write below
+          # is gated by RLS's has_role(auth.uid(), 'admin') check, not by
+          # keeping this value hidden. Neither of the two values that ARE
+          # secret (CONTENT_EDIT_ADMIN_EMAIL / _PASSWORD, right below) is
+          # ever echoed, written to a file, or included in any artifact by
+          # any step in this workflow — they are consumed only inside
+          # scripts/lib/content-edit-supabase-store.mjs's own Supabase Auth
+          # call, which never logs them either.
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dGRncGJ5YmtjZW9rZm9oaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mzg4NzAsImV4cCI6MjA4OTUxNDg3MH0.KPKgPrhms2frDi09sdNChScBrHS00O7UhX2k8SArTxs
+          CONTENT_EDIT_ADMIN_EMAIL: ${{ secrets.CONTENT_EDIT_ADMIN_EMAIL }}
+          CONTENT_EDIT_ADMIN_PASSWORD: ${{ secrets.CONTENT_EDIT_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          npm run content:apply -- "$PROPOSAL_PATH" | tee apply-output.txt
+
+          batch_id=$(jq -r '.batchId' "$PROPOSAL_PATH")
+          expected=$(jq -r '.editCount' "$PROPOSAL_PATH")
+
+          if grep -q '^SKIPPED:' apply-output.txt; then
+            # applyProposal()'s own idempotency guard refused a double-apply of
+            # this exact batch — nothing was written (again). Not a mismatch,
+            # not a failure: report it plainly and stop, no artifact to upload.
+            {
+              echo
+              echo "## Skipped — already applied"
+              echo
+              echo "$(grep '^SKIPPED:' apply-output.txt)"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "batch_id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          applied=$(grep -oP '(?<=Applied batch )\S+(?=:)' apply-output.txt || true)
+          counts=$(grep -oP '\d+/\d+(?= edits)' apply-output.txt || true)
+          applied_count=$(echo "$counts" | cut -d/ -f1)
+          total_count=$(echo "$counts" | cut -d/ -f2)
+
+          echo "batch_id=$batch_id" >> "$GITHUB_OUTPUT"
+
+          {
+            echo
+            echo "## Applied"
+            echo
+            echo "**Batch:** \`$batch_id\`"
+            echo "**Rows changed:** ${applied_count:-?} / ${total_count:-?} (proposal declared $expected)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$applied_count" ] || [ "$applied_count" != "$total_count" ] || [ "$total_count" != "$expected" ] || [ "$batch_id" != "$applied" ]; then
+            echo "::error::Row count or batch mismatch — reported batch=${applied:-?} applied=${applied_count:-?} total=${total_count:-?} proposal batchId=$batch_id editCount=$expected. Check the run log above before trusting this batch." >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Row count or batch mismatch — reported batch=${applied:-?} applied=${applied_count:-?} total=${total_count:-?} proposal batchId=$batch_id editCount=$expected."
+            exit 1
+          fi
+
+          echo "$expected/$expected rows changed, matching the proposal's declared edit count."
+
+      - name: Upload the backup as a workflow artifact
+        if: always() && steps.apply.outputs.batch_id != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-edit-backup-${{ steps.apply.outputs.batch_id }}
+          path: content-edits/backups/${{ steps.apply.outputs.batch_id }}.backup.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Upload the updated ledger as a workflow artifact
+        if: always() && steps.apply.outputs.batch_id != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-edit-ledger-${{ steps.apply.outputs.batch_id }}
+          path: content-edits/ledger.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Next step
+        if: steps.apply.outputs.batch_id != ''
+        run: |
+          echo "Backup uploaded as artifact content-edit-backup-${{ steps.apply.outputs.batch_id }} (90-day retention)."
+          echo "Ledger uploaded as artifact content-edit-ledger-${{ steps.apply.outputs.batch_id }} (90-day retention)."
+          echo "Commit content-edits/backups/${{ steps.apply.outputs.batch_id }}.backup.json and the updated"
+          echo "content-edits/ledger.json in their own small PR now — download them from this run's"
+          echo "Artifacts tab if nobody has a local checkout with them. They are the only rollback path."
+
+  rollback:
+    name: Rollback (writes to production)
+    if: inputs.mode == 'rollback'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # only rollback needs this, to pull a backup artifact from a prior run
+    environment: production-content-apply
+    steps:
+      - name: Validate inputs
+        run: |
+          set -euo pipefail
+          if [ -z "${{ inputs.backup_path }}" ]; then
+            echo "::error::backup_path is required for mode=rollback"
+            exit 1
+          fi
+          case "${{ inputs.backup_path }}" in
+            content-edits/backups/*.backup.json) ;;
+            *) echo "::error::backup_path must be content-edits/backups/<batchId>.backup.json"; exit 1 ;;
+          esac
+
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Work out the artifact name to fetch
+        if: inputs.backup_run_id != ''
+        id: artifact_name
+        env:
+          BACKUP_PATH: ${{ inputs.backup_path }}
+        run: |
+          set -euo pipefail
+          batch_id=$(basename "$BACKUP_PATH" .backup.json)
+          echo "name=content-edit-backup-${batch_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the backup artifact, if the file isn't already committed
+        if: inputs.backup_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact_name.outputs.name }}
+          run-id: ${{ inputs.backup_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: content-edits/backups/
+
+      - name: Confirm the backup file is present
+        env:
+          BACKUP_PATH: ${{ inputs.backup_path }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$BACKUP_PATH" ]; then
+            echo "::error::$BACKUP_PATH not found in the checkout and no usable backup_run_id was given (or the artifact didn't contain it)."
+            exit 1
+          fi
+
+      - name: Print what is about to be restored
+        env:
+          BACKUP_PATH: ${{ inputs.backup_path }}
+        run: |
+          set -euo pipefail
+          batch_id=$(jq -r '.batchId' "$BACKUP_PATH")
+          entry_count=$(jq -r '.entries | length' "$BACKUP_PATH")
+          {
+            echo "# Rolling back batch \`$batch_id\`"
+            echo
+            echo "**Entries to restore:** $entry_count"
+            echo
+            echo "| slug | lang | column | restoring to |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.entries[] | "| \(.slug) | \(.lang) | \(.column) | \(.before | gsub("\\|";"\\|")) |"' "$BACKUP_PATH" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Roll back
+        env:
+          BACKUP_PATH: ${{ inputs.backup_path }}
+          SUPABASE_URL: https://ewtdgpbybkceokfohhyg.supabase.co
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dGRncGJ5YmtjZW9rZm9oaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mzg4NzAsImV4cCI6MjA4OTUxNDg3MH0.KPKgPrhms2frDi09sdNChScBrHS00O7UhX2k8SArTxs
+          CONTENT_EDIT_ADMIN_EMAIL: ${{ secrets.CONTENT_EDIT_ADMIN_EMAIL }}
+          CONTENT_EDIT_ADMIN_PASSWORD: ${{ secrets.CONTENT_EDIT_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          npm run content:rollback -- "$BACKUP_PATH" | tee rollback-output.txt
+
+          if grep -q '^SKIPPED:' rollback-output.txt; then
+            # rollbackBatch()'s own idempotency guard refused to roll back this
+            # batch a second time — nothing was written (again). Not a
+            # mismatch, not a failure.
+            {
+              echo
+              echo "## Skipped — already rolled back"
+              echo
+              echo "$(grep '^SKIPPED:' rollback-output.txt)"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          expected=$(jq -r '.entries | length' "$BACKUP_PATH")
+          counts=$(grep -oP '\d+/\d+(?= entries restored)' rollback-output.txt || true)
+          restored_count=$(echo "$counts" | cut -d/ -f1)
+          total_count=$(echo "$counts" | cut -d/ -f2)
+
+          {
+            echo
+            echo "## Rolled back"
+            echo
+            echo "**Entries restored:** ${restored_count:-?} / ${total_count:-?} (backup declared $expected)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$restored_count" ] || [ "$restored_count" != "$total_count" ] || [ "$total_count" != "$expected" ]; then
+            echo "::error::Row count mismatch — restored=${restored_count:-?} total=${total_count:-?} backup entry count=$expected." >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Row count mismatch — restored=${restored_count:-?} total=${total_count:-?} backup entry count=$expected."
+            exit 1
+          fi
