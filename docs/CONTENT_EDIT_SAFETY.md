@@ -18,6 +18,16 @@ npm run content:rollback -- content-edits/backups/<batchId>.backup.json
 npm run content:status
 ```
 
+**Against production, `apply` and `rollback` are run through the Apply
+Content Edits GitHub Actions workflow, not by hand.** See
+[`docs/APPLYING_CONTENT_EDITS.md`](./APPLYING_CONTENT_EDITS.md) — it's the
+same plan-then-apply, secrets-live-in-GitHub-Actions pattern
+`docs/APPLYING_MIGRATIONS.md` already uses for the database, and for the
+same reason: `CONTENT_EDIT_ADMIN_EMAIL` / `CONTENT_EDIT_ADMIN_PASSWORD` are a
+real admin account's real credentials, and those don't belong on a laptop or
+in an AI session's environment. `content:status` is read-only and fine to
+run anywhere.
+
 There is deliberately no generic `content:propose` command — computing *what*
 to propose is specific to each step (a title rewrite, an FAQ block, a link).
 Each step gets its own small script (e.g. `scripts/proposals/titles.mjs` in
