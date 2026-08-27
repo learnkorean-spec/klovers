@@ -9,6 +9,7 @@
 import { describe, it, expect } from "vitest";
 import {
   buildExpectedSessions,
+  bundleTone,
   formatMoney,
   formatSessionDate,
   localDateKey,
@@ -316,5 +317,19 @@ describe("formatSessionDate", () => {
   it("names the weekday so a catch-up row is unambiguous", () => {
     expect(formatSessionDate("2026-08-17")).toBe("Mon 17 Aug");
     expect(formatSessionDate("2026-08-23")).toBe("Sun 23 Aug");
+  });
+});
+
+describe("bundleTone", () => {
+  it("is clean when usage exactly matches the total", () => {
+    expect(bundleTone(4, 4)).toBe("clean");
+  });
+
+  it("is unused when a bundle finished with classes left over", () => {
+    expect(bundleTone(2, 4)).toBe("unused");
+  });
+
+  it("is negative when usage overran the total", () => {
+    expect(bundleTone(5, 4)).toBe("negative");
   });
 });

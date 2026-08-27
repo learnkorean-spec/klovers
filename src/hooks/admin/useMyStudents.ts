@@ -324,6 +324,36 @@ export function useAllStudentSessions(studentId: string | null) {
 }
 
 /**
+ * Per-bundle usage across every student, in one query: how many counted
+ * sessions each bundle carries, and the date of the most recent one.
+ * useBundleBalances only ever covers the ACTIVE bundle per student, so a
+ * completed bundle's own usage — what the card's completed-bundle line
+ * needs — has nowhere else to come from.
+ */
+export function useBundleSessionSummaries() {
+  return useQuery<Map<string, { used: number; lastDate: string | null }>>({
+    queryKey: [...BUNDLE_KEYS.sessions, "bundle-summary"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_class_sessions")
+        .select("bundle_id, session_date, counted")
+        .eq("counted", true)
+        .order("session_date", { ascending: true });
+      if (error) throw error;
+      const map = new Map<string, { used: number; lastDate: string | null }>();
+      for (const row of (data ?? []) as { bundle_id: string; session_date: string }[]) {
+        const cur = map.get(row.bundle_id) ?? { used: 0, lastDate: null };
+        cur.used += 1;
+        cur.lastDate = row.session_date; // ascending order -- last write is the latest date
+        map.set(row.bundle_id, cur);
+      }
+      return map;
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
  * Confirmed sessions across all students within the catch-up window. Loaded in
  * one query rather than per student: the window is short and the rows are tiny,
  * and one round trip keeps the confirm strip from flickering student by student.

@@ -370,3 +370,19 @@ export function resolveBundleForDate(
     || a.id.localeCompare(b.id),
   )[0];
 }
+
+export type BundleTone = "clean" | "unused" | "negative";
+
+/**
+ * The one place that decides what a bundle's usage reads as. Two surfaces
+ * draw a bundle's state from this — the completed-bundle history line on the
+ * student card, and the queued zero-session context work for the same card —
+ * so both read it off this function rather than inventing adjacent colour
+ * rules for what is really the same three-way fact: finished clean, finished
+ * with classes left unspent, or overran.
+ */
+export function bundleTone(usedClasses: number, totalClasses: number): BundleTone {
+  if (usedClasses > totalClasses) return "negative";
+  if (usedClasses < totalClasses) return "unused";
+  return "clean";
+}
