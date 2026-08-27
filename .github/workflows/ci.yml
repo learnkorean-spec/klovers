@@ -57,7 +57,7 @@ jobs:
           # This PR's own new migration version numbers (added files only -
           # renaming or editing an existing one isn't a collision risk here).
           mine=$(git diff --name-only --diff-filter=A "$BASE" "$HEAD" -- supabase/migrations/ \
-            | xargs -n1 basename 2>/dev/null \
+            | xargs -r -n1 basename 2>/dev/null \
             | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p' \
             | sort -u)
 
@@ -73,7 +73,7 @@ jobs:
           #    what happened on 27 Aug.
           git fetch origin main -q
           main_versions=$(git ls-tree origin/main -- supabase/migrations/ --name-only \
-            | xargs -n1 basename 2>/dev/null \
+            | xargs -r -n1 basename 2>/dev/null \
             | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p' \
             | sort -u)
 
@@ -93,7 +93,7 @@ jobs:
           for branch in $other_branches; do
             git fetch origin "$branch" -q 2>/dev/null || continue
             other_versions=$(git ls-tree "origin/$branch" -- supabase/migrations/ --name-only 2>/dev/null \
-              | xargs -n1 basename 2>/dev/null \
+              | xargs -r -n1 basename 2>/dev/null \
               | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p')
             for v in $mine; do
               if echo "$other_versions" | grep -qx "$v"; then
