@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 /**
- * titles.mjs — Gate 2 Step 1: repair the 42 published article titles that
+ * titles.mjs — Gate 2 Step 1: repair the published article titles that
  * violate one of: over 60 characters, end in an ellipsis (an incomplete
- * phrase), or repeat the same word/concept twice via a stuffed keyword
- * prefix ("keyword — Real Title").
+ * phrase), repeat the same word/concept twice via a stuffed keyword prefix
+ * ("keyword — Real Title"), are English/transliteration placeholders, or are
+ * otherwise ungrammatical, mistranslated, or factually wrong (v3: 6 Arabic
+ * corrections from a native-speaker second reading — see each edit's
+ * `reason`). Current count: 51 (26 en, 25 ar). v3 pulled 2 Arabic titles
+ * pending a retirement-vs-title-fix decision on a likely duplicate pair —
+ * see the comment above where they used to sit in EDITS.
  *
  * HARD CONSTRAINT: this touches `title` only. It never proposes a `slug`
  * change — slugs are live URLs.
  *
- * The 42 titles and their replacements are hand-curated, not generated —
+ * The titles and their replacements are hand-curated, not generated —
  * this script's job is to package that curation into the standard
  * propose/apply/rollback format from scripts/lib/content-edit.mjs, not to
  * decide the titles itself. Every edit carries `reason`; Arabic edits also
@@ -263,9 +268,9 @@ export const EDITS = [
     slug: "korean-dating-phrases-kdrama-lines-ar",
     lang: "ar",
     before: "عبارات التعارف الكورية — عبارات المواعدة الكورية وخطوط الدرا",
-    after: "عبارات المواعدة الكورية وأشهر خطوط الدراما",
-    reason: "'عبارات' repeated, and 'التعارف' (getting acquainted) / 'المواعدة' (dating) are near-duplicate concepts stacked together, plus the title was truncated. FLAG: I chose 'المواعدة' over 'التعارف' based on the slug and keywords, but have not read the article body to confirm which concept it actually emphasizes — please check before approving.",
-    confidence: "medium",
+    after: "عبارات المواعدة الكورية وأشهر اقتباسات الدراما",
+    reason: "MISTRANSLATION, caught in Re's GM's second Arabic reading: v1's 'خطوط الدراما' translates 'drama lines' literally — Arabic 'خطوط' means geometric lines or stripes, never dialogue. Replaced with 'اقتباسات' (quotes/lines of dialogue), the correct term. 'عبارات' repeated and 'التعارف'/'المواعدة' stacked near-duplicates are also fixed, as in v1.",
+    confidence: "high",
   },
   {
     slug: "korean-drinking-culture-soju-etiquette-ar",
@@ -275,14 +280,22 @@ export const EDITS = [
     reason: "69 characters, 9 over. Trimmed the relative clause 'والقواعد التي يجب أن يعرفها' (and the rules every beginner should know) to 'لكل مبتدئ' (for every beginner) — loses the explicit word 'rules' though 'etiquette' still carries that meaning.",
     confidence: "medium",
   },
-  {
-    slug: "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
-    lang: "ar",
-    before: "تطبيقات تعلم اللغة الكورية — أفضل تطبيقات التعلم الكورية مقا",
-    after: "أفضل تطبيقات تعلم الكورية 2026: دولينجو مقابل روزيتا ستون",
-    reason: "'تطبيقات' and 'الكورية' both repeated, and truncated. Replaced the generic repeated lead with the actual comparison named in the slug and keywords (Duolingo vs Rosetta Stone) — FLAG: please confirm the article is in fact a head-to-head comparison of exactly these two apps, not a broader list, before approving this framing.",
-    confidence: "medium",
-  },
+  // korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar and
+  // korean-learning-apps-comparison-2026-ar (below, where it used to sit)
+  // were PULLED from this batch after Re's GM's second Arabic reading flagged
+  // them as a likely keyword-cannibalisation pair, not two articles: same 5
+  // apps compared, same "12 criteria" framing, near-identical primary
+  // keyword. Confirmed against the live rows (2026-08-27): the
+  // -duolingo-rosetta-stone-ar slug shares its published_at timestamp with
+  // its real English partner and is the genuine translation (11,849 chars,
+  // 2 views); the plain -ar slug has no English partner at all, is under
+  // half the length (5,441 chars), is written in a distinctly different
+  // colloquial-Egyptian register, and has 0 views — a stray duplicate from a
+  // separate generation run, exactly like the 10 pairs already retired in
+  // scripts/lib/retired-arabic-slugs.mjs, just using the -ar/-ar naming
+  // pattern instead of that sweep's ar-/-ar pattern so it wasn't caught by
+  // it. Both titles belong in a retirement PR, not this one — see the
+  // structural-finding report for the recommended survivor and redirect.
   {
     slug: "korean-military-service-explained-ar",
     lang: "ar",
@@ -303,8 +316,8 @@ export const EDITS = [
     slug: "korean-proverbs-idioms-guide-ar",
     lang: "ar",
     before: "الأمثال الكورية والتعابير المكونة من أربعة أحرف التي يجب أن يعرفها كل متعلم",
-    after: "الأمثال الكورية والتعابير المكونة من أربعة أحرف",
-    reason: "75 characters, 15 over. Dropped the trailing relative clause 'التي يجب أن يعرفها كل متعلم' (that every learner should know) entirely — it added length without adding meaning.",
+    after: "الأمثال والتعابير الرباعية في اللغة الكورية",
+    reason: "WRONG TERM, caught in Re's GM's second Arabic reading: 사자성어 are four Chinese CHARACTERS, not four letters — v1's 'أربعة أحرف' (four letters/alphabet characters) misdescribes the concept. Replaced with 'الرباعية' (the four-part/quadrilateral ones), which doesn't claim a wrong unit. Also fixes v1's length overage (75 chars) by dropping the trailing relative clause.",
     confidence: "high",
   },
   {
@@ -319,9 +332,9 @@ export const EDITS = [
     slug: "korean-telling-time-dates-guide-ar",
     lang: "ar",
     before: "كيف تخبر الوقت والتاريخ بالكورية (الأرقام الأصلية مقابل الصينية-الكورية)",
-    after: "كيف تخبر الوقت والتاريخ بالكورية: الأرقام الأصلية والصينية",
-    reason: "72 characters, 12 over. FLAG: shortened 'الصينية-الكورية' (Sino-Korean) to 'الصينية' (Chinese) to fit — on its own this could read as 'Chinese numbers' rather than 'Sino-Korean numbers' specifically, which is a real ambiguity risk in a grammar-teaching context. Please check whether this reads correctly or whether the fuller compound term needs to stay even at the cost of further trimming elsewhere.",
-    confidence: "medium",
+    after: "الوقت والتاريخ بالكورية: الأرقام الأصلية والصينية-الكورية",
+    reason: "FACTUAL ERROR, caught in Re's GM's second Arabic reading: v1 shortened 'الصينية-الكورية' (Sino-Korean, i.e. 한자어 — Korean numbers of Chinese origin) to 'الصينية' (Chinese) to fit the length limit — that's not a trim, it's wrong: it calls the numbers Chinese instead of Korean, a factual error in material that teaches Korean. Restored the full compound term. Also drops v1's literal calque 'كيف تخبر الوقت' ('how to tell the time' — Arabic doesn't use 'تخبر' this way) in favor of a plain noun-phrase title, which frees enough length to keep the correct term without going over 60.",
+    confidence: "high",
   },
   {
     slug: "korean-drama-vocabulary-advanced-ar",
@@ -337,14 +350,6 @@ export const EDITS = [
     before: "مفردات طعام كوري: طعام كوري: 60 كلمة مفردات أساسية",
     after: "مفردات الطعام الكوري: 60 كلمة أساسية",
     reason: "'طعام كوري' repeated with a colon between, and 'مفردات' also repeated later. Kept one mention of each, standard definite-article phrasing.",
-    confidence: "high",
-  },
-  {
-    slug: "korean-learning-apps-comparison-2026-ar",
-    lang: "ar",
-    before: "تطبيقات تعلم كوري — أفضل تطبيقات تعلم الكورية 2026",
-    after: "أفضل تطبيقات تعلم اللغة الكورية 2026",
-    reason: "'تطبيقات' and 'تعلم' both repeated. Kept one clean mention of each.",
     confidence: "high",
   },
 
@@ -373,17 +378,17 @@ export const EDITS = [
     slug: "dokkaebi-korean-goblin-myth-kdrama-ar",
     lang: "ar",
     before: "dokkaebi — دوكايبي — Klovers Korean",
-    after: "دوكايبي: أسطورة الغول الكوري في الدراما",
-    reason: "Same placeholder pattern as the Seollal title: English word, transliteration, site name appended.",
-    confidence: "medium",
+    after: "دوكايبي: أسطورة العفريت الكوري في الدراما",
+    reason: "Same placeholder pattern as the Seollal title: English word, transliteration, site name appended. WORD CHOICE CORRECTED, Re's GM's second Arabic reading: v1 used 'الغول', a man-eating ogre in Arabic — a 도깨비 is mischievous, not monstrous. Replaced with 'العفريت' (a mischievous/trickster spirit), the accurate register.",
+    confidence: "high",
   },
   {
     slug: "jeoseung-saja-korean-grim-reaper-symbolism-ar",
     lang: "ar",
     before: "جيوسيونغ ساجا — Jeoseung Saja — Klovers Korean",
-    after: "جيوسيونغ ساجا: رمزية ملاك الموت الكوري",
-    reason: "Same placeholder pattern: transliteration, the English title repeated, site name appended.",
-    confidence: "medium",
+    after: "جيوسيونغ ساجا: رمزية حاصد الأرواح في الأساطير الكورية",
+    reason: "RELIGIOUS SENSITIVITY, caught in Re's GM's second Arabic reading: v1's 'ملاك الموت' (angel of death) is a specific Islamic theological term (Azrael) — applying it to a Korean folk figure risks offending the Egyptian Muslim audience this site serves. Replaced with 'حاصد الأرواح' (reaper of souls), a secular description with no theological claim. Placeholder pattern (transliteration, English title repeated, site name appended) fixed as in v1.",
+    confidence: "high",
   },
   {
     slug: "what-is-jeong-korean-untranslatable-concept-ar",
@@ -413,8 +418,8 @@ export const EDITS = [
     slug: "korean-pronunciation-guide-speaking-ar",
     lang: "ar",
     before: "نطق كوري: دليل النطق الكوري: اتقن الكلام من اليوم الأول",
-    after: "دليل النطق الكوري: اتقن الكلام من اليوم الأول",
-    reason: "Two colons, and 'نطق'/'كوري' repeated in the first two segments — same ال-stripping gap. Dropped the redundant lead, kept the rest unchanged.",
+    after: "دليل النطق الكوري: أتقِن الكلام من اليوم الأول",
+    reason: "Two colons, and 'نطق'/'كوري' repeated in the first two segments — same ال-stripping gap. Dropped the redundant lead. ORTHOGRAPHY CORRECTED, Re's GM's second Arabic reading: v1's 'اتقن' was missing its hamza — corrected to 'أتقِن'.",
     confidence: "high",
   },
   {
@@ -470,7 +475,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { batchId, jsonPath, mdPath, proposal } = await writeProposal(
     {
       source: "scripts/proposals/titles.mjs",
-      description: "Gate 2 Step 1 — repair 53 published article titles (over 60 chars, ellipsis endings, stuffed keyword prefixes / repetition, and — found on re-scan — 3 English/transliteration placeholder titles and 4 more repetition cases masked by Arabic morphology). title only, slug untouched.",
+      description: "Gate 2 Step 1 v3 — repair 51 published article titles (over 60 chars, ellipsis endings, stuffed keyword prefixes / repetition, 3 English/transliteration placeholder titles, 4 repetition cases masked by Arabic morphology, and 6 corrections from Re's GM's second Arabic reading: 3 factual/terminology errors, 1 religious-sensitivity fix, 1 orthography fix, 1 mistranslation). 2 Arabic titles pulled pending a retirement-vs-title-fix decision on a likely duplicate pair (korean-learning-apps-comparison-2026-ar vs -duolingo-rosetta-stone-ar) — see the structural-finding report, not in this batch. title only, slug untouched.",
       edits,
     },
     store

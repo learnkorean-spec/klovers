@@ -1,10 +1,79 @@
-# Gate 2 Step 1 — title repair, review table (v2 — 53 titles)
+# Gate 2 Step 1 — title repair, review table (v3 — 51 titles)
 
-**Date:** 2026-08-26 (v2 — expanded from 42 to 53 after a second pass, see below)
+**Date:** 2026-08-27 (v3 — 6 Arabic corrections from a native-speaker second
+reading, 2 titles pulled pending a duplicate-content investigation; v2 was
+2026-08-26, expanded from 42 to 53 after a second pass, see below)
 **Scope:** `title` only. No `slug` is touched anywhere in this proposal — that is
 a hard constraint, not a preference (slugs are live URLs).
 
-## What changed since v1 (42 titles)
+## What changed since v2 (53 → 51 titles)
+
+Re sent the v2 Arabic table (27 rows) to her GM for a second native-speaker
+reading before dispatching `apply`. Six corrections came back, all folded in
+here; a seventh finding was structural, not a wording fix, and is reported
+below rather than resolved by editing a title.
+
+**Must-fix — factual/terminology errors, mistranslation, religious
+sensitivity (4):**
+
+- `korean-telling-time-dates-guide-ar` — v2 shortened "الصينية-الكورية"
+  (Sino-Korean, i.e. 한자어: Korean numbers of Chinese origin) to "الصينية"
+  (Chinese) to fit the length limit. That's not a trim, it's a factual error
+  in material that teaches Korean — restored the correct compound term, and
+  dropped a literal calque ("كيف تخبر الوقت") to make room.
+- `korean-dating-phrases-kdrama-lines-ar` — v2's "خطوط الدراما" translates
+  "drama lines" literally; Arabic "خطوط" means geometric lines/stripes, never
+  dialogue. Replaced with "اقتباسات" (quotes/lines of dialogue).
+- `korean-proverbs-idioms-guide-ar` — 사자성어 are four Chinese *characters*,
+  not four letters; v2's "أربعة أحرف" (four alphabet letters) misdescribes
+  the concept. Replaced with "الرباعية".
+- `jeoseung-saja-korean-grim-reaper-symbolism-ar` — v2's "ملاك الموت" (angel
+  of death) is a specific Islamic theological term (Azrael); applying it to a
+  Korean folk figure risks offending the Egyptian Muslim audience this site
+  serves. Replaced with the secular "حاصد الأرواح" (reaper of souls).
+
+**Should-fix — orthography, word choice (2):**
+
+- `korean-pronunciation-guide-speaking-ar` — "اتقن" was missing its hamza;
+  corrected to "أتقِن".
+- `dokkaebi-korean-goblin-myth-kdrama-ar` — "الغول" is a man-eating ogre in
+  Arabic; a 도깨비 is mischievous, not monstrous. Replaced with "العفريت".
+
+All six are now marked **HIGH** confidence (up from MEDIUM/HIGH in v2) —
+native-speaker-reviewed, not just mechanically de-duplicated.
+
+**Structural finding — 2 titles pulled, not fixed:**
+
+`korean-learning-apps-comparison-2026-ar` and
+`korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar` were
+flagged as a likely keyword-cannibalisation pair, not two articles: same 5
+apps compared, same "12 criteria" framing, near-identical primary keyword.
+Investigated against the live rows before writing either title, per Re's
+instruction:
+
+| | `-duolingo-rosetta-stone-ar` | `-ar` (plain) |
+|---|---|---|
+| English partner | `korean-learning-apps-comparison-2026-duolingo-rosetta-stone` (16 views) | **none** |
+| `published_at` | identical to its English partner's | 4 days later, on its own |
+| content length | 11,849 chars | 5,441 chars — under half |
+| register | matches the site's standard Arabic voice | Egyptian colloquial ("أكتر", "بيشتغل") — doesn't match |
+| views | 2 | 0 |
+
+This is the same pattern already documented in
+`scripts/lib/retired-arabic-slugs.mjs` for 10 other pairs — a 2026 rerun of
+the article generator produced a second Arabic article on a topic that
+already had one, splitting the ranking signal for one query — just using the
+`-ar`/`-ar` naming pattern instead of that sweep's `ar-`/`-ar` pattern, which
+is why the earlier sweep's slug-prefix test didn't catch it.
+`-duolingo-rosetta-stone-ar` is the clear survivor by every measure above.
+**Recommendation: retire `korean-learning-apps-comparison-2026-ar` behind a
+301 to `korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar`, in
+its own retirement PR** — not decided or executed here. Both titles are
+pulled from this batch (53 → 51) until that's resolved; the survivor's own
+title defect (stuffed keyword prefix, truncated) is still real and can be
+re-proposed once the retirement question is settled.
+
+## What changed since v1 (42 → 53 titles)
 
 The first pass tested three mechanical things: over 60 characters, ends in an
 ellipsis, and verbatim word repetition across a `:`/`—` split. Re asked two
@@ -46,12 +115,11 @@ skipped or silently fixed.
 
 **Nothing has been written to the database.** This table, plus the standard
 proposal file it was generated alongside
-(`content-edits/proposals/2026-08-26T04-57-30-113Z.proposal.json`), are the
-review artifacts. Once approved, applying is one command:
-
-```
-npm run content:apply -- content-edits/proposals/2026-08-26T04-57-30-113Z.proposal.json
-```
+(`content-edits/proposals/2026-08-27T12-43-40-928Z.proposal.json`), are the
+review artifacts. Once approved, applying goes through the Apply Content
+Edits workflow (`docs/APPLYING_CONTENT_EDITS.md`) — `mode: plan` with this
+`proposal_path`, confirm the printed table matches this document, then
+`mode: apply` with the checksum `plan` reports.
 
 ---
 
@@ -88,7 +156,7 @@ npm run content:apply -- content-edits/proposals/2026-08-26T04-57-30-113Z.propos
 
 ---
 
-## Arabic (27 titles), ordered by views descending
+## Arabic (25 titles), ordered by views descending
 
 **Every row below needs your review, regardless of the confidence marker.**
 HIGH means the fix is a mechanical de-duplication with no register or
@@ -107,25 +175,23 @@ native Arabic speaker; treat HIGH as "I found no ambiguity," not as
 | 3 | `how-long-to-learn-korean-arabic-speakers-ar` | كم يستغرق تعلم الكورية — كم من الوقت يستغرق تعلم اللغة الكور | كم يستغرق تعلم اللغة الكورية للناطقين بالعربية؟ | 47 | MEDIUM | 'How long does it take' said twice, and truncated. FLAG: added a question mark, which I have not confirmed is consistent with this site's other Arabic titles — please check. |
 | 3 | `learn-korean-3-months-study-method-ar` | تعلم الكورية 3 أشهر: تعلم الكورية في 3 أشهر: خطة دراسية | تعلم الكورية في 3 أشهر: خطة دراسية فعالة | 40 | HIGH | 'تعلم الكورية...3 أشهر' repeated almost verbatim. Kept one mention, added 'فعالة' (effective). |
 | 3 | `korean-honorifics-formality-levels-grammar-ar` | احترام كوري — مستويات الاحترام والرسمية في الكورية | مستويات الاحترام والرسمية في اللغة الكورية | 42 | HIGH | 'احترام' (respect) and 'كوري/الكورية' (Korean) both repeated across the dash — same ال-stripping gap. Dropped the redundant lead. |
-| 3 | `korean-pronunciation-guide-speaking-ar` | نطق كوري: دليل النطق الكوري: اتقن الكلام من اليوم الأول | دليل النطق الكوري: اتقن الكلام من اليوم الأول | 45 | HIGH | Two colons, and 'نطق'/'كوري' repeated in the first two segments — same ال-stripping gap. Dropped the redundant lead, kept the rest unchanged. |
-| 2 | `korean-dating-phrases-kdrama-lines-ar` | عبارات التعارف الكورية — عبارات المواعدة الكورية وخطوط الدرا | عبارات المواعدة الكورية وأشهر خطوط الدراما | 42 | MEDIUM | 'عبارات' repeated, and 'التعارف' (getting acquainted) / 'المواعدة' (dating) are near-duplicate concepts stacked together, plus the title was truncated. FLAG: I chose 'المواعدة' over 'التعارف' based on the slug and keywords, but have not read the article body to confirm which concept it actually emphasizes — please check before approving. |
+| 3 | `korean-pronunciation-guide-speaking-ar` | نطق كوري: دليل النطق الكوري: اتقن الكلام من اليوم الأول | دليل النطق الكوري: أتقِن الكلام من اليوم الأول | 46 | HIGH | Two colons, and 'نطق'/'كوري' repeated in the first two segments — same ال-stripping gap. Dropped the redundant lead. v3: ORTHOGRAPHY caught by Re's GM — v2's 'اتقن' was missing its hamza, corrected to 'أتقِن'. |
+| 2 | `korean-dating-phrases-kdrama-lines-ar` | عبارات التعارف الكورية — عبارات المواعدة الكورية وخطوط الدرا | عبارات المواعدة الكورية وأشهر اقتباسات الدراما | 46 | HIGH | v3: MISTRANSLATION caught by Re's GM's second reading — v2's 'خطوط الدراما' translates 'drama lines' literally; Arabic 'خطوط' means geometric lines/stripes, never dialogue. Replaced with 'اقتباسات' (quotes/lines of dialogue). 'عبارات' repeated and 'التعارف'/'المواعدة' stacked near-duplicates fixed as in v2. |
 | 2 | `korean-drinking-culture-soju-etiquette-ar` | ثقافة الشرب الكورية: آداب السوجو والقواعد التي يجب أن يعرفها كل مبتدئ | ثقافة الشرب الكورية: آداب السوجو لكل مبتدئ | 42 | MEDIUM | 69 characters, 9 over. Trimmed the relative clause 'والقواعد التي يجب أن يعرفها' (and the rules every beginner should know) to 'لكل مبتدئ' (for every beginner) — loses the explicit word 'rules' though 'etiquette' still carries that meaning. |
-| 2 | `korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar` | تطبيقات تعلم اللغة الكورية — أفضل تطبيقات التعلم الكورية مقا | أفضل تطبيقات تعلم الكورية 2026: دولينجو مقابل روزيتا ستون | 57 | MEDIUM | 'تطبيقات' and 'الكورية' both repeated, and truncated. Replaced the generic repeated lead with the actual comparison named in the slug and keywords (Duolingo vs Rosetta Stone) — FLAG: please confirm the article is in fact a head-to-head comparison of exactly these two apps, not a broader list, before approving this framing. |
 | 2 | `korean-military-service-explained-ar` | الخدمة العسكرية الكورية: لماذا يلتحق نجوم الكيبوب والممثلون بالجيش | الخدمة العسكرية الكورية: لماذا يلتحق نجوم الكيبوب بالجيش؟ | 57 | MEDIUM | 66 characters, 6 over. Trimmed 'والممثلون' (and actors) — the article's own keywords name only K-pop idols, not actors, so this narrows to what the keywords actually target rather than cutting arbitrarily. |
 | 2 | `korean-past-tense-conjugation-guide-ar` | الزمن الماضي الكوري — تصريف الفعل الماضي الكوري | تصريف الفعل الماضي في اللغة الكورية | 35 | HIGH | 'الماضي' (past) repeated. Kept one mention, standard grammar-guide phrasing. |
-| 2 | `korean-proverbs-idioms-guide-ar` | الأمثال الكورية والتعابير المكونة من أربعة أحرف التي يجب أن يعرفها كل متعلم | الأمثال الكورية والتعابير المكونة من أربعة أحرف | 47 | HIGH | 75 characters, 15 over. Dropped the trailing relative clause 'التي يجب أن يعرفها كل متعلم' (that every learner should know) entirely — it added length without adding meaning. |
+| 2 | `korean-proverbs-idioms-guide-ar` | الأمثال الكورية والتعابير المكونة من أربعة أحرف التي يجب أن يعرفها كل متعلم | الأمثال والتعابير الرباعية في اللغة الكورية | 43 | HIGH | v3: WRONG TERM caught by Re's GM — 사자성어 are four Chinese *characters*, not four letters; v2's 'أربعة أحرف' (four alphabet letters) misdescribes the concept. Replaced with 'الرباعية'. Also fixes v2's length overage (75 chars) by dropping the trailing relative clause. |
 | 2 | `korean-sentence-structure-word-order-guide-ar` | هيكل الجملة الكورية — بنية الجملة الكورية | هيكل الجملة الكورية وترتيب الكلمات | 34 | HIGH | This is the exact repetition pattern named in the Gate 2 brief: 'بنية' (structure) and 'هيكل' (structure) are near-synonyms, and 'الجملة الكورية' is repeated verbatim. Replaced 'بنية الجملة الكورية' with 'ترتيب الكلمات' (word order), which matches the article's own keyword and slug. |
-| 2 | `korean-telling-time-dates-guide-ar` | كيف تخبر الوقت والتاريخ بالكورية (الأرقام الأصلية مقابل الصينية-الكورية) | كيف تخبر الوقت والتاريخ بالكورية: الأرقام الأصلية والصينية | 58 | MEDIUM | 72 characters, 12 over. FLAG: shortened 'الصينية-الكورية' (Sino-Korean) to 'الصينية' (Chinese) to fit — on its own this could read as 'Chinese numbers' rather than 'Sino-Korean numbers' specifically, which is a real ambiguity risk in a grammar-teaching context. Please check whether this reads correctly or whether the fuller compound term needs to stay even at the cost of further trimming elsewhere. |
+| 2 | `korean-telling-time-dates-guide-ar` | كيف تخبر الوقت والتاريخ بالكورية (الأرقام الأصلية مقابل الصينية-الكورية) | الوقت والتاريخ بالكورية: الأرقام الأصلية والصينية-الكورية | 57 | HIGH | v3: FACTUAL ERROR caught by Re's GM — v2 shortened 'الصينية-الكورية' (Sino-Korean, i.e. 한자어: Korean numbers of Chinese origin) to 'الصينية' (Chinese) to fit the length limit. That's not a trim, it's wrong: it calls the numbers Chinese instead of Korean. Restored the correct compound term, and dropped a literal calque ('كيف تخبر الوقت') to make room. |
 | 2 | `korean-adjectives-100-examples-beginners-ar` | 100 الصفات الكورية الأساسية مع الجمل سبيل المثال | 100 صفة كورية أساسية مع جمل توضيحية | 35 | MEDIUM | Not a length or repetition defect — a genuinely ungrammatical string. 'سبيل المثال' ('by way of example') needs a preceding 'على' and appears bare with no connector after 'الجمل'; '100' directly before a definite plural noun is non-standard numeral-noun agreement. Reads as a machine-translation artefact, not a sentence a person wrote. |
-| 2 | `dokkaebi-korean-goblin-myth-kdrama-ar` | dokkaebi — دوكايبي — Klovers Korean | دوكايبي: أسطورة الغول الكوري في الدراما | 39 | MEDIUM | Same placeholder pattern as the Seollal title: English word, transliteration, site name appended. |
-| 2 | `jeoseung-saja-korean-grim-reaper-symbolism-ar` | جيوسيونغ ساجا — Jeoseung Saja — Klovers Korean | جيوسيونغ ساجا: رمزية ملاك الموت الكوري | 38 | MEDIUM | Same placeholder pattern: transliteration, the English title repeated, site name appended. |
+| 2 | `dokkaebi-korean-goblin-myth-kdrama-ar` | dokkaebi — دوكايبي — Klovers Korean | دوكايبي: أسطورة العفريت الكوري في الدراما | 41 | HIGH | Same placeholder pattern as the Seollal title: English word, transliteration, site name appended. v3: WORD CHOICE caught by Re's GM — v2's 'الغول' is a man-eating ogre in Arabic; a 도깨비 is mischievous, not monstrous. Replaced with 'العفريت'. |
+| 2 | `jeoseung-saja-korean-grim-reaper-symbolism-ar` | جيوسيونغ ساجا — Jeoseung Saja — Klovers Korean | جيوسيونغ ساجا: رمزية حاصد الأرواح في الأساطير الكورية | 53 | HIGH | Same placeholder pattern: transliteration, the English title repeated, site name appended. v3: RELIGIOUS SENSITIVITY caught by Re's GM — v2's 'ملاك الموت' (angel of death) is a specific Islamic theological term (Azrael); applying it to a Korean folk figure risks offending the Egyptian Muslim audience this site serves. Replaced with the secular 'حاصد الأرواح'. |
 | 2 | `what-is-jeong-korean-untranslatable-concept-ar` | jeong: ما هو جيونغ (정)؟ المفهوم الكوري الذي لا يمكنك ترجمته | ما هو جيونغ (정)؟ المفهوم الكوري الذي لا يمكنك ترجمته | 52 | HIGH | Opens with a bare lowercase English word ('jeong:') before the Arabic starts — same family as the placeholder titles above, though milder: the Arabic that follows is already a complete, correct sentence once the English lead-in is dropped. |
 | 2 | `korean-counting-units-classifiers-ar` | عدادات كورية: وحدات العد الكورية (المصنفات): الدليل الكامل | وحدات العد والمصنفات الكورية: الدليل الكامل | 43 | MEDIUM | 'عدادات' and 'وحدات العد' are two different Arabic words for the same 'counting units' concept, stated back to back — a synonym-level duplication no exact-string test can catch. This is the Arabic sibling of 'korean-counting-units-classifiers' (English), already in this table for the identical underlying redundancy. FLAG: merges two near-synonymous terms into one — I could not check which term the article body itself actually uses. |
 | 2 | `korean-verb-conjugation-guide-ar` | الأفعال الكورية — أصبح تصريف الفعل الكوري سهلاً | تصريف الفعل الكوري أصبح سهلاً | 29 | MEDIUM | 'الأفعال' (verbs, plural) and 'الفعل' (verb, singular) — same root, different number, so exact-string matching missed it. This is the Arabic sibling of 'korean-verb-conjugation-guide' (English), already in this table for the same defect. Dropped the redundant lead, reordered slightly for natural flow. |
 | 1 | `korean-drama-vocabulary-advanced-ar` | المفردات الدراما — مفردات الدراما الكورية المتقدمة | مفردات الدراما الكورية المتقدمة | 31 | HIGH | Stuffed prefix repeating 'الدراما', and the prefix itself ('المفردات الدراما') was grammatically awkward (mismatched definite article). Dropped it. |
 | 1 | `korean-food-vocabulary-ar` | مفردات طعام كوري: طعام كوري: 60 كلمة مفردات أساسية | مفردات الطعام الكوري: 60 كلمة أساسية | 36 | HIGH | 'طعام كوري' repeated with a colon between, and 'مفردات' also repeated later. Kept one mention of each, standard definite-article phrasing. |
 | 1 | `korean-body-language-social-etiquette-ar` | آداب كورية: لغة الجسد الكورية وآداب السلوك الاجتماعي | لغة الجسد الكورية وآداب السلوك الاجتماعي | 40 | HIGH | 'آداب' (etiquette) repeated — missed originally because the second occurrence carries the connector prefix 'و' ('وآداب'), which the detector didn't strip before comparing. This is the Arabic sibling of 'korean-body-language-social-etiquette' (English), already in this table for the same defect. Dropped the redundant lead. |
-| 0 | `korean-learning-apps-comparison-2026-ar` | تطبيقات تعلم كوري — أفضل تطبيقات تعلم الكورية 2026 | أفضل تطبيقات تعلم اللغة الكورية 2026 | 36 | HIGH | 'تطبيقات' and 'تعلم' both repeated. Kept one clean mention of each. |
 
 ---
 
@@ -158,6 +224,10 @@ native Arabic speaker; treat HIGH as "I found no ambiguity," not as
 - **The 10 retired Arabic duplicate slugs** (redirected behind a 301,
   `docs/SEO_GATE1_DUPLICATE_SLUGS.md`) are excluded — see the callout above
   for the one that shares this table's defect.
+- **`korean-learning-apps-comparison-2026-ar` and its
+  `-duolingo-rosetta-stone-ar` sibling** — an 11th duplicate pair, found this
+  round, not yet retired. See "Structural finding" above; not title-fixed
+  here on purpose.
 
 ## After this lands
 
