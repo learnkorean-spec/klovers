@@ -6,6 +6,17 @@ PR can be merged, the duplicate Arabic articles need a canonical URL and a
 redirect, or the sitemap change would deliberately submit duplicate Arabic
 URLs to Google. **10 pairs, not 8** — see the second correction below.
 
+> **An 11th pair exists, found later, out of this document's scope.**
+> `korean-learning-apps-comparison-2026-ar` /
+> `korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar` surfaced
+> during Gate 2 Step 1's Arabic title review (2026-08-27), not this sweep —
+> the prefix-based test below only ever looked for `ar-<base>` duplicates,
+> and this pair uses the `-ar`/`-ar` suffix pattern instead. Full record,
+> including the register/text-defect evidence, is in
+> `scripts/lib/retired-arabic-slugs.mjs`'s own docstring ("PAIR #11"), not
+> retrofitted into the analysis below. `RETIRED_ARABIC_SLUGS` now has 11
+> entries; every count below is this document's original 10.
+
 Everything below was checked directly against the live database
 (`ewtdgpbybkceokfohhyg`, read-only `SELECT` only).
 
@@ -107,10 +118,12 @@ the backlog item below.
 
 ## Gate 2 backlog — merge, don't discard (NOT executed here)
 
-**For each of the 10 pairs:** harvest the unique Korean examples, sections and
-FAQ entries from the retired 2026 version into the surviving 2025 article,
-de-duplicating overlapping items and keeping the surviving article's voice
-consistent.
+**For each of the 10 pairs, plus pair #11** (see the note above —
+`korean-learning-apps-comparison-2026-ar`, retired 2026-08-27): harvest the
+unique Korean examples, sections and FAQ entries from the retired version
+into the surviving article, de-duplicating overlapping items and keeping the
+surviving article's voice consistent. Same instruction, same Gate 2 Step 4 —
+pair #11 isn't a special case here even though it was found a different way.
 
 Why this beats "pick a winner": the two versions are different vocabulary sets
 on the same topic, not a better and a worse draft of the same one. Merging the
