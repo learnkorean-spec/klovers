@@ -77,6 +77,19 @@ vi.mock("@/hooks/admin/useMyStudents", () => ({
       : new Map([...balances.entries()].map(([sid, b]) => [sid, [syntheticBundle(sid, b)]])),
   }),
   useBundleEdits: () => ({ data: [] }),
+  useBundleSessionSummaries: () => ({
+    data: (() => {
+      const map = new Map<string, { used: number; lastDate: string | null }>();
+      for (const s of [...sessions].sort((a, b) => a.session_date.localeCompare(b.session_date))) {
+        if (!s.counted) continue;
+        const cur = map.get(s.bundle_id) ?? { used: 0, lastDate: null };
+        cur.used += 1;
+        cur.lastDate = s.session_date;
+        map.set(s.bundle_id, cur);
+      }
+      return map;
+    })(),
+  }),
   useAddBundle: () => ({ mutateAsync: addBundleMutate, isPending: false }),
   useUpdateBundle: () => ({ mutateAsync: updateBundleMutate, isPending: false }),
   useDeleteBundle: () => ({ mutateAsync: deleteBundleMutate, isPending: false }),
@@ -658,6 +671,85 @@ describe("bundle numbering and negative balance in Manage bundles", () => {
     draw();
     click(screen.getByRole("button", { name: /^Manage bundles/i }));
     expect(within(screen.getByRole("dialog")).getByText("1 over")).toBeInTheDocument();
+  });
+});
+
+describe("the completed-bundle history on the student card", () => {
+  const countedSession = (id: string, bundleId: string, date: string) => ({
+    id, student_id: "solafa", bundle_id: bundleId, class_id: null,
+    session_date: date, start_time: "19:00:00",
+    outcome: "attended" as const, counted: true, confirmed_at: `${date}T00:00:00Z`, note: null,
+  });
+
+  it("shows a clean finish as a plain fraction, not the 'ended with' wording", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed",
+      label: "Private · 1 month · 4 classes", total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = [
+      countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13"),
+      countedSession("s3", "b1", "2026-07-20"), countedSession("s4", "b1", "2026-07-27"),
+    ];
+    draw();
+    expect(screen.getByText(
+      /Bundle 1 · Private · 1 month · 4 classes · 4 of 4 · EGP 2,350\.00 · Mon 6 Jul – Mon 27 Jul/,
+    )).toBeInTheDocument();
+    expect(screen.queryByText(/ended with/)).not.toBeInTheDocument();
+  });
+
+  it("names an unfinished-but-completed bundle in words, not a bare fraction", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4,
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = [countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13")];
+    draw();
+    expect(screen.getByText(/ended with 2 unused/)).toBeInTheDocument();
+    expect(screen.queryByText(/·\s*2 of 4\s*·/)).not.toBeInTheDocument();
+  });
+
+  it("still shows a negative balance on a completed bundle on the card itself, not only in Manage bundles", () => {
+    const overrun = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4,
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [overrun, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = Array.from({ length: 5 }, (_, i) => countedSession(`s${i}`, "b1", `2026-07-0${i + 1}`));
+    draw();
+    expect(screen.getByText(/5 of 4/)).toBeInTheDocument();
+  });
+
+  it("caps completed bundles at 2, most recent first, with the rest folded into Manage bundles", () => {
+    const b1 = studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed", label: "Oldest" });
+    const b2 = studentBundle({ id: "b2", coverage_start: "2026-03-01", status: "completed", label: "Middle" });
+    const b3 = studentBundle({ id: "b3", coverage_start: "2026-05-01", status: "completed", label: "Newest" });
+    const active = studentBundle({ id: "b4", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [b1, b2, b3, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b4" })]]);
+    sessions = [];
+    draw();
+    expect(screen.getByText(/Bundle 3 · Newest/)).toBeInTheDocument();
+    expect(screen.getByText(/Bundle 2 · Middle/)).toBeInTheDocument();
+    expect(screen.queryByText(/Bundle 1 · Oldest/)).not.toBeInTheDocument();
+    expect(screen.getByText("+1 more completed — see all in Manage bundles")).toBeInTheDocument();
+  });
+
+  it("excludes cancelled bundles from the completed-bundle history entirely", () => {
+    const voided = studentBundle({
+      id: "b1", coverage_start: "2026-06-01", status: "cancelled", voided_reason: "created by mistake", label: "Voided bundle",
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [voided, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = [];
+    draw();
+    expect(screen.queryByText(/Voided bundle/)).not.toBeInTheDocument();
   });
 });
 

@@ -38,14 +38,14 @@ import {
   useUpsertClass, useDeleteClass, checkClassConflicts, type ClassConflict,
   useBundleBalances, useRecentSessions, useAllStudentSessions, useStudentBundles,
   useAllBundles, useBundleEdits, useAddBundle, useUpdateBundle, useDeleteBundle,
-  useConfirmSessions, useUnconfirmSession,
+  useConfirmSessions, useUnconfirmSession, useBundleSessionSummaries,
   type ConfirmSessionInput,
 } from "@/hooks/admin/useMyStudents";
 import {
   DAY_NAMES, STATUS_LABEL, STUDENT_STATUSES, STUDENT_SUBJECTS, SUBJECT_LABEL,
   buildExpectedSessions, crossesMidnight, formatClassRange, formatMoney,
   formatSessionDate, formatWeeklySummary, localDateKey, pricePerClass, weeklyMinutes,
-  resolveBundleForDate,
+  resolveBundleForDate, bundleTone, type BundleTone,
   type BundleBalance, type ExpectedSession, type MyStudentWithClasses,
   type StudentBundle, type StudentClassSchedule, type StudentStatus, type StudentSubject,
 } from "@/types/students";
@@ -197,6 +197,100 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
   );
 };
 
+/** Same three-way fact (bundleTone), rendered once instead of three times. */
+const BUNDLE_TONE_CLASSES: Record<BundleTone, { fill: string; text: string }> = {
+  clean: { fill: "bg-green-500/70", text: "text-green-700" },
+  unused: { fill: "bg-muted-foreground/30", text: "text-muted-foreground" },
+  // Exactly D's existing negative-balance tokens (see the `out` branch below)
+  // — never a second red on the same card.
+  negative: { fill: "bg-destructive", text: "text-destructive" },
+};
+
+const COMPLETED_BUNDLES_SHOWN = 2;
+
+type CompletedBundleSummary = {
+  bundle: StudentBundle;
+  bundleNumber: number;
+  used: number;
+  lastSessionDate: string | null;
+};
+
+/**
+ * A student's completed bundles, most recent first — the history the card
+ * shows so "has this student finished a bundle before, and did it end
+ * cleanly" no longer costs a click into Manage bundles to answer. Cancelled
+ * bundles are a different question (a mistake, not a finished purchase) and
+ * already have their own marker there, so they are excluded here.
+ */
+function completedBundleSummaries(
+  bundles: StudentBundle[],
+  sessionSummaries: Map<string, { used: number; lastDate: string | null }>,
+): CompletedBundleSummary[] {
+  const numbers = numberBundles(bundles);
+  return bundles
+    .filter(b => b.status === "completed")
+    .map(b => {
+      const s = sessionSummaries.get(b.id) ?? { used: 0, lastDate: null };
+      return { bundle: b, bundleNumber: numbers.get(b.id)!, used: s.used, lastSessionDate: s.lastDate };
+    })
+    .sort((a, b) => b.bundle.coverage_start.localeCompare(a.bundle.coverage_start));
+}
+
+/**
+ * Slim and static on purpose — a third the active bar's height, no percentage,
+ * no animation — so the active bundle stays the only thing on the card that
+ * reads as live. "Ended with N unused" is spelled out rather than left as a
+ * bare fraction: a completed bundle with classes left over is a different
+ * business fact from a clean finish, and the difference is exactly the thing
+ * that got missed the one time this mattered (Finding 2).
+ */
+const CompletedBundleLines = ({
+  completed, onManageBundles,
+}: {
+  completed: CompletedBundleSummary[];
+  onManageBundles: () => void;
+}) => {
+  if (completed.length === 0) return null;
+
+  const shown = completed.slice(0, COMPLETED_BUNDLES_SHOWN);
+  const extra = completed.length - shown.length;
+
+  return (
+    <div className="space-y-1.5 pt-0.5">
+      {shown.map(({ bundle, bundleNumber, used, lastSessionDate }) => {
+        const tone = bundleTone(used, bundle.total_classes);
+        const classes = BUNDLE_TONE_CLASSES[tone];
+        const usageText = tone === "unused"
+          ? `ended with ${bundle.total_classes - used} unused`
+          : `${used} of ${bundle.total_classes}`;
+        const window = lastSessionDate
+          ? `${formatSessionDate(bundle.coverage_start)} – ${formatSessionDate(lastSessionDate)}`
+          : `since ${formatSessionDate(bundle.coverage_start)}`;
+        return (
+          <div key={bundle.id} className="space-y-0.5">
+            <div className="h-[3px] rounded-full bg-muted overflow-hidden">
+              <div className={`h-full w-full ${classes.fill}`} />
+            </div>
+            <p className={`text-[11px] ${classes.text}`}>
+              Bundle {bundleNumber} · {bundle.label} · {usageText} ·{" "}
+              {formatMoney(bundle.total_price, bundle.currency)} · {window}
+            </p>
+          </div>
+        );
+      })}
+      {extra > 0 && (
+        <button
+          type="button"
+          onClick={onManageBundles}
+          className="text-[11px] text-primary hover:underline text-left"
+        >
+          +{extra} more completed — see all in Manage bundles
+        </button>
+      )}
+    </div>
+  );
+};
+
 /**
  * What the student bought and what is left.
  *
@@ -206,7 +300,8 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
  * screen disagree with the week.
  */
 const BundleBox = ({
-  balance, bundleNumber, bundleCount, unreviewed, onAdd, onCatchUp, onManageBundles, onHistory, unconfirmedCount,
+  balance, bundleNumber, bundleCount, unreviewed, completedBundles,
+  onAdd, onCatchUp, onManageBundles, onHistory, unconfirmedCount,
 }: {
   balance: BundleBalance | undefined;
   /** Undefined only when there is no active bundle, matching `balance`. */
@@ -216,6 +311,8 @@ const BundleBox = ({
    * without opening anything. */
   bundleCount: number;
   unreviewed: boolean;
+  /** Completed bundles only, most recent first — see completedBundleSummaries. */
+  completedBundles: CompletedBundleSummary[];
   onAdd: () => void;
   onCatchUp: () => void;
   onManageBundles: () => void;
@@ -224,20 +321,23 @@ const BundleBox = ({
 }) => {
   if (!balance) {
     return (
-      <div className="rounded-md border border-dashed px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          No bundle — classes are not being counted for this student.
-        </span>
-        <span className="flex flex-wrap gap-1.5">
-          {bundleCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={onManageBundles}>
-              Manage bundles ({bundleCount})
+      <div className="rounded-md border border-dashed px-3 py-2.5 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">
+            No bundle — classes are not being counted for this student.
+          </span>
+          <span className="flex flex-wrap gap-1.5">
+            {bundleCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={onManageBundles}>
+                Manage bundles ({bundleCount})
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={onAdd}>
+              <Wallet className="h-3.5 w-3.5 mr-1" /> Add bundle
             </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={onAdd}>
-            <Wallet className="h-3.5 w-3.5 mr-1" /> Add bundle
-          </Button>
-        </span>
+          </span>
+        </div>
+        <CompletedBundleLines completed={completedBundles} onManageBundles={onManageBundles} />
       </div>
     );
   }
@@ -267,6 +367,8 @@ const BundleBox = ({
           style={{ width: `${pct}%` }}
         />
       </div>
+
+      <CompletedBundleLines completed={completedBundles} onManageBundles={onManageBundles} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">
@@ -533,6 +635,7 @@ const MyStudentsManager = () => {
   // Every bundle, any status -- resolveBundleForDate needs the whole history
   // per student, not just whichever one is currently active.
   const { data: allBundles } = useAllBundles();
+  const { data: sessionSummaries } = useBundleSessionSummaries();
   const addBundle = useAddBundle();
   const updateBundle = useUpdateBundle();
   const deleteBundle = useDeleteBundle();
@@ -1220,6 +1323,9 @@ const MyStudentsManager = () => {
               bundleCount={(allBundles?.get(student.id) ?? []).length}
               unreviewed={(allBundles?.get(student.id) ?? []).some(
                 b => b.status === "active" && b.coverage_start_confirmed_at === null,
+              )}
+              completedBundles={completedBundleSummaries(
+                allBundles?.get(student.id) ?? [], sessionSummaries ?? new Map(),
               )}
               unconfirmedCount={unconfirmedCount(student.id)}
               onAdd={() => openBundleDialog(student)}
