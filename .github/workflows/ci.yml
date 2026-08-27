@@ -16,11 +16,98 @@ jobs:
   build:
     name: Build & Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       # v5 — v4 targets Node 20, which GitHub has deprecated and is already
       # force-running on Node 24. Currently a warning; will become a failure.
       - name: Checkout repo
         uses: actions/checkout@v5
+
+      # BLOCKING. Two sessions can each pick a migration filename timestamp
+      # with zero visibility into what the other picked - this is exactly
+      # what happened on 27 Aug 2026: two independent PRs both introduced
+      # a file named 20260827140000_*.sql. One merged first; from that
+      # point on, Apply Migrations matches pending files by version PREFIX
+      # only (`find supabase/migrations -name "${version}_*.sql"`), so once
+      # that prefix was recorded as applied, the second PR's migration could
+      # never run under that number again - it would silently stay
+      # "pending" forever while looking identical to every other pending
+      # file, or (worse) get marked applied without its own SQL ever having
+      # executed if a later run happened to match on the prefix. Nothing in
+      # the pipeline raised a warning. A direct database check caught it, by
+      # someone thinking to run one - not by anything mechanical. This step
+      # is what should have caught it, before merge, not after.
+      - name: Check for colliding migration version numbers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
+            echo "Not a pull_request event with base/head SHAs - nothing to compare, skipping."
+            exit 0
+          fi
+
+          git fetch origin "$BASE" --depth=1 -q
+          git fetch origin "$HEAD" --depth=1 -q
+
+          # This PR's own new migration version numbers (added files only -
+          # renaming or editing an existing one isn't a collision risk here).
+          mine=$(git diff --name-only --diff-filter=A "$BASE" "$HEAD" -- supabase/migrations/ \
+            | xargs -n1 basename 2>/dev/null \
+            | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p' \
+            | sort -u)
+
+          if [ -z "$mine" ]; then
+            echo "No new migration files in this PR - nothing to check."
+            exit 0
+          fi
+          echo "This PR introduces migration version(s):"
+          echo "$mine"
+
+          # 1. Already on main right now - catches "a different PR merged
+          #    the same number while this one was open," which is exactly
+          #    what happened on 27 Aug.
+          git fetch origin main -q
+          main_versions=$(git ls-tree origin/main -- supabase/migrations/ --name-only \
+            | xargs -n1 basename 2>/dev/null \
+            | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p' \
+            | sort -u)
+
+          collision=0
+          for v in $mine; do
+            if echo "$main_versions" | grep -qx "$v"; then
+              echo "::error::Migration version $v already exists on main (a different PR merged it first). Rename this file to a new, unused timestamp."
+              collision=1
+            fi
+          done
+
+          # 2. Every other currently-open PR - catches the collision before
+          #    EITHER side merges, not just after one already has.
+          echo "Checking other open PRs for the same version number..."
+          other_branches=$(gh pr list --state open --json number,headRefName \
+            --jq '.[] | select(.headRefName != "${{ github.head_ref }}") | .headRefName' || true)
+          for branch in $other_branches; do
+            git fetch origin "$branch" -q 2>/dev/null || continue
+            other_versions=$(git ls-tree "origin/$branch" -- supabase/migrations/ --name-only 2>/dev/null \
+              | xargs -n1 basename 2>/dev/null \
+              | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p')
+            for v in $mine; do
+              if echo "$other_versions" | grep -qx "$v"; then
+                echo "::error::Migration version $v is also used on branch '$branch' (another open PR). Whichever merges second will silently never run under that number - coordinate, or rename to a new timestamp now."
+                collision=1
+              fi
+            done
+          done
+
+          if [ "$collision" -eq 1 ]; then
+            echo "::error::Colliding migration version number(s) found - see errors above. This PR cannot merge safely until every listed version is renamed to something unused."
+            exit 1
+          fi
+          echo "No collisions found."
 
       - name: Setup Node
         uses: actions/setup-node@v5
