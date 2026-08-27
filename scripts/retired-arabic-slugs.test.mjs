@@ -30,15 +30,26 @@ describe("retired Arabic duplicates (RETIRED_ARABIC_SLUGS) vs vercel.json", () =
     for (const { from, to } of RETIRED_ARABIC_SLUGS) expect(from).not.toBe(to);
   });
 
-  it("only retires the ar- prefix form, always to a -ar suffix", () => {
+  it("retires either the legacy ar- prefix form or a -ar/-ar suffix duplicate, always to a -ar suffix survivor", () => {
+    // Pairs #1-10 retire the ar-<base> prefix form. Pair #11 (2026-08-27,
+    // see the module docstring) retires a second -ar suffix slug instead —
+    // same underlying duplicate-content problem, a different naming shape
+    // that the original prefix-only sweep couldn't catch. Every `to` still
+    // ends in -ar either way.
     for (const { from, to } of RETIRED_ARABIC_SLUGS) {
-      expect(from.startsWith("ar-")).toBe(true);
+      expect(from.startsWith("ar-") || from.endsWith("-ar")).toBe(true);
       expect(to.endsWith("-ar")).toBe(true);
     }
   });
 
-  it("covers all 10 confirmed duplicates", () => {
-    expect(RETIRED_ARABIC_SLUGS).toHaveLength(10);
+  it("pair #11 retires the shorter, unpaired, colloquial-register duplicate", () => {
+    const pair11 = RETIRED_ARABIC_SLUGS.find((r) => r.from === "korean-learning-apps-comparison-2026-ar");
+    expect(pair11).toBeDefined();
+    expect(pair11.to).toBe("korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar");
+  });
+
+  it("covers all 11 confirmed duplicates", () => {
+    expect(RETIRED_ARABIC_SLUGS).toHaveLength(11);
   });
 });
 
@@ -46,7 +57,7 @@ describe("RETIRED_SLUGS (the sitemap/prerender exclusion set)", () => {
   it("is exactly the set of retired duplicate slugs", () => {
     const expected = new Set(RETIRED_ARABIC_SLUGS.map((r) => r.from));
     expect(RETIRED_SLUGS).toEqual(expected);
-    expect(RETIRED_SLUGS.size).toBe(10);
+    expect(RETIRED_SLUGS.size).toBe(11);
   });
 });
 

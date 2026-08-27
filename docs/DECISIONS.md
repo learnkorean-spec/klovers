@@ -36,3 +36,21 @@ deployed. Remove the dead Google ping endpoint.
 Remove the false `?lang=ar` alternate. No hreflang on marketing pages until
 Arabic has URLs of its own (Option B). Blog hreflang only where a `-ar` / `ar-`
 partner post actually exists.
+
+## 2026-08-27 — Arabic register for Gate 3 (OPEN — needs Re's decision before Gate 3 starts)
+
+Retiring `korean-learning-apps-comparison-2026-ar` (see
+`scripts/lib/retired-arabic-slugs.mjs`, pair #11) leaves the live Arabic
+catalogue at 89 standard-MSA articles and exactly 1 Egyptian-colloquial
+article — the one just retired was that one colloquial outlier, and it also
+carried a text defect, not just a register choice. Egyptian colloquial is not
+wrong for this audience and may in fact read closer to them than MSA does —
+but one article drifting into it while 89 don't is drift, not a considered
+choice for the site.
+
+**Not decided or acted on here.** Which register the ~60 new Arabic articles
+for Gate 3 should use — MSA (consistent with today's catalogue), Egyptian
+colloquial (closer to the primary audience), or a deliberate per-topic mix —
+is a real strategic decision. It needs Re's call, recorded here, before Gate
+3 content generation starts, not settled implicitly by whatever a title-repair
+or retirement PR happens to touch.
