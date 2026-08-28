@@ -16,8 +16,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, ChevronUp, CalendarCog, Copy } from "lucide-react";
-import { formatTime, convertDateTimeToTimezone } from "@/lib/admin-utils";
+import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, ChevronUp, CalendarCog, Copy, AlertTriangle } from "lucide-react";
+import { formatTime, convertDateTimeToTimezone, deriveSessionPeriod } from "@/lib/admin-utils";
 import { getAdminTimezone } from "@/lib/viewerTimezone";
 import { getLevelShortLabel } from "@/constants/levels";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
@@ -686,6 +686,28 @@ const TrialClassesManager = () => {
     .filter((s) => s.lifecycle === "active")
     .sort((a, b) => (a.trial_date ?? "").localeCompare(b.trial_date ?? "") || a.start_time.localeCompare(b.start_time));
 
+  /**
+   * Cairo is where every trial student is; the authoring timezone (still
+   * sometimes the teacher's own, per ADMIN_TIMEZONE) is secondary context,
+   * not the headline. `mismatched` is what would have caught the 5:30am
+   * slot labelled "evening" before it ever went live, instead of after.
+   */
+  const cairoViewFor = (s: TrialSlotRow) => {
+    if (!s.trial_date) return null;
+    const cairo = convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Africa/Cairo");
+    if (Number.isNaN(cairo.hour24)) return null;
+    const d = new Date(`${cairo.dateStr}T00:00:00`);
+    const label = `${cairo.weekday.slice(0, 3)} ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${cairo.timeFormatted}`;
+    const impliedPeriod = deriveSessionPeriod(cairo.hour24);
+    return {
+      label,
+      dateStr: cairo.dateStr,
+      impliedPeriod,
+      mismatched: !!s.session_period && s.session_period !== impliedPeriod,
+      authoredDiffers: s.timezone !== "Africa/Cairo",
+    };
+  };
+
   return (
     <div className="space-y-4">
       {/* Trial schedule — edit dates/times/language/capacity for your own availability */}
@@ -721,35 +743,60 @@ const TrialClassesManager = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Day</TableHead>
-                      <TableHead>Time</TableHead>
+                      <TableHead>Cairo time</TableHead>
+                      <TableHead>Session</TableHead>
                       <TableHead>Language</TableHead>
                       <TableHead className="text-right">Capacity</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {activeScheduleSlots.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="text-xs font-mono">{s.trial_date ?? "—"}</TableCell>
-                        <TableCell className="text-xs">{DAY_NAMES[s.day_of_week]}</TableCell>
-                        <TableCell className="text-xs font-mono">{s.start_time} ({s.timezone})</TableCell>
-                        <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
-                        <TableCell className="text-xs text-right">{s.capacity}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0"
-                            onClick={() => setEditingSlot(s)}
-                            title="Edit this trial slot"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {activeScheduleSlots.map((s) => {
+                      const cairo = cairoViewFor(s);
+                      return (
+                        <TableRow key={s.id}>
+                          <TableCell className="text-xs">
+                            {cairo ? (
+                              <>
+                                <div className="font-mono font-medium">{cairo.label}</div>
+                                {cairo.authoredDiffers && (
+                                  <div className="text-muted-foreground/70 text-[10px] font-mono">
+                                    authored {s.trial_date !== cairo.dateStr ? `${s.trial_date} ` : ""}{s.start_time} {s.timezone.replace(/_/g, " ")}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <span className="font-mono">{s.start_time} ({s.timezone}) · {DAY_NAMES[s.day_of_week]}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {s.session_period ? (
+                              <span className={`capitalize inline-flex items-center gap-1 ${cairo?.mismatched ? "text-destructive font-medium" : ""}`}>
+                                {s.session_period}
+                                {cairo?.mismatched && (
+                                  <span title={`This is ${cairo.impliedPeriod} in Cairo, not ${s.session_period} — the label and the actual local hour disagree.`}>
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                  </span>
+                                )}
+                              </span>
+                            ) : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
+                          <TableCell className="text-xs text-right">{s.capacity}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => setEditingSlot(s)}
+                              title="Edit this trial slot"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
