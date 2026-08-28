@@ -138,7 +138,15 @@ const SessionAttendanceManager = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Sessions Generated", description: `${data} new sessions created.` });
+      if (data === 0) {
+        toast({
+          title: "No New Sessions",
+          description: "0 sessions were created — this group's package may be missing a scheduled day of week.",
+          className: "border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100",
+        });
+      } else {
+        toast({ title: "Sessions Generated", description: `${data} new sessions created.` });
+      }
       loadSessions(selectedGroupId);
     }
     setGenerating(false);
