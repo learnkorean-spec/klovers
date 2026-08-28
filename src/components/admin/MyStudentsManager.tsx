@@ -197,16 +197,26 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
   );
 };
 
-/** Same shared fact (bundleTone), rendered once instead of per surface. */
+/**
+ * Same shared fact (bundleTone), rendered once instead of per surface. `fill`
+ * drives each bundle's slim consumption bar, `text` its identity line — the
+ * two are allowed to read differently for the same tone (active's bar is
+ * green, its line is not) because they answer different questions: the bar
+ * says how much of the bundle is used up, the line says how the bundle's
+ * story ended. Neither call site hardcodes a colour of its own; both always
+ * come from here, off the same tone, so a bar can never show green while its
+ * line disagrees about why.
+ */
 const BUNDLE_TONE_CLASSES: Record<BundleTone, { fill: string; text: string }> = {
   clean: { fill: "bg-green-500/70", text: "text-green-700" },
   unused: { fill: "bg-muted-foreground/30", text: "text-muted-foreground" },
   // Exactly D's existing negative-balance tokens (see the `out` branch below)
   // — never a second red on the same card.
   negative: { fill: "bg-destructive", text: "text-destructive" },
-  // A still-running bundle's own bar (rendered separately, in BundleBox) is
-  // what shows it is alive; this identity line just needs to stay quiet.
-  active: { fill: "bg-muted-foreground/30", text: "text-muted-foreground" },
+  // The active identity line stays quiet (never green, even at 100% used —
+  // the bundle has not finished). Its consumption bar still fills in the same
+  // green as a clean finish: it is answering "how full", not "how it ended".
+  active: { fill: "bg-green-500/70", text: "text-muted-foreground" },
 };
 
 const COMPLETED_BUNDLES_SHOWN = 2;
@@ -247,10 +257,13 @@ function completedBundleSummaries(
 
 /**
  * Slim and static on purpose — a third the active bar's height, no percentage,
- * no animation — so the active bundle stays the only thing on the card that
- * reads as live. Each line is built by bundleIdentityLine, the same function
- * the active bundle's own identity line below uses — one place decides the
- * wording and colour for every bundle on this card, active or completed.
+ * no animation — so the active bundle's own full-height bar stays the only
+ * thing on the card that reads as live. Each unit is built by
+ * bundleIdentityLine, the same function the active bundle's own identity line
+ * in BundleBox uses — one place decides the wording, colour, and fill for
+ * every bundle on this card, active or completed. The line sits above its
+ * bar, matching the active bundle's own line-then-bar order, so the card
+ * reads as one repeating unit rather than two different layouts.
  */
 const CompletedBundleLines = ({
   completed, onManageBundles,
@@ -266,14 +279,14 @@ const CompletedBundleLines = ({
   return (
     <div className="space-y-1.5 pt-0.5">
       {shown.map(({ bundle, bundleNumber, used, lastSessionDate }) => {
-        const { tone, text } = bundleIdentityLine(bundle, bundleNumber, used, lastSessionDate);
+        const { tone, text, fillPct } = bundleIdentityLine(bundle, bundleNumber, used, lastSessionDate);
         const classes = BUNDLE_TONE_CLASSES[tone];
         return (
           <div key={bundle.id} className="space-y-0.5">
-            <div className="h-[3px] rounded-full bg-muted overflow-hidden">
-              <div className={`h-full w-full ${classes.fill}`} />
-            </div>
             <p className={`text-[11px] ${classes.text}`}>{text}</p>
+            <div className="h-[3px] rounded-full bg-muted overflow-hidden">
+              <div className={`h-full ${classes.fill}`} style={{ width: `${fillPct}%` }} />
+            </div>
           </div>
         );
       })}
@@ -395,6 +408,21 @@ const BundleBox = ({
           </Badge>
         )}
       </div>
+
+      {/* The active bundle's own slim consumption bar — same shape and same
+          bundleIdentityLine-driven fill/colour as every completed bundle's,
+          directly beneath its line, so the card reads as one repeating unit
+          instead of two different layouts. The full-height bar above stays
+          the primary at-a-glance element; this one only ever answers "how
+          much of this bundle is used up". */}
+      {activeLine && (
+        <div className="h-[3px] rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full ${BUNDLE_TONE_CLASSES[activeLine.tone].fill}`}
+            style={{ width: `${activeLine.fillPct}%` }}
+          />
+        </div>
+      )}
 
       {out && (
         <p className="text-xs text-destructive">

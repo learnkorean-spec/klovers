@@ -353,16 +353,18 @@ describe("bundleIdentityLine", () => {
       status: "active", coverage_start: "2026-08-24", label: "Private · 1 month · 4 classes",
       total_classes: 4, total_price: 2350, currency: "EGP",
     });
-    const { tone, text } = bundleIdentityLine(b, 2, 1, null);
+    const { tone, text, fillPct } = bundleIdentityLine(b, 2, 1, null);
     expect(tone).toBe("active");
     expect(text).toBe(`Bundle 2 · Private · 1 month · 4 classes · 1 of 4 · ${formatMoney(2350, "EGP")} · from Mon 24 Aug`);
+    expect(fillPct).toBe(25);
   });
 
   it("reads a zero-session active bundle plainly, not as an error", () => {
     const b = bundle({ status: "active", coverage_start: "2026-08-24", total_classes: 4, total_price: 2350, currency: "EGP" });
-    const { text } = bundleIdentityLine(b, 2, 0, null);
+    const { text, fillPct } = bundleIdentityLine(b, 2, 0, null);
     expect(text).toContain("0 of 4");
     expect(text).not.toContain("ended with");
+    expect(fillPct).toBe(0);
   });
 
   it("gives a completed bundle a closed start–end window", () => {
@@ -370,15 +372,24 @@ describe("bundleIdentityLine", () => {
       status: "completed", coverage_start: "2026-07-06", label: "Private · 1 month · 4 classes",
       total_classes: 4, total_price: 2350, currency: "EGP",
     });
-    const { tone, text } = bundleIdentityLine(b, 1, 4, "2026-07-27");
+    const { tone, text, fillPct } = bundleIdentityLine(b, 1, 4, "2026-07-27");
     expect(tone).toBe("clean");
     expect(text).toBe(`Bundle 1 · Private · 1 month · 4 classes · 4 of 4 · ${formatMoney(2350, "EGP")} · Mon 6 Jul – Mon 27 Jul`);
+    expect(fillPct).toBe(100);
   });
 
   it("spells out an unfinished completed bundle in words, not a bare fraction", () => {
     const b = bundle({ status: "completed", coverage_start: "2026-07-06", total_classes: 4 });
-    const { tone, text } = bundleIdentityLine(b, 1, 2, "2026-07-13");
+    const { tone, text, fillPct } = bundleIdentityLine(b, 1, 2, "2026-07-13");
     expect(tone).toBe("unused");
     expect(text).toContain("ended with 2 unused");
+    expect(fillPct).toBe(50);
+  });
+
+  it("clamps an overrun bundle's fill to 100, never past its track", () => {
+    const b = bundle({ status: "completed", coverage_start: "2026-07-06", total_classes: 4 });
+    const { tone, fillPct } = bundleIdentityLine(b, 1, 6, "2026-07-27");
+    expect(tone).toBe("negative");
+    expect(fillPct).toBe(100);
   });
 });

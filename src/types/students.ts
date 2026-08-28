@@ -401,13 +401,17 @@ export function bundleTone(status: BundleStatus, usedClasses: number, totalClass
  * the open-ended "from <coverage_start>": it has not ended, so it never gets
  * an end date. A completed bundle's window is its coverage_start through its
  * last counted session (or "since <coverage_start>" if it somehow has none).
+ *
+ * `fillPct` is the same `counted / total` fraction (clamped 0–100) that drives
+ * the slim consumption bar beneath this line on every bundle — computed here,
+ * once, so the bar can never show a fill the line's own numbers disagree with.
  */
 export function bundleIdentityLine(
   bundle: StudentBundle,
   bundleNumber: number,
   usedClasses: number,
   lastCountedSessionDate: string | null,
-): { tone: BundleTone; text: string } {
+): { tone: BundleTone; text: string; fillPct: number } {
   const tone = bundleTone(bundle.status, usedClasses, bundle.total_classes);
   const usageText = tone === "unused"
     ? `ended with ${bundle.total_classes - usedClasses} unused`
@@ -417,8 +421,10 @@ export function bundleIdentityLine(
         ? `${formatSessionDate(bundle.coverage_start)} – ${formatSessionDate(lastCountedSessionDate)}`
         : `since ${formatSessionDate(bundle.coverage_start)}`)
     : `from ${formatSessionDate(bundle.coverage_start)}`;
+  const fillPct = Math.min(100, Math.max(0, (usedClasses / Math.max(1, bundle.total_classes)) * 100));
   return {
     tone,
     text: `Bundle ${bundleNumber} · ${bundle.label} · ${usageText} · ${formatMoney(bundle.total_price, bundle.currency)} · ${windowText}`,
+    fillPct,
   };
 }

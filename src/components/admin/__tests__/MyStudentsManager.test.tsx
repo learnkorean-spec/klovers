@@ -811,6 +811,100 @@ describe("the active bundle's own identity line", () => {
   });
 });
 
+describe("the slim consumption bar beneath each bundle's line", () => {
+  const countedSession = (id: string, bundleId: string, date: string) => ({
+    id, student_id: "solafa", bundle_id: bundleId, class_id: null,
+    session_date: date, start_time: "19:00:00",
+    outcome: "attended" as const, counted: true, confirmed_at: `${date}T00:00:00Z`, note: null,
+  });
+
+  it("fills the active bundle's bar to counted/total in green, directly beneath its line", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 1, remaining_classes: 3,
+    })]]);
+    draw();
+    const line = screen.getByText(/1 of 4/);
+    // The row holds the line and the "left" badge together; the bar is the
+    // very next element after that whole row, not part of it.
+    const bar = line.closest(".flex")!.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-green-500/70");
+    expect(fill).toHaveStyle({ width: "25%" });
+  });
+
+  it("renders an empty track for a zero-session active bundle, not an error", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 0, remaining_classes: 4,
+    })]]);
+    draw();
+    const line = screen.getByText(/0 of 4/);
+    const bar = line.closest(".flex")!.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill).toHaveStyle({ width: "0%" });
+  });
+
+  it("clamps an overrun active bundle's bar to 100% in red, never past its track", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 6, remaining_classes: -2,
+    })]]);
+    draw();
+    const line = screen.getByText(/6 of 4/);
+    const bar = line.closest(".flex")!.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-destructive");
+    expect(fill).toHaveStyle({ width: "100%" });
+  });
+
+  it("puts each completed bundle's line above its bar, matching the active bundle's own order", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed",
+      label: "Private · 1 month · 4 classes", total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active", total_classes: 4 });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", total_classes: 4, used_classes: 1, remaining_classes: 3 })]]);
+    sessions = [
+      countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13"),
+      countedSession("s3", "b1", "2026-07-20"), countedSession("s4", "b1", "2026-07-27"),
+    ];
+    draw();
+    const line = screen.getByText(/Bundle 1 ·/);
+    // Moved from above the line (PR #116) to below it, so the unit reads
+    // line-then-bar the same way the active bundle's own does.
+    const unit = line.parentElement!;
+    expect(unit.children[0]).toBe(line);
+    const bar = unit.children[1] as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-green-500/70");
+    expect(fill).toHaveStyle({ width: "100%" });
+  });
+
+  it("fills a completed bundle that ended with unused classes only partway, in grey", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4,
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active", total_classes: 4 });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", total_classes: 4, used_classes: 1, remaining_classes: 3 })]]);
+    sessions = [countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13")];
+    draw();
+    const line = screen.getByText(/ended with 2 unused/);
+    const bar = line.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-muted-foreground/30");
+    expect(fill).toHaveStyle({ width: "50%" });
+  });
+});
+
 describe("the unreviewed coverage_start marker", () => {
   it("shows on the active bundle's card when coverage_start_confirmed_at is null", () => {
     studentBundles = new Map([["solafa", [studentBundle({ coverage_start_confirmed_at: null })]]]);
