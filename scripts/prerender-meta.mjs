@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { createClient } from "@supabase/supabase-js";
 import { baseOf, buildRelatedMap, RELATED_MIN } from "./lib/related-posts.mjs";
+import { buildFaqJsonLd } from "./lib/faq-parser.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -198,7 +199,7 @@ async function fetchPublishedPosts() {
   const { data, error } = await supabase
     .from("blog_posts")
     .select(
-      "slug, title, description, keywords, lang, hero_image, hero_alt, article_type, author, published_at, updated_at"
+      "slug, title, description, keywords, lang, hero_image, hero_alt, article_type, author, published_at, updated_at, content"
     )
     .eq("published", true)
     .order("published_at", { ascending: false });
@@ -223,6 +224,7 @@ const postToRoute = (p) => ({
     author: p.author || SITE_NAME,
     publishedAt: p.published_at || null,
     updatedAt: p.updated_at || p.published_at || null,
+    content: p.content || "",
   },
 });
 
@@ -471,6 +473,9 @@ function buildHeadTags(route) {
         },
       })
     );
+
+    const faqLd = buildFaqJsonLd(p.content);
+    if (faqLd) tags.push(jsonLd(faqLd));
 
     tags.push(
       jsonLd({
