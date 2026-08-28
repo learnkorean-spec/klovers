@@ -27,8 +27,10 @@
 -- Only start_time moves. This is a real reschedule for both rows: new
 -- instants, not a representation change.
 --
--- The two Arabic slots (d59bac2d… Friday 14:00, cc68b1b8… Saturday 17:00) are
--- not touched — they serve Egypt and are correct as they are. This migration
+-- The two Arabic slots (d59bac2d… Friday 14:00, cc68b1b8… Saturday 16:30 --
+-- revised from 20260828114539's original 17:00 before first apply, to avoid
+-- a collision with a retired row; see that migration's header) are not
+-- touched — they serve Egypt and are correct as they are. This migration
 -- proves that below: it asserts their instants are byte-identical to the
 -- values 20260828114539 already established for them.
 --
@@ -116,7 +118,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM public.trial_slots
      WHERE id = 'cc68b1b8-adbe-4210-82c4-39d96de1f973'
-       AND trial_date = '2026-09-05' AND timezone = 'Africa/Cairo' AND start_time = '17:00'
+       AND trial_date = '2026-09-05' AND timezone = 'Africa/Cairo' AND start_time = '16:30'
   ) THEN
     RAISE EXCEPTION 'Guard failed: Saturday Arabic slot (cc68b1b8...) is not where 20260828114539 left it -- refusing to run';
   END IF;
@@ -175,7 +177,7 @@ BEGIN
   END IF;
   IF (SELECT (trial_date + start_time::time) AT TIME ZONE timezone
         FROM public.trial_slots WHERE id = 'cc68b1b8-adbe-4210-82c4-39d96de1f973')
-     <> '2026-09-05 14:00:00+00'::timestamptz THEN
+     <> '2026-09-05 13:30:00+00'::timestamptz THEN
     RAISE EXCEPTION 'Verify failed: Saturday Arabic slot''s real instant changed -- this migration must not touch it';
   END IF;
 END $$;
