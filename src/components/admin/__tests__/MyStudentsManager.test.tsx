@@ -193,10 +193,12 @@ afterEach(() => {
 describe("the bundle on the card", () => {
   it("shows what they bought, in the currency they paid", () => {
     draw();
-    // Prefixed with its bundle number ("Bundle 1 — ...") — see numbering below.
-    expect(screen.getByText(/16 English classes/)).toBeInTheDocument();
+    // Prefixed with its bundle number ("Bundle 1 — ...") in the title row --
+    // see numbering below -- and again in its own identity line beneath the
+    // bar, so both queries now find two matches, not one.
+    expect(screen.getAllByText(/16 English classes/).length).toBeGreaterThan(0);
     // Intl renders the code as a prefix: "EGP 6,400.00".
-    expect(screen.getByText(/EGP\s*6,400/)).toBeInTheDocument();
+    expect(screen.getAllByText(/EGP\s*6,400/).length).toBeGreaterThan(0);
   });
 
   it("shows the price per class rather than storing it", () => {
@@ -207,7 +209,7 @@ describe("the bundle on the card", () => {
 
   it("shows usage and what is left", () => {
     draw();
-    expect(screen.getByText("9 of 16 used")).toBeInTheDocument();
+    expect(screen.getByText(/9 of 16/)).toBeInTheDocument();
     expect(screen.getByText("7 left")).toBeInTheDocument();
   });
 
@@ -218,8 +220,8 @@ describe("the bundle on the card", () => {
       ["nora", balance({ student_id: "nora", bundle_id: "b2", label: "Private · 3 months", total_price: 1238, currency: "SAR", total_classes: 12, used_classes: 0, remaining_classes: 12 })],
     ]);
     draw();
-    expect(screen.getByText(/SAR\s*1,238/)).toBeInTheDocument();
-    expect(screen.getByText(/EGP\s*6,400/)).toBeInTheDocument();
+    expect(screen.getAllByText(/SAR\s*1,238/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/EGP\s*6,400/).length).toBeGreaterThan(0);
   });
 
   it("offers to add one when the student has no bundle", () => {
@@ -548,7 +550,7 @@ describe("the class start date", () => {
     // The resulting balance the card would show once those 4 are counted.
     balances = new Map([["solafa", balance({ used_classes: 4, remaining_classes: 12 })]]);
     draw();
-    expect(screen.getByText("4 of 16 used")).toBeInTheDocument();
+    expect(screen.getByText(/4 of 16/)).toBeInTheDocument();
     expect(screen.getByText("12 left")).toBeInTheDocument();
   });
 });
@@ -753,13 +755,72 @@ describe("the completed-bundle history on the student card", () => {
   });
 });
 
+describe("the active bundle's own identity line", () => {
+  it("carries the same identity-line format as completed bundles, with an open-ended 'from' date", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active",
+      label: "Private · 1 month · 4 classes", total_classes: 4, total_price: 2350, currency: "EGP",
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", label: "Private · 1 month · 4 classes",
+      total_classes: 4, used_classes: 1, remaining_classes: 3, total_price: 2350, currency: "EGP",
+    })]]);
+    draw();
+    expect(screen.getByText(
+      /Bundle 1 · Private · 1 month · 4 classes · 1 of 4 · EGP 2,350\.00 · from Mon 24 Aug/,
+    )).toBeInTheDocument();
+    // The old plain wording this line replaces must be gone entirely.
+    expect(screen.queryByText(/1 of 4 used/)).not.toBeInTheDocument();
+    // Keeps the existing "left" pill on the same row, untouched.
+    expect(screen.getByText("3 left")).toBeInTheDocument();
+  });
+
+  it("never reads green even when a still-running bundle happens to be fully used", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 4, remaining_classes: 0,
+    })]]);
+    draw();
+    const line = screen.getByText(/4 of 4/);
+    expect(line.className).toContain("text-muted-foreground");
+    expect(line.className).not.toContain("text-green");
+  });
+
+  it("reads a zero-session active bundle plainly, not as an error", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 0, remaining_classes: 4,
+    })]]);
+    draw();
+    expect(screen.getByText(/0 of 4/)).toBeInTheDocument();
+  });
+
+  it("separates the completed-bundle history from the active bundle with a divider", () => {
+    const finished = studentBundle({ id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4 });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active", total_classes: 4 });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", total_classes: 4, used_classes: 1, remaining_classes: 3 })]]);
+    sessions = [];
+    draw();
+    const completedLine = screen.getByText(/Bundle 1 ·/);
+    expect(completedLine.closest(".border-t")).not.toBeNull();
+  });
+});
+
 describe("the unreviewed coverage_start marker", () => {
   it("shows on the active bundle's card when coverage_start_confirmed_at is null", () => {
     studentBundles = new Map([["solafa", [studentBundle({ coverage_start_confirmed_at: null })]]]);
     draw();
     // Scoped to the card itself -- an unconfirmed bundle also warns on every
     // to-confirm row drawing against it, which is a separate assertion below.
-    const card = screen.getByText(/16 English classes/).closest("div")!.parentElement!;
+    // The title row's em dash ("Bundle 1 — ...") is what makes this match
+    // unique -- the identity line beneath the bar names the same bundle with
+    // a middle dot instead ("Bundle 1 · ...").
+    const card = screen.getByText(/Bundle 1 — /).closest("div")!.parentElement!;
     expect(within(card).getByText(/start date not reviewed/i)).toBeInTheDocument();
   });
 

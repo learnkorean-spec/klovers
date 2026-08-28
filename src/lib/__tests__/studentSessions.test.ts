@@ -9,6 +9,7 @@
 import { describe, it, expect } from "vitest";
 import {
   buildExpectedSessions,
+  bundleIdentityLine,
   bundleTone,
   formatMoney,
   formatSessionDate,
@@ -321,15 +322,63 @@ describe("formatSessionDate", () => {
 });
 
 describe("bundleTone", () => {
-  it("is clean when usage exactly matches the total", () => {
-    expect(bundleTone(4, 4)).toBe("clean");
+  it("is clean when a completed bundle's usage exactly matches the total", () => {
+    expect(bundleTone("completed", 4, 4)).toBe("clean");
   });
 
-  it("is unused when a bundle finished with classes left over", () => {
-    expect(bundleTone(2, 4)).toBe("unused");
+  it("is unused when a completed bundle finished with classes left over", () => {
+    expect(bundleTone("completed", 2, 4)).toBe("unused");
   });
 
-  it("is negative when usage overran the total", () => {
-    expect(bundleTone(5, 4)).toBe("negative");
+  it("is negative when usage overran the total, completed or not", () => {
+    expect(bundleTone("completed", 5, 4)).toBe("negative");
+    expect(bundleTone("active", 5, 4)).toBe("negative");
+  });
+
+  it("is active, never clean, when a still-running bundle happens to be fully used", () => {
+    // The whole reason status is a parameter: a live bundle at 4 of 4 has not
+    // finished, and must not read as a clean finish just because the numbers
+    // momentarily match.
+    expect(bundleTone("active", 4, 4)).toBe("active");
+  });
+
+  it("is active, never 'unused', for a bundle that has simply just started", () => {
+    expect(bundleTone("active", 0, 4)).toBe("active");
+  });
+});
+
+describe("bundleIdentityLine", () => {
+  it("gives an active bundle an open-ended 'from' window and a plain fraction, never green", () => {
+    const b = bundle({
+      status: "active", coverage_start: "2026-08-24", label: "Private · 1 month · 4 classes",
+      total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const { tone, text } = bundleIdentityLine(b, 2, 1, null);
+    expect(tone).toBe("active");
+    expect(text).toBe(`Bundle 2 · Private · 1 month · 4 classes · 1 of 4 · ${formatMoney(2350, "EGP")} · from Mon 24 Aug`);
+  });
+
+  it("reads a zero-session active bundle plainly, not as an error", () => {
+    const b = bundle({ status: "active", coverage_start: "2026-08-24", total_classes: 4, total_price: 2350, currency: "EGP" });
+    const { text } = bundleIdentityLine(b, 2, 0, null);
+    expect(text).toContain("0 of 4");
+    expect(text).not.toContain("ended with");
+  });
+
+  it("gives a completed bundle a closed start–end window", () => {
+    const b = bundle({
+      status: "completed", coverage_start: "2026-07-06", label: "Private · 1 month · 4 classes",
+      total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const { tone, text } = bundleIdentityLine(b, 1, 4, "2026-07-27");
+    expect(tone).toBe("clean");
+    expect(text).toBe(`Bundle 1 · Private · 1 month · 4 classes · 4 of 4 · ${formatMoney(2350, "EGP")} · Mon 6 Jul – Mon 27 Jul`);
+  });
+
+  it("spells out an unfinished completed bundle in words, not a bare fraction", () => {
+    const b = bundle({ status: "completed", coverage_start: "2026-07-06", total_classes: 4 });
+    const { tone, text } = bundleIdentityLine(b, 1, 2, "2026-07-13");
+    expect(tone).toBe("unused");
+    expect(text).toContain("ended with 2 unused");
   });
 });
