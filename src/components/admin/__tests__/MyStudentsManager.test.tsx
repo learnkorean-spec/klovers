@@ -18,7 +18,7 @@ const confirmMutate = vi.fn().mockResolvedValue(undefined);
 const unconfirmMutate = vi.fn().mockResolvedValue(undefined);
 const addBundleMutate = vi.fn().mockResolvedValue(undefined);
 const updateBundleMutate = vi.fn().mockResolvedValue(undefined);
-const deleteBundleMutate = vi.fn().mockResolvedValue(undefined);
+const deleteBundleMutate = vi.fn().mockResolvedValue({ auditLogged: true });
 const upsertClassMutate = vi.fn().mockResolvedValue(undefined);
 
 let students: MyStudentWithClasses[] = [];
@@ -30,6 +30,15 @@ let sessions: StudentClassSession[] = [];
  * per entry in `balances` when it is empty, so the ~40 tests written before
  * coverage_start existed keep working unchanged. */
 let studentBundles: Map<string, StudentBundle[]> = new Map();
+/** admin_audit_log rows for the currently-open student's deleted bundles --
+ * see useDeletedBundles. Most tests never set this. */
+let deletedBundles: Array<{
+  id: string; deletedAt: string;
+  snapshot: {
+    bundle_number: number; label: string; total_classes: number; total_price: number;
+    currency: string; coverage_start: string; voided_reason: string | null;
+  };
+}> = [];
 
 /** A StudentBundle from the BundleBalance shape older tests already build,
  * with a coverage_start far enough in the past to resolve any session date
@@ -93,6 +102,7 @@ vi.mock("@/hooks/admin/useMyStudents", () => ({
   useAddBundle: () => ({ mutateAsync: addBundleMutate, isPending: false }),
   useUpdateBundle: () => ({ mutateAsync: updateBundleMutate, isPending: false }),
   useDeleteBundle: () => ({ mutateAsync: deleteBundleMutate, isPending: false }),
+  useDeletedBundles: () => ({ data: deletedBundles }),
   useConfirmSessions: () => ({ mutateAsync: confirmMutate, isPending: false }),
   useUnconfirmSession: () => ({ mutateAsync: unconfirmMutate, isPending: false }),
 }));
@@ -178,12 +188,14 @@ const click = (el: Element) => { fireEvent.click(el); };
 beforeEach(() => {
   vi.clearAllMocks();
   upsertClassMutate.mockResolvedValue(undefined);
+  deleteBundleMutate.mockResolvedValue({ auditLogged: true });
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(NOW);
   students = [solafa()];
   balances = new Map([["solafa", balance()]]);
   sessions = [];
   studentBundles = new Map();
+  deletedBundles = [];
 });
 
 afterEach(() => {
@@ -952,19 +964,22 @@ describe("edit bundle", () => {
 });
 
 describe("delete vs void", () => {
-  it("offers Delete when a bundle has zero sessions, and confirming calls useDeleteBundle", async () => {
-    studentBundles = new Map([["solafa", [studentBundle()]]]);
+  it("is deletable once cancelled with zero sessions of any kind, and confirming calls useDeleteBundle", async () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "created by mistake" })]]]);
     sessions = [];
     draw();
     click(screen.getByRole("button", { name: /^Manage bundles/i }));
     click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
 
-    click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }));
-    await waitFor(() => expect(deleteBundleMutate).toHaveBeenCalledWith("bundle-1"));
+    click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete bundle" }));
+    await waitFor(() => expect(deleteBundleMutate).toHaveBeenCalledWith({
+      bundle: expect.objectContaining({ id: "bundle-1", status: "cancelled" }),
+      bundleNumber: 1,
+    }));
   });
 
-  it("names exactly what the delete confirm is about to remove — number, label, classes, price, currency, purchase date", () => {
-    studentBundles = new Map([["solafa", [studentBundle()]]]);
+  it("names exactly what the delete confirm is about to remove — number, label, classes, price, currency, coverage start, and that 0 classes are recorded", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "created by mistake" })]]]);
     sessions = [];
     draw();
     click(screen.getByRole("button", { name: /^Manage bundles/i }));
@@ -976,8 +991,43 @@ describe("delete vs void", () => {
     expect(text).toContain("16 English classes");
     expect(text).toContain("16 classes");
     expect(text).toMatch(/EGP\s*6,400/);
-    expect(text).toContain("purchased");
-    expect(text).toContain("Wed 12 Aug");
+    expect(text).toContain("from Wed 12 Aug");
+    expect(text).toContain("0 classes recorded against it");
+    expect(text).toContain("cannot be undone");
+  });
+
+  it("is not deletable once a cancelled bundle has even one session, of any status — a plain sentence appears, never a disabled button", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "created by mistake" })]]]);
+    sessions = [{
+      id: "s1", student_id: "solafa", bundle_id: "bundle-1", class_id: null,
+      session_date: "2026-08-17", start_time: "22:00:00",
+      outcome: "cancelled_no_charge", counted: false, confirmed_at: "2026-08-17T15:00:00Z", note: null,
+    }];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    expect(manageDialog.textContent!.replace(/\s+/g, " ")).toContain("Has 1 class recorded — cannot be deleted.");
+  });
+
+  it("is never deletable while active, regardless of session count", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "active" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    expect(within(manageDialog).getByRole("button", { name: /^Void$/i })).toBeInTheDocument();
+  });
+
+  it("is never deletable while completed, regardless of session count", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "completed" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    expect(within(manageDialog).getByRole("button", { name: /^Void$/i })).toBeInTheDocument();
   });
 
   it("offers Void instead of Delete once a bundle has sessions, and requires a reason", async () => {
@@ -1003,6 +1053,107 @@ describe("delete vs void", () => {
     expect(updateBundleMutate.mock.calls[0][0]).toMatchObject({
       id: "bundle-1", status: "cancelled", voided_reason: "created by mistake",
     });
+  });
+
+  it("warns by name which later bundles will be renumbered", () => {
+    const b1 = studentBundle({
+      id: "b1", coverage_start: "2026-01-01", status: "cancelled", label: "Oldest", voided_reason: "mistake",
+    });
+    const b2 = studentBundle({ id: "b2", coverage_start: "2026-06-01", status: "completed", label: "Middle" });
+    const b3 = studentBundle({ id: "b3", coverage_start: "2026-08-01", status: "active", label: "Newest" });
+    studentBundles = new Map([["solafa", [b1, b2, b3]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    const text = screen.getByRole("alertdialog").textContent!.replace(/\s+/g, " ");
+    expect(text).toContain("Bundle 2 will become Bundle 1.");
+    expect(text).toContain("Bundle 3 will become Bundle 2.");
+  });
+
+  it("shows no renumbering warning when no later bundle exists", () => {
+    const b1 = studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed", label: "Oldest" });
+    const b2 = studentBundle({
+      id: "b2", coverage_start: "2026-08-01", status: "cancelled", label: "Newest", voided_reason: "mistake",
+    });
+    studentBundles = new Map([["solafa", [b1, b2]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    expect(screen.getByRole("alertdialog").textContent).not.toContain("will become");
+  });
+});
+
+describe("the deleted-bundle audit trail", () => {
+  it("shows enough of a deleted bundle to reconstruct it, lazily, same convention as the edit history", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "active" })]]]);
+    sessions = [];
+    deletedBundles = [{
+      id: "log-1", deletedAt: "2026-08-20T10:00:00Z",
+      snapshot: {
+        bundle_number: 2, label: "Special", total_classes: 16, total_price: 0,
+        currency: "EGP", coverage_start: "2026-08-01", voided_reason: "not correct",
+      },
+    }];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByText(/Bundle 2 · Special/)).not.toBeInTheDocument();
+
+    click(within(manageDialog).getByRole("button", { name: /View deleted bundles/i }));
+    const text = manageDialog.textContent!.replace(/\s+/g, " ");
+    expect(text).toContain("Bundle 2");
+    expect(text).toContain("Special");
+    expect(text).toContain("16 classes");
+    expect(text).toContain("not correct");
+  });
+
+  it("says plainly when nothing has been deleted", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    sessions = [];
+    deletedBundles = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /View deleted bundles/i }));
+    expect(within(screen.getByRole("dialog")).getByText("No bundles deleted.")).toBeInTheDocument();
+  });
+});
+
+describe("bidi-safe count phrases", () => {
+  // The reported bug: an English count phrase mixing digits and words
+  // reordered to "left (0 used) 16" inside an RTL-adjacent paragraph. Fixed
+  // at the source by isolating the phrase's own direction rather than
+  // reordering the words to compensate -- so the regression to guard is the
+  // isolating `dir="ltr"` disappearing from these elements, not the text.
+  it("isolates the remaining/used line in Manage bundles from bidi reordering", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const line = within(screen.getByRole("dialog")).getByText(/16 left \(0 used\)/);
+    expect(line).toHaveAttribute("dir", "ltr");
+  });
+
+  it("isolates the delete-confirm bundle summary and the 0-classes line from bidi reordering", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "mistake" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText(/Bundle 1 —/)).toHaveAttribute("dir", "ltr");
+    expect(within(dialog).getByText(/0 classes recorded against it/)).toHaveAttribute("dir", "ltr");
+  });
+
+  it("isolates the active bundle's own count line and left/over badge on the card", () => {
+    balances = new Map([["solafa", balance({ used_classes: 9, remaining_classes: 7 })]]);
+    draw();
+    const line = screen.getByText(/9 of 16/);
+    expect(line).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("7 left")).toHaveAttribute("dir", "ltr");
   });
 });
 

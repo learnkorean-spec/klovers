@@ -448,26 +448,122 @@ export function useUpdateBundle() {
   });
 }
 
+export interface DeleteBundleInput {
+  bundle: StudentBundle;
+  /** For the audit record only -- readable at a glance without re-deriving
+   * numbering from a bundle list that, after this delete, will already have
+   * shifted. */
+  bundleNumber: number;
+}
+
 /**
- * Deletes a bundle outright. Only succeeds when it has zero sessions on it —
- * the database's ON DELETE RESTRICT foreign key refuses it otherwise (Postgres
- * error 23503), which this translates into a message pointing at Void instead.
- * The caller should already know the session count and offer Void directly in
- * that case; this is the backstop, not the primary UX.
+ * Deletes a bundle outright. The UI only ever offers this for a cancelled
+ * bundle with zero student_class_sessions rows referencing it (any status,
+ * not just counted) -- but that is a courtesy, not the guard. The real guard
+ * is the database's ON DELETE RESTRICT foreign key, which refuses the delete
+ * regardless (Postgres error 23503), translated here into a message pointing
+ * at Void instead. Never retried, never falls back to a different delete path
+ * -- a failed delete leaves the bundle exactly as it was.
+ *
+ * Deletes first, logs second: the row is gone the moment the delete succeeds,
+ * so nothing here should claim a deletion happened before it really did. The
+ * log goes to admin_audit_log rather than student_bundle_edits -- that
+ * table's bundle_id column is ON DELETE CASCADE, so a row written there for
+ * this bundle would vanish in the very same statement that deletes its
+ * parent, which would defeat the entire point of keeping a durable record of
+ * what was destroyed. admin_audit_log has no such foreign key, so the record
+ * outlives the row it describes. If the log write itself fails, the deletion
+ * -- which already succeeded and cannot be rolled back by a logging error --
+ * is still reported as done; the caller distinguishes an unlogged deletion by
+ * `auditLogged: false` rather than this throwing.
  */
 export function useDeleteBundle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("student_bundles").delete().eq("id", id);
+    mutationFn: async ({ bundle, bundleNumber }: DeleteBundleInput) => {
+      const { error } = await supabase.from("student_bundles").delete().eq("id", bundle.id);
       if (error) {
         if (error.code === "23503") {
           throw new Error("This bundle has classes recorded against it — void it instead of deleting it.");
         }
         throw error;
       }
+
+      const { data: userData } = await supabase.auth.getUser();
+      const { error: logErr } = await supabase.from("admin_audit_log").insert({
+        admin_id: userData.user?.id ?? null,
+        action: "bundle_deleted",
+        field: `Bundle ${bundleNumber} — ${bundle.label}`,
+        old_value: JSON.stringify({
+          bundle_id: bundle.id,
+          student_id: bundle.student_id,
+          bundle_number: bundleNumber,
+          label: bundle.label,
+          source: bundle.source,
+          catalog_key: bundle.catalog_key,
+          total_classes: bundle.total_classes,
+          total_price: bundle.total_price,
+          currency: bundle.currency,
+          purchased_on: bundle.purchased_on,
+          coverage_start: bundle.coverage_start,
+          status: bundle.status,
+          voided_reason: bundle.voided_reason,
+          voided_at: bundle.voided_at,
+          note: bundle.note,
+          deleted_at: new Date().toISOString(),
+        }),
+      });
+      return { auditLogged: !logErr };
     },
     onSuccess: () => invalidateCredits(qc),
+  });
+}
+
+/** One entry parsed back out of admin_audit_log's bundle_deleted rows. */
+export interface DeletedBundleRecord {
+  id: string;
+  deletedAt: string;
+  snapshot: {
+    bundle_number: number;
+    label: string;
+    total_classes: number;
+    total_price: number;
+    currency: string;
+    coverage_start: string;
+    voided_reason: string | null;
+  };
+}
+
+/**
+ * A student's deleted bundles, newest first -- the durable record left behind
+ * by useDeleteBundle. Reads admin_audit_log directly rather than
+ * student_bundle_edits (see useDeleteBundle for why) and filters to this
+ * student client-side, since the log has no student_id column of its own --
+ * the table is small and general-purpose, not scoped to bundles.
+ */
+export function useDeletedBundles(studentId: string | null) {
+  return useQuery<DeletedBundleRecord[]>({
+    queryKey: ["admin", "bundle-deletions", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_audit_log")
+        .select("id, created_at, old_value")
+        .eq("action", "bundle_deleted")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const out: DeletedBundleRecord[] = [];
+      for (const row of (data ?? []) as { id: string; created_at: string; old_value: string | null }[]) {
+        try {
+          const snapshot = JSON.parse(row.old_value ?? "{}");
+          if (snapshot.student_id === studentId) out.push({ id: row.id, deletedAt: row.created_at, snapshot });
+        } catch {
+          // A row this parser cannot read is skipped, not thrown -- one bad
+          // record must never take down the rest of a student's history.
+        }
+      }
+      return out;
+    },
   });
 }
 
