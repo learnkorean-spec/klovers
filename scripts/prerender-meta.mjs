@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { createClient } from "@supabase/supabase-js";
 import { baseOf, buildRelatedMap, RELATED_MIN } from "./lib/related-posts.mjs";
+import { RETIRED_SLUGS } from "./lib/retired-arabic-slugs.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -185,7 +186,14 @@ const MARKETING_ROUTES = [
 
 // ── Blog routes, from the database ──────────────────────────────────────────
 
-/** Fetch every published post. Same filter as api/sitemap.xml.js. */
+/**
+ * Fetch every published post, minus the retired Arabic duplicates.
+ *
+ * Same filter as api/sitemap.xml.js's `live`: these slugs carry their own 301
+ * in vercel.json, so prerendering a page for one (or linking to it from the
+ * /blog index or a related-articles block) would only ever hand a reader or
+ * a crawler a page that immediately redirects away.
+ */
 async function fetchPublishedPosts() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error(
@@ -205,7 +213,13 @@ async function fetchPublishedPosts() {
 
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) throw new Error("query returned zero published posts");
-  return data;
+
+  const live = data.filter((p) => !RETIRED_SLUGS.has(p.slug));
+  const retiredCount = data.length - live.length;
+  if (retiredCount > 0) {
+    console.log(`Excluded ${retiredCount} retired Arabic duplicate(s) from prerendering.`);
+  }
+  return live;
 }
 
 /** Turn a post row into a route entry. */
