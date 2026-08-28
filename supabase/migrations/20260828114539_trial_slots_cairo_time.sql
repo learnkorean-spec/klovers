@@ -18,6 +18,20 @@
 -- Nobody would attend it. Re's decision: move Saturday to 17:00 Cairo (a
 -- real reschedule — new instant, 2026-09-05 14:00 UTC, was 02:30 UTC).
 --
+-- Revised before first apply: 17:00 Cairo on 2026-09-05 collides with a
+-- retired (lifecycle='retired', is_active=false) row from an old
+-- Asia/Ho_Chi_Minh-timezone scheme (d54acaf3…) that still occupies that
+-- literal (trial_date, start_time) pair under the table's UNIQUE(trial_date,
+-- start_time) constraint, which does not exempt retired rows or account for
+-- timezone. First apply attempt failed on exactly this: "duplicate key value
+-- violates unique constraint trial_slots_trial_date_start_time_key". Re's
+-- final decision: 16:30 Cairo instead (new instant, 2026-09-05 13:30 UTC).
+-- Verified directly before this revision: no other trial_slots row (active
+-- or retired) holds (2026-09-05, 16:30); and 16:30 Cairo is 21:30 in Re's
+-- own zone (Asia/Kuala_Lumpur), which does not overlap her real Saturday
+-- class (Menna, 16:00-17:30 KL, from teacher_student_classes) or any other
+-- recurring commitment on that weekday.
+--
 -- Friday, Sunday and Monday keep the exact same real instant they already
 -- had — this migration only corrects how that instant is REPRESENTED
 -- (Africa/Cairo + its own local start_time instead of Kuala_Lumpur's), the
@@ -92,7 +106,7 @@ BEGIN
   FOR r IN
     SELECT * FROM (VALUES
       ('d59bac2d-e566-4346-8d4e-6d4d45f90e66'::uuid, '2026-09-04'::date, 'Asia/Kuala_Lumpur', '19:00', 'Africa/Cairo', '14:00'),
-      ('cc68b1b8-adbe-4210-82c4-39d96de1f973'::uuid, '2026-09-05'::date, 'Asia/Kuala_Lumpur', '10:30', 'Africa/Cairo', '17:00'),
+      ('cc68b1b8-adbe-4210-82c4-39d96de1f973'::uuid, '2026-09-05'::date, 'Asia/Kuala_Lumpur', '10:30', 'Africa/Cairo', '16:30'),
       ('b1c14a79-7332-4e48-a84f-a5756eb03e27'::uuid, '2026-09-06'::date, 'Asia/Kuala_Lumpur', '22:00', 'Africa/Cairo', '17:00'),
       ('369da68c-c751-4eef-9b15-f576c404254a'::uuid, '2026-09-07'::date, 'Asia/Kuala_Lumpur', '22:00', 'Africa/Cairo', '17:00')
     ) AS expected(id, trial_date, pre_tz, pre_time, post_tz, post_time)
@@ -110,6 +124,20 @@ BEGIN
       RAISE EXCEPTION 'Guard failed: trial_slots row % is not in the documented pre- or post-migration state -- refusing to guess', r.id;
     END IF;
   END LOOP;
+
+  -- Guard: the Saturday row's new slot (2026-09-05, 16:30) is not already
+  -- held by any other row -- active or retired. This is exactly the check
+  -- that would have caught the first apply attempt's failure (a retired
+  -- Asia/Ho_Chi_Minh row squatting on 2026-09-05/17:00 under the table's
+  -- UNIQUE(trial_date, start_time), which does not exempt retired rows)
+  -- before it reached a raw constraint violation.
+  IF EXISTS (
+    SELECT 1 FROM public.trial_slots
+     WHERE trial_date = '2026-09-05' AND start_time = '16:30'
+       AND id <> 'cc68b1b8-adbe-4210-82c4-39d96de1f973'
+  ) THEN
+    RAISE EXCEPTION 'Guard failed: another trial_slots row already occupies (2026-09-05, 16:30) -- refusing to collide again';
+  END IF;
 END $$;
 
 -- The actual change. Only touches rows still in the pre-state, so a re-run
@@ -125,7 +153,7 @@ UPDATE public.trial_slots ts
        updated_at     = now()
   FROM (VALUES
     ('d59bac2d-e566-4346-8d4e-6d4d45f90e66'::uuid, 'Africa/Cairo', '14:00'),
-    ('cc68b1b8-adbe-4210-82c4-39d96de1f973'::uuid, 'Africa/Cairo', '17:00'),
+    ('cc68b1b8-adbe-4210-82c4-39d96de1f973'::uuid, 'Africa/Cairo', '16:30'),
     ('b1c14a79-7332-4e48-a84f-a5756eb03e27'::uuid, 'Africa/Cairo', '17:00'),
     ('369da68c-c751-4eef-9b15-f576c404254a'::uuid, 'Africa/Cairo', '17:00')
   ) AS v(id, post_tz, post_time)
@@ -168,20 +196,24 @@ BEGIN
   -- new instant.
   IF (SELECT (trial_date + start_time::time) AT TIME ZONE timezone
         FROM public.trial_slots WHERE id = 'cc68b1b8-adbe-4210-82c4-39d96de1f973')
-     <> '2026-09-05 14:00:00+00'::timestamptz THEN
-    RAISE EXCEPTION 'Verify failed: Saturday slot did not land on the decided new instant (2026-09-05 14:00 UTC)';
+     <> '2026-09-05 13:30:00+00'::timestamptz THEN
+    RAISE EXCEPTION 'Verify failed: Saturday slot did not land on the decided new instant (2026-09-05 13:30 UTC)';
   END IF;
 
   -- session_period actually agrees with the Cairo-local hour now -- asserted,
-  -- not assumed.
+  -- not assumed. The two 17:00 Cairo English slots are evening; the 16:30
+  -- Cairo Saturday slot falls one half-hour short of the evening boundary
+  -- and is correctly daytime under the same formula, not a special case.
   IF EXISTS (
     SELECT 1 FROM public.trial_slots
      WHERE id IN (
-       'cc68b1b8-adbe-4210-82c4-39d96de1f973', 'b1c14a79-7332-4e48-a84f-a5756eb03e27',
-       '369da68c-c751-4eef-9b15-f576c404254a'
+       'b1c14a79-7332-4e48-a84f-a5756eb03e27', '369da68c-c751-4eef-9b15-f576c404254a'
      ) AND session_period <> 'evening'
   ) THEN
     RAISE EXCEPTION 'Verify failed: a 17:00 Cairo slot is not labelled evening';
+  END IF;
+  IF (SELECT session_period FROM public.trial_slots WHERE id = 'cc68b1b8-adbe-4210-82c4-39d96de1f973') <> 'daytime' THEN
+    RAISE EXCEPTION 'Verify failed: the 16:30 Cairo Saturday slot is not labelled daytime';
   END IF;
   IF (SELECT session_period FROM public.trial_slots WHERE id = 'd59bac2d-e566-4346-8d4e-6d4d45f90e66') <> 'daytime' THEN
     RAISE EXCEPTION 'Verify failed: the 14:00 Cairo Friday slot is not labelled daytime';
