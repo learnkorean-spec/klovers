@@ -45,7 +45,7 @@ import {
   DAY_NAMES, STATUS_LABEL, STUDENT_STATUSES, STUDENT_SUBJECTS, SUBJECT_LABEL,
   buildExpectedSessions, crossesMidnight, formatClassRange, formatMoney,
   formatSessionDate, formatWeeklySummary, localDateKey, pricePerClass, weeklyMinutes,
-  resolveBundleForDate, bundleTone, type BundleTone,
+  resolveBundleForDate, bundleIdentityLine, type BundleTone,
   type BundleBalance, type ExpectedSession, type MyStudentWithClasses,
   type StudentBundle, type StudentClassSchedule, type StudentStatus, type StudentSubject,
 } from "@/types/students";
@@ -197,16 +197,25 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
   );
 };
 
-/** Same three-way fact (bundleTone), rendered once instead of three times. */
+/** Same shared fact (bundleTone), rendered once instead of per surface. */
 const BUNDLE_TONE_CLASSES: Record<BundleTone, { fill: string; text: string }> = {
   clean: { fill: "bg-green-500/70", text: "text-green-700" },
   unused: { fill: "bg-muted-foreground/30", text: "text-muted-foreground" },
   // Exactly D's existing negative-balance tokens (see the `out` branch below)
   // — never a second red on the same card.
   negative: { fill: "bg-destructive", text: "text-destructive" },
+  // A still-running bundle's own bar (rendered separately, in BundleBox) is
+  // what shows it is alive; this identity line just needs to stay quiet.
+  active: { fill: "bg-muted-foreground/30", text: "text-muted-foreground" },
 };
 
 const COMPLETED_BUNDLES_SHOWN = 2;
+
+/** The active bundle for a student, if any — the one row every other bundle
+ * status lookup on this card ultimately wants. */
+function activeBundleFor(bundles: StudentBundle[]): StudentBundle | undefined {
+  return bundles.find(b => b.status === "active");
+}
 
 type CompletedBundleSummary = {
   bundle: StudentBundle;
@@ -239,10 +248,9 @@ function completedBundleSummaries(
 /**
  * Slim and static on purpose — a third the active bar's height, no percentage,
  * no animation — so the active bundle stays the only thing on the card that
- * reads as live. "Ended with N unused" is spelled out rather than left as a
- * bare fraction: a completed bundle with classes left over is a different
- * business fact from a clean finish, and the difference is exactly the thing
- * that got missed the one time this mattered (Finding 2).
+ * reads as live. Each line is built by bundleIdentityLine, the same function
+ * the active bundle's own identity line below uses — one place decides the
+ * wording and colour for every bundle on this card, active or completed.
  */
 const CompletedBundleLines = ({
   completed, onManageBundles,
@@ -258,23 +266,14 @@ const CompletedBundleLines = ({
   return (
     <div className="space-y-1.5 pt-0.5">
       {shown.map(({ bundle, bundleNumber, used, lastSessionDate }) => {
-        const tone = bundleTone(used, bundle.total_classes);
+        const { tone, text } = bundleIdentityLine(bundle, bundleNumber, used, lastSessionDate);
         const classes = BUNDLE_TONE_CLASSES[tone];
-        const usageText = tone === "unused"
-          ? `ended with ${bundle.total_classes - used} unused`
-          : `${used} of ${bundle.total_classes}`;
-        const window = lastSessionDate
-          ? `${formatSessionDate(bundle.coverage_start)} – ${formatSessionDate(lastSessionDate)}`
-          : `since ${formatSessionDate(bundle.coverage_start)}`;
         return (
           <div key={bundle.id} className="space-y-0.5">
             <div className="h-[3px] rounded-full bg-muted overflow-hidden">
               <div className={`h-full w-full ${classes.fill}`} />
             </div>
-            <p className={`text-[11px] ${classes.text}`}>
-              Bundle {bundleNumber} · {bundle.label} · {usageText} ·{" "}
-              {formatMoney(bundle.total_price, bundle.currency)} · {window}
-            </p>
+            <p className={`text-[11px] ${classes.text}`}>{text}</p>
           </div>
         );
       })}
@@ -300,10 +299,14 @@ const CompletedBundleLines = ({
  * screen disagree with the week.
  */
 const BundleBox = ({
-  balance, bundleNumber, bundleCount, unreviewed, completedBundles,
+  balance, activeBundle, bundleNumber, bundleCount, unreviewed, completedBundles,
   onAdd, onCatchUp, onManageBundles, onHistory, unconfirmedCount,
 }: {
   balance: BundleBalance | undefined;
+  /** The active bundle's own row, for bundleIdentityLine -- BundleBalance
+   * carries the numbers but not coverage_start/status/label. Undefined only
+   * when there is no active bundle, matching `balance`. */
+  activeBundle: StudentBundle | undefined;
   /** Undefined only when there is no active bundle, matching `balance`. */
   bundleNumber: number | undefined;
   /** Every bundle this student has ever had, any status -- shown on its own
@@ -346,6 +349,14 @@ const BundleBox = ({
   const pct = Math.min(100, Math.max(0, (used_classes / Math.max(1, total_classes)) * 100));
   const out = remaining_classes <= 0;
   const low = remaining_classes > 0 && remaining_classes <= 2;
+  // activeBundle is only absent if balance and activeBundle fell out of sync
+  // for a render or two -- falls back to the old plain wording rather than
+  // crash. bundleIdentityLine is the same function CompletedBundleLines
+  // uses; this is the one place on the card that draws it for a still-
+  // running bundle instead of a finished one.
+  const activeLine = activeBundle && bundleNumber != null
+    ? bundleIdentityLine(activeBundle, bundleNumber, used_classes, null)
+    : null;
 
   return (
     <div className={`rounded-md border px-3 py-2.5 space-y-2 ${out ? "border-destructive/50 bg-destructive/5" : ""}`}>
@@ -368,11 +379,9 @@ const BundleBox = ({
         />
       </div>
 
-      <CompletedBundleLines completed={completedBundles} onManageBundles={onManageBundles} />
-
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          {used_classes} of {total_classes} used
+        <span className={`text-xs ${activeLine ? BUNDLE_TONE_CLASSES[activeLine.tone].text : "text-muted-foreground"}`}>
+          {activeLine ? activeLine.text : `${used_classes} of ${total_classes} used`}
         </span>
         {out ? (
           <Badge className="bg-destructive text-destructive-foreground">
@@ -392,6 +401,15 @@ const BundleBox = ({
           Bundle finished. Classes still run and still block trial times — add the next
           bundle when you have agreed it with them.
         </p>
+      )}
+
+      {completedBundles.length > 0 && (
+        // Hairline divider: without it the completed line below reads as
+        // though it belongs to the active bundle above it, which is exactly
+        // what Re flagged after PR #116.
+        <div className="pt-2 mt-0.5 border-t border-border">
+          <CompletedBundleLines completed={completedBundles} onManageBundles={onManageBundles} />
+        </div>
       )}
 
       <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -1258,7 +1276,11 @@ const MyStudentsManager = () => {
           </div>
         )}
 
-        {students.map(student => (
+        {students.map(student => {
+          const studentBundles = allBundles?.get(student.id) ?? [];
+          const activeBundle = activeBundleFor(studentBundles);
+          const activeBundleNumber = activeBundle ? numberBundles(studentBundles).get(activeBundle.id) : undefined;
+          return (
           <div key={student.id} className="rounded-lg border p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -1316,17 +1338,13 @@ const MyStudentsManager = () => {
 
             <BundleBox
               balance={balances?.get(student.id)}
-              bundleNumber={(() => {
-                const active = (allBundles?.get(student.id) ?? []).find(b => b.status === "active");
-                return active ? numberBundles(allBundles?.get(student.id) ?? []).get(active.id) : undefined;
-              })()}
-              bundleCount={(allBundles?.get(student.id) ?? []).length}
-              unreviewed={(allBundles?.get(student.id) ?? []).some(
+              activeBundle={activeBundle}
+              bundleNumber={activeBundleNumber}
+              bundleCount={studentBundles.length}
+              unreviewed={studentBundles.some(
                 b => b.status === "active" && b.coverage_start_confirmed_at === null,
               )}
-              completedBundles={completedBundleSummaries(
-                allBundles?.get(student.id) ?? [], sessionSummaries ?? new Map(),
-              )}
+              completedBundles={completedBundleSummaries(studentBundles, sessionSummaries ?? new Map())}
               unconfirmedCount={unconfirmedCount(student.id)}
               onAdd={() => openBundleDialog(student)}
               onCatchUp={() => openCatchUp(student)}
@@ -1390,7 +1408,8 @@ const MyStudentsManager = () => {
               </Button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </CardContent>
 
       {/* Student dialog */}
