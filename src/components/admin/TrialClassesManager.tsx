@@ -689,8 +689,16 @@ const TrialClassesManager = () => {
   /**
    * Cairo is where every trial student is; the authoring timezone (still
    * sometimes the teacher's own, per ADMIN_TIMEZONE) is secondary context,
-   * not the headline. `mismatched` is what would have caught the 5:30am
-   * slot labelled "evening" before it ever went live, instead of after.
+   * not the headline. `impliedPeriod` (derived from the real Cairo-local
+   * hour) is now the only session-period value shown — there is no stored
+   * label left for it to disagree with, which is exactly the point: a
+   * derived value cannot lie the way the old free-typed `session_period`
+   * field could (see issue #127).
+   *
+   * `asiaLabel`, English slots only: the same instant in Kuala Lumpur, so
+   * Re doesn't have to convert Asia-audience slots in her head. Illustrative
+   * only — there's no stored per-slot audience timezone, so this is one
+   * representative Asia city, not a claim about where every student is.
    */
   const cairoViewFor = (s: TrialSlotRow) => {
     if (!s.trial_date) return null;
@@ -699,11 +707,14 @@ const TrialClassesManager = () => {
     const d = new Date(`${cairo.dateStr}T00:00:00`);
     const label = `${cairo.weekday.slice(0, 3)} ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${cairo.timeFormatted}`;
     const impliedPeriod = deriveSessionPeriod(cairo.hour24);
+    const asiaLabel = s.class_language === "english"
+      ? convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Asia/Kuala_Lumpur").timeFormatted
+      : null;
     return {
       label,
       dateStr: cairo.dateStr,
       impliedPeriod,
-      mismatched: !!s.session_period && s.session_period !== impliedPeriod,
+      asiaLabel,
       authoredDiffers: s.timezone !== "Africa/Cairo",
     };
   };
@@ -764,23 +775,17 @@ const TrialClassesManager = () => {
                                     authored {s.trial_date !== cairo.dateStr ? `${s.trial_date} ` : ""}{s.start_time} {s.timezone.replace(/_/g, " ")}
                                   </div>
                                 )}
+                                {cairo.asiaLabel && (
+                                  <div className="text-muted-foreground/70 text-[10px] font-mono">
+                                    ≈ {cairo.asiaLabel} Kuala Lumpur
+                                  </div>
+                                )}
                               </>
                             ) : (
                               <span className="font-mono">{s.start_time} ({s.timezone}) · {DAY_NAMES[s.day_of_week]}</span>
                             )}
                           </TableCell>
-                          <TableCell className="text-xs">
-                            {s.session_period ? (
-                              <span className={`capitalize inline-flex items-center gap-1 ${cairo?.mismatched ? "text-destructive font-medium" : ""}`}>
-                                {s.session_period}
-                                {cairo?.mismatched && (
-                                  <span title={`This is ${cairo.impliedPeriod} in Cairo, not ${s.session_period} — the label and the actual local hour disagree.`}>
-                                    <AlertTriangle className="h-3.5 w-3.5" />
-                                  </span>
-                                )}
-                              </span>
-                            ) : "—"}
-                          </TableCell>
+                          <TableCell className="text-xs capitalize">{cairo?.impliedPeriod ?? "—"}</TableCell>
                           <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
                           <TableCell className="text-xs text-right">{s.capacity}</TableCell>
                           <TableCell className="text-right">
