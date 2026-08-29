@@ -124,6 +124,8 @@ export interface TrialSlotRow {
   class_language: 'arabic' | 'english' | null;
   min_to_run: number | null;
   session_period: TrialSessionPeriod | null;
+  rollover_skipped_at: string | null;
+  rollover_skip_reason: string | null;
   created_at: string;
   updated_at: string;
 }
