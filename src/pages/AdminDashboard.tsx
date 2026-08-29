@@ -1068,9 +1068,9 @@ const AdminDashboard = () => {
 
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "manage", "sales", "promos"] },
-    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["group-attendance", "group-matcher", "placement-tests", "session-attendance", "my-students", "availability", "preferences", "league-users"] },
+    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit"] },
-    { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "availability", "settings"] },
+    { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings"] },
   ];
   const activeGroup = TAB_GROUPS.find(g => g.tabs.includes(adminTab))?.id ?? "ops";
   const [tabGroup, setTabGroup] = useState<string>(activeGroup);
@@ -1397,6 +1397,27 @@ const AdminDashboard = () => {
                     <Tag className="h-3.5 w-3.5" /> Promos
                   </TabsTrigger>
                 )}
+                {inActiveGroup("my-students") && (
+                  <TabsTrigger value="my-students" className={TAB_CLS}>
+                    <GraduationCap className="h-3.5 w-3.5" /> My Students
+                  </TabsTrigger>
+                )}
+                {inActiveGroup("placement-tests") && (
+                  <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
+                )}
+                {inActiveGroup("preferences") && (
+                  <TabsTrigger value="preferences" className={TAB_CLS}>
+                    <BarChart3 className="h-3.5 w-3.5" /> Preferences
+                  </TabsTrigger>
+                )}
+                {inActiveGroup("availability") && (
+                  <TabsTrigger value="availability" className={TAB_CLS}>
+                    <Clock className="h-3.5 w-3.5" /> Group Availability
+                  </TabsTrigger>
+                )}
+                {inActiveGroup("group-matcher") && (
+                  <TabsTrigger value="group-matcher" className={TAB_CLS}>Matcher</TabsTrigger>
+                )}
                 {inActiveGroup("group-attendance") && (
                   <TabsTrigger value="group-attendance" className={TAB_CLS}>
                     <Users className="h-3.5 w-3.5" /> Groups
@@ -1405,20 +1426,9 @@ const AdminDashboard = () => {
                     )}
                   </TabsTrigger>
                 )}
-                {inActiveGroup("group-matcher") && (
-                  <TabsTrigger value="group-matcher" className={TAB_CLS}>Matcher</TabsTrigger>
-                )}
-                {inActiveGroup("placement-tests") && (
-                  <TabsTrigger value="placement-tests" className={TAB_CLS}>Placement Tests</TabsTrigger>
-                )}
                 {inActiveGroup("session-attendance") && (
                   <TabsTrigger value="session-attendance" className={TAB_CLS}>
                     <FileCheck className="h-3.5 w-3.5" /> Attendance
-                  </TabsTrigger>
-                )}
-                {inActiveGroup("preferences") && (
-                  <TabsTrigger value="preferences" className={TAB_CLS}>
-                    <BarChart3 className="h-3.5 w-3.5" /> Preferences
                   </TabsTrigger>
                 )}
                 {inActiveGroup("league-users") && (
@@ -1461,16 +1471,6 @@ const AdminDashboard = () => {
                 )}
                 {inActiveGroup("scheduling") && (
                   <TabsTrigger value="scheduling" className={TAB_CLS}>Scheduling</TabsTrigger>
-                )}
-                {inActiveGroup("my-students") && (
-                  <TabsTrigger value="my-students" className={TAB_CLS}>
-                    <GraduationCap className="h-3.5 w-3.5" /> My Students
-                  </TabsTrigger>
-                )}
-                {inActiveGroup("availability") && (
-                  <TabsTrigger value="availability" className={TAB_CLS}>
-                    <Clock className="h-3.5 w-3.5" /> Group Availability
-                  </TabsTrigger>
                 )}
                 {inActiveGroup("settings") && (
                   <TabsTrigger value="settings" className={TAB_CLS}>
