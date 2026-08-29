@@ -24,9 +24,26 @@ function timeAgo(iso: string): string {
 }
 
 /**
- * Community achievements feed — shows recent badges earned by other students.
- * Uses a simple public query (no RLS leak: only badge_key + first-name initial).
- * Refreshes every 60 seconds via polling.
+ * Your achievements feed — the badges YOU have earned, most recent first.
+ *
+ * This was built as a community feed and never was one. Two independent
+ * defects, both silent, both corrected here rather than papered over:
+ *
+ *   1. It selected `profiles!inner(full_name)`. There is no `full_name` column
+ *      on `profiles` — it is `name`. PostgREST rejected every request, `data`
+ *      came back null, and the `if (!data) return` below made it look like an
+ *      empty feed rather than a failing query. Same defect class as the
+ *      `xp_amount` typo that kept the weekly leaderboard dead from launch.
+ *   2. A comment here asserted "RLS: student_badges is readable by all
+ *      authenticated users (public league data)". That is false. The live
+ *      policy is `Users can view own badges` — own row OR admin. Even with the
+ *      column fixed, this query can only ever return the caller's own badges.
+ *
+ * Making it genuinely communal needs a SECURITY DEFINER `get_community_feed()`
+ * on the same pattern as the leaderboard RPCs (see
+ * supabase/migrations/20260828120000_games_leaderboard_rpcs.sql). That is a
+ * migration, so it belongs in its own PR. Until then this is honest about
+ * being personal.
  */
 export default function CommunityFeed() {
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -34,14 +51,18 @@ export default function CommunityFeed() {
 
   const fetchFeed = async () => {
     try {
-      // Join student_badges with profiles to get a display name
-      // RLS: student_badges is readable by all authenticated users (public league data)
-      const { data } = await supabase
+      // `name`, not `full_name` — see the note above. RLS scopes this to the
+      // caller's own rows regardless, which is why the copy says "You".
+      const { data, error } = await supabase
         .from("student_badges" as never)
-        .select("id, badge_key, created_at, user_id, profiles!inner(full_name)")
+        .select("id, badge_key, created_at, user_id, profiles!inner(name)")
         .order("created_at", { ascending: false })
         .limit(20) as any;
 
+      if (error) {
+        console.error("Achievements feed:", error);
+        return;
+      }
       if (!data) return;
 
       const feed: FeedItem[] = data
@@ -50,9 +71,9 @@ export default function CommunityFeed() {
           id: r.id,
           badgeKey: r.badge_key,
           earnedAt: r.created_at,
-          displayName: r.profiles?.full_name
-            ? r.profiles.full_name.split(" ")[0]   // first name only for privacy
-            : "A student",
+          displayName: r.profiles?.name
+            ? r.profiles.name.split(" ")[0]   // first name only for privacy
+            : "You",
         }));
 
       setItems(feed);
@@ -66,8 +87,8 @@ export default function CommunityFeed() {
   useEffect(() => {
     fetchFeed();
 
-    // Subscribe to real-time inserts on student_badges so the feed updates
-    // instantly when any student earns a new badge — no polling needed.
+    // Realtime INSERT on student_badges. Under own-row RLS this delivers only
+    // your own inserts — which matches what the query can read anyway.
     const channel = supabase
       .channel("community-badges")
       .on(
@@ -97,12 +118,12 @@ export default function CommunityFeed() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Users className="w-4 h-4 text-primary" aria-hidden="true" />
-          Community Achievements
+          Your Achievements
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <ul
-          aria-label="Recent achievements by other students"
+          aria-label="Your recent achievements"
           className="divide-y divide-border"
         >
           {items.slice(0, 10).map(item => {
