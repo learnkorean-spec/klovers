@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { convertSlotToTimezone, convertDateTimeToTimezone, formatTime } from "./admin-utils";
+import { convertSlotToTimezone, convertDateTimeToTimezone, deriveSessionPeriod, formatTime } from "./admin-utils";
 
 describe("formatTime", () => {
   it("converts 24h → 12h", () => {
@@ -74,5 +74,33 @@ describe("convertDateTimeToTimezone (specific date)", () => {
   it("handles invalid input", () => {
     const r = convertDateTimeToTimezone("", "18:00", "Africa/Cairo", "Africa/Cairo");
     expect(r.dateStr).toBe("");
+  });
+
+  it("gives hour24 as the real 24h hour, not derived from the 12h+AM/PM string", () => {
+    // The exact bug this file exists to catch: 5:30am mislabelled evening.
+    expect(convertDateTimeToTimezone("2026-09-05", "05:30", "Africa/Cairo", "Africa/Cairo").hour24).toBe(5);
+    expect(convertDateTimeToTimezone("2026-09-05", "17:00", "Africa/Cairo", "Africa/Cairo").hour24).toBe(17);
+    expect(convertDateTimeToTimezone("2026-09-05", "00:15", "Africa/Cairo", "Africa/Cairo").hour24).toBe(0);
+    expect(convertDateTimeToTimezone("2026-09-05", "12:00", "Africa/Cairo", "Africa/Cairo").hour24).toBe(12);
+  });
+});
+
+describe("deriveSessionPeriod", () => {
+  it("is morning before noon", () => {
+    expect(deriveSessionPeriod(0)).toBe("morning");
+    expect(deriveSessionPeriod(5)).toBe("morning");
+    expect(deriveSessionPeriod(11)).toBe("morning");
+  });
+
+  it("is daytime from noon up to (not including) 5pm", () => {
+    expect(deriveSessionPeriod(12)).toBe("daytime");
+    expect(deriveSessionPeriod(14)).toBe("daytime"); // the known Friday anchor
+    expect(deriveSessionPeriod(16)).toBe("daytime");
+  });
+
+  it("is evening from 5pm on", () => {
+    expect(deriveSessionPeriod(17)).toBe("evening"); // the known Sat/Sun/Mon anchor
+    expect(deriveSessionPeriod(20)).toBe("evening");
+    expect(deriveSessionPeriod(23)).toBe("evening");
   });
 });

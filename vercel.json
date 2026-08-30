@@ -106,12 +106,21 @@
       "source": "/blog/ar-learn-korean-alphabet-hangul",
       "destination": "/blog/learn-korean-alphabet-hangul-guide-ar",
       "permanent": true
+    },
+    {
+      "source": "/blog/korean-learning-apps-comparison-2026-ar",
+      "destination": "/blog/korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+      "permanent": true
     }
   ],
   "rewrites": [
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap.xml"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/api/blog-not-found"
     },
     {
       "source": "/((?!api|assets|videos|klovers-logo\\.jpg|klovers-mascot\\.svg|instagram-posts\\.html|favicon\\.ico|placeholder\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|sw\\.js|app\\.html|8f8e25f6c4d7b10abab899f355a7e529\\.txt).*)",

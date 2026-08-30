@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Originally hardcoded to project ref yqzjsmqrtxwaxqzyhxki, abandoned same-day on
+// 2026-03-19 (linked, found empty, reverted within 4 minutes — commit 17b040c) and
+// superseded by ewtdgpbybkceokfohhyg the next day. Verified gone from the Supabase
+// account entirely as of 2026-08-25 — no rotation needed. See docs/SECURITY_BACKLOG.md.
 const supabase = createClient(
-  'https://yqzjsmqrtxwaxqzyhxki.supabase.co',
-  'sb_secret_EkMbAC4-DdPjSq4UOzItdQ_5K86bTfs'
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY
 );
 
 const { data: lesson, error: le } = await supabase

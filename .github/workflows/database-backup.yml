@@ -142,15 +142,18 @@ jobs:
           set -euo pipefail
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
           # Captured before the dump so the restore can be checked against it.
+          # Schema-qualified (public.X vs auth.X are different tables) and
+          # covers auth/storage as well as public - the verify step below
+          # fails the run if a dumped auth or storage table doesn't come back.
           psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -tAF'|' -v ON_ERROR_STOP=1 <<'SQL' > prod-counts.txt
-          SELECT c.relname, (xpath('/row/c/text()',
-                   query_to_xml(format('SELECT count(*) AS c FROM public.%I', c.relname),
+          SELECT n.nspname || '.' || c.relname, (xpath('/row/c/text()',
+                   query_to_xml(format('SELECT count(*) AS c FROM %I.%I', n.nspname, c.relname),
                                 false, true, '')))[1]::text::bigint
             FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-           WHERE n.nspname = 'public' AND c.relkind = 'r'
-           ORDER BY c.relname;
+           WHERE n.nspname IN ('public', 'auth', 'storage') AND c.relkind = 'r'
+           ORDER BY 1;
           SQL
-          echo "Tables in public: $(wc -l < prod-counts.txt)"
+          echo "Tables (public+auth+storage): $(wc -l < prod-counts.txt)"
           echo "Total rows: $(awk -F'|' '{s+=$2} END {print s+0}' prod-counts.txt)"
 
       - name: Dump the database
@@ -273,14 +276,40 @@ jobs:
             echo "::endgroup::"
           done
 
+          # auth and storage are OPTIONAL at dump time (dump_schema above), so
+          # restoring them is conditional on them actually having been dumped.
+          # A schema recorded in SKIPPED.txt was never captured this run - that
+          # is a known, already-warned-about gap, not something to fail on
+          # again here. One that should have dumped but has no file and no
+          # SKIPPED.txt entry is a genuine surprise and does fail the run.
+          for schema in auth storage; do
+            f="restore/${schema}.sql"
+            if [ -f "$f" ]; then
+              echo "::group::restore ${schema}.sql"
+              $PSQL -q -f "$f" > /dev/null 2> "${schema}.sql.err" || true
+              echo "psql errors: $(grep -c '^psql:' "${schema}.sql.err" || true)"
+              echo "::endgroup::"
+            elif [ -f restore/SKIPPED.txt ] && grep -qx "$schema" restore/SKIPPED.txt; then
+              echo "skipping restore of ${schema}: this run's pg_dump could not read it (see SKIPPED.txt) - already warned above"
+            else
+              echo "::error::${schema}.sql is absent from the archive and was not recorded as skipped. Treating as a failed dump."
+              exit 1
+            fi
+          done
+
+          # Schema-qualified, and covers auth/storage alongside public - has to
+          # match the shape of prod-counts.txt exactly for the comparison below
+          # to line up.
           $PSQL -tAF'|' -c "
-            SELECT c.relname, (xpath('/row/c/text()',
-                     query_to_xml(format('SELECT count(*) AS c FROM public.%I', c.relname),
+            SELECT n.nspname || '.' || c.relname, (xpath('/row/c/text()',
+                     query_to_xml(format('SELECT count(*) AS c FROM %I.%I', n.nspname, c.relname),
                                   false, true, '')))[1]::text::bigint
               FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-             WHERE n.nspname='public' AND c.relkind='r' ORDER BY c.relname;" > restored-counts.txt
+             WHERE n.nspname IN ('public', 'auth', 'storage') AND c.relkind='r' ORDER BY 1;" > restored-counts.txt
 
           python3 - <<'PY' | tee verify-report.txt
+          import os
+
           def load(p):
               d = {}
               for line in open(p):
@@ -290,28 +319,43 @@ jobs:
                   d[t] = int(c)
               return d
 
+          def schema_of(key):
+              return key.split('.', 1)[0]
+
+          # Schemas this run's pg_dump could not read at all - a known,
+          # already-warned-about gap. Their tables cannot possibly have
+          # restored and must not be scored as a verification failure for
+          # a reason the restore step didn't cause.
+          skipped_schemas = set()
+          if os.path.exists('restore/SKIPPED.txt'):
+              skipped_schemas = {l.strip() for l in open('restore/SKIPPED.txt') if l.strip()}
+
           prod = load('restore/ROW-COUNTS.txt')
           got  = load('restored-counts.txt')
+          checkable = {t: n for t, n in prod.items() if schema_of(t) not in skipped_schemas}
+          skipped_tables = sorted(t for t in prod if schema_of(t) in skipped_schemas)
 
-          missing = sorted(t for t in prod if t not in got)
+          missing = sorted(t for t in checkable if t not in got)
           # Fatal: production had rows and the restore has none.
-          empty   = sorted(t for t, n in prod.items() if n > 0 and got.get(t, 0) == 0)
+          empty   = sorted(t for t, n in checkable.items() if n > 0 and got.get(t, 0) == 0)
           # Not fatal: production is live, so a write during the dump can move
           # a count by a row or two. Reported so it never passes unnoticed.
-          drift   = sorted((t, prod[t], got[t]) for t in prod
-                           if t in got and got[t] and prod[t] != got[t])
+          drift   = sorted((t, checkable[t], got[t]) for t in checkable
+                           if t in got and got[t] and checkable[t] != got[t])
 
-          print(f"tables in production : {len(prod)}")
+          print(f"tables in production : {len(prod)} (auth/storage/public)")
+          print(f"tables checkable this run : {len(checkable)} ({len(skipped_tables)} skipped - schema not dumped)")
           print(f"tables restored      : {len(got)}")
           print(f"rows in production   : {sum(prod.values())}")
           print(f"rows restored        : {sum(got.values())}")
+          if skipped_tables: print("SKIPPED (schema not dumped this run): " + ", ".join(skipped_tables))
           if missing: print("MISSING TABLES: " + ", ".join(missing))
           if empty:   print("EMPTY AFTER RESTORE: " + ", ".join(empty))
           for t, a, b in drift: print(f"drift: {t} production={a} restored={b}")
 
           if missing or empty:
               raise SystemExit("::error::Restore verification FAILED - the backup is not trustworthy.")
-          print("RESTORE VERIFIED: every production table came back with its rows.")
+          print("RESTORE VERIFIED: every production table came back with its rows (public, auth, storage).")
           PY
 
       - name: Upload the encrypted backup

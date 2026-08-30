@@ -12,16 +12,54 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, within, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { BundleBalance, MyStudentWithClasses, StudentClassSession } from "@/types/students";
+import type { BundleBalance, MyStudentWithClasses, StudentBundle, StudentClassSession } from "@/types/students";
 
 const confirmMutate = vi.fn().mockResolvedValue(undefined);
 const unconfirmMutate = vi.fn().mockResolvedValue(undefined);
 const addBundleMutate = vi.fn().mockResolvedValue(undefined);
+const updateBundleMutate = vi.fn().mockResolvedValue(undefined);
+const deleteBundleMutate = vi.fn().mockResolvedValue({ auditLogged: true });
 const upsertClassMutate = vi.fn().mockResolvedValue(undefined);
 
 let students: MyStudentWithClasses[] = [];
 let balances = new Map<string, BundleBalance>();
 let sessions: StudentClassSession[] = [];
+/** Per-student full bundle history for tests that need more than one bundle,
+ * multiple statuses, or a specific coverage_start/review state. Most tests
+ * never set this -- see useAllBundles below, which synthesises one bundle
+ * per entry in `balances` when it is empty, so the ~40 tests written before
+ * coverage_start existed keep working unchanged. */
+let studentBundles: Map<string, StudentBundle[]> = new Map();
+/** admin_audit_log rows for the currently-open student's deleted bundles --
+ * see useDeletedBundles. Most tests never set this. */
+let deletedBundles: Array<{
+  id: string; deletedAt: string;
+  snapshot: {
+    bundle_number: number; label: string; total_classes: number; total_price: number;
+    currency: string; coverage_start: string; voided_reason: string | null;
+  };
+}> = [];
+
+/** A StudentBundle from the BundleBalance shape older tests already build,
+ * with a coverage_start far enough in the past to resolve any session date
+ * those tests use, and marked reviewed so no test gets a surprise badge. */
+const syntheticBundle = (studentId: string, b: BundleBalance): StudentBundle => ({
+  id: b.bundle_id,
+  student_id: studentId,
+  source: b.source,
+  catalog_key: b.catalog_key,
+  label: b.label,
+  total_classes: b.total_classes,
+  total_price: b.total_price,
+  currency: b.currency,
+  purchased_on: b.purchased_on,
+  coverage_start: "2000-01-01",
+  coverage_start_confirmed_at: "2026-01-01T00:00:00Z",
+  status: "active",
+  voided_reason: null,
+  voided_at: null,
+  note: null,
+});
 
 vi.mock("@/hooks/admin/useMyStudents", () => ({
   useMyStudents: () => ({ data: students, isLoading: false }),
@@ -33,8 +71,38 @@ vi.mock("@/hooks/admin/useMyStudents", () => ({
   checkClassConflicts: vi.fn().mockResolvedValue([]),
   useBundleBalances: () => ({ data: balances }),
   useRecentSessions: () => ({ data: sessions }),
-  useStudentBundles: () => ({ data: [] }),
+  useAllStudentSessions: (studentId: string | null) => ({
+    data: sessions.filter(s => s.student_id === studentId),
+    isLoading: false,
+  }),
+  useStudentBundles: (studentId: string | null) => ({
+    data: studentId
+      ? studentBundles.get(studentId) ?? (balances.has(studentId) ? [syntheticBundle(studentId, balances.get(studentId)!)] : [])
+      : [],
+  }),
+  useAllBundles: () => ({
+    data: studentBundles.size > 0
+      ? studentBundles
+      : new Map([...balances.entries()].map(([sid, b]) => [sid, [syntheticBundle(sid, b)]])),
+  }),
+  useBundleEdits: () => ({ data: [] }),
+  useBundleSessionSummaries: () => ({
+    data: (() => {
+      const map = new Map<string, { used: number; lastDate: string | null }>();
+      for (const s of [...sessions].sort((a, b) => a.session_date.localeCompare(b.session_date))) {
+        if (!s.counted) continue;
+        const cur = map.get(s.bundle_id) ?? { used: 0, lastDate: null };
+        cur.used += 1;
+        cur.lastDate = s.session_date;
+        map.set(s.bundle_id, cur);
+      }
+      return map;
+    })(),
+  }),
   useAddBundle: () => ({ mutateAsync: addBundleMutate, isPending: false }),
+  useUpdateBundle: () => ({ mutateAsync: updateBundleMutate, isPending: false }),
+  useDeleteBundle: () => ({ mutateAsync: deleteBundleMutate, isPending: false }),
+  useDeletedBundles: () => ({ data: deletedBundles }),
   useConfirmSessions: () => ({ mutateAsync: confirmMutate, isPending: false }),
   useUnconfirmSession: () => ({ mutateAsync: unconfirmMutate, isPending: false }),
 }));
@@ -86,6 +154,25 @@ const balance = (over: Partial<BundleBalance> = {}): BundleBalance => ({
   ...over,
 });
 
+const studentBundle = (over: Partial<StudentBundle> = {}): StudentBundle => ({
+  id: "bundle-1",
+  student_id: "solafa",
+  source: "custom",
+  catalog_key: null,
+  label: "16 English classes",
+  total_classes: 16,
+  total_price: 6400,
+  currency: "EGP",
+  purchased_on: "2026-08-12",
+  coverage_start: "2026-08-12",
+  coverage_start_confirmed_at: "2026-08-12T00:00:00Z",
+  status: "active",
+  voided_reason: null,
+  voided_at: null,
+  note: null,
+  ...over,
+});
+
 const draw = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -101,11 +188,14 @@ const click = (el: Element) => { fireEvent.click(el); };
 beforeEach(() => {
   vi.clearAllMocks();
   upsertClassMutate.mockResolvedValue(undefined);
+  deleteBundleMutate.mockResolvedValue({ auditLogged: true });
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(NOW);
   students = [solafa()];
   balances = new Map([["solafa", balance()]]);
   sessions = [];
+  studentBundles = new Map();
+  deletedBundles = [];
 });
 
 afterEach(() => {
@@ -115,9 +205,12 @@ afterEach(() => {
 describe("the bundle on the card", () => {
   it("shows what they bought, in the currency they paid", () => {
     draw();
-    expect(screen.getByText("16 English classes")).toBeInTheDocument();
+    // Prefixed with its bundle number ("Bundle 1 — ...") in the title row --
+    // see numbering below -- and again in its own identity line beneath the
+    // bar, so both queries now find two matches, not one.
+    expect(screen.getAllByText(/16 English classes/).length).toBeGreaterThan(0);
     // Intl renders the code as a prefix: "EGP 6,400.00".
-    expect(screen.getByText(/EGP\s*6,400/)).toBeInTheDocument();
+    expect(screen.getAllByText(/EGP\s*6,400/).length).toBeGreaterThan(0);
   });
 
   it("shows the price per class rather than storing it", () => {
@@ -128,7 +221,7 @@ describe("the bundle on the card", () => {
 
   it("shows usage and what is left", () => {
     draw();
-    expect(screen.getByText("9 of 16 used")).toBeInTheDocument();
+    expect(screen.getByText(/9 of 16/)).toBeInTheDocument();
     expect(screen.getByText("7 left")).toBeInTheDocument();
   });
 
@@ -139,8 +232,8 @@ describe("the bundle on the card", () => {
       ["nora", balance({ student_id: "nora", bundle_id: "b2", label: "Private · 3 months", total_price: 1238, currency: "SAR", total_classes: 12, used_classes: 0, remaining_classes: 12 })],
     ]);
     draw();
-    expect(screen.getByText(/SAR\s*1,238/)).toBeInTheDocument();
-    expect(screen.getByText(/EGP\s*6,400/)).toBeInTheDocument();
+    expect(screen.getAllByText(/SAR\s*1,238/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/EGP\s*6,400/).length).toBeGreaterThan(0);
   });
 
   it("offers to add one when the student has no bundle", () => {
@@ -469,7 +562,7 @@ describe("the class start date", () => {
     // The resulting balance the card would show once those 4 are counted.
     balances = new Map([["solafa", balance({ used_classes: 4, remaining_classes: 12 })]]);
     draw();
-    expect(screen.getByText("4 of 16 used")).toBeInTheDocument();
+    expect(screen.getByText(/4 of 16/)).toBeInTheDocument();
     expect(screen.getByText("12 left")).toBeInTheDocument();
   });
 });
@@ -560,5 +653,587 @@ describe("the catch-up queue has no expiry", () => {
     draw();
     click(screen.getByRole("button", { name: /Catch up/i }));
     expect(screen.getByText("Nothing waiting — every class is confirmed.")).toBeInTheDocument();
+  });
+});
+
+describe("bundle numbering and negative balance in Manage bundles", () => {
+  it("numbers bundles per student ordered by coverage_start, oldest first", () => {
+    studentBundles = new Map([["solafa", [
+      studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed" }),
+      studentBundle({ id: "b2", coverage_start: "2026-06-01", status: "active", label: "Renewal" }),
+    ]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", label: "Renewal" })]]);
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText(/Bundle 1 —/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Bundle 2 —/)).toBeInTheDocument();
+  });
+
+  it("surfaces a negative balance on a superseded bundle, not only the active one", () => {
+    // The exact real-world case this shipped for: a 4-class bundle overran to
+    // -1 after being superseded, invisible anywhere except a direct query.
+    const overrun = studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed", total_classes: 4, label: "Overrun bundle" });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-06-01", status: "active", label: "Current bundle" });
+    studentBundles = new Map([["solafa", [overrun, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", label: "Current bundle" })]]);
+    sessions = Array.from({ length: 5 }, (_, i) => ({
+      id: `s${i}`, student_id: "solafa", bundle_id: "b1", class_id: null,
+      session_date: `2026-0${i + 1}-15`, start_time: "22:00:00",
+      outcome: "attended" as const, counted: true, confirmed_at: "2026-01-15T00:00:00Z", note: null,
+    }));
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    expect(within(screen.getByRole("dialog")).getByText("1 over")).toBeInTheDocument();
+  });
+});
+
+describe("the completed-bundle history on the student card", () => {
+  const countedSession = (id: string, bundleId: string, date: string) => ({
+    id, student_id: "solafa", bundle_id: bundleId, class_id: null,
+    session_date: date, start_time: "19:00:00",
+    outcome: "attended" as const, counted: true, confirmed_at: `${date}T00:00:00Z`, note: null,
+  });
+
+  it("shows a clean finish as a plain fraction, not the 'ended with' wording", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed",
+      label: "Private · 1 month · 4 classes", total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = [
+      countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13"),
+      countedSession("s3", "b1", "2026-07-20"), countedSession("s4", "b1", "2026-07-27"),
+    ];
+    draw();
+    expect(screen.getByText(
+      /Bundle 1 · Private · 1 month · 4 classes · 4 of 4 · EGP 2,350\.00 · Mon 6 Jul – Mon 27 Jul/,
+    )).toBeInTheDocument();
+    expect(screen.queryByText(/ended with/)).not.toBeInTheDocument();
+  });
+
+  it("names an unfinished-but-completed bundle in words, not a bare fraction", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4,
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = [countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13")];
+    draw();
+    expect(screen.getByText(/ended with 2 unused/)).toBeInTheDocument();
+    expect(screen.queryByText(/·\s*2 of 4\s*·/)).not.toBeInTheDocument();
+  });
+
+  it("still shows a negative balance on a completed bundle on the card itself, not only in Manage bundles", () => {
+    const overrun = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4,
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [overrun, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = Array.from({ length: 5 }, (_, i) => countedSession(`s${i}`, "b1", `2026-07-0${i + 1}`));
+    draw();
+    expect(screen.getByText(/5 of 4/)).toBeInTheDocument();
+  });
+
+  it("caps completed bundles at 2, most recent first, with the rest folded into Manage bundles", () => {
+    const b1 = studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed", label: "Oldest" });
+    const b2 = studentBundle({ id: "b2", coverage_start: "2026-03-01", status: "completed", label: "Middle" });
+    const b3 = studentBundle({ id: "b3", coverage_start: "2026-05-01", status: "completed", label: "Newest" });
+    const active = studentBundle({ id: "b4", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [b1, b2, b3, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b4" })]]);
+    sessions = [];
+    draw();
+    expect(screen.getByText(/Bundle 3 · Newest/)).toBeInTheDocument();
+    expect(screen.getByText(/Bundle 2 · Middle/)).toBeInTheDocument();
+    expect(screen.queryByText(/Bundle 1 · Oldest/)).not.toBeInTheDocument();
+    expect(screen.getByText("+1 more completed — see all in Manage bundles")).toBeInTheDocument();
+  });
+
+  it("excludes cancelled bundles from the completed-bundle history entirely", () => {
+    const voided = studentBundle({
+      id: "b1", coverage_start: "2026-06-01", status: "cancelled", voided_reason: "created by mistake", label: "Voided bundle",
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active" });
+    studentBundles = new Map([["solafa", [voided, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2" })]]);
+    sessions = [];
+    draw();
+    expect(screen.queryByText(/Voided bundle/)).not.toBeInTheDocument();
+  });
+});
+
+describe("the active bundle's own identity line", () => {
+  it("carries the same identity-line format as completed bundles, with an open-ended 'from' date", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active",
+      label: "Private · 1 month · 4 classes", total_classes: 4, total_price: 2350, currency: "EGP",
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", label: "Private · 1 month · 4 classes",
+      total_classes: 4, used_classes: 1, remaining_classes: 3, total_price: 2350, currency: "EGP",
+    })]]);
+    draw();
+    expect(screen.getByText(
+      /Bundle 1 · Private · 1 month · 4 classes · 1 of 4 · EGP 2,350\.00 · from Mon 24 Aug/,
+    )).toBeInTheDocument();
+    // The old plain wording this line replaces must be gone entirely.
+    expect(screen.queryByText(/1 of 4 used/)).not.toBeInTheDocument();
+    // Keeps the existing "left" pill on the same row, untouched.
+    expect(screen.getByText("3 left")).toBeInTheDocument();
+  });
+
+  it("never reads green even when a still-running bundle happens to be fully used", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 4, remaining_classes: 0,
+    })]]);
+    draw();
+    const line = screen.getByText(/4 of 4/);
+    expect(line.className).toContain("text-muted-foreground");
+    expect(line.className).not.toContain("text-green");
+  });
+
+  it("reads a zero-session active bundle plainly, not as an error", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 0, remaining_classes: 4,
+    })]]);
+    draw();
+    expect(screen.getByText(/0 of 4/)).toBeInTheDocument();
+  });
+
+  it("separates the completed-bundle history from the active bundle with a divider", () => {
+    const finished = studentBundle({ id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4 });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active", total_classes: 4 });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", total_classes: 4, used_classes: 1, remaining_classes: 3 })]]);
+    sessions = [];
+    draw();
+    const completedLine = screen.getByText(/Bundle 1 ·/);
+    expect(completedLine.closest(".border-t")).not.toBeNull();
+  });
+});
+
+describe("the slim consumption bar beneath each bundle's line", () => {
+  const countedSession = (id: string, bundleId: string, date: string) => ({
+    id, student_id: "solafa", bundle_id: bundleId, class_id: null,
+    session_date: date, start_time: "19:00:00",
+    outcome: "attended" as const, counted: true, confirmed_at: `${date}T00:00:00Z`, note: null,
+  });
+
+  it("fills the active bundle's bar to counted/total in green, directly beneath its line", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 1, remaining_classes: 3,
+    })]]);
+    draw();
+    const line = screen.getByText(/1 of 4/);
+    // The row holds the line and the "left" badge together; the bar is the
+    // very next element after that whole row, not part of it.
+    const bar = line.closest(".flex")!.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-green-500/70");
+    expect(fill).toHaveStyle({ width: "25%" });
+  });
+
+  it("renders an empty track for a zero-session active bundle, not an error", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 0, remaining_classes: 4,
+    })]]);
+    draw();
+    const line = screen.getByText(/0 of 4/);
+    const bar = line.closest(".flex")!.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill).toHaveStyle({ width: "0%" });
+  });
+
+  it("clamps an overrun active bundle's bar to 100% in red, never past its track", () => {
+    studentBundles = new Map([["solafa", [studentBundle({
+      id: "bundle-1", coverage_start: "2026-08-24", status: "active", total_classes: 4,
+    })]]]);
+    balances = new Map([["solafa", balance({
+      bundle_id: "bundle-1", total_classes: 4, used_classes: 6, remaining_classes: -2,
+    })]]);
+    draw();
+    const line = screen.getByText(/6 of 4/);
+    const bar = line.closest(".flex")!.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-destructive");
+    expect(fill).toHaveStyle({ width: "100%" });
+  });
+
+  it("puts each completed bundle's line above its bar, matching the active bundle's own order", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed",
+      label: "Private · 1 month · 4 classes", total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active", total_classes: 4 });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", total_classes: 4, used_classes: 1, remaining_classes: 3 })]]);
+    sessions = [
+      countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13"),
+      countedSession("s3", "b1", "2026-07-20"), countedSession("s4", "b1", "2026-07-27"),
+    ];
+    draw();
+    const line = screen.getByText(/Bundle 1 ·/);
+    // Moved from above the line (PR #116) to below it, so the unit reads
+    // line-then-bar the same way the active bundle's own does.
+    const unit = line.parentElement!;
+    expect(unit.children[0]).toBe(line);
+    const bar = unit.children[1] as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-green-500/70");
+    expect(fill).toHaveStyle({ width: "100%" });
+  });
+
+  it("fills a completed bundle that ended with unused classes only partway, in grey", () => {
+    const finished = studentBundle({
+      id: "b1", coverage_start: "2026-07-06", status: "completed", total_classes: 4,
+    });
+    const active = studentBundle({ id: "b2", coverage_start: "2026-08-24", status: "active", total_classes: 4 });
+    studentBundles = new Map([["solafa", [finished, active]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", total_classes: 4, used_classes: 1, remaining_classes: 3 })]]);
+    sessions = [countedSession("s1", "b1", "2026-07-06"), countedSession("s2", "b1", "2026-07-13")];
+    draw();
+    const line = screen.getByText(/ended with 2 unused/);
+    const bar = line.nextElementSibling as HTMLElement;
+    const fill = bar.querySelector("div")!;
+    expect(fill.className).toContain("bg-muted-foreground/30");
+    expect(fill).toHaveStyle({ width: "50%" });
+  });
+});
+
+describe("the unreviewed coverage_start marker", () => {
+  it("shows on the active bundle's card when coverage_start_confirmed_at is null", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ coverage_start_confirmed_at: null })]]]);
+    draw();
+    // Scoped to the card itself -- an unconfirmed bundle also warns on every
+    // to-confirm row drawing against it, which is a separate assertion below.
+    // The title row's em dash ("Bundle 1 — ...") is what makes this match
+    // unique -- the identity line beneath the bar names the same bundle with
+    // a middle dot instead ("Bundle 1 · ...").
+    const card = screen.getByText(/Bundle 1 — /).closest("div")!.parentElement!;
+    expect(within(card).getByText(/start date not reviewed/i)).toBeInTheDocument();
+  });
+
+  it("does not show once the bundle has been reviewed", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ coverage_start_confirmed_at: "2026-08-12T00:00:00Z" })]]]);
+    draw();
+    expect(screen.queryByText(/start date not reviewed/i)).not.toBeInTheDocument();
+  });
+
+  it("shows on a to-confirm row too, so a session is never silently charged against an unreviewed window", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ coverage_start_confirmed_at: null })]]]);
+    draw();
+    const strip = screen.getByText("To confirm").closest("div")!.parentElement!;
+    expect(within(strip).getAllByText(/start date not reviewed/i).length).toBeGreaterThan(0);
+  });
+});
+
+describe("edit bundle", () => {
+  it("prefills the dialog with the bundle's own dates and saves through useUpdateBundle, marking it reviewed", async () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Edit$/i }));
+
+    expect(screen.getByLabelText("Purchased on")).toHaveValue("2026-08-12");
+    expect(screen.getByLabelText("Covers from")).toHaveValue("2026-08-12");
+    fireEvent.change(screen.getByLabelText("Covers from"), { target: { value: "2026-07-01" } });
+    click(screen.getByRole("button", { name: /Save changes/i }));
+
+    await waitFor(() => expect(updateBundleMutate).toHaveBeenCalledTimes(1));
+    expect(updateBundleMutate.mock.calls[0][0]).toMatchObject({ id: "bundle-1", coverage_start: "2026-07-01" });
+    // Saving the dialog is what "reviewed" means here, regardless of what changed.
+    expect(updateBundleMutate.mock.calls[0][0].coverage_start_confirmed_at).toBeTruthy();
+  });
+});
+
+describe("delete vs void", () => {
+  it("is deletable once cancelled with zero sessions of any kind, and confirming calls useDeleteBundle", async () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "created by mistake" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete bundle" }));
+    await waitFor(() => expect(deleteBundleMutate).toHaveBeenCalledWith({
+      bundle: expect.objectContaining({ id: "bundle-1", status: "cancelled" }),
+      bundleNumber: 1,
+    }));
+  });
+
+  it("names exactly what the delete confirm is about to remove — number, label, classes, price, currency, coverage start, and that 0 classes are recorded", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "created by mistake" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    const confirmDialog = screen.getByRole("alertdialog");
+    const text = confirmDialog.textContent!.replace(/\s+/g, " ");
+    expect(text).toContain("Bundle 1");
+    expect(text).toContain("16 English classes");
+    expect(text).toContain("16 classes");
+    expect(text).toMatch(/EGP\s*6,400/);
+    expect(text).toContain("from Wed 12 Aug");
+    expect(text).toContain("0 classes recorded against it");
+    expect(text).toContain("cannot be undone");
+  });
+
+  it("is not deletable once a cancelled bundle has even one session, of any status — a plain sentence appears, never a disabled button", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "created by mistake" })]]]);
+    sessions = [{
+      id: "s1", student_id: "solafa", bundle_id: "bundle-1", class_id: null,
+      session_date: "2026-08-17", start_time: "22:00:00",
+      outcome: "cancelled_no_charge", counted: false, confirmed_at: "2026-08-17T15:00:00Z", note: null,
+    }];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    expect(manageDialog.textContent!.replace(/\s+/g, " ")).toContain("Has 1 class recorded — cannot be deleted.");
+  });
+
+  it("is never deletable while active, regardless of session count", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "active" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    expect(within(manageDialog).getByRole("button", { name: /^Void$/i })).toBeInTheDocument();
+  });
+
+  it("is never deletable while completed, regardless of session count", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "completed" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    expect(within(manageDialog).getByRole("button", { name: /^Void$/i })).toBeInTheDocument();
+  });
+
+  it("offers Void instead of Delete once a bundle has sessions, and requires a reason", async () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    sessions = [{
+      id: "s1", student_id: "solafa", bundle_id: "bundle-1", class_id: null,
+      session_date: "2026-08-17", start_time: "22:00:00",
+      outcome: "attended", counted: true, confirmed_at: "2026-08-17T15:00:00Z", note: null,
+    }];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByRole("button", { name: /^Delete$/i })).not.toBeInTheDocument();
+    click(within(manageDialog).getByRole("button", { name: /^Void$/i }));
+
+    const voidButton = screen.getByRole("button", { name: /Void bundle/i });
+    expect(voidButton).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "created by mistake" } });
+    expect(voidButton).not.toBeDisabled();
+    click(voidButton);
+
+    await waitFor(() => expect(updateBundleMutate).toHaveBeenCalledTimes(1));
+    expect(updateBundleMutate.mock.calls[0][0]).toMatchObject({
+      id: "bundle-1", status: "cancelled", voided_reason: "created by mistake",
+    });
+  });
+
+  it("warns by name which later bundles will be renumbered", () => {
+    const b1 = studentBundle({
+      id: "b1", coverage_start: "2026-01-01", status: "cancelled", label: "Oldest", voided_reason: "mistake",
+    });
+    const b2 = studentBundle({ id: "b2", coverage_start: "2026-06-01", status: "completed", label: "Middle" });
+    const b3 = studentBundle({ id: "b3", coverage_start: "2026-08-01", status: "active", label: "Newest" });
+    studentBundles = new Map([["solafa", [b1, b2, b3]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    const text = screen.getByRole("alertdialog").textContent!.replace(/\s+/g, " ");
+    expect(text).toContain("Bundle 2 will become Bundle 1.");
+    expect(text).toContain("Bundle 3 will become Bundle 2.");
+  });
+
+  it("shows no renumbering warning when no later bundle exists", () => {
+    const b1 = studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed", label: "Oldest" });
+    const b2 = studentBundle({
+      id: "b2", coverage_start: "2026-08-01", status: "cancelled", label: "Newest", voided_reason: "mistake",
+    });
+    studentBundles = new Map([["solafa", [b1, b2]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+
+    expect(screen.getByRole("alertdialog").textContent).not.toContain("will become");
+  });
+});
+
+describe("the deleted-bundle audit trail", () => {
+  it("shows enough of a deleted bundle to reconstruct it, lazily, same convention as the edit history", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "active" })]]]);
+    sessions = [];
+    deletedBundles = [{
+      id: "log-1", deletedAt: "2026-08-20T10:00:00Z",
+      snapshot: {
+        bundle_number: 2, label: "Special", total_classes: 16, total_price: 0,
+        currency: "EGP", coverage_start: "2026-08-01", voided_reason: "not correct",
+      },
+    }];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const manageDialog = screen.getByRole("dialog");
+    expect(within(manageDialog).queryByText(/Bundle 2 · Special/)).not.toBeInTheDocument();
+
+    click(within(manageDialog).getByRole("button", { name: /View deleted bundles/i }));
+    const text = manageDialog.textContent!.replace(/\s+/g, " ");
+    expect(text).toContain("Bundle 2");
+    expect(text).toContain("Special");
+    expect(text).toContain("16 classes");
+    expect(text).toContain("not correct");
+  });
+
+  it("says plainly when nothing has been deleted", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    sessions = [];
+    deletedBundles = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /View deleted bundles/i }));
+    expect(within(screen.getByRole("dialog")).getByText("No bundles deleted.")).toBeInTheDocument();
+  });
+});
+
+describe("bidi-safe count phrases", () => {
+  // The reported bug: an English count phrase mixing digits and words
+  // reordered to "left (0 used) 16" inside an RTL-adjacent paragraph. Fixed
+  // at the source by isolating the phrase's own direction rather than
+  // reordering the words to compensate -- so the regression to guard is the
+  // isolating `dir="ltr"` disappearing from these elements, not the text.
+  it("isolates the remaining/used line in Manage bundles from bidi reordering", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    const line = within(screen.getByRole("dialog")).getByText(/16 left \(0 used\)/);
+    expect(line).toHaveAttribute("dir", "ltr");
+  });
+
+  it("isolates the delete-confirm bundle summary and the 0-classes line from bidi reordering", () => {
+    studentBundles = new Map([["solafa", [studentBundle({ status: "cancelled", voided_reason: "mistake" })]]]);
+    sessions = [];
+    draw();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    click(within(screen.getByRole("dialog")).getByRole("button", { name: /^Delete$/i }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText(/Bundle 1 —/)).toHaveAttribute("dir", "ltr");
+    expect(within(dialog).getByText(/0 classes recorded against it/)).toHaveAttribute("dir", "ltr");
+  });
+
+  it("isolates the active bundle's own count line and left/over badge on the card", () => {
+    balances = new Map([["solafa", balance({ used_classes: 9, remaining_classes: 7 })]]);
+    draw();
+    const line = screen.getByText(/9 of 16/);
+    expect(line).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("7 left")).toHaveAttribute("dir", "ltr");
+  });
+});
+
+describe("a session with no bundle covering its date is a door, not a wall", () => {
+  // Solafa's classes run since 2026-01-01; a bundle that only reaches back to
+  // 20 Aug leaves everything before that unresolvable -- the real shape of
+  // what every existing bundle looks like the moment coverage_start ships,
+  // since the backfill sets it to purchased_on.
+  // Coverage_start deliberately set to tomorrow (relative to NOW, Sun 23 Aug)
+  // so nothing in Solafa's window resolves at all -- not even today's classes,
+  // which have not happened yet -- keeping this test unambiguous.
+  beforeEach(() => {
+    studentBundles = new Map([["solafa", [studentBundle({ coverage_start: "2026-08-24" })]]]);
+  });
+
+  it("blocks the to-confirm row with a named fix, not just a disabled button", () => {
+    draw();
+    const strip = screen.getByText("To confirm").closest("div")!.parentElement!;
+    expect(within(strip).getAllByText(/no bundle covers this date/i).length).toBeGreaterThan(0);
+    // The old disabled "Class done" affordance is gone for this row, not just inert.
+    expect(within(strip).queryAllByRole("button", { name: /Class done/i })).toHaveLength(0);
+  });
+
+  it("gets to the fix in one click, prefilled with the bundle that needs its start date moved back", () => {
+    draw();
+    const strip = screen.getByText("To confirm").closest("div")!.parentElement!;
+    click(within(strip).getAllByRole("button", { name: /Fix start date/i })[0]);
+
+    expect(screen.getByText("Edit bundle")).toBeInTheDocument();
+    expect(screen.getByLabelText("Covers from")).toHaveValue("2026-08-24");
+  });
+
+  it("names the count and earliest blocked date in the catch-up dialog, and refuses the batch until fixed", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+
+    const dialog = screen.getByRole("dialog");
+    const summary = dialog.textContent!.replace(/\s+/g, " ");
+    // Named with an actual count and an actual date, not a bare "some of these".
+    expect(summary).toMatch(/\d+ classes? cannot be confirmed yet — no bundle covers (it|them), earliest \w{3} \d{1,2} \w{3}\./i);
+
+    click(within(dialog).getByRole("button", { name: /^Confirm$/i }));
+    expect(confirmMutate).not.toHaveBeenCalled();
+  });
+
+  it("reaches the fix from inside the catch-up dialog too", () => {
+    draw();
+    click(screen.getByRole("button", { name: /Catch up/i }));
+    click(within(screen.getByRole("dialog")).getAllByRole("button", { name: /Fix start date/i })[0]);
+
+    expect(screen.getByText("Edit bundle")).toBeInTheDocument();
+  });
+});
+
+describe("bundle actions live on the card, where Re looks — not a click deeper", () => {
+  it("shows the bundle count on the card itself, with no dialog open", () => {
+    studentBundles = new Map([["solafa", [
+      studentBundle({ id: "b1", coverage_start: "2026-01-01", status: "completed" }),
+      studentBundle({ id: "b2", coverage_start: "2026-06-01", status: "active", label: "Renewal" }),
+    ]]]);
+    balances = new Map([["solafa", balance({ bundle_id: "b2", label: "Renewal" })]]);
+    draw();
+    // The count is answered by the button label alone -- no click, no scroll.
+    expect(screen.getByRole("button", { name: "Manage bundles (2)" })).toBeInTheDocument();
+  });
+
+  it("keeps New bundle on the card as well as inside Manage bundles, during the historical-entry period", () => {
+    draw();
+    expect(screen.getByRole("button", { name: /New bundle/i })).toBeInTheDocument();
+    click(screen.getByRole("button", { name: /^Manage bundles/i }));
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: /New bundle/i })).toBeInTheDocument();
+  });
+
+  it("History no longer shows bundle actions — it is the class-by-class ledger only", () => {
+    studentBundles = new Map([["solafa", [studentBundle()]]]);
+    draw();
+    click(screen.getByRole("button", { name: /^History$/i }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).queryByRole("button", { name: /^Edit$/i })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: /New bundle/i })).not.toBeInTheDocument();
+    expect(within(dialog).queryByText(/16 English classes/)).not.toBeInTheDocument();
   });
 });

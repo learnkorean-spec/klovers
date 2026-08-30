@@ -69,6 +69,42 @@
  * duplicate" rather than "point at a slug this rename will create."
  * PENDING_SLUG_RENAMES is retired along with the miscategorisation; nothing
  * in this file is pending a production data write.
+ *
+ * ---
+ *
+ * PAIR #11, 2026-08-27: found a different way, and a different shape.
+ * `korean-learning-apps-comparison-2026-ar` and
+ * `korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar` were not
+ * found by the sitemap-blocker sweep above - they surfaced while reviewing
+ * Gate 2 Step 1's Arabic title table (docs/GATE2_STEP1_TITLES.md), because
+ * both titles independently needed repair and shared a suspiciously close
+ * primary keyword. Same underlying problem as pairs #1-10 (a 2026 generator
+ * rerun producing a second Arabic article on a topic that already had one),
+ * but a different NAMING pattern: both slugs already use the `-ar` suffix,
+ * not the `ar-` prefix, so the prefix-based test that found the other 10
+ * never had a chance to catch this one.
+ *
+ * Confirmed against the live rows before writing or retiring anything:
+ *
+ *   |                  | -duolingo-rosetta-stone-ar (survivor) | -ar (retired)     |
+ *   |------------------|----------------------------------------|-------------------|
+ *   | English partner  | korean-learning-apps-comparison-2026-duolingo-rosetta-stone (16 views) | none |
+ *   | published_at     | 2026-04-07 17:46:53 (matches partner) | 2026-04-11 07:14:31 (4 days later, on its own) |
+ *   | content length   | 11,849 chars                          | 5,441 chars       |
+ *   | register         | standard MSA, matches the other 89 Arabic articles | Egyptian colloquial - the ONLY colloquial article in the catalogue |
+ *   | views            | 2                                      | 0                 |
+ *
+ * The survivor is also the ONLY Arabic article in the entire catalogue
+ * exceeding 6,000 characters (24 English articles do; exactly 1 Arabic one
+ * does, and it's this one) - so "keep the older/paired one" and "keep the
+ * reference-length pillar" are the same decision here, not competing rules.
+ *
+ * The retired article isn't just a register mismatch, it carries an actual
+ * text defect - "في 2026" (in 2026) is duplicated across its heading and the
+ * first words of its body: "تطبيقات تعلم الكورية في 2026 ... في 2026 عندك
+ * خيارات أكتر من أي وقت". Confirmed directly against the live `content`
+ * column. Register drift plus a repeated phrase is what actually got
+ * retired here, not a style preference.
  */
 
 /**
@@ -89,6 +125,12 @@ export const RETIRED_ARABIC_SLUGS = [
   // live and correct before this file caught up to what they meant.
   { from: "ar-korean-cafe-culture", to: "korean-cafe-coffee-culture-ar" },
   { from: "ar-learn-korean-alphabet-hangul", to: "learn-korean-alphabet-hangul-guide-ar" },
+  // Pair #11 - see "PAIR #11" above. Different naming pattern (-ar/-ar, not
+  // ar-/-ar) for the same underlying defect.
+  {
+    from: "korean-learning-apps-comparison-2026-ar",
+    to: "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+  },
 ];
 
 /**
