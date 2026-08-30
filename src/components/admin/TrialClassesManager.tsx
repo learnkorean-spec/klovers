@@ -686,6 +686,12 @@ const TrialClassesManager = () => {
     .filter((s) => s.lifecycle === "active")
     .sort((a, b) => (a.trial_date ?? "").localeCompare(b.trial_date ?? "") || a.start_time.localeCompare(b.start_time));
 
+  // advance_trial_slots() (the hourly rollover cron) marks a slot here when
+  // it can't move forward because another row already occupies the date and
+  // time it would land on — surfaced here, on the exact table Re already
+  // opens, rather than only in a log she'd have to know to go looking for.
+  const rolloverSkippedSlots = activeScheduleSlots.filter((s) => s.rollover_skipped_at);
+
   /**
    * Cairo is where every trial student is; the authoring timezone (still
    * sometimes the teacher's own, per ADMIN_TIMEZONE) is secondary context,
@@ -720,6 +726,12 @@ const TrialClassesManager = () => {
             <CardTitle className="text-sm flex items-center gap-2">
               <CalendarCog className="h-4 w-4" />
               Trial Schedule ({activeScheduleSlots.length} active {activeScheduleSlots.length === 1 ? "slot" : "slots"})
+              {rolloverSkippedSlots.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-destructive font-medium text-xs">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {rolloverSkippedSlots.length} didn't auto-advance
+                </span>
+              )}
             </CardTitle>
             <div className="flex items-center gap-2">
               <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -734,6 +746,19 @@ const TrialClassesManager = () => {
         </CardHeader>
         {scheduleOpen && (
           <CardContent className="pt-0">
+            {rolloverSkippedSlots.length > 0 && (
+              <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-1">
+                <p className="font-medium flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {rolloverSkippedSlots.length} slot{rolloverSkippedSlots.length === 1 ? "" : "s"} didn't auto-advance this week — move {rolloverSkippedSlots.length === 1 ? "it" : "them"} manually below.
+                </p>
+                {rolloverSkippedSlots.map((s) => (
+                  <p key={s.id} className="pl-5 text-muted-foreground">
+                    {DAY_NAMES[s.day_of_week]} {s.start_time} ({s.timezone.replace(/_/g, " ")}): {s.rollover_skip_reason}
+                  </p>
+                ))}
+              </div>
+            )}
             {allSlotsQ.isLoading ? (
               <p className="text-xs text-muted-foreground py-4">Loading schedule...</p>
             ) : activeScheduleSlots.length === 0 ? (
@@ -767,6 +792,12 @@ const TrialClassesManager = () => {
                               </>
                             ) : (
                               <span className="font-mono">{s.start_time} ({s.timezone}) · {DAY_NAMES[s.day_of_week]}</span>
+                            )}
+                            {s.rollover_skipped_at && (
+                              <div className="text-destructive text-[10px] font-medium flex items-center gap-1 mt-0.5" title={s.rollover_skip_reason ?? undefined}>
+                                <AlertTriangle className="h-3 w-3 shrink-0" />
+                                didn't auto-advance
+                              </div>
                             )}
                           </TableCell>
                           <TableCell className="text-xs">
