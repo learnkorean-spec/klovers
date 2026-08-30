@@ -1,0 +1,80 @@
+# ci.yml only re-runs on a PR event (opened/synchronize/reopened/
+# ready_for_review) or a push to main - never on a PR's base branch simply
+# moving. That means an open PR's green checkmark can describe a merge
+# result that no longer matches main: main advanced after the PR's last
+# real CI run, and nothing forces a fresh one. Recomputing the PR's
+# mergeable_state via the API does not trigger CI either - only an actual
+# new commit on the PR branch does (documented the hard way in CLAUDE.md,
+# under "Merge safety net").
+#
+# This closes that gap the same way a person would: when main moves, merge
+# it into every open PR's branch and push. A plain (non-force) push, so it
+# never rewrites anyone's history - just adds a merge commit, which is
+# exactly what GitHub's own "Update branch" button does. The push's
+# `synchronize` event is what gets ci.yml to actually run against the new
+# merge result.
+#
+# A PR whose merge conflicts is left alone - conflicts get resolved by a
+# person (or an agent) reading the actual clash, not by anything automatic
+# here. No comment is posted for that case: PR-activity subscriptions
+# already surface merge-conflict state through their own notification path.
+
+name: Refresh open PRs against main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  refresh:
+    name: Merge main into every open PR branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Merge main into each open PR that is behind
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          prs=$(gh pr list --state open --json number,headRefName --jq '.[] | "\(.number)\t\(.headRefName)"')
+          if [ -z "$prs" ]; then
+            echo "No open PRs."
+            exit 0
+          fi
+
+          echo "## Refresh open PRs against main" >> "$GITHUB_STEP_SUMMARY"
+          while IFS=$'\t' read -r number branch; do
+            [ -n "$branch" ] || continue
+            echo "::group::PR #${number} (${branch})"
+
+            git fetch origin "$branch" -q
+            git checkout -q -B "$branch" "origin/$branch"
+
+            if git merge --no-edit -q origin/main; then
+              if git diff --quiet "origin/$branch" HEAD; then
+                echo "Already up to date with main - nothing to push."
+                echo "- #${number} (${branch}): already up to date" >> "$GITHUB_STEP_SUMMARY"
+              else
+                git push origin "$branch"
+                echo "Pushed merge commit - ci.yml will re-run via synchronize."
+                echo "- #${number} (${branch}): merged main, pushed" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            else
+              git merge --abort || true
+              echo "Merge conflict - left untouched for manual resolution."
+              echo "- #${number} (${branch}): merge conflict, skipped" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "::endgroup::"
+          done <<< "$prs"
