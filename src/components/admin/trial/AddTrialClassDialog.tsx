@@ -32,7 +32,6 @@ type Form = {
   minToRun: string; // empty string = "use global default"
   timezone: string;
   classLanguage: 'arabic' | 'english';
-  sessionPeriod: 'morning' | 'evening' | 'daytime';
   meetingUrl: string;
 };
 
@@ -44,7 +43,6 @@ const defaultForm = (): Form => ({
   minToRun: '',
   timezone: ADMIN_TIMEZONE,
   classLanguage: 'arabic',
-  sessionPeriod: 'morning',
   meetingUrl: '',
 });
 
@@ -56,7 +54,6 @@ const formFromSlot = (s: TrialSlotRow): Form => ({
   minToRun: s.min_to_run != null ? String(s.min_to_run) : '',
   timezone: s.timezone,
   classLanguage: s.class_language ?? 'arabic',
-  sessionPeriod: s.session_period ?? 'morning',
   meetingUrl: s.meeting_url ?? '',
 });
 
@@ -120,7 +117,6 @@ export default function AddTrialClassDialog({
           capacity: f.capacity,
           min_to_run: f.minToRun ? Number(f.minToRun) : null,
           class_language: f.classLanguage,
-          session_period: f.sessionPeriod,
           is_active: true,
           lifecycle: 'active',
           trial_date: f.trialDate,
@@ -162,7 +158,6 @@ export default function AddTrialClassDialog({
           capacity: form.capacity,
           minToRun: form.minToRun ? Number(form.minToRun) : null,
           classLanguage: form.classLanguage,
-          sessionPeriod: form.sessionPeriod,
           timezone: form.timezone,
           meetingUrl: form.meetingUrl.trim() || null,
         },
@@ -233,32 +228,17 @@ export default function AddTrialClassDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="trial-language">Language</Label>
-              <select
-                id="trial-language"
-                value={form.classLanguage}
-                onChange={(e) => setForm({ ...form, classLanguage: e.target.value as Form['classLanguage'] })}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                <option value="arabic">Arabic</option>
-                <option value="english">English</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="trial-period">Time of day</Label>
-              <select
-                id="trial-period"
-                value={form.sessionPeriod}
-                onChange={(e) => setForm({ ...form, sessionPeriod: e.target.value as Form['sessionPeriod'] })}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                <option value="morning">Morning</option>
-                <option value="daytime">Daytime</option>
-                <option value="evening">Evening</option>
-              </select>
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="trial-language">Language</Label>
+            <select
+              id="trial-language"
+              value={form.classLanguage}
+              onChange={(e) => setForm({ ...form, classLanguage: e.target.value as Form['classLanguage'] })}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="arabic">Arabic</option>
+              <option value="english">English</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

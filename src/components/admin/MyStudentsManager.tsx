@@ -38,14 +38,14 @@ import {
   useUpsertClass, useDeleteClass, checkClassConflicts, type ClassConflict,
   useBundleBalances, useRecentSessions, useAllStudentSessions, useStudentBundles,
   useAllBundles, useBundleEdits, useAddBundle, useUpdateBundle, useDeleteBundle,
-  useConfirmSessions, useUnconfirmSession,
+  useDeletedBundles, useConfirmSessions, useUnconfirmSession, useBundleSessionSummaries,
   type ConfirmSessionInput,
 } from "@/hooks/admin/useMyStudents";
 import {
   DAY_NAMES, STATUS_LABEL, STUDENT_STATUSES, STUDENT_SUBJECTS, SUBJECT_LABEL,
   buildExpectedSessions, crossesMidnight, formatClassRange, formatMoney,
   formatSessionDate, formatWeeklySummary, localDateKey, pricePerClass, weeklyMinutes,
-  resolveBundleForDate,
+  resolveBundleForDate, bundleIdentityLine, type BundleTone,
   type BundleBalance, type ExpectedSession, type MyStudentWithClasses,
   type StudentBundle, type StudentClassSchedule, type StudentStatus, type StudentSubject,
 } from "@/types/students";
@@ -132,6 +132,29 @@ function numberBundles(bundles: StudentBundle[]): Map<string, number> {
 }
 
 /**
+ * Which other bundles change number if `deletingId` is removed, oldest
+ * shifted first -- so the delete-bundle confirmation can name each one, the
+ * same way it names everything else that click destroys. Numbers are derived
+ * from coverage order (numberBundles), so deleting anything but the newest
+ * bundle shifts every one after it down by one; this is empty whenever the
+ * bundle being deleted is already the last in coverage order.
+ */
+function bundlesRenumberedByDeleting(
+  bundles: StudentBundle[], deletingId: string,
+): Array<{ before: number; after: number }> {
+  const before = numberBundles(bundles);
+  const after = numberBundles(bundles.filter(b => b.id !== deletingId));
+  const changed: Array<{ before: number; after: number }> = [];
+  for (const b of bundles) {
+    if (b.id === deletingId) continue;
+    const b4 = before.get(b.id)!;
+    const af = after.get(b.id)!;
+    if (b4 !== af) changed.push({ before: b4, after: af });
+  }
+  return changed.sort((a, b) => a.before - b.before);
+}
+
+/**
  * The bundle to open when a session has no bundle covering its date at all --
  * the earliest one, since pulling ITS coverage_start further back is the fix
  * that would actually reach the date. A voided bundle is skipped for the same
@@ -198,6 +221,112 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
 };
 
 /**
+ * Same shared fact (bundleTone), rendered once instead of per surface. `fill`
+ * drives each bundle's slim consumption bar, `text` its identity line — the
+ * two are allowed to read differently for the same tone (active's bar is
+ * green, its line is not) because they answer different questions: the bar
+ * says how much of the bundle is used up, the line says how the bundle's
+ * story ended. Neither call site hardcodes a colour of its own; both always
+ * come from here, off the same tone, so a bar can never show green while its
+ * line disagrees about why.
+ */
+const BUNDLE_TONE_CLASSES: Record<BundleTone, { fill: string; text: string }> = {
+  clean: { fill: "bg-green-500/70", text: "text-green-700" },
+  unused: { fill: "bg-muted-foreground/30", text: "text-muted-foreground" },
+  // Exactly D's existing negative-balance tokens (see the `out` branch below)
+  // — never a second red on the same card.
+  negative: { fill: "bg-destructive", text: "text-destructive" },
+  // The active identity line stays quiet (never green, even at 100% used —
+  // the bundle has not finished). Its consumption bar still fills in the same
+  // green as a clean finish: it is answering "how full", not "how it ended".
+  active: { fill: "bg-green-500/70", text: "text-muted-foreground" },
+};
+
+const COMPLETED_BUNDLES_SHOWN = 2;
+
+/** The active bundle for a student, if any — the one row every other bundle
+ * status lookup on this card ultimately wants. */
+function activeBundleFor(bundles: StudentBundle[]): StudentBundle | undefined {
+  return bundles.find(b => b.status === "active");
+}
+
+type CompletedBundleSummary = {
+  bundle: StudentBundle;
+  bundleNumber: number;
+  used: number;
+  lastSessionDate: string | null;
+};
+
+/**
+ * A student's completed bundles, most recent first — the history the card
+ * shows so "has this student finished a bundle before, and did it end
+ * cleanly" no longer costs a click into Manage bundles to answer. Cancelled
+ * bundles are a different question (a mistake, not a finished purchase) and
+ * already have their own marker there, so they are excluded here.
+ */
+function completedBundleSummaries(
+  bundles: StudentBundle[],
+  sessionSummaries: Map<string, { used: number; lastDate: string | null }>,
+): CompletedBundleSummary[] {
+  const numbers = numberBundles(bundles);
+  return bundles
+    .filter(b => b.status === "completed")
+    .map(b => {
+      const s = sessionSummaries.get(b.id) ?? { used: 0, lastDate: null };
+      return { bundle: b, bundleNumber: numbers.get(b.id)!, used: s.used, lastSessionDate: s.lastDate };
+    })
+    .sort((a, b) => b.bundle.coverage_start.localeCompare(a.bundle.coverage_start));
+}
+
+/**
+ * Slim and static on purpose — a third the active bar's height, no percentage,
+ * no animation — so the active bundle's own full-height bar stays the only
+ * thing on the card that reads as live. Each unit is built by
+ * bundleIdentityLine, the same function the active bundle's own identity line
+ * in BundleBox uses — one place decides the wording, colour, and fill for
+ * every bundle on this card, active or completed. The line sits above its
+ * bar, matching the active bundle's own line-then-bar order, so the card
+ * reads as one repeating unit rather than two different layouts.
+ */
+const CompletedBundleLines = ({
+  completed, onManageBundles,
+}: {
+  completed: CompletedBundleSummary[];
+  onManageBundles: () => void;
+}) => {
+  if (completed.length === 0) return null;
+
+  const shown = completed.slice(0, COMPLETED_BUNDLES_SHOWN);
+  const extra = completed.length - shown.length;
+
+  return (
+    <div className="space-y-1.5 pt-0.5">
+      {shown.map(({ bundle, bundleNumber, used, lastSessionDate }) => {
+        const { tone, text, fillPct } = bundleIdentityLine(bundle, bundleNumber, used, lastSessionDate);
+        const classes = BUNDLE_TONE_CLASSES[tone];
+        return (
+          <div key={bundle.id} className="space-y-0.5">
+            <p dir="ltr" className={`text-[11px] ${classes.text}`}>{text}</p>
+            <div className="h-[3px] rounded-full bg-muted overflow-hidden">
+              <div className={`h-full ${classes.fill}`} style={{ width: `${fillPct}%` }} />
+            </div>
+          </div>
+        );
+      })}
+      {extra > 0 && (
+        <button
+          type="button"
+          onClick={onManageBundles}
+          className="text-[11px] text-primary hover:underline text-left"
+        >
+          +{extra} more completed — see all in Manage bundles
+        </button>
+      )}
+    </div>
+  );
+};
+
+/**
  * What the student bought and what is left.
  *
  * Reaching zero is loud and nothing else: no status changes, no schedule pauses.
@@ -206,9 +335,14 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
  * screen disagree with the week.
  */
 const BundleBox = ({
-  balance, bundleNumber, bundleCount, unreviewed, onAdd, onCatchUp, onManageBundles, onHistory, unconfirmedCount,
+  balance, activeBundle, bundleNumber, bundleCount, unreviewed, completedBundles,
+  onAdd, onCatchUp, onManageBundles, onHistory, unconfirmedCount,
 }: {
   balance: BundleBalance | undefined;
+  /** The active bundle's own row, for bundleIdentityLine -- BundleBalance
+   * carries the numbers but not coverage_start/status/label. Undefined only
+   * when there is no active bundle, matching `balance`. */
+  activeBundle: StudentBundle | undefined;
   /** Undefined only when there is no active bundle, matching `balance`. */
   bundleNumber: number | undefined;
   /** Every bundle this student has ever had, any status -- shown on its own
@@ -216,6 +350,8 @@ const BundleBox = ({
    * without opening anything. */
   bundleCount: number;
   unreviewed: boolean;
+  /** Completed bundles only, most recent first — see completedBundleSummaries. */
+  completedBundles: CompletedBundleSummary[];
   onAdd: () => void;
   onCatchUp: () => void;
   onManageBundles: () => void;
@@ -224,20 +360,23 @@ const BundleBox = ({
 }) => {
   if (!balance) {
     return (
-      <div className="rounded-md border border-dashed px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          No bundle — classes are not being counted for this student.
-        </span>
-        <span className="flex flex-wrap gap-1.5">
-          {bundleCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={onManageBundles}>
-              Manage bundles ({bundleCount})
+      <div className="rounded-md border border-dashed px-3 py-2.5 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">
+            No bundle — classes are not being counted for this student.
+          </span>
+          <span className="flex flex-wrap gap-1.5">
+            {bundleCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={onManageBundles}>
+                Manage bundles ({bundleCount})
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={onAdd}>
+              <Wallet className="h-3.5 w-3.5 mr-1" /> Add bundle
             </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={onAdd}>
-            <Wallet className="h-3.5 w-3.5 mr-1" /> Add bundle
-          </Button>
-        </span>
+          </span>
+        </div>
+        <CompletedBundleLines completed={completedBundles} onManageBundles={onManageBundles} />
       </div>
     );
   }
@@ -246,6 +385,14 @@ const BundleBox = ({
   const pct = Math.min(100, Math.max(0, (used_classes / Math.max(1, total_classes)) * 100));
   const out = remaining_classes <= 0;
   const low = remaining_classes > 0 && remaining_classes <= 2;
+  // activeBundle is only absent if balance and activeBundle fell out of sync
+  // for a render or two -- falls back to the old plain wording rather than
+  // crash. bundleIdentityLine is the same function CompletedBundleLines
+  // uses; this is the one place on the card that draws it for a still-
+  // running bundle instead of a finished one.
+  const activeLine = activeBundle && bundleNumber != null
+    ? bundleIdentityLine(activeBundle, bundleNumber, used_classes, null)
+    : null;
 
   return (
     <div className={`rounded-md border px-3 py-2.5 space-y-2 ${out ? "border-destructive/50 bg-destructive/5" : ""}`}>
@@ -269,27 +416,54 @@ const BundleBox = ({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          {used_classes} of {total_classes} used
+        <span
+          dir="ltr"
+          className={`text-xs ${activeLine ? BUNDLE_TONE_CLASSES[activeLine.tone].text : "text-muted-foreground"}`}
+        >
+          {activeLine ? activeLine.text : `${used_classes} of ${total_classes} used`}
         </span>
         {out ? (
-          <Badge className="bg-destructive text-destructive-foreground">
+          <Badge dir="ltr" className="bg-destructive text-destructive-foreground">
             {remaining_classes === 0
               ? "0 classes left"
               : `${Math.abs(remaining_classes)} over`}
           </Badge>
         ) : (
-          <Badge variant="outline" className={low ? "border-amber-400 text-amber-700" : ""}>
+          <Badge dir="ltr" variant="outline" className={low ? "border-amber-400 text-amber-700" : ""}>
             {remaining_classes} left
           </Badge>
         )}
       </div>
+
+      {/* The active bundle's own slim consumption bar — same shape and same
+          bundleIdentityLine-driven fill/colour as every completed bundle's,
+          directly beneath its line, so the card reads as one repeating unit
+          instead of two different layouts. The full-height bar above stays
+          the primary at-a-glance element; this one only ever answers "how
+          much of this bundle is used up". */}
+      {activeLine && (
+        <div className="h-[3px] rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full ${BUNDLE_TONE_CLASSES[activeLine.tone].fill}`}
+            style={{ width: `${activeLine.fillPct}%` }}
+          />
+        </div>
+      )}
 
       {out && (
         <p className="text-xs text-destructive">
           Bundle finished. Classes still run and still block trial times — add the next
           bundle when you have agreed it with them.
         </p>
+      )}
+
+      {completedBundles.length > 0 && (
+        // Hairline divider: without it the completed line below reads as
+        // though it belongs to the active bundle above it, which is exactly
+        // what Re flagged after PR #116.
+        <div className="pt-2 mt-0.5 border-t border-border">
+          <CompletedBundleLines completed={completedBundles} onManageBundles={onManageBundles} />
+        </div>
       )}
 
       <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -346,6 +520,44 @@ const BundleEditHistory = ({ bundleId }: { bundleId: string }) => {
             </span>
           ))}
         </div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * Bundles deleted for this student -- lazily fetched, same convention as
+ * BundleEditHistory above. Deliberately student-level rather than per-bundle:
+ * a deleted bundle has no row left to attach a per-bundle history control to,
+ * so this reads from admin_audit_log instead of student_bundle_edits (see
+ * useDeleteBundle for why that table can't hold it durably).
+ */
+const DeletedBundleHistory = ({ studentId }: { studentId: string }) => {
+  const [open, setOpen] = useState(false);
+  const { data: deletions = [] } = useDeletedBundles(open ? studentId : null);
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="text-[11px] text-primary hover:underline">
+        View deleted bundles
+      </button>
+    );
+  }
+
+  if (deletions.length === 0) {
+    return <p className="text-[11px] text-muted-foreground">No bundles deleted.</p>;
+  }
+
+  return (
+    <div className="space-y-1">
+      {deletions.map(d => (
+        <p key={d.id} dir="ltr" className="text-[11px] text-muted-foreground">
+          Bundle {d.snapshot.bundle_number} · {d.snapshot.label} · {d.snapshot.total_classes} classes{" "}
+          · {formatMoney(d.snapshot.total_price, d.snapshot.currency)} · from {formatSessionDate(d.snapshot.coverage_start)}
+          {" — deleted "}
+          {new Date(d.deletedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+          {d.snapshot.voided_reason && ` · voided: ${d.snapshot.voided_reason}`}
+        </p>
       ))}
     </div>
   );
@@ -414,7 +626,13 @@ const BundleManager = ({
             return (
               <div key={b.id} className="rounded-md bg-muted/30 px-3 py-2 text-sm space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span>
+                  {/* dir="ltr" on the OUTER span, not just the price/count
+                      fragment -- an isolated inner run only protects itself;
+                      the un-isolated "Bundle N — label" text around it still
+                      reorders as a whole against that island under an RTL
+                      ancestor, which is exactly what an earlier version of
+                      this fix missed. */}
+                  <span dir="ltr">
                     Bundle {bundleNumbers.get(b.id)} — {b.label}
                     <span className="text-muted-foreground"> · {formatMoney(b.total_price, b.currency)} · {b.total_classes} classes</span>
                   </span>
@@ -424,11 +642,11 @@ const BundleManager = ({
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {remaining < 0 ? (
-                    <Badge className="bg-destructive text-destructive-foreground text-[10px]">
+                    <Badge dir="ltr" className="bg-destructive text-destructive-foreground text-[10px]">
                       {Math.abs(remaining)} over
                     </Badge>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">{remaining} left ({used} used)</span>
+                    <span dir="ltr" className="text-[11px] text-muted-foreground">{remaining} left ({used} used)</span>
                   )}
                   {b.coverage_start_confirmed_at === null && <UnreviewedBadge />}
                   {b.status === "cancelled" && b.voided_reason && (
@@ -439,7 +657,15 @@ const BundleManager = ({
                   <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => onEditBundle(b)}>
                     <Pencil className="h-3 w-3 mr-1" /> Edit
                   </Button>
-                  {b.status !== "cancelled" && (
+                  {b.status === "cancelled" ? (
+                    // Delete only ever appears once a bundle is voided AND
+                    // carries zero sessions of any kind -- counted or not,
+                    // any outcome. The FK (ON DELETE RESTRICT on
+                    // student_class_sessions.bundle_id) is the real guard;
+                    // this is only the courtesy of never showing a control
+                    // that would just bounce off it. A greyed-out button
+                    // would be worse than no button, so a cancelled bundle
+                    // that still has sessions gets a plain sentence instead.
                     sessionCount === 0 ? (
                       <Button
                         variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-destructive"
@@ -449,10 +675,17 @@ const BundleManager = ({
                         <Trash2 className="h-3 w-3 mr-1" /> Delete
                       </Button>
                     ) : (
-                      <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-destructive" onClick={() => onVoidBundle(b)}>
-                        <Ban className="h-3 w-3 mr-1" /> Void
-                      </Button>
+                      <span className="text-[11px] text-muted-foreground">
+                        Has <span dir="ltr">{sessionCount} class{sessionCount === 1 ? "" : "es"}</span> recorded — cannot be deleted.
+                      </span>
                     )
+                  ) : (
+                    // Never a direct delete for an active or completed bundle,
+                    // regardless of session count -- voiding is the only path
+                    // out, and only a voided, empty bundle can go further.
+                    <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-destructive" onClick={() => onVoidBundle(b)}>
+                      <Ban className="h-3 w-3 mr-1" /> Void
+                    </Button>
                   )}
                   <BundleEditHistory bundleId={b.id} />
                 </div>
@@ -461,6 +694,9 @@ const BundleManager = ({
           })}
         </div>
       )}
+      <div className="pt-1">
+        <DeletedBundleHistory studentId={studentId} />
+      </div>
     </div>
   );
 };
@@ -533,6 +769,7 @@ const MyStudentsManager = () => {
   // Every bundle, any status -- resolveBundleForDate needs the whole history
   // per student, not just whichever one is currently active.
   const { data: allBundles } = useAllBundles();
+  const { data: sessionSummaries } = useBundleSessionSummaries();
   const addBundle = useAddBundle();
   const updateBundle = useUpdateBundle();
   const deleteBundle = useDeleteBundle();
@@ -1001,16 +1238,25 @@ const MyStudentsManager = () => {
   };
 
   /**
-   * Deletes a bundle that has zero sessions on it. A bundle with sessions is
-   * refused by the database's own ON DELETE RESTRICT foreign key -- this is
-   * the confirm step for the zero-session case the UI already knows about,
-   * not a substitute for that guard.
+   * Deletes a cancelled bundle that has zero sessions on it, any status. A
+   * bundle with sessions -- or one that is not cancelled at all -- never
+   * reaches this: the UI never offers Delete for it. The database's own ON
+   * DELETE RESTRICT foreign key is still the real guard if that courtesy is
+   * ever wrong; this is the confirm step, not a substitute for it.
    */
   const removeBundle = async () => {
     if (!confirmDeleteBundle) return;
+    const bundleNumber =
+      numberBundles(allBundles?.get(confirmDeleteBundle.student_id) ?? []).get(confirmDeleteBundle.id)!;
     try {
-      await deleteBundle.mutateAsync(confirmDeleteBundle.id);
-      toast({ title: "Bundle deleted" });
+      const { auditLogged } = await deleteBundle.mutateAsync({ bundle: confirmDeleteBundle, bundleNumber });
+      toast({
+        title: "Bundle deleted",
+        description: auditLogged
+          ? undefined
+          : "The deletion itself went through, but its audit record could not be saved.",
+        variant: auditLogged ? undefined : "destructive",
+      });
       setConfirmDeleteBundle(null);
     } catch (e) {
       toast({ title: "Could not delete bundle", description: (e as Error).message, variant: "destructive" });
@@ -1155,7 +1401,11 @@ const MyStudentsManager = () => {
           </div>
         )}
 
-        {students.map(student => (
+        {students.map(student => {
+          const studentBundles = allBundles?.get(student.id) ?? [];
+          const activeBundle = activeBundleFor(studentBundles);
+          const activeBundleNumber = activeBundle ? numberBundles(studentBundles).get(activeBundle.id) : undefined;
+          return (
           <div key={student.id} className="rounded-lg border p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -1213,14 +1463,13 @@ const MyStudentsManager = () => {
 
             <BundleBox
               balance={balances?.get(student.id)}
-              bundleNumber={(() => {
-                const active = (allBundles?.get(student.id) ?? []).find(b => b.status === "active");
-                return active ? numberBundles(allBundles?.get(student.id) ?? []).get(active.id) : undefined;
-              })()}
-              bundleCount={(allBundles?.get(student.id) ?? []).length}
-              unreviewed={(allBundles?.get(student.id) ?? []).some(
+              activeBundle={activeBundle}
+              bundleNumber={activeBundleNumber}
+              bundleCount={studentBundles.length}
+              unreviewed={studentBundles.some(
                 b => b.status === "active" && b.coverage_start_confirmed_at === null,
               )}
+              completedBundles={completedBundleSummaries(studentBundles, sessionSummaries ?? new Map())}
               unconfirmedCount={unconfirmedCount(student.id)}
               onAdd={() => openBundleDialog(student)}
               onCatchUp={() => openCatchUp(student)}
@@ -1284,7 +1533,8 @@ const MyStudentsManager = () => {
               </Button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </CardContent>
 
       {/* Student dialog */}
@@ -1995,30 +2245,50 @@ const MyStudentsManager = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {confirmDeleteBundle?.label}?</AlertDialogTitle>
             {/* The FK protects sessions from being orphaned; nothing protects the
-                bundle record itself from a plain click. This restates exactly
-                what is about to disappear -- the same "show what the click will
-                write" principle as the catch-up dialog's D3 summary -- since a
-                zero-session bundle passes the delete guard with nothing else in
-                the way. */}
-            {confirmDeleteBundle && (
-              <AlertDialogDescription asChild>
-                <div className="space-y-1">
-                  <p>
-                    Bundle {numberBundles(allBundles?.get(confirmDeleteBundle.student_id) ?? []).get(confirmDeleteBundle.id)}
-                    {" — "}
-                    <strong>{confirmDeleteBundle.label}</strong>
-                    {" · "}{confirmDeleteBundle.total_classes} classes
-                    {" · "}{formatMoney(confirmDeleteBundle.total_price, confirmDeleteBundle.currency)}
-                    {" · purchased "}{formatSessionDate(confirmDeleteBundle.purchased_on)}
-                  </p>
-                  <p>It has no classes recorded against it, so nothing financial is lost. This cannot be undone.</p>
-                </div>
-              </AlertDialogDescription>
-            )}
+                bundle record itself from a plain click. This names exactly
+                what is about to disappear -- the same "show what the click
+                will write" principle as the catch-up dialog's D3 summary --
+                since a cancelled, zero-session bundle passes the delete
+                guard with nothing else in the way. This is the same class of
+                action that caused the August data loss, so every number here
+                is spelled out rather than implied. */}
+            {confirmDeleteBundle && (() => {
+              const bundleNumber =
+                numberBundles(allBundles?.get(confirmDeleteBundle.student_id) ?? []).get(confirmDeleteBundle.id);
+              const renumbered = bundlesRenumberedByDeleting(
+                allBundles?.get(confirmDeleteBundle.student_id) ?? [], confirmDeleteBundle.id,
+              );
+              return (
+                <AlertDialogDescription asChild>
+                  <div className="space-y-1">
+                    <p dir="ltr">
+                      Bundle {bundleNumber}
+                      {" — "}
+                      <strong>{confirmDeleteBundle.label}</strong>
+                      {" · "}{confirmDeleteBundle.total_classes} classes
+                      {" · "}{formatMoney(confirmDeleteBundle.total_price, confirmDeleteBundle.currency)}
+                      {" · from "}{formatSessionDate(confirmDeleteBundle.coverage_start)}
+                    </p>
+                    <p dir="ltr">0 classes recorded against it — nothing is being thrown away with it.</p>
+                    {renumbered.length > 0 && (
+                      <p dir="ltr">
+                        {renumbered.map(({ before, after }, i) => (
+                          <span key={before}>
+                            {i > 0 && " "}
+                            Bundle {before} will become Bundle {after}.
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                    <p>This cannot be undone.</p>
+                  </div>
+                </AlertDialogDescription>
+              );
+            })()}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={removeBundle}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={removeBundle}>Delete bundle</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

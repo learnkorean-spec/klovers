@@ -11,6 +11,7 @@
 // Users who already have an APPROVED enrollment are skipped (they converted).
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { cairoDateKey, shiftDateKey } from "../_shared/cairoTime.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -74,12 +75,7 @@ async function dispatchStage(
   const column = STAGE_COLUMN[stage];
   const offset = STAGE_DAY_OFFSET[stage];
 
-  // Egypt has had no DST since 2011, so Cairo is a fixed UTC+2 — a pure
-  // JS offset is correct here. If DST is ever reinstated, move this to a
-  // Postgres RPC that uses `AT TIME ZONE 'Africa/Cairo'`.
-  const nowCairoMs = Date.now() + 2 * 60 * 60 * 1000;
-  const targetMs = nowCairoMs + offset * 86400000;
-  const targetDate = new Date(targetMs).toISOString().slice(0, 10);
+  const targetDate = shiftDateKey(cairoDateKey(), offset);
 
   // Query bookings whose trial_date matches the target and whose stage column is null.
   // Exclude TBA placeholders and anyone with an APPROVED enrollment.

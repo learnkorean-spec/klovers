@@ -370,3 +370,61 @@ export function resolveBundleForDate(
     || a.id.localeCompare(b.id),
   )[0];
 }
+
+export type BundleTone = "clean" | "unused" | "negative" | "active";
+
+/**
+ * The one place that decides what a bundle's usage reads as. Every surface
+ * that draws a bundle's state on the student card — the active bundle's own
+ * identity line, the completed-bundle history beneath it, and the queued
+ * zero-session context work — reads it off this function rather than
+ * inventing adjacent colour rules for what is really the same fact asked at
+ * a different point in a bundle's life.
+ *
+ * Status matters as much as the numbers: a still-running bundle never reads
+ * green just because it happens to be fully used at this instant, and never
+ * gets the "ended with N unused" wording either — it has not ended. Only a
+ * genuine overrun (used > total) overrides status, because a class that
+ * happened after the bundle ran out still happened, active or not.
+ */
+export function bundleTone(status: BundleStatus, usedClasses: number, totalClasses: number): BundleTone {
+  if (usedClasses > totalClasses) return "negative";
+  if (status !== "completed") return "active";
+  if (usedClasses < totalClasses) return "unused";
+  return "clean";
+}
+
+/**
+ * The identity line every bundle carries on the card, active or completed —
+ * "Bundle N · label · usage · price · window" — built once so neither surface
+ * invents its own wording or date logic. An active bundle's window is always
+ * the open-ended "from <coverage_start>": it has not ended, so it never gets
+ * an end date. A completed bundle's window is its coverage_start through its
+ * last counted session (or "since <coverage_start>" if it somehow has none).
+ *
+ * `fillPct` is the same `counted / total` fraction (clamped 0–100) that drives
+ * the slim consumption bar beneath this line on every bundle — computed here,
+ * once, so the bar can never show a fill the line's own numbers disagree with.
+ */
+export function bundleIdentityLine(
+  bundle: StudentBundle,
+  bundleNumber: number,
+  usedClasses: number,
+  lastCountedSessionDate: string | null,
+): { tone: BundleTone; text: string; fillPct: number } {
+  const tone = bundleTone(bundle.status, usedClasses, bundle.total_classes);
+  const usageText = tone === "unused"
+    ? `ended with ${bundle.total_classes - usedClasses} unused`
+    : `${usedClasses} of ${bundle.total_classes}`;
+  const windowText = bundle.status === "completed"
+    ? (lastCountedSessionDate
+        ? `${formatSessionDate(bundle.coverage_start)} – ${formatSessionDate(lastCountedSessionDate)}`
+        : `since ${formatSessionDate(bundle.coverage_start)}`)
+    : `from ${formatSessionDate(bundle.coverage_start)}`;
+  const fillPct = Math.min(100, Math.max(0, (usedClasses / Math.max(1, bundle.total_classes)) * 100));
+  return {
+    tone,
+    text: `Bundle ${bundleNumber} · ${bundle.label} · ${usageText} · ${formatMoney(bundle.total_price, bundle.currency)} · ${windowText}`,
+    fillPct,
+  };
+}

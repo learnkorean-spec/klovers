@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchLeaderboardBundle } from "@/lib/leaderboardApi";
 
 export interface LeaderboardEntry {
   user_id: string;
@@ -20,8 +20,29 @@ export interface LeaderboardData {
   loading: boolean;
 }
 
+/**
+ * All three boards now come from SECURITY DEFINER RPCs
+ * (supabase/migrations/20260830120000_games_leaderboard_rpcs.sql).
+ *
+ * What was wrong before, one bug per tab:
+ *   XP      `.from('xp_leaderboard')` — the view is security_invoker=true and
+ *           student_xp RLS is own-row-only, so it returned exactly one row.
+ *   Streak  `.from('student_streaks')` — same own-row RLS, same one row.
+ *   Weekly  `.select('user_id, xp_amount')` — no such column (it is xp_earned).
+ *           PostgREST rejected the request, the error was never destructured,
+ *           and the `if (weeklyXpData)` guard silently skipped the whole block.
+ *           This tab never rendered a row, and no database fix touches it.
+ *
+ * Rank is now computed server-side by row_number(). The old local derivation
+ * (`idx + 1`, and findIndex over the returned window) returned -1 for anyone
+ * ranked past the limit — invisible while one row came back, live the moment
+ * the board started returning everyone. get_my_xp_rank() / get_my_streak_rank()
+ * return the caller's rank even when they fall outside the window.
+ *
+ * The weekly window boundary is Africa/Cairo, computed server-side — not UTC and
+ * not the device clock. There is deliberately no week arithmetic left here.
+ */
 export function useLeaderboard(): LeaderboardData {
-  const { user } = useAuth();
   const [xpLeaderboard, setXpLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [streakLeaderboard, setStreakLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [weeklyLeaderboard, setWeeklyLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -34,150 +55,46 @@ export function useLeaderboard(): LeaderboardData {
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
-      // Use the xp_leaderboard view — already aggregated, sorted desc, limited to 50
-      const { data: xpViewData } = await supabase
-        .from("xp_leaderboard")
-        .select("user_id, name, avatar_url, total_xp");
+      const bundle = await fetchLeaderboardBundle(50);
 
-      // Fetch top streaks
-      const { data: streakData } = await supabase
-        .from("student_streaks")
-        .select("user_id, current_streak")
-        .gt("current_streak", 0)
-        .order("current_streak", { ascending: false })
-        .limit(20);
+      setXpLeaderboard(bundle.xpLeaderboard);
+      setStreakLeaderboard(bundle.streakLeaderboard);
+      setWeeklyLeaderboard(bundle.weeklyLeaderboard);
+      setCurrentUserXpRank(bundle.currentUserXpRank);
+      setCurrentUserStreakRank(bundle.currentUserStreakRank);
 
-      // Build XP leaderboard from the view (already sorted, already has name/avatar)
-      const topXpRows = (xpViewData || []).slice(0, 10);
-
-      const xpBoard: LeaderboardEntry[] = topXpRows.map((r: any, idx: number) => ({
-        user_id: r.user_id,
-        name: r.name || "Anonymous",
-        avatar_url: r.avatar_url ?? null,
-        value: r.total_xp ?? 0,
-        rank: idx + 1,
-        isCurrentUser: r.user_id === user?.id,
-      }));
-
-      setXpLeaderboard(xpBoard);
-
-      // Determine current user's XP rank within the full view result
-      if (user?.id) {
-        const userXpIndex = (xpViewData || []).findIndex((r: any) => r.user_id === user.id);
-        setCurrentUserXpRank(userXpIndex >= 0 ? userXpIndex + 1 : null);
-      }
-
-      // Build streak leaderboard — fetch profiles for streak users not already in the XP view
-      if (streakData) {
-        // Build a profile map from the XP view data we already have
-        const profileMap: Record<string, { name: string; avatar_url: string | null }> = {};
-        (xpViewData || []).forEach((r: any) => {
-          profileMap[r.user_id] = { name: r.name || "Anonymous", avatar_url: r.avatar_url ?? null };
-        });
-
-        // Find streak user IDs whose profiles aren't already in the XP view
-        const streakUserIds = streakData.slice(0, 10).map((r: any) => r.user_id);
-        const missingIds = streakUserIds.filter((id: string) => !profileMap[id]);
-
-        if (missingIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, name, avatar_url")
-            .in("user_id", missingIds);
-
-          (profiles || []).forEach((p: any) => {
-            profileMap[p.user_id] = { name: p.name || "Anonymous", avatar_url: p.avatar_url ?? null };
-          });
-        }
-
-        const streakBoard: LeaderboardEntry[] = streakData
-          .slice(0, 10)
-          .map((r: any, idx: number) => ({
-            user_id: r.user_id,
-            name: profileMap[r.user_id]?.name || "Anonymous",
-            avatar_url: profileMap[r.user_id]?.avatar_url ?? null,
-            value: r.current_streak,
-            rank: idx + 1,
-            isCurrentUser: r.user_id === user?.id,
-          }));
-
-        setStreakLeaderboard(streakBoard);
-
-        if (user?.id) {
-          const userStreakRank = streakData.findIndex((r: any) => r.user_id === user.id);
-          setCurrentUserStreakRank(userStreakRank >= 0 ? userStreakRank + 1 : null);
-        }
-      }
-
-      // Weekly leaderboard: query student_xp for this week, group by user, sum xp
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + (startOfWeek.getDay() === 0 ? -6 : 1)); // Monday
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      const { data: weeklyXpData } = await supabase
-        .from("student_xp")
-        .select("user_id, xp_amount")
-        .gte("created_at", startOfWeek.toISOString());
-
-      if (weeklyXpData) {
-        // Aggregate by user
-        const weeklyTotals: Record<string, number> = {};
-        (weeklyXpData as any[]).forEach((row) => {
-          weeklyTotals[row.user_id] = (weeklyTotals[row.user_id] || 0) + (row.xp_amount || 0);
-        });
-
-        // Sort descending, take top 10
-        const sorted = Object.entries(weeklyTotals)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 10);
-
-        // Build profile map from existing xpViewData
-        const profileMap: Record<string, { name: string; avatar_url: string | null }> = {};
-        (xpViewData || []).forEach((r: any) => {
-          profileMap[r.user_id] = { name: r.name || "Anonymous", avatar_url: r.avatar_url ?? null };
-        });
-
-        // Fetch missing profiles
-        const missingIds = sorted.map(([id]) => id).filter(id => !profileMap[id]);
-        if (missingIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, name, avatar_url")
-            .in("user_id", missingIds);
-          (profiles || []).forEach((p: any) => {
-            profileMap[p.user_id] = { name: p.name || "Anonymous", avatar_url: p.avatar_url ?? null };
-          });
-        }
-
-        const weeklyBoard: LeaderboardEntry[] = sorted.map(([userId, total], idx) => ({
-          user_id: userId,
-          name: profileMap[userId]?.name || "Anonymous",
-          avatar_url: profileMap[userId]?.avatar_url ?? null,
-          value: total,
-          rank: idx + 1,
-          isCurrentUser: userId === user?.id,
-        }));
-
-        setWeeklyLeaderboard(weeklyBoard);
+      // fetchLeaderboardBundle uses allSettled so one failed tab does not blank
+      // the others — but the failures must still be surfaced. Swallowing an
+      // error is what kept the weekly tab dead from launch.
+      if (bundle.errors.length > 0) {
+        console.error("Leaderboard: partial failure", bundle.errors);
       }
     } catch (err) {
       console.error("Leaderboard fetch error:", err);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
   const debouncedFetch = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => { fetchLeaderboard(); }, 2000);
   }, [fetchLeaderboard]);
 
-  // Initial fetch and re-fetch when the current user changes
   useEffect(() => {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  // Realtime subscription: re-fetch (debounced) on any INSERT into student_xp
+  // Realtime — decision recorded rather than left implicit.
+  //
+  // This listens for INSERT on student_xp. Under own-row RLS, Realtime delivers
+  // only YOUR OWN inserts, so the board refreshes when you earn XP but not when
+  // anyone else does. Standings therefore go stale until the next mount.
+  //
+  // Accepted deliberately: with 2 weekly active students, a 60s poll would cost
+  // five RPC round-trips a minute per open tab to show a board that changes a
+  // few times a month. Revisit if activity picks up — swap this for
+  // setInterval(fetchLeaderboard, 60_000).
   useEffect(() => {
     const channel = supabase
       .channel("leaderboard-student-xp")

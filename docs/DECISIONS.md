@@ -54,3 +54,43 @@ colloquial (closer to the primary audience), or a deliberate per-topic mix —
 is a real strategic decision. It needs Re's call, recorded here, before Gate
 3 content generation starts, not settled implicitly by whatever a title-repair
 or retirement PR happens to touch.
+
+## 2026-08-29 — Rendering (OPEN — the A2/B choice deferred on 2026-08-19, revisited)
+
+**Not decided here.** The two-week deferral above has elapsed. Evidence for
+the choice — what changed in the codebase since 19 August, Option A2 and
+Option B re-costed against today's state, the Arabic marketing-URL question,
+and a recommendation clearly marked as such — is assembled in
+`docs/RENDERING_DECISION_2026-08.md`. It is missing real Search Console data
+(no access in the session that wrote it); that gap is flagged prominently in
+the document itself and should be closed before its recommendation is
+trusted over Re's own read of GSC.
+
+This entry also corrects the record on the prior line above: **"Option A2 is
+rejected"** (2026-08-19) was never accompanied by recorded reasoning
+anywhere in this repo. `docs/RENDERING_DECISION_2026-08.md` re-costs A2 from
+a clean analysis for that reason, not because the original rejection is
+assumed wrong — if Re recalls why it was rejected and that reason still
+holds, it should be weighed against the new document, not overridden by it.
+
+## 2026-08-30 — Option A2's 2026-08-19 rejection is reopened (OPEN — outcome pending Re)
+
+Stated plainly, as its own entry, so the record shows this was done
+deliberately and is not lost inside the longer 2026-08-29 entry above:
+
+- The 2026-08-19 entry above states **"Option A2 is rejected."** No
+  reasoning for that rejection is recorded anywhere in this repo —
+  `docs/SEO_DIAGNOSIS.md`, `docs/SEO_MIGRATION.md`, and this file itself
+  were all checked, and none of them say why.
+- Because no rationale is recorded to weigh against, **that rejection is
+  reopened as of this entry.** The 19 August line is left as written above
+  — nothing here overwrites or removes it — but it no longer stands as a
+  closed decision.
+- The evidence for reconsidering it is `docs/RENDERING_DECISION_2026-08.md`
+  (PR #139): what changed in the codebase since 19 August, A2 and Option B
+  both re-costed against today's state, the Arabic marketing-URL gap, and a
+  recommendation (A2 now, B deferred) explicitly marked as a
+  recommendation, not a decision.
+- **Outcome: not decided.** Left blank deliberately, pending Re's call. If
+  she recalls the original 19 August reasoning and it still holds, that
+  reasoning — not this reopening — should settle it.

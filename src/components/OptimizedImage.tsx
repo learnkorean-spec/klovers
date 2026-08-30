@@ -60,81 +60,73 @@ const OptimizedImage = ({
     sizes || (isCard ? DEFAULT_SIZES_CARD : effectiveIsHero ? DEFAULT_SIZES_HERO : DEFAULT_SIZES_HERO);
 
   const isValidUrl = src && (src.startsWith("http://") || src.startsWith("https://"));
+  const showFallback = !isValidUrl || imgError;
 
-  // Fallback UI for missing/broken images
-  const fallbackContent = (
-    <div
-      className={`
-        w-full flex items-center justify-center
-        ${effectiveIsHero ? "aspect-[16/9] rounded-none sm:rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 border border-border" : "aspect-video bg-gradient-to-br from-muted/50 to-muted/20"}
-        ${className}
-      `}
-    >
-      <div className="text-center">
-        {imgError && !isCard ? (
-          <>
-            <AlertCircle className="h-12 w-12 mx-auto text-destructive/50 mb-2" />
-            <p className="text-xs text-muted-foreground">Image unavailable</p>
-          </>
-        ) : (
-          <span className="text-5xl">{fallbackEmoji}</span>
-        )}
-      </div>
-    </div>
-  );
+  // One persistent box, reused unchanged across loading / loaded / error.
+  // Previously loading+loaded and error were two entirely different
+  // subtrees (separate `<figure>{X}</figure>` returns), each reserving its
+  // own aspect ratio independently. Confirmed via Lighthouse's
+  // layout-shifts audit against production (2026-08-30): swapping between
+  // them was the largest CLS contributor on article pages — the box
+  // reappearing under new classes is not the same guarantee as the box
+  // never disappearing. Reserving space on this one wrapper, and only ever
+  // swapping its *contents*, removes the swap that caused the shift by
+  // construction rather than by coincidence of matching classes.
+  const aspectClass = effectiveIsHero ? "aspect-[16/9]" : "aspect-video";
+  const roundedClass = effectiveIsHero ? "rounded-none sm:rounded-2xl" : "rounded-xl";
 
-  if (!isValidUrl || imgError) {
-    if (isCard) {
-      return fallbackContent;
-    }
-    return (
-      <figure className={figureClassName}>
-        {fallbackContent}
-        {caption && (
-          <figcaption className="text-xs text-muted-foreground mt-2 text-center italic px-4 sm:px-0">
-            {caption}
-          </figcaption>
-        )}
-      </figure>
-    );
-  }
-
-  const imgElement = (
-    <div className={`relative overflow-hidden ${effectiveIsHero ? "rounded-none sm:rounded-2xl" : "rounded-xl"}`}>
-      {isLoading && (
-        <div className={`absolute inset-0 bg-muted animate-pulse ${effectiveIsHero ? "aspect-[16/9]" : "aspect-video"}`} />
+  const mediaBox = (
+    <div className={`relative overflow-hidden w-full ${aspectClass} ${roundedClass} ${className}`}>
+      {showFallback ? (
+        <div
+          className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${
+            effectiveIsHero ? "from-muted/60 to-muted/30 border border-border" : "from-muted/50 to-muted/20"
+          }`}
+        >
+          <div className="text-center">
+            {imgError && !isCard ? (
+              <>
+                <AlertCircle className="h-12 w-12 mx-auto text-destructive/50 mb-2" />
+                <p className="text-xs text-muted-foreground">Image unavailable</p>
+              </>
+            ) : (
+              <span className="text-5xl">{fallbackEmoji}</span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {isLoading && <div className="absolute inset-0 bg-muted animate-pulse" />}
+          <img
+            src={optimizedUrl(src!, effectiveIsHero ? 1200 : 640, quality)}
+            srcSet={buildSrcSet(src!, quality)}
+            sizes={effectiveSizes}
+            alt={alt}
+            loading={priority ? "eager" : "lazy"}
+            decoding={priority ? "sync" : "async"}
+            referrerPolicy="no-referrer"
+            {...(priority ? { fetchPriority: "high" as const } : {})}
+            className={`absolute inset-0 w-full h-full object-cover shadow-md ${
+              isLoading ? "opacity-0" : "opacity-100"
+            } transition-opacity duration-300`}
+            onLoad={() => setIsLoading(false)}
+            onError={() => {
+              setImgError(true);
+              setIsLoading(false);
+            }}
+          />
+        </>
       )}
-      <img
-        src={optimizedUrl(src!, effectiveIsHero ? 1200 : 640, quality)}
-        srcSet={buildSrcSet(src!, quality)}
-        sizes={effectiveSizes}
-        alt={alt}
-        loading={priority ? "eager" : "lazy"}
-        decoding={priority ? "sync" : "async"}
-        referrerPolicy="no-referrer"
-        {...(priority ? { fetchPriority: "high" as const } : {})}
-        className={`
-          ${className}
-          ${effectiveIsHero ? "rounded-none sm:rounded-2xl aspect-[16/9] shadow-md" : "rounded-xl shadow-md"}
-          ${isLoading ? "opacity-0" : "opacity-100"}
-          transition-opacity duration-300
-        `}
-        onLoad={() => setIsLoading(false)}
-        onError={() => {
-          setImgError(true);
-          setIsLoading(false);
-        }}
-      />
     </div>
   );
 
   if (isCard) {
-    return imgElement;
+    return mediaBox;
   }
 
   return (
     <figure className={figureClassName}>
-      {imgElement}
+      {mediaBox}
       {caption && (
         <figcaption className="text-xs text-muted-foreground mt-2 text-center italic px-4 sm:px-0">
           {caption}

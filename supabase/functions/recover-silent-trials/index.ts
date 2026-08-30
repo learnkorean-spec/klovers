@@ -14,6 +14,7 @@
 // treats these rows as done and never re-emails them.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { cairoDateKey, shiftDateKey } from "../_shared/cairoTime.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -80,9 +81,8 @@ Deno.serve(async (req) => {
 
     // Trials that already happened (trial_date <= today Cairo), within the window,
     // not yet sent the day3 follow-up, not TBA placeholders, with a usable email.
-    const nowCairoMs = Date.now() + 2 * 60 * 60 * 1000;
-    const todayCairo = new Date(nowCairoMs).toISOString().slice(0, 10);
-    const cutoffCairo = new Date(nowCairoMs - days * 86400000).toISOString().slice(0, 10);
+    const todayCairo = cairoDateKey();
+    const cutoffCairo = shiftDateKey(todayCairo, -days);
 
     // .lt (not .lte) so we only target trials that have already happened.
     // Otherwise we'd email today's trial bookers before they attend, which
