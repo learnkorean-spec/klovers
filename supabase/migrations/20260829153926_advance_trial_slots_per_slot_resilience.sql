@@ -47,6 +47,21 @@
 -- Does NOT touch the UNIQUE (trial_date, start_time) constraint itself --
 -- that is issue #127's separate, still-open question, deliberately not
 -- decided here.
+--
+-- Two more fixes added on review, before this ever applied anywhere:
+--
+-- 4. Both AT TIME ZONE fallbacks below read COALESCE(timezone, 'Asia/Kuala_Lumpur')
+--    -- the teacher's old zone, not the Cairo audience every active slot has used
+--    since PR #125. trial_slots.timezone is NOT NULL, so this specific COALESCE can
+--    never actually fire against live data (verified: every is_active/active row is
+--    Africa/Cairo) -- but it is the same landmine that produced the 5:30 AM slot,
+--    one layer further from tripping. Both literals changed to 'Africa/Cairo'.
+--
+-- 5. trial_slots.timezone's own column DEFAULT was still 'Asia/Kuala_Lumpur'. No
+--    current write path relies on it -- AddTrialClassDialog and fn_create_trial_slot
+--    both set timezone explicitly -- so this changes no existing row. Left alone it
+--    is the same landmine one layer further up: a future INSERT that omits timezone
+--    would land silently on the wrong zone. Changed to 'Africa/Cairo' to match.
 
 BEGIN;
 
@@ -54,7 +69,8 @@ SELECT set_config('request.jwt.claim.sub', 'eb51d4be-8378-493f-b6c7-9c3a5e9b5416
 
 ALTER TABLE public.trial_slots
   ADD COLUMN IF NOT EXISTS rollover_skipped_at timestamptz,
-  ADD COLUMN IF NOT EXISTS rollover_skip_reason text;
+  ADD COLUMN IF NOT EXISTS rollover_skip_reason text,
+  ALTER COLUMN timezone SET DEFAULT 'Africa/Cairo';
 
 DROP FUNCTION IF EXISTS public.advance_trial_slots();
 
@@ -80,7 +96,7 @@ BEGIN
     WHERE is_active = true
       AND lifecycle = 'active'
       AND trial_date IS NOT NULL
-      AND (trial_date + start_time::time) AT TIME ZONE COALESCE(timezone, 'Asia/Kuala_Lumpur') <= now()
+      AND (trial_date + start_time::time) AT TIME ZONE COALESCE(timezone, 'Africa/Cairo') <= now()
   LOOP
     target_month := date_trunc('month', slot.trial_date)::date;
     LOOP
@@ -88,7 +104,7 @@ BEGIN
       block_start := public.fn_first_trial_block_date(target_month);
       dow_offset := ((slot.day_of_week - EXTRACT(DOW FROM block_start)::int) + 7) % 7;
       new_date := block_start + dow_offset;
-      EXIT WHEN (new_date + slot.start_time::time) AT TIME ZONE COALESCE(slot.timezone, 'Asia/Kuala_Lumpur') > now();
+      EXIT WHEN (new_date + slot.start_time::time) AT TIME ZONE COALESCE(slot.timezone, 'Africa/Cairo') > now();
     END LOOP;
 
     BEGIN
@@ -145,6 +161,14 @@ BEGIN
      WHERE p.proname = 'advance_trial_slots' AND t.typname = 'record'
   ) THEN
     RAISE EXCEPTION 'Verify failed: advance_trial_slots() does not have the expected TABLE(...) return shape';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'trial_slots'
+       AND column_name = 'timezone' AND column_default = '''Africa/Cairo''::text'
+  ) THEN
+    RAISE EXCEPTION 'Verify failed: trial_slots.timezone default is not Africa/Cairo';
   END IF;
 END $$;
 
