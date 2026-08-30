@@ -62,6 +62,31 @@
 --    both set timezone explicitly -- so this changes no existing row. Left alone it
 --    is the same landmine one layer further up: a future INSERT that omits timezone
 --    would land silently on the wrong zone. Changed to 'Africa/Cairo' to match.
+--
+-- A third, security-relevant fix added on a second review pass, before this ever
+-- applied anywhere:
+--
+-- 6. DROP FUNCTION + CREATE FUNCTION doesn't just change the return type -- it
+--    also discards the function's existing ACL and replaces it with this
+--    project's default privileges for new functions created by postgres in the
+--    public schema. Verified directly against the live default ACL (pg_default_acl)
+--    and reproduced locally against a real Postgres 16 instance mirroring it
+--    exactly: that default grants EXECUTE to postgres, anon, authenticated, AND
+--    service_role -- not to PUBLIC. So `REVOKE EXECUTE ... FROM PUBLIC` alone
+--    (tried first) does nothing here -- anon and authenticated keep EXECUTE on a
+--    SECURITY DEFINER function afterward, confirmed empirically against the same
+--    local reproduction. The revoke below names anon and authenticated explicitly
+--    (PUBLIC too, for defense in depth against a plain-Postgres default). Before
+--    this fix, applying this migration as originally written would have made
+--    advance_trial_slots() directly callable by any anon or authenticated caller
+--    via `supabase.rpc('advance_trial_slots')` -- unreachable today only because
+--    nothing has applied yet (live ACL is still {postgres, service_role}, verified).
+--
+-- The EXCEPTION block above catches WHEN unique_violation only, deliberately --
+-- not WHEN OTHERS. Any other error (a bug, a constraint this migration doesn't
+-- know about, a connectivity problem) should abort the whole run loudly, the same
+-- as the pre-fix function did, rather than being silently swallowed and reported
+-- as a routine "skipped" slot.
 
 BEGIN;
 
@@ -141,11 +166,22 @@ BEGIN
 END;
 $function$;
 
+-- CREATE FUNCTION resets the ACL to this project's default privileges for new
+-- functions owned by postgres in the public schema, which grant EXECUTE to
+-- postgres, anon, authenticated, AND service_role (verified against
+-- pg_default_acl and reproduced locally -- see note 6 above). REVOKE FROM
+-- PUBLIC alone does not touch anon/authenticated, since they were granted by
+-- name, not via the PUBLIC pseudo-role -- both must be named explicitly.
+REVOKE EXECUTE ON FUNCTION public.advance_trial_slots() FROM PUBLIC, anon, authenticated;
+
 -- Same grant the function already had -- postgres (owner) and service_role
 -- (the cron job's role) only. Never anon, never authenticated.
 GRANT EXECUTE ON FUNCTION public.advance_trial_slots() TO service_role;
 
 DO $$
+DECLARE
+  v_fn regprocedure := 'public.advance_trial_slots()'::regprocedure;
+  v_acl_grantees text[];
 BEGIN
   IF (
     SELECT count(*) FROM information_schema.columns
@@ -155,12 +191,8 @@ BEGIN
     RAISE EXCEPTION 'Verify failed: rollover_skipped_at/rollover_skip_reason columns are missing';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_proc p
-    JOIN pg_type t ON t.oid = p.prorettype
-     WHERE p.proname = 'advance_trial_slots' AND t.typname = 'record'
-  ) THEN
-    RAISE EXCEPTION 'Verify failed: advance_trial_slots() does not have the expected TABLE(...) return shape';
+  IF NOT (SELECT proretset FROM pg_proc WHERE oid = v_fn) THEN
+    RAISE EXCEPTION 'Verify failed: advance_trial_slots() does not return a set (expected TABLE(...) return shape)';
   END IF;
 
   IF NOT EXISTS (
@@ -169,6 +201,20 @@ BEGIN
        AND column_name = 'timezone' AND column_default = '''Africa/Cairo''::text'
   ) THEN
     RAISE EXCEPTION 'Verify failed: trial_slots.timezone default is not Africa/Cairo';
+  END IF;
+
+  -- Exact-ACL check, not just "PUBLIC/anon/authenticated absent" -- confirms
+  -- the REVOKE above actually landed and nothing else crept in either.
+  SELECT array_agg(grantee_name ORDER BY grantee_name)
+    INTO v_acl_grantees
+  FROM (
+    SELECT DISTINCT CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE a.grantee::regrole::text END AS grantee_name
+    FROM pg_proc p, LATERAL aclexplode(p.proacl) a
+    WHERE p.oid = v_fn AND a.privilege_type = 'EXECUTE'
+  ) grantees;
+
+  IF v_acl_grantees IS DISTINCT FROM ARRAY['postgres', 'service_role'] THEN
+    RAISE EXCEPTION 'Verify failed: advance_trial_slots() EXECUTE ACL is %, expected exactly {postgres, service_role}', v_acl_grantees;
   END IF;
 END $$;
 
