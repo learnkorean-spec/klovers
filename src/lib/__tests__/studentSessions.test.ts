@@ -9,6 +9,8 @@
 import { describe, it, expect } from "vitest";
 import {
   buildExpectedSessions,
+  bundleIdentityLine,
+  bundleTone,
   formatMoney,
   formatSessionDate,
   localDateKey,
@@ -242,6 +244,41 @@ describe("resolveBundleForDate", () => {
     const c = bundle({ id: "c", coverage_start: "2026-07-01" });
     expect(resolveBundleForDate([a, b, c], "2026-05-15")?.id).toBe("b");
   });
+
+  describe("a tie on coverage_start", () => {
+    // The exact real-world case: a superseded, zero-price bundle and its live
+    // paid replacement shared the same backfilled coverage_start. The old
+    // implementation picked whichever came first in the input array -- an
+    // accident of unordered query results, not a rule -- and it happened to
+    // land on the superseded one. These assert the fix is a property of the
+    // data, not of array order: every case runs both ways round.
+    it("prefers the active bundle over a completed one on a tie, regardless of input order", () => {
+      const superseded = bundle({ id: "superseded", coverage_start: "2026-08-23", status: "completed", total_price: 0 });
+      const live = bundle({ id: "live", coverage_start: "2026-08-23", status: "active", total_price: 6400 });
+      expect(resolveBundleForDate([superseded, live], "2026-08-25")?.id).toBe("live");
+      expect(resolveBundleForDate([live, superseded], "2026-08-25")?.id).toBe("live");
+    });
+
+    it("falls back to the latest purchased_on when neither tied bundle is active", () => {
+      const older = bundle({ id: "older", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      const newer = bundle({ id: "newer", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-23" });
+      expect(resolveBundleForDate([older, newer], "2026-08-25")?.id).toBe("newer");
+      expect(resolveBundleForDate([newer, older], "2026-08-25")?.id).toBe("newer");
+    });
+
+    it("falls back to id as a final, stable tiebreak when status and purchased_on both tie", () => {
+      const x = bundle({ id: "xxxx", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      const y = bundle({ id: "yyyy", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      expect(resolveBundleForDate([x, y], "2026-08-25")?.id).toBe("xxxx");
+      expect(resolveBundleForDate([y, x], "2026-08-25")?.id).toBe("xxxx");
+    });
+
+    it("never lets a voided bundle win a tie via the active/purchased_on/id fallback", () => {
+      const voided = bundle({ id: "voided", coverage_start: "2026-08-23", status: "cancelled", voided_reason: "mistake", purchased_on: "2026-08-24" });
+      const completed = bundle({ id: "completed", coverage_start: "2026-08-23", status: "completed", purchased_on: "2026-08-20" });
+      expect(resolveBundleForDate([voided, completed], "2026-08-25")?.id).toBe("completed");
+    });
+  });
 });
 
 describe("money is shown as paid, never converted", () => {
@@ -281,5 +318,78 @@ describe("formatSessionDate", () => {
   it("names the weekday so a catch-up row is unambiguous", () => {
     expect(formatSessionDate("2026-08-17")).toBe("Mon 17 Aug");
     expect(formatSessionDate("2026-08-23")).toBe("Sun 23 Aug");
+  });
+});
+
+describe("bundleTone", () => {
+  it("is clean when a completed bundle's usage exactly matches the total", () => {
+    expect(bundleTone("completed", 4, 4)).toBe("clean");
+  });
+
+  it("is unused when a completed bundle finished with classes left over", () => {
+    expect(bundleTone("completed", 2, 4)).toBe("unused");
+  });
+
+  it("is negative when usage overran the total, completed or not", () => {
+    expect(bundleTone("completed", 5, 4)).toBe("negative");
+    expect(bundleTone("active", 5, 4)).toBe("negative");
+  });
+
+  it("is active, never clean, when a still-running bundle happens to be fully used", () => {
+    // The whole reason status is a parameter: a live bundle at 4 of 4 has not
+    // finished, and must not read as a clean finish just because the numbers
+    // momentarily match.
+    expect(bundleTone("active", 4, 4)).toBe("active");
+  });
+
+  it("is active, never 'unused', for a bundle that has simply just started", () => {
+    expect(bundleTone("active", 0, 4)).toBe("active");
+  });
+});
+
+describe("bundleIdentityLine", () => {
+  it("gives an active bundle an open-ended 'from' window and a plain fraction, never green", () => {
+    const b = bundle({
+      status: "active", coverage_start: "2026-08-24", label: "Private · 1 month · 4 classes",
+      total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const { tone, text, fillPct } = bundleIdentityLine(b, 2, 1, null);
+    expect(tone).toBe("active");
+    expect(text).toBe(`Bundle 2 · Private · 1 month · 4 classes · 1 of 4 · ${formatMoney(2350, "EGP")} · from Mon 24 Aug`);
+    expect(fillPct).toBe(25);
+  });
+
+  it("reads a zero-session active bundle plainly, not as an error", () => {
+    const b = bundle({ status: "active", coverage_start: "2026-08-24", total_classes: 4, total_price: 2350, currency: "EGP" });
+    const { text, fillPct } = bundleIdentityLine(b, 2, 0, null);
+    expect(text).toContain("0 of 4");
+    expect(text).not.toContain("ended with");
+    expect(fillPct).toBe(0);
+  });
+
+  it("gives a completed bundle a closed start–end window", () => {
+    const b = bundle({
+      status: "completed", coverage_start: "2026-07-06", label: "Private · 1 month · 4 classes",
+      total_classes: 4, total_price: 2350, currency: "EGP",
+    });
+    const { tone, text, fillPct } = bundleIdentityLine(b, 1, 4, "2026-07-27");
+    expect(tone).toBe("clean");
+    expect(text).toBe(`Bundle 1 · Private · 1 month · 4 classes · 4 of 4 · ${formatMoney(2350, "EGP")} · Mon 6 Jul – Mon 27 Jul`);
+    expect(fillPct).toBe(100);
+  });
+
+  it("spells out an unfinished completed bundle in words, not a bare fraction", () => {
+    const b = bundle({ status: "completed", coverage_start: "2026-07-06", total_classes: 4 });
+    const { tone, text, fillPct } = bundleIdentityLine(b, 1, 2, "2026-07-13");
+    expect(tone).toBe("unused");
+    expect(text).toContain("ended with 2 unused");
+    expect(fillPct).toBe(50);
+  });
+
+  it("clamps an overrun bundle's fill to 100, never past its track", () => {
+    const b = bundle({ status: "completed", coverage_start: "2026-07-06", total_classes: 4 });
+    const { tone, fillPct } = bundleIdentityLine(b, 1, 6, "2026-07-27");
+    expect(tone).toBe("negative");
+    expect(fillPct).toBe(100);
   });
 });

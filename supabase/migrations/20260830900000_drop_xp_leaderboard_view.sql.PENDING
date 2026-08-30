@@ -1,0 +1,21 @@
+-- ============================================================================
+-- G1 step 3 -- retire the broken view
+--
+-- ⚠️ DO NOT APPLY YET. Rename this file to drop the ".PENDING" suffix ONLY
+-- after the frontend using get_xp_leaderboard / get_streak_leaderboard /
+-- get_weekly_leaderboard is live in production.
+--
+-- Dropping the view in the same migration as the functions would break the
+-- running frontend for the minutes between "migration applied" and "deploy
+-- finished". Add -> migrate -> remove.
+--
+-- ⚠️ AND DO NOT "FIX" THE VIEW INSTEAD BY REMOVING security_invoker.
+-- anon currently holds SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES
+-- and TRIGGER on this view -- a Lovable-era blanket grant. Today that is
+-- harmless only because security_invoker makes anon see nothing. Drop
+-- security_invoker with those grants live and the view starts publishing the
+-- real names and avatars of the top 50 students to the open internet.
+-- ============================================================================
+
+revoke all on public.xp_leaderboard from anon, authenticated;
+drop view if exists public.xp_leaderboard;

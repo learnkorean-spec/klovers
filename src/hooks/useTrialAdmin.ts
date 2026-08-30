@@ -202,7 +202,6 @@ export function useUpdateTrialSlot() {
       capacity?: number;
       minToRun?: number | null;
       classLanguage?: 'arabic' | 'english';
-      sessionPeriod?: 'morning' | 'evening' | 'daytime';
       timezone?: string;
       meetingUrl?: string | null;
       lifecycle?: 'active' | 'archived' | 'retired';
@@ -215,7 +214,6 @@ export function useUpdateTrialSlot() {
         p_capacity: args.capacity ?? null,
         p_min_to_run: args.minToRun ?? null,
         p_class_language: args.classLanguage ?? null,
-        p_session_period: args.sessionPeriod ?? null,
         p_timezone: args.timezone ?? null,
         p_meeting_url: args.meetingUrl ?? null,
         p_lifecycle: args.lifecycle ?? null,

@@ -331,7 +331,23 @@ export function formatSessionDate(dateKey: string): string {
  * A voided bundle (status "cancelled") is never resolved to -- it was voided
  * because it was wrong, so a date that would fall in its window is either
  * covered by an earlier bundle or resolves to nothing, surfacing the gap
- * instead of drawing against a bundle already flagged as a mistake.
+ * instead of drawing against a bundle already flagged as a mistake. A
+ * completed bundle stays eligible -- a date genuinely inside a superseded
+ * bundle's own window must keep resolving there, which is the entire reason
+ * coverage_start exists.
+ *
+ * Two bundles can share the same coverage_start (same-day renewal, or two
+ * bundles both backfilled to the same purchased_on). A same-day production
+ * case did: a superseded, zero-price bundle and its live paid replacement
+ * both carried the same date, and picking "the latest coverage_start" alone
+ * left the choice between them to whatever order the caller's array happened
+ * to be in -- not a rule, an accident of how the data was fetched. This is a
+ * pure function of its inputs precisely so that can never happen again:
+ * among every eligible bundle sharing the true maximum coverage_start, ties
+ * break on (a) status "active" over anything else -- a live bundle must never
+ * lose to a superseded one for the same date -- then (b) the latest
+ * purchased_on, then (c) id, so there is always exactly one answer regardless
+ * of input order.
  *
  * Returns null when no (non-voided) bundle covers the date at all.
  */
@@ -339,11 +355,76 @@ export function resolveBundleForDate(
   bundles: StudentBundle[],
   dateKey: string,
 ): StudentBundle | null {
-  let best: StudentBundle | null = null;
-  for (const b of bundles) {
-    if (b.status === "cancelled") continue;
-    if (b.coverage_start > dateKey) continue;
-    if (!best || b.coverage_start > best.coverage_start) best = b;
-  }
-  return best;
+  const eligible = bundles.filter(b => b.status !== "cancelled" && b.coverage_start <= dateKey);
+  if (eligible.length === 0) return null;
+
+  const latestStart = eligible.reduce(
+    (max, b) => (b.coverage_start > max ? b.coverage_start : max), eligible[0].coverage_start,
+  );
+  const tied = eligible.filter(b => b.coverage_start === latestStart);
+  if (tied.length === 1) return tied[0];
+
+  return [...tied].sort((a, b) =>
+    (b.status === "active" ? 1 : 0) - (a.status === "active" ? 1 : 0)
+    || b.purchased_on.localeCompare(a.purchased_on)
+    || a.id.localeCompare(b.id),
+  )[0];
+}
+
+export type BundleTone = "clean" | "unused" | "negative" | "active";
+
+/**
+ * The one place that decides what a bundle's usage reads as. Every surface
+ * that draws a bundle's state on the student card — the active bundle's own
+ * identity line, the completed-bundle history beneath it, and the queued
+ * zero-session context work — reads it off this function rather than
+ * inventing adjacent colour rules for what is really the same fact asked at
+ * a different point in a bundle's life.
+ *
+ * Status matters as much as the numbers: a still-running bundle never reads
+ * green just because it happens to be fully used at this instant, and never
+ * gets the "ended with N unused" wording either — it has not ended. Only a
+ * genuine overrun (used > total) overrides status, because a class that
+ * happened after the bundle ran out still happened, active or not.
+ */
+export function bundleTone(status: BundleStatus, usedClasses: number, totalClasses: number): BundleTone {
+  if (usedClasses > totalClasses) return "negative";
+  if (status !== "completed") return "active";
+  if (usedClasses < totalClasses) return "unused";
+  return "clean";
+}
+
+/**
+ * The identity line every bundle carries on the card, active or completed —
+ * "Bundle N · label · usage · price · window" — built once so neither surface
+ * invents its own wording or date logic. An active bundle's window is always
+ * the open-ended "from <coverage_start>": it has not ended, so it never gets
+ * an end date. A completed bundle's window is its coverage_start through its
+ * last counted session (or "since <coverage_start>" if it somehow has none).
+ *
+ * `fillPct` is the same `counted / total` fraction (clamped 0–100) that drives
+ * the slim consumption bar beneath this line on every bundle — computed here,
+ * once, so the bar can never show a fill the line's own numbers disagree with.
+ */
+export function bundleIdentityLine(
+  bundle: StudentBundle,
+  bundleNumber: number,
+  usedClasses: number,
+  lastCountedSessionDate: string | null,
+): { tone: BundleTone; text: string; fillPct: number } {
+  const tone = bundleTone(bundle.status, usedClasses, bundle.total_classes);
+  const usageText = tone === "unused"
+    ? `ended with ${bundle.total_classes - usedClasses} unused`
+    : `${usedClasses} of ${bundle.total_classes}`;
+  const windowText = bundle.status === "completed"
+    ? (lastCountedSessionDate
+        ? `${formatSessionDate(bundle.coverage_start)} – ${formatSessionDate(lastCountedSessionDate)}`
+        : `since ${formatSessionDate(bundle.coverage_start)}`)
+    : `from ${formatSessionDate(bundle.coverage_start)}`;
+  const fillPct = Math.min(100, Math.max(0, (usedClasses / Math.max(1, bundle.total_classes)) * 100));
+  return {
+    tone,
+    text: `Bundle ${bundleNumber} · ${bundle.label} · ${usageText} · ${formatMoney(bundle.total_price, bundle.currency)} · ${windowText}`,
+    fillPct,
+  };
 }

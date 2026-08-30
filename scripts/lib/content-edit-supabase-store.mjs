@@ -7,9 +7,9 @@
  * service_role key is explicitly rejected as an option: it bypasses RLS
  * entirely, and there is no reason to when admin sign-in reaches the same rows.
  *
- * Credentials come from env vars, never hardcoded (unlike
- * scripts/deploy-lesson1.mjs, which has a live secret key committed in the
- * repo — a separate, pre-existing problem, not something this file repeats).
+ * Credentials come from env vars, never hardcoded — scripts/deploy-lesson1.mjs
+ * used to have a secret key committed inline (see docs/SECURITY_BACKLOG.md;
+ * closed 2026-08-25, the credential targeted an already-abandoned project).
  */
 import { createClient } from "@supabase/supabase-js";
 
