@@ -184,7 +184,7 @@ jobs:
         id: lighthouse
         continue-on-error: true
         env:
-          SITE: https://kloversegy.com
+          SITE: https://klovers-git-fix-article-cls-learnkorean-specs-projects.vercel.app
         run: |
           node scripts/lighthouse-budget.mjs "$SITE" | tee lighthouse-report.md
 
