@@ -1,6 +1,6 @@
 /**
  * Leaderboard data access — the six SECURITY DEFINER RPCs added in
- * supabase/migrations/20260828120000_games_leaderboard_rpcs.sql
+ * supabase/migrations/20260830120000_games_leaderboard_rpcs.sql
  *
  * WHY THIS FILE EXISTS AS A NEW MODULE
  * ------------------------------------

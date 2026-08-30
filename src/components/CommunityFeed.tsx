@@ -41,7 +41,7 @@ function timeAgo(iso: string): string {
  *
  * Making it genuinely communal needs a SECURITY DEFINER `get_community_feed()`
  * on the same pattern as the leaderboard RPCs (see
- * supabase/migrations/20260828120000_games_leaderboard_rpcs.sql). That is a
+ * supabase/migrations/20260830120000_games_leaderboard_rpcs.sql). That is a
  * migration, so it belongs in its own PR. Until then this is honest about
  * being personal.
  */

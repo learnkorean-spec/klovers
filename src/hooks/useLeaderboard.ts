@@ -22,7 +22,7 @@ export interface LeaderboardData {
 
 /**
  * All three boards now come from SECURITY DEFINER RPCs
- * (supabase/migrations/20260828120000_games_leaderboard_rpcs.sql).
+ * (supabase/migrations/20260830120000_games_leaderboard_rpcs.sql).
  *
  * What was wrong before, one bug per tab:
  *   XP      `.from('xp_leaderboard')` — the view is security_invoker=true and

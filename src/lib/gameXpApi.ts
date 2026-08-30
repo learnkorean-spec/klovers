@@ -1,6 +1,6 @@
 /**
  * Server-authoritative game XP — wraps award_game_xp, added in
- * supabase/migrations/20260828120200_game_xp_rules_and_award_rpc.sql
+ * supabase/migrations/20260830120200_game_xp_rules_and_award_rpc.sql
  *
  * WHAT CHANGES
  * ------------
