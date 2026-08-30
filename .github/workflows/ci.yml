@@ -138,6 +138,21 @@ jobs:
       - name: SEO check
         run: npm run seo:check
 
+      # BLOCKING, as a ratchet rather than a cleanup. Three production bugs
+      # shared one mechanism: a Supabase query destructured `data` and never
+      # read `error`, so a rejected request became `data === null`, a falsy
+      # guard swallowed it, and the UI showed an empty state instead of a
+      # failure. The weekly leaderboard tab (selecting a column that does not
+      # exist) and the community feed (same) were both dead for months with
+      # nothing in the console.
+      #
+      # src/ has 205 of these today. Fixing them all at once would be an
+      # unreviewable diff, so scripts/supabase-errors-baseline.json records the
+      # per-file count and this fails only when a file gains more. The number
+      # can go down and never up. Pay one down, rerun with --update, commit.
+      - name: No new unchecked Supabase errors
+        run: node scripts/check-supabase-errors.mjs
+
       # Advisory only: the codebase currently has 22 pre-existing eslint errors
       # and ~579 warnings, so this must not block merges yet. Remove
       # continue-on-error once those are cleaned up to make lint a hard gate.
