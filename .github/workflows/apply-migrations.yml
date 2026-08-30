@@ -15,11 +15,24 @@
 # the whole batch, so a later file's failure can never leave an earlier
 # file's already-committed change unrecorded.
 #
-# Two modes, dispatched by hand:
-#   plan   (default)  list what would be applied, change nothing
-#   apply             apply them, record them, verify none remain
+# Three modes, dispatched by hand:
+#   plan         (default)  list what would be applied, change nothing
+#   apply                   apply them, record them, verify none remain
+#   repair-only             record ONE already-verified-live version as
+#                           applied - no psql, no schema touched at all.
+#                           For exactly one situation: a migration whose
+#                           effect is confirmed live on production by some
+#                           means other than this workflow (direct SQL
+#                           access, a manual apply_migration call, anything
+#                           outside the git -> PR -> this-workflow path),
+#                           found unrecorded in schema_migrations. That is a
+#                           human judgment call, not something this workflow
+#                           verifies for you - see the `repair` job below for
+#                           exactly what it does and does not check. Needs
+#                           the `version` input; leave it blank for the other
+#                           two modes.
 #
-# Two jobs, not one. `plan` is read-only (migration list + a dry SQL preview
+# Two jobs for plan/apply, not one, plus a third for repair-only. `plan` is read-only (migration list + a dry SQL preview
 # in the step summary) and always runs so a reviewer has something to look
 # at. `apply` is the only job that touches the database, and it runs under
 # the `production-db-apply` GitHub Environment - if that environment has
@@ -40,13 +53,19 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "plan lists what would be applied; apply actually applies it"
+        description: "plan lists what would be applied; apply actually applies it; repair-only records one version already verified live (needs the version input, touches no schema)"
         required: true
         default: plan
         type: choice
         options:
           - plan
           - apply
+          - repair-only
+      version:
+        description: "repair-only mode only: the exact version to record (e.g. 20260829153926). You must have already verified its effect is live yourself - this job does not check that for you."
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -145,11 +164,18 @@ jobs:
           echo "-----------------------------------------------------------"
 
       - name: Stop here (plan mode)
-        if: inputs.mode != 'apply'
+        if: inputs.mode == 'plan'
         run: |
           set -euo pipefail
           echo "Plan mode - nothing was applied."
           echo "Re-run with mode=apply to apply the ${{ steps.plan.outputs.count }} migration(s) listed above."
+
+      - name: Stop here (repair-only mode)
+        if: inputs.mode == 'repair-only'
+        run: |
+          set -euo pipefail
+          echo "repair-only mode - this job only lists what git and the database currently disagree on."
+          echo "It does not run the repair itself; see the repair job below for that, gated on the version input."
 
       - name: What happens next (apply mode)
         if: inputs.mode == 'apply' && steps.plan.outputs.count != '0'
@@ -317,3 +343,93 @@ jobs:
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  repair:
+    name: Record one version as already applied (no execution)
+    if: inputs.mode == 'repair-only'
+    runs-on: ubuntu-latest
+    # Same lock as apply. Marking a version "applied" when it was not is
+    # just as dangerous as a bad apply - a later real migration could then
+    # build on a foundation that was never actually laid - so this gets the
+    # same required-reviewer gate, not a lighter one.
+    environment: production-db-apply
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Supabase CLI
+        run: npx supabase@latest --version
+
+      - name: Validate the version input
+        run: |
+          set -euo pipefail
+          version="${{ inputs.version }}"
+          if [ -z "$version" ]; then
+            echo "::error::mode=repair-only requires the version input (e.g. 20260829153926). Nothing done."
+            exit 1
+          fi
+          if ! [[ "$version" =~ ^[0-9]{14}$ ]]; then
+            echo "::error::version '${version}' does not look like a 14-digit migration timestamp. Nothing done."
+            exit 1
+          fi
+          f=$(find supabase/migrations -maxdepth 1 -name "${version}_*.sql" | head -1)
+          if [ -z "$f" ]; then
+            echo "::error::No local migration file found for version ${version}. This job only records versions that already have a reviewed file in the repo - it does not invent history."
+            exit 1
+          fi
+          echo "Found local file: $(basename "$f")"
+
+      - name: Link project
+        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+
+      - name: Confirm this version is not already recorded
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list.txt
+          # The CLI's table wraps every cell in backticks: `VERSION` | `VERSION` | `TIME`
+          # (see scripts/parse-migration-list.py's docstring for the exact
+          # format). A row is already-applied when the same version appears
+          # backticked in both the Local and Remote columns.
+          if grep -qE "\`${{ inputs.version }}\`[[:space:]]*[|│][[:space:]]*\`${{ inputs.version }}\`" migration-list.txt; then
+            echo "::notice::${{ inputs.version }} already appears applied in schema_migrations - nothing to do. This is a safe no-op, not an error."
+            echo "ALREADY_RECORDED=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Record the version
+        if: env.ALREADY_RECORDED != '1'
+        run: |
+          set -euo pipefail
+          # This is the ENTIRE action this job takes: one call to the CLI's
+          # own writer, exactly what the apply job's "record" step runs for
+          # a version it just applied itself. No psql connection is opened
+          # anywhere in this job, no SQL of any kind runs against the
+          # database - this cannot touch the schema even by accident.
+          #
+          # Whoever dispatched this run is asserting, on their own
+          # authority, that this version's effect is already verified live
+          # on production by some means outside this workflow. This job
+          # takes that on trust - it has no way to independently confirm a
+          # migration file's effect matches reality, only a human
+          # comparing the file to the database can do that. Get that proof
+          # BEFORE dispatching this, not after.
+          npx supabase@latest migration repair --status applied "${{ inputs.version }}"
+          echo "recorded: ${{ inputs.version }}"
+
+      - name: Verify and print the state
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list-after.txt
+          if ! grep -qE "\`${{ inputs.version }}\`[[:space:]]*[|│][[:space:]]*\`${{ inputs.version }}\`" migration-list-after.txt; then
+            echo "::error::${{ inputs.version }} still does not show as applied after the repair call."
+            exit 1
+          fi
+          {
+            echo "## repair-only: ${{ inputs.version }}"
+            echo
+            echo "Now recorded as applied. No SQL was executed against the database in this job."
+          } >> "$GITHUB_STEP_SUMMARY"
