@@ -9,8 +9,11 @@
 # really were applied, so it is not used either.
 #
 # Instead this workflow applies each pending migration directly with psql and
-# then records it through the CLI's own writer, which is what db push would
-# have done minus the consistency check it cannot satisfy.
+# records it through the CLI's own writer immediately after, before moving to
+# the next file - what db push would have done minus the consistency check it
+# cannot satisfy. Apply-then-record happens per file, not as two passes over
+# the whole batch, so a later file's failure can never leave an earlier
+# file's already-committed change unrecorded.
 #
 # Two modes, dispatched by hand:
 #   plan   (default)  list what would be applied, change nothing
@@ -232,13 +235,25 @@ jobs:
           echo "DBHOST=$DBHOST" >> "$GITHUB_ENV"
           echo "DBUSER=$DBUSER" >> "$GITHUB_ENV"
 
-      - name: Apply the pending migrations
+      - name: Apply and record the pending migrations, one at a time
         if: steps.replan.outputs.count != '0'
         run: |
           set -euo pipefail
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
 
-          # Version order, which is the order the filenames sort in.
+          # Each file is applied AND recorded before moving to the next one.
+          # This used to be two passes - apply every file, then record every
+          # version in one batched `migration repair` call at the end. That
+          # meant a file N+1 failure (or the job dying between the passes for
+          # any other reason - cancellation, runner loss) left every already-
+          # committed file 1..N applied on the live database but with no row
+          # in schema_migrations - a migration that is real and unrecorded at
+          # the same time, exactly the state 20260829153926 was found in.
+          # Recording each version immediately after its own psql succeeds
+          # closes that gap: whatever already committed to the database is
+          # durably recorded before the next file's psql even starts, so a
+          # later failure can never again leave a real, applied migration
+          # without its row.
           while read -r version; do
             [ -n "$version" ] || continue
             f=$(find supabase/migrations -maxdepth 1 -name "${version}_*.sql" | head -1)
@@ -259,18 +274,15 @@ jobs:
               psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres \
                    -v ON_ERROR_STOP=1 --single-transaction -f "$f"
             fi
-            echo "::endgroup::"
             echo "applied: $(basename "$f")"
-          done < pending-versions.txt
 
-      - name: Record them as applied
-        if: steps.replan.outputs.count != '0'
-        run: |
-          set -euo pipefail
-          # The CLI's own writer, so these rows match every other row in
-          # supabase_migrations.schema_migrations rather than a hand-rolled insert.
-          # shellcheck disable=SC2046
-          npx supabase@latest migration repair --status applied $(tr '\n' ' ' < pending-versions.txt)
+            # The CLI's own writer, so this row matches every other row in
+            # supabase_migrations.schema_migrations rather than a hand-rolled
+            # insert. Runs right here, not after the loop - see the note above.
+            npx supabase@latest migration repair --status applied "$version"
+            echo "recorded: ${version}"
+            echo "::endgroup::"
+          done < pending-versions.txt
 
       - name: Verify nothing is pending and print the state
         run: |
