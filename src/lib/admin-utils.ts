@@ -99,13 +99,12 @@ export function convertSlotToTimezone(
 }
 
 /**
- * The session-period label a slot's Cairo-local hour actually implies —
- * morning before noon, daytime noon through 4pm, evening from 5pm on.
- * `session_period` itself is a free admin-typed label with no derivation
- * logic anywhere in this codebase; this is the one place that says what it
- * SHOULD say, so a slot's stored label can be checked against it rather than
- * trusted blindly — which is exactly how a 5:30am slot sat labelled "evening"
- * unnoticed.
+ * The session-period label a slot's Cairo-local hour implies — morning
+ * before noon, daytime noon through 4pm, evening from 5pm on. `trial_slots`
+ * still has a stored `session_period` column, but nothing writes to it
+ * anymore (see issue #127) — the admin table derives the label from here
+ * every time instead of trusting a stored value, which is exactly how a
+ * 5:30am slot once sat labelled "evening" unnoticed.
  */
 export function deriveSessionPeriod(cairoHour: number): 'morning' | 'daytime' | 'evening' {
   if (cairoHour < 12) return 'morning';
