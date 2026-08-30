@@ -737,7 +737,7 @@ const StudentDashboard = () => {
                     <Button size="sm" disabled={vocabClaimed} onClick={handleVocabClaim}
                       className={`shrink-0 ${vocabClaimed ? "bg-white/20 text-white/60 hover:bg-white/20" : "bg-white text-black hover:bg-white/90"}`}
                       variant={vocabClaimed ? "outline" : "default"}>
-                      {vocabClaimed ? "✓ +5 XP" : "Claim +5 XP"}
+                      {vocabClaimed ? "✓ +25 XP" : "Claim +25 XP"}
                     </Button>
                   </div>
                 </div>
