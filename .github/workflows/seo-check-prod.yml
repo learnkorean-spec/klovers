@@ -186,7 +186,7 @@ jobs:
         env:
           SITE: https://kloversegy.com
         run: |
-          node scripts/_tmp-cls-diagnose.mjs "$SITE" | tee lighthouse-report.md
+          node scripts/lighthouse-budget.mjs "$SITE" | tee lighthouse-report.md
 
       - name: Publish to run summary
         if: always()
