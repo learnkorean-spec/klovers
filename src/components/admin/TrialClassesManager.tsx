@@ -16,8 +16,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, ChevronUp, CalendarCog, Copy } from "lucide-react";
-import { formatTime, convertDateTimeToTimezone } from "@/lib/admin-utils";
+import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, ChevronUp, CalendarCog, Copy, AlertTriangle } from "lucide-react";
+import { formatTime, convertDateTimeToTimezone, deriveSessionPeriod } from "@/lib/admin-utils";
 import { getAdminTimezone } from "@/lib/viewerTimezone";
 import { getLevelShortLabel } from "@/constants/levels";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
@@ -686,6 +686,45 @@ const TrialClassesManager = () => {
     .filter((s) => s.lifecycle === "active")
     .sort((a, b) => (a.trial_date ?? "").localeCompare(b.trial_date ?? "") || a.start_time.localeCompare(b.start_time));
 
+  // advance_trial_slots() (the hourly rollover cron) marks a slot here when
+  // it can't move forward because another row already occupies the date and
+  // time it would land on — surfaced here, on the exact table Re already
+  // opens, rather than only in a log she'd have to know to go looking for.
+  const rolloverSkippedSlots = activeScheduleSlots.filter((s) => s.rollover_skipped_at);
+
+  /**
+   * Cairo is where every trial student is; the authoring timezone (still
+   * sometimes the teacher's own, per ADMIN_TIMEZONE) is secondary context,
+   * not the headline. `impliedPeriod` (derived from the real Cairo-local
+   * hour) is now the only session-period value shown — there is no stored
+   * label left for it to disagree with, which is exactly the point: a
+   * derived value cannot lie the way the old free-typed `session_period`
+   * field could (see issue #127).
+   *
+   * `asiaLabel`, English slots only: the same instant in Kuala Lumpur, so
+   * Re doesn't have to convert Asia-audience slots in her head. Illustrative
+   * only — there's no stored per-slot audience timezone, so this is one
+   * representative Asia city, not a claim about where every student is.
+   */
+  const cairoViewFor = (s: TrialSlotRow) => {
+    if (!s.trial_date) return null;
+    const cairo = convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Africa/Cairo");
+    if (Number.isNaN(cairo.hour24)) return null;
+    const d = new Date(`${cairo.dateStr}T00:00:00`);
+    const label = `${cairo.weekday.slice(0, 3)} ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${cairo.timeFormatted}`;
+    const impliedPeriod = deriveSessionPeriod(cairo.hour24);
+    const asiaLabel = s.class_language === "english"
+      ? convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Asia/Kuala_Lumpur").timeFormatted
+      : null;
+    return {
+      label,
+      dateStr: cairo.dateStr,
+      impliedPeriod,
+      asiaLabel,
+      authoredDiffers: s.timezone !== "Africa/Cairo",
+    };
+  };
+
   return (
     <div className="space-y-4">
       {/* Trial schedule — edit dates/times/language/capacity for your own availability */}
@@ -698,6 +737,12 @@ const TrialClassesManager = () => {
             <CardTitle className="text-sm flex items-center gap-2">
               <CalendarCog className="h-4 w-4" />
               Trial Schedule ({activeScheduleSlots.length} active {activeScheduleSlots.length === 1 ? "slot" : "slots"})
+              {rolloverSkippedSlots.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-destructive font-medium text-xs">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {rolloverSkippedSlots.length} didn't auto-advance
+                </span>
+              )}
             </CardTitle>
             <div className="flex items-center gap-2">
               <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -712,6 +757,19 @@ const TrialClassesManager = () => {
         </CardHeader>
         {scheduleOpen && (
           <CardContent className="pt-0">
+            {rolloverSkippedSlots.length > 0 && (
+              <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-1">
+                <p className="font-medium flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {rolloverSkippedSlots.length} slot{rolloverSkippedSlots.length === 1 ? "" : "s"} didn't auto-advance this week — move {rolloverSkippedSlots.length === 1 ? "it" : "them"} manually below.
+                </p>
+                {rolloverSkippedSlots.map((s) => (
+                  <p key={s.id} className="pl-5 text-muted-foreground">
+                    {DAY_NAMES[s.day_of_week]} {s.start_time} ({s.timezone.replace(/_/g, " ")}): {s.rollover_skip_reason}
+                  </p>
+                ))}
+              </div>
+            )}
             {allSlotsQ.isLoading ? (
               <p className="text-xs text-muted-foreground py-4">Loading schedule...</p>
             ) : activeScheduleSlots.length === 0 ? (
@@ -721,35 +779,60 @@ const TrialClassesManager = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Day</TableHead>
-                      <TableHead>Time</TableHead>
+                      <TableHead>Cairo time</TableHead>
+                      <TableHead>Session</TableHead>
                       <TableHead>Language</TableHead>
                       <TableHead className="text-right">Capacity</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {activeScheduleSlots.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="text-xs font-mono">{s.trial_date ?? "—"}</TableCell>
-                        <TableCell className="text-xs">{DAY_NAMES[s.day_of_week]}</TableCell>
-                        <TableCell className="text-xs font-mono">{s.start_time} ({s.timezone})</TableCell>
-                        <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
-                        <TableCell className="text-xs text-right">{s.capacity}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0"
-                            onClick={() => setEditingSlot(s)}
-                            title="Edit this trial slot"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {activeScheduleSlots.map((s) => {
+                      const cairo = cairoViewFor(s);
+                      return (
+                        <TableRow key={s.id}>
+                          <TableCell className="text-xs">
+                            {cairo ? (
+                              <>
+                                <div className="font-mono font-medium">{cairo.label}</div>
+                                {cairo.authoredDiffers && (
+                                  <div className="text-muted-foreground/70 text-[10px] font-mono">
+                                    authored {s.trial_date !== cairo.dateStr ? `${s.trial_date} ` : ""}{s.start_time} {s.timezone.replace(/_/g, " ")}
+                                  </div>
+                                )}
+                                {cairo.asiaLabel && (
+                                  <div className="text-muted-foreground/70 text-[10px] font-mono">
+                                    ≈ {cairo.asiaLabel} Kuala Lumpur
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <span className="font-mono">{s.start_time} ({s.timezone}) · {DAY_NAMES[s.day_of_week]}</span>
+                            )}
+                            {s.rollover_skipped_at && (
+                              <div className="text-destructive text-[10px] font-medium flex items-center gap-1 mt-0.5" title={s.rollover_skip_reason ?? undefined}>
+                                <AlertTriangle className="h-3 w-3 shrink-0" />
+                                didn't auto-advance
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs capitalize">{cairo?.impliedPeriod ?? "—"}</TableCell>
+                          <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
+                          <TableCell className="text-xs text-right">{s.capacity}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => setEditingSlot(s)}
+                              title="Edit this trial slot"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

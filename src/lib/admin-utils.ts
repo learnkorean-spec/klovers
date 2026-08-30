@@ -99,6 +99,20 @@ export function convertSlotToTimezone(
 }
 
 /**
+ * The session-period label a slot's Cairo-local hour implies — morning
+ * before noon, daytime noon through 4pm, evening from 5pm on. `trial_slots`
+ * still has a stored `session_period` column, but nothing writes to it
+ * anymore (see issue #127) — the admin table derives the label from here
+ * every time instead of trusting a stored value, which is exactly how a
+ * 5:30am slot once sat labelled "evening" unnoticed.
+ */
+export function deriveSessionPeriod(cairoHour: number): 'morning' | 'daytime' | 'evening' {
+  if (cairoHour < 12) return 'morning';
+  if (cairoHour < 17) return 'daytime';
+  return 'evening';
+}
+
+/**
  * Convert a specific calendar datetime from source tz to target tz.
  * Accepts `YYYY-MM-DD` + `HH:MM`. Returns localized date, time, weekday.
  */
@@ -107,9 +121,9 @@ export function convertDateTimeToTimezone(
   timeHHMM: string,
   sourceTz: string,
   targetTz: string,
-): { dateStr: string; timeFormatted: string; weekday: string } {
+): { dateStr: string; timeFormatted: string; weekday: string; hour24: number } {
   if (!dateStr || !timeHHMM || !/^\d{1,2}:\d{2}$/.test(timeHHMM)) {
-    return { dateStr, timeFormatted: formatTime(timeHHMM), weekday: "" };
+    return { dateStr, timeFormatted: formatTime(timeHHMM), weekday: "", hour24: NaN };
   }
   const [y, mo, d] = dateStr.split("-").map(Number);
   const [h, mi] = timeHHMM.split(":").map(Number);
@@ -121,10 +135,18 @@ export function convertDateTimeToTimezone(
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "numeric", minute: "2-digit", hour12: true,
   }).formatToParts(instant).reduce((a, p) => { a[p.type] = p.value; return a; }, {} as Record<string, string>);
+  // A separate h23-cycle pass rather than converting the 12h value above --
+  // deriving 24h from a locale's 12h + AM/PM string is exactly the kind of
+  // "should be equivalent" arithmetic this task exists to distrust.
+  const hour24 = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: targetTz, hour: "2-digit", hourCycle: "h23" })
+      .formatToParts(instant).find((p) => p.type === "hour")!.value,
+  );
   return {
     dateStr: `${parts.year}-${parts.month}-${parts.day}`,
     timeFormatted: `${parts.hour}:${parts.minute} ${parts.dayPeriod}`,
     weekday: parts.weekday,
+    hour24,
   };
 }
 

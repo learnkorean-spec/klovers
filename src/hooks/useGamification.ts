@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { XP_VALUES, getLeague, BADGES } from "@/constants/gamification";
 import { capture } from "@/lib/analytics";
+import { awardGameXpCompat } from "@/lib/gameXpApi";
 
 interface UserProgress {
   totalXp: number;
@@ -308,17 +309,18 @@ export function useGamification() {
 
     capture({ event: "game_played", gameId, score, totalRounds, xpEarned: score * XP_VALUES.game_complete });
 
-    const xpPerCorrect = XP_VALUES.game_complete;
-    const totalXpEarned = score * xpPerCorrect;
     const oldLeague = getLeague(progress.totalXp);
     const oldBadges = new Set(progress.badges);
 
-    await supabase.from("student_xp").insert({
-      user_id: userId,
-      lesson_id: null,
-      activity_type: `game_${gameId}`,
-      xp_earned: totalXpEarned,
-    });
+    // Server-authoritative award. The RPC takes the game id ('match'), builds
+    // `game_${id}` itself, clamps the score to that game's real round ceiling
+    // and computes the XP from game_xp_rules. This is a no-op on amounts —
+    // match 6 → 30, hangul 18 → 90, sentence 8 → 40, flashcard 12 → 60,
+    // any 10-round game 10 → 50, vocab_daily → 25, all matching production.
+    //
+    // Errors are not swallowed into a 0 award: a silent 0 means a student
+    // played for nothing. Let it throw to the caller.
+    const totalXpEarned = await awardGameXpCompat(gameId, score, totalRounds);
 
     await updateStreak(userId);
 

@@ -101,17 +101,25 @@ jobs:
             check "/blog/korean-numbers-guide"
             check "$AR_POST"
             check "$RETIRED_POST"
+            check "/blog/this-slug-does-not-exist"
             check "/this-page-does-not-exist"
             check "/login"
             echo "Note: ${RETIRED_POST} is a retired Arabic duplicate. It is"
             echo "deliberately absent from the sitemap but still served, so a 200"
             echo "with its own canonical is the expected result."
             echo
-            echo "Note: /this-page-does-not-exist returning 200 is expected."
-            echo "A Vite SPA on Vercel cannot emit a real 404 - the server replies"
-            echo "before the app knows the route is unknown. The page carries no"
-            echo "canonical, so it makes no duplicate-content claim. Tracked as a"
-            echo "known limitation until Option B (see docs/SEO_MIGRATION.md)."
+            echo "Note: /blog/this-slug-does-not-exist returning 404 is the expected"
+            echo "result (PR #132, 2026-08-29) - this line is the regression check for"
+            echo "that fix. A 200 here would mean the /blog/:slug rewrite broke."
+            echo
+            echo "Note: /this-page-does-not-exist returning 200 is still expected."
+            echo "PR #132 (2026-08-29) fixed this for /blog/:slug specifically -"
+            echo "api/blog-not-found.js, checked above - via Vercel serving a matching"
+            echo "static file before it ever evaluates rewrites, which only /blog/:slug"
+            echo "can rely on (every valid slug has a prerendered file; a missing one is"
+            echo "always invalid). No other route has that property, so a top-level path"
+            echo "like this one still falls through to the generic SPA shell with a 200."
+            echo "Known limitation until Option B (see docs/SEO_MIGRATION.md)."
           } 2>&1 | tee seo-report/curl-checks.txt
 
       # Puts both reports on the run's summary page, so they can be read without
@@ -147,3 +155,63 @@ jobs:
         run: |
           echo "::error::seo-check failed against ${SITE}. See the run summary or the seo-check-production artifact."
           exit 1
+
+  lighthouse:
+    name: Core Web Vitals (Lighthouse)
+    runs-on: ubuntu-latest
+    # Independent of the seo-check job above: neither depends on the other,
+    # and a Lighthouse failure never fails this workflow (see the note on
+    # scripts/lighthouse-budget.mjs below). Its own job so the fast,
+    # dependency-free seo-check job above keeps that property - Lighthouse
+    # needs npx to fetch a real package and a real Chrome, seo-check
+    # deliberately doesn't.
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # Reported, not gated. This is the first time Core Web Vitals have
+      # ever been measured for this site (open since the August diagnosis) -
+      # there is no baseline yet to set a pass/fail threshold against.
+      # continue-on-error so a Lighthouse hiccup (a flaky Chrome launch, a
+      # slow cold page) never fails the workflow or blocks seo-check's own
+      # report; the numbers just show up as "-" for whichever page failed.
+      - name: Run Lighthouse against production
+        id: lighthouse
+        continue-on-error: true
+        env:
+          SITE: https://kloversegy.com
+        run: |
+          node scripts/lighthouse-budget.mjs "$SITE" | tee lighthouse-report.md
+
+      - name: Publish to run summary
+        if: always()
+        run: |
+          {
+            echo "## Core Web Vitals — production (Lighthouse, mobile, lab data)"
+            echo
+            echo "Reported metric, not a gate yet — no baseline exists to set a"
+            echo "threshold against. A threshold gets proposed once these numbers"
+            echo "have run for a few weeks. See docs/DECISIONS.md."
+            echo
+            cat lighthouse-report.md 2>/dev/null || echo "(Lighthouse produced no output — see the job log)"
+            echo
+            echo "TBT (Total Blocking Time) is a lab proxy for interactivity, not"
+            echo "real INP — a single cold-navigation Lighthouse run has no user"
+            echo "interaction to measure, so it cannot produce field INP. Real INP"
+            echo "needs either CrUX field data (via PageSpeed Insights, once this"
+            echo "site has enough real traffic to populate it) or a scripted"
+            echo "Lighthouse user-flow, neither of which this job does."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-budget
+          path: lighthouse-report.md
+          retention-days: 30

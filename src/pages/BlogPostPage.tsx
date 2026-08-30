@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { buildFaqJsonLd } from "../../scripts/lib/faq-parser.mjs";
 
 interface BlogPost {
   id: string;
@@ -315,32 +316,17 @@ const BlogPostPage = () => {
       }
     });
 
-    // JSON-LD: FAQPage — built from `### question?` / A pairs under FAQ heading
+    // JSON-LD: FAQPage — same shared parser scripts/prerender-meta.mjs uses at
+    // build time, so the client and the prerendered page never disagree about
+    // which articles have a genuine FAQ section.
     document.getElementById("faq-jsonld")?.remove();
-    const faqHeadingRe = /##\s+(Frequently Asked Questions|الأسئلة الشائعة)[\s\S]*?(?=\n##\s|$)/i;
-    const faqMatch = post.content.match(faqHeadingRe);
-    if (faqMatch) {
-      const qaRe = /###\s+(.+?)\n+([\s\S]*?)(?=\n###\s|\n##\s|$)/g;
-      const qa: { q: string; a: string }[] = [];
-      let m: RegExpExecArray | null;
-      while ((m = qaRe.exec(faqMatch[0])) !== null) {
-        qa.push({ q: m[1].trim(), a: m[2].trim().replace(/\n+/g, " ").slice(0, 800) });
-      }
-      if (qa.length > 0) {
-        const faqLd = document.createElement("script");
-        faqLd.id = "faq-jsonld";
-        faqLd.setAttribute("type", "application/ld+json");
-        faqLd.textContent = JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: qa.map(x => ({
-            "@type": "Question",
-            name: x.q,
-            acceptedAnswer: { "@type": "Answer", text: x.a },
-          })),
-        });
-        document.head.appendChild(faqLd);
-      }
+    const faqJsonLdData = buildFaqJsonLd(post.content);
+    if (faqJsonLdData) {
+      const faqLd = document.createElement("script");
+      faqLd.id = "faq-jsonld";
+      faqLd.setAttribute("type", "application/ld+json");
+      faqLd.textContent = JSON.stringify(faqJsonLdData);
+      document.head.appendChild(faqLd);
     }
 
     // JSON-LD: BreadcrumbList
