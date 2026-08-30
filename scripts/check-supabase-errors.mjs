@@ -4,21 +4,24 @@
  *
  * WHY THIS EXISTS
  * ---------------
- * Three separate production bugs in this repo shared one mechanism: a Supabase
- * query destructured `data` and never looked at `error`, so a rejected request
- * produced `data === null`, a falsy guard swallowed it, and the UI rendered an
- * empty state instead of a failure. All three were invisible for months.
+ * Four production defects in this codebase share one shape: a query fails, an
+ * `error` nobody destructured, a `data` that is therefore null, and a guard
+ * that skips the block. The UI shows an empty state. It reads as "no data yet"
+ * and it is really "broken", and it survives for months because nothing
+ * anywhere ever says so.
  *
- *   useLeaderboard.ts   .select('user_id, xp_amount')      — no such column.
- *                       The "This Week" tab never rendered a single row.
- *   CommunityFeed.tsx   profiles!inner(full_name)          — no such column.
- *                       The feed looked empty; it was failing on every call.
- *   xp_leaderboard      security_invoker view + own-row RLS — returned 1 row.
- *                       Every student saw a plausible leaderboard of herself.
+ *   useLeaderboard.ts:119   select('...xp_amount...')     — no such column.
+ *                           The "This Week" tab never rendered a single row.
+ *   CommunityFeed.tsx:41    profiles!inner(full_name)     — no such column
+ *                           (profiles has `name`). Failed on every call.
+ *   xp_leaderboard          security_invoker + own-row RLS → 1 row, no error.
+ *                           Every student saw a plausible board of herself.
+ *   achievement_milestones  update() on rows nothing inserts → 0 rows, no error.
  *
- * A wrong column name is a typo. A wrong column name that looks like "no data
- * yet" for five months is a missing `error` check. This script makes the second
- * one impossible to add.
+ * This does not catch all four. The view and the milestones table are logic
+ * bugs, not swallowed errors. It catches the swallow — the part that turns a
+ * bug into a SILENT bug. A wrong column name is a typo; a wrong column name
+ * that looks like "no data yet" for five months is a missing `error` check.
  *
  * HOW IT WORKS
  * ------------
@@ -41,6 +44,15 @@ const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const BASELINE = join(ROOT, "scripts", "supabase-errors-baseline.json");
 const UPDATE = process.argv.includes("--update");
+
+/**
+ * Escape hatch for a call that genuinely cannot fail meaningfully, or where the
+ * error is handled somewhere the regex cannot see. Put it on the same line and
+ * say WHY — an unexplained marker is the swallow this script exists to stop.
+ *
+ *   const { data } = await supabase.rpc('x'); // supabase-error-check-ignore: reason
+ */
+const ALLOW = "supabase-error-check-ignore";
 
 /** Walk src/, skipping tests — a test may stub a client on purpose. */
 function walk(dir, out = []) {
@@ -93,7 +105,12 @@ function findViolations(text) {
     if (!/\bdata\b/.test(pattern)) continue;
     if (/\berror\b/.test(pattern)) continue;
 
-    hits.push(text.slice(0, open).split("\n").length);
+    const lineNo = text.slice(0, open).split("\n").length;
+    // The marker may sit on the declaration line or anywhere in the statement.
+    if ((pattern + stmt).includes(ALLOW)) continue;
+    if ((text.split("\n")[lineNo - 1] ?? "").includes(ALLOW)) continue;
+
+    hits.push(lineNo);
   }
   return hits;
 }
@@ -141,6 +158,8 @@ as "no data yet" and hides the failure. That is exactly how the weekly
 leaderboard tab and the community feed stayed broken for months.
 
 If you genuinely fixed some and the count should drop, rerun with --update.
+If a call truly cannot fail meaningfully, add a trailing
+// supabase-error-check-ignore: <reason> — with the reason, not bare.
 `);
   process.exit(1);
 }

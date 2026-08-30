@@ -12,7 +12,7 @@
 -- leaves the server.
 --
 -- ADDITIVE. Nothing is dropped here. The view stays until the frontend is live
--- (see 20260828900000_drop_xp_leaderboard_view.sql.PENDING).
+-- (see 20260830900000_drop_xp_leaderboard_view.sql.PENDING).
 -- ============================================================================
 
 -- ---------------------------------------------------------------- XP (all time)
