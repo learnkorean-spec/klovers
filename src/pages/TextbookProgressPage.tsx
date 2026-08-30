@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useGamification } from "@/hooks/useGamification";
+import { fetchXpLeaderboard, toEntries, type LeaderboardEntryLike } from "@/lib/leaderboardApi";
 import { LeagueProgressBar, LeagueCard, StreakDisplay, BadgeGrid, XpBadge, LessonProgressDots } from "@/components/GamificationUI";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,12 +16,12 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 
-interface LeaderboardEntry {
-  user_id: string;
-  name: string;
-  avatar_url: string | null;
-  total_xp: number;
-}
+// Shaped by toEntries() in @/lib/leaderboardApi. The old xp_leaderboard view is
+// being dropped: it was security_invoker=true against own-row RLS, so it
+// returned exactly one row to every student. The RPC returns no user_id at all
+// (identity never leaves the server), so "is this me?" comes from is_me and the
+// React key comes from rank.
+type LeaderboardEntry = LeaderboardEntryLike;
 
 interface Lesson {
   id: number;
@@ -41,10 +42,10 @@ const TextbookProgressPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [lbRes, lessonsRes] = await Promise.all([
-        supabase.from("xp_leaderboard").select("*").limit(20),
+        fetchXpLeaderboard(20),
         supabase.from("textbook_lessons").select("id, emoji, title_en, title_ko, sort_order, book").eq("is_published", true).order("sort_order"),
       ]);
-      setLeaderboard((lbRes.data as unknown as LeaderboardEntry[]) || []);
+      setLeaderboard(toEntries(lbRes));
       setLessons((lessonsRes.data as unknown as Lesson[]) || []);
     };
     fetchData();
@@ -225,8 +226,8 @@ const TextbookProgressPage = () => {
             ) : (
               <div className="space-y-2">
                 {leaderboard.map((entry, i) => {
-                  const entryLeague = getLeague(entry.total_xp);
-                  const isMe = entry.user_id === userId;
+                  const entryLeague = getLeague(entry.value);
+                  const isMe = entry.isCurrentUser;
                   return (
                     <div
                       key={entry.user_id}
@@ -244,7 +245,7 @@ const TextbookProgressPage = () => {
                         </p>
                         <p className="text-xs text-muted-foreground">{entryLeague.emoji} {entryLeague.name}</p>
                       </div>
-                      <XpBadge xp={entry.total_xp} />
+                      <XpBadge xp={entry.value} />
                     </div>
                   );
                 })}
