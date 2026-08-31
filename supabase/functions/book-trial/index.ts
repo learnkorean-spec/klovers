@@ -242,9 +242,12 @@ Deno.serve(async (req) => {
     const trialMs = new Date(trialDate + "T00:00:00Z").getTime();
     const todayMs = new Date(todayInSlotTz + "T00:00:00Z").getTime();
     if (Math.round((trialMs - todayMs) / 86_400_000) <= 1) {
+      // Same class of failure as the other pre-checks above (invalid email,
+      // bad day_of_week, bad start_time) -- a real 400, not a 200 wrapping
+      // an error. Body shape is unchanged.
       return new Response(
         JSON.stringify({ ok: false, success: false, error: "Booking is closed — registrations close 1 day before the class." }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -388,7 +391,8 @@ Deno.serve(async (req) => {
     const booking = newBookingId ? { id: newBookingId as string } : null;
 
     if (bookingError || !booking) {
-      // Unique constraint: user has a real booking
+      // Unique constraint: user has a real booking -- a real conflict, so a
+      // real 409, not a 200 wrapping an error.
       if (bookingError?.code === "23505") {
         return new Response(
           JSON.stringify({
@@ -396,7 +400,7 @@ Deno.serve(async (req) => {
             success: false,
             error: "You already have a trial class booked. Check your email for details.",
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Exclusion constraint: somebody else holds this exact slot.
@@ -418,7 +422,7 @@ Deno.serve(async (req) => {
             error: "Sorry — that time was just taken. Please pick another slot.",
             error_code: "slot_taken",
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Conflict trigger: trial time overlaps an existing enrolled class
@@ -429,18 +433,21 @@ Deno.serve(async (req) => {
             success: false,
             error: "This trial time overlaps with one of your existing classes. Please pick a different slot or contact us on WhatsApp.",
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Surface the real DB error in the response body instead of throwing a
       // generic 500 — this lets the UI show a meaningful message and lets us
       // see the error code/message without needing server-side log access.
+      // Genuinely unexpected (not one of the known conflict codes above), so
+      // a real 500 -- this was the most dangerous of the four 200s: an actual
+      // bug returning "success" to every caller and monitor.
       const errMsg = bookingError?.message ?? "Failed to insert trial booking";
       const errCode = bookingError?.code ?? "unknown";
       console.error("book-trial insert error:", errCode, errMsg, JSON.stringify(bookingError));
       return new Response(
         JSON.stringify({ ok: false, success: false, error: errMsg, error_code: errCode }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
