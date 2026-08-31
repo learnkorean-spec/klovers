@@ -83,6 +83,17 @@ const GamesPage = () => {
     if (pageViewLogged.current) return;
     pageViewLogged.current = true;
     void logGameEvent({ source_type: "games_page_view" });
+
+    // The default game renders on mount without selectGame ever running, so
+    // without this it would be the one game with starts and completions
+    // against zero opens — which is worse than missing data, because it is
+    // shaped like data. It is also `match`: one of only two games playable
+    // without an account, and therefore the likeliest first game of the
+    // logged-out visitor this whole step exists to measure.
+    void logGameEvent({ source_type: "game_opened", cta_label: activeGame });
+    // activeGame is read once at mount on purpose — later changes come
+    // through selectGame, which logs its own game_opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
