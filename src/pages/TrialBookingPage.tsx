@@ -332,6 +332,29 @@ const TrialBookingPage = () => {
         return;
       }
 
+      // book-trial now returns real status codes (400/409/500) for
+      // application-level failures instead of wrapping them in a 200 —
+      // supabase-js treats any non-2xx as FunctionsHttpError and routes the
+      // body through `error`, not `data`, so the specific friendly message
+      // book-trial sends (e.g. "that time was just taken") would otherwise
+      // be lost behind the generic fallback below. err.context is the raw
+      // Response, not yet read — same object err429 detection above already
+      // reads .status from.
+      if (err?.context && typeof err.context.json === "function") {
+        try {
+          const body = await err.context.json();
+          if (body?.error) {
+            logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: body.error } });
+            toast({ title: t("trialBooking.bookingFailed"), description: body.error, variant: "destructive" });
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // Body wasn't JSON or already consumed — fall through to the
+          // generic message below.
+        }
+      }
+
       logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: err?.message || "unknown" } });
       toast({
         title: t("trialBooking.somethingWrong"),
