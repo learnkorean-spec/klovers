@@ -264,9 +264,54 @@ async function sendEmail(
 
 // ── Main handler ──────────────────────────────────────────────────────────────
 
+// ── DISABLED — 2026-08-31 ───────────────────────────────────────────────────
+//
+// Do not remove this guard without fixing all three of the following first —
+// each was confirmed against the live deployed source and the live database,
+// not assumed:
+//
+//   1. Wrong audience. The bulk path below queries `profiles` — every user
+//      with an email who hasn't unsubscribed — not the specific trial leads
+//      (public.trial_bookings) this was meant to re-engage. A `send_all`
+//      call reaches a much larger and different list than intended.
+//
+//   2. Hardcoded past dates. buildEmail() below prints a fixed schedule
+//      ("4 June 2026", "5 June 2026", "7 June 2026") baked directly into the
+//      template text. It is not read from trial_slots, does not reflect any
+//      real bookable date, and June 2026 is already in the past.
+//
+//   3. Wrong destination. The CTA button links to whatever
+//      app_settings.zoom_meeting_url is currently set to — a single shared
+//      Google Meet room — not to /free-trial or /trial-booking. A recipient
+//      who clicks through never reaches the real booking system and gets no
+//      reserved slot, no matter what the email claims.
+//
+// Any of the three alone would be a real problem; together they mean a
+// `send_all` call today would mislead a wide, wrong audience with content
+// that cannot be booked against. Fix all three, verify against a real test
+// send, and only then remove this guard.
+const DISABLED = true;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (DISABLED) {
+    console.warn(
+      "[send-trial-interest-confirmation] refused — disabled pending rewrite",
+      { method: req.method, at: new Date().toISOString() },
+    );
+    return new Response(
+      JSON.stringify({
+        error: "disabled",
+        reason:
+          "send-trial-interest-confirmation is disabled pending a rewrite " +
+          "(wrong audience, hardcoded past dates, wrong destination link). " +
+          "No email was sent.",
+      }),
+      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
   const ok = (data: unknown) =>
