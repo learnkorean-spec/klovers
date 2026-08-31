@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -17,6 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+// G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
+// mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
+import { logGameEvent } from "@/lib/leadTracking";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
 const NumbersGame = lazy(() => import("@/components/games/NumbersGame"));
@@ -73,6 +76,26 @@ const GamesPage = () => {
     }
   }, [newBadges]);
 
+  // G0c: arrival at /games. Ref-guarded because React StrictMode mounts
+  // twice in development, and a doubled denominator is worse than none.
+  const pageViewLogged = useRef(false);
+  useEffect(() => {
+    if (pageViewLogged.current) return;
+    pageViewLogged.current = true;
+    void logGameEvent({ source_type: "games_page_view" });
+
+    // The default game renders on mount without selectGame ever running, so
+    // without this it would be the one game with starts and completions
+    // against zero opens — which is worse than missing data, because it is
+    // shaped like data. It is also `match`: one of only two games playable
+    // without an account, and therefore the likeliest first game of the
+    // logged-out visitor this whole step exists to measure.
+    void logGameEvent({ source_type: "game_opened", cta_label: activeGame });
+    // activeGame is read once at mount on purpose — later changes come
+    // through selectGame, which logs its own game_opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session);
@@ -107,6 +130,15 @@ const GamesPage = () => {
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
+    // Logged first and unconditionally: a score of 0, and a logged-out
+    // player who earns no XP at all, are both exactly the signal G0c wants.
+    // student_xp already records everyone who finished and was awarded.
+    void logGameEvent({
+      source_type: "game_completed",
+      cta_label: gameId,
+      metadata: { score, totalRounds },
+    });
+
     if (isLoggedIn) {
       const xp = await awardGameXp(gameId, score, totalRounds);
       if (xp && xp > 0) {
@@ -122,7 +154,48 @@ const GamesPage = () => {
     }
   }, [awardGameXp, league, isLoggedIn]);
 
+  // G0c: game_started fires on the first genuine interaction inside the game
+  // area, never on mount — "opened it" and "actually played it" are the two
+  // sides of the drop-off this whole step exists to measure, and a
+  // mount-time event would collapse them into one.
+  //
+  // A capture-phase listener on the container gets this for all 20 games
+  // without touching 20 components. The trade-off, stated plainly: it counts
+  // the first click or keypress anywhere in the game area, so a click on an
+  // inert part of a game's chrome also counts. That is still an interaction
+  // with the game rather than a mount, which is the distinction being drawn.
+  //
+  // The locked-game placeholder renders in this same container, so the
+  // playable check below keeps a click on the signup CTA out of the data.
+  const gameAreaRef = useRef<HTMLDivElement>(null);
+  const startedForGame = useRef<string | null>(null);
+
+  useEffect(() => {
+    const el = gameAreaRef.current;
+    if (!el) return;
+    if (!isLoggedIn && !FREE_GAME_IDS.includes(activeGame)) return;
+
+    const onFirstInteraction = () => {
+      if (startedForGame.current === activeGame) return;
+      startedForGame.current = activeGame;
+      void logGameEvent({ source_type: "game_started", cta_label: activeGame });
+    };
+
+    el.addEventListener("pointerdown", onFirstInteraction, true);
+    el.addEventListener("keydown", onFirstInteraction, true);
+    return () => {
+      el.removeEventListener("pointerdown", onFirstInteraction, true);
+      el.removeEventListener("keydown", onFirstInteraction, true);
+    };
+  }, [activeGame, isLoggedIn]);
+
   const selectGame = (id: string) => {
+    void logGameEvent({ source_type: "game_opened", cta_label: id });
+    // Reset so a replay of the game already on screen can emit its own
+    // game_started. Without this, re-selecting the active game raises
+    // game_opened while activeGame never changes, the effect below never
+    // re-runs, and the started/opened ratio silently understates replays.
+    startedForGame.current = null;
     setActiveGame(id);
     setTimeout(() => {
       document.getElementById("active-game-area")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -367,7 +440,7 @@ const GamesPage = () => {
         </section>
 
         {/* Active game */}
-        <div id="active-game-area" className="border-t border-border scroll-mt-20">
+        <div id="active-game-area" ref={gameAreaRef} className="border-t border-border scroll-mt-20">
           {renderGame()}
         </div>
         <FinalCTA />
