@@ -12,11 +12,11 @@ Grep for the symbol name, the UI string, and the column name before writing code
 
 ## Git workflow
 
-- Branch as `claude/<short-description>` for normal work, or `fix/`/`feat/`/
-  `docs/`/`chore/` when a session's own working rules say `claude/` must be
-  avoided (that prefix's auto-merge behavior is disabled as of 2026-08-24 —
-  see "Merge safety net" below — but the prefix itself may still carry other
-  meaning to tooling, so don't assume it's inert).
+- Branch as `<type>/<short-description>` — `ci/`, `fix/`, `feat/`, `docs/`,
+  `chore/`. **Do not use `claude/`.** It bought auto-merge, that mechanism is
+  disabled as of 2026-08-24 (see "Merge safety net" below), and its bot-merges
+  are the ones measured leaving production undeployed. The prefix may still
+  carry meaning to other tooling, so don't assume it is merely inert.
 - Open a PR. `.github/workflows/ci.yml` runs `npm test` and `npm run build`
   against the **merge result** (not the branch).
 - **All merges are manual.** Re signs in as `learnkorean-spec` specifically
@@ -45,9 +45,8 @@ was still `in_progress` or outright red. GitHub's `"blocked"` state is what a
 *required* status check produces when it hasn't passed; `"unstable"` means
 something is failing but isn't gating the merge button. Nothing currently stops
 a red or half-finished PR from being merged by hand. This is exactly why a
-branch protection rule requiring `CI / Build & Test` (and *only* that check —
-never the Netlify integration, which is permanently red and not a real signal)
-needs to exist before relying on any auto-merge mechanism, native or custom.
+branch protection rule requiring `CI / Build & Test` needs to exist before
+relying on any auto-merge mechanism, native or custom.
 
 **2. `ci.yml` does not re-run on a base-branch change alone.** It triggers on
 `pull_request: [opened, synchronize, reopened, ready_for_review]` and on
@@ -98,8 +97,13 @@ Supabase project ref: `ewtdgpbybkceokfohhyg`
 - `npx tsc --noEmit`: fails on ~10 files (stale generated Supabase types, a
   too-narrow `LeadSource` union). Advisory in CI. Vite does not typecheck at
   build time, which is why production is unaffected.
-- A dead Netlify integration (`preeminent-bienenstitch-afa306`) fails 4 checks on
-  every PR. Ignore it. Only `CI / Build & Test` is a real signal.
+- ~~A dead Netlify integration fails 4 checks on every PR; ignore it.~~
+  **No longer true, and reversed.** The `preeminent-bienenstitch-afa306`
+  integration was disconnected on 2026-08-24: PR #86 (12:01 UTC) still received
+  its 3 failing checks, PR #93 (17:46 UTC) and everything since received none,
+  and no `netlify.toml` is tracked. **Every red check on a PR is now a real
+  signal — investigate it, do not wave it through.** The habit of ignoring red
+  is what this entry used to license, and it no longer applies.
 
 ## Project overview
 
