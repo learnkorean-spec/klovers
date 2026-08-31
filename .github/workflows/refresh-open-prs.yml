@@ -10,9 +10,21 @@
 # This closes that gap the same way a person would: when main moves, merge
 # it into every open PR's branch and push. A plain (non-force) push, so it
 # never rewrites anyone's history - just adds a merge commit, which is
-# exactly what GitHub's own "Update branch" button does. The push's
-# `synchronize` event is what gets ci.yml to actually run against the new
-# merge result.
+# exactly what GitHub's own "Update branch" button does.
+#
+# The push's `synchronize` event alone is NOT enough to get ci.yml to
+# actually run, and this was found the hard way on this workflow's own
+# first real run: every resulting ci.yml run landed as "action_required"
+# with zero jobs executed. Cause - a documented GitHub Actions gotcha, not
+# a bug in ci.yml itself: a push made with the default GITHUB_TOKEN is
+# attributed to the github-actions[bot] identity, and GitHub's
+# approval-required-for-outside-contributors gate catches that identity
+# even on a same-repo push, exactly as if it were a fork PR from a
+# first-time contributor. So this workflow does not rely on synchronize at
+# all - after a successful push it explicitly dispatches ci.yml via
+# workflow_dispatch (which ci.yml already supports) against the branch's
+# new head. workflow_dispatch is a direct, explicit API call, not an
+# inferred consequence of a push, so it is not subject to that same gate.
 #
 # A PR whose merge conflicts is left alone - conflicts get resolved by a
 # person (or an agent) reading the actual clash, not by anything automatic
@@ -29,6 +41,7 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  actions: write
 
 jobs:
   refresh:
@@ -68,8 +81,11 @@ jobs:
                 echo "- #${number} (${branch}): already up to date" >> "$GITHUB_STEP_SUMMARY"
               else
                 git push origin "$branch"
-                echo "Pushed merge commit - ci.yml will re-run via synchronize."
-                echo "- #${number} (${branch}): merged main, pushed" >> "$GITHUB_STEP_SUMMARY"
+                # The push's own synchronize event lands as action_required and
+                # never runs (see the file header) - dispatch directly instead.
+                gh workflow run ci.yml --ref "$branch"
+                echo "Pushed merge commit and dispatched ci.yml directly."
+                echo "- #${number} (${branch}): merged main, pushed, ci.yml dispatched" >> "$GITHUB_STEP_SUMMARY"
               fi
             else
               git merge --abort || true
