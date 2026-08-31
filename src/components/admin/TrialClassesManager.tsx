@@ -61,6 +61,7 @@ interface TrialBooking {
   trial_date: string | null;
   timezone: string;
   language?: string | null;
+  class_language?: string | null;
   status: string;
   confirmed_at: string | null;
   created_at: string;
@@ -97,6 +98,8 @@ interface TrialSlot {
 
 type TimeFilter = "all" | "upcoming" | "past";
 type StatusFilter = "all" | "pending" | "confirmed" | "no_show" | "cancelled";
+type LanguageFilter = "all" | "arabic" | "english";
+type BookedSort = "asc" | "desc";
 
 interface UpcomingSlot {
   value: string; // "YYYY-MM-DD|dow|HH:mm"
@@ -138,6 +141,11 @@ const TrialClassesManager = () => {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("all");
+  // Which order the "Booked" column sorts each session's rows in. Defaults
+  // to oldest-first: the pilot list is defined by signup date, and nothing
+  // else in this view sorted by it before this.
+  const [bookedSort, setBookedSort] = useState<BookedSort>("asc");
   const [trialSlotMap, setTrialSlotMap] = useState<Record<string, string>>({});
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<TrialSlotRow | null>(null);
@@ -579,6 +587,7 @@ const TrialClassesManager = () => {
   const filtered = useMemo(() => {
     return bookings.filter((b) => {
       if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      if (languageFilter !== "all" && (b.class_language ?? null) !== languageFilter) return false;
       if (timeFilter !== "all") {
         // TBA rows have no date; exclude from upcoming/past filters.
         if (!b.trial_date || isTbaBooking(b)) return false;
@@ -588,7 +597,7 @@ const TrialClassesManager = () => {
       }
       return true;
     });
-  }, [bookings, statusFilter, timeFilter, startOfToday]);
+  }, [bookings, statusFilter, languageFilter, timeFilter, startOfToday]);
 
   // ── Group by exact session (trial_date + start_time). TBA rows fold into a
   // single synthetic session so admins see one "Unscheduled" card.
@@ -871,6 +880,14 @@ const TrialClassesManager = () => {
               <SelectItem value="cancelled">Cancelled only</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={languageFilter} onValueChange={(v) => setLanguageFilter(v as LanguageFilter)}>
+            <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All languages</SelectItem>
+              <SelectItem value="arabic">Arabic only</SelectItem>
+              <SelectItem value="english">English only</SelectItem>
+            </SelectContent>
+          </Select>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -1010,7 +1027,17 @@ const TrialClassesManager = () => {
                         <TableHead>Phone</TableHead>
                         <TableHead>Level</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Booked</TableHead>
+                        <TableHead>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 hover:text-foreground"
+                            onClick={() => setBookedSort((s) => (s === "asc" ? "desc" : "asc"))}
+                            title={bookedSort === "asc" ? "Oldest signup first — click for newest first" : "Newest signup first — click for oldest first"}
+                          >
+                            Booked
+                            {bookedSort === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          </button>
+                        </TableHead>
                         <TableHead>Changed</TableHead>
                         <TableHead>Cancelled</TableHead>
                         <TableHead>Notes</TableHead>
@@ -1018,7 +1045,13 @@ const TrialClassesManager = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {session.items.map((b) => (
+                      {[...session.items]
+                        .sort((a, b) =>
+                          bookedSort === "asc"
+                            ? a.created_at.localeCompare(b.created_at)
+                            : b.created_at.localeCompare(a.created_at),
+                        )
+                        .map((b) => (
                         <TableRow key={b.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-1 flex-wrap">
