@@ -3,7 +3,17 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 
-type PageState = "loading" | "success" | "already" | "error";
+type PageState = "loading" | "ready" | "confirming" | "success" | "already" | "error";
+
+interface BookingInfo {
+  first_name: string | null;
+  trial_date: string | null;
+  start_time: string | null;
+  timezone: string | null;
+  class_language: string | null;
+  is_tba: boolean | null;
+  attendance_response: string | null;
+}
 
 const TrialConfirmPage = () => {
   // Transactional page: real content for the signed-in user, nothing a
@@ -11,68 +21,67 @@ const TrialConfirmPage = () => {
   useSEO({ title: "Trial Confirmation", description: "Confirm your Klovers free trial booking.", noindex: true });
 
   const [searchParams] = useSearchParams();
-  const id = searchParams.get("id") ?? "";
   const token = searchParams.get("token") ?? "";
   const [state, setState] = useState<PageState>("loading");
+  const [booking, setBooking] = useState<BookingInfo | null>(null);
   const [classLink, setClassLink] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id || !token) {
+    if (!token) {
       setState("error");
       return;
     }
 
-    const confirm = async () => {
-      // Fetch the booking to check current status and get the slot's meeting_url
-      const { data: booking, error: fetchErr } = await supabase
-        .from("trial_bookings")
-        .select("id, status, trial_date, start_time")
-        .eq("id", id)
-        .eq("confirmation_token", token)
-        .maybeSingle();
+    const load = async () => {
+      // Read-only, STABLE, no write — safe for a mail client or link
+      // scanner to prefetch. The confirming write only happens on a
+      // real button click, below.
+      const { data, error } = await (supabase.rpc as any)(
+        "get_trial_booking_by_token",
+        { p_token: token },
+      ).maybeSingle();
 
-      if (fetchErr || !booking) {
+      if (error || !data) {
         setState("error");
         return;
       }
 
-      if (booking.status === "confirmed_attendance") {
-        // Already confirmed — idempotent: just show success
-        setState("already");
-      } else {
-        // Attempt the update
-        const { error: updateErr } = await supabase
-          .from("trial_bookings")
-          .update({
-            status: "confirmed_attendance",
-            attendance_confirmed_at: new Date().toISOString(),
-          } as any)
-          .eq("id", id)
-          .eq("confirmation_token", token)
-          .neq("status", "confirmed_attendance");
-
-        if (updateErr) {
-          setState("error");
-          return;
-        }
-        setState("success");
-      }
-
-      // Try to fetch the Google Meet link from the trial slot
-      if (booking.trial_date && booking.start_time) {
-        const { data: slotRow } = await supabase
-          .from("trial_slots")
-          .select("meeting_url")
-          .eq("trial_date", booking.trial_date)
-          .eq("start_time", booking.start_time)
-          .maybeSingle();
-        const url = (slotRow as { meeting_url?: string | null } | null)?.meeting_url ?? null;
-        if (url) setClassLink(url);
-      }
+      setBooking(data);
+      setState(data.attendance_response === "yes" ? "already" : "ready");
+      fetchClassLink(data.trial_date, data.start_time);
     };
 
-    confirm();
-  }, [id, token]);
+    load();
+  }, [token]);
+
+  const fetchClassLink = async (trialDate: string | null, startTime: string | null) => {
+    if (!trialDate || !startTime) return;
+    const { data: slotRow } = await supabase
+      .from("trial_slots")
+      .select("meeting_url")
+      .eq("trial_date", trialDate)
+      .eq("start_time", startTime)
+      .maybeSingle();
+    const url = (slotRow as { meeting_url?: string | null } | null)?.meeting_url ?? null;
+    if (url) setClassLink(url);
+  };
+
+  const handleConfirm = async () => {
+    setState("confirming");
+
+    const { data, error } = await (supabase.rpc as any)(
+      "respond_trial_attendance",
+      { p_token: token, p_response: "yes" },
+    ).maybeSingle();
+
+    if (error || !data) {
+      setState("error");
+      return;
+    }
+
+    setBooking(data);
+    setState("success");
+  };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -86,6 +95,52 @@ const TrialConfirmPage = () => {
         </div>
 
         {state === "loading" && (
+          <div className="py-8">
+            <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading your trial booking…</p>
+          </div>
+        )}
+
+        {state === "ready" && booking && (
+          <div className="py-4">
+            <h1 className="text-2xl font-bold text-black mb-1">
+              {booking.first_name ? `Hi ${booking.first_name}!` : "Confirm your trial class"}
+            </h1>
+            <p className="text-gray-600 mb-5">Please confirm you'll be attending this trial class.</p>
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left text-sm text-gray-700 space-y-1.5">
+              <p><span className="font-semibold text-black">Language:</span> {booking.class_language ?? "—"}</p>
+              <p>
+                <span className="font-semibold text-black">Date:</span>{" "}
+                {booking.is_tba
+                  ? "To be announced"
+                  : booking.trial_date
+                    ? new Date(booking.trial_date).toLocaleDateString(undefined, {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "—"}
+              </p>
+              {!booking.is_tba && booking.start_time && (
+                <p>
+                  <span className="font-semibold text-black">Time:</span> {booking.start_time}
+                  {booking.timezone ? ` (${booking.timezone})` : ""}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              style={{ backgroundColor: "#000", color: "#FACC15" }}
+              className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
+            >
+              Confirm my attendance
+            </button>
+          </div>
+        )}
+
+        {state === "confirming" && (
           <div className="py-8">
             <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-600">Confirming your attendance…</p>
