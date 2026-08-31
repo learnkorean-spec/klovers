@@ -44,6 +44,17 @@ At this point the account exists and can sign in, but it has no permissions —
 false and every RLS-gated write (including `content-edit-cli.mjs apply`) will
 be rejected. That's Step 2.
 
+**If you ever need to change this account's password later** (lost it,
+suspect it leaked, or created the account without capturing it): delete the
+user in the dashboard and repeat Step 1 with a new password, then repeat
+Step 2 to re-grant the role under the new user ID. Do **not** update
+`auth.users` directly — not through the SQL Editor, not by any other means —
+even by hand. That is a direct write to production outside this repo's own
+git → PR → Apply Migrations path, the exact class of change the daily
+schema-drift check (`schema-drift-check.yml`) exists to catch, and the same
+rule that applies to every other production write applies here too: no
+exceptions for "it's just this once."
+
 ## Step 2 — Grant it the `admin` role
 
 There is no admin-panel screen for this (checked — every `user_roles`
