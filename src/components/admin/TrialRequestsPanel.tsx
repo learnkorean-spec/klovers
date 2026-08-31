@@ -84,6 +84,20 @@ const TrialRequestsPanel = () => {
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
 
   const handleApprove = async (booking: TrialBooking) => {
+    // Guards the button's own `disabled` state below — a TBA row (no
+    // trial_date) has nothing to confirm here: this would flip status to
+    // "confirmed" with no date, no time, and no email sent (see the
+    // trial_date/start_time check further down), leaving the student
+    // marked confirmed but never told anything. Assign a real slot via the
+    // Trial Classes tab's Confirm action instead.
+    if (!booking.trial_date) {
+      toast({
+        title: "No date assigned",
+        description: "Use the Trial Classes tab's Confirm action to assign a slot before approving.",
+        variant: "destructive",
+      });
+      return;
+    }
     setActionLoading(booking.id);
     try {
       // Update status to confirmed
@@ -210,27 +224,35 @@ const TrialRequestsPanel = () => {
                       <TableCell className="text-sm text-muted-foreground">{bookedAt}</TableCell>
                       <TableCell className="text-right">
                         {b.status === "pending" && (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1 text-green-700 border-green-300 hover:bg-green-50"
-                              disabled={actionLoading === b.id}
-                              onClick={() => handleApprove(b)}
-                            >
-                              {actionLoading === b.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                              Approve
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1 text-red-700 border-red-300 hover:bg-red-50"
-                              disabled={actionLoading === b.id}
-                              onClick={() => handleReject(b)}
-                            >
-                              <X className="h-3 w-3" />
-                              Reject
-                            </Button>
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 gap-1 text-green-700 border-green-300 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={actionLoading === b.id || !b.trial_date}
+                                title={!b.trial_date ? "No date assigned yet — use the Trial Classes tab's Confirm action instead." : undefined}
+                                onClick={() => handleApprove(b)}
+                              >
+                                {actionLoading === b.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 gap-1 text-red-700 border-red-300 hover:bg-red-50"
+                                disabled={actionLoading === b.id}
+                                onClick={() => handleReject(b)}
+                              >
+                                <X className="h-3 w-3" />
+                                Reject
+                              </Button>
+                            </div>
+                            {!b.trial_date && (
+                              <span className="text-[11px] text-muted-foreground max-w-[220px] text-right leading-tight">
+                                No date yet — assign one in the Trial Classes tab's Confirm action, not here.
+                              </span>
+                            )}
                           </div>
                         )}
                         {b.status === "confirmed" && b.trial_date && b.start_time && (
