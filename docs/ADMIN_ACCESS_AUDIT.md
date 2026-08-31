@@ -158,3 +158,26 @@ wants to say who did what — not just that something happened.
 
 **Ordering, explicit:** this item sits ahead of building the audit log
 itself in Re's priority list. Not attempted in this entry.
+
+**Update — fix ready, not yet merged:** PR #167 removes the hardcoded
+`admin@klovers.com` check from `src/pages/AdminLogin.tsx`, leaving the
+`user_roles` check that already existed (and already failed closed) as the
+only gate. Open, CI pending, not merged — this entry stays OPEN until Re
+merges it and confirms her own login works live.
+
+## 2026-08-31 — `teacher_availability`'s admin RLS style (LOW PRIORITY — normalize later)
+
+Found while auditing every RLS policy referencing `admin` for PR #167 (the
+`AdminLogin.tsx` role-check fix). Every other admin-gated table's write
+policies call `has_role(auth.uid(), 'admin')` directly. `teacher_availability`'s
+three admin write policies (insert/update/delete) do the same check a
+different way — matching `auth.jwt() ->> 'email'` against `profiles.email`
+for users who hold the `admin` role in `user_roles`, instead of calling
+`has_role()`.
+
+**Not a hardcoded-email gate** — it still resolves through the real
+`user_roles` table, so it grants and denies the same accounts `has_role()`
+would. It's a style inconsistency, not a security gap: worth rewriting to
+call `has_role()` directly for consistency with the rest of the schema, at
+some point, not urgently. Explicitly out of scope for PR #167 and not
+touched there.
