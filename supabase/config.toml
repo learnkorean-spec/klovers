@@ -62,6 +62,12 @@ verify_jwt = false
 [functions.sitemap]
 verify_jwt = false
 
+# Retired endpoint (see supabase/functions/rebook-trial/index.ts) -- still
+# needs verify_jwt = false so the 410 response actually reaches whoever
+# clicks one of the old links, instead of a bare gateway 401.
+[functions.rebook-trial]
+verify_jwt = false
+
 # --- Cron / Scheduled functions ---
 
 [functions.ping-search-engines]
