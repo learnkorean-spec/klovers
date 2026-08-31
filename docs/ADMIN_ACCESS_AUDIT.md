@@ -122,3 +122,26 @@ No code signs in as this account or uses its credentials for anything.
 Its `admin` role appears to be inert — attached to an account that has
 never authenticated, doing nothing a revoke would break, as far as this
 read-only pass found.
+
+## 2026-08-31 — 🔴 Admin login checks email, not role (OPEN — blocks any real audit log)
+
+Re's own read of the finding above, and the reason it outranks anything
+else in this doc: `/admin/login` rejecting every email except
+`admin@klovers.com` (regardless of `user_roles`) means **every admin
+action in this app is attributable to one shared identity, no matter who
+is actually behind the keyboard.** A per-admin audit log — the next
+thing on the list after this doc — would be built on top of a login that
+cannot tell two different people apart. Re confirmed the 2026-08-29
+sign-in traced above was her; that doesn't change the underlying gap for
+whoever else might sign in with the same shared password later, or has
+in the past.
+
+**The fix, recorded but explicitly NOT done here — Re's call on timing:**
+`/admin/login` (`src/pages/AdminLogin.tsx`) should check `user_roles` for
+the signed-in user, the same way this app decides admin access
+everywhere else, instead of hard-coding one email. That lets each admin
+sign in as themselves, and is the precondition for any audit log that
+wants to say who did what — not just that something happened.
+
+**Ordering, explicit:** this item sits ahead of building the audit log
+itself in Re's priority list. Not attempted in this entry.
