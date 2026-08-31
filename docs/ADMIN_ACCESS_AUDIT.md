@@ -102,8 +102,7 @@ Supabase dashboard's own "Users" panel. Immediately before it
 (14:42:09), a `refresh_token` grant for the same account was revoked from
 the same IP — the ordinary pattern of a browser session's silent refresh
 expiring, followed by a fresh password login, not two separate incidents.
-**Whether `149.40.58.150` is a familiar IP is for Re to check on her
-end** — not verified here.
+**Confirmed by Re as her own login — see the RESOLVED entry below.**
 
 **3. Does any code use `learnkorean@kloversegy.com`? Is the account
 dead?**
@@ -122,6 +121,20 @@ No code signs in as this account or uses its credentials for anything.
 Its `admin` role appears to be inert — attached to an account that has
 never authenticated, doing nothing a revoke would break, as far as this
 read-only pass found.
+
+## 2026-08-31 — RESOLVED: the 2026-08-29 `admin@klovers.com` login was Re
+
+Closing the one open thread the read-only follow-up above left hanging.
+**Re confirms**: the 2026-08-29 14:42:10 UTC sign-in traced above (password
+grant, `referer: kloversegy.com`, `remote_addr: 149.40.58.150`) was her.
+No unauthorised access occurred. Re also confirms **she is the only person
+who currently knows `admin@klovers.com`'s password** — the shared-login
+design flagged in the entry below is a real structural risk, but as of
+this entry it is a risk with no evidence of actual sharing, leak, or
+second holder.
+
+Marked resolved, not open — no further investigation needed on who this
+login was.
 
 ## 2026-08-31 — 🔴 Admin login checks email, not role (OPEN — blocks any real audit log)
 
