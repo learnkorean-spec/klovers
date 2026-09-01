@@ -285,6 +285,12 @@ const TrialBookingPage = () => {
           country: selectedCountry,
           referrer_id: referrerId,
           authed: true,
+          // The student's real zone, straight from the browser — never
+          // inferred from country or phone. Read the same way the rest of
+          // this page reads it, bypassing any stale localStorage value.
+          student_timezone: (() => {
+            try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
+          })(),
         },
       });
 
