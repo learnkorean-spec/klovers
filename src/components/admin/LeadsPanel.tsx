@@ -136,6 +136,9 @@ const LeadsPanel: React.FC = () => {
       toast({ title: "No duplicates", description: "All leads are unique." });
       return;
     }
+    if (!window.confirm(`Delete ${dupeIds.length} duplicate lead(s)? This cannot be undone.`)) {
+      return;
+    }
     const { error } = await supabase.from("leads").delete().in("id", dupeIds);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
