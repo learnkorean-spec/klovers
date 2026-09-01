@@ -108,7 +108,7 @@ export function buildGroupMatchEmail(p: EmailPayload) {
         </ul>
       </div>` : "";
   const customHtml = p.custom_message
-    ? `<div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0; color: ${BRAND_TEXT};">
+    ? `<div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0; color: ${BRAND_TEXT};">
         <p style="margin: 0; white-space: pre-wrap;">${p.custom_message}</p>
       </div>` : "";
 
@@ -118,7 +118,7 @@ export function buildGroupMatchEmail(p: EmailPayload) {
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أخبار رائعة يا ${p.name}! 🎉</h1>
         <p>تم تكوين مجموعتك الدراسية!</p>
-        <div style="background: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
+        <div style="background-color: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
           <p style="margin: 0; font-weight: bold;">📚 المجموعة: ${p.group_name}</p>
           <p style="margin: 8px 0 0;">📅 الأيام: ${p.group_days}</p>
           ${levelLabel ? `<p style="margin: 8px 0 0;">${levelLabel}</p>` : ""}
@@ -138,7 +138,7 @@ export function buildGroupMatchEmail(p: EmailPayload) {
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Great news, ${p.name}! 🎉</h1>
       <p>Your study group has been formed!</p>
-      <div style="background: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
+      <div style="background-color: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
         <p style="margin: 0; font-weight: bold;">📚 Group: ${p.group_name}</p>
         <p style="margin: 8px 0 0;">📅 Days: ${p.group_days}</p>
         ${levelLabel ? `<p style="margin: 8px 0 0;">${levelLabel}</p>` : ""}
@@ -162,7 +162,7 @@ export function buildSlotConfirmedEmail(p: EmailPayload) {
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أخبار رائعة يا ${p.name}! 🎉</h1>
         <p>تم تأكيد مجموعتك الدراسية!</p>
-        <div style="background: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
+        <div style="background-color: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
           <p style="margin: 0; font-weight: bold;">📅 ${p.slot_day} - ${p.slot_time}</p>
           <p style="margin: 8px 0 0;">🌍 ${p.slot_timezone || "Africa/Cairo"}</p>
           <p style="margin: 8px 0 0;">📚 المستوى: ${p.slot_level}</p>
@@ -179,7 +179,7 @@ export function buildSlotConfirmedEmail(p: EmailPayload) {
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Great news, ${p.name}! 🎉</h1>
       <p>Your study group has been confirmed and is ready to start!</p>
-      <div style="background: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
+      <div style="background-color: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW};">
         <p style="margin: 0; font-weight: bold;">📅 ${p.slot_day} at ${p.slot_time}</p>
         <p style="margin: 8px 0 0;">🌍 ${(p.slot_timezone || "Africa/Cairo").replace(/_/g, " ")}</p>
         <p style="margin: 8px 0 0;">📚 Level: ${p.slot_level}</p>
@@ -303,7 +303,7 @@ export function buildRejectionEmail(p: EmailPayload) {
     bodyEn = `
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
       <p>We're sorry, but your enrollment has been <strong>rejected</strong> because we were unable to confirm that the payment was received.</p>
-      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #991b1b; font-size: 13px;">💳 <strong>Reason:</strong> Payment transfer could not be confirmed.</p>
       </div>
       <p>Please re-enroll and make sure to transfer the correct amount and upload a clear receipt.</p>
@@ -316,7 +316,7 @@ export function buildRejectionEmail(p: EmailPayload) {
     bodyAr = `
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
       <p>نأسف لإبلاغك بأنه تم <strong>رفض</strong> طلب تسجيلك لعدم تمكننا من تأكيد استلام الدفعة.</p>
-      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #991b1b; font-size: 13px;">💳 <strong>السبب:</strong> لم يتم التحقق من تحويل الدفعة.</p>
       </div>
       <p>يرجى إعادة التسجيل مع التأكد من تحويل المبلغ الصحيح ورفع إيصال واضح.</p>
@@ -333,7 +333,7 @@ export function buildRejectionEmail(p: EmailPayload) {
     bodyEn = `
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
       <p>Unfortunately, there are currently <strong>no available time slots</strong> that match your preferred schedule.</p>
-      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #92400e; font-size: 13px;">📅 Please use the button below to view available slots and select a new time that works for you.</p>
       </div>
       ${ctaBtn ? `<div style="margin: 24px 0; text-align: center;">${ctaBtn}</div>` : ""}
@@ -343,7 +343,7 @@ export function buildRejectionEmail(p: EmailPayload) {
     bodyAr = `
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
       <p>للأسف، <strong>لا توجد مواعيد متاحة</strong> حالياً تتناسب مع جدولك المفضل.</p>
-      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #92400e; font-size: 13px;">📅 يرجى استخدام الزر أدناه لعرض المواعيد المتاحة واختيار وقت يناسبك.</p>
       </div>
       ${ctaBtn ? `<div style="margin: 24px 0; text-align: center;">${ctaBtn}</div>` : ""}
@@ -354,7 +354,7 @@ export function buildRejectionEmail(p: EmailPayload) {
     bodyEn = `
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
       <p>We're sorry, but your enrollment has been <strong>rejected</strong>.</p>
-      ${p.rejection_note ? `<div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0;"><p style="margin: 0; color: ${BRAND_TEXT};">${p.rejection_note}</p></div>` : ""}
+      ${p.rejection_note ? `<div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0;"><p style="margin: 0; color: ${BRAND_TEXT};">${p.rejection_note}</p></div>` : ""}
       <p>Please contact us if you have any questions.</p>
       <div style="margin: 24px 0; text-align: center;">
         ${brandButton("Contact Us on WhatsApp", "https://wa.me/201010003084")}
@@ -363,7 +363,7 @@ export function buildRejectionEmail(p: EmailPayload) {
     bodyAr = `
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
       <p>نأسف لإبلاغك بأنه تم <strong>رفض</strong> طلب تسجيلك.</p>
-      ${p.rejection_note ? `<div style="background: ${BRAND_GRAY}; border-right: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0;"><p style="margin: 0; color: ${BRAND_TEXT};">${p.rejection_note}</p></div>` : ""}
+      ${p.rejection_note ? `<div style="background-color: ${BRAND_GRAY}; border-right: 4px solid ${BRAND_YELLOW}; padding: 12px 16px; border-radius: 4px; margin: 16px 0;"><p style="margin: 0; color: ${BRAND_TEXT};">${p.rejection_note}</p></div>` : ""}
       <p>تواصل معنا إذا كان لديك أي استفسار.</p>
       <div style="margin: 24px 0; text-align: center;">
         ${brandButton("تواصل معنا عبر واتساب", "https://wa.me/201010003084")}
@@ -387,7 +387,7 @@ export function buildPaymentMethodReminderEmail(name: string, enrollmentId: stri
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${name}!</h1>
         <p>لاحظنا أنك أرسلت إيصال الدفع، لكن لم يتم تحديد <strong>طريقة الدفع</strong> بعد.</p>
         <p>يرجى زيارة صفحة الدفع الخاصة بك لإكمال هذه الخطوة حتى يتمكن فريقنا من مراجعة طلبك والموافقة عليه.</p>
-        <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
           <p style="margin: 0; color: #92400e; font-size: 13px;">⚠️ لن يتم الموافقة على تسجيلك حتى يتم تأكيد طريقة الدفع.</p>
         </div>
         <div style="margin: 24px 0; text-align: center;">
@@ -403,7 +403,7 @@ export function buildPaymentMethodReminderEmail(name: string, enrollmentId: stri
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${name}!</h1>
       <p>We noticed you submitted a payment receipt, but your <strong>payment method</strong> wasn't confirmed.</p>
       <p>Please visit your payment page to complete this step so our team can review and approve your enrollment.</p>
-      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #92400e; font-size: 13px;">⚠️ Your enrollment won't be approved until the payment method is confirmed.</p>
       </div>
       <div style="margin: 24px 0; text-align: center;">
@@ -506,15 +506,15 @@ export function buildGroupFormingEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 👋</h1>
         <p>أردنا فقط التأكد من أن كل شيء على ما يرام.</p>
         <p>لا يزال فريقنا يعمل على تشكيل مجموعتك الدراسية — نحرص على إيجاد أفضل جدول ومعلم مناسب لك.</p>
-        <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+        <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
           <p style="margin: 0; font-size: 14px;">📧 بمجرد تجهيز مجموعتك، ستتلقى بريداً إلكترونياً فوراً يتضمن رابط الانضمام.</p>
         </div>
         <p>شكراً لصبرك — نقدّره كثيراً!</p>
         <p style="color: ${BRAND_MUTED}; font-size: 13px;">عندك أسئلة؟ تواصل معنا عبر واتساب.</p>
         <div style="margin: 20px 0; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
-        <div style="background: ${BRAND_GRAY}; border-radius: 6px; padding: 14px 18px; margin-top: 16px;">
+        <div style="background-color: ${BRAND_GRAY}; border-radius: 6px; padding: 14px 18px; margin-top: 16px;">
           <p style="margin: 0 0 6px; font-size: 13px; font-weight: bold; color: ${BRAND_DARK};">📚 ابدأ قبل ما تيجي الحصة الأولى</p>
           <p style="margin: 0; font-size: 13px; color: ${BRAND_MUTED};">تعلم الأبجدية الكورية (هانغول) في 30 دقيقة — <a href="https://www.youtube.com/watch?v=s5aobqyEaMQ" style="color: ${BRAND_DARK}; font-weight: bold;">شاهد على يوتيوب ←</a></p>
         </div>
@@ -528,15 +528,15 @@ export function buildGroupFormingEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 👋</h1>
       <p>Just a quick update from the team.</p>
       <p>We're still putting together your class group — making sure you get the best schedule and the right teacher match.</p>
-      <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+      <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
         <p style="margin: 0; font-size: 14px;">📧 Once your group is ready, you'll receive an email immediately with your class meeting link.</p>
       </div>
       <p>Thank you for your patience — we really appreciate it!</p>
       <p style="color: ${BRAND_MUTED}; font-size: 13px;">Any questions? Message us on WhatsApp.</p>
       <div style="margin: 20px 0; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
-      <div style="background: ${BRAND_GRAY}; border-radius: 6px; padding: 14px 18px; margin-top: 16px;">
+      <div style="background-color: ${BRAND_GRAY}; border-radius: 6px; padding: 14px 18px; margin-top: 16px;">
         <p style="margin: 0 0 6px; font-size: 13px; font-weight: bold; color: ${BRAND_DARK};">📚 Start before your first class</p>
         <p style="margin: 0; font-size: 13px; color: ${BRAND_MUTED};">Learn the Korean alphabet (Hangul) in 30 minutes — <a href="https://www.youtube.com/watch?v=s5aobqyEaMQ" style="color: ${BRAND_DARK}; font-weight: bold;">Watch on YouTube →</a></p>
       </div>
@@ -555,7 +555,7 @@ export function buildReceiptNudgeEmail(p: EmailPayload) {
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! ⚠️</h1>
         <p>لاحظنا أن تسجيلك لا يزال معلقاً لأننا لم نتلقَّ إيصال الدفع بعد.</p>
-        <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
           <p style="margin: 0; color: #92400e; font-size: 13px;"><strong>المطلوب:</strong> قم برفع إيصال التحويل البنكي أو Vodafone Cash أو InstaPay من خلال لوحة التحكم الخاصة بك.</p>
         </div>
         <p>بمجرد التحقق من الدفع، سيتم قبول تسجيلك وتفعيل حسابك.</p>
@@ -572,7 +572,7 @@ export function buildReceiptNudgeEmail(p: EmailPayload) {
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! ⚠️</h1>
       <p>Your enrollment is still pending because we haven't received your payment receipt yet.</p>
-      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #92400e; font-size: 13px;"><strong>Action needed:</strong> Upload your bank transfer, Vodafone Cash, or InstaPay receipt from your dashboard.</p>
       </div>
       <p>Once your payment is verified, your enrollment will be approved and your account activated.</p>
@@ -610,13 +610,13 @@ export function buildClassLinkEmail(p: EmailPayload) {
   }
 
   const scheduleBlock = p.slot_day
-    ? `<div style="background: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0;">
+    ? `<div style="background-color: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0;">
         <p style="margin: 0; font-size: 14px;">📅 <strong>${p.slot_day}</strong>${p.slot_time ? ` at ${p.slot_time}` : ""} <span style="color: ${BRAND_MUTED}; font-size: 12px;">(${tz})</span></p>
       </div>`
     : "";
 
   const scheduleBlockAr = p.slot_day
-    ? `<div style="background: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0;">
+    ? `<div style="background-color: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0;">
         <p style="margin: 0; font-size: 14px;">📅 <strong>${p.slot_day}</strong>${p.slot_time ? ` الساعة ${p.slot_time}` : ""} <span style="color: ${BRAND_MUTED}; font-size: 12px;">(${tz})</span></p>
       </div>`
     : "";
@@ -628,7 +628,7 @@ export function buildClassLinkEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">حصتك جاهزة يا ${p.name}! 🎓</h1>
         <p>تم تشكيل مجموعتك الدراسية بالكامل وحصتك مجدولة ومستعدة للبدء.</p>
         ${scheduleBlockAr}
-        <div style="background: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW}; text-align: center;">
+        <div style="background-color: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW}; text-align: center;">
           <p style="margin: 0 0 12px; font-weight: bold; font-size: 15px;">رابط الانضمام لحصتك:</p>
           ${brandButton("انضم للحصة الآن", linkUrl)}
         </div>
@@ -645,7 +645,7 @@ export function buildClassLinkEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Your class is ready, ${p.name}! 🎓</h1>
       <p>Your study group is fully formed and your class is scheduled and ready to start.</p>
       ${scheduleBlock}
-      <div style="background: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW}; text-align: center;">
+      <div style="background-color: ${BRAND_GRAY}; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid ${BRAND_YELLOW}; text-align: center;">
         <p style="margin: 0 0 12px; font-weight: bold; font-size: 15px;">Your class meeting link:</p>
         ${brandButton("Join Your Class", linkUrl)}
       </div>
@@ -667,12 +667,12 @@ export function buildGroupFormingEscalationEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
         <p>نعلم أن الانتظار قد يكون صعباً، ونقدّر صبرك الكبير.</p>
         <p>ما زلنا نعمل على إتمام تشكيل مجموعتك — نريد التأكد من حصولك على أفضل معلم وجدول يناسبك تماماً.</p>
-        <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+        <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
           <p style="margin: 0; color: #92400e; font-size: 13px;">⚡ ستتلقى بريداً إلكترونياً يتضمن رابط حصتك فور اكتمال تشكيل المجموعة.</p>
         </div>
         <p>لو عندك أي سؤال أو قلق، كلمنا مباشرة على واتساب:</p>
         <div style="margin: 20px 0; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
       `, true),
@@ -684,12 +684,12 @@ export function buildGroupFormingEscalationEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
       <p>We know waiting isn't fun, and we really appreciate your patience.</p>
       <p>We're still working on forming your class group — we want to make sure you get the best teacher match and schedule for you.</p>
-      <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+      <div style="background-color: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
         <p style="margin: 0; color: #92400e; font-size: 13px;">⚡ You'll receive your class meeting link the moment your group is complete.</p>
       </div>
       <p>If you have any questions or concerns, message us directly on WhatsApp:</p>
       <div style="margin: 20px 0; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
       ${unsubscribeFooter(p.unsubscribe_token, false)}
     `, false),
@@ -706,7 +706,7 @@ export function buildRejectionFollowupEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
         <p>لاحظنا أنك لم تختر موعداً جديداً بعد.</p>
         <p>لا يزال بإمكانك إعادة التسجيل واختيار وقت يناسبك — لدينا مواعيد متاحة وطلابنا ينتظرونك في المجموعة!</p>
-        <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+        <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
           <p style="margin: 0; font-size: 14px;">📅 اختر موعدك الجديد وسنقوم بمطابقتك مع المجموعة المناسبة.</p>
         </div>
         <div style="margin: 24px 0; text-align: center;">
@@ -723,7 +723,7 @@ export function buildRejectionFollowupEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
       <p>We noticed you haven't picked a new time slot yet.</p>
       <p>You can still re-enroll and choose a schedule that works for you — we have availability and your future classmates are waiting!</p>
-      <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+      <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
         <p style="margin: 0; font-size: 14px;">📅 Pick your new slot and we'll match you with the right group.</p>
       </div>
       <div style="margin: 24px 0; text-align: center;">
@@ -744,7 +744,7 @@ export function buildPreClassReminderEmail(p: EmailPayload) {
       subject: "KLovers — حصتك الأولى غداً! 🎯 استعد الآن",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">يا ${p.name}، حصتك الأولى غداً! 🎯</h1>
-        ${dateStr ? `<div style="background: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;"><p style="margin: 0; font-size: 16px; font-weight: bold;">📅 ${dateStr} (القاهرة)</p></div>` : ""}
+        ${dateStr ? `<div style="background-color: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;"><p style="margin: 0; font-size: 16px; font-weight: bold;">📅 ${dateStr} (القاهرة)</p></div>` : ""}
         <p>إليك كيف تستفيد من حصتك للأقصى:</p>
         <ul style="color: ${BRAND_TEXT}; padding-right: 20px; line-height: 2;">
           <li>🎧 جرّب الكاميرا والميكروفون قبل الحصة بـ 10 دقائق</li>
@@ -755,7 +755,7 @@ export function buildPreClassReminderEmail(p: EmailPayload) {
         <p>متحمس لبداية رحلتك! 🚀</p>
         <p style="color: ${BRAND_MUTED}; font-size: 13px;">أي سؤال؟ كلمنا على واتساب.</p>
         <div style="margin: 20px 0; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
       `, true),
@@ -765,7 +765,7 @@ export function buildPreClassReminderEmail(p: EmailPayload) {
     subject: "KLovers — Your first class is tomorrow! 🎯 Get ready",
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Your first class is tomorrow, ${p.name}! 🎯</h1>
-      ${dateStr ? `<div style="background: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;"><p style="margin: 0; font-size: 16px; font-weight: bold;">📅 ${dateStr} (Cairo time)</p></div>` : ""}
+      ${dateStr ? `<div style="background-color: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;"><p style="margin: 0; font-size: 16px; font-weight: bold;">📅 ${dateStr} (Cairo time)</p></div>` : ""}
       <p>Here's how to make the most of your first class:</p>
       <ul style="color: ${BRAND_TEXT}; padding-left: 20px; line-height: 2;">
         <li>🎧 Test your camera and microphone 10 minutes before class</li>
@@ -776,7 +776,7 @@ export function buildPreClassReminderEmail(p: EmailPayload) {
       <p>So excited for you to start this journey! 🚀</p>
       <p style="color: ${BRAND_MUTED}; font-size: 13px;">Any questions? Message us on WhatsApp.</p>
       <div style="margin: 20px 0; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
       ${unsubscribeFooter(p.unsubscribe_token, false)}
     `, false),
@@ -794,17 +794,17 @@ export function buildClassFeedbackEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! كيف كانت الحصة الأولى؟ 🌟</h1>
         <p>نتمنى أن تكون حصتك الأولى قد أعجبتك!</p>
         <p>رأيك يهمنا كثيراً — شاركنا تجربتك حتى نتمكن من تحسين تجربة كل الطلاب.</p>
-        <div style="background: ${BRAND_GRAY}; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+        <div style="background-color: ${BRAND_GRAY}; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
           <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: ${BRAND_DARK};">كيف تقيّم حصتك الأولى؟</p>
           <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-            <a href="${waUrl}?text=تقييمي+للحصة+الأولى%3A+ممتازة+⭐⭐⭐⭐⭐" style="display: inline-block; background: ${BRAND_DARK}; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐⭐ ممتازة</a>
-            <a href="${waUrl}?text=تقييمي+للحصة+الأولى%3A+جيدة+⭐⭐⭐⭐" style="display: inline-block; background: ${BRAND_DARK}; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐ جيدة</a>
-            <a href="${waUrl}?text=تقييمي+للحصة+الأولى%3A+تحتاج+تحسين" style="display: inline-block; background: #e0e0e0; color: ${BRAND_DARK}; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">تحتاج تحسين</a>
+            <a href="${waUrl}?text=تقييمي+للحصة+الأولى%3A+ممتازة+⭐⭐⭐⭐⭐" style="display: inline-block; background-color: ${BRAND_DARK} !important; color: #fff !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐⭐ ممتازة</a>
+            <a href="${waUrl}?text=تقييمي+للحصة+الأولى%3A+جيدة+⭐⭐⭐⭐" style="display: inline-block; background-color: ${BRAND_DARK} !important; color: #fff !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐ جيدة</a>
+            <a href="${waUrl}?text=تقييمي+للحصة+الأولى%3A+تحتاج+تحسين" style="display: inline-block; background-color: #e0e0e0 !important; color: ${BRAND_DARK} !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">تحتاج تحسين</a>
           </div>
         </div>
         <p style="color: ${BRAND_MUTED}; font-size: 13px;">أو تكلم معنا مباشرة على واتساب — أي سؤال أو ملاحظة نحن هنا.</p>
         <div style="margin: 20px 0; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
         <p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: center; margin-top: 20px;">شكراً لانضمامك لعائلة KLovers — رحلتك الكورية بدأت للتو! 🇰🇷</p>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
@@ -817,17 +817,17 @@ export function buildClassFeedbackEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! How was your first class? 🌟</h1>
       <p>We hope your first class was amazing!</p>
       <p>Your feedback means everything to us — it helps us improve the experience for every student.</p>
-      <div style="background: ${BRAND_GRAY}; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+      <div style="background-color: ${BRAND_GRAY}; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
         <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: ${BRAND_DARK};">How would you rate your first class?</p>
         <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-          <a href="${waUrl}?text=My+first+class+rating%3A+Excellent+%E2%AD%90%E2%AD%90%E2%AD%90%E2%AD%90%E2%AD%90" style="display: inline-block; background: ${BRAND_DARK}; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐⭐ Excellent</a>
-          <a href="${waUrl}?text=My+first+class+rating%3A+Good+%E2%AD%90%E2%AD%90%E2%AD%90%E2%AD%90" style="display: inline-block; background: ${BRAND_DARK}; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐ Good</a>
-          <a href="${waUrl}?text=My+first+class+rating%3A+Needs+improvement" style="display: inline-block; background: #e0e0e0; color: ${BRAND_DARK}; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">Needs improvement</a>
+          <a href="${waUrl}?text=My+first+class+rating%3A+Excellent+%E2%AD%90%E2%AD%90%E2%AD%90%E2%AD%90%E2%AD%90" style="display: inline-block; background-color: ${BRAND_DARK} !important; color: #fff !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐⭐ Excellent</a>
+          <a href="${waUrl}?text=My+first+class+rating%3A+Good+%E2%AD%90%E2%AD%90%E2%AD%90%E2%AD%90" style="display: inline-block; background-color: ${BRAND_DARK} !important; color: #fff !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">⭐⭐⭐⭐ Good</a>
+          <a href="${waUrl}?text=My+first+class+rating%3A+Needs+improvement" style="display: inline-block; background-color: #e0e0e0 !important; color: ${BRAND_DARK} !important; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px; margin: 4px;">Needs improvement</a>
         </div>
       </div>
       <p style="color: ${BRAND_MUTED}; font-size: 13px;">Or message us directly on WhatsApp — any questions or feedback, we're here.</p>
       <div style="margin: 20px 0; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
       <p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: center; margin-top: 20px;">Thank you for joining the KLovers family — your Korean journey has just begun! 🇰🇷</p>
       ${unsubscribeFooter(p.unsubscribe_token, false)}

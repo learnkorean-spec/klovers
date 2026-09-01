@@ -109,9 +109,9 @@ export function unsubscribeFooter(token: string | undefined, isAr: boolean): str
 export function brandWrapper(content: string, isRtl: boolean) {
   const dir = isRtl ? 'direction: rtl; text-align: right;' : '';
   return `
-  <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+  <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
     <!-- Header -->
-    <div style="background: ${BRAND_BLACK}; padding: 24px; text-align: center;">
+    <div style="background-color: ${BRAND_BLACK}; padding: 24px; text-align: center;">
       <img src="${LOGO_URL}" alt="KLovers" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid ${BRAND_YELLOW};" />
       <h2 translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; margin: 12px 0 0; font-size: 22px; letter-spacing: 1px;">KLovers</h2>
       <p style="color: #cccccc; margin: 4px 0 0; font-size: 12px;">Korean Language Academy</p>
@@ -121,7 +121,7 @@ export function brandWrapper(content: string, isRtl: boolean) {
       ${content}
     </div>
     <!-- Footer -->
-    <div style="background: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
+    <div style="background-color: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
       <p translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;">— The KLovers Team</p>
       <a href="https://kloversegy.com" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
     </div>
@@ -129,7 +129,7 @@ export function brandWrapper(content: string, isRtl: boolean) {
 }
 
 export function brandButton(text: string, href: string) {
-  return `<a href="${href}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK};">${text}</a>`;
+  return `<a href="${href}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK};">${text}</a>`;
 }
 
 export function brandTable(rows: [string, string][]) {
