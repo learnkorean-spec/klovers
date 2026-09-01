@@ -24,7 +24,7 @@ import { CheckCircle2, CalendarPlus, CalendarClock, CalendarX, ArrowRight, Gradu
 import { useLanguage } from "@/contexts/LanguageContext";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 
-// ── Country / pricing helpers ─────────────────────────────────────────────────
+// ── Country / pricing helpers ─────────────────────────────────────────
 
 /** IANA timezone → country name (best-effort pre-fill) */
 const TZ_TO_COUNTRY: Record<string, string> = {
@@ -104,7 +104,7 @@ function defaultLanguageForCountry(country: string): "arabic" | "english" {
 const isMissingAuditColumn = (error: any) =>
   error?.code === "42703" || /changed_at|cancelled_at|cancel_reason/i.test(error?.message || "");
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
 
 interface BookingResult {
   trial_date: string;
@@ -285,6 +285,12 @@ const TrialBookingPage = () => {
           country: selectedCountry,
           referrer_id: referrerId,
           authed: true,
+          // The student's real zone, straight from the browser — never
+          // inferred from country or phone. Read the same way the rest of
+          // this page reads it, bypassing any stale localStorage value.
+          student_timezone: (() => {
+            try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
+          })(),
         },
       });
 
@@ -458,7 +464,7 @@ const TrialBookingPage = () => {
     }
   };
 
-  // ── Success state ──────────────────────────────────────────────────────────
+  // ── Success state ─────────────────────────────────────────────────
   if (bookingResult) {
     const formattedDate = new Date(bookingResult.trial_date + "T00:00:00").toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
       weekday: "long",
@@ -760,7 +766,7 @@ const TrialBookingPage = () => {
     );
   }
 
-  // ── Slot picker state ──────────────────────────────────────────────────────
+  // ── Slot picker state ──────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <Header />
