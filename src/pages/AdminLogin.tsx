@@ -25,13 +25,6 @@ const AdminLogin = () => {
       return;
     }
 
-    if (data.user.email !== "admin@klovers.com") {
-      await supabase.auth.signOut();
-      toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
     // Check if user has admin role
     const { data: roleData, error: roleError } = await supabase
       .from("user_roles")
