@@ -31,12 +31,43 @@
 # here. No comment is posted for that case: PR-activity subscriptions
 # already surface merge-conflict state through their own notification path.
 
+# COST CONTROL, added 2026-08-31 after measuring the damage.
+#
+# This workflow pushed one commit per open PR on every push to main, and each
+# of those pushes created a Vercel preview deployment. Measured that day: 90
+# commits pushed, 68 of them from here. The Hobby plan allows 100 deployments
+# per day and builds ONE at a time, so a single merge to main queued ~15
+# preview builds AND the production deploy behind them - the deploy that
+# actually reaches students waited on previews of documentation PRs.
+#
+# Two independent brakes now, because they fail differently:
+#   1. Here: only refresh PRs that can actually be affected - skip drafts and
+#      skip PRs whose diff is documentation only. That reduces deployments
+#      CREATED, which is what the 100/day limit counts.
+#   2. scripts/vercel-ignore-build.sh (wired via ignoreCommand in
+#      vercel.json): even when a refresh commit is pushed, Vercel does not
+#      build it. That frees the single concurrent build slot, which is what
+#      was actually delaying production.
+#
+# Neither weakens the guarantee this workflow exists for. A draft PR is not
+# merging yet, and marking it ready fires ci.yml against the current merge
+# result anyway (pull_request: ready_for_review) - so it is covered at exactly
+# the moment its CI starts to matter. A documentation-only PR cannot break the
+# build or collide on a migration version.
+
 name: Refresh open PRs against main
 
 on:
   push:
     branches:
       - main
+
+# main moved 18 times on 2026-08-31. Without this, overlapping runs each push
+# their own merge commit to the same branches and multiply the deployments
+# again.
+concurrency:
+  group: refresh-open-prs
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -61,18 +92,41 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          prs=$(gh pr list --state open --json number,headRefName --jq '.[] | "\(.number)\t\(.headRefName)"')
+          # isDraft comes along so we can skip drafts without a second API call.
+          prs=$(gh pr list --state open --json number,headRefName,isDraft \
+            --jq '.[] | "\(.number)\t\(.headRefName)\t\(.isDraft)"')
           if [ -z "$prs" ]; then
             echo "No open PRs."
             exit 0
           fi
 
           echo "## Refresh open PRs against main" >> "$GITHUB_STEP_SUMMARY"
-          while IFS=$'\t' read -r number branch; do
+          while IFS=$'\t' read -r number branch isdraft; do
             [ -n "$branch" ] || continue
             echo "::group::PR #${number} (${branch})"
 
+            if [ "$isdraft" = "true" ]; then
+              echo "Draft - skipped. Marking it ready fires ci.yml against the"
+              echo "current merge result, so nothing is lost by waiting."
+              echo "- #${number} (${branch}): draft, skipped" >> "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+              continue
+            fi
+
             git fetch origin "$branch" -q
+
+            # A PR that only touches documentation cannot break the build and
+            # cannot collide on a migration version, so refreshing it buys
+            # nothing and costs a deployment.
+            changed=$(git diff --name-only "origin/main...origin/$branch")
+            if [ -n "$changed" ] && ! echo "$changed" | grep -qvE '(^docs/|\.md$)'; then
+              echo "Documentation only - skipped. Files:"
+              echo "$changed" | sed 's/^/  /'
+              echo "- #${number} (${branch}): docs-only, skipped" >> "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+              continue
+            fi
+
             git checkout -q -B "$branch" "origin/$branch"
 
             if git merge --no-edit -q origin/main; then
