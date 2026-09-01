@@ -912,12 +912,32 @@ function buildTrialRebookEmail(p: EmailPayload) {
           ? new Date(s.date + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric" })
           : "";
         const dayPart = dateLabel ? `${day}, ${dateLabel}` : day;
+        // A slot time is stored in the teacher's zone (Africa/Cairo). Showing
+        // only that is useless to a student who is not in Egypt, and this
+        // booking record does not capture the student's real timezone - so
+        // pair it with GMT, which anyone can convert from. The booking page
+        // itself renders each slot in the visitor's own local time; the line
+        // under the cards says so.
+        const gmtLabel = s.date
+          ? formatTime12(
+              new Date(localToUTCISO(s.date, s.start_time, s.timezone || "Africa/Cairo"))
+                .toISOString().slice(11, 16),
+              isAr,
+            )
+          : "";
+        const timeLine = gmtLabel
+          ? `⏰ ${formatTime12(s.start_time, isAr)} (${tz}) &nbsp;·&nbsp; ${gmtLabel} GMT`
+          : `⏰ ${formatTime12(s.start_time, isAr)} (${tz})`;
         return `<div style="background: ${BRAND_GRAY}; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; margin: 8px 0; ${isAr ? "text-align: right;" : ""}">
           <p style="margin: 0; font-weight: bold; color: ${BRAND_DARK};">📅 ${dayPart}</p>
-          <p style="margin: 4px 0 0; color: ${BRAND_MUTED}; font-size: 13px;">⏰ ${formatTime12(s.start_time, isAr)} (${tz})</p>
+          <p style="margin: 4px 0 0; color: ${BRAND_MUTED}; font-size: 13px;">${timeLine}</p>
         </div>`;
       }).join("")
     : "";
+
+  const localTimeNote = isAr
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🌍 لما تفتحي صفحة الحجز، هتلاقي كل ميعاد مكتوب <strong>بتوقيتك إنتِ</strong> تلقائيًا.</p>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🌍 When you open the booking page, every time is shown in <strong>your own local time</strong> automatically.</p>`;
 
   const meetLinkSection = p.class_link_url
     ? (isAr
@@ -946,6 +966,7 @@ function buildTrialRebookEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أهلاً ${p.name}! 👋</h1>
         <p>حصتك الكورية التجريبية المجانية <strong>جاهزة للحجز</strong>. دي المواعيد المتاحة:</p>
         ${slotCards}
+        ${localTimeNote}
         <p>كل ميعاد بيتشرح بلغة واحدة بس — لو اخترتي ميعاد <strong>إنجليزي</strong> الحصة هتبقى كلها بالإنجليزي، ولو <strong>عربي</strong> هتبقى كلها بالعربي.</p>
         <p>الأماكن محدودة بـ <strong>١٠ طالبات لكل حصة</strong>، فاحجزي بدري.</p>
         ${chooseBtn}
@@ -964,6 +985,7 @@ function buildTrialRebookEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 👋</h1>
       <p>Your free Korean trial class is <strong>ready to book</strong>. Here are the available dates:</p>
       ${slotCards}
+      ${localTimeNote}
       <p>Each slot is taught in one language only — pick an <strong>English</strong> slot and the class runs in English, an <strong>Arabic</strong> slot and it runs in Arabic.</p>
       <p>Places are limited to <strong>10 students per class</strong>, so pick your date early.</p>
       ${chooseBtn}
