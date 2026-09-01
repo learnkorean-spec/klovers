@@ -98,14 +98,20 @@ serve(async (req) => {
   const authorization = await authorizeRequest(req, "admin-or-service");
   if (!authorization.ok) return authorizationError(authorization, corsHeaders);
 
+  // Declared out here on purpose. It used to be `let payload` INSIDE the try,
+  // which is block-scoped - so in the catch below `typeof payload` was always
+  // "undefined" and the failure branch of logEmail has never once run. That is
+  // why a template throwing for every Arabic reader left no trace in
+  // email_logs: the crash and the record of the crash were both swallowed.
+  let payload: EmailPayload | undefined;
+
   try {
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    let payload: EmailPayload = {} as EmailPayload;
     payload = await req.json();
-    const { email, name, language, template } = payload;
+    const { email, name, language, template } = payload!;
 
     if (!email || !name) {
       return new Response(JSON.stringify({ error: "Missing email or name" }), {
@@ -115,13 +121,13 @@ serve(async (req) => {
     }
 
     // Validate required fields per template
-    if (template === "class_link" && (!payload.class_link_url || payload.class_link_url.trim() === "")) {
+    if (template === "class_link" && (!payload!.class_link_url || payload!.class_link_url.trim() === "")) {
       return new Response(JSON.stringify({ error: "class_link_url is required for the class_link template" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (template === "payment_method_reminder" && !payload.enrollment_id) {
+    if (template === "payment_method_reminder" && !payload!.enrollment_id) {
       return new Response(JSON.stringify({ error: "enrollment_id is required for the payment_method_reminder template" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -137,89 +143,89 @@ serve(async (req) => {
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
         break;
       case "group_match":
-        ({ subject, html } = buildGroupMatchEmail(payload));
+        ({ subject, html } = buildGroupMatchEmail(payload!));
         break;
       case "slot_confirmed":
-        ({ subject, html } = buildSlotConfirmedEmail(payload));
+        ({ subject, html } = buildSlotConfirmedEmail(payload!));
         break;
       case "approval":
-        ({ subject, html } = buildApprovalEmail(payload));
+        ({ subject, html } = buildApprovalEmail(payload!));
         break;
       case "pending_review":
-        ({ subject, html } = buildPendingReviewEmail(payload));
+        ({ subject, html } = buildPendingReviewEmail(payload!));
         break;
       case "payment_confirmed":
-        ({ subject, html } = buildPaymentConfirmedEmail(payload));
+        ({ subject, html } = buildPaymentConfirmedEmail(payload!));
         break;
       case "class_link": {
-        const classLinkResult = buildClassLinkEmail(payload);
+        const classLinkResult = buildClassLinkEmail(payload!);
         subject = classLinkResult.subject;
         html = classLinkResult.html;
         if (classLinkResult.icsAttachment) emailAttachments = [classLinkResult.icsAttachment];
         break;
       }
       case "payment_method_reminder":
-        ({ subject, html } = buildPaymentMethodReminderEmail(name, payload.enrollment_id!, language || "en"));
+        ({ subject, html } = buildPaymentMethodReminderEmail(name, payload!.enrollment_id!, language || "en"));
         break;
       case "rejection":
-        ({ subject, html } = buildRejectionEmail(payload));
+        ({ subject, html } = buildRejectionEmail(payload!));
         break;
       case "trial_confirmed": {
-        const trialResult = buildTrialConfirmedEmail(payload);
+        const trialResult = buildTrialConfirmedEmail(payload!);
         subject = trialResult.subject;
         html = trialResult.html;
         if (trialResult.icsAttachment) emailAttachments = [trialResult.icsAttachment];
         break;
       }
       case "trial_rebook_request":
-        ({ subject, html } = buildTrialRebookEmail(payload));
+        ({ subject, html } = buildTrialRebookEmail(payload!));
         break;
       case "trial_prep":
-        ({ subject, html } = buildTrialPrepEmail(payload));
+        ({ subject, html } = buildTrialPrepEmail(payload!));
         break;
       case "trial_followup_day1":
-        ({ subject, html } = buildTrialFollowupDay1Email(payload));
+        ({ subject, html } = buildTrialFollowupDay1Email(payload!));
         break;
       case "trial_followup_day3":
-        ({ subject, html } = buildTrialFollowupDay3Email(payload));
+        ({ subject, html } = buildTrialFollowupDay3Email(payload!));
         break;
       case "trial_followup_day7":
-        ({ subject, html } = buildTrialFollowupDay7Email(payload));
+        ({ subject, html } = buildTrialFollowupDay7Email(payload!));
         break;
       case "group_forming":
-        ({ subject, html } = buildGroupFormingEmail(payload));
+        ({ subject, html } = buildGroupFormingEmail(payload!));
         break;
       case "receipt_nudge":
-        ({ subject, html } = buildReceiptNudgeEmail(payload));
+        ({ subject, html } = buildReceiptNudgeEmail(payload!));
         break;
       case "group_forming_escalation":
-        ({ subject, html } = buildGroupFormingEscalationEmail(payload));
+        ({ subject, html } = buildGroupFormingEscalationEmail(payload!));
         break;
       case "rejection_followup":
-        ({ subject, html } = buildRejectionFollowupEmail(payload));
+        ({ subject, html } = buildRejectionFollowupEmail(payload!));
         break;
       case "pre_class_reminder":
-        ({ subject, html } = buildPreClassReminderEmail(payload));
+        ({ subject, html } = buildPreClassReminderEmail(payload!));
         break;
       case "class_feedback":
-        ({ subject, html } = buildClassFeedbackEmail(payload));
+        ({ subject, html } = buildClassFeedbackEmail(payload!));
         break;
       case "trial_attendance_confirmation": {
-        const attendResult = buildTrialAttendanceConfirmationEmail(payload);
+        const attendResult = buildTrialAttendanceConfirmationEmail(payload!);
         subject = attendResult.subject;
         html = attendResult.html;
         if (attendResult.icsAttachment) emailAttachments = [attendResult.icsAttachment];
         break;
       }
       case "trial_group_full":
-        ({ subject, html } = buildTrialGroupFullEmail(payload));
+        ({ subject, html } = buildTrialGroupFullEmail(payload!));
         break;
       case "trial_rollover":
-        ({ subject, html } = buildTrialRolloverEmail(payload));
+        ({ subject, html } = buildTrialRolloverEmail(payload!));
         break;
       case "enrollment":
       default:
-        ({ subject, html } = buildEnrollmentEmail(payload));
+        ({ subject, html } = buildEnrollmentEmail(payload!));
         break;
     }
 
@@ -236,7 +242,7 @@ serve(async (req) => {
     console.error("Email error:", msg);
     // best-effort log — payload may be undefined if error happened during req.json()
     try {
-      if (typeof payload !== "undefined") {
+      if (payload) {
         await logEmail({ template: payload.template || "unknown", toEmail: payload.email || "unknown", toName: payload.name, status: "failed", error: msg });
       }
     } catch { /* ignore */ }
