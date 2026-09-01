@@ -51,17 +51,17 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
   const calSection = icsAttachment
     ? `<div style="margin: 16px 0; text-align: center;">
         <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 13px;">📎 ${isAr ? "ملف التقويم (.ics) مرفق بهذا الإيميل — افتحه لإضافة الحصة لأي تطبيق تقويم (Google, Apple, Outlook)" : "A calendar file (.ics) is attached — open it to add your class to Google Calendar, Apple Calendar, or Outlook"}</p>
-        ${p.calendar_url ? `<a href="${p.calendar_url}" style="display: inline-block; background: #4285f4; color: #ffffff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;">📅 ${isAr ? "أضف إلى Google Calendar" : "Add to Google Calendar"}</a>` : ""}
+        ${p.calendar_url ? `<a href="${p.calendar_url}" style="display: inline-block; background-color: #4285f4 !important; color: #ffffff !important; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;">📅 ${isAr ? "أضف إلى Google Calendar" : "Add to Google Calendar"}</a>` : ""}
        </div>`
     : (p.calendar_url
         ? `<div style="margin: 16px 0; text-align: center;">
-            <a href="${p.calendar_url}" style="display: inline-block; background: #4285f4; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">📅 ${isAr ? "أضف إلى تقويم Google" : "Add to Google Calendar"}</a>
+            <a href="${p.calendar_url}" style="display: inline-block; background-color: #4285f4 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">📅 ${isAr ? "أضف إلى تقويم Google" : "Add to Google Calendar"}</a>
            </div>`
         : "");
 
   const joinBtn = p.class_link_url
     ? `<div style="margin: 20px 0; text-align: center;">
-        <a href="${p.class_link_url}" style="display:inline-block;background:${BRAND_BLACK};color:${BRAND_YELLOW};padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:700;font-size:16px;">🎓 ${isAr ? "انضم للحصة" : "Join the Class"}</a>
+        <a href="${p.class_link_url}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:700;font-size:16px;">🎓 ${isAr ? "انضم للحصة" : "Join the Class"}</a>
        </div>`
     : `<p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: ${isAr ? "right" : "left"};">${isAr ? "سيتم إرسال رابط الحصة إليك قبل الموعد مباشرة. تابع بريدك الإلكتروني! 📩" : "The class link will be sent to you before the session. Keep an eye on your inbox! 📩"}</p>`;
 
@@ -77,8 +77,8 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </p>
 
         <!-- Details card -->
-        <div style="background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
-          <div style="background: ${BRAND_BLACK}; padding: 10px 18px;">
+        <div style="background-color: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
+          <div style="background-color: ${BRAND_BLACK}; padding: 10px 18px;">
             <p style="margin: 0; color: ${BRAND_YELLOW}; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">📅 Class Details</p>
           </div>
           <table style="width: 100%; border-collapse: collapse;">
@@ -107,7 +107,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">👋</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">👋</span>
             </td>
             <td style="padding: 9px 0 9px 10px; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.5;">
               <strong>Introductions</strong> — meet your teacher and the rest of the group
@@ -115,7 +115,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
           </tr>
           <tr>
             <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">💬</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">💬</span>
             </td>
             <td style="padding: 9px 0 9px 10px; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.5;">
               <strong>Why Korean?</strong> — everyone shares their story and motivation
@@ -123,7 +123,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
           </tr>
           <tr>
             <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">🗺️</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">🗺️</span>
             </td>
             <td style="padding: 9px 0 9px 10px; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.5;">
               <strong>How the course works</strong> — structure, schedule, and what to expect
@@ -131,7 +131,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
           </tr>
           <tr>
             <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">📊</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">📊</span>
             </td>
             <td style="padding: 9px 0 9px 10px; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.5;">
               <strong>Korean levels explained</strong> — we'll help you find where you fit in
@@ -139,7 +139,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
           </tr>
           <tr>
             <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">🎯</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">🎯</span>
             </td>
             <td style="padding: 9px 0 9px 10px; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.5;">
               <strong>Your goals</strong> — what do you want to achieve with Korean?
@@ -147,7 +147,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
           </tr>
           <tr>
             <td style="padding: 9px 0; vertical-align: top;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">❓</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px; flex-shrink: 0;">❓</span>
             </td>
             <td style="padding: 9px 0 9px 10px; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.5;">
               <strong>Q&amp;A</strong> — ask us anything, no question is too small!
@@ -156,7 +156,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </table>
 
         <!-- Tip box -->
-        <div style="background: #fffff0; border-left: 4px solid ${BRAND_YELLOW}; border-radius: 6px; padding: 13px 16px; margin: 22px 0;">
+        <div style="background-color: #fffff0; border-left: 4px solid ${BRAND_YELLOW}; border-radius: 6px; padding: 13px 16px; margin: 22px 0;">
           <p style="margin: 0; color: ${BRAND_DARK}; font-size: 13.5px;">💡 <strong>Quick tip:</strong> Join 5 minutes early, find a quiet spot, and bring your smile — that's all you need! 🇰🇷</p>
         </div>
 
@@ -177,8 +177,8 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
       </p>
 
       <!-- Details card -->
-      <div style="background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
-        <div style="background: ${BRAND_BLACK}; padding: 10px 18px; text-align: right;">
+      <div style="background-color: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
+        <div style="background-color: ${BRAND_BLACK}; padding: 10px 18px; text-align: right;">
           <p style="margin: 0; color: ${BRAND_YELLOW}; font-size: 12px; font-weight: 700; letter-spacing: 1px;">تفاصيل الحصة 📅</p>
         </div>
         <table style="width: 100%; border-collapse: collapse; direction: rtl;">
@@ -197,7 +197,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </table>
       </div>
 
-      ${calBtn}
+      ${calSection}
       ${joinBtn}
 
       <!-- What to expect -->
@@ -207,7 +207,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
       <table style="width: 100%; border-collapse: collapse; direction: rtl;">
         <tr>
           <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top; width: 36px;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">👋</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">👋</span>
           </td>
           <td style="padding: 9px 10px 9px 0; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.6; text-align: right;">
             <strong>تعارف</strong> — هنتعرف على المدرس وعلى بعض
@@ -215,7 +215,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </tr>
         <tr>
           <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">💬</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">💬</span>
           </td>
           <td style="padding: 9px 10px 9px 0; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.6; text-align: right;">
             <strong>ليه الكورية؟</strong> — كل واحد يشارك قصته وسبب اهتمامه باللغة
@@ -223,7 +223,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </tr>
         <tr>
           <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">🗺️</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">🗺️</span>
           </td>
           <td style="padding: 9px 10px 9px 0; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.6; text-align: right;">
             <strong>إزاي الكورس بيشتغل؟</strong> — هنشرح المحتوى والجداول وكل التفاصيل
@@ -231,7 +231,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </tr>
         <tr>
           <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">📊</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">📊</span>
           </td>
           <td style="padding: 9px 10px 9px 0; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.6; text-align: right;">
             <strong>مستويات اللغة الكورية</strong> — هتعرف إنت على أي مستوى وتبدأ منين
@@ -239,7 +239,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </tr>
         <tr>
           <td style="padding: 9px 0; border-bottom: 1px solid #f5f5f5; vertical-align: top;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">🎯</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">🎯</span>
           </td>
           <td style="padding: 9px 10px 9px 0; border-bottom: 1px solid #f5f5f5; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.6; text-align: right;">
             <strong>أهدافك</strong> — عايز تحقق إيه من تعلم الكورية؟
@@ -247,7 +247,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
         </tr>
         <tr>
           <td style="padding: 9px 0; vertical-align: top;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">❓</span>
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-size: 13px;">❓</span>
           </td>
           <td style="padding: 9px 10px 9px 0; color: ${BRAND_TEXT}; font-size: 14px; line-height: 1.6; text-align: right;">
             <strong>أسئلة وأجوبة</strong> — اسأل أي حاجة، ما فيش سؤال صغير!
@@ -256,7 +256,7 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
       </table>
 
       <!-- Tip box -->
-      <div style="background: #fffff0; border-right: 4px solid ${BRAND_YELLOW}; border-radius: 6px; padding: 13px 16px; margin: 22px 0; text-align: right;">
+      <div style="background-color: #fffff0; border-right: 4px solid ${BRAND_YELLOW}; border-radius: 6px; padding: 13px 16px; margin: 22px 0; text-align: right;">
         <p style="margin: 0; color: ${BRAND_DARK}; font-size: 13.5px;">💡 <strong>نصيحة سريعة:</strong> انضم قبل الحصة بـ 5 دقايق، دور على مكان هادي، وجيب معاك ابتسامتك — ده كل اللي محتاجه! 🇰🇷</p>
       </div>
 
@@ -318,7 +318,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
           studentTz: p.student_timezone, isAr,
         });
         const timeLine = `⏰ ${ct.timeLine}`;
-        return `<div style="background: ${BRAND_GRAY}; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; margin: 8px 0; ${isAr ? "text-align: right;" : ""}">
+        return `<div style="background-color: ${BRAND_GRAY}; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; margin: 8px 0; ${isAr ? "text-align: right;" : ""}">
           <p style="margin: 0; font-weight: bold; color: ${BRAND_DARK};">📅 ${dayPart}</p>
           <p style="margin: 4px 0 0; color: ${BRAND_MUTED}; font-size: 13px;">${timeLine}</p>
         </div>`;
@@ -331,20 +331,20 @@ export function buildTrialRebookEmail(p: EmailPayload) {
 
   const meetLinkSection = p.class_link_url
     ? (isAr
-        ? `<div style="background: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
+        ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet (احفظه لو سمحت!)</p>
-            <a href="${p.class_link_url}" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">انضم للكلاس</a>
+            <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">انضم للكلاس</a>
             <p style="margin: 8px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">ملاحظة: هذا الرابط شخصي — لا تشاركه مع أحد.</p>
           </div>`
-        : `<div style="background: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
+        : `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">🎓 Your Google Meet link (save it for class day!)</p>
-            <a href="${p.class_link_url}" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Join the Class</a>
+            <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Join the Class</a>
             <p style="margin: 8px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">Note: This link is personal — please don't share it.</p>
           </div>`)
     : "";
 
   const chooseBtn = `<div style="margin: 24px 0; text-align: center;">
-    <a href="${url}" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">
+    <a href="${url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">
       ${isAr ? "اختر موعدك الآن" : "Choose My Date"}
     </a>
   </div>`;
@@ -364,7 +364,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
         <p>ولو الحصة كملت قبل ما تحجزي، هنبعتلك المواعيد اللي بعدها — <strong>مكانك محفوظ</strong> ومش محتاجة تعملي حاجة.</p>
         <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ ردي على الإيميل ده أو كلمينا على واتساب:</p>
         <div style="margin: 8px 0 4px; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
       `, true),
     };
@@ -383,7 +383,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
       <p>If a class fills up before you get there, we'll send you the next set of dates — <strong>your place on the list is kept</strong> and there's nothing you need to do.</p>
       <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp:</p>
       <div style="margin: 8px 0 4px; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
     `, false),
   };
@@ -425,19 +425,19 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
 
   const meetSection = classLink
     ? (isAr
-        ? `<div style="background: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
+        ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet الخاص بك</p>
-            <a href="${classLink}" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">انضم للكلاس</a>
+            <a href="${classLink}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">انضم للكلاس</a>
           </div>`
-        : `<div style="background: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
+        : `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">🎓 Your Google Meet link</p>
-            <a href="${classLink}" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Join the Class</a>
+            <a href="${classLink}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Join the Class</a>
           </div>`)
     : (isAr
-        ? `<div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
+        ? `<div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0; color: ${BRAND_DARK}; font-size: 14px;">🕐 سيتم إرسال رابط الحصة إليك بالبريد الإلكتروني قبل ٢٤ ساعة من الموعد</p>
           </div>`
-        : `<div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
+        : `<div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0; color: ${BRAND_DARK}; font-size: 14px;">🕐 Your class link will be sent to you 24 hours before your session</p>
           </div>`);
 
@@ -455,7 +455,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
       ].map(([icon, title, desc]) => `
         <tr>
           <td width="48" style="padding: 10px 8px; vertical-align: top; text-align: center;">
-            <span style="display: inline-block; width: 36px; height: 36px; background: ${BRAND_YELLOW}; border-radius: 50%; line-height: 36px; text-align: center; font-size: 18px;">${icon}</span>
+            <span style="display: inline-block; width: 36px; height: 36px; background-color: ${BRAND_YELLOW}; border-radius: 50%; line-height: 36px; text-align: center; font-size: 18px;">${icon}</span>
           </td>
           <td style="padding: 10px 8px; vertical-align: top;">
             <strong style="color: ${BRAND_DARK};">${title}</strong>
@@ -463,7 +463,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
           </td>
         </tr>`).join("")}
     </table>
-    <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0;">
+    <div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0;">
       <p style="margin: 0; color: ${BRAND_DARK}; font-size: 14px;">💡 <strong>نصيحة سريعة:</strong> انضم قبل ٥ دقائق، اختر مكاناً هادئاً، وابتسم 😊</p>
     </div>`;
 
@@ -481,7 +481,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
       ].map(([icon, title, desc]) => `
         <tr>
           <td width="48" style="padding: 10px 8px; vertical-align: top; text-align: center;">
-            <span style="display: inline-block; width: 36px; height: 36px; background: ${BRAND_YELLOW}; border-radius: 50%; line-height: 36px; text-align: center; font-size: 18px;">${icon}</span>
+            <span style="display: inline-block; width: 36px; height: 36px; background-color: ${BRAND_YELLOW}; border-radius: 50%; line-height: 36px; text-align: center; font-size: 18px;">${icon}</span>
           </td>
           <td style="padding: 10px 8px; vertical-align: top;">
             <strong style="color: ${BRAND_DARK};">${title}</strong>
@@ -489,7 +489,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
           </td>
         </tr>`).join("")}
     </table>
-    <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0;">
+    <div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0;">
       <p style="margin: 0; color: ${BRAND_DARK}; font-size: 14px;">💡 <strong>Quick tip:</strong> Join 5 minutes early, find a quiet spot, and bring your smile 😊</p>
     </div>`;
 
@@ -505,7 +505,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
           ["🌍 التوقيت", tzDisplay],
         ])}
         <div style="margin: 24px 0; text-align: center;">
-          <a href="${confirmUrl}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ أكّد حضوري</a>
+          <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ أكّد حضوري</a>
         </div>
         ${meetSection}
         ${breakdownAr}
@@ -513,10 +513,10 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
           <p style="color: ${BRAND_DARK}; font-weight: bold; font-size: 15px; margin: 0 0 16px;">استعد للحصة — ابدأ بهذين الخطوتين</p>
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td style="padding: 0 8px 0 0; text-align: center;">
-              <a href="${SITE_URL}/placement-test" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">🎯 اختبر مستواك</a>
+              <a href="${SITE_URL}/placement-test" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">🎯 اختبر مستواك</a>
             </td>
             <td style="padding: 0 0 0 8px; text-align: center;">
-              <a href="${SITE_URL}/pricing" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">💰 شوف الأسعار</a>
+              <a href="${SITE_URL}/pricing" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">💰 شوف الأسعار</a>
             </td>
           </tr></table>
         </div>
@@ -537,7 +537,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         ["🌍 Timezone", tzDisplay],
       ])}
       <div style="margin: 24px 0; text-align: center;">
-        <a href="${confirmUrl}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ Confirm My Attendance</a>
+        <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ Confirm My Attendance</a>
       </div>
       ${meetSection}
       ${breakdownEn}
@@ -545,10 +545,10 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         <p style="color: ${BRAND_DARK}; font-weight: bold; font-size: 15px; margin: 0 0 16px;">Get ready — start with these two steps</p>
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
           <td style="padding: 0 8px 0 0; text-align: center;">
-            <a href="${SITE_URL}/placement-test" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">🎯 Take the Placement Test</a>
+            <a href="${SITE_URL}/placement-test" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">🎯 Take the Placement Test</a>
           </td>
           <td style="padding: 0 0 0 8px; text-align: center;">
-            <a href="${SITE_URL}/pricing" style="display: inline-block; background: ${BRAND_BLACK}; color: ${BRAND_YELLOW}; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">💰 See Class Prices</a>
+            <a href="${SITE_URL}/pricing" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK}; width: 100%; box-sizing: border-box;">💰 See Class Prices</a>
           </td>
         </tr></table>
       </div>
@@ -578,7 +578,7 @@ export function buildTrialGroupFullEmail(p: EmailPayload) {
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 🎉</h1>
         <p>خبر حلو — مجموعة حصتك التجريبية (${isArabicClass ? "عربي" : "إنجليزي"}) اكتملت بـ ${count} طلاب مؤكدين!</p>
-        <div style="background: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;">
+        <div style="background-color: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;">
           <p style="margin: 0; font-size: 16px; font-weight: bold;">📅 ${dayDate}</p>
           <p style="margin: 4px 0 0;">🕒 ${ct.timeLine}</p>
         </div>
@@ -592,7 +592,7 @@ export function buildTrialGroupFullEmail(p: EmailPayload) {
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 🎉</h1>
       <p>Great news — your ${isArabicClass ? "Arabic" : "English"} trial class group is now full with ${count} confirmed students!</p>
-      <div style="background: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;">
+      <div style="background-color: ${BRAND_GRAY}; padding: 12px 16px; border-radius: 6px; margin: 12px 0; text-align: center;">
         <p style="margin: 0; font-size: 16px; font-weight: bold;">📅 ${dayDate}</p>
         <p style="margin: 4px 0 0;">🕒 ${ct.timeLine}</p>
       </div>
@@ -627,7 +627,7 @@ export function buildTrialRolloverEmail(p: EmailPayload) {
         <p>ولو المجموعة ما اكتملتش تاني، هنبعتلك إيميل جديد بالمواعيد اللي بعدها — مكانك محفوظ، ومش محتاج تعمل أي حاجة عشان تحتفظ بيه.</p>
         <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ رد على الإيميل ده أو كلمنا على واتساب:</p>
         <div style="margin: 8px 0 4px; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
       `, true),
@@ -646,7 +646,7 @@ export function buildTrialRolloverEmail(p: EmailPayload) {
       <p>If this group still doesn't fill up, we'll email you again with the next available dates — you won't lose your place, and you don't need to do anything to keep it.</p>
       <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp:</p>
       <div style="margin: 8px 0 4px; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
       ${unsubscribeFooter(p.unsubscribe_token, false)}
     `, false),
@@ -665,7 +665,7 @@ export function buildTrialPrepEmail(p: EmailPayload) {
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 👋</h1>
         <p>حصتك التجريبية المجانية <strong>غداً</strong>. إليك كيف تستفيد منها للأقصى:</p>
-        <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+        <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
           <p style="margin: 0 0 8px; font-weight: bold;">✅ اختبر مستواك قبل الحصة (دقيقتان)</p>
           <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 13px;">هنطابقك مع المعلم المناسب من أول دقيقة. مجاني وبدون تسجيل.</p>
         </div>
@@ -688,7 +688,7 @@ export function buildTrialPrepEmail(p: EmailPayload) {
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 👋</h1>
       <p>Your free trial class is <strong>tomorrow</strong>. Here's how to get the most out of it:</p>
-      <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+      <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
         <p style="margin: 0 0 8px; font-weight: bold;">✅ Find your level before class (2 min)</p>
         <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 13px;">So your teacher is ready for you from minute one. Free, no sign-up.</p>
       </div>
@@ -717,7 +717,7 @@ export function buildTrialFollowupDay1Email(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 🌱</h1>
         <p>ازاي كانت حصتك التجريبية أمس؟ نتمنى تكون حبيتها.</p>
         <p>لو جاهز تكمل رحلة الكورية، شوف خططنا — فيه <strong>حصص جماعية تبدأ من 25$</strong> وحصص خاصة لو بتفضّل الاهتمام الشخصي.</p>
-        <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+        <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
           <p style="margin: 0 0 8px; font-weight: bold;">✨ ليه يسجّل الطلاب معانا:</p>
           <ul style="margin: 6px 0 0; padding-right: 20px; color: ${BRAND_TEXT}; line-height: 1.7;">
             <li>مجموعات صغيرة (4–8 طلاب)</li>
@@ -739,7 +739,7 @@ export function buildTrialFollowupDay1Email(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 🌱</h1>
       <p>How was your trial class yesterday? We hope you loved it.</p>
       <p>If you're ready to keep going, here are our plans — <strong>group classes from just $25</strong> and private 1-on-1 if you want dedicated attention.</p>
-      <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+      <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
         <p style="margin: 0 0 8px; font-weight: bold;">✨ Why students stay with us:</p>
         <ul style="margin: 6px 0 0; padding-left: 20px; color: ${BRAND_TEXT}; line-height: 1.7;">
           <li>Small groups (4–8 students)</li>
@@ -768,7 +768,7 @@ export function buildTrialFollowupDay3Email(p: EmailPayload) {
         <p>مرّت كام يوم على حصتك التجريبية — أحياناً اختيار الخطة المناسبة بياخد وقت.</p>
         <p>لو عندك أي سؤال عن الأسعار أو المجموعات أو الجدول، <strong>كلمنا على واتساب</strong> وهنساعدك في دقايق.</p>
         <div style="margin: 20px 0; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 كلمنا على واتساب</a>
+          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 كلمنا على واتساب</a>
         </div>
         <p style="text-align: center; color: ${BRAND_MUTED}; font-size: 13px;">أو <a href="${pricingUrl}" style="color: ${BRAND_DARK};">شوف الخطط بنفسك</a></p>
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
@@ -784,7 +784,7 @@ export function buildTrialFollowupDay3Email(p: EmailPayload) {
       <p>It's been a few days since your trial — picking the right plan can take some thought.</p>
       <p>If you've got any question on pricing, groups, or schedule, <strong>message us on WhatsApp</strong> and we'll sort it out in minutes.</p>
       <div style="margin: 20px 0; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 Chat on WhatsApp</a>
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 Chat on WhatsApp</a>
       </div>
       <p style="text-align: center; color: ${BRAND_MUTED}; font-size: 13px;">Or <a href="${pricingUrl}" style="color: ${BRAND_DARK};">browse the plans yourself</a></p>
       <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
@@ -807,7 +807,7 @@ export function buildTrialFollowupDay7Email(p: EmailPayload) {
         <div style="margin: 20px 0; text-align: center;">
           ${brandButton("شوف الخطط", pricingUrl)}
         </div>
-        <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+        <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
           <p style="margin: 0 0 8px; font-weight: bold;">🎁 اعرف صحابك على KLovers</p>
           <p style="margin: 0; color: ${BRAND_TEXT}; font-size: 13px;">شارك رابط الحصة التجريبية المجانية مع أي حد حابب يتعلم كورية:</p>
           <p style="margin: 8px 0 0; font-size: 13px;"><a href="${referralUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">${referralUrl}</a></p>
@@ -825,7 +825,7 @@ export function buildTrialFollowupDay7Email(p: EmailPayload) {
       <div style="margin: 20px 0; text-align: center;">
         ${brandButton("See the plans", pricingUrl)}
       </div>
-      <div style="background: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
+      <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
         <p style="margin: 0 0 8px; font-weight: bold;">🎁 Know someone learning Korean?</p>
         <p style="margin: 0; color: ${BRAND_TEXT}; font-size: 13px;">Share your free trial link with a friend:</p>
         <p style="margin: 8px 0 0; font-size: 13px;"><a href="${referralUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">${referralUrl}</a></p>
