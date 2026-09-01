@@ -159,11 +159,12 @@ wants to say who did what — not just that something happened.
 **Ordering, explicit:** this item sits ahead of building the audit log
 itself in Re's priority list. Not attempted in this entry.
 
-**Update — fix ready, not yet merged:** PR #167 removes the hardcoded
-`admin@klovers.com` check from `src/pages/AdminLogin.tsx`, leaving the
-`user_roles` check that already existed (and already failed closed) as the
-only gate. Open, CI pending, not merged — this entry stays OPEN until Re
-merges it and confirms her own login works live.
+**Update — merged 2026-09-01, pending live confirmation:** PR #167 removed
+the hardcoded `admin@klovers.com` check from `src/pages/AdminLogin.tsx`,
+leaving the `user_roles` check that already existed (and already failed
+closed) as the only gate. Merged by `learnkorean-spec` at 2026-09-01
+02:54:28 UTC. This entry stays OPEN until Re confirms her own login works
+live on `kloversegy.com` — merged code is not the same as a confirmed fix.
 
 ## 2026-08-31 — `teacher_availability`'s admin RLS style (LOW PRIORITY — normalize later)
 
