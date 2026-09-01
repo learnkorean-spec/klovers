@@ -1174,9 +1174,11 @@ function buildTrialRolloverEmail(p: EmailPayload) {
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}!</h1>
         <p>حصتك التجريبية${prevDate ? ` يوم ${prevDate}` : ""} ما اتقيّمتش لأن مجموعتك ما وصلتش لعدد الطلاب المطلوب — مش لسبب راجع لك، وحصتك <strong>مش ضايعة</strong>.</p>
         <p>دلوقتي فيه مواعيد جديدة متاحة، واحنا محتفظين بحجزك. اختار الميعاد اللي يناسبك:</p>
+        <p>كل ميعاد بيتشرح بلغة واحدة بس. لو اخترت ميعاد <strong>إنجليزي</strong>، الحصة هتبقى كلها بالإنجليزي. ولو اخترت ميعاد <strong>عربي</strong>، الحصة هتبقى كلها بالعربي.</p>
         <div style="margin: 20px 0; text-align: center;">
           ${brandButton("اختار ميعاد جديد", bookingUrl)}
         </div>
+        <p>ولو المجموعة ما اكتملتش تاني، هنبعتلك إيميل جديد بالمواعيد اللي بعدها — مكانك محفوظ، ومش محتاج تعمل أي حاجة عشان تحتفظ بيه.</p>
         <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ رد على الإيميل ده أو راسلنا واتساب.</p>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
       `, true),
@@ -1188,9 +1190,11 @@ function buildTrialRolloverEmail(p: EmailPayload) {
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}!</h1>
       <p>Your trial class${prevDate ? ` on ${prevDate}` : ""} didn't run because that group didn't reach the number of students we need to hold it — this wasn't anything on your end, and your trial spot <strong>hasn't been used up</strong>.</p>
       <p>New trial dates are available now, and we've kept your booking on file. Pick whichever works for you:</p>
+      <p>Each slot is taught in one language only. If you pick an <strong>English</strong> slot, the whole class is in English. If you pick an <strong>Arabic</strong> slot, the whole class is in Arabic.</p>
       <div style="margin: 20px 0; text-align: center;">
         ${brandButton("Pick a new date", bookingUrl)}
       </div>
+      <p>If this group still doesn't fill up, we'll email you again with the next available dates — you won't lose your place, and you don't need to do anything to keep it.</p>
       <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp.</p>
       ${unsubscribeFooter(p.unsubscribe_token, false)}
     `, false),
