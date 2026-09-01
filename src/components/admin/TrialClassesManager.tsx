@@ -405,7 +405,14 @@ const TrialClassesManager = () => {
           template: "trial_rebook_request",
           email: booking.email,
           name: booking.name || booking.email,
-          language: "en",
+          // Was hardcoded "en" while bookingLang sat computed and unused, so
+          // Arabic-track students got the English template - and the confirm
+          // dialog told the admin otherwise.
+          language: bookingLang,
+          // The student's own zone, so the email states each slot in their
+          // time. Null for bookings made before that capture shipped; the
+          // template then falls back to the slot time plus GMT.
+          student_timezone: (booking as any).student_timezone ?? null,
           rebook_url: `${window.location.origin}/trial-booking`,
           class_link_url: meetingUrl,
           available_slots: langSlots.map((s) => ({
@@ -469,7 +476,8 @@ const TrialClassesManager = () => {
             template: "trial_rebook_request",
             email: b.email,
             name: b.name || b.email,
-            language: "en",
+            language: bLang,
+            student_timezone: (b as any).student_timezone ?? null,
             rebook_url: `${window.location.origin}/trial-booking`,
             class_link_url: bulkMeetingUrl,
             available_slots: bSlots,
