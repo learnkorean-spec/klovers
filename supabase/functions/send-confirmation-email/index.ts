@@ -1166,6 +1166,7 @@ function buildTrialRolloverEmail(p: EmailPayload) {
   const isAr = p.language === "ar";
   const bookingUrl = p.booking_url || `${SITE_URL}/trial-booking`;
   const prevDate = p.previous_trial_date || "";
+  const waUrl = "https://wa.me/201010003084";
 
   if (isAr) {
     return {
@@ -1179,7 +1180,10 @@ function buildTrialRolloverEmail(p: EmailPayload) {
           ${brandButton("اختار ميعاد جديد", bookingUrl)}
         </div>
         <p>ولو المجموعة ما اكتملتش تاني، هنبعتلك إيميل جديد بالمواعيد اللي بعدها — مكانك محفوظ، ومش محتاج تعمل أي حاجة عشان تحتفظ بيه.</p>
-        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ رد على الإيميل ده أو راسلنا واتساب.</p>
+        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ رد على الإيميل ده أو كلمنا على واتساب:</p>
+        <div style="margin: 8px 0 4px; text-align: center;">
+          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+        </div>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
       `, true),
     };
@@ -1195,7 +1199,10 @@ function buildTrialRolloverEmail(p: EmailPayload) {
         ${brandButton("Pick a new date", bookingUrl)}
       </div>
       <p>If this group still doesn't fill up, we'll email you again with the next available dates — you won't lose your place, and you don't need to do anything to keep it.</p>
-      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp.</p>
+      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp:</p>
+      <div style="margin: 8px 0 4px; text-align: center;">
+        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+      </div>
       ${unsubscribeFooter(p.unsubscribe_token, false)}
     `, false),
   };
