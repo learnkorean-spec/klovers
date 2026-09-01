@@ -881,8 +881,13 @@ function buildTrialConfirmedEmail(p: EmailPayload) {
 }
 
 function buildTrialRebookEmail(p: EmailPayload) {
-  const isAr = false; // always send in English
+  // Was hardcoded `false`, which sent Arabic-track students an English email
+  // while the fully-written Arabic branch below sat unreachable. The slot
+  // cards already localise day names and 12-hour times via dayNamesAr /
+  // formatTime12(t, ar), so honouring p.language turns all of that on.
+  const isAr = p.language === "ar";
   const url = p.rebook_url || `${SITE_URL}/free-trial`;
+  const waUrl = "https://wa.me/201010003084";
 
   const dayNamesEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayNamesAr = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -936,26 +941,38 @@ function buildTrialRebookEmail(p: EmailPayload) {
 
   if (isAr) {
     return {
-      subject: "اختر موعد حصتك التجريبية في Klovers 🎉",
+      subject: "KLovers — حصتك التجريبية المجانية جاهزة للحجز 🎉",
       html: brandWrapper(`
-        <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 👋</h1>
-        <p>مواعيد جديدة متاحة الآن — اختر الموعد الذي يناسبك:</p>
+        <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أهلاً ${p.name}! 👋</h1>
+        <p>حصتك الكورية التجريبية المجانية <strong>جاهزة للحجز</strong>. دي المواعيد المتاحة:</p>
         ${slotCards}
+        <p>كل ميعاد بيتشرح بلغة واحدة بس — لو اخترتي ميعاد <strong>إنجليزي</strong> الحصة هتبقى كلها بالإنجليزي، ولو <strong>عربي</strong> هتبقى كلها بالعربي.</p>
+        <p>الأماكن محدودة بـ <strong>١٠ طالبات لكل حصة</strong>، فاحجزي بدري.</p>
         ${chooseBtn}
         ${meetLinkSection}
-        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">إذا واجهت أي مشكلة، راسلنا على واتساب أو رد على هذا الإيميل.</p>
+        <p>ولو الحصة كملت قبل ما تحجزي، هنبعتلك المواعيد اللي بعدها — <strong>مكانك محفوظ</strong> ومش محتاجة تعملي حاجة.</p>
+        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ ردي على الإيميل ده أو كلمينا على واتساب:</p>
+        <div style="margin: 8px 0 4px; text-align: center;">
+          <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
+        </div>
       `, true),
     };
   }
   return {
-    subject: "Choose your new trial class date at Klovers 🎉",
+    subject: "KLovers — your free trial is ready to book 🎉",
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 👋</h1>
-      <p>New trial dates are now available — choose one that works for you.</p>
+      <p>Your free Korean trial class is <strong>ready to book</strong>. Here are the available dates:</p>
       ${slotCards}
+      <p>Each slot is taught in one language only — pick an <strong>English</strong> slot and the class runs in English, an <strong>Arabic</strong> slot and it runs in Arabic.</p>
+      <p>Places are limited to <strong>10 students per class</strong>, so pick your date early.</p>
       ${chooseBtn}
       ${meetLinkSection}
-      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any trouble? Just reply to this email or message us on WhatsApp.</p>
+      <p>If a class fills up before you get there, we'll send you the next set of dates — <strong>your place on the list is kept</strong> and there's nothing you need to do.</p>
+      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp:</p>
+      <div style="margin: 8px 0 4px; text-align: center;">
+        <a href="${waUrl}" style="display: inline-block; background: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+      </div>
     `, false),
   };
 }
