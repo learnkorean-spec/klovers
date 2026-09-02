@@ -251,16 +251,19 @@ export const normalizeLevel = (label: string): string => {
 // ---------------------------------------------------------------------------
 
 /**
- * Map a canonical key → friendly short label (e.g. "l1" → "Level 1", or
- * "المستوى الأول" when the page is Arabic). Falls back to the raw value for
- * anything unrecognised, so legacy strings still render readably.
+ * Map a canonical key → friendly short label (e.g. "l1" → "Level 1"). Falls
+ * back to the raw value for anything unrecognised, so legacy strings still
+ * render readably during the transition.
  *
- * Pass `language` where you have it; without it the label follows the UI
- * language, which is what every existing caller wants.
+ * ENGLISH BY DEFAULT, on purpose. Not every caller is UI: `scheduleSlotEngine`
+ * builds class names from this and `marketingEngine` builds captions, and both
+ * produce strings that get stored or sent onward. Those must not change
+ * language because whoever is logged in happens to have the site in Arabic.
+ * Pass the language explicitly where the output is read on screen.
  */
 export const getLevelShortLabel = (
   key: string | null | undefined,
-  language: UiLanguage = uiLanguage(),
+  language: UiLanguage = "en",
 ): string => {
   if (!key) return "";
   const lvl = getLevelByKey(key) ?? mapLegacyLevel(key);
