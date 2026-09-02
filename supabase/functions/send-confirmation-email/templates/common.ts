@@ -72,16 +72,14 @@ export const BRAND_TEXT = "#333333";
 export const BRAND_MUTED = "#666666";
 
 /**
- * The mark in the email header.
+ * Kept for other functions that still reference it (send-class-reminders,
+ * send-name-collection-email, abandoned-checkout-recovery each hold their own
+ * copy of this constant and their own header).
  *
- * NOTE ON RESOLUTION. This file is 41,004 bytes — byte for byte the size of
- * favicon.ico, which is to say the favicon is doing duty as the logo. At the
- * header size that is roughly 120 device pixels on a phone, and it looks it.
- *
- * A small bitmap cannot be enlarged into a large sharp one, so the header
- * below is built so the WORDMARK carries the composition and the image plays a
- * supporting part at a size it can hold. Replace this file with a PNG of at
- * least 256×256 (512 is better) and the header sharpens with no code change.
+ * `brandWrapper` below no longer uses it. The file it points at is 41,004
+ * bytes — byte for byte the size of favicon.ico, i.e. the favicon doing duty
+ * as a logo — and a small bitmap cannot be enlarged into a large sharp one.
+ * The mark is drawn now instead. See `brandMark`.
  */
 export const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
 export const SITE_URL = "https://kloversegy.com";
@@ -121,20 +119,43 @@ export function unsubscribeFooter(token: string | undefined, isAr: boolean): str
 }
 
 /**
+ * The Klovers mark, DRAWN rather than loaded.
+ *
+ * The logo is a yellow disc with a black K on it. That is two HTML elements,
+ * and drawing it beats fetching a JPEG on every count that matters in email:
+ *
+ *  • Sharp at any pixel density. There is no source resolution to outgrow, and
+ *    nothing to re-export if the header size ever changes.
+ *  • Survives image blocking. Outlook blocks remote images by default and
+ *    Gmail's promotions tab frequently does — for those readers the mark was
+ *    simply absent. Now it is always there.
+ *  • Costs no bytes and no round trip.
+ *
+ * A table, not a div, because Outlook renders through Word: it sizes a cell
+ * from the width/height ATTRIBUTES, and ignores border-radius entirely. There
+ * the disc becomes a yellow square with a black K — still the brand, still
+ * legible, which is more than a broken-image icon managed.
+ */
+export function brandMark(size = 64): string {
+  const font = Math.round(size * 0.58);
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
+    <tr>
+      <td width="${size}" height="${size}" align="center" valign="middle" style="width: ${size}px; height: ${size}px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-family: Arial, Helvetica, sans-serif; font-size: ${font}px; font-weight: bold; line-height: ${size}px; color: ${BRAND_BLACK}; text-align: center;">K</td>
+    </tr>
+  </table>`;
+}
+
+/**
  * The frame every email is rendered inside.
  *
  * Design notes, because email is not the web:
- *  • The wordmark leads. Type is resolution-independent and renders crisply in
- *    every client; a bitmap logo at 60px does not. See LOGO_URL above.
- *  • width/height attributes sit on the <img> as well as in the style, because
- *    Outlook and several mobile clients reserve space from the attributes and
- *    will otherwise reflow the header as the image loads.
- *  • The header is black behind the image, so an image blocked by the client —
- *    which is the default in Outlook and Gmail's promotions tab — leaves the
- *    wordmark on black rather than a white hole with a broken-image icon.
- *  • Everything is inline styles and simple divs. No flexbox, no CSS grid, no
- *    <style> block: Outlook's rendering engine is Word, and it supports none
+ *  • The mark is drawn (see brandMark) and the wordmark is type. Nothing in
+ *    this header depends on an image loading.
+ *  • Everything is inline styles and simple elements. No flexbox, no CSS grid,
+ *    no <style> block: Outlook's rendering engine is Word and supports none
  *    of them.
+ *  • The header is black, so a client that strips backgrounds still leaves
+ *    yellow type on white rather than yellow on yellow.
  */
 export function brandWrapper(content: string, isRtl: boolean) {
   const dir = isRtl ? 'direction: rtl; text-align: right;' : '';
@@ -142,9 +163,9 @@ export function brandWrapper(content: string, isRtl: boolean) {
   <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 14px; overflow: hidden;">
     <!-- Header -->
     <div style="background-color: ${BRAND_BLACK}; padding: 30px 24px 26px; text-align: center;">
-      <img src="${LOGO_URL}" alt="" width="56" height="56" style="display: inline-block; width: 56px; height: 56px; border-radius: 50%; border: 2px solid ${BRAND_YELLOW}; object-fit: cover;" />
-      <div translate="no" class="notranslate" style="margin: 14px 0 0;">
-        <span style="color: ${BRAND_YELLOW}; font-size: 26px; font-weight: 700; letter-spacing: 6px; line-height: 1;">KLOVERS</span>
+      ${brandMark(64)}
+      <div translate="no" class="notranslate" style="margin: 16px 0 0;">
+        <span style="color: ${BRAND_YELLOW}; font-size: 26px; font-weight: 700; letter-spacing: 5px; line-height: 1;">KLOVERS</span>
       </div>
       <div style="width: 40px; height: 2px; background-color: ${BRAND_YELLOW}; margin: 12px auto 0; opacity: 0.55; font-size: 0; line-height: 0;">&nbsp;</div>
       <p style="color: #b8b8b8; margin: 12px 0 0; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">Korean Language Academy</p>
