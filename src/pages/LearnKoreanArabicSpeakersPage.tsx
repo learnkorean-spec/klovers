@@ -17,7 +17,17 @@ const LearnKoreanArabicSpeakersPage = () => {
   });
 
   useEffect(() => {
-    // JSON-LD: FAQPage Schema for featured snippets
+    /**
+     * These answers are what Google quotes back as a featured snippet, so they
+     * are the most-repeated sentences on the site and the least edited.
+     *
+     * Two of them described KLOVERS' OWN curriculum in CEFR bands — "A1-A2 =
+     * 3-4 months, B1-B2 = 6-8 months, C1 = 12-15 months" — which names our
+     * courses by a scale we do not teach in and attaches a duration nobody can
+     * promise. They now use the Klovers ladder, say what a level prepares you
+     * for rather than what it equals, and admit that pace depends on the work
+     * a student does between classes.
+     */
     const faqSchema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -27,7 +37,7 @@ const LearnKoreanArabicSpeakersPage = () => {
           name: "Is Korean hard for Arabic speakers?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Korean is actually easier for Arabic speakers than for English speakers. Korean grammar is agglutinative (like Arabic), uses formal/informal speech levels (like Arabic), and Hangul is a phonetic alphabet designed for non-native speakers. Most Arabic speakers reach intermediate (B1) level in 6-8 months vs 12+ months for English speakers."
+            text: "Korean is often easier for Arabic speakers than for English speakers. Korean grammar is agglutinative (like Arabic), it uses formal and informal speech levels (like Arabic), and Hangul is a phonetic alphabet designed to be learned quickly. Arabic speakers tend to move through the early stages faster as a result."
           }
         },
         {
@@ -43,7 +53,7 @@ const LearnKoreanArabicSpeakersPage = () => {
           name: "How long does it take Arabic speakers to learn Korean?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Following Klovers' structured curriculum: A1-A2 (beginner) = 3-4 months, B1-B2 (intermediate) = 6-8 months total, C1 (advanced) = 12-15 months. Compared to English speakers who need 12-24 months for similar levels."
+            text: "It depends on how much you practise between classes, so treat any figure as a rough guide. At Klovers the alphabet is a four-class Hangul course. After that, Level 1 and Level 2 cover the beginner ground and prepare you toward TOPIK 1 and TOPIK 2; students on two classes a week typically spend a few months on each. Levels 3 to 6 take longer, because the material per level grows. A Klovers level prepares you for a TOPIK band — it does not certify one."
           }
         },
         {
@@ -71,7 +81,7 @@ const LearnKoreanArabicSpeakersPage = () => {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: "Learn Korean as an Arabic Speaker: Difficulty Guide & Study Methods",
-      description: "Why Korean is easier for Arabic speakers and proven methods to accelerate learning from A1 to B2 level",
+      description: "Why Korean is easier for Arabic speakers, and study methods that work from the Hangul alphabet through the intermediate levels",
       image: "https://kloversegy.com/klovers-logo.jpg",
       author: { "@type": "Organization", name: "Klovers" },
       datePublished: "2026-04-08",

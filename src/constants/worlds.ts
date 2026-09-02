@@ -1,5 +1,20 @@
 // Korean Learning Worlds - Duolingo-style progression structure
 // TOPIK 1 (Worlds 1-7, Lessons 1-75) + TOPIK 2 (Worlds 8-13, Lessons 76-120)
+//
+// ── `topikLevel` is NOT a course level ────────────────────────────────────
+//
+// It groups TEXTBOOK LESSONS by the exam band whose material they cover. That
+// is a different axis from the course ladder in `constants/levels.ts`, where
+// Hangul sits BEFORE TOPIK 1 with `topik: null`.
+//
+// So "Hangul Village" carrying `topikLevel: 1` is not the alphabet claiming a
+// TOPIK band — it is the first ten lessons of the TOPIK 1 book. If the two are
+// ever merged, `levels.ts` is the source of truth for what a student is
+// enrolled in; this file is the source of truth for where a lesson sits in the
+// textbook.
+//
+// Descriptions here are shown on world cards, so they follow the same rule as
+// the rest of the site: no "(TOPIK n/Xn)" equations.
 export interface World {
   id: number;
   key: string;
@@ -11,6 +26,7 @@ export interface World {
   descriptionAr: string;
   color: string;
   lessonRange: [number, number]; // [startSortOrder, endSortOrder]
+  /** Which TOPIK band's MATERIAL these lessons cover. Not the student's course level. */
   topikLevel: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
@@ -188,7 +204,7 @@ export const WORLDS: World[] = [
     topikLevel: 2,
   },
 
-  // ===== TOPIK 3 / B1 — Intermediate-High =====
+  // ===== TOPIK 3 material — Intermediate-High =====
   {
     id: 14,
     key: "real_life_stage",
@@ -196,14 +212,14 @@ export const WORLDS: World[] = [
     nameAr: "مسرح الحياة الواقعية",
     emoji: "🎭",
     icon: "🌍",
-    description: "Handle complex real-life topics, debates & formal registers (TOPIK 3/B1)",
-    descriptionAr: "التعامل مع مواضيع الحياة المعقدة والنقاشات والأساليب الرسمية (TOPIK 3/B1)",
+    description: "Handle complex real-life topics, debates & formal registers",
+    descriptionAr: "التعامل مع مواضيع الحياة المعقدة والنقاشات والأساليب الرسمية",
     color: "#D7F7F7",
     lessonRange: [121, 140],
     topikLevel: 3,
   },
 
-  // ===== TOPIK 4 / B2 — Upper-Intermediate =====
+  // ===== TOPIK 4 material — Upper-Intermediate =====
   {
     id: 15,
     key: "professional_plaza",
@@ -211,14 +227,14 @@ export const WORLDS: World[] = [
     nameAr: "ساحة المحترفين",
     emoji: "💼",
     icon: "🏢",
-    description: "Business Korean, presentations, negotiations & professional writing (TOPIK 4/B2)",
-    descriptionAr: "الكورية في الأعمال والعروض والتفاوض والكتابة المهنية (TOPIK 4/B2)",
+    description: "Business Korean, presentations, negotiations & professional writing",
+    descriptionAr: "الكورية في الأعمال والعروض والتفاوض والكتابة المهنية",
     color: "#D6E8FF",
     lessonRange: [141, 158],
     topikLevel: 4,
   },
 
-  // ===== TOPIK 5 / C1 — Advanced =====
+  // ===== TOPIK 5 material — Advanced =====
   {
     id: 16,
     key: "academic_heights",
@@ -226,14 +242,14 @@ export const WORLDS: World[] = [
     nameAr: "قمم الأكاديميا",
     emoji: "🎓",
     icon: "📚",
-    description: "Academic discourse, literary analysis & advanced nuance (TOPIK 5/C1)",
-    descriptionAr: "الخطاب الأكاديمي والتحليل الأدبي والدقة المتقدمة (TOPIK 5/C1)",
+    description: "Academic discourse, literary analysis & advanced nuance",
+    descriptionAr: "الخطاب الأكاديمي والتحليل الأدبي والدقة المتقدمة",
     color: "#EFE6FF",
     lessonRange: [159, 172],
     topikLevel: 5,
   },
 
-  // ===== TOPIK 6 / C2 — Near-Native Mastery =====
+  // ===== TOPIK 6 material — Near-Native Mastery =====
   {
     id: 17,
     key: "master_hall",
@@ -241,8 +257,8 @@ export const WORLDS: World[] = [
     nameAr: "قاعة الأساتذة",
     emoji: "🌟",
     icon: "🏆",
-    description: "Near-native mastery — idioms, classical styles & professional broadcasting (TOPIK 6/C2)",
-    descriptionAr: "إتقان شبه أصلي — اصطلاحات وأساليب كلاسيكية وبث مهني (TOPIK 6/C2)",
+    description: "Near-native mastery — idioms, classical styles & professional broadcasting",
+    descriptionAr: "إتقان شبه أصلي — اصطلاحات وأساليب كلاسيكية وبث مهني",
     color: "#DFFFE6",
     lessonRange: [173, 180],
     topikLevel: 6,
