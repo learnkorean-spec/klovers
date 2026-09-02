@@ -5,10 +5,28 @@
  *   hangul, l1, l2, l3, l4, l5, l6
  *
  * These short keys are what the database stores and what every API write must
- * send. UI rendering uses `shortLabel` (e.g. "Hangul (A0)") via `LEVEL_SELECT_OPTIONS`.
+ * send. UI rendering uses `shortLabel` (e.g. "Hangul") via `LEVEL_SELECT_OPTIONS`.
  *
  * Legacy values (`foundation`, `level_1`…`level_6`, `beginner_1`, `intermediate_2`
  * etc.) are supported READ-SIDE only via `mapLegacyLevel()` — never emit them on write.
+ *
+ * ── On the standards these map to ──────────────────────────────────────────
+ *
+ * TOPIK 1-6 maps to CEFR A1-C2 in the commonly published tables, and that is
+ * what `cefr` carries. Two caveats worth keeping in mind before any of this is
+ * put in front of a student:
+ *
+ *   • The TOPIK 6 = C2 equivalence is contested. Several studies place the
+ *     top TOPIK band nearer C1. Lead with TOPIK; treat CEFR as approximate.
+ *
+ *   • A level is a body of material, not a certificate. Korean university
+ *     institutes budget roughly 200 hours per level (Yonsei: 200 hours per
+ *     10-week term). A 90-minute class twice a week for three months is about
+ *     36 hours. So a Klovers level PREPARES a student toward a TOPIK band —
+ *     it does not certify one, and the descriptions below say so.
+ *
+ * Hangul sits before the ladder (`topik: null`) and is deliberately optional:
+ * a student who can already read goes straight to Level 1.
  */
 
 export interface Level {
@@ -17,8 +35,11 @@ export interface Level {
   name: string;
   shortLabel: string;
   topik: number | null;
+  /** Published CEFR equivalent. Approximate — see the note at the top of this file. */
   cefr: string;
   order: number;
+  /** Fixed number of classes, where the level has one. Null = not fixed yet. */
+  sessions: number | null;
   description_en: string;
   description_ar: string;
 }
@@ -30,10 +51,15 @@ export const LEVELS: Level[] = [
     name: "Hangul Foundation",
     shortLabel: "Hangul",
     topik: null,
-    cefr: "A0",
+    // CEFR has no "A0". "Pre-A1" is the official term for the stage below A1,
+    // introduced in the 2018 CEFR Companion Volume.
+    cefr: "Pre-A1",
     order: 0,
-    description_en: "Master reading, writing, and pronunciation fundamentals before entering TOPIK Levels.",
-    description_ar: "إتقان القراءة والكتابة والنطق قبل مستويات TOPIK.",
+    sessions: 4,
+    description_en:
+      "Four classes. Learn the alphabet from zero — vowels and consonants, how syllables are built, final consonants, and the pronunciation rules. By the end you can read and write any Korean word. Take it on its own, or as the step before Level 1.",
+    description_ar:
+      "أربع حصص. تتعلم الأبجدية من الصفر — الحروف المتحركة والساكنة، وتركيب المقاطع، والحرف الأخير، وقواعد النطق. في النهاية تقرأ وتكتب أي كلمة كورية. يمكنك دراستها وحدها، أو كخطوة قبل المستوى الأول.",
   },
   {
     id: 1,
@@ -43,8 +69,9 @@ export const LEVELS: Level[] = [
     topik: 1,
     cefr: "A1",
     order: 1,
-    description_en: "Core greetings, basic grammar, and daily expressions (TOPIK 1 / A1).",
-    description_ar: "تحيات وقواعد أساسية وتعبيرات يومية (TOPIK 1 / A1).",
+    sessions: null,
+    description_en: "Core greetings, basic grammar, and daily expressions. Prepares you toward TOPIK 1 (≈ CEFR A1).",
+    description_ar: "تحيات وقواعد أساسية وتعبيرات يومية. يجهّزك لـ TOPIK 1 (يقابل تقريبًا A1).",
   },
   {
     id: 2,
@@ -54,8 +81,9 @@ export const LEVELS: Level[] = [
     topik: 2,
     cefr: "A2",
     order: 2,
-    description_en: "Expand sentence building, everyday conversations, and comprehension (TOPIK 2 / A2).",
-    description_ar: "توسيع بناء الجمل ومحادثات الحياة اليومية (TOPIK 2 / A2).",
+    sessions: null,
+    description_en: "Expand sentence building, everyday conversations, and comprehension. Prepares you toward TOPIK 2 (≈ CEFR A2).",
+    description_ar: "توسيع بناء الجمل ومحادثات الحياة اليومية. يجهّزك لـ TOPIK 2 (يقابل تقريبًا A2).",
   },
   {
     id: 3,
@@ -65,8 +93,9 @@ export const LEVELS: Level[] = [
     topik: 3,
     cefr: "B1",
     order: 3,
-    description_en: "Handle real-life topics with more complex grammar (TOPIK 3 / B1).",
-    description_ar: "مواضيع واقعية مع قواعد أكثر تعقيدًا (TOPIK 3 / B1).",
+    sessions: null,
+    description_en: "Handle real-life topics with more complex grammar. Prepares you toward TOPIK 3 (≈ CEFR B1).",
+    description_ar: "مواضيع واقعية مع قواعد أكثر تعقيدًا. يجهّزك لـ TOPIK 3 (يقابل تقريبًا B1).",
   },
   {
     id: 4,
@@ -76,8 +105,9 @@ export const LEVELS: Level[] = [
     topik: 4,
     cefr: "B2",
     order: 4,
-    description_en: "Fluent conversation structures, longer listening/reading (TOPIK 4 / B2).",
-    description_ar: "محادثة منظمة واستماع/قراءة أطول (TOPIK 4 / B2).",
+    sessions: null,
+    description_en: "Fluent conversation structures, longer listening and reading. Prepares you toward TOPIK 4 (≈ CEFR B2).",
+    description_ar: "محادثة منظمة واستماع وقراءة أطول. يجهّزك لـ TOPIK 4 (يقابل تقريبًا B2).",
   },
   {
     id: 5,
@@ -87,8 +117,9 @@ export const LEVELS: Level[] = [
     topik: 5,
     cefr: "C1",
     order: 5,
-    description_en: "Advanced nuance, formal language, topic discussion (TOPIK 5 / C1).",
-    description_ar: "فروقات دقيقة ولغة رسمية ونقاشات (TOPIK 5 / C1).",
+    sessions: null,
+    description_en: "Advanced nuance, formal language, topic discussion. Prepares you toward TOPIK 5 (≈ CEFR C1).",
+    description_ar: "فروقات دقيقة ولغة رسمية ونقاشات. يجهّزك لـ TOPIK 5 (يقابل تقريبًا C1).",
   },
   {
     id: 6,
@@ -96,10 +127,13 @@ export const LEVELS: Level[] = [
     name: "Level 6",
     shortLabel: "Level 6",
     topik: 6,
+    // Published as C2. Contested — several studies place TOPIK's top band
+    // nearer C1. See the note at the top of this file.
     cefr: "C2",
     order: 6,
-    description_en: "Near-native comprehension, idioms, and advanced expression (TOPIK 6 / C2).",
-    description_ar: "فهم شبه أصلي وتعبيرات متقدمة واصطلاحات (TOPIK 6 / C2).",
+    sessions: null,
+    description_en: "Near-native comprehension, idioms, and advanced expression. Prepares you toward TOPIK 6 (the highest TOPIK band).",
+    description_ar: "فهم شبه أصلي وتعبيرات متقدمة واصطلاحات. يجهّزك لـ TOPIK 6 (أعلى مستويات TOPIK).",
   },
 ];
 
@@ -119,10 +153,17 @@ export const getLevelById = (id: number): Level | undefined =>
 export const getLevelByKey = (key: string): Level | undefined =>
   LEVELS.find((l) => l.key === key);
 
-export const formatLevelLabel = (level: Level): string =>
-  level.topik
-    ? `${level.name} — TOPIK ${level.topik} / ${level.cefr}`
-    : `${level.name}`;
+/**
+ * "Level 1 — prepares you toward TOPIK 1" / "Hangul Foundation — 4 classes".
+ *
+ * Never says a level EQUALS a TOPIK band: the hours do not support that claim.
+ * See the note at the top of this file.
+ */
+export const formatLevelLabel = (level: Level): string => {
+  if (level.topik) return `${level.name} — prepares you toward TOPIK ${level.topik}`;
+  if (level.sessions) return `${level.name} — ${level.sessions} classes`;
+  return level.name;
+};
 
 export const isFoundationLevel = (id: number): boolean => id === 0;
 
@@ -153,7 +194,7 @@ export const normalizeLevel = (label: string): string => {
 // ---------------------------------------------------------------------------
 
 /**
- * Map a canonical key → friendly `shortLabel` (e.g. "l1" → "L1 (TOPIK 1 / A1)").
+ * Map a canonical key → friendly `shortLabel` (e.g. "l1" → "Level 1").
  * Falls back to the raw value for anything unrecognised, so legacy strings
  * still render readably during the transition.
  */
@@ -272,6 +313,21 @@ export const validateLevels = (): void => {
 
   LEVELS.filter((l) => l.id >= 1 && l.id <= 6).forEach((l) => {
     if (l.topik !== l.id) throw new Error(`Level ${l.id} topik mismatch`);
+  });
+
+  // Hangul sits BEFORE the TOPIK ladder. If it ever gains a topik number it
+  // has stopped being the alphabet course and the ladder above it is wrong.
+  const hangul = getLevelByKey("hangul");
+  if (!hangul) throw new Error("Hangul level missing");
+  if (hangul.topik !== null) throw new Error("Hangul must not claim a TOPIK band");
+  if (hangul.cefr !== "Pre-A1") throw new Error('Hangul CEFR must be "Pre-A1" — CEFR has no "A0"');
+  if (hangul.sessions !== 4) throw new Error("Hangul is a 4-class course");
+
+  // No level may claim to BE a TOPIK band. The hours do not support it.
+  LEVELS.forEach((l) => {
+    if (/\bis TOPIK\b|=\s*TOPIK/i.test(l.description_en)) {
+      throw new Error(`Level ${l.key} claims to equal a TOPIK band; it should say "prepares you toward"`);
+    }
   });
 };
 
