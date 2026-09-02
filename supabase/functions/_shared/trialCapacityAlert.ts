@@ -17,6 +17,45 @@ interface ClaimResult {
 }
 
 /**
+ * The zone this student's browser reported when they booked.
+ *
+ * claim_trial_capacity_alert does not return it, and widening that RPC's
+ * return type means a migration for one nullable text column - so read it
+ * off the booking instead. Best-effort by design: a booking made before
+ * student_timezone shipped has none, and an environment where the column
+ * doesn't exist yet answers 42703. Both give null, and the template's
+ * unknown-zone branch is exactly the behaviour we have today.
+ */
+async function lookupStudentTimezone(
+  supabase: SupabaseClient,
+  trialDate: string,
+  startTime: string,
+  email: string,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from("trial_bookings")
+      .select("student_timezone")
+      .eq("trial_date", trialDate)
+      .eq("start_time", startTime)
+      .ilike("email", email)
+      .not("student_timezone", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      // Don't log the row or the address - only that the lookup didn't land.
+      if (error.code !== "42703") console.warn("student_timezone lookup failed:", error.code);
+      return null;
+    }
+    const tz = (data as { student_timezone?: string | null } | null)?.student_timezone ?? null;
+    return typeof tz === "string" && tz.trim() ? tz.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Checks whether a trial slot/date just reached its confirmed-registration
  * capacity alert threshold, and if so — exactly once per occurrence — emails
  * the teacher and the student who completed that spot. Best-effort: never
@@ -66,6 +105,11 @@ export async function checkAndSendTrialCapacityAlert(
 
     // Student alert — the confirming student's own email.
     if (claim.fourth_email && SUPABASE_URL && SERVICE_ROLE_KEY) {
+      // Her own zone, so this email states the class at the same hour every
+      // other trial email does. Null falls back to the slot time plus GMT.
+      const studentTimezone = await lookupStudentTimezone(
+        supabase, trialDate, startTime, claim.fourth_email,
+      );
       try {
         await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation-email`, {
           method: "POST",
@@ -83,6 +127,7 @@ export async function checkAndSendTrialCapacityAlert(
             trial_time: startTime,
             trial_timezone: timezone,
             trial_day_name: dayName,
+            student_timezone: studentTimezone,
             confirmed_count: confirmedCount,
           }),
         });
