@@ -11,11 +11,16 @@ import type {
   EmailPayload,
 } from "./templates/common.ts";
 import {
-  buildTrialConfirmedEmail, buildTrialRebookEmail,
+  buildTrialConfirmedEmail,
   buildTrialAttendanceConfirmationEmail, buildTrialGroupFullEmail,
   buildTrialRolloverEmail, buildTrialPrepEmail, buildTrialFollowupDay1Email,
   buildTrialFollowupDay3Email, buildTrialFollowupDay7Email,
 } from "./templates/trial.ts";
+// The invitation lives on its own since 2026-09-02, so its copy can be edited
+// without resending 58 KB of trial.ts. trial.ts still exports a stale copy of
+// buildTrialRebookEmail that nothing imports - delete it there next time that
+// file is opened.
+import { buildTrialRebookEmail } from "./templates/trialRebook.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
