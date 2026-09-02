@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { authorizationError, authorizeRequest } from "../_shared/authorize.ts";
+import { levelLabel, type EmailLanguage } from "../_shared/levelLabel.ts";
 
 // The templates live in ./templates/ since 2026-09-01. This file had grown to
 // ~128 KB, past what the GitHub contents API accepts in a single write, which
@@ -111,6 +112,23 @@ serve(async (req) => {
     }
 
     payload = await req.json();
+
+    // The templates render `level` / `group_level` straight into the letter,
+    // title-cased, which turned the canonical key `l1` into "L1" for every
+    // enrolling student - and in Arabic dropped the English key into Arabic
+    // copy, because \b\w matches no Arabic letter. Resolved once here rather
+    // than in two 54 KB template files, so every template downstream receives
+    // a name a student can actually read.
+    if (payload) {
+      const lang: EmailLanguage = payload.language === "ar" ? "ar" : "en";
+      const withLevels = payload as unknown as {
+        level?: string | null;
+        group_level?: string | null;
+      };
+      if (withLevels.level) withLevels.level = levelLabel(withLevels.level, lang);
+      if (withLevels.group_level) withLevels.group_level = levelLabel(withLevels.group_level, lang);
+    }
+
     const { email, name, language, template } = payload!;
 
     if (!email || !name) {
