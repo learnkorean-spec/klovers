@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/useSEO";
 import { useAuth } from "@/hooks/useAuth";
+import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
@@ -37,25 +38,17 @@ const FreeTrialPage = () => {
     { icon: Sparkles,      num: "3", text: t("trialBooking.expectItem3") },
   ];
 
-  /** 4 official trial class timestamps (MYT / UTC+8). */
-  const TRIAL_INSTANTS_MYT = [
-    "2026-05-29T01:00:00+08:00",
-    "2026-05-30T23:00:00+08:00",
-    "2026-06-02T23:00:00+08:00",
-    "2026-06-07T09:00:00+08:00",
-  ];
+  /** The real upcoming trial slots, straight from the database. */
+  const { slots } = useUpcomingTrialSlots();
 
-  const userTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "Asia/Kuala_Lumpur"; } })();
-
-  const SLOT_HIGHLIGHTS = TRIAL_INSTANTS_MYT
-    .map((iso) => {
-      const d = new Date(iso);
-      if (d.getTime() <= Date.now()) return null;
-      const day = d.toLocaleDateString(isAr ? "ar-EG" : "en-US", { weekday: "long", month: "short", day: "numeric", timeZone: userTz });
-      const time = d.toLocaleTimeString(isAr ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: userTz });
-      return { day, time };
-    })
-    .filter(Boolean) as { day: string; time: string }[];
+  const SLOT_HIGHLIGHTS = useMemo(() => {
+    const locale = isAr ? "ar-EG" : "en-US";
+    const tz = viewerTimezone();
+    return slots.map((slot) => ({
+      day: slot.startsAt.toLocaleDateString(locale, { weekday: "long", month: "short", day: "numeric", timeZone: tz }),
+      time: slot.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz }),
+    }));
+  }, [slots, isAr]);
 
   const TESTIMONIALS: { quote: string; name: string; role: string }[] = [
     {
@@ -98,12 +91,16 @@ const FreeTrialPage = () => {
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "category": "Free Trial" },
         "inLanguage": "ko",
         "url": "https://kloversegy.com/free-trial",
-        "hasCourseInstance": [
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-05-29T01:00:00+08:00", "endDate": "2026-05-29T01:30:00+08:00" },
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-05-30T23:00:00+08:00", "endDate": "2026-05-30T23:30:00+08:00" },
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-06-02T23:00:00+08:00", "endDate": "2026-06-02T23:30:00+08:00" },
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-06-07T09:00:00+08:00", "endDate": "2026-06-07T09:30:00+08:00" },
-        ],
+        ...(slots.length > 0
+          ? {
+              "hasCourseInstance": slots.map((slot) => ({
+                "@type": "CourseInstance",
+                "courseMode": "online",
+                "startDate": slot.startsAt.toISOString(),
+                "endDate": new Date(slot.startsAt.getTime() + slot.durationMin * 60000).toISOString(),
+              })),
+            }
+          : {}),
       },
       {
         "@context": "https://schema.org",
@@ -123,7 +120,7 @@ const FreeTrialPage = () => {
         "mainEntity": [
           { "@type": "Question", "name": "Is the trial class really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — completely free, no credit card required. You attend a 30-minute live class with a real teacher." } },
           { "@type": "Question", "name": "What level do I need to be?", "acceptedAnswer": { "@type": "Answer", "text": "Any level is welcome. Most students start from zero (Hangul). The teacher will assess your level during the class." } },
-          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "Upcoming sessions: July 3, July 4, July 5, and July 7 2026. All times are automatically shown in your local timezone when you visit the booking page." } },
+          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "New trial sessions open every week. The booking page always shows the next available dates, automatically converted to your own timezone." } },
           { "@type": "Question", "name": "How do I book?", "acceptedAnswer": { "@type": "Answer", "text": "Click 'Book My Free Class', choose a day, and confirm. You'll receive an email with the class link and a Google Calendar invite." } },
           { "@type": "Question", "name": "What happens after the trial?", "acceptedAnswer": { "@type": "Answer", "text": "After your trial you'll receive a level recommendation and pricing options if you'd like to continue with a full course." } },
         ],
@@ -131,7 +128,7 @@ const FreeTrialPage = () => {
     ]);
     document.head.appendChild(el);
     return () => { el.remove(); };
-  }, []);
+  }, [slots]);
 
   const navigate = useNavigate();
   const { user, loading } = useAuth();
