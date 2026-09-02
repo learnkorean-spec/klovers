@@ -75,6 +75,22 @@ interface TrialBooking {
   confirmation_token?: string | null;
 }
 
+/**
+ * One row per email address, keeping the first occurrence.
+ *
+ * A student who books twice without picking a date has two unscheduled rows,
+ * and the bulk sender used to mail them once per row.
+ */
+const dedupeByEmail = <T extends { email?: string | null }>(rows: T[]): T[] => {
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    const key = (r.email ?? "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 // Source of truth for unscheduled placeholders. Post-migration, TBA rows
 // have start_time/trial_date=NULL; the DB trigger keeps is_tba in sync.
 // Legacy sentinel checks remain defensive.
@@ -206,6 +222,23 @@ const TrialClassesManager = () => {
           class_language: s.class_language ?? null,
         };
       });
+  }, [activeSlots]);
+
+  /**
+   * The slots it is honest to offer a student.
+   *
+   * `activeSlots` is every row with is_active = true, which still includes
+   * last week's - so a rebook email could offer a date that had already
+   * passed, and the meeting link could come from a class that was over. Today
+   * is read in the admin's own timezone, not UTC, so a slot does not vanish
+   * an evening early.
+   */
+  const futureSlots = useMemo(() => {
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: getAdminTimezone(),
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    return activeSlots.filter((s) => s.trial_date && s.trial_date >= todayStr);
   }, [activeSlots]);
 
   const formatDateTime = (value?: string | null) =>
@@ -385,21 +418,36 @@ const TrialClassesManager = () => {
     setActioningId(booking.id);
     try {
       // Use active trial slots as the canonical slot list (not derived from bookings).
-      const meetingUrl = activeSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
+      const meetingUrl = futureSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
       if (!meetingUrl) {
+        // This used to warn and then send anyway, so the student received an
+        // invitation with no way to join.
         toast({
           title: "No Google Meet link found for this class.",
           description: "Add it in the trial slot settings before sending.",
           variant: "destructive",
         });
+        return;
+      }
+      if (!booking.email) {
+        toast({ title: "No email address on this booking", variant: "destructive" });
+        return;
       }
       // class_language on the booking is "arabic" | "english" (stored at booking time).
       // Normalise to the ISO code expected by the email template ("ar" / "en").
       const rawLang = booking.class_language ?? "en";
       const bookingLang = rawLang === "arabic" ? "ar" : rawLang === "english" ? "en" : rawLang;
-      const langSlots = activeSlots.filter(
-        (s) => s.trial_date && (!s.class_language || s.class_language === rawLang)
+      const langSlots = futureSlots.filter(
+        (s) => !s.class_language || s.class_language === rawLang
       );
+      if (langSlots.length === 0) {
+        toast({
+          title: "No upcoming slots to offer",
+          description: "Add an upcoming trial slot before sending a rebook email.",
+          variant: "destructive",
+        });
+        return;
+      }
       const { error: emailErr } = await supabase.functions.invoke("send-confirmation-email", {
         body: {
           template: "trial_rebook_request",
@@ -442,35 +490,52 @@ const TrialClassesManager = () => {
     }
   };
 
-  const handleSendRebookToAllTBA = async () => {
-    const tba = bookings.filter(isTbaBooking);
-    if (tba.length === 0) {
-      toast({ title: "Nothing to send", description: "No unscheduled (TBA) bookings right now." });
+  /**
+   * Email every unscheduled student the button is counting - and only those.
+   *
+   * This used to send to `bookings.filter(isTbaBooking)`: the whole table,
+   * ignoring the status/language/time filters the admin had set, including
+   * cancelled rows, including students who had already been emailed, and once
+   * per duplicate row. The button beside it counted something else entirely,
+   * so the number on the button was never the number of emails sent. The
+   * caller now passes the exact list the count was taken from.
+   */
+  const handleSendRebookToAllTBA = async (targets: TrialBooking[]) => {
+    if (targets.length === 0) {
+      toast({ title: "Nothing to send", description: "No unscheduled students left to email." });
       return;
     }
-    // Use active trial slots as the canonical slot list (not derived from bookings).
-    const bulkMeetingUrl = activeSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
+    const bulkMeetingUrl = futureSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
     if (!bulkMeetingUrl) {
+      // Warned and then sent anyway before this, which put an invitation with
+      // no joinable link in front of every unscheduled student at once.
       toast({
         title: "No Google Meet link found for this class.",
         description: "Add it in the trial slot settings before sending.",
         variant: "destructive",
       });
+      return;
     }
     setBulkBusy(true);
-    let ok = 0, fail = 0;
-    for (const b of tba) {
+    let ok = 0, fail = 0, skipped = 0;
+    for (const b of targets) {
       try {
         const bRawLang = b.class_language ?? "en";
         const bLang = bRawLang === "arabic" ? "ar" : bRawLang === "english" ? "en" : bRawLang;
-        const bSlots = activeSlots
-          .filter((s) => s.trial_date && (!s.class_language || s.class_language === bRawLang))
+        const bSlots = futureSlots
+          .filter((s) => !s.class_language || s.class_language === bRawLang)
           .map((s) => ({
             day_of_week: s.day_of_week,
             start_time: s.start_time,
             timezone: s.timezone ?? ADMIN_TIMEZONE,
             date: s.trial_date,
           }));
+        if (bSlots.length === 0) {
+          // Nothing upcoming in this student's language. An email offering an
+          // empty list of dates is worse than no email.
+          skipped++;
+          continue;
+        }
         const { error: emailErr } = await supabase.functions.invoke("send-confirmation-email", {
           body: {
             template: "trial_rebook_request",
@@ -493,7 +558,10 @@ const TrialClassesManager = () => {
         fail++;
       }
     }
-    toast({ title: "Rebook emails", description: `${ok} sent${fail ? `, ${fail} failed` : ""}.` });
+    toast({
+      title: "Rebook emails",
+      description: `${ok} sent${fail ? `, ${fail} failed` : ""}${skipped ? `, ${skipped} skipped (no upcoming slot in their language)` : ""}.`,
+    });
     fetchData();
     setBulkBusy(false);
   };
@@ -940,7 +1008,18 @@ const TrialClassesManager = () => {
               ?? activeSlots.find((s) => s.start_time === session.time)
             : null;
           const sessionLanguage = slotMatch?.class_language ?? session.items[0]?.language ?? null;
-          const tbaUnsentCount = isTbaSession ? session.items.length : 0;
+          // The list the button counts IS the list the button sends to.
+          // These were two different sets before: the count was every row in
+          // the card (cancelled rows and already-emailed rows included), the
+          // send was every TBA row in the table regardless of the filters.
+          const tbaTargets = isTbaSession
+            ? dedupeByEmail(
+                session.items.filter(
+                  (b) => b.status !== "cancelled" && !!b.email && !b.rebook_email_sent_at
+                )
+              )
+            : [];
+          const tbaUnsentCount = tbaTargets.length;
           return (
             <Card key={session.key}>
               <CardHeader className="py-3">
@@ -1002,7 +1081,7 @@ const TrialClassesManager = () => {
                             variant="default"
                             className="h-7"
                             disabled={bulkBusy || tbaUnsentCount === 0}
-                            title={tbaUnsentCount === 0 ? "No unscheduled students" : `Email ${tbaUnsentCount} unscheduled student${tbaUnsentCount === 1 ? "" : "s"}`}
+                            title={tbaUnsentCount === 0 ? "Every unscheduled student here has already been emailed" : `Email ${tbaUnsentCount} unscheduled student${tbaUnsentCount === 1 ? "" : "s"}`}
                           >
                             <Mail className="h-3.5 w-3.5 mr-1" />
                             Resend with new dates ({tbaUnsentCount})
@@ -1012,12 +1091,12 @@ const TrialClassesManager = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Send rebook email to {tbaUnsentCount} student{tbaUnsentCount === 1 ? "" : "s"}?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              An Arabic rebook email with active slot options will be sent to each unscheduled student in this TBA session.
+                              Each student gets one email, in their own booking language, listing only upcoming slots. Cancelled bookings, duplicate rows, and anyone already emailed are excluded — {tbaUnsentCount} will receive it.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleSendRebookToAllTBA}>Send {tbaUnsentCount}</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleSendRebookToAllTBA(tbaTargets)}>Send {tbaUnsentCount}</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
