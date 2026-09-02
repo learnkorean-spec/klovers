@@ -198,17 +198,26 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
     return `${weekday}, ${dateLabel} at ${timeFormatted} — ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`;
   };
 
-  const keyFor = (s: TrialSlot) => `${s.day_of_week}|${s.start_time}`;
+  /**
+   * The date is part of the identity of a session.
+   *
+   * This used to be `day_of_week|start_time`, but get_trial_availability
+   * returns one row per dated trial_slots row - so two upcoming occurrences
+   * of the same weekday and time collapsed into one key. React saw duplicate
+   * keys, the Select saw duplicate option values, and `find` always matched
+   * the first. A student who chose the later of two identical-looking
+   * sessions was booked into the earlier one, and only found out from the
+   * date in her confirmation email.
+   */
+  const keyFor = (s: TrialSlot) => `${sessionDateFor(s)}|${s.day_of_week}|${s.start_time}`;
 
   const selectedSlot = availableSlots.find((s) => keyFor(s) === selectedKey);
 
   const commit = () => {
     if (!selectedKey || !selectedSlot) return;
-    const [dStr, time] = selectedKey.split("|");
-    const day = Number(dStr);
-    // Always pass a concrete date — never let the edge function guess.
-    const trialDate = sessionDateFor(selectedSlot);
-    onSelect(day, time, trialDate);
+    // Read the day and time off the slot itself rather than re-parsing them
+    // out of the key - one source, so they cannot drift from the date.
+    onSelect(selectedSlot.day_of_week, selectedSlot.start_time, sessionDateFor(selectedSlot));
   };
 
   return (
