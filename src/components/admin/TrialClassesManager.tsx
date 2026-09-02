@@ -23,6 +23,7 @@ import { getLevelShortLabel } from "@/constants/levels";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
+import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
 import { TrialSlotRow } from "@/types/trial-admin";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -75,22 +76,6 @@ interface TrialBooking {
   confirmation_token?: string | null;
 }
 
-/**
- * One row per email address, keeping the first occurrence.
- *
- * A student who books twice without picking a date has two unscheduled rows,
- * and the bulk sender used to mail them once per row.
- */
-const dedupeByEmail = <T extends { email?: string | null }>(rows: T[]): T[] => {
-  const seen = new Set<string>();
-  return rows.filter((r) => {
-    const key = (r.email ?? "").trim().toLowerCase();
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-
 // Source of truth for unscheduled placeholders. Post-migration, TBA rows
 // have start_time/trial_date=NULL; the DB trigger keeps is_tba in sync.
 // Legacy sentinel checks remain defensive.
@@ -110,6 +95,9 @@ interface TrialSlot {
   meeting_url?: string | null;
   class_language?: string | null;
   timezone?: string | null;
+  capacity?: number | null;
+  /** When this slot's date/time last changed — the staleness clock for invitations. */
+  updated_at?: string | null;
 }
 
 type TimeFilter = "all" | "upcoming" | "past";
@@ -189,7 +177,7 @@ const TrialClassesManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trial_slots")
-        .select("day_of_week, start_time, is_active, trial_date, meeting_url, class_language, timezone")
+        .select("day_of_week, start_time, is_active, trial_date, meeting_url, class_language, timezone, capacity, updated_at")
         .eq("is_active", true);
       if (error) throw error;
       return (data as TrialSlot[] | null) ?? [];
@@ -240,6 +228,54 @@ const TrialClassesManager = () => {
     }).format(new Date());
     return activeSlots.filter((s) => s.trial_date && s.trial_date >= todayStr);
   }, [activeSlots]);
+
+  /**
+   * The moment the offered dates last changed.
+   *
+   * An invitation is only "already sent" if it was sent for THESE dates. Every
+   * rebook email in the database went out on 2 July 2026, for a July block that
+   * no longer exists; the current slots were last written on 1 September. A
+   * plain "has rebook_email_sent_at" check calls those students done and never
+   * writes to them again, which is how 41 people came to be sitting on an
+   * invitation to dates that have passed.
+   */
+  const slotsUpdatedAt = useMemo(() => {
+    const stamps = futureSlots
+      .map((s) => (s.updated_at ? Date.parse(s.updated_at) : NaN))
+      .filter((n) => !Number.isNaN(n));
+    return stamps.length ? new Date(Math.max(...stamps)) : null;
+  }, [futureSlots]);
+
+  /**
+   * Seats actually left, per class language.
+   *
+   * Emailing more students than there are seats is not a neutral act: the ones
+   * who arrive late open the invitation, find nothing bookable, and that is the
+   * last impression they get. The confirm dialog states this before the send.
+   */
+  const seatsByLanguage = useMemo(() => {
+    const taken = new Map<string, number>();
+    for (const b of bookings) {
+      if (b.status === "cancelled" || isTbaBooking(b)) continue;
+      const key = `${b.trial_date}__${b.start_time}`;
+      taken.set(key, (taken.get(key) ?? 0) + 1);
+    }
+    const out: Record<string, number> = {};
+    for (const s of futureSlots) {
+      const lang = s.class_language ?? "any";
+      const used = taken.get(`${s.trial_date}__${s.start_time}`) ?? 0;
+      out[lang] = (out[lang] ?? 0) + Math.max(0, (s.capacity ?? 0) - used);
+    }
+    return out;
+  }, [futureSlots, bookings]);
+
+  const seatsFor = (targets: TrialBooking[]) => {
+    const langs = new Set(targets.map((t) => t.class_language ?? "any"));
+    let n = 0;
+    for (const l of langs) n += seatsByLanguage[l] ?? 0;
+    if (seatsByLanguage["any"] && !langs.has("any")) n += seatsByLanguage["any"];
+    return n;
+  };
 
   const formatDateTime = (value?: string | null) =>
     value ? new Date(value).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—";
@@ -1008,18 +1044,17 @@ const TrialClassesManager = () => {
               ?? activeSlots.find((s) => s.start_time === session.time)
             : null;
           const sessionLanguage = slotMatch?.class_language ?? session.items[0]?.language ?? null;
-          // The list the button counts IS the list the button sends to.
-          // These were two different sets before: the count was every row in
-          // the card (cancelled rows and already-emailed rows included), the
-          // send was every TBA row in the table regardless of the filters.
+          // The list the button counts IS the list the button sends to, and
+          // "already emailed" means emailed about THESE dates - see
+          // rebookTargets.ts. Before, the count was every row in the card
+          // (cancelled and already-emailed included) while the send was every
+          // TBA row in the table regardless of the admin's filters.
           const tbaTargets = isTbaSession
-            ? dedupeByEmail(
-                session.items.filter(
-                  (b) => b.status !== "cancelled" && !!b.email && !b.rebook_email_sent_at
-                )
-              )
+            ? pickRebookTargets(session.items, slotsUpdatedAt)
             : [];
           const tbaUnsentCount = tbaTargets.length;
+          const tbaSeats = isTbaSession ? seatsFor(tbaTargets) : 0;
+          const tbaOversubscribed = tbaUnsentCount > tbaSeats;
           return (
             <Card key={session.key}>
               <CardHeader className="py-3">
@@ -1090,8 +1125,17 @@ const TrialClassesManager = () => {
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Send rebook email to {tbaUnsentCount} student{tbaUnsentCount === 1 ? "" : "s"}?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Each student gets one email, in their own booking language, listing only upcoming slots. Cancelled bookings, duplicate rows, and anyone already emailed are excluded — {tbaUnsentCount} will receive it.
+                            <AlertDialogDescription asChild>
+                              <div className="space-y-2">
+                                <p>
+                                  One email each, in the student's own booking language, listing only upcoming slots. Cancelled bookings, duplicate rows, and anyone already invited to <em>these</em> dates are excluded — {tbaUnsentCount} will receive it.
+                                </p>
+                                <p className={tbaOversubscribed ? "text-destructive font-medium" : ""}>
+                                  {tbaOversubscribed
+                                    ? `Only ${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are left across the upcoming classes. ${tbaUnsentCount - tbaSeats} of these students will open the email and find nothing to book. Consider adding a class first, or emailing in batches.`
+                                    : `${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are open across the upcoming classes — enough for everyone on this list.`}
+                                </p>
+                              </div>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
