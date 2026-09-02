@@ -39,7 +39,7 @@ const FreeTrialPage = () => {
   ];
 
   /** The real upcoming trial slots, straight from the database. */
-  const { slots } = useUpcomingTrialSlots();
+  const { slots, loading: slotsLoading } = useUpcomingTrialSlots();
 
   const SLOT_HIGHLIGHTS = useMemo(() => {
     const locale = isAr ? "ar-EG" : "en-US";
@@ -389,30 +389,63 @@ const FreeTrialPage = () => {
               <p className="text-sm text-muted-foreground">{t("freeTrial.slotsSubtitle")}</p>
             </div>
 
-            {/* Ticket cards — 1-col mobile, 2-col / 4-col desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {SLOT_HIGHLIGHTS.map((s, i) => (
-                <div
-                  key={i}
-                  className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_black] hover:shadow-[2px_2px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
+            {/* Ticket cards — 1-col mobile, 2-col desktop. The list is empty
+                while the fetch is in flight, and empty again if trial_slots
+                genuinely has nothing upcoming. Neither case should render a
+                heading over a hole, which is what it did before. */}
+            {slotsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8" aria-hidden="true">
+                {[0, 1].map((i) => (
+                  <div key={i} className="border-2 border-border rounded-2xl overflow-hidden animate-pulse">
+                    <div className="bg-muted h-9" />
+                    <div className="bg-background h-[76px]" />
+                  </div>
+                ))}
+              </div>
+            ) : SLOT_HIGHLIGHTS.length === 0 ? (
+              <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center mb-8">
+                <p className="text-sm font-semibold text-foreground mb-1">
+                  {isAr ? "مواعيد الأسبوع الجاي لسه بتتفتح." : "Next week's sessions are still opening up."}
+                </p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {isAr
+                    ? "ابعتلنا على واتساب ونحجزلك أول ميعاد بيفتح."
+                    : "Message us on WhatsApp and we'll hold you the first seat that opens."}
+                </p>
+                <Button
+                  variant="outline"
+                  className="gap-2 font-bold"
+                  onClick={() => trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "free_trial_no_slots_whatsapp" })}
                 >
-                  {/* Header */}
-                  <div className="bg-foreground py-2.5 px-4 text-center">
-                    <p className="text-xs font-black text-primary uppercase tracking-widest">{s.day}</p>
+                  <MessageCircle className="h-4 w-4" />
+                  {isAr ? "واتساب" : "WhatsApp Us"}
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                {SLOT_HIGHLIGHTS.map((s, i) => (
+                  <div
+                    key={i}
+                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_black] hover:shadow-[2px_2px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
+                  >
+                    {/* Header */}
+                    <div className="bg-foreground py-2.5 px-4 text-center">
+                      <p className="text-xs font-black text-primary uppercase tracking-widest">{s.day}</p>
+                    </div>
+                    {/* Perforated divider */}
+                    <div className="relative flex items-center bg-background">
+                      <div className="absolute -left-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
+                      <div className="flex-1 border-t-2 border-dashed border-foreground/25 mx-1" />
+                      <div className="absolute -right-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
+                    </div>
+                    {/* Body */}
+                    <div className="bg-background py-5 px-4 text-center">
+                      <p className="text-2xl font-black text-foreground">{s.time}</p>
+                    </div>
                   </div>
-                  {/* Perforated divider */}
-                  <div className="relative flex items-center bg-background">
-                    <div className="absolute -left-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
-                    <div className="flex-1 border-t-2 border-dashed border-foreground/25 mx-1" />
-                    <div className="absolute -right-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
-                  </div>
-                  {/* Body */}
-                  <div className="bg-background py-5 px-4 text-center">
-                    <p className="text-2xl font-black text-foreground">{s.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Urgency */}
             <div className="flex items-center justify-center gap-1.5 mb-5 text-xs font-semibold text-orange-600 dark:text-orange-400">
