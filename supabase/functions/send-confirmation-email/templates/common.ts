@@ -70,8 +70,22 @@ export const BRAND_DARK = "#1a1a1a";
 export const BRAND_GRAY = "#f5f5f5";
 export const BRAND_TEXT = "#333333";
 export const BRAND_MUTED = "#666666";
+
+/**
+ * The mark in the email header.
+ *
+ * NOTE ON RESOLUTION. This file is 41,004 bytes — byte for byte the size of
+ * favicon.ico, which is to say the favicon is doing duty as the logo. At the
+ * header size that is roughly 120 device pixels on a phone, and it looks it.
+ *
+ * A small bitmap cannot be enlarged into a large sharp one, so the header
+ * below is built so the WORDMARK carries the composition and the image plays a
+ * supporting part at a size it can hold. Replace this file with a PNG of at
+ * least 256×256 (512 is better) and the header sharpens with no code change.
+ */
 export const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
 export const SITE_URL = "https://kloversegy.com";
+export const WHATSAPP_URL = "https://wa.me/201010003084";
 export const FUNCTION_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/functions/v1";
 
 // City names in Arabic for the zones our students actually book from. A zone
@@ -106,24 +120,45 @@ export function unsubscribeFooter(token: string | undefined, isAr: boolean): str
     : `<p style="text-align:center;margin-top:24px;font-size:11px;color:#999">Don't want these emails? <a href="${url}" style="color:#999">Unsubscribe</a></p>`;
 }
 
+/**
+ * The frame every email is rendered inside.
+ *
+ * Design notes, because email is not the web:
+ *  • The wordmark leads. Type is resolution-independent and renders crisply in
+ *    every client; a bitmap logo at 60px does not. See LOGO_URL above.
+ *  • width/height attributes sit on the <img> as well as in the style, because
+ *    Outlook and several mobile clients reserve space from the attributes and
+ *    will otherwise reflow the header as the image loads.
+ *  • The header is black behind the image, so an image blocked by the client —
+ *    which is the default in Outlook and Gmail's promotions tab — leaves the
+ *    wordmark on black rather than a white hole with a broken-image icon.
+ *  • Everything is inline styles and simple divs. No flexbox, no CSS grid, no
+ *    <style> block: Outlook's rendering engine is Word, and it supports none
+ *    of them.
+ */
 export function brandWrapper(content: string, isRtl: boolean) {
   const dir = isRtl ? 'direction: rtl; text-align: right;' : '';
   return `
-  <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+  <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 14px; overflow: hidden;">
     <!-- Header -->
-    <div style="background-color: ${BRAND_BLACK}; padding: 24px; text-align: center;">
-      <img src="${LOGO_URL}" alt="KLovers" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid ${BRAND_YELLOW};" />
-      <h2 translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; margin: 12px 0 0; font-size: 22px; letter-spacing: 1px;">KLovers</h2>
-      <p style="color: #cccccc; margin: 4px 0 0; font-size: 12px;">Korean Language Academy</p>
+    <div style="background-color: ${BRAND_BLACK}; padding: 30px 24px 26px; text-align: center;">
+      <img src="${LOGO_URL}" alt="" width="56" height="56" style="display: inline-block; width: 56px; height: 56px; border-radius: 50%; border: 2px solid ${BRAND_YELLOW}; object-fit: cover;" />
+      <div translate="no" class="notranslate" style="margin: 14px 0 0;">
+        <span style="color: ${BRAND_YELLOW}; font-size: 26px; font-weight: 700; letter-spacing: 6px; line-height: 1;">KLOVERS</span>
+      </div>
+      <div style="width: 40px; height: 2px; background-color: ${BRAND_YELLOW}; margin: 12px auto 0; opacity: 0.55; font-size: 0; line-height: 0;">&nbsp;</div>
+      <p style="color: #b8b8b8; margin: 12px 0 0; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">Korean Language Academy</p>
     </div>
     <!-- Body -->
-    <div style="padding: 28px 24px; ${dir} color: ${BRAND_TEXT};">
+    <div style="padding: 32px 28px; ${dir} color: ${BRAND_TEXT}; font-size: 15px; line-height: 1.75;">
       ${content}
     </div>
     <!-- Footer -->
-    <div style="background-color: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
-      <p translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;">— The KLovers Team</p>
-      <a href="https://kloversegy.com" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
+    <div style="background-color: ${BRAND_BLACK}; padding: 22px 24px; text-align: center;">
+      <p translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 10px; font-weight: 600;">— The KLovers Team</p>
+      <a href="${SITE_URL}" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
+      <span style="color: #555555; font-size: 11px;"> &nbsp;·&nbsp; </span>
+      <a href="${WHATSAPP_URL}" style="color: #cccccc; font-size: 11px; text-decoration: none;">WhatsApp</a>
     </div>
   </div>`;
 }
