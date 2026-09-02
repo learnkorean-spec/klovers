@@ -24,6 +24,7 @@ import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
 import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
+import { emailLanguageFor } from "@/components/admin/trial/emailLanguage";
 import { TrialSlotRow } from "@/types/trial-admin";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -472,7 +473,11 @@ const TrialClassesManager = () => {
       // class_language on the booking is "arabic" | "english" (stored at booking time).
       // Normalise to the ISO code expected by the email template ("ar" / "en").
       const rawLang = booking.class_language ?? "en";
-      const bookingLang = rawLang === "arabic" ? "ar" : rawLang === "english" ? "en" : rawLang;
+      // The letter's language and the class's language are two different
+      // questions. An Egyptian number means write in Arabic; it does not move
+      // anyone out of the English group they chose - langSlots below still
+      // filters on rawLang.
+      const bookingLang = emailLanguageFor(booking);
       const langSlots = futureSlots.filter(
         (s) => !s.class_language || s.class_language === rawLang
       );
@@ -557,7 +562,8 @@ const TrialClassesManager = () => {
     for (const b of targets) {
       try {
         const bRawLang = b.class_language ?? "en";
-        const bLang = bRawLang === "arabic" ? "ar" : bRawLang === "english" ? "en" : bRawLang;
+        // Letter language, not class language - see emailLanguage.ts.
+        const bLang = emailLanguageFor(b);
         const bSlots = futureSlots
           .filter((s) => !s.class_language || s.class_language === bRawLang)
           .map((s) => ({
@@ -1055,6 +1061,11 @@ const TrialClassesManager = () => {
           const tbaUnsentCount = tbaTargets.length;
           const tbaSeats = isTbaSession ? seatsFor(tbaTargets) : 0;
           const tbaOversubscribed = tbaUnsentCount > tbaSeats;
+          // Split by the language the letter would be written in, so an
+          // Arabic-only send is one click rather than a filter that gets the
+          // set slightly wrong.
+          const tbaArabic = tbaTargets.filter((b) => emailLanguageFor(b) === "ar");
+          const tbaArabicSeats = isTbaSession ? seatsFor(tbaArabic) : 0;
           return (
             <Card key={session.key}>
               <CardHeader className="py-3">
@@ -1122,25 +1133,68 @@ const TrialClassesManager = () => {
                             Resend with new dates ({tbaUnsentCount})
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-lg">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Send rebook email to {tbaUnsentCount} student{tbaUnsentCount === 1 ? "" : "s"}?</AlertDialogTitle>
+                            <AlertDialogTitle>Who gets a rebook email?</AlertDialogTitle>
                             <AlertDialogDescription asChild>
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 <p>
-                                  One email each, in the student's own booking language, listing only upcoming slots. Cancelled bookings, duplicate rows, and anyone already invited to <em>these</em> dates are excluded — {tbaUnsentCount} will receive it.
+                                  One email each, listing only upcoming slots in that student&apos;s own class language. Cancelled bookings, duplicate rows, and anyone already invited to <em>these</em> dates are excluded.
                                 </p>
+
+                                {/* The list itself. Names belong here - behind
+                                    the admin login, at the moment of the
+                                    decision - and nowhere else. */}
+                                <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
+                                  {tbaTargets.map((b) => {
+                                    const lang = emailLanguageFor(b);
+                                    return (
+                                      <div key={b.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs">
+                                        <span className="min-w-0">
+                                          <span className="font-medium text-foreground block truncate">{b.name || "—"}</span>
+                                          <span className="text-muted-foreground block truncate">{b.email}</span>
+                                        </span>
+                                        <span className="flex items-center gap-1 shrink-0">
+                                          {lang === "ar" && b.class_language !== "arabic" && (
+                                            <Badge variant="outline" className="text-[9px] px-1 py-0" title="English class, but an Egyptian number - the letter is written in Arabic">
+                                              EG number
+                                            </Badge>
+                                          )}
+                                          <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${lang === "ar" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                                            {lang === "ar" ? "AR" : "EN"}
+                                          </span>
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
                                 <p className={tbaOversubscribed ? "text-destructive font-medium" : ""}>
                                   {tbaOversubscribed
-                                    ? `Only ${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are left across the upcoming classes. ${tbaUnsentCount - tbaSeats} of these students will open the email and find nothing to book. Consider adding a class first, or emailing in batches.`
+                                    ? `Only ${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are left across the upcoming classes. Emailing all ${tbaUnsentCount} means ${tbaUnsentCount - tbaSeats} of them open the invitation and find nothing to book.`
                                     : `${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are open across the upcoming classes — enough for everyone on this list.`}
                                 </p>
+                                {tbaArabic.length > 0 && tbaArabic.length < tbaUnsentCount && (
+                                  <p className="text-muted-foreground">
+                                    {tbaArabic.length} of these would be written in Arabic, and {tbaArabicSeats} seat{tbaArabicSeats === 1 ? "" : "s"} cover them.
+                                  </p>
+                                )}
                               </div>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleSendRebookToAllTBA(tbaTargets)}>Send {tbaUnsentCount}</AlertDialogAction>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
+                            {tbaArabic.length > 0 && tbaArabic.length < tbaUnsentCount && (
+                              <AlertDialogAction
+                                onClick={() => handleSendRebookToAllTBA(tbaArabic)}
+                                className="bg-emerald-600 hover:bg-emerald-700"
+                              >
+                                Send Arabic only ({tbaArabic.length})
+                              </AlertDialogAction>
+                            )}
+                            <AlertDialogAction onClick={() => handleSendRebookToAllTBA(tbaTargets)}>
+                              Send all {tbaUnsentCount}
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
