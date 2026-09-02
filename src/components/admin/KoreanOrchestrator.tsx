@@ -29,15 +29,25 @@ const BOOKS = [
   { key: "grammar-mastery", label: "Grammar Mastery", icon: Brain },
 ] as const;
 
+/**
+ * This filter selects LESSONS by `textbook_lessons.topik_level` — the exam
+ * band whose material a lesson covers. It is not the course ladder a student
+ * enrols in (that lives in `@/constants/levels`), and the two must not be
+ * conflated, so these labels name the material rather than a course.
+ *
+ * They previously read "Level 1 — TOPIK 1 / A1" … "Level 6 — TOPIK 6 / C2":
+ * the equation the rest of the site no longer makes, in the admin file most
+ * likely to be copied when the next panel is built.
+ */
 const LEVELS = [
   { value: "all", label: "All Levels" },
-  { value: "0", label: "Foundation (Hangul)" },
-  { value: "1", label: "Level 1 — TOPIK 1 / A1" },
-  { value: "2", label: "Level 2 — TOPIK 2 / A2" },
-  { value: "3", label: "Level 3 — TOPIK 3 / B1" },
-  { value: "4", label: "Level 4 — TOPIK 4 / B2" },
-  { value: "5", label: "Level 5 — TOPIK 5 / C1" },
-  { value: "6", label: "Level 6 — TOPIK 6 / C2" },
+  { value: "0", label: "Hangul — alphabet lessons" },
+  { value: "1", label: "TOPIK 1 material" },
+  { value: "2", label: "TOPIK 2 material" },
+  { value: "3", label: "TOPIK 3 material" },
+  { value: "4", label: "TOPIK 4 material" },
+  { value: "5", label: "TOPIK 5 material" },
+  { value: "6", label: "TOPIK 6 material" },
 ];
 
 type SectionStatus = "idle" | "running" | "done" | "error";
