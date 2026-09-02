@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { levelLabel } from "../_shared/levelLabel.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,17 +10,17 @@ const corsHeaders = {
 const ADMIN_EMAIL = "reham.elshrkawy@gmail.com";
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const LEVEL_LABELS: Record<string, string> = {
-  beginner_1: "Korean Level 1",
-  beginner_2: "Korean Level 2",
-  intermediate_1: "Intermediate 1",
-  intermediate_2: "Intermediate 2",
-  advanced: "Advanced",
-};
-
-function getLevelLabel(level: string): string {
-  return LEVEL_LABELS[level] || level.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
+/**
+ * This used to be a local LEVEL_LABELS map keyed on pre-2026-04 values only
+ * (beginner_1, intermediate_2 …), with a title-casing fallback. Every
+ * canonical level therefore missed the map and came out of the fallback as
+ * "L1". These captions are written to be pasted straight onto Instagram and
+ * into Meta ads, so that name was going public.
+ *
+ * Reports are for Reham and the captions she posts are English, so the
+ * language is fixed here.
+ */
+const getLevelLabel = (level: string): string => levelLabel(level, "en") || level;
 
 function formatTime(timeStr: string): string {
   const [h, m] = timeStr.split(":");
@@ -33,9 +34,9 @@ function generateCaption(group: {
   level: string; day_name: string; start_time: string;
   duration_min: number; seats_left: number;
 }): string {
-  const levelLabel = getLevelLabel(group.level);
+  const levelText = getLevelLabel(group.level);
   const seatsLine = group.seats_left <= 3 ? `\nOnly ${group.seats_left} seat${group.seats_left === 1 ? "" : "s"} left.` : "";
-  return `🚀 ${levelLabel} — Starting ${group.day_name} ${group.start_time}${seatsLine}
+  return `🚀 ${levelText} — Starting ${group.day_name} ${group.start_time}${seatsLine}
 
 Learn to read, speak, and build real Korean sentences from week one.
 
