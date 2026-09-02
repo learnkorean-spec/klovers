@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { track } from "@/lib/tracking";
 import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
+import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 
 const SignUpPage = () => {
   useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
@@ -40,6 +41,15 @@ const SignUpPage = () => {
   }
   const { t, language } = useLanguage();
   const isAr = language === "ar";
+
+  // Remember where this signup was heading as soon as the page opens, not only
+  // after a successful signup. A student who arrived from the trial email and
+  // then clicks "Forgot password?" leaves without ever submitting this form -
+  // without this she would come back to the dashboard instead of the booking
+  // page she was sent here for.
+  useEffect(() => {
+    rememberRedirect(redirectTo);
+  }, [redirectTo]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,6 +242,14 @@ const SignUpPage = () => {
                   className="text-foreground font-semibold underline"
                 >
                   {t("auth.logIn") || "Log In"}
+                </Link>
+              </p>
+              <p className="text-sm text-center text-muted-foreground">
+                <Link
+                  to={withRedirect("/forgot-password", redirectTo)}
+                  className="text-foreground font-semibold underline"
+                >
+                  {t("auth.forgotPassword") || "Forgot password?"}
                 </Link>
               </p>
             </form>
