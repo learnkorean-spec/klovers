@@ -28,6 +28,7 @@
  */
 
 import { LEVELS, SPECIAL_TRACKS, type Level } from "@/constants/levels";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 export interface CourseCard {
   /** Canonical level key, or the special-track key. Also the React list key. */
@@ -43,6 +44,11 @@ export interface CourseCard {
   features_ar: string[];
   /** Where "book this level" goes. */
   href: string;
+  /**
+   * True when `href` leaves the site (WhatsApp). Router <Link> cannot carry an
+   * absolute URL, so the component renders a plain <a> for these.
+   */
+  external?: boolean;
   /** Label for that button. */
   cta_en: string;
   cta_ar: string;
@@ -236,9 +242,12 @@ const specialCards: CourseCard[] = [
       "محادثة حرة في مواضيع تختارها",
       "يمكن دراسته مع أي مستوى",
     ],
-    href: "/contact",
-    cta_en: "Ask about times",
-    cta_ar: "اسأل عن المواعيد",
+    // A private track is arranged by conversation, not by a booking form, so it
+    // goes where that conversation actually happens.
+    href: WHATSAPP_BASE,
+    external: true,
+    cta_en: "Ask about times on WhatsApp",
+    cta_ar: "اسأل عن المواعيد على واتساب",
   },
   {
     key: "topik_prep",
@@ -285,6 +294,17 @@ export const COURSE_SECTION_COPY = {
   placement_ar: "اختبار تحديد المستوى",
   trial_en: "or try a free class first",
   trial_ar: "أو جرّب حصة مجانية أولًا",
+  /**
+   * The last exit on the page. Someone who has read nine cards and still has a
+   * question will not fill in a form; they will message. Wording matches the
+   * floating WhatsApp button so the two read as the same offer.
+   */
+  wa_en: "Can't find what you're looking for?",
+  wa_ar: "مش لاقي اللي بتدوّر عليه؟",
+  waCta_en: "Chat with us on WhatsApp",
+  waCta_ar: "تكلّم معانا على واتساب",
+  waMessage_en: "Hi! I have a question about the Korean courses.",
+  waMessage_ar: "السلام عليكم، عندي استفسار عن دورات الكورية.",
 };
 
 // ---------------------------------------------------------------------------
@@ -305,6 +325,14 @@ export const validateCourseCards = (): void => {
     // it, and this is exactly the claim the old translations file was making.
     if (/TOPIK\s*\d\s*\/\s*[ABC]\d/.test(c.eyebrow_en) || /=\s*TOPIK/i.test(c.eyebrow_en)) {
       throw new Error(`Card ${c.key} equates a level with a TOPIK band`);
+    }
+  });
+  COURSE_CARDS.forEach((c) => {
+    if (c.external && !/^https?:\/\//.test(c.href)) {
+      throw new Error(`Card ${c.key} is marked external but its href is not absolute`);
+    }
+    if (!c.external && !c.href.startsWith("/")) {
+      throw new Error(`Card ${c.key} has an absolute href but is not marked external`);
     }
   });
   const hangul = COURSE_CARDS.find((c) => c.key === "hangul");
