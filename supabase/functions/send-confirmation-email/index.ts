@@ -40,6 +40,18 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 
+/**
+ * Where a reply actually lands.
+ *
+ * Mail goes out from noreply@, and several templates — the trial invitation
+ * among them — invite the reader to "reply to this email". Without this header
+ * every one of those replies is dropped on the floor, and the people who reply
+ * rather than click are usually the ones with a single question holding them
+ * back. Mirrors CONTACT_EMAIL in src/lib/siteConfig.ts; edge functions cannot
+ * import from src/, so keep the two in step by hand.
+ */
+const REPLY_TO_EMAIL = "koreanlovers.net@gmail.com";
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -79,7 +91,13 @@ async function sendEmail(
   to: string, subject: string, html: string,
   attachments?: Array<{ filename: string; content: string; content_type?: string }>
 ) {
-  const body: Record<string, unknown> = { from: FROM_EMAIL, to: [to], subject, html };
+  const body: Record<string, unknown> = {
+    from: FROM_EMAIL,
+    reply_to: REPLY_TO_EMAIL,
+    to: [to],
+    subject,
+    html,
+  };
   if (attachments?.length) body.attachments = attachments;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
