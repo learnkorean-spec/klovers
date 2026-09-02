@@ -34,6 +34,8 @@ export interface Level {
   key: string;
   name: string;
   shortLabel: string;
+  /** Arabic short label. Same role as `shortLabel`, for the Arabic UI. */
+  shortLabel_ar: string;
   topik: number | null;
   /** Published CEFR equivalent. Approximate — see the note at the top of this file. */
   cefr: string;
@@ -50,6 +52,7 @@ export const LEVELS: Level[] = [
     key: "hangul",
     name: "Hangul Foundation",
     shortLabel: "Hangul",
+    shortLabel_ar: "تأسيس الهانغل",
     topik: null,
     // CEFR has no "A0". "Pre-A1" is the official term for the stage below A1,
     // introduced in the 2018 CEFR Companion Volume.
@@ -66,6 +69,7 @@ export const LEVELS: Level[] = [
     key: "l1",
     name: "Level 1",
     shortLabel: "Level 1",
+    shortLabel_ar: "المستوى الأول",
     topik: 1,
     cefr: "A1",
     order: 1,
@@ -78,6 +82,7 @@ export const LEVELS: Level[] = [
     key: "l2",
     name: "Level 2",
     shortLabel: "Level 2",
+    shortLabel_ar: "المستوى الثاني",
     topik: 2,
     cefr: "A2",
     order: 2,
@@ -90,6 +95,7 @@ export const LEVELS: Level[] = [
     key: "l3",
     name: "Level 3",
     shortLabel: "Level 3",
+    shortLabel_ar: "المستوى الثالث",
     topik: 3,
     cefr: "B1",
     order: 3,
@@ -102,6 +108,7 @@ export const LEVELS: Level[] = [
     key: "l4",
     name: "Level 4",
     shortLabel: "Level 4",
+    shortLabel_ar: "المستوى الرابع",
     topik: 4,
     cefr: "B2",
     order: 4,
@@ -114,6 +121,7 @@ export const LEVELS: Level[] = [
     key: "l5",
     name: "Level 5",
     shortLabel: "Level 5",
+    shortLabel_ar: "المستوى الخامس",
     topik: 5,
     cefr: "C1",
     order: 5,
@@ -126,6 +134,7 @@ export const LEVELS: Level[] = [
     key: "l6",
     name: "Level 6",
     shortLabel: "Level 6",
+    shortLabel_ar: "المستوى السادس",
     topik: 6,
     // Published as C2. Contested — several studies place TOPIK's top band
     // nearer C1. See the note at the top of this file.
@@ -168,6 +177,54 @@ export const formatLevelLabel = (level: Level): string => {
 export const isFoundationLevel = (id: number): boolean => id === 0;
 
 // ---------------------------------------------------------------------------
+// UI language
+// ---------------------------------------------------------------------------
+
+export type UiLanguage = "en" | "ar";
+
+/**
+ * The language the visitor is reading the site in.
+ *
+ * `LanguageProvider` seeds its state from this same localStorage key and
+ * writes it on every toggle, so reading it here gives the right answer on the
+ * first render — earlier than `document.documentElement.lang`, which the
+ * provider only sets in an effect, after the first paint.
+ *
+ * Wrapped in try/catch: Safari private mode throws on localStorage access, and
+ * a level dropdown is not worth a white screen.
+ */
+const uiLanguage = (): UiLanguage => {
+  if (typeof window === "undefined") return "en";
+  try {
+    return window.localStorage.getItem("k-lovers-lang") === "ar" ? "ar" : "en";
+  } catch {
+    return "en";
+  }
+};
+
+/**
+ * The label for one level in a picker.
+ *
+ * The TOPIK band rides along — "المستوى الأول (TOPIK 1)" — because a student
+ * choosing their own level is exactly the person who may know their TOPIK
+ * result and not know what "Level 1" means here. Hangul has no band, so it
+ * shows its name alone.
+ */
+export const levelOptionLabel = (level: Level, language: UiLanguage): string => {
+  const name = language === "ar" ? level.shortLabel_ar : level.shortLabel;
+  return level.topik ? `${name} (TOPIK ${level.topik})` : name;
+};
+
+/**
+ * {value, label}[] for a Select, in the language you pass.
+ *
+ * Prefer this at any call site that already has the language to hand — it is
+ * explicit, and it does not read browser storage.
+ */
+export const getLevelSelectOptions = (language: UiLanguage) =>
+  LEVELS.map((l) => ({ value: l.key, label: levelOptionLabel(l, language) }));
+
+// ---------------------------------------------------------------------------
 // Normalizer (centralised — was duplicated in 4 files)
 // ---------------------------------------------------------------------------
 
@@ -194,14 +251,24 @@ export const normalizeLevel = (label: string): string => {
 // ---------------------------------------------------------------------------
 
 /**
- * Map a canonical key → friendly `shortLabel` (e.g. "l1" → "Level 1").
- * Falls back to the raw value for anything unrecognised, so legacy strings
- * still render readably during the transition.
+ * Map a canonical key → friendly short label (e.g. "l1" → "Level 1"). Falls
+ * back to the raw value for anything unrecognised, so legacy strings still
+ * render readably during the transition.
+ *
+ * ENGLISH BY DEFAULT, on purpose. Not every caller is UI: `scheduleSlotEngine`
+ * builds class names from this and `marketingEngine` builds captions, and both
+ * produce strings that get stored or sent onward. Those must not change
+ * language because whoever is logged in happens to have the site in Arabic.
+ * Pass the language explicitly where the output is read on screen.
  */
-export const getLevelShortLabel = (key: string | null | undefined): string => {
+export const getLevelShortLabel = (
+  key: string | null | undefined,
+  language: UiLanguage = "en",
+): string => {
   if (!key) return "";
   const lvl = getLevelByKey(key) ?? mapLegacyLevel(key);
-  return lvl?.shortLabel ?? key;
+  if (!lvl) return key;
+  return language === "ar" ? lvl.shortLabel_ar : lvl.shortLabel;
 };
 
 // ---------------------------------------------------------------------------
@@ -283,16 +350,46 @@ export const mapLegacyLevel = (legacyKey: string): Level | undefined => {
 /** Just the key strings */
 export const LEVEL_KEYS = LEVELS.map((l) => l.key);
 
-/** {value, label}[] for Select components — uses shortLabel for compact display */
-export const LEVEL_SELECT_OPTIONS = LEVELS.map((l) => ({
+/**
+ * {value, label}[] for Select components — COMPATIBILITY SHIM.
+ *
+ * `label` is a getter that follows the UI language rather than a fixed string.
+ * That is unusual, so here is why it is worth it.
+ *
+ * Twelve call sites import this constant and none of them pass a language.
+ * Six are student-facing: EnrollNowPage, TrialBookingPage, SignUpPage,
+ * CompleteProfilePage, ResubmitSchedulePage, RegistrationChecklist. An Arabic
+ * student on any of them saw "Hangul, Level 1 … Level 6" — the only English
+ * left on the page, at the step where they must choose. Two of those files are
+ * 58 KB and 47 KB, and the GitHub contents API takes whole files, so a
+ * one-line change there means resending 105 KB and hoping it round-trips.
+ *
+ * A getter fixes all six today from one file. It stays correct because React
+ * re-renders on a language toggle and re-reads `label`, and because array
+ * spread (`[...LEVEL_SELECT_OPTIONS]`, used below and in CompleteProfilePage)
+ * copies element REFERENCES, so the getter survives. Object spread on one
+ * option would freeze it at the then-current value — still correct, just no
+ * longer live.
+ *
+ * Migrate call sites to `getLevelSelectOptions(language)` as they are touched;
+ * when the last one is gone, this can go back to being a plain array.
+ */
+export const LEVEL_SELECT_OPTIONS: { value: string; label: string }[] = LEVELS.map((l) => ({
   value: l.key,
-  label: l.shortLabel,
+  get label() {
+    return levelOptionLabel(l, uiLanguage());
+  },
 }));
 
 /** Same but with special tracks appended */
-export const LEVEL_SELECT_OPTIONS_WITH_SPECIAL = [
+export const LEVEL_SELECT_OPTIONS_WITH_SPECIAL: { value: string; label: string }[] = [
   ...LEVEL_SELECT_OPTIONS,
-  ...SPECIAL_TRACKS.map((t) => ({ value: t.key, label: t.label })),
+  ...SPECIAL_TRACKS.map((t) => ({
+    value: t.key,
+    get label() {
+      return uiLanguage() === "ar" ? t.label_ar : t.label;
+    },
+  })),
 ];
 
 /** Level names for simple string-based lists (admin scheduling) */
@@ -327,6 +424,17 @@ export const validateLevels = (): void => {
   LEVELS.forEach((l) => {
     if (/\bis TOPIK\b|=\s*TOPIK/i.test(l.description_en)) {
       throw new Error(`Level ${l.key} claims to equal a TOPIK band; it should say "prepares you toward"`);
+    }
+  });
+
+  // Every level needs both labels: a missing Arabic one shows up as an empty
+  // row in the dropdown, which is worse than the English it replaced.
+  LEVELS.forEach((l) => {
+    if (!l.shortLabel_ar || !l.shortLabel_ar.trim()) {
+      throw new Error(`Level ${l.key} has no Arabic short label`);
+    }
+    if (l.shortLabel_ar === l.shortLabel) {
+      throw new Error(`Level ${l.key} Arabic label was never translated`);
     }
   });
 };
