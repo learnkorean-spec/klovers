@@ -12,8 +12,12 @@ const STEPS = [
     bg: "bg-blue-500/10",
     titleEn: "Take Your Placement Test",
     titleAr: "اختبر مستواك",
-    descEn: "Find out your exact Korean level (A1–C2) with our free TOPIK-based assessment. It only takes 10 minutes!",
-    descAr: "اكتشف مستواك الدقيق في الكورية من A1 إلى C2 باختبار TOPIK المجاني. يستغرق فقط 10 دقائق!",
+    // Was: "Find out your exact Korean level (A1–C2)". The quiz measures
+    // neither CEFR nor anything exactly — it is thirty questions that suggest
+    // where to start. Promise that instead, in the level names the rest of the
+    // site uses.
+    descEn: "See which level to start from — Hangul, or Level 1 to 6 — with our free placement quiz. It only takes 10 minutes.",
+    descAr: "اعرف تبدأ من أنهي مستوى — تأسيس الهانغل، أو من المستوى الأول للسادس — باختبار تحديد المستوى المجاني. ١٠ دقائق بس.",
     cta: "/placement-test",
     ctaEn: "Take Free Test",
     ctaAr: "ابدأ الاختبار",
