@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { levelLabel } from "../_shared/levelLabel.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,7 +30,9 @@ async function sendEmail(to: string, subject: string, html: string) {
 /* ── Enrollment Welcome Email ── */
 function buildEnrollmentWelcomeEmail(name: string, planType: string, duration: number, amount: number, currency: string, preferredDays: string[], level: string) {
   const daysText = preferredDays.length > 0 ? preferredDays.join(", ") : "Not selected yet";
-  const levelLabel = level ? level.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "To be determined";
+  // Was: level.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()), which
+  // turns the canonical key `l1` into "L1". These letters are English-only.
+  const levelText = levelLabel(level, "en") || "To be determined";
   const currencyLabel = currency === "EGP" ? "EGP" : "$";
   const amountText = currency === "EGP" ? `${amount.toLocaleString()} EGP` : `$${amount}`;
 
@@ -62,7 +65,7 @@ function buildEnrollmentWelcomeEmail(name: string, planType: string, duration: n
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Plan</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${planType === "group" ? "Group" : "Private"} Classes</td></tr>
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Duration</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${duration} ${duration === 1 ? "Month" : "Months"}</td></tr>
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Amount</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${amountText}</td></tr>
-          <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Level</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${levelLabel}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Level</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${levelText}</td></tr>
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Preferred Days</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${daysText}</td></tr>
         </table>
       </div>
@@ -100,7 +103,7 @@ function buildEnrollmentWelcomeEmail(name: string, planType: string, duration: n
 function buildGroupFormedEmail(name: string, groupName: string, dayOfWeek: number, startTime: string, timezone: string, level: string) {
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayLabel = dayNames[dayOfWeek] || "TBD";
-  const levelLabel = level ? level.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "";
+  const levelText = levelLabel(level, "en");
 
   return {
     subject: "KLovers — Your Group is Formed! 🎓",
@@ -130,7 +133,7 @@ function buildGroupFormedEmail(name: string, groupName: string, dayOfWeek: numbe
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Day</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${dayLabel}</td></tr>
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Time</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${startTime}</td></tr>
           <tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Timezone</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${(timezone || "Africa/Cairo").replace(/_/g, " ")}</td></tr>
-          ${levelLabel ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Level</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${levelLabel}</td></tr>` : ""}
+          ${levelText ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:14px;">Level</td><td style="padding:6px 0;font-weight:600;color:#111827;font-size:14px;">${levelText}</td></tr>` : ""}
         </table>
       </div>
 
