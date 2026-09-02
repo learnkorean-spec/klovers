@@ -1,0 +1,152 @@
+# Generate a content-edit proposal from live data, with no credential.
+#
+# The propose step used to be something only a laptop with a checkout could
+# do, which is why the 51-title proposal sat unapplied: regenerating it after
+# it aged was a manual errand. This workflow makes generation a dispatch like
+# every other step.
+#
+# It writes NOTHING to the database and needs NO secret. Generation is a read:
+# scripts/lib/content-edit-supabase-store.mjs's read-only store uses the anon
+# key, which is public (it ships in every visitor's JS bundle) and can only
+# SELECT published posts. The only credential-bearing step in this pipeline is
+# still `apply` in apply-content-edits.yml, gated behind the
+# production-content-apply environment.
+#
+# Output: a new branch holding the generated proposal .json/.md, plus the same
+# files as a workflow artifact. Open a PR from that branch, read the table in
+# the .md, then dispatch Apply Content Edits (plan, then apply).
+#
+# See docs/APPLYING_CONTENT_EDITS.md for the rest of the flow.
+
+name: Generate Content Proposal
+
+on:
+  workflow_dispatch:
+    inputs:
+      generator:
+        description: "which proposal to generate"
+        required: true
+        default: internal-links
+        type: choice
+        options:
+          - internal-links
+          - keyword-focus
+      per_article:
+        description: "internal-links only: how many related links per article (default 4)"
+        required: false
+        default: "4"
+        type: string
+      contested_at:
+        description: "keyword-focus only: a keyword claimed by MORE than this many articles is contested (default 3)"
+        required: false
+        default: "3"
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-content-proposal
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate (read-only, no credential)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The selection logic decides what gets written to live, indexed
+      # articles. It runs before the generator, not after, so a regression
+      # stops here rather than reaching a review table.
+      - name: Test the selection logic
+        run: npx vitest run scripts/lib/related-links.test.mjs scripts/lib/keyword-ownership.test.mjs
+
+      - name: Generate the proposal
+        id: gen
+        env:
+          SUPABASE_URL: https://ewtdgpbybkceokfohhyg.supabase.co
+          # Public key. Read-only here, and RLS still applies.
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dGRncGJ5YmtjZW9rZm9oaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mzg4NzAsImV4cCI6MjA4OTUxNDg3MH0.KPKgPrhms2frDi09sdNChScBrHS00O7UhX2k8SArTxs
+        run: |
+          set -euo pipefail
+          case "${{ inputs.generator }}" in
+            internal-links)
+              node scripts/proposals/internal-links.mjs --per-article "${{ inputs.per_article }}" | tee gen-output.txt
+              ;;
+            keyword-focus)
+              node scripts/proposals/keyword-focus.mjs --contested-at "${{ inputs.contested_at }}" | tee gen-output.txt
+              ;;
+            *)
+              echo "::error::unknown generator ${{ inputs.generator }}"; exit 1 ;;
+          esac
+
+          json=$(ls -t content-edits/proposals/*.proposal.json 2>/dev/null | head -1 || true)
+          if [ -z "$json" ]; then
+            echo "::notice::No proposal file was produced - the generator found nothing to change."
+            echo "batch_id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          batch_id=$(jq -r '.batchId' "$json")
+          edit_count=$(jq -r '.editCount' "$json")
+          stale_count=$(jq -r '.staleCount' "$json")
+          checksum=$(sha256sum "$json" | awk '{print $1}')
+
+          echo "batch_id=$batch_id" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "# Generated \`${{ inputs.generator }}\` proposal"
+            echo
+            echo "**File:** \`$json\`"
+            echo "**Edits:** $edit_count (stale: $stale_count)"
+            echo "**sha256:** \`$checksum\`"
+            echo
+            echo "Nothing has been written to the database. Next: open a PR from the branch"
+            echo "below, read the before/after table in the .md, then dispatch **Apply Content"
+            echo "Edits** with mode=plan, and only then mode=apply."
+            echo
+            echo '```'
+            cat gen-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$stale_count" != "0" ]; then
+            echo "::warning::$stale_count edit(s) are stale - apply will refuse this file. Regenerate."
+          fi
+
+      - name: Push the proposal to its own branch
+        if: steps.gen.outputs.batch_id != ''
+        env:
+          BATCH_ID: ${{ steps.gen.outputs.batch_id }}
+        run: |
+          set -euo pipefail
+          branch="proposal/${{ inputs.generator }}-${BATCH_ID}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add content-edits/proposals/
+          git commit -m "chore(content): generate ${{ inputs.generator }} proposal ${BATCH_ID}"
+          git push origin "$branch"
+          {
+            echo
+            echo "**Branch:** \`$branch\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the proposal as an artifact
+        if: steps.gen.outputs.batch_id != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-proposal-${{ steps.gen.outputs.batch_id }}
+          path: content-edits/proposals/
+          retention-days: 90
+          if-no-files-found: error
