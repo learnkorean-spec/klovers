@@ -5,21 +5,59 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
+import { getLevelByKey, mapLegacyLevel, type Level } from "@/constants/levels";
 
-const LEVEL_LABELS: Record<string, string> = {
-  "A0": "Complete Beginner",
-  "A1": "TOPIK 1 – Beginner",
-  "TOPIK 1 / A1": "TOPIK 1 – Beginner",
-  "A2": "TOPIK 2 – Elementary",
-  "TOPIK 2 / A2": "TOPIK 2 – Elementary",
-  "B1": "TOPIK 3 – Intermediate",
-  "TOPIK 3 / B1": "TOPIK 3 – Intermediate",
-  "B2": "TOPIK 4 – Upper Intermediate",
-  "TOPIK 4 / B2": "TOPIK 4 – Upper Intermediate",
-  "C1": "TOPIK 5 – Advanced",
-  "TOPIK 5 / C1": "TOPIK 5 – Advanced",
-  "C2": "TOPIK 6 – Mastery",
-  "TOPIK 6 / C2": "TOPIK 6 – Mastery",
+/**
+ * WHAT THIS DOCUMENT MAY AND MAY NOT SAY
+ * --------------------------------------
+ * It used to read: "has successfully completed the Korean language program at
+ * KLovers Korean Academy and achieved the level of" → "TOPIK 1 – Beginner",
+ * over Reham's signature.
+ *
+ * Klovers cannot award a TOPIK band. TOPIK is awarded by NIIED on the strength
+ * of a sat exam, and a term of roughly 36 contact hours is not the ~200 hours
+ * a level is reckoned at (see the note at the top of `constants/levels.ts`).
+ * So the certificate now certifies the only thing it can: that this student
+ * completed this Klovers course, and which TOPIK band that course prepares
+ * them toward. A line at the foot says outright that it is not a TOPIK result,
+ * because a gold-bordered PNG with a signature on it will be shown to people
+ * who did not read this file.
+ */
+
+/**
+ * Old certificate links are in inboxes and chat histories, so every value this
+ * page ever issued still has to resolve: bare CEFR, the old "TOPIK n / An"
+ * pairs, and the pre-2026-04 level keys.
+ */
+const CEFR_TO_KEY: Record<string, string> = {
+  A0: "hangul",
+  "PRE-A1": "hangul",
+  A1: "l1",
+  A2: "l2",
+  B1: "l3",
+  B2: "l4",
+  C1: "l5",
+  C2: "l6",
+};
+
+const resolveLevel = (raw: string): Level | undefined => {
+  const value = raw.trim();
+  if (!value) return undefined;
+
+  // Canonical key first: hangul, l1…l6.
+  const direct = getLevelByKey(value);
+  if (direct) return direct;
+
+  // Bare CEFR, as the old dashboard button sent ("A0" was its default).
+  const byCefr = CEFR_TO_KEY[value.toUpperCase()];
+  if (byCefr) return getLevelByKey(byCefr);
+
+  // "TOPIK 3 / B1" and friends.
+  const topik = value.match(/TOPIK\s*([1-6])/i);
+  if (topik) return getLevelByKey(`l${topik[1]}`);
+
+  // foundation, level_1, beginner_2, …
+  return mapLegacyLevel(value);
 };
 
 const CertificatePage = () => {
@@ -32,8 +70,23 @@ const CertificatePage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState("Student");
   const [loading, setLoading] = useState(true);
-  const level = decodeURIComponent(params.get("level") || "A0");
-  const levelLabel = LEVEL_LABELS[level] || level;
+  const rawLevel = decodeURIComponent(params.get("level") || "");
+  const level = resolveLevel(rawLevel);
+
+  // The course completed. Hangul has no TOPIK band, so it states its length
+  // instead — the fact that makes it a course rather than a warm-up.
+  const courseLine = level
+    ? level.topik
+      ? level.name
+      : `${level.name} · ${level.sessions ?? 4} classes`
+    : "Korean course";
+
+  // What that course prepares them for. Never what it certifies.
+  const preparesLine = level
+    ? level.topik
+      ? `a course preparing toward TOPIK ${level.topik}`
+      : "reading and writing the Korean alphabet"
+    : "";
 
   useEffect(() => {
     const loadName = async () => {
@@ -98,9 +151,10 @@ const CertificatePage = () => {
     ctx.letterSpacing = "4px";
     ctx.fillText("K L O V E R S   K O R E A N   A C A D E M Y", W / 2, 186);
 
+    ctx.letterSpacing = "0px";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.font = "13px sans-serif";
-    ctx.fillText("CERTIFICATE OF ACHIEVEMENT", W / 2, 210);
+    ctx.fillText("CERTIFICATE OF COMPLETION", W / 2, 210);
 
     // Divider
     const grad = ctx.createLinearGradient(100, 0, W - 100, 0);
@@ -133,13 +187,10 @@ const CertificatePage = () => {
     ctx.lineTo(W / 2 + nameW / 2, 374);
     ctx.stroke();
 
-    // "has successfully completed"
+    // Completion — a course, at this academy. Not a band, not an award.
     ctx.fillStyle = "rgba(255,255,255,0.6)";
     ctx.font = "italic 18px Georgia, serif";
-    ctx.fillText("has successfully completed the Korean language program at", W / 2, 420);
-
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.fillText("KLovers Korean Academy and achieved the level of", W / 2, 448);
+    ctx.fillText("has successfully completed, at KLovers Korean Academy,", W / 2, 428);
 
     // Level badge background — manual rounded rect (roundRect not supported in older Safari/Firefox)
     const rr = (x: number, y: number, w: number, h: number, r: number) => {
@@ -155,20 +206,32 @@ const CertificatePage = () => {
       ctx.quadraticCurveTo(x, y, x + r, y);
       ctx.closePath();
     };
+
+    // Measure before drawing: "Hangul Foundation · 4 classes" is a good deal
+    // wider than "Level 1", and a fixed 320px badge clipped it.
+    ctx.font = "bold 22px sans-serif";
+    const badgeW = Math.max(320, ctx.measureText(courseLine).width + 72);
     ctx.fillStyle = "#FFFF00";
-    rr(W / 2 - 160, 472, 320, 64, 12);
+    rr(W / 2 - badgeW / 2, 462, badgeW, 64, 12);
     ctx.fill();
 
     ctx.fillStyle = "#000";
-    ctx.font = "bold 22px sans-serif";
-    ctx.fillText(levelLabel, W / 2, 511);
+    ctx.fillText(courseLine, W / 2, 501);
+
+    // What the course prepares them toward — deliberately below the badge and
+    // in the quieter style, because it is context, not the award.
+    if (preparesLine) {
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.font = "italic 17px Georgia, serif";
+      ctx.fillText(preparesLine, W / 2, 556);
+    }
 
     // Divider
     ctx.strokeStyle = grad;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(100, 570);
-    ctx.lineTo(W - 100, 570);
+    ctx.moveTo(100, 588);
+    ctx.lineTo(W - 100, 588);
     ctx.stroke();
 
     // Date + signature area
@@ -176,27 +239,38 @@ const CertificatePage = () => {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.font = "14px sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText(`Issued: ${dateStr}`, 120, 630);
+    ctx.fillText(`Issued: ${dateStr}`, 120, 632);
 
     ctx.textAlign = "right";
-    ctx.fillText("kloversegy.com", W - 120, 630);
+    ctx.fillText("kloversegy.com", W - 120, 632);
 
     // Signature line
     ctx.textAlign = "center";
     ctx.strokeStyle = "rgba(255,255,0,0.4)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(W / 2 - 120, 690);
-    ctx.lineTo(W / 2 + 120, 690);
+    ctx.moveTo(W / 2 - 120, 688);
+    ctx.lineTo(W / 2 + 120, 688);
     ctx.stroke();
 
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = "bold 16px sans-serif";
-    ctx.fillText("Reham", W / 2, 714);
+    ctx.fillText("Reham", W / 2, 712);
 
     ctx.fillStyle = "rgba(255,255,255,0.4)";
     ctx.font = "12px sans-serif";
-    ctx.fillText("Founder & Lead Instructor · KLovers Academy", W / 2, 732);
+    ctx.fillText("Founder & Lead Instructor · KLovers Academy", W / 2, 730);
+
+    // Says the quiet part out loud. This PNG will be forwarded to people who
+    // never saw the page it came from, and it must not be mistaken for a TOPIK
+    // result awarded by NIIED.
+    ctx.fillStyle = "rgba(255,255,255,0.32)";
+    ctx.font = "11px sans-serif";
+    ctx.fillText(
+      "Certifies completion of a Klovers course. It is not a TOPIK result — TOPIK is awarded by NIIED.",
+      W / 2,
+      782
+    );
 
     // Korean text watermark
     ctx.save();
@@ -206,7 +280,7 @@ const CertificatePage = () => {
     ctx.fillText("한국어", W / 2, H / 2 + 60);
     ctx.restore();
 
-  }, [loading, name, levelLabel]);
+  }, [loading, name, courseLine, preparesLine]);
 
   const download = () => {
     const canvas = canvasRef.current;
