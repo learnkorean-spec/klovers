@@ -12,7 +12,7 @@ import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
  * The public "choose your level" grid.
  *
  * What this section is for: the copy comes from `@/constants/courseCards`,
- * which derives the level number, TOPIK band and CEFR band from
+ * which derives the level number, class count, TOPIK band and CEFR band from
  * `@/constants/levels`. It used to come from `translations.courses.items` — a
  * hand-written array that had drifted, which is how the site came to say
  * "Level 2 — TOPIK 2 / A2". A level prepares a student toward a TOPIK band; it
@@ -22,8 +22,9 @@ import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
  * EnrollNowPage reads and preselects. Reading & Speaking is arranged by
  * conversation, so it opens WhatsApp instead.
  *
- * Below the grid are the two exits for someone who did not find their answer
- * in a card: the placement test / free trial, and WhatsApp.
+ * Below the grid: the caveat about study between classes, then the two exits
+ * for someone who did not find their answer in a card — the placement test /
+ * free trial, and WhatsApp.
  */
 
 /**
@@ -140,8 +141,15 @@ const CoursesSection = () => {
           })}
         </div>
 
+        {/* The caveat, once. It is what stops "24 classes · prepares you toward
+            TOPIK 1" reading as "24 classes gets you TOPIK 1" — 24 classes is 24
+            hours, and institutes budget roughly 200 hours a level. */}
+        <p className="text-center text-xs text-muted-foreground mt-8 max-w-xl mx-auto">
+          {isAr ? c.note_ar : c.note_en}
+        </p>
+
         {/* The two exits for anyone the cards did not answer. */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-8">
           <p className="text-sm text-muted-foreground mb-3">
             {isAr ? c.unsure_ar : c.unsure_en}
           </p>

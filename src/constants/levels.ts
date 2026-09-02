@@ -10,23 +10,35 @@
  * Legacy values (`foundation`, `level_1`…`level_6`, `beginner_1`, `intermediate_2`
  * etc.) are supported READ-SIDE only via `mapLegacyLevel()` — never emit them on write.
  *
+ * ── What a level is, in hours ──────────────────────────────────────────────
+ *
+ * A Klovers class is 60 minutes, once a week. A level is 24 classes over six
+ * months, which matches the 6-month bundle in `lib/stripePrices` (4 / 12 / 24
+ * classes for 1 / 3 / 6 months). So a level is **24 contact hours**.
+ *
+ * Hold that against the outside world before writing any promise:
+ *
+ *   • Yonsei's Korean Language Institute runs 20 hours a week for a 10-week
+ *     term — 200 hours per level, six levels.
+ *   • Published estimates put zero → TOPIK 1-2 at roughly 300-400 hours.
+ *
+ * 24 hours is not 200 hours, and no amount of good teaching closes that by a
+ * factor of eight. That is why every description here says a level PREPARES a
+ * student toward a TOPIK band, why nothing on the site says a level equals or
+ * certifies one, and why the course cards carry a line saying that reaching
+ * exam standard needs study between classes. If someone later shortens that
+ * wording, this note is the reason not to.
+ *
  * ── On the standards these map to ──────────────────────────────────────────
  *
  * TOPIK 1-6 maps to CEFR A1-C2 in the commonly published tables, and that is
- * what `cefr` carries. Two caveats worth keeping in mind before any of this is
- * put in front of a student:
- *
- *   • The TOPIK 6 = C2 equivalence is contested. Several studies place the
- *     top TOPIK band nearer C1. Lead with TOPIK; treat CEFR as approximate.
- *
- *   • A level is a body of material, not a certificate. Korean university
- *     institutes budget roughly 200 hours per level (Yonsei: 200 hours per
- *     10-week term). A 90-minute class twice a week for three months is about
- *     36 hours. So a Klovers level PREPARES a student toward a TOPIK band —
- *     it does not certify one, and the descriptions below say so.
+ * what `cefr` carries. The TOPIK 6 = C2 equivalence is contested — several
+ * studies place the top TOPIK band nearer C1. Lead with TOPIK; treat CEFR as
+ * approximate, and print it with "≈".
  *
  * Hangul sits before the ladder (`topik: null`) and is deliberately optional:
- * a student who can already read goes straight to Level 1.
+ * a student who can already read goes straight to Level 1. It is four classes,
+ * complete in itself, and sold on its own.
  */
 
 export interface Level {
@@ -40,8 +52,8 @@ export interface Level {
   /** Published CEFR equivalent. Approximate — see the note at the top of this file. */
   cefr: string;
   order: number;
-  /** Fixed number of classes, where the level has one. Null = not fixed yet. */
-  sessions: number | null;
+  /** How many 60-minute classes the level is. 24 for the ladder, 4 for Hangul. */
+  sessions: number;
   description_en: string;
   description_ar: string;
 }
@@ -73,7 +85,7 @@ export const LEVELS: Level[] = [
     topik: 1,
     cefr: "A1",
     order: 1,
-    sessions: null,
+    sessions: 24,
     description_en: "Core greetings, basic grammar, and daily expressions. Prepares you toward TOPIK 1 (≈ CEFR A1).",
     description_ar: "تحيات وقواعد أساسية وتعبيرات يومية. يجهّزك لـ TOPIK 1 (يقابل تقريبًا A1).",
   },
@@ -86,7 +98,7 @@ export const LEVELS: Level[] = [
     topik: 2,
     cefr: "A2",
     order: 2,
-    sessions: null,
+    sessions: 24,
     description_en: "Expand sentence building, everyday conversations, and comprehension. Prepares you toward TOPIK 2 (≈ CEFR A2).",
     description_ar: "توسيع بناء الجمل ومحادثات الحياة اليومية. يجهّزك لـ TOPIK 2 (يقابل تقريبًا A2).",
   },
@@ -99,7 +111,7 @@ export const LEVELS: Level[] = [
     topik: 3,
     cefr: "B1",
     order: 3,
-    sessions: null,
+    sessions: 24,
     description_en: "Handle real-life topics with more complex grammar. Prepares you toward TOPIK 3 (≈ CEFR B1).",
     description_ar: "مواضيع واقعية مع قواعد أكثر تعقيدًا. يجهّزك لـ TOPIK 3 (يقابل تقريبًا B1).",
   },
@@ -112,7 +124,7 @@ export const LEVELS: Level[] = [
     topik: 4,
     cefr: "B2",
     order: 4,
-    sessions: null,
+    sessions: 24,
     description_en: "Fluent conversation structures, longer listening and reading. Prepares you toward TOPIK 4 (≈ CEFR B2).",
     description_ar: "محادثة منظمة واستماع وقراءة أطول. يجهّزك لـ TOPIK 4 (يقابل تقريبًا B2).",
   },
@@ -125,7 +137,7 @@ export const LEVELS: Level[] = [
     topik: 5,
     cefr: "C1",
     order: 5,
-    sessions: null,
+    sessions: 24,
     description_en: "Advanced nuance, formal language, topic discussion. Prepares you toward TOPIK 5 (≈ CEFR C1).",
     description_ar: "فروقات دقيقة ولغة رسمية ونقاشات. يجهّزك لـ TOPIK 5 (يقابل تقريبًا C1).",
   },
@@ -140,7 +152,7 @@ export const LEVELS: Level[] = [
     // nearer C1. See the note at the top of this file.
     cefr: "C2",
     order: 6,
-    sessions: null,
+    sessions: 24,
     description_en: "Near-native comprehension, idioms, and advanced expression. Prepares you toward TOPIK 6 (the highest TOPIK band).",
     description_ar: "فهم شبه أصلي وتعبيرات متقدمة واصطلاحات. يجهّزك لـ TOPIK 6 (أعلى مستويات TOPIK).",
   },
@@ -163,15 +175,14 @@ export const getLevelByKey = (key: string): Level | undefined =>
   LEVELS.find((l) => l.key === key);
 
 /**
- * "Level 1 — prepares you toward TOPIK 1" / "Hangul Foundation — 4 classes".
+ * "Level 1 — 24 classes, prepares you toward TOPIK 1".
  *
  * Never says a level EQUALS a TOPIK band: the hours do not support that claim.
  * See the note at the top of this file.
  */
 export const formatLevelLabel = (level: Level): string => {
-  if (level.topik) return `${level.name} — prepares you toward TOPIK ${level.topik}`;
-  if (level.sessions) return `${level.name} — ${level.sessions} classes`;
-  return level.name;
+  if (level.topik) return `${level.name} — ${level.sessions} classes, prepares you toward TOPIK ${level.topik}`;
+  return `${level.name} — ${level.sessions} classes`;
 };
 
 export const isFoundationLevel = (id: number): boolean => id === 0;
@@ -419,6 +430,18 @@ export const validateLevels = (): void => {
   if (hangul.topik !== null) throw new Error("Hangul must not claim a TOPIK band");
   if (hangul.cefr !== "Pre-A1") throw new Error('Hangul CEFR must be "Pre-A1" — CEFR has no "A0"');
   if (hangul.sessions !== 4) throw new Error("Hangul is a 4-class course");
+
+  // Every level must state how many classes it is, and the ladder is 24 —
+  // matching the 6-month bundle in stripePrices. A level with no class count
+  // is a level a student cannot price, which is the state this replaced.
+  LEVELS.forEach((l) => {
+    if (!l.sessions || l.sessions < 1) throw new Error(`Level ${l.key} has no class count`);
+  });
+  LEVELS.filter((l) => l.topik).forEach((l) => {
+    if (l.sessions !== 24) {
+      throw new Error(`Level ${l.key} is ${l.sessions} classes; the ladder is 24, and the 6-month bundle sells 24`);
+    }
+  });
 
   // No level may claim to BE a TOPIK band. The hours do not support it.
   LEVELS.forEach((l) => {
