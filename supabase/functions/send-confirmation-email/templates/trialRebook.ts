@@ -20,11 +20,11 @@
  * price is deliberately absent for that reason, and because it varies by
  * country: the courses page shows each reader theirs.
  *
- * The copy is organised around the reasons people do not book, in the order
- * they occur to a reader: which dates (slots), in my time? (local-time note),
- * do I have to perform? (what-happens box), who is teaching (teacher line),
- * then the ask, then what comes after, then an exit for anyone none of the
- * dates suit.
+ * The copy is ordered by the objections a reader actually has, in the order
+ * they occur: which dates (slots), in my time? (local-time note), how long do
+ * I have to decide (deadline), will I be put on the spot (what-happens box),
+ * who is teaching (teacher line), then the ask, then what comes after, then an
+ * exit for anyone none of the dates suit.
  *
  * GENDER
  * ------
@@ -32,14 +32,14 @@
  * "١٠ طالبات". Most Klovers students are women, but a letter grammatically
  * addressed to women tells every man who gets it that the class is not his.
  * Arabic has no true neuter, so: impersonal constructions wherever a verb can
- * be avoided ("عند فتح صفحة الحجز…", "يُفضَّل الحجز بدري"), unmarked forms
- * where one cannot. No sentence marks the reader's gender.
+ * be avoided ("صفحة الحجز بتعرض…", "ننصح بالحجز مبكرًا"), unmarked forms where
+ * one cannot. No sentence marks the reader's gender.
  */
 
 import type { EmailPayload } from "./common.ts";
 import {
   BRAND_BLACK, BRAND_YELLOW, BRAND_DARK, BRAND_GRAY, BRAND_MUTED,
-  SITE_URL, brandWrapper, renderClassTime,
+  SITE_URL, WHATSAPP_URL, brandWrapper, renderClassTime,
 } from "./common.ts";
 
 /**
@@ -58,6 +58,25 @@ const TRIAL_CAPACITY = 8;
  */
 const TRIAL_MINUTES = 30;
 
+/**
+ * When the Hangul course actually runs.
+ *
+ * ⚠ This used to read "a week after your trial, same day, same time". That was
+ * WRONG for three readers in four. The trial slots are Fri 15:00 and Sat 16:30
+ * (Arabic), Sun 15:00 and Mon 16:00 (English); the course cohorts opened by
+ * migration 20260903000000 are Fri 15:00 (Arabic) and Sat 15:00 (English). So
+ * only the Friday Arabic trial matched — everyone else was being told a class
+ * time that does not exist.
+ *
+ * The days are stated outright now, which is what the design was in the first
+ * place: one Arabic day, one English day, and the student's track picks which.
+ *
+ * Hardcoded because a template has no database access. If the cohorts move,
+ * change them here and in `schedule_packages` in the same breath.
+ */
+const COURSE_DAYS_AR = "العربي يوم الجمعة ٣ العصر، والإنجليزي يوم السبت ٣ العصر — بتوقيت القاهرة.";
+const COURSE_DAYS_EN = "Arabic track Fridays 3pm, English track Saturdays 3pm — Cairo time.";
+
 const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 const toArabicDigits = (n: number): string =>
   String(n).replace(/\d/g, (d) => AR_DIGITS[Number(d)]);
@@ -66,7 +85,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const isAr = p.language === "ar";
   const url = p.rebook_url || `${SITE_URL}/free-trial`;
   const coursesUrl = `${SITE_URL}/courses`;
-  const waUrl = "https://wa.me/201010003084";
+  const waUrl = WHATSAPP_URL;
 
   const dayNamesEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayNamesAr = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -97,16 +116,16 @@ export function buildTrialRebookEmail(p: EmailPayload) {
           slotTz: s.timezone || "Africa/Cairo",
           studentTz: p.student_timezone, isAr,
         });
-        return `<div style="background-color: ${BRAND_GRAY}; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px; margin: 8px 0; ${isAr ? "text-align: right;" : ""}">
-          <p style="margin: 0; font-weight: bold; color: ${BRAND_DARK};">📅 ${dayPart}</p>
-          <p style="margin: 4px 0 0; color: ${BRAND_MUTED}; font-size: 13px;">⏰ ${ct.timeLine}</p>
+        return `<div style="background-color: ${BRAND_GRAY}; border: 1px solid #e6e6e6; border-radius: 10px; padding: 14px 18px; margin: 10px 0; ${isAr ? "text-align: right;" : ""}">
+          <p style="margin: 0; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">📅 ${dayPart}</p>
+          <p style="margin: 5px 0 0; color: ${BRAND_MUTED}; font-size: 13px;">⏰ ${ct.timeLine}</p>
         </div>`;
       }).join("")
     : "";
 
   const localTimeNote = isAr
-    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🌍 عند فتح صفحة الحجز، كل ميعاد بيظهر <strong>بتوقيت بلدك</strong> تلقائيًا.</p>`
-    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🌍 When you open the booking page, every time is shown in <strong>your own local time</strong> automatically.</p>`;
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">🌍 صفحة الحجز بتعرض كل ميعاد بتوقيت بلدك تلقائيًا.</p>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">🌍 The booking page shows every time in your own local time, automatically.</p>`;
 
   // A real deadline, derived from the dates in the letter rather than typed —
   // it cannot contradict the slot cards above it or go stale on a re-send.
@@ -114,8 +133,8 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const lastDate = slots.map((s) => s.date).filter(Boolean).sort().pop();
   const deadlineNote = lastDate
     ? (isAr
-        ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🗓️ المواعيد دي كلها في نفس الأسبوع — آخر واحد فيهم <strong>${fmtDate(lastDate as string)}</strong>.</p>`
-        : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🗓️ These dates are all in the same week — the last one is <strong>${fmtDate(lastDate as string)}</strong>.</p>`)
+        ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🗓️ المواعيد دي كلها في نفس الأسبوع، وآخرها <strong>${fmtDate(lastDate as string)}</strong>.</p>`
+        : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🗓️ These dates are all in the same week — the last is <strong>${fmtDate(lastDate as string)}</strong>.</p>`)
     : "";
 
   const minutes = p.trial_duration_min || TRIAL_MINUTES;
@@ -128,76 +147,76 @@ export function buildTrialRebookEmail(p: EmailPayload) {
    * and one concrete thing they will walk away having done.
    */
   const whatHappens = isAr
-    ? `<div style="background-color: ${BRAND_GRAY}; border-radius: 10px; padding: 16px 20px; margin: 20px 0; text-align: right;">
-        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">الحصة ماشية إزاي؟</p>
-        <p style="margin: 0 0 6px; color: ${BRAND_MUTED}; font-size: 14px;">• ${minutesLabel} دقيقة على Google Meet</p>
-        <p style="margin: 0 0 6px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>مش لازم تفتح الكاميرا</strong> — اتفرّج وشارك براحتك</p>
+    ? `<div style="background-color: ${BRAND_GRAY}; border-radius: 12px; padding: 18px 22px; margin: 22px 0; text-align: right;">
+        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">تفاصيل الحصة</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• ${minutesLabel} دقيقة على Google Meet</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>الكاميرا اختيارية</strong> — الحضور والمشاركة على راحتك</p>
         <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• في آخر الحصة <strong>هتكتب اسمك بالكوري</strong></p>
       </div>`
-    : `<div style="background-color: ${BRAND_GRAY}; border-radius: 10px; padding: 16px 20px; margin: 20px 0;">
-        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">What happens in the class?</p>
-        <p style="margin: 0 0 6px; color: ${BRAND_MUTED}; font-size: 14px;">• ${minutesLabel} minutes on Google Meet</p>
-        <p style="margin: 0 0 6px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>Camera is optional</strong> — join and take part at your own pace</p>
+    : `<div style="background-color: ${BRAND_GRAY}; border-radius: 12px; padding: 18px 22px; margin: 22px 0;">
+        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">What the class looks like</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• ${minutesLabel} minutes on Google Meet</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>Camera optional</strong> — join and take part at your own pace</p>
         <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• By the end you'll <strong>write your own name in Korean</strong></p>
       </div>`;
 
-  // The letter came from a brand with no face. A named teacher with a live
-  // class is the one thing a language app cannot copy.
+  // The letter came from a brand with no face. A named teacher in a live room
+  // is the one thing an app cannot copy.
   const teacherLine = isAr
-    ? `<p style="margin: 0 0 14px;">بتدرّس معايا أنا — <strong>ريهام</strong>. حصة مباشرة معايا، مش فيديو مسجّل ولا تطبيق.</p>`
-    : `<p style="margin: 0 0 14px;">You'll be taught by me — <strong>Reham</strong>. A live class with a teacher, not a recorded video or an app.</p>`;
+    ? `<p style="margin: 0 0 16px;">الحصة معايا شخصيًا — <strong>ريهام</strong>، مؤسِّسة كلوفرز. حصة مباشرة، مش فيديو مسجّل ولا تطبيق.</p>`
+    : `<p style="margin: 0 0 16px;">The class is with me — <strong>Reham</strong>, who founded Klovers. Live, not a recorded video or an app.</p>`;
 
   const meetLinkSection = p.class_link_url
     ? (isAr
-        ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
-            <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet (يُفضَّل حفظه ليوم الحصة)</p>
+        ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
+            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet — يُفضَّل حفظه ليوم الحصة</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">الدخول للكلاس</a>
-            <p style="margin: 8px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">ملاحظة: الرابط ده شخصي — من فضلك ما تشاركهوش مع حد.</p>
+            <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">الرابط ده شخصي — من فضلك ما تشاركهوش مع حد.</p>
           </div>`
-        : `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
-            <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">🎓 Your Google Meet link (save it for class day)</p>
+        : `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
+            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 Your Google Meet link — save it for class day</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Join the Class</a>
-            <p style="margin: 8px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">Note: this link is personal — please don't share it.</p>
+            <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">This link is personal — please don't share it.</p>
           </div>`)
     : "";
 
-  const chooseBtn = `<div style="margin: 24px 0; text-align: center;">
-    <a href="${url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">
+  const chooseBtn = `<div style="margin: 26px 0; text-align: center;">
+    <a href="${url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 15px 36px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; border: 1px solid rgba(0,0,0,0.25);">
       ${isAr ? "احجز موعدك" : "Choose My Date"}
     </a>
   </div>`;
 
   // The missing half of this letter. A free class with nothing after it is a
-  // pleasant hour that converts nobody.
-  //
-  // "Same day, same time, the week after" is true by construction: the Hangul
-  // cohorts run Fri and Sat 15:00 Africa/Cairo and the Arabic Friday and
-  // English Sunday trials are 15:00 too. Relative rather than dated, so it
-  // cannot go stale between sends.
+  // pleasant half-hour that converts nobody. The days are named rather than
+  // described relative to the trial — see COURSE_DAYS_AR above for why.
   const nextStep = isAr
-    ? `<div style="border: 1px dashed #d1d5db; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: right;">
-        <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">وبعد الحصة التجريبية؟</p>
-        <p style="margin: 0 0 6px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.7;">
-          كورس <strong>تأسيس الهانغل</strong> بيبدأ بعدها بأسبوع — <strong>نفس اليوم ونفس الساعة</strong>.
-          ٤ حصص، الحصة ٦٠ دقيقة، وفي آخرها تقدر تقرا وتكتب أي كلمة كورية.
+    ? `<div style="border: 1px dashed #d5d5d5; border-radius: 12px; padding: 18px 22px; margin: 24px 0; text-align: right;">
+        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">وبعد الحصة التجريبية؟</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          كورس <strong>تأسيس الهانغل</strong> — ٤ حصص، الحصة ٦٠ دقيقة، وفي آخرها تقرأ وتكتب أي كلمة كورية.
+        </p>
+        <p style="margin: 0 0 10px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          المواعيد: ${COURSE_DAYS_AR}
         </p>
         <a href="${coursesUrl}" style="color: ${BRAND_DARK}; font-size: 13px; font-weight: bold;">تفاصيل الكورس والأسعار ←</a>
       </div>`
-    : `<div style="border: 1px dashed #d1d5db; border-radius: 10px; padding: 16px 20px; margin: 22px 0;">
-        <p style="margin: 0 0 8px; font-weight: bold; color: ${BRAND_DARK};">And after the trial?</p>
-        <p style="margin: 0 0 6px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.7;">
-          The <strong>Hangul Foundation</strong> course starts a week later — <strong>same day, same time</strong>.
-          Four classes of 60 minutes, and by the end you can read and write any Korean word.
+    : `<div style="border: 1px dashed #d5d5d5; border-radius: 12px; padding: 18px 22px; margin: 24px 0;">
+        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">And after the trial?</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          The <strong>Hangul Foundation</strong> course — four classes of 60 minutes, and by the end you can read and write any Korean word.
+        </p>
+        <p style="margin: 0 0 10px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          When it runs: ${COURSE_DAYS_EN}
         </p>
         <a href="${coursesUrl}" style="color: ${BRAND_DARK}; font-size: 13px; font-weight: bold;">Course details and prices →</a>
       </div>`;
 
   // Anyone none of the four dates suit used to have nothing to do but close
-  // the email. This turns a silent no into a message that also says which day
-  // to open next.
+  // the email. This turns a silent no into the data that decides which day
+  // opens next.
   const noneSuit = isAr
-    ? `<p style="margin: 0 0 14px;">مش مناسب أي ميعاد فيهم؟ <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">ابعتلنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة على أساس الردود دي.</p>`
-    : `<p style="margin: 0 0 14px;">None of these times work? <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">Message us on WhatsApp</a> and tell us which day suits you — new slots get opened based on exactly these replies.</p>`;
+    ? `<p style="margin: 0 0 16px;">لو مفيش ميعاد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">كلّمنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة بناءً على الردود دي.</p>`
+    : `<p style="margin: 0 0 16px;">If none of these work, <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">message us on WhatsApp</a> and tell us which day suits you — new slots get opened on exactly these replies.</p>`;
 
   const seats = isAr ? toArabicDigits(TRIAL_CAPACITY) : String(TRIAL_CAPACITY);
 
@@ -205,22 +224,22 @@ export function buildTrialRebookEmail(p: EmailPayload) {
     return {
       subject: "KLovers — حصتك التجريبية المجانية جاهزة للحجز 🎉",
       html: brandWrapper(`
-        <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أهلاً ${p.name}! 👋</h1>
-        <p>حصتك الكورية التجريبية المجانية <strong>جاهزة للحجز</strong>. دي المواعيد المتاحة:</p>
+        <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">أهلاً ${p.name}! 👋</h1>
+        <p style="margin: 0 0 16px;">حصتك التجريبية المجانية <strong>جاهزة للحجز</strong> — دي المواعيد المتاحة:</p>
         ${slotCards}
         ${localTimeNote}
         ${deadlineNote}
-        <p>كل ميعاد بلغة واحدة بس — الميعاد <strong>الإنجليزي</strong> حصته كلها بالإنجليزي، و<strong>العربي</strong> كلها بالعربي.</p>
-        <p>الأماكن محدودة بـ <strong>${seats} لكل حصة</strong>، ويُفضَّل الحجز بدري.</p>
+        <p style="margin: 0 0 14px;">كل ميعاد بلغة واحدة: الميعاد <strong>الإنجليزي</strong> حصته بالإنجليزي بالكامل، و<strong>العربي</strong> بالعربي بالكامل.</p>
+        <p style="margin: 0 0 6px;">عدد المقاعد <strong>${seats} لكل حصة</strong>، فننصح بالحجز مبكرًا.</p>
         ${whatHappens}
         ${teacherLine}
         ${chooseBtn}
         ${meetLinkSection}
         ${nextStep}
         ${noneSuit}
-        <p>ولو الحصة كمّلت قبل الحجز، هنبعت المواعيد اللي بعدها — <strong>المكان في القائمة محفوظ</strong>، ومش محتاج أي إجراء.</p>
-        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">أي سؤال؟ الرد على الإيميل ده، أو على واتساب:</p>
-        <div style="margin: 8px 0 4px; text-align: center;">
+        <p style="margin: 0 0 16px;">ولو الحصة اكتملت قبل ما تحجز، هنبعتلك المواعيد التالية تلقائيًا — <strong>مكانك في القائمة محفوظ</strong>.</p>
+        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 22px 0 10px;">أي استفسار؟ رد على الإيميل ده، أو كلّمنا على واتساب:</p>
+        <div style="margin: 0 0 4px; text-align: center;">
           <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
         </div>
       `, true),
@@ -230,22 +249,22 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   return {
     subject: "KLovers — your free trial is ready to book 🎉",
     html: brandWrapper(`
-      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 👋</h1>
-      <p>Your free Korean trial class is <strong>ready to book</strong>. Here are the available dates:</p>
+      <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">Hi ${p.name}! 👋</h1>
+      <p style="margin: 0 0 16px;">Your free Korean trial class is <strong>ready to book</strong> — here are the available dates:</p>
       ${slotCards}
       ${localTimeNote}
       ${deadlineNote}
-      <p>Each slot is taught in one language only — pick an <strong>English</strong> slot and the class runs in English, an <strong>Arabic</strong> slot and it runs in Arabic.</p>
-      <p>Places are limited to <strong>${seats} per class</strong>, so it is worth booking early.</p>
+      <p style="margin: 0 0 14px;">Each slot is taught in one language only: an <strong>English</strong> slot runs entirely in English, an <strong>Arabic</strong> slot entirely in Arabic.</p>
+      <p style="margin: 0 0 6px;">There are <strong>${seats} places per class</strong>, so it is worth booking early.</p>
       ${whatHappens}
       ${teacherLine}
       ${chooseBtn}
       ${meetLinkSection}
       ${nextStep}
       ${noneSuit}
-      <p>If a class fills up before you book, we'll send the next set of dates — <strong>your place on the list is kept</strong>, and there's nothing you need to do.</p>
-      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email, or message us on WhatsApp:</p>
-      <div style="margin: 8px 0 4px; text-align: center;">
+      <p style="margin: 0 0 16px;">If a class fills up before you book, we'll send the next set of dates automatically — <strong>your place on the list is kept</strong>.</p>
+      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 22px 0 10px;">Any questions? Reply to this email, or message us on WhatsApp:</p>
+      <div style="margin: 0 0 4px; text-align: center;">
         <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
       </div>
     `),
