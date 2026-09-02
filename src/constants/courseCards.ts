@@ -10,15 +10,15 @@
  * truth, in a file too large for anyone to notice.
  *
  * So the cards are now DERIVED from `LEVELS`. The level number, the TOPIK
- * band and the CEFR band all come from `levels.ts`; only the marketing
- * sentences live here, keyed by the same canonical keys. Change a level
- * there and the card follows.
+ * band, the CEFR band and the class count all come from `levels.ts`; only the
+ * marketing sentences live here, keyed by the same canonical keys. Change a
+ * level there and the card follows.
  *
  * TWO CLAIMS THIS COPY IS CAREFUL ABOUT
  * -------------------------------------
  *  1. A level PREPARES a student toward a TOPIK band. It does not equal one,
  *     and it certainly does not certify one — see the hours note at the top
- *     of `levels.ts`. Every eyebrow reads "prepares you toward", never "=".
+ *     of `levels.ts`. Every blurb reads "prepares you toward", never "=".
  *  2. CEFR is shown with "≈". The TOPIK↔CEFR table is a convenience, not a
  *     standard, and the TOPIK 6 = C2 end of it is disputed.
  *
@@ -33,7 +33,7 @@ import { WHATSAPP_BASE } from "@/lib/siteConfig";
 export interface CourseCard {
   /** Canonical level key, or the special-track key. Also the React list key. */
   key: string;
-  /** Small label above the title: the standards line. */
+  /** Small label above the title: how many classes, over how long. */
   eyebrow_en: string;
   eyebrow_ar: string;
   title_en: string;
@@ -186,21 +186,44 @@ const ARABIC_ORDINAL: Record<number, string> = {
   6: "السادس",
 };
 
-/**
- * The standards line under the card title.
- *
- * Hangul has no TOPIK band, so it shows its class count instead. Everything
- * else says "prepares you toward" — never "=".
- */
-const eyebrowEn = (l: Level): string =>
-  l.topik === null
-    ? `${l.cefr} · ${l.sessions} classes`
-    : `Prepares you toward TOPIK ${l.topik} · ≈ CEFR ${l.cefr}`;
+/** Arabic-Indic digits, to match the rest of the Arabic copy on these cards. */
+const ar = (n: number): string => String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
 
-const eyebrowAr = (l: Level): string =>
-  l.topik === null
-    ? `تمهيدي (${l.cefr}) · ${l.sessions} حصص`
-    : `يجهّزك لـ TOPIK ${l.topik} · يقابل تقريبًا ${l.cefr}`;
+/**
+ * The line above the card title.
+ *
+ * It carries the COMMERCIAL fact — how many classes, over how long — because
+ * that is the question a student actually has at this point and the one the
+ * site could not answer. The TOPIK band moved down into the blurb: it is
+ * context for the course, not the headline, and putting a band where the price
+ * question belongs is how "level = TOPIK band" starts sounding true again.
+ *
+ * Months are derived, not stored: the purchasable bundles are 4 / 12 / 24
+ * classes for 1 / 3 / 6 months, i.e. four classes a month (see stripePrices).
+ */
+const monthsFor = (sessions: number): number => Math.round(sessions / 4);
+
+const eyebrowEn = (l: Level): string => {
+  const n = l.sessions ?? 0;
+  if (l.topik === null) return `${n} classes · ${l.cefr}`;
+  return `${n} classes · ${monthsFor(n)} months`;
+};
+
+const eyebrowAr = (l: Level): string => {
+  const n = l.sessions ?? 0;
+  if (l.topik === null) return `${ar(n)} حصص · تمهيدي (${l.cefr})`;
+  return `${ar(n)} حصة · ${ar(monthsFor(n))} شهور`;
+};
+
+/**
+ * "Prepares you toward TOPIK n" — generated, so it cannot drift from `levels.ts`
+ * and cannot accidentally be written as an equation in one card and not another.
+ */
+const preparesEn = (l: Level): string =>
+  l.topik ? ` Prepares you toward TOPIK ${l.topik} (≈ CEFR ${l.cefr}).` : "";
+
+const preparesAr = (l: Level): string =>
+  l.topik ? ` يجهّزك لـ TOPIK ${l.topik} (يقابل تقريبًا ${l.cefr}).` : "";
 
 const levelCards: CourseCard[] = LEVELS.map((l) => {
   const copy = LEVEL_COPY[l.key];
@@ -210,8 +233,8 @@ const levelCards: CourseCard[] = LEVELS.map((l) => {
     eyebrow_ar: eyebrowAr(l),
     title_en: l.name,
     title_ar: l.key === "hangul" ? "تأسيس الهانغل" : `المستوى ${ARABIC_ORDINAL[l.id] ?? l.id}`,
-    blurb_en: copy?.blurb_en ?? l.description_en,
-    blurb_ar: copy?.blurb_ar ?? l.description_ar,
+    blurb_en: (copy?.blurb_en ?? l.description_en) + preparesEn(l),
+    blurb_ar: (copy?.blurb_ar ?? l.description_ar) + preparesAr(l),
     features_en: copy?.features_en ?? [],
     features_ar: copy?.features_ar ?? [],
     // EnrollNowPage reads ?level= and preselects it (canonical key).
@@ -284,9 +307,20 @@ export const COURSE_SECTION_COPY = {
   title_en: "Choose the level that fits your journey",
   title_ar: "اختر المستوى الذي يناسب رحلتك",
   subtitle_en:
-    "From the alphabet to advanced. Each level prepares you toward its TOPIK band — and you can book straight from here.",
+    "From the alphabet to advanced. Every class is 60 minutes, once a week. A level is 24 classes over 6 months — except Hangul Foundation, which is 4.",
   subtitle_ar:
-    "من الأبجدية حتى المستوى المتقدم. كل مستوى يجهّزك لمستوى TOPIK المقابل — ويمكنك الحجز مباشرة من هنا.",
+    "من الأبجدية حتى المستوى المتقدم. كل حصة ٦٠ دقيقة، مرة في الأسبوع. المستوى ٢٤ حصة على ٦ شهور — ما عدا تأسيس الهانغل، ٤ حصص.",
+  /**
+   * The honest caveat, once under the grid rather than on all nine cards.
+   *
+   * It is what stops "Level 1 → TOPIK 1" reading as a promise. 24 classes is
+   * 24 hours; institutes budget roughly 200 hours a level, and the published
+   * range from zero to TOPIK 1-2 is 300-400 hours. Without this line, naming a
+   * class count next to a TOPIK band quietly makes the claim the certificate
+   * was just stopped from making.
+   */
+  note_en: "Classes cover the level's syllabus. Reaching TOPIK exam standard needs study between them.",
+  note_ar: "الحصص بتغطي منهج المستوى. الوصول لمستوى امتحان TOPIK بيحتاج مذاكرة بينها كمان.",
   /** Shown under the grid for anyone who cannot place themselves. */
   unsure_en: "Not sure where you are?",
   unsure_ar: "مش متأكد من مستواك؟",
@@ -323,7 +357,10 @@ export const validateCourseCards = (): void => {
     if (c.features_en.length === 0) throw new Error(`Card ${c.key} has no features`);
     // No card may claim a level EQUALS a TOPIK band — the hours do not support
     // it, and this is exactly the claim the old translations file was making.
-    if (/TOPIK\s*\d\s*\/\s*[ABC]\d/.test(c.eyebrow_en) || /=\s*TOPIK/i.test(c.eyebrow_en)) {
+    // Checked on the blurb as well as the eyebrow, because that is where the
+    // TOPIK sentence now lives.
+    const equates = (s: string) => /TOPIK\s*\d\s*\/\s*[ABC]\d/.test(s) || /=\s*TOPIK/i.test(s) || /\bis TOPIK\b/i.test(s);
+    if (equates(c.eyebrow_en) || equates(c.blurb_en)) {
       throw new Error(`Card ${c.key} equates a level with a TOPIK band`);
     }
   });
@@ -333,6 +370,14 @@ export const validateCourseCards = (): void => {
     }
     if (!c.external && !c.href.startsWith("/")) {
       throw new Error(`Card ${c.key} has an absolute href but is not marked external`);
+    }
+  });
+  // Every level must state how many classes it is. A card that names a TOPIK
+  // band but not a class count is the shape that sent students to WhatsApp to
+  // ask what they were actually buying.
+  LEVELS.forEach((l) => {
+    if (!l.sessions || l.sessions < 1) {
+      throw new Error(`Level ${l.key} has no class count, so its card cannot say what it sells`);
     }
   });
   const hangul = COURSE_CARDS.find((c) => c.key === "hangul");
