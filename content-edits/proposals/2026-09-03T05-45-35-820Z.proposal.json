@@ -1,0 +1,1573 @@
+{
+  "batchId": "2026-09-03T05-45-35-820Z",
+  "createdAt": "2026-09-03T05:46:01.647Z",
+  "source": "scripts/proposals/keyword-focus.mjs",
+  "description": "Gate 2 Step 4 - resolve keyword cannibalisation across 79 articles. 18 keyword(s) were each claimed by more than 3 articles; each is now owned by one article (most views, then longest, then first slug alphabetically) and removed from the rest. Arabic morphological variants of one phrase are treated as one claim. No article is left with an empty keyword list: 0 article(s) whose every keyword belongs to someone else are deliberately left UNCHANGED and listed in the run log for a human to give a more specific keyword - a script cannot invent one. keywords column only.",
+  "editCount": 79,
+  "staleCount": 0,
+  "edits": [
+    {
+      "slug": "best-kdrama-learn-korean-difficulty-ranked",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "k-drama",
+        "learn korean",
+        "watching dramas",
+        "korean listening comprehension",
+        "kdrama learning"
+      ],
+      "after": [
+        "k-drama",
+        "watching dramas",
+        "korean listening comprehension",
+        "kdrama learning"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "dokkaebi-korean-goblin-myth-kdrama-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "dokkaebi",
+        "عفريت كوري",
+        "دوكايبي كدراما",
+        "الفولكلور الكوري",
+        "دراما عفريت",
+        "الأساطير الكورية"
+      ],
+      "after": [
+        "dokkaebi",
+        "عفريت كوري",
+        "دوكايبي كدراما",
+        "دراما عفريت"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "gumiho-nine-tailed-fox-korean-folklore",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "gumiho",
+        "nine-tailed fox",
+        "korean folklore",
+        "korean mythology",
+        "tale of the nine tailed",
+        "korean myths"
+      ],
+      "after": [
+        "gumiho",
+        "nine-tailed fox",
+        "tale of the nine tailed",
+        "korean myths"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "hanbok-korean-traditional-clothing",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "hanbok",
+        "korean traditional clothing",
+        "korean dress",
+        "hanbok rental seoul",
+        "korean fashion",
+        "korean culture",
+        "한복"
+      ],
+      "after": [
+        "hanbok",
+        "korean traditional clothing",
+        "korean dress",
+        "hanbok rental seoul",
+        "korean fashion",
+        "한복"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "hanbok-korean-traditional-clothing-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "هانبوك",
+        "ملابس كورية تقليدية",
+        "ثقافة كورية",
+        "زي كوري"
+      ],
+      "after": [
+        "هانبوك",
+        "ملابس كورية تقليدية",
+        "زي كوري"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "how-to-introduce-yourself-in-korean",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "how to introduce yourself in korean",
+        "korean self introduction",
+        "korean greetings",
+        "jagisogae",
+        "korean for beginners",
+        "learn korean"
+      ],
+      "after": [
+        "how to introduce yourself in korean",
+        "korean self introduction",
+        "korean greetings",
+        "jagisogae"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "jeoseung-saja-korean-grim-reaper-symbolism",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "jeoseung saja",
+        "korean grim reaper",
+        "korean folklore",
+        "goblin kdrama",
+        "korean mythology",
+        "korean afterlife"
+      ],
+      "after": [
+        "jeoseung saja",
+        "korean grim reaper",
+        "goblin kdrama",
+        "korean afterlife"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "jeoseung-saja-korean-grim-reaper-symbolism-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "جيوسيونغ ساجا",
+        "حاصد الأرواح الكوري",
+        "الفولكلور الكوري",
+        "عفريت كدراما",
+        "الأساطير الكورية",
+        "الحياة الآخرة الكورية"
+      ],
+      "after": [
+        "جيوسيونغ ساجا",
+        "حاصد الأرواح الكوري",
+        "عفريت كدراما",
+        "الحياة الآخرة الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-ability-expressions-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean ability grammar",
+        "eul su itda eopda",
+        "korean can and cannot",
+        "learn korean grammar",
+        "korean verb patterns"
+      ],
+      "after": [
+        "korean ability grammar",
+        "eul su itda eopda",
+        "korean can and cannot",
+        "korean verb patterns"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-adjectives-100-examples-beginners",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean adjectives",
+        "100 korean adjectives",
+        "korean descriptive verbs",
+        "korean vocabulary",
+        "learn korean",
+        "korean for beginners"
+      ],
+      "after": [
+        "korean adjectives",
+        "100 korean adjectives",
+        "korean descriptive verbs",
+        "korean vocabulary"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-adjectives-100-examples-beginners-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "الصفات الكورية",
+        "100 الصفات الكورية",
+        "الأفعال الوصفية الكورية",
+        "المفردات الكورية",
+        "تعلم اللغة الكورية",
+        "الكورية للمبتدئين"
+      ],
+      "after": [
+        "الصفات الكورية",
+        "100 الصفات الكورية",
+        "الأفعال الوصفية الكورية",
+        "المفردات الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-age-system-explained",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean age system",
+        "korean age",
+        "how does korean age work",
+        "korean age calculator",
+        "korean culture",
+        "만나이 세는법"
+      ],
+      "after": [
+        "korean age system",
+        "korean age",
+        "how does korean age work",
+        "korean age calculator",
+        "만나이 세는법"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-animal-vocabulary-sounds",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean animal vocabulary",
+        "korean animal sounds",
+        "korean onomatopoeia",
+        "learn korean words",
+        "korean for beginners"
+      ],
+      "after": [
+        "korean animal vocabulary",
+        "korean animal sounds",
+        "korean onomatopoeia"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-animal-vocabulary-sounds-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات الحيوانات الكورية",
+        "اصوات الحيوانات بالكورية",
+        "كلمات كورية للمبتدئين",
+        "تعلم مفردات كورية",
+        "الكورية للمبتدئين"
+      ],
+      "after": [
+        "مفردات الحيوانات الكورية",
+        "اصوات الحيوانات بالكورية",
+        "كلمات كورية للمبتدئين",
+        "تعلم مفردات كورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-body-parts-vocabulary",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean body parts vocabulary",
+        "body parts in korean",
+        "korean for doctor visit",
+        "learn korean words",
+        "korean beginner vocabulary"
+      ],
+      "after": [
+        "korean body parts vocabulary",
+        "body parts in korean",
+        "korean for doctor visit",
+        "korean beginner vocabulary"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-body-parts-vocabulary-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات اعضاء الجسم بالكورية",
+        "اجزاء الجسم بالكورية",
+        "كورية لزيارة الطبيب",
+        "تعلم كلمات كورية",
+        "مفردات كورية للمبتدئين"
+      ],
+      "after": [
+        "مفردات اعضاء الجسم بالكورية",
+        "اجزاء الجسم بالكورية",
+        "كورية لزيارة الطبيب",
+        "مفردات كورية للمبتدئين"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-cafe-coffee-culture",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean cafe culture",
+        "korea coffee shops",
+        "seoul cafes",
+        "korean coffee vocabulary",
+        "cafe korea",
+        "korean culture"
+      ],
+      "after": [
+        "korean cafe culture",
+        "korea coffee shops",
+        "seoul cafes",
+        "korean coffee vocabulary",
+        "cafe korea"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-causative-verbs-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean causative verbs",
+        "korean grammar causative",
+        "ge hada pattern",
+        "learn korean grammar",
+        "korean verb forms"
+      ],
+      "after": [
+        "korean causative verbs",
+        "korean grammar causative",
+        "ge hada pattern",
+        "korean verb forms"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-clothing-fashion-vocabulary",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean clothing vocabulary",
+        "korean fashion words",
+        "korean shopping phrases",
+        "learn korean words",
+        "k-fashion vocabulary"
+      ],
+      "after": [
+        "korean clothing vocabulary",
+        "korean fashion words",
+        "korean shopping phrases",
+        "k-fashion vocabulary"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-clothing-fashion-vocabulary-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات الملابس الكورية",
+        "كلمات الموضة الكورية",
+        "عبارات التسوق الكورية",
+        "تعلم كلمات كورية",
+        "مفردات كي فاشون"
+      ],
+      "after": [
+        "مفردات الملابس الكورية",
+        "كلمات الموضة الكورية",
+        "عبارات التسوق الكورية",
+        "مفردات كي فاشون"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-color-vocabulary-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات الالوان الكورية",
+        "الالوان بالكورية",
+        "تعلم كلمات كورية",
+        "صفات كورية الالوان",
+        "ثقافة الالوان الكورية"
+      ],
+      "after": [
+        "مفردات الالوان الكورية",
+        "الالوان بالكورية",
+        "صفات كورية الالوان",
+        "ثقافة الالوان الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-comparative-superlative-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean comparatives",
+        "korean superlatives",
+        "deo jeil gajang",
+        "boda particle korean",
+        "learn korean grammar"
+      ],
+      "after": [
+        "korean comparatives",
+        "korean superlatives",
+        "deo jeil gajang",
+        "boda particle korean"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-conditional-sentences-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean conditional sentences",
+        "eumyeon grammar",
+        "korean if clauses",
+        "korean grammar guide",
+        "learn korean grammar"
+      ],
+      "after": [
+        "korean conditional sentences",
+        "eumyeon grammar",
+        "korean if clauses",
+        "korean grammar guide"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-connectors-conjunctions-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean connectors",
+        "korean conjunctions",
+        "geureonde geuraeseo",
+        "korean sentence linkers",
+        "korean grammar"
+      ],
+      "after": [
+        "korean connectors",
+        "korean conjunctions",
+        "geureonde geuraeseo",
+        "korean sentence linkers"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-daily-greetings",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean greetings",
+        "korean phrases",
+        "annyeonghaseyo",
+        "korean hello",
+        "basic korean phrases",
+        "korean for beginners",
+        "learn korean"
+      ],
+      "after": [
+        "korean greetings",
+        "korean phrases",
+        "annyeonghaseyo",
+        "korean hello",
+        "basic korean phrases"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-dating-phrases-kdrama-lines",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean dating phrases",
+        "romantic korean",
+        "kdrama love lines",
+        "korean confession",
+        "korean love words",
+        "learn korean"
+      ],
+      "after": [
+        "korean dating phrases",
+        "romantic korean",
+        "kdrama love lines",
+        "korean confession",
+        "korean love words"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-dating-phrases-kdrama-lines-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "عبارات التعارف الكورية",
+        "كورية رومانسية",
+        "خطوط حب دراما",
+        "اعتراف كوري",
+        "كلمات حب كورية",
+        "تعلم اللغة الكورية"
+      ],
+      "after": [
+        "عبارات التعارف الكورية",
+        "كورية رومانسية",
+        "خطوط حب دراما",
+        "اعتراف كوري",
+        "كلمات حب كورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-directions-location-vocabulary",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean directions vocabulary",
+        "korean location words",
+        "asking for directions korean",
+        "learn korean words",
+        "korean travel phrases"
+      ],
+      "after": [
+        "korean directions vocabulary",
+        "korean location words",
+        "asking for directions korean",
+        "korean travel phrases"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-directions-location-vocabulary-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات الاتجاهات الكورية",
+        "كلمات المواقع الكورية",
+        "السؤال عن الاتجاهات بالكورية",
+        "تعلم كلمات كورية",
+        "عبارات سفر كورية"
+      ],
+      "after": [
+        "مفردات الاتجاهات الكورية",
+        "كلمات المواقع الكورية",
+        "السؤال عن الاتجاهات بالكورية",
+        "عبارات سفر كورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-drinking-culture-soju-etiquette",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean drinking culture",
+        "soju etiquette rules",
+        "korean drinking games",
+        "korean culture guide",
+        "hoesik meaning korean"
+      ],
+      "after": [
+        "korean drinking culture",
+        "soju etiquette rules",
+        "korean drinking games",
+        "hoesik meaning korean"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-drinking-culture-soju-etiquette-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "ثقافة الشرب الكورية",
+        "اداب السوجو",
+        "العاب الشرب الكورية",
+        "دليل الثقافة الكورية",
+        "معنى هويسيك بالكورية"
+      ],
+      "after": [
+        "ثقافة الشرب الكورية",
+        "اداب السوجو",
+        "العاب الشرب الكورية",
+        "معنى هويسيك بالكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-easier-than-japanese-chinese",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean vs japanese",
+        "korean vs chinese",
+        "easiest asian language to learn",
+        "learn korean",
+        "korean for beginners",
+        "why learn korean"
+      ],
+      "after": [
+        "korean vs japanese",
+        "korean vs chinese",
+        "easiest asian language to learn",
+        "why learn korean"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-first-birthday-dol-traditions",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "doljanchi explained",
+        "korean first birthday tradition",
+        "doljabi meaning",
+        "korean baby traditions",
+        "korean culture guide"
+      ],
+      "after": [
+        "doljanchi explained",
+        "korean first birthday tradition",
+        "doljabi meaning",
+        "korean baby traditions"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-first-birthday-dol-traditions-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "شرح دولجانتشي",
+        "تقليد عيد الميلاد الاول الكوري",
+        "معنى دولجابي",
+        "تقاليد الاطفال الكورية",
+        "دليل الثقافة الكورية"
+      ],
+      "after": [
+        "شرح دولجانتشي",
+        "تقليد عيد الميلاد الاول الكوري",
+        "معنى دولجابي",
+        "تقاليد الاطفال الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-funeral-traditions-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "تقاليد الجنازات الكورية",
+        "اداب الحداد الكورية",
+        "شرح ساميلجانغ",
+        "عبارات التعزية الكورية",
+        "دليل الثقافة الكورية"
+      ],
+      "after": [
+        "تقاليد الجنازات الكورية",
+        "اداب الحداد الكورية",
+        "شرح ساميلجانغ",
+        "عبارات التعزية الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-future-tense-plans-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean future tense",
+        "geoyeyo grammar",
+        "korean plans intentions grammar",
+        "learn korean grammar",
+        "korean verb endings"
+      ],
+      "after": [
+        "korean future tense",
+        "geoyeyo grammar",
+        "korean plans intentions grammar",
+        "korean verb endings"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-ghost-stories-chilling-legends",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean ghost stories",
+        "korean gwishin",
+        "korean horror legends",
+        "korean folklore",
+        "korean myths",
+        "korean scary stories"
+      ],
+      "after": [
+        "korean ghost stories",
+        "korean gwishin",
+        "korean horror legends",
+        "korean myths",
+        "korean scary stories"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-ghost-stories-chilling-legends-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "قصص الأشباح الكورية",
+        "جويشين الكورية",
+        "أساطير الرعب الكورية",
+        "الفولكلور الكوري",
+        "الأساطير الكورية",
+        "قصص كورية مخيفة"
+      ],
+      "after": [
+        "قصص الأشباح الكورية",
+        "جويشين الكورية",
+        "أساطير الرعب الكورية",
+        "قصص كورية مخيفة"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-grammar-particles-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "قواعد الكورية",
+        "جسيمات الكورية",
+        "조사",
+        "حروف الجر الكورية"
+      ],
+      "after": [
+        "جسيمات الكورية",
+        "조사",
+        "حروف الجر الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-hobbies-free-time-vocabulary",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean hobbies vocabulary",
+        "free time in korean",
+        "korean word for hobby chwimi",
+        "learn korean words",
+        "korean conversation practice"
+      ],
+      "after": [
+        "korean hobbies vocabulary",
+        "free time in korean",
+        "korean word for hobby chwimi",
+        "korean conversation practice"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-hobbies-free-time-vocabulary-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات الهوايات الكورية",
+        "وقت الفراغ بالكورية",
+        "كلمة هواية بالكورية",
+        "تعلم كلمات كورية",
+        "محادثة كورية عملية"
+      ],
+      "after": [
+        "مفردات الهوايات الكورية",
+        "وقت الفراغ بالكورية",
+        "كلمة هواية بالكورية",
+        "محادثة كورية عملية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-imperative-suggestion-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean imperative grammar",
+        "korean suggestion grammar",
+        "seyo ja bsida",
+        "learn korean grammar",
+        "korean politeness levels"
+      ],
+      "after": [
+        "korean imperative grammar",
+        "korean suggestion grammar",
+        "seyo ja bsida",
+        "korean politeness levels"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-irregular-verbs-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean irregular verbs",
+        "bieup irregular",
+        "reueu irregular korean",
+        "korean conjugation rules",
+        "korean grammar"
+      ],
+      "after": [
+        "korean irregular verbs",
+        "bieup irregular",
+        "reueu irregular korean",
+        "korean conjugation rules"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-myths-legends-stories-kdrama-fans",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean myths and legends",
+        "korean folklore",
+        "kdrama myths",
+        "korean mythology",
+        "gumiho",
+        "dokkaebi"
+      ],
+      "after": [
+        "korean myths and legends",
+        "kdrama myths",
+        "gumiho",
+        "dokkaebi"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-myths-legends-stories-kdrama-fans-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "الأساطير والأساطير الكورية",
+        "الفولكلور الكوري",
+        "أساطير الدراما",
+        "الأساطير الكورية",
+        "جوميهو",
+        "dokkaebi"
+      ],
+      "after": [
+        "الأساطير والأساطير الكورية",
+        "أساطير الدراما",
+        "جوميهو",
+        "dokkaebi"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-negation-grammar-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean negation",
+        "an mot geuji anta",
+        "korean grammar negative",
+        "learn korean grammar",
+        "korean sentence patterns"
+      ],
+      "after": [
+        "korean negation",
+        "an mot geuji anta",
+        "korean grammar negative",
+        "korean sentence patterns"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-numbers-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean numbers",
+        "sino-korean numbers",
+        "native korean numbers",
+        "korean counting",
+        "korean for beginners",
+        "learn korean"
+      ],
+      "after": [
+        "korean numbers",
+        "sino-korean numbers",
+        "native korean numbers",
+        "korean counting",
+        "korean for beginners"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-passive-voice-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean passive voice",
+        "ihiligi verbs",
+        "korean grammar passive",
+        "learn korean grammar",
+        "korean verb forms"
+      ],
+      "after": [
+        "korean passive voice",
+        "ihiligi verbs",
+        "korean grammar passive",
+        "korean verb forms"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-past-experience-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean past experience grammar",
+        "bon jeok itda",
+        "have you ever korean",
+        "learn korean grammar",
+        "korean verb patterns"
+      ],
+      "after": [
+        "korean past experience grammar",
+        "bon jeok itda",
+        "have you ever korean",
+        "korean verb patterns"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-past-tense-conjugation-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean past tense",
+        "korean verb conjugation",
+        "korean grammar",
+        "ass-eoyo",
+        "korean tense",
+        "learn korean grammar"
+      ],
+      "after": [
+        "korean past tense",
+        "korean verb conjugation",
+        "ass-eoyo",
+        "korean tense"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-past-tense-conjugation-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "الزمن الماضي الكوري",
+        "تصريف الفعل الكوري",
+        "القواعد الكورية",
+        "الحمار يويو",
+        "التوتر الكوري",
+        "تعلم قواعد اللغة الكورية"
+      ],
+      "after": [
+        "الزمن الماضي الكوري",
+        "تصريف الفعل الكوري",
+        "الحمار يويو",
+        "التوتر الكوري",
+        "تعلم قواعد اللغة الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-phone-texting-etiquette",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean phone etiquette",
+        "korean texting etiquette",
+        "korean phone phrases",
+        "korean culture guide",
+        "yeoboseyo meaning"
+      ],
+      "after": [
+        "korean phone etiquette",
+        "korean texting etiquette",
+        "korean phone phrases",
+        "yeoboseyo meaning"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-pronunciation-guide-beginners",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean pronunciation",
+        "how to pronounce korean",
+        "korean sounds",
+        "korean for beginners",
+        "learn korean pronunciation",
+        "hangul pronunciation"
+      ],
+      "after": [
+        "korean pronunciation",
+        "how to pronounce korean",
+        "korean sounds",
+        "learn korean pronunciation",
+        "hangul pronunciation"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-purpose-intention-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean purpose grammar",
+        "ryeogo wihaeseo",
+        "korean intention grammar",
+        "learn korean grammar",
+        "korean sentence patterns"
+      ],
+      "after": [
+        "korean purpose grammar",
+        "ryeogo wihaeseo",
+        "korean intention grammar",
+        "korean sentence patterns"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-question-words-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean question words",
+        "who what where in korean",
+        "korean wh questions",
+        "korean grammar",
+        "learn korean",
+        "korean for beginners"
+      ],
+      "after": [
+        "korean question words",
+        "who what where in korean",
+        "korean wh questions"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-question-words-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "كلمات السؤال الكورية",
+        "من ماذا أين باللغة الكورية",
+        "الأسئلة الكورية",
+        "القواعد الكورية",
+        "تعلم اللغة الكورية",
+        "الكورية للمبتدئين"
+      ],
+      "after": [
+        "كلمات السؤال الكورية",
+        "من ماذا أين باللغة الكورية",
+        "الأسئلة الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-reported-speech-grammar",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean reported speech",
+        "dago nyago rago jago",
+        "korean quotation grammar",
+        "learn korean grammar",
+        "indirect speech korean"
+      ],
+      "after": [
+        "korean reported speech",
+        "dago nyago rago jago",
+        "korean quotation grammar",
+        "indirect speech korean"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-restaurant-ordering-phrases-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean restaurant phrases",
+        "order food in korean",
+        "korean food ordering",
+        "restaurant korean",
+        "korean for travelers",
+        "eating in korea"
+      ],
+      "after": [
+        "korean restaurant phrases",
+        "order food in korean",
+        "korean food ordering",
+        "restaurant korean",
+        "eating in korea"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-sentence-structure-word-order-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean sentence structure",
+        "korean word order",
+        "sov korean",
+        "korean grammar",
+        "korean particles",
+        "how korean sentences work"
+      ],
+      "after": [
+        "korean sentence structure",
+        "korean word order",
+        "sov korean",
+        "korean particles",
+        "how korean sentences work"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-sentence-structure-word-order-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "هيكل الجملة الكورية",
+        "ترتيب الكلمات الكورية",
+        "سوف الكورية",
+        "القواعد الكورية",
+        "الجسيمات الكورية",
+        "كيف تعمل الجمل الكورية"
+      ],
+      "after": [
+        "هيكل الجملة الكورية",
+        "ترتيب الكلمات الكورية",
+        "سوف الكورية",
+        "الجسيمات الكورية",
+        "كيف تعمل الجمل الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-shamanism-mudang-kdrama-tradition",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean shamanism",
+        "mudang",
+        "gut ritual",
+        "korean folklore",
+        "muism",
+        "korean spirituality"
+      ],
+      "after": [
+        "korean shamanism",
+        "mudang",
+        "gut ritual",
+        "muism",
+        "korean spirituality"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-shamanism-mudang-kdrama-tradition-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "الشامانية الكورية",
+        "mudang",
+        "طقوس الأمعاء",
+        "الفولكلور الكوري",
+        "com.muism",
+        "الروحانية الكورية"
+      ],
+      "after": [
+        "الشامانية الكورية",
+        "mudang",
+        "طقوس الأمعاء",
+        "com.muism",
+        "الروحانية الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-shopping-phrases-complete-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean shopping phrases",
+        "shopping in korean",
+        "korean for travelers",
+        "bargain in korean",
+        "myeongdong shopping",
+        "seoul shopping"
+      ],
+      "after": [
+        "korean shopping phrases",
+        "shopping in korean",
+        "bargain in korean",
+        "myeongdong shopping",
+        "seoul shopping"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-skincare-kbeauty-routine-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean skincare",
+        "k-beauty",
+        "10 step skincare routine",
+        "korean beauty products",
+        "glass skin",
+        "korean culture"
+      ],
+      "after": [
+        "korean skincare",
+        "k-beauty",
+        "10 step skincare routine",
+        "korean beauty products",
+        "glass skin"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-superstitions-beliefs-daily-life-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "الخرافات الكورية",
+        "المعتقدات الكورية",
+        "موت المروحة",
+        "كوريا رقم 4",
+        "الثقافة الكورية",
+        "المحرمات الكورية"
+      ],
+      "after": [
+        "الخرافات الكورية",
+        "المعتقدات الكورية",
+        "موت المروحة",
+        "كوريا رقم 4",
+        "المحرمات الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-tattoo-culture-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean tattoo culture",
+        "korean tattoo stigma",
+        "are tattoos legal in korea",
+        "korean tattoo artists",
+        "korean culture guide"
+      ],
+      "after": [
+        "korean tattoo culture",
+        "korean tattoo stigma",
+        "are tattoos legal in korea",
+        "korean tattoo artists"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-tattoo-culture-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "ثقافة الوشم الكورية",
+        "وصمة الوشم في كوريا",
+        "هل الوشم قانوني في كوريا",
+        "فنانو الوشم الكوريون",
+        "دليل الثقافة الكورية"
+      ],
+      "after": [
+        "ثقافة الوشم الكورية",
+        "وصمة الوشم في كوريا",
+        "هل الوشم قانوني في كوريا",
+        "فنانو الوشم الكوريون"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-traditional-holidays-chuseok-seollal",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "chuseok",
+        "seollal",
+        "korean holidays",
+        "korean traditional festivals",
+        "korean culture",
+        "korean thanksgiving",
+        "korean lunar new year"
+      ],
+      "after": [
+        "chuseok",
+        "seollal",
+        "korean holidays",
+        "korean traditional festivals",
+        "korean thanksgiving",
+        "korean lunar new year"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-transportation-guide-seoul",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean transportation vocabulary",
+        "seoul subway korean",
+        "korean travel phrases",
+        "getting around seoul",
+        "korean for travelers"
+      ],
+      "after": [
+        "korean transportation vocabulary",
+        "seoul subway korean",
+        "korean travel phrases",
+        "getting around seoul"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-weather-seasons-vocabulary",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean weather vocabulary",
+        "korean seasons",
+        "weather in korean",
+        "korean climate words",
+        "korean for beginners",
+        "korean vocabulary"
+      ],
+      "after": [
+        "korean weather vocabulary",
+        "korean seasons",
+        "weather in korean",
+        "korean climate words",
+        "korean vocabulary"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-weather-seasons-vocabulary-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "مفردات الطقس الكورية",
+        "المواسم الكورية",
+        "الطقس باللغة الكورية",
+        "كلمات المناخ الكورية",
+        "الكورية للمبتدئين",
+        "المفردات الكورية"
+      ],
+      "after": [
+        "مفردات الطقس الكورية",
+        "المواسم الكورية",
+        "الطقس باللغة الكورية",
+        "كلمات المناخ الكورية",
+        "المفردات الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-wedding-traditions-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean wedding traditions",
+        "pyebaek ceremony explained",
+        "korean wedding vocabulary",
+        "korean marriage customs",
+        "korean culture guide"
+      ],
+      "after": [
+        "korean wedding traditions",
+        "pyebaek ceremony explained",
+        "korean wedding vocabulary",
+        "korean marriage customs"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-wedding-traditions-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "تقاليد الزفاف الكورية",
+        "طقس بييباك بالشرح",
+        "مفردات الزفاف الكورية",
+        "عادات الزواج الكورية",
+        "دليل الثقافة الكورية"
+      ],
+      "after": [
+        "تقاليد الزفاف الكورية",
+        "طقس بييباك بالشرح",
+        "مفردات الزفاف الكورية",
+        "عادات الزواج الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-zodiac-fortune-telling-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "korean zodiac explained",
+        "saju fortune telling",
+        "gunghap compatibility",
+        "korean tti animal signs",
+        "korean culture guide"
+      ],
+      "after": [
+        "korean zodiac explained",
+        "saju fortune telling",
+        "gunghap compatibility",
+        "korean tti animal signs"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "korean-zodiac-fortune-telling-guide-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "الابراج الكورية بالشرح",
+        "تنجيم ساجو",
+        "توافق غونغهاب",
+        "حيوانات تي الكورية",
+        "دليل الثقافة الكورية"
+      ],
+      "after": [
+        "الابراج الكورية بالشرح",
+        "تنجيم ساجو",
+        "توافق غونغهاب",
+        "حيوانات تي الكورية"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-3-months-study-method",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "learn korean fast",
+        "korean study method",
+        "korean in 3 months",
+        "how to learn korean",
+        "korean for beginners",
+        "learn korean arabic"
+      ],
+      "after": [
+        "learn korean fast",
+        "korean study method",
+        "korean in 3 months",
+        "how to learn korean",
+        "learn korean arabic"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "nunchi-korean-social-superpower-guide",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "nunchi",
+        "korean nunchi",
+        "reading the room",
+        "korean social skills",
+        "korean culture",
+        "how to learn nunchi"
+      ],
+      "after": [
+        "nunchi",
+        "korean nunchi",
+        "reading the room",
+        "korean social skills",
+        "how to learn nunchi"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "what-is-jeong-korean-untranslatable-concept",
+      "lang": "en",
+      "column": "keywords",
+      "before": [
+        "jeong",
+        "korean jeong",
+        "what is jeong",
+        "korean emotions",
+        "korean culture",
+        "untranslatable korean"
+      ],
+      "after": [
+        "jeong",
+        "korean jeong",
+        "what is jeong",
+        "korean emotions",
+        "untranslatable korean"
+      ],
+      "stale": false
+    },
+    {
+      "slug": "what-is-jeong-korean-untranslatable-concept-ar",
+      "lang": "ar",
+      "column": "keywords",
+      "before": [
+        "jeong",
+        "جيونغ الكورية",
+        "ما هو جيونج",
+        "العواطف الكورية",
+        "الثقافة الكورية",
+        "كورية غير قابلة للترجمة"
+      ],
+      "after": [
+        "jeong",
+        "جيونغ الكورية",
+        "ما هو جيونج",
+        "العواطف الكورية",
+        "كورية غير قابلة للترجمة"
+      ],
+      "stale": false
+    }
+  ]
+}
