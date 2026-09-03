@@ -35,6 +35,41 @@ const nowIso = () => new Date().toISOString();
 /** Safe for a filename: no colons, no fractional seconds. */
 const stampForId = (d = new Date()) => d.toISOString().replace(/[:.]/g, "-");
 
+/**
+ * Are two column values the same value?
+ *
+ * Not every column is a scalar. `blog_posts.keywords` is a Postgres text[],
+ * which arrives here as a JavaScript array — and two arrays holding identical
+ * strings are never `===` each other, because `===` compares references. Every
+ * comparison in this file used to be `!==`, which meant:
+ *
+ *   - writeProposal marked EVERY array-column edit stale, printing a table
+ *     whose "expected" and "actual" cells were visibly identical;
+ *   - applyProposal's read-back check would have thrown "write did not stick"
+ *     on a write that had in fact stuck, aborting the batch after the row was
+ *     already changed and recording appliedCount 0 in the ledger.
+ *
+ * The second one is why this is a correctness fix and not a cosmetic one: a
+ * batch that fails while having silently changed a row is worse than one that
+ * refuses to start.
+ *
+ * Scalars keep exactly their previous behaviour, so batches touching only
+ * `title` or `content` are unaffected.
+ */
+export function valuesEqual(a, b) {
+  if (a === b) return true;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    return a.length === b.length && a.every((v, i) => valuesEqual(v, b[i]));
+  }
+  if (a && b && typeof a === "object" && typeof b === "object") {
+    const ka = Object.keys(a);
+    const kb = Object.keys(b);
+    return ka.length === kb.length && ka.every((k) => valuesEqual(a[k], b[k]));
+  }
+  return false;
+}
+
 function readLedger() {
   if (!existsSync(LEDGER_PATH)) return { batches: [] };
   return JSON.parse(readFileSync(LEDGER_PATH, "utf-8"));
@@ -68,7 +103,7 @@ export async function writeProposal({ source, description, edits }, store) {
     }
     const live = await store.readRow(slug);
     const liveValue = live ? live[column] : undefined;
-    const stale = live === null || liveValue !== edit.before;
+    const stale = live === null || !valuesEqual(liveValue, edit.before);
     checked.push({ ...edit, stale, liveValue: stale ? liveValue : undefined });
   }
 
@@ -214,7 +249,7 @@ export async function applyProposal(proposalPath, store, { source } = {}) {
       await store.writeColumn(slug, column, after);
 
       const readBack = await store.readRow(slug);
-      if (readBack?.[column] !== after) {
+      if (!valuesEqual(readBack?.[column], after)) {
         throw new Error(
           `applyProposal: write did not stick for ${slug}.${column} — wrote ` +
             `${JSON.stringify(after)}, read back ${JSON.stringify(readBack?.[column])}. ` +
@@ -286,7 +321,7 @@ export async function rollbackBatch(backupPath, store) {
   for (const e of [...backup.entries].reverse()) {
     await store.writeColumn(e.slug, e.column, e.before);
     const readBack = await store.readRow(e.slug);
-    if (readBack?.[e.column] !== e.before) {
+    if (!valuesEqual(readBack?.[e.column], e.before)) {
       throw new Error(
         `rollbackBatch: restore did not stick for ${e.slug}.${e.column} — wanted ` +
           `${JSON.stringify(e.before)}, read back ${JSON.stringify(readBack?.[e.column])}. ` +

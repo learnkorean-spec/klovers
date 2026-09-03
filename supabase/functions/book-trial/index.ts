@@ -365,6 +365,12 @@ Deno.serve(async (req) => {
     // Authenticated rebook: mark previous booking cancelled (any kind) to allow
     // slot change while preserving changed_at/cancelled_at for admin.
     // Unauthenticated: only close TBA placeholders (or rollover bookings).
+    //
+    // NOTE for anyone touching the rejoin cooldown (migration 20260903170000):
+    // this is the reason cancel_reason matters. A reschedule writes a cancelled
+    // row with cancelled_at = now, milliseconds before the insert below. The
+    // cooldown trigger ignores 'student_reschedule' and 'tba_rebook' precisely
+    // so that rescheduling does not lock the student out for a month.
     const shouldCloseExisting = existingBooking && (authed || isTbaPlaceholder || isRollover);
     if (shouldCloseExisting) {
       const auditUpdate = await supabase
@@ -446,6 +452,28 @@ Deno.serve(async (req) => {
             success: false,
             error: "Sorry — that time was just taken. Please pick another slot.",
             error_code: "slot_taken",
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // Rejoin cooldown: this email cancelled a trial recently (migration
+      // 20260903170000, trial_settings.rejoin_cooldown_days).
+      //
+      // Matched on the message, not the SQLSTATE: the trigger raises P0001,
+      // and the branch below already owns 23514 for "overlaps an existing
+      // class". Reusing that code would have shown a wrong reason, stated
+      // confidently. This branch must therefore stay ABOVE it.
+      //
+      // A cooldown is a policy decision, not a server fault, so it is a 409 —
+      // without this branch it fell through to the generic 500 and showed the
+      // student the raw Postgres exception text.
+      if (bookingError?.message?.includes("trial_rejoin_cooldown")) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            success: false,
+            error: "You cancelled a trial class recently. You can book another one a month after that date — message us on WhatsApp if you need it sooner.",
+            error_code: "rejoin_cooldown",
           }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
