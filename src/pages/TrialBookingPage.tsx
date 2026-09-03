@@ -20,6 +20,7 @@ import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { track } from "@/lib/tracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { LEVEL_SELECT_OPTIONS, getLevelShortLabel } from "@/constants/levels";
+import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
 import { CheckCircle2, CalendarPlus, CalendarClock, CalendarX, ArrowRight, GraduationCap, LayoutDashboard, Sparkles, MessageCircle, Tag, Share2, Globe, Link2, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
@@ -116,6 +117,63 @@ interface BookingResult {
   calendar_url: string;
 }
 
+/** A trial_bookings row, in the shape either recovery path can select. */
+interface BookingRow {
+  trial_date?: string | null;
+  start_time?: string | null;
+  duration_min?: number | null;
+  timezone?: string | null;
+  calendar_url?: string | null;
+}
+
+/**
+ * Turn a booking row into the object the success screen renders.
+ *
+ * Both recovery paths — the "you already have a booking" pre-check and the
+ * 429 double-tap check — used to build this by hand, and the 429 one built it
+ * from a five-column select that had none of the fields the screen needs. It
+ * then cast the result with `as any`, so nothing complained: the student saw
+ * a blank duration and a time computed against a fallback timezone hours away
+ * from the real one. One mapper, so a missing column is a compile error rather
+ * than a wrong time in front of a student.
+ *
+ * The fallbacks match the actual trial_bookings column defaults (30 minutes,
+ * Africa/Cairo). They were 45 and Asia/Kuala_Lumpur, which matched nothing.
+ */
+function toBookingResult(row: BookingRow | null | undefined): BookingResult | null {
+  if (!row?.trial_date) return null;
+  const time = row.start_time ?? "";
+  const hhmm = time.match(/^(\d{1,2}):(\d{2})$/);
+  const start_time_12h = hhmm
+    ? (() => {
+        const h = Number(hhmm[1]);
+        const m = Number(hhmm[2]);
+        const ap = h >= 12 ? "PM" : "AM";
+        return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ap}`;
+      })()
+    : "";
+  return {
+    trial_date: row.trial_date,
+    day_name: new Date(row.trial_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long" }),
+    start_time: time,
+    start_time_12h,
+    duration_min: row.duration_min ?? 30,
+    timezone: row.timezone || "Africa/Cairo",
+    calendar_url: row.calendar_url || "",
+  };
+}
+
+/** Today's date in the reader's own zone, as YYYY-MM-DD. */
+function localToday(): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
 const TrialBookingPage = () => {
   const { t, language } = useLanguage();
   // Transactional page behind auth: a real page for the signed-in user, but
@@ -179,43 +237,28 @@ const TrialBookingPage = () => {
   // function — instead, show them their existing booking as the success
   // screen. Fixes the UX cliff hitting ~4 sessions/month of users who
   // bounce back to /trial-booking a second time.
+  //
+  // This could not fire at all before: it filtered on ["pending","confirmed"]
+  // while book-trial creates every authenticated booking as
+  // "awaiting_attendance". The one flow it was written for was the one flow
+  // it never matched, so the returning student was shown the picker again,
+  // rebooked, and had her original row cancelled as a "student_reschedule"
+  // she never asked for.
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const todayMyt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const { data } = await supabase
         .from("trial_bookings")
         .select("trial_date, start_time, duration_min, timezone, calendar_url, status")
         .eq("user_id", user.id)
-        .in("status", ["pending", "confirmed"])
-        .gte("trial_date", todayMyt)
+        .in("status", ACTIVE_TRIAL_STATUS_LIST)
+        .gte("trial_date", localToday())
         .neq("trial_date", "2099-12-31")
         .order("trial_date", { ascending: true })
         .limit(1)
         .maybeSingle();
-      if (data && data.trial_date) {
-        const d = new Date(data.trial_date + "T00:00:00");
-        const day_name = d.toLocaleDateString("en-US", { weekday: "long" });
-        const timeStr = data.start_time as string | null;
-        const timeMatch = timeStr?.match(/^(\d{1,2}):(\d{2})$/);
-        const start_time_12h = timeMatch
-          ? (() => {
-              const h = Number(timeMatch[1]);
-              const m = Number(timeMatch[2]);
-              const ap = h >= 12 ? "PM" : "AM";
-              return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ap}`;
-            })()
-          : "";
-        setBookingResult({
-          trial_date: data.trial_date,
-          day_name,
-          start_time: timeStr || "",
-          start_time_12h,
-          duration_min: data.duration_min || 45,
-          timezone: data.timezone || "Asia/Kuala_Lumpur",
-          calendar_url: data.calendar_url || "",
-        });
-      }
+      const existing = toBookingResult(data as BookingRow | null);
+      if (existing) setBookingResult(existing);
     })();
   }, [user]);
 
@@ -285,6 +328,12 @@ const TrialBookingPage = () => {
           country: selectedCountry,
           referrer_id: referrerId,
           authed: true,
+          // The student's real zone, straight from the browser — never
+          // inferred from country or phone. Read the same way the rest of
+          // this page reads it, bypassing any stale localStorage value.
+          student_timezone: (() => {
+            try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
+          })(),
         },
       });
 
@@ -305,10 +354,14 @@ const TrialBookingPage = () => {
 
       if (is429) {
         // Before showing an error, check whether the booking actually landed
-        // (the function may have succeeded on a prior tap before rate-limiting kicked in).
+        // (the function may have succeeded on a prior tap before rate-limiting
+        // kicked in). Select everything the success screen needs — this used
+        // to fetch five columns and cast them through `as any`, which is how a
+        // student who double-tapped ended up looking at a blank duration and a
+        // time converted from the wrong timezone.
         const { data: existing } = await supabase
           .from("trial_bookings")
-          .select("id, trial_date, start_time, day_of_week, status")
+          .select("id, trial_date, start_time, day_of_week, status, duration_min, timezone, calendar_url")
           .eq("email", user.email ?? "")
           .neq("status", "cancelled")
           .order("created_at", { ascending: false })
@@ -317,8 +370,11 @@ const TrialBookingPage = () => {
 
         if (existing?.trial_date === trialDate && existing?.start_time === startTime) {
           // Booking succeeded on a previous tap — treat as success silently.
-          setBookingResult(existing as any);
-          return;
+          const recovered = toBookingResult(existing as BookingRow);
+          if (recovered) {
+            setBookingResult(recovered);
+            return;
+          }
         }
 
         toast({
@@ -413,6 +469,12 @@ const TrialBookingPage = () => {
     setCancelling(true);
     try {
       const now = new Date().toISOString();
+      // .select("id") so we can see WHICH rows were cancelled. PostgREST
+      // reports a zero-row UPDATE as a success, and the status filter here
+      // used to be ["pending","confirmed"] while every authenticated booking
+      // is created as "awaiting_attendance" — so this matched nothing, said
+      // nothing, and the student was told her class was cancelled while it
+      // stayed on the roster and kept holding a seat.
       const update = await supabase
         .from("trial_bookings")
         .update({
@@ -422,7 +484,10 @@ const TrialBookingPage = () => {
         } as any)
         .eq("user_id", user.id)
         .eq("trial_date", bookingResult.trial_date)
-        .in("status", ["pending", "confirmed"]);
+        .in("status", ACTIVE_TRIAL_STATUS_LIST)
+        .select("id");
+
+      let cancelledRows = update.data?.length ?? 0;
       if (update.error) {
         if (!isMissingAuditColumn(update.error)) throw update.error;
         const fallback = await supabase
@@ -430,8 +495,21 @@ const TrialBookingPage = () => {
           .update({ status: "cancelled" })
           .eq("user_id", user.id)
           .eq("trial_date", bookingResult.trial_date)
-          .in("status", ["pending", "confirmed"]);
+          .in("status", ACTIVE_TRIAL_STATUS_LIST)
+          .select("id");
         if (fallback.error) throw fallback.error;
+        cancelledRows = fallback.data?.length ?? 0;
+      }
+
+      if (cancelledRows === 0) {
+        // Nothing matched. Never claim a cancellation that did not happen —
+        // the student would walk away believing the seat was released.
+        toast({
+          title: t("trialBooking.somethingWrong"),
+          description: t("trialBooking.tryAgain"),
+          variant: "destructive",
+        });
+        return;
       }
 
       track.custom("trial_cancelled", { old_date: bookingResult.trial_date });
@@ -470,10 +548,10 @@ const TrialBookingPage = () => {
     const daysUntil = Math.max(0, Math.round((trialDateMs - Date.now()) / 86400000));
 
     // Always use the BROWSER's real timezone — bypasses any stale localStorage value.
-    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kuala_Lumpur";
+    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Africa/Cairo";
 
     // Convert from the slot's source timezone (stored in the booking record from the edge function).
-    const SLOT_TZ = bookingResult.timezone || "Asia/Kuala_Lumpur";
+    const SLOT_TZ = bookingResult.timezone || "Africa/Cairo";
     const localized = convertDateTimeToTimezone(bookingResult.trial_date, bookingResult.start_time, SLOT_TZ, userTz);
     const localDate = new Date(localized.dateStr + "T00:00:00");
     const localFormattedDate = localDate.toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });

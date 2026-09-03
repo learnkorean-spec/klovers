@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,18 +9,32 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 
 const ForgotPasswordPage = () => {
   useSEO({ title: "Forgot Password | Klovers Korean Academy", description: "Reset your Klovers account password to regain access to your Korean lessons.", noindex: true });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
   const { t } = useLanguage();
+
+  // Park the destination before the student leaves for her inbox. The reset
+  // link comes back to /reset-password with no memory of where she was headed,
+  // and often in a different tab, so a query parameter cannot survive the trip.
+  useEffect(() => {
+    rememberRedirect(redirectTo);
+  }, [redirectTo]);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // redirectTo is deliberately left exactly as it was. Supabase matches this
+    // URL against the project's allowed-redirect list, so appending a query
+    // string here risks breaking password reset for everyone. The destination
+    // travels in localStorage instead - see rememberRedirect above.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -50,7 +64,7 @@ const ForgotPasswordPage = () => {
                   {t("auth.resetEmailSent")}
                 </p>
                 <Button variant="outline" asChild className="w-full">
-                  <Link to="/login">{t("auth.backToLogin")}</Link>
+                  <Link to={withRedirect("/login", redirectTo)}>{t("auth.backToLogin")}</Link>
                 </Button>
               </div>
             ) : (
@@ -69,7 +83,7 @@ const ForgotPasswordPage = () => {
                   {loading ? t("auth.sending") : t("auth.sendResetLink")}
                 </Button>
                 <p className="text-sm text-center text-muted-foreground">
-                  <Link to="/login" className="text-primary underline">{t("auth.backToLogin")}</Link>
+                  <Link to={withRedirect("/login", redirectTo)} className="text-primary underline">{t("auth.backToLogin")}</Link>
                 </p>
               </form>
             )}
