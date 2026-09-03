@@ -18,10 +18,14 @@
     <meta property="og:description" content="Learn Korean online with Klovers — interactive lessons, certified teachers, placement tests, and gamified learning for all levels." />
     <meta property="og:url" content="https://kloversegy.com/" />
     <meta property="og:image" content="https://kloversegy.com/klovers-logo.jpg" />
-    <meta property="og:image:width" content="1149" />
-    <meta property="og:image:height" content="1149" />
-    <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:image:alt" content="Klovers — Korean Lovers Academy" />
+    <!-- No og:image:width/height/type/alt here. dist/index.html is copied to
+         every prerendered route by scripts/prerender-meta.mjs, which swaps
+         og:image for each blog post's hero image but cannot know its size.
+         A dimension declared here would therefore describe the logo on ~20
+         marketing routes and lie about the hero on ~200 article routes -
+         and scrapers trust the declaration instead of measuring the file.
+         Declaring nothing makes every scraper measure, which is right for
+         all 220. og:image:alt is emitted per-route by the same script. -->
 
     <!-- OG locale — primary EN, alternate AR for bilingual audience -->
     <meta property="og:locale" content="en_US" />
