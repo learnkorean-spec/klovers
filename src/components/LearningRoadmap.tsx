@@ -3,23 +3,53 @@ import { ChevronDown, BookOpen, MessageCircle, Zap, Star, Trophy, Flame, Graduat
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { COURSE_CARDS } from "@/constants/courseCards";
+import { LEVEL_KEYS } from "@/constants/levels";
 
-const LEVEL_META: Record<string, { color: string; bg: string; border: string; gradient: string; icon: React.ElementType; emoji: string }> = {
-  A0:              { color: "text-[#E8D9FF]", bg: "bg-[#E8D9FF]/10", border: "border-[#E8D9FF]/30", gradient: "from-[#E8D9FF]/30 to-[#E8D9FF]/5", icon: BookOpen,      emoji: "🇰🇷" },
-  "TOPIK 1 / A1":  { color: "text-[#D6E8FF]", bg: "bg-[#D6E8FF]/10", border: "border-[#D6E8FF]/30", gradient: "from-[#D6E8FF]/30 to-[#D6E8FF]/5", icon: MessageCircle, emoji: "🌱" },
-  "TOPIK 2 / A2":  { color: "text-[#D7F7F7]", bg: "bg-[#D7F7F7]/10", border: "border-[#D7F7F7]/30", gradient: "from-[#D7F7F7]/30 to-[#D7F7F7]/5", icon: Zap,           emoji: "⚡" },
-  "TOPIK 3 / B1":  { color: "text-[#CFF7D3]", bg: "bg-[#CFF7D3]/10", border: "border-[#CFF7D3]/30", gradient: "from-[#CFF7D3]/30 to-[#CFF7D3]/5", icon: Star,          emoji: "🔥" },
-  "TOPIK 4 / B2":  { color: "text-[#FFE5CC]", bg: "bg-[#FFE5CC]/10", border: "border-[#FFE5CC]/30", gradient: "from-[#FFE5CC]/30 to-[#FFE5CC]/5", icon: Flame,         emoji: "💪" },
-  "TOPIK 5 / C1":  { color: "text-[#FFE5CC]", bg: "bg-[#FFE5CC]/10", border: "border-[#FFE5CC]/30", gradient: "from-[#FFE5CC]/30 to-[#FFE5CC]/5", icon: Trophy,        emoji: "🏅" },
-  "TOPIK 6 / C2":  { color: "text-[#FFD9E6]", bg: "bg-[#FFD9E6]/10", border: "border-[#FFD9E6]/30", gradient: "from-[#FFD9E6]/30 to-[#FFD9E6]/5", icon: GraduationCap, emoji: "🏆" },
+/**
+ * The homepage "your journey" ladder.
+ *
+ * It used to read `translations.roadmap.stages` — a second hand-written copy
+ * of the level ladder, which had drifted exactly as the courses array did. It
+ * badged the cards "A0" (not a CEFR band) and "TOPIK 1 / A1" (a level does not
+ * equal a band), and it described Hangul as what you do "before entering TOPIK
+ * Levels", i.e. a gate — when Hangul is optional and four classes long.
+ *
+ * Now it derives from `COURSE_CARDS`, which derives from `constants/levels`.
+ * The roadmap and the levels grid are the same content in two shapes; they
+ * should not be able to disagree.
+ *
+ * The section heading, subtitle and CTA still come from translations — those
+ * carry no level claims.
+ */
+
+/**
+ * Per-level ornament. Keyed by canonical level key, so adding a level cannot
+ * shift the palette, and a renamed badge string cannot silently blank it.
+ *
+ * The accents are the site's own yellow ladder — pale at Hangul, full neon at
+ * Level 3, black at Level 6 — matching the levels grid. Written as literal
+ * class strings, because Tailwind's scanner only keeps what it can see.
+ */
+const LEVEL_META: Record<string, { icon: React.ElementType; emoji: string; dot: string }> = {
+  hangul: { icon: BookOpen, emoji: "🇰🇷", dot: "bg-[hsl(60_100%_85%)]" },
+  l1: { icon: MessageCircle, emoji: "🌱", dot: "bg-[hsl(60_100%_75%)]" },
+  l2: { icon: Zap, emoji: "⚡", dot: "bg-[hsl(60_100%_62%)]" },
+  l3: { icon: Star, emoji: "🔥", dot: "bg-primary" },
+  l4: { icon: Flame, emoji: "💪", dot: "bg-[hsl(60_90%_38%)]" },
+  l5: { icon: Trophy, emoji: "🏅", dot: "bg-[hsl(60_80%_25%)]" },
+  l6: { icon: GraduationCap, emoji: "🏆", dot: "bg-foreground" },
 };
 
-const getMeta = (level: string) =>
-  LEVEL_META[level] ?? { color: "text-primary", bg: "bg-primary/10", border: "border-primary/30", gradient: "from-primary/20 to-primary/5", icon: Star, emoji: "⭐" };
+const getMeta = (key: string) =>
+  LEVEL_META[key] ?? { icon: Star, emoji: "⭐", dot: "bg-primary" };
+
+/** The ladder only — the two special tracks are not steps on it. */
+const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
 
 const LearningRoadmap = () => {
-  const { t, tArray } = useLanguage();
-  const stages = tArray("roadmap", "stages") as { title: string; description: string; level: string }[];
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -41,7 +71,7 @@ const LearningRoadmap = () => {
       observers.push(obs);
     });
     return () => observers.forEach((o) => o.disconnect());
-  }, [stages.length]);
+  }, []);
 
   const toggle = (index: number) =>
     setActiveStep((prev) => (prev === index ? null : index));
@@ -64,16 +94,16 @@ const LearningRoadmap = () => {
 
         {/* Roadmap cards — centered stack, no timeline line */}
         <div className="max-w-xl mx-auto space-y-3">
-          {stages.map((stage, index) => {
+          {STAGES.map((stage, index) => {
             const isActive = activeStep === index;
             const isVisible = visibleItems.has(index);
-            const meta = getMeta(stage.level);
+            const meta = getMeta(stage.key);
             const Icon = meta.icon;
-            const isLast = index === stages.length - 1;
+            const isLast = index === STAGES.length - 1;
 
             return (
               <div
-                key={index}
+                key={stage.key}
                 ref={(el) => { itemRefs.current[index] = el; }}
                 style={{ transitionDelay: `${index * 80}ms` }}
                 className={`transition-all duration-700 ease-out ${
@@ -88,24 +118,24 @@ const LearningRoadmap = () => {
                   onKeyDown={(e) => e.key === "Enter" && toggle(index)}
                   className={`relative rounded-2xl p-5 md:p-6 cursor-pointer transition-all duration-300 border overflow-hidden group ${
                     isActive
-                      ? `${meta.border} shadow-lg ring-1 ring-inset ${meta.border}`
+                      ? "border-primary shadow-lg ring-1 ring-inset ring-primary"
                       : "border-border hover:border-primary/30 hover:shadow-md"
                   }`}
                 >
                   {/* Subtle gradient background when active */}
                   {isActive && (
-                    <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradient} pointer-events-none`} />
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 pointer-events-none" />
                   )}
 
                   {/* Top row */}
                   <div className="relative flex items-center gap-4">
                     {/* Step number + emoji */}
                     <div className={`relative flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                      isActive ? `${meta.bg} shadow-md` : "bg-muted/50 group-hover:bg-muted"
+                      isActive ? "bg-primary/15 shadow-md" : "bg-muted/50 group-hover:bg-muted"
                     }`}>
                       <span className="text-2xl">{meta.emoji}</span>
                       <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-background ${
-                        isActive ? `${meta.bg} ${meta.color}` : "bg-muted text-muted-foreground"
+                        isActive ? "bg-primary text-black" : "bg-muted text-muted-foreground"
                       }`}>
                         {index + 1}
                       </span>
@@ -114,22 +144,23 @@ const LearningRoadmap = () => {
                     {/* Text */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <Icon className={`w-3.5 h-3.5 ${isActive ? meta.color : "text-muted-foreground"} transition-colors`} />
-                        <span className={`text-[11px] font-bold uppercase tracking-widest ${
-                          isActive ? meta.color : "text-muted-foreground"
+                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ring-1 ring-foreground/25 ${meta.dot}`} />
+                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-foreground" : "text-muted-foreground"} transition-colors`} />
+                        <span className={`text-[11px] font-bold tracking-wide ${
+                          isActive ? "text-foreground" : "text-muted-foreground"
                         } transition-colors`}>
-                          {stage.level}
+                          {isAr ? stage.eyebrow_ar : stage.eyebrow_en}
                         </span>
                       </div>
                       <h3 className="text-base md:text-lg font-bold text-foreground leading-tight">
-                        {stage.title}
+                        {isAr ? stage.title_ar : stage.title_en}
                       </h3>
                     </div>
 
                     {/* Chevron */}
                     <ChevronDown
                       className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${
-                        isActive ? `rotate-180 ${meta.color}` : "text-muted-foreground"
+                        isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
                       }`}
                     />
                   </div>
@@ -137,11 +168,11 @@ const LearningRoadmap = () => {
                   {/* Expandable description */}
                   <div
                     className={`relative overflow-hidden transition-all duration-400 ease-in-out ${
-                      isActive ? "max-h-40 mt-4 opacity-100" : "max-h-0 opacity-0"
+                      isActive ? "max-h-52 mt-4 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
-                    <p className="text-sm text-muted-foreground leading-relaxed pl-[72px]">
-                      {stage.description}
+                    <p className={`text-sm text-muted-foreground leading-relaxed ${isAr ? "pr-[72px]" : "pl-[72px]"}`}>
+                      {isAr ? stage.blurb_ar : stage.blurb_en}
                     </p>
                   </div>
                 </div>
@@ -164,7 +195,7 @@ const LearningRoadmap = () => {
           <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
             <Link to="/placement-test">
               {t("roadmap", "cta")}
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} />
             </Link>
           </Button>
           <p className="text-sm text-muted-foreground mt-3">{t("roadmap", "ctaSub")}</p>

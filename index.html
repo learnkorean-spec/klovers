@@ -18,8 +18,14 @@
     <meta property="og:description" content="Learn Korean online with Klovers — interactive lessons, certified teachers, placement tests, and gamified learning for all levels." />
     <meta property="og:url" content="https://kloversegy.com/" />
     <meta property="og:image" content="https://kloversegy.com/klovers-logo.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <!-- No og:image:width/height/type/alt here. dist/index.html is copied to
+         every prerendered route by scripts/prerender-meta.mjs, which swaps
+         og:image for each blog post's hero image but cannot know its size.
+         A dimension declared here would therefore describe the logo on ~20
+         marketing routes and lie about the hero on ~200 article routes -
+         and scrapers trust the declaration instead of measuring the file.
+         Declaring nothing makes every scraper measure, which is right for
+         all 220. og:image:alt is emitted per-route by the same script. -->
 
     <!-- OG locale — primary EN, alternate AR for bilingual audience -->
     <meta property="og:locale" content="en_US" />
@@ -32,15 +38,15 @@
     <meta name="twitter:image" content="https://kloversegy.com/klovers-logo.jpg" />
 
     <!-- Favicons & PWA -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" sizes="any" href="/favicon.ico" />
-    <link rel="icon" type="image/jpeg" sizes="48x48" href="/klovers-logo.jpg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/klovers-logo.jpg" />
+    <link rel="apple-touch-icon" href="/klovers-logo.jpg" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Klovers" />
-    <meta name="theme-color" content="#f59e0b" />
+    <meta name="theme-color" content="#FCFD01" />
 
     <!-- Preconnect to external origins for faster resource loading -->
     <link rel="preconnect" href="https://ewtdgpbybkceokfohhyg.supabase.co" crossorigin />
@@ -102,8 +108,8 @@
       "logo": {
         "@type": "ImageObject",
         "url": "https://kloversegy.com/klovers-logo.jpg",
-        "width": 512,
-        "height": 512
+        "width": 1149,
+        "height": 1149
       },
       "image": "https://kloversegy.com/klovers-logo.jpg",
       "description": "Korean Lovers Academy offering interactive online lessons, certified teachers, placement tests, and gamified learning for all levels.",

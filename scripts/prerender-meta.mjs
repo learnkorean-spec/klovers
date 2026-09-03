@@ -26,6 +26,7 @@ import { createClient } from "@supabase/supabase-js";
 import { baseOf, buildRelatedMap, RELATED_MIN } from "./lib/related-posts.mjs";
 import { RETIRED_SLUGS } from "./lib/retired-arabic-slugs.mjs";
 import { buildFaqJsonLd } from "./lib/faq-parser.mjs";
+import { PRELOAD_PATTERN, preloadTagFor } from "./lib/lcp-preload.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -531,6 +532,8 @@ let created = 0;
 let withHreflang = 0;
 let blogIndexLinks = 0;
 let relatedLinksWritten = 0;
+let preloadRetargeted = 0;
+let preloadDropped = 0;
 
 for (const route of routes) {
   const isHome = route.path === "/";
@@ -562,6 +565,26 @@ for (const route of routes) {
     /<meta name="twitter:description" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:description" content="${attr(description)}" />`
   );
+
+  // The LCP preload. index.html ships one pointing at the homepage hero, and
+  // this loop copies that document to every route — so without this, all 189
+  // article pages tell the browser to fetch, at the highest priority, an image
+  // they never render, competing with the one they do. The homepage keeps its
+  // own tag; an article gets its own hero; anything else loses the tag, because
+  // a preload aimed at the wrong file is worse than none at all.
+  if (!isHome) {
+    PRELOAD_PATTERN.lastIndex = 0;
+    const replacement = preloadTagFor(
+      { isHome: false, heroImage: route.post?.heroImage || null },
+      { attr }
+    );
+    const before = html;
+    html = html.replace(PRELOAD_PATTERN, replacement);
+    if (html !== before) {
+      if (replacement) preloadRetargeted++;
+      else preloadDropped++;
+    }
+  }
 
   // Drop the placeholders that the base document ships with, so the values
   // written below are the only ones present.
@@ -638,7 +661,12 @@ for (const route of routes) {
 // and manage their own robots meta via useSEO({ noindex: true }), and a blanket
 // noindex here would be invisible to those pages but fatal if a marketing route
 // ever fell through.
+//
+// It also carries no image preload. The shell serves unknown and app-only
+// routes, none of which display the homepage hero, so preloading it there is
+// the same wasted high-priority fetch this file removes from article pages.
 
+PRELOAD_PATTERN.lastIndex = 0;
 const shellHTML = baseWithoutOrgJsonLd
   .replace(/<title>[^<]*<\/title>/, `<title>${SITE_NAME}</title>`)
   .replace(
@@ -651,10 +679,11 @@ const shellHTML = baseWithoutOrgJsonLd
   .replace(/[ \t]*<meta property="og:description" content="[^"]*"\s*\/?>\n?/g, "")
   .replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "")
   .replace(/[ \t]*<meta name="twitter:title" content="[^"]*"\s*\/?>\n?/g, "")
-  .replace(/[ \t]*<meta name="twitter:description" content="[^"]*"\s*\/?>\n?/g, "");
+  .replace(/[ \t]*<meta name="twitter:description" content="[^"]*"\s*\/?>\n?/g, "")
+  .replace(PRELOAD_PATTERN, "");
 
 writeFileSync(join(DIST, "app.html"), shellHTML, "utf-8");
-console.log("   Wrote dist/app.html (neutral shell for unmatched routes).");
+console.log("   Wrote dist/app.html (neutral shell for unmatched routes, no image preload).");
 
 console.log(
   `\n✅ Prerendered ${created} routes ` +
@@ -663,6 +692,10 @@ console.log(
 );
 console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.`);
 console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.`);
+console.log(
+  `   LCP preload: ${preloadRetargeted} route(s) retargeted to their own hero, ` +
+    `${preloadDropped} dropped (no hero to preload). The homepage keeps its own.`
+);
 
 const orphans = blogRoutes.filter((r) => inboundCount.get(r.post.slug) === 0);
 console.log(

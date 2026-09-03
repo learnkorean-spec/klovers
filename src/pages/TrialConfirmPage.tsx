@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
+import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 
 type PageState = "loading" | "ready" | "confirming" | "success" | "already" | "error";
 
@@ -13,6 +14,57 @@ interface BookingInfo {
   class_language: string | null;
   is_tba: boolean | null;
   attendance_response: string | null;
+}
+
+/** "Asia/Kuala_Lumpur" -> "Kuala Lumpur" */
+const tzCity = (tz: string) => (tz.includes("/") ? tz.split("/").pop()!.replace(/_/g, " ") : tz);
+
+const viewerTimezone = (): string => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+};
+
+/**
+ * The class as this reader should see it: their own date and their own time.
+ *
+ * This screen used to print `booking.start_time` straight from the database
+ * next to the slot's timezone - "14:00 (Africa/Cairo)" - on the one page
+ * whose entire purpose is the student saying yes, I'll be there. And it
+ * formatted the date with `new Date("2026-09-11")`, which is parsed as UTC
+ * midnight and rendered in the browser's zone, so every student west of UTC
+ * was shown the previous day.
+ *
+ * Converting both together is the point: a time without its date moving with
+ * it is how someone arrives on the wrong day.
+ */
+function renderWhen(booking: BookingInfo, locale: string) {
+  const { trial_date: date, start_time: time } = booking;
+  if (!date || !time) return null;
+  const slotTz = booking.timezone || "Africa/Cairo";
+  const viewerTz = viewerTimezone() || slotTz;
+  const local = convertDateTimeToTimezone(date, time, slotTz, viewerTz);
+  if (Number.isNaN(local.hour24)) return null;
+
+  // Local midnight, so toLocaleDateString cannot shift the day back again.
+  const [y, m, d] = local.dateStr.split("-").map(Number);
+  const dateLabel = new Date(y, m - 1, d).toLocaleDateString(locale, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const sameZone = viewerTz === slotTz;
+  const slotLocal = sameZone ? null : convertDateTimeToTimezone(date, time, slotTz, slotTz);
+
+  return {
+    dateLabel,
+    timeLabel: `${local.timeFormatted} (${tzCity(viewerTz)})`,
+    alsoLabel: slotLocal ? `${slotLocal.timeFormatted} ${tzCity(slotTz)}` : null,
+  };
 }
 
 const TrialConfirmPage = () => {
@@ -83,6 +135,8 @@ const TrialConfirmPage = () => {
     setState("success");
   };
 
+  const when = booking && !booking.is_tba ? renderWhen(booking, "en-US") : null;
+
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
@@ -111,21 +165,16 @@ const TrialConfirmPage = () => {
               <p><span className="font-semibold text-black">Language:</span> {booking.class_language ?? "—"}</p>
               <p>
                 <span className="font-semibold text-black">Date:</span>{" "}
-                {booking.is_tba
-                  ? "To be announced"
-                  : booking.trial_date
-                    ? new Date(booking.trial_date).toLocaleDateString(undefined, {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
-                    : "—"}
+                {booking.is_tba ? "To be announced" : when ? when.dateLabel : "—"}
               </p>
-              {!booking.is_tba && booking.start_time && (
+              {when && (
                 <p>
-                  <span className="font-semibold text-black">Time:</span> {booking.start_time}
-                  {booking.timezone ? ` (${booking.timezone})` : ""}
+                  <span className="font-semibold text-black">Time:</span> {when.timeLabel}
+                  {when.alsoLabel && (
+                    <span className="block text-xs text-gray-400 mt-0.5">
+                      That's {when.alsoLabel} for your teacher.
+                    </span>
+                  )}
                 </p>
               )}
             </div>
@@ -153,11 +202,17 @@ const TrialConfirmPage = () => {
               <span className="text-3xl">✅</span>
             </div>
             <h1 className="text-2xl font-bold text-black mb-2">Attendance Confirmed!</h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-2">
               {state === "already"
                 ? "You've already confirmed your attendance. See you in class!"
                 : "You're all set. See you in class!"}
             </p>
+            {when && (
+              <p className="text-sm text-gray-500 mb-6">
+                {when.dateLabel} · {when.timeLabel}
+              </p>
+            )}
+            {!when && <div className="mb-6" />}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="/placement-test"

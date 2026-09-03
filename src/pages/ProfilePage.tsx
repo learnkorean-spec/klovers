@@ -13,9 +13,45 @@ import AvatarUpload from "@/components/AvatarUpload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Mail, Globe, GraduationCap, BookOpen, Gamepad2, CalendarDays, LayoutDashboard, LogOut, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getLevelByKey, getLevelSelectOptions, mapLegacyLevel } from "@/constants/levels";
 
-const LEVELS = ["A0 Absolute Beginner", "A1 Beginner", "A2 Elementary", "B1 Intermediate", "B2 Upper-Intermediate", "C1 Advanced", "C2 Mastery"];
 const COUNTRIES = ["Egypt", "Saudi Arabia", "UAE", "Jordan", "Kuwait", "Bahrain", "Qatar", "Oman", "Libya", "Morocco", "Tunisia", "Algeria", "Other"];
+
+/**
+ * This page used to carry its own ladder:
+ *
+ *   ["A0 Absolute Beginner", "A1 Beginner", … "C2 Mastery"]
+ *
+ * Hardcoded, English-only on an Arabic page, led by a CEFR band that does not
+ * exist, and describing the student in a vocabulary no other part of the app
+ * speaks — `getLevelByKey` could not read what it saved, which is how a
+ * certificate ended up unable to name its own level.
+ *
+ * Anything already stored in that vocabulary still has to open cleanly, so old
+ * values are mapped to canonical keys on load.
+ */
+const CEFR_PREFIX_TO_KEY: Record<string, string> = {
+  A0: "hangul",
+  A1: "l1",
+  A2: "l2",
+  B1: "l3",
+  B2: "l4",
+  C1: "l5",
+  C2: "l6",
+};
+
+const toCanonicalLevel = (stored: string | null | undefined): string => {
+  const value = (stored ?? "").trim();
+  if (!value) return "";
+  if (getLevelByKey(value)) return value;
+
+  // "A1 Beginner", "B2 Upper-Intermediate", … — the old option strings.
+  const prefix = value.split(/\s+/)[0].toUpperCase();
+  if (CEFR_PREFIX_TO_KEY[prefix]) return CEFR_PREFIX_TO_KEY[prefix];
+
+  // foundation, level_1, beginner_2, …
+  return mapLegacyLevel(value)?.key ?? "";
+};
 
 interface Profile {
   user_id: string;
@@ -30,6 +66,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const isAr = language === "ar";
+  const levelOptions = getLevelSelectOptions(language);
 
   const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
@@ -59,7 +96,7 @@ const ProfilePage = () => {
       if (data) {
         setProfile(data as Profile);
         setName(data.name || "");
-        setLevel(data.level || "");
+        setLevel(toCanonicalLevel(data.level));
         setCountry(data.country || "");
         setAvatarUrl(data.avatar_url || "");
       }
@@ -180,8 +217,8 @@ const ProfilePage = () => {
                     <SelectValue placeholder={isAr ? "اختر مستواك" : "Select your level"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {LEVELS.map((l) => (
-                      <SelectItem key={l} value={l}>{l}</SelectItem>
+                    {levelOptions.map((l) => (
+                      <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
