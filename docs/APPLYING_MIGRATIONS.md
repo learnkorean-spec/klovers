@@ -20,6 +20,23 @@ it is not used. Applying directly and recording afterwards is what the Apply
 Migrations workflow does instead: the same two things `db push` does, minus a
 consistency check this project cannot satisfy.
 
+## One-time setup: the confirmation phrase
+
+`apply` and `repair-only` both require a `confirmation` input that must match
+the `MIGRATION_APPLY_CONFIRMATION` secret on the `production-db-apply`
+environment. This exists so dispatching the wrong mode (or the right mode
+with the wrong version) by accident stops before anything is touched, rather
+than after.
+
+Set it once: **Settings → Environments → `production-db-apply` → Environment
+secrets → Add secret**, name it exactly `MIGRATION_APPLY_CONFIRMATION`, value
+whatever phrase you'll type back in every time (e.g. `apply klovers prod`).
+Until this secret exists, `apply` and `repair-only` refuse to run at all —
+this is fail-closed, not skipped.
+
+`plan` never checks this and needs no `confirmation` value — it changes
+nothing regardless.
+
 ## Adding a migration
 
 1. Add the file to `supabase/migrations/` as usual and merge it.
@@ -34,12 +51,14 @@ consistency check this project cannot satisfy.
    Lists what would be applied and changes nothing. Check the list is exactly
    what you expect.
 
-3. Same workflow, `mode: apply`.
+3. Same workflow, `mode: apply`, `confirmation: <the phrase from the
+   MIGRATION_APPLY_CONFIRMATION secret>`.
 
    Applies each pending migration in version order and records it. Each file is
    applied in a transaction unless it opens its own, so a failure part-way
    through a file cannot half-apply it, and a failure on one migration leaves
-   later ones untouched.
+   later ones untouched. A missing or wrong `confirmation` value stops the run
+   before checkout even happens — nothing is touched.
 
 4. `Check migration state` goes green on the next push.
 

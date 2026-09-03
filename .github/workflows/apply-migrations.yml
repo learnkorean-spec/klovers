@@ -45,6 +45,17 @@
 # first (Settings -> Environments -> New environment -> name it exactly
 # `production-db-apply` -> Required reviewers) for the gate to mean anything.
 #
+# Both `apply` and `repair-only` also require the `confirmation` input to
+# match the `MIGRATION_APPLY_CONFIRMATION` environment secret on
+# `production-db-apply`. This is a second, independent gate, not a
+# replacement for Required reviewers: reviewers approve WHO can run the job;
+# this catches the far more common accident of the WRONG dispatch - picking
+# apply instead of plan, or the wrong version, without meaning to. The check
+# is the first step in each job, before checkout or any database connection,
+# so a mismatch stops the run having touched nothing at all. If the secret
+# itself is unset, the job fails closed (refuses to run) rather than treating
+# a blank input as a match. See docs/APPLYING_MIGRATIONS.md for how to set it.
+#
 # See docs/APPLYING_MIGRATIONS.md.
 
 name: Apply Migrations
@@ -63,6 +74,11 @@ on:
           - repair-only
       version:
         description: "repair-only mode only: the exact version to record (e.g. 20260829153926). You must have already verified its effect is live yourself - this job does not check that for you."
+        required: false
+        default: ""
+        type: string
+      confirmation:
+        description: "Required for apply and repair-only: the exact phrase from the MIGRATION_APPLY_CONFIRMATION environment secret. Leave blank for plan mode."
         required: false
         default: ""
         type: string
@@ -195,6 +211,22 @@ jobs:
     # this file for what has to exist in repo Settings for that to be real.
     environment: production-db-apply
     steps:
+      - name: Require explicit confirmation before touching production
+        env:
+          EXPECTED: ${{ secrets.MIGRATION_APPLY_CONFIRMATION }}
+          GOT: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPECTED" ]; then
+            echo "::error::MIGRATION_APPLY_CONFIRMATION is not set on the production-db-apply environment. Refusing to run apply until it exists - see docs/APPLYING_MIGRATIONS.md."
+            exit 1
+          fi
+          if [ "$GOT" != "$EXPECTED" ]; then
+            echo "::error::confirmation input did not match. Nothing has been touched. Re-dispatch mode=apply with the correct phrase."
+            exit 1
+          fi
+          echo "Confirmation accepted."
+
       - name: Checkout repo
         uses: actions/checkout@v5
 
@@ -354,6 +386,22 @@ jobs:
     # same required-reviewer gate, not a lighter one.
     environment: production-db-apply
     steps:
+      - name: Require explicit confirmation before touching production
+        env:
+          EXPECTED: ${{ secrets.MIGRATION_APPLY_CONFIRMATION }}
+          GOT: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPECTED" ]; then
+            echo "::error::MIGRATION_APPLY_CONFIRMATION is not set on the production-db-apply environment. Refusing to run repair-only until it exists - see docs/APPLYING_MIGRATIONS.md."
+            exit 1
+          fi
+          if [ "$GOT" != "$EXPECTED" ]; then
+            echo "::error::confirmation input did not match. Nothing has been touched. Re-dispatch mode=repair-only with the correct phrase."
+            exit 1
+          fi
+          echo "Confirmation accepted."
+
       - name: Checkout repo
         uses: actions/checkout@v5
 
