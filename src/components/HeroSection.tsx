@@ -6,6 +6,7 @@ const heroPoster = "/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialSlots";
 
 const useCountUp = (target: number, duration = 1800) => {
   const [count, setCount] = useState(0);
@@ -30,42 +31,34 @@ const useCountUp = (target: number, duration = 1800) => {
   return { count, ref };
 };
 
-/** 4 official trial class timestamps stored as MYT (UTC+8) ISO instants. */
-const TRIAL_INSTANTS_MYT = [
-  "2026-07-03T01:00:00+08:00",
-  "2026-07-04T23:00:00+08:00",
-  "2026-07-05T09:00:00+08:00",
-  "2026-07-07T23:00:00+08:00",
-];
-
-/** Returns the label for the next upcoming trial class in the visitor's timezone. */
-const nextClassLabel = () => {
-  const now = Date.now();
-  const upcoming = TRIAL_INSTANTS_MYT
-    .map((iso) => new Date(iso))
-    .filter((d) => d.getTime() > now);
-  if (upcoming.length === 0) return { en: "soon", ar: "قريباً" };
-  const next = upcoming[0];
-  const userTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "Asia/Kuala_Lumpur"; } })();
-  const en = next.toLocaleDateString("en-US", { weekday: "long", timeZone: userTz });
-  const ar = next.toLocaleDateString("ar-EG", { weekday: "long", timeZone: userTz });
-  return { en, ar };
-};
-
-/** Formats a trial instant for display in the visitor's local timezone. */
-function formatTrialPill(iso: string, lang: "en" | "ar"): string | null {
-  const d = new Date(iso);
-  if (d.getTime() <= Date.now()) return null;
-  const userTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "Asia/Kuala_Lumpur"; } })();
-  const day = d.toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", { weekday: "short", month: "short", day: "numeric", timeZone: userTz });
-  const time = d.toLocaleTimeString(lang === "ar" ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: userTz });
-  return `${day} · ${time}`;
-}
-
 const HeroSection = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
-  const nextDay = useMemo(() => nextClassLabel(), []);
+  // Trial dates come from trial_slots, not from a hardcoded array. Four such
+  // arrays had accumulated across the site, none agreeing with another and
+  // every one of them already in the past - which is why this hero has been
+  // showing "Next class: soon" above an empty row of pills.
+  const { slots } = useUpcomingTrialSlots();
+
+  const nextDay = useMemo(() => {
+    const next = slots[0];
+    if (!next) return { en: "soon", ar: "قريباً" };
+    const tz = viewerTimezone();
+    return {
+      en: next.startsAt.toLocaleDateString("en-US", { weekday: "long", timeZone: tz }),
+      ar: next.startsAt.toLocaleDateString("ar-EG", { weekday: "long", timeZone: tz }),
+    };
+  }, [slots]);
+
+  const pills = useMemo(() => {
+    const tz = viewerTimezone();
+    const locale = isAr ? "ar-EG" : "en-US";
+    return slots.map((s) => ({
+      key: `${s.date}-${s.startTime}`,
+      label: `${s.startsAt.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric", timeZone: tz })} · ${s.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz })}`,
+    }));
+  }, [slots, isAr]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -247,18 +240,16 @@ const HeroSection = () => {
             {isAr ? "✓ بدون بطاقة بنكية · ✓ ٩٨٪ راضون · ✓ رد خلال دقائق" : "✓ No credit card · ✓ 98% satisfaction · ✓ Reply in minutes"}
           </p>
 
-          {/* Upcoming class sessions — auto-localised to visitor timezone */}
+          {/* Upcoming class sessions — live from trial_slots, shown in the
+              visitor's own timezone. Renders nothing while loading or when
+              there is genuinely no upcoming slot, which is honest either way. */}
           <div className="flex flex-wrap gap-2 justify-center">
-            {TRIAL_INSTANTS_MYT.map((iso) => {
-              const label = formatTrialPill(iso, isAr ? "ar" : "en");
-              if (!label) return null;
-              return (
-                <div key={iso} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-white/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                  {label}
-                </div>
-              );
-            })}
+            {pills.map((p) => (
+              <div key={p.key} className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-white/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
+                {p.label}
+              </div>
+            ))}
           </div>
 
           {/* Hangul sheet — reciprocity trigger */}

@@ -133,7 +133,9 @@ Deno.serve(async (req) => {
 
   // ── 24-hour reminder ────────────────────────────────────────────────────────
   if (reminderType === "24h" || reminderType === "both") {
-    // Sessions happening tomorrow (Cairo = UTC+2, so tomorrow in Cairo)
+    // Sessions happening tomorrow in Cairo — the actual comparison happens
+    // inside get_sessions_for_reminder_24h(), via `AT TIME ZONE 'Africa/Cairo'`
+    // (a real IANA conversion, correct across the DST boundary), not here.
     const { data: sessions24h } = await supabase.rpc("get_sessions_for_reminder_24h") as any;
 
     for (const s of sessions24h ?? []) {

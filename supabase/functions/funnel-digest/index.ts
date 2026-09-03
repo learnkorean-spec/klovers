@@ -9,10 +9,12 @@
 //   - Cron health (followups sent)
 //   - Top concerns (auto-flagged thresholds)
 //
-// Triggered hourly by pg_cron with a guard so it only sends once per day
-// at the 8am Cairo (06:00 UTC) tick.
+// Triggered hourly by pg_cron with a guard so it only sends once per day,
+// at the 8am Cairo tick — checked against the real Cairo-local hour, not a
+// fixed UTC hour, so the gate stays correct across the DST boundary.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { cairoDateKey, cairoHour, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -119,27 +121,30 @@ Deno.serve(async (req) => {
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Cron fires hourly; only proceed at 06:00 UTC = 08:00 Cairo (one digest/day).
+    // Cron fires hourly; only proceed at 8am Cairo local (one digest/day).
     const url = new URL(req.url);
     const force = url.searchParams.get("force") === "1";
-    const utcHour = new Date().getUTCHours();
-    if (!force && utcHour !== 6) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, utcHour }), {
+    const hourCairo = cairoHour();
+    if (!force && hourCairo !== 8) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, hourCairo }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    // Yesterday in Cairo (UTC+2, no DST since 2011)
-    const nowCairo = new Date(Date.now() + 2 * 60 * 60 * 1000);
-    const yest = new Date(nowCairo.getTime() - 86400000);
-    const yLabel = yest.toISOString().slice(0, 10);
+    // Yesterday in Cairo — a real IANA conversion, correct on both sides of
+    // the DST boundary.
+    const todayCairo = cairoDateKey();
+    const yLabel = shiftDateKey(todayCairo, -1);
+    const tomorrowCairo = shiftDateKey(todayCairo, 1);
 
     // ── Headline numbers ────────────────────────────────────────────────────
     const { data: hdr } = await supabase.rpc("exec_funnel_digest_headline_v1", {}).select();
     void hdr; // best-effort RPC; fall back to inline counts below
 
-    const since = new Date(yest.getTime()).toISOString();
-    const until = new Date(yest.getTime() + 86400000).toISOString();
+    // Cairo-local yesterday's midnight-to-midnight window, expressed as the
+    // UTC instants it actually spans.
+    const since = zonedMidnightUtc(yLabel).toISOString();
+    const until = zonedMidnightUtc(todayCairo).toISOString();
 
     const { data: lf } = await supabase
       .from("lead_funnel")
@@ -212,8 +217,6 @@ Deno.serve(async (req) => {
       .from("trial_bookings")
       .select("followup_prep_sent_at, followup_day1_sent_at, followup_day3_sent_at, trial_date, is_tba");
     const yesterdayPrefix = yLabel; // yyyy-mm-dd
-    const todayCairo = nowCairo.toISOString().slice(0, 10);
-    const tomorrowCairo = new Date(nowCairo.getTime() + 86400000).toISOString().slice(0, 10);
     let prepSent = 0, day1Sent = 0, day3Sent = 0, prepWindowTomorrow = 0;
     for (const r of (cronStats ?? [])) {
       if (r.followup_prep_sent_at && (r.followup_prep_sent_at as string).startsWith(yesterdayPrefix)) prepSent++;
@@ -221,7 +224,6 @@ Deno.serve(async (req) => {
       if (r.followup_day3_sent_at && (r.followup_day3_sent_at as string).startsWith(yesterdayPrefix)) day3Sent++;
       if (r.trial_date === tomorrowCairo && r.is_tba !== true) prepWindowTomorrow++;
     }
-    void todayCairo;
 
     // ── Auto-flagged concerns ───────────────────────────────────────────────
     const flags: string[] = [];

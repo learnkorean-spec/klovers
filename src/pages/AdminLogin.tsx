@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,6 @@ const AdminLogin = () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    if (data.user.email !== "admin@klovers.com") {
-      await supabase.auth.signOut();
       toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
       setLoading(false);
       return;
@@ -88,6 +81,9 @@ const AdminLogin = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
+            <p className="text-sm text-center text-muted-foreground">
+              <Link to="/forgot-password" className="text-foreground font-semibold underline">Forgot password?</Link>
+            </p>
           </form>
         </CardContent>
       </Card>

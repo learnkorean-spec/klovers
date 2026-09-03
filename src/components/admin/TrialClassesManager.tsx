@@ -16,13 +16,15 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, ChevronUp, CalendarCog, Copy } from "lucide-react";
-import { formatTime, convertDateTimeToTimezone } from "@/lib/admin-utils";
+import { CheckCircle, Mail, RefreshCw, Users, XCircle, Pencil, ChevronDown, ChevronUp, CalendarCog, Copy, AlertTriangle } from "lucide-react";
+import { formatTime, convertDateTimeToTimezone, deriveSessionPeriod } from "@/lib/admin-utils";
 import { getAdminTimezone } from "@/lib/viewerTimezone";
 import { getLevelShortLabel } from "@/constants/levels";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
+import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
+import { emailLanguageFor } from "@/components/admin/trial/emailLanguage";
 import { TrialSlotRow } from "@/types/trial-admin";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -61,6 +63,7 @@ interface TrialBooking {
   trial_date: string | null;
   timezone: string;
   language?: string | null;
+  class_language?: string | null;
   status: string;
   confirmed_at: string | null;
   created_at: string;
@@ -93,10 +96,15 @@ interface TrialSlot {
   meeting_url?: string | null;
   class_language?: string | null;
   timezone?: string | null;
+  capacity?: number | null;
+  /** When this slot's date/time last changed — the staleness clock for invitations. */
+  updated_at?: string | null;
 }
 
 type TimeFilter = "all" | "upcoming" | "past";
 type StatusFilter = "all" | "pending" | "confirmed" | "no_show" | "cancelled";
+type LanguageFilter = "all" | "arabic" | "english";
+type BookedSort = "asc" | "desc";
 
 interface UpcomingSlot {
   value: string; // "YYYY-MM-DD|dow|HH:mm"
@@ -138,6 +146,11 @@ const TrialClassesManager = () => {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("all");
+  // Which order the "Booked" column sorts each session's rows in. Defaults
+  // to oldest-first: the pilot list is defined by signup date, and nothing
+  // else in this view sorted by it before this.
+  const [bookedSort, setBookedSort] = useState<BookedSort>("asc");
   const [trialSlotMap, setTrialSlotMap] = useState<Record<string, string>>({});
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<TrialSlotRow | null>(null);
@@ -165,7 +178,7 @@ const TrialClassesManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trial_slots")
-        .select("day_of_week, start_time, is_active, trial_date, meeting_url, class_language, timezone")
+        .select("day_of_week, start_time, is_active, trial_date, meeting_url, class_language, timezone, capacity, updated_at")
         .eq("is_active", true);
       if (error) throw error;
       return (data as TrialSlot[] | null) ?? [];
@@ -199,6 +212,71 @@ const TrialClassesManager = () => {
         };
       });
   }, [activeSlots]);
+
+  /**
+   * The slots it is honest to offer a student.
+   *
+   * `activeSlots` is every row with is_active = true, which still includes
+   * last week's - so a rebook email could offer a date that had already
+   * passed, and the meeting link could come from a class that was over. Today
+   * is read in the admin's own timezone, not UTC, so a slot does not vanish
+   * an evening early.
+   */
+  const futureSlots = useMemo(() => {
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: getAdminTimezone(),
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    return activeSlots.filter((s) => s.trial_date && s.trial_date >= todayStr);
+  }, [activeSlots]);
+
+  /**
+   * The moment the offered dates last changed.
+   *
+   * An invitation is only "already sent" if it was sent for THESE dates. Every
+   * rebook email in the database went out on 2 July 2026, for a July block that
+   * no longer exists; the current slots were last written on 1 September. A
+   * plain "has rebook_email_sent_at" check calls those students done and never
+   * writes to them again, which is how 41 people came to be sitting on an
+   * invitation to dates that have passed.
+   */
+  const slotsUpdatedAt = useMemo(() => {
+    const stamps = futureSlots
+      .map((s) => (s.updated_at ? Date.parse(s.updated_at) : NaN))
+      .filter((n) => !Number.isNaN(n));
+    return stamps.length ? new Date(Math.max(...stamps)) : null;
+  }, [futureSlots]);
+
+  /**
+   * Seats actually left, per class language.
+   *
+   * Emailing more students than there are seats is not a neutral act: the ones
+   * who arrive late open the invitation, find nothing bookable, and that is the
+   * last impression they get. The confirm dialog states this before the send.
+   */
+  const seatsByLanguage = useMemo(() => {
+    const taken = new Map<string, number>();
+    for (const b of bookings) {
+      if (b.status === "cancelled" || isTbaBooking(b)) continue;
+      const key = `${b.trial_date}__${b.start_time}`;
+      taken.set(key, (taken.get(key) ?? 0) + 1);
+    }
+    const out: Record<string, number> = {};
+    for (const s of futureSlots) {
+      const lang = s.class_language ?? "any";
+      const used = taken.get(`${s.trial_date}__${s.start_time}`) ?? 0;
+      out[lang] = (out[lang] ?? 0) + Math.max(0, (s.capacity ?? 0) - used);
+    }
+    return out;
+  }, [futureSlots, bookings]);
+
+  const seatsFor = (targets: TrialBooking[]) => {
+    const langs = new Set(targets.map((t) => t.class_language ?? "any"));
+    let n = 0;
+    for (const l of langs) n += seatsByLanguage[l] ?? 0;
+    if (seatsByLanguage["any"] && !langs.has("any")) n += seatsByLanguage["any"];
+    return n;
+  };
 
   const formatDateTime = (value?: string | null) =>
     value ? new Date(value).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—";
@@ -377,27 +455,53 @@ const TrialClassesManager = () => {
     setActioningId(booking.id);
     try {
       // Use active trial slots as the canonical slot list (not derived from bookings).
-      const meetingUrl = activeSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
+      const meetingUrl = futureSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
       if (!meetingUrl) {
+        // This used to warn and then send anyway, so the student received an
+        // invitation with no way to join.
         toast({
           title: "No Google Meet link found for this class.",
           description: "Add it in the trial slot settings before sending.",
           variant: "destructive",
         });
+        return;
+      }
+      if (!booking.email) {
+        toast({ title: "No email address on this booking", variant: "destructive" });
+        return;
       }
       // class_language on the booking is "arabic" | "english" (stored at booking time).
       // Normalise to the ISO code expected by the email template ("ar" / "en").
       const rawLang = booking.class_language ?? "en";
-      const bookingLang = rawLang === "arabic" ? "ar" : rawLang === "english" ? "en" : rawLang;
-      const langSlots = activeSlots.filter(
-        (s) => s.trial_date && (!s.class_language || s.class_language === rawLang)
+      // The letter's language and the class's language are two different
+      // questions. An Egyptian number means write in Arabic; it does not move
+      // anyone out of the English group they chose - langSlots below still
+      // filters on rawLang.
+      const bookingLang = emailLanguageFor(booking);
+      const langSlots = futureSlots.filter(
+        (s) => !s.class_language || s.class_language === rawLang
       );
+      if (langSlots.length === 0) {
+        toast({
+          title: "No upcoming slots to offer",
+          description: "Add an upcoming trial slot before sending a rebook email.",
+          variant: "destructive",
+        });
+        return;
+      }
       const { error: emailErr } = await supabase.functions.invoke("send-confirmation-email", {
         body: {
           template: "trial_rebook_request",
           email: booking.email,
           name: booking.name || booking.email,
-          language: "en",
+          // Was hardcoded "en" while bookingLang sat computed and unused, so
+          // Arabic-track students got the English template - and the confirm
+          // dialog told the admin otherwise.
+          language: bookingLang,
+          // The student's own zone, so the email states each slot in their
+          // time. Null for bookings made before that capture shipped; the
+          // template then falls back to the slot time plus GMT.
+          student_timezone: (booking as any).student_timezone ?? null,
           rebook_url: `${window.location.origin}/trial-booking`,
           class_link_url: meetingUrl,
           available_slots: langSlots.map((s) => ({
@@ -427,41 +531,60 @@ const TrialClassesManager = () => {
     }
   };
 
-  const handleSendRebookToAllTBA = async () => {
-    const tba = bookings.filter(isTbaBooking);
-    if (tba.length === 0) {
-      toast({ title: "Nothing to send", description: "No unscheduled (TBA) bookings right now." });
+  /**
+   * Email every unscheduled student the button is counting - and only those.
+   *
+   * This used to send to `bookings.filter(isTbaBooking)`: the whole table,
+   * ignoring the status/language/time filters the admin had set, including
+   * cancelled rows, including students who had already been emailed, and once
+   * per duplicate row. The button beside it counted something else entirely,
+   * so the number on the button was never the number of emails sent. The
+   * caller now passes the exact list the count was taken from.
+   */
+  const handleSendRebookToAllTBA = async (targets: TrialBooking[]) => {
+    if (targets.length === 0) {
+      toast({ title: "Nothing to send", description: "No unscheduled students left to email." });
       return;
     }
-    // Use active trial slots as the canonical slot list (not derived from bookings).
-    const bulkMeetingUrl = activeSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
+    const bulkMeetingUrl = futureSlots.find((s) => s.meeting_url)?.meeting_url ?? null;
     if (!bulkMeetingUrl) {
+      // Warned and then sent anyway before this, which put an invitation with
+      // no joinable link in front of every unscheduled student at once.
       toast({
         title: "No Google Meet link found for this class.",
         description: "Add it in the trial slot settings before sending.",
         variant: "destructive",
       });
+      return;
     }
     setBulkBusy(true);
-    let ok = 0, fail = 0;
-    for (const b of tba) {
+    let ok = 0, fail = 0, skipped = 0;
+    for (const b of targets) {
       try {
         const bRawLang = b.class_language ?? "en";
-        const bLang = bRawLang === "arabic" ? "ar" : bRawLang === "english" ? "en" : bRawLang;
-        const bSlots = activeSlots
-          .filter((s) => s.trial_date && (!s.class_language || s.class_language === bRawLang))
+        // Letter language, not class language - see emailLanguage.ts.
+        const bLang = emailLanguageFor(b);
+        const bSlots = futureSlots
+          .filter((s) => !s.class_language || s.class_language === bRawLang)
           .map((s) => ({
             day_of_week: s.day_of_week,
             start_time: s.start_time,
             timezone: s.timezone ?? ADMIN_TIMEZONE,
             date: s.trial_date,
           }));
+        if (bSlots.length === 0) {
+          // Nothing upcoming in this student's language. An email offering an
+          // empty list of dates is worse than no email.
+          skipped++;
+          continue;
+        }
         const { error: emailErr } = await supabase.functions.invoke("send-confirmation-email", {
           body: {
             template: "trial_rebook_request",
             email: b.email,
             name: b.name || b.email,
-            language: "en",
+            language: bLang,
+            student_timezone: (b as any).student_timezone ?? null,
             rebook_url: `${window.location.origin}/trial-booking`,
             class_link_url: bulkMeetingUrl,
             available_slots: bSlots,
@@ -477,7 +600,10 @@ const TrialClassesManager = () => {
         fail++;
       }
     }
-    toast({ title: "Rebook emails", description: `${ok} sent${fail ? `, ${fail} failed` : ""}.` });
+    toast({
+      title: "Rebook emails",
+      description: `${ok} sent${fail ? `, ${fail} failed` : ""}${skipped ? `, ${skipped} skipped (no upcoming slot in their language)` : ""}.`,
+    });
     fetchData();
     setBulkBusy(false);
   };
@@ -579,6 +705,7 @@ const TrialClassesManager = () => {
   const filtered = useMemo(() => {
     return bookings.filter((b) => {
       if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      if (languageFilter !== "all" && (b.class_language ?? null) !== languageFilter) return false;
       if (timeFilter !== "all") {
         // TBA rows have no date; exclude from upcoming/past filters.
         if (!b.trial_date || isTbaBooking(b)) return false;
@@ -588,7 +715,7 @@ const TrialClassesManager = () => {
       }
       return true;
     });
-  }, [bookings, statusFilter, timeFilter, startOfToday]);
+  }, [bookings, statusFilter, languageFilter, timeFilter, startOfToday]);
 
   // ── Group by exact session (trial_date + start_time). TBA rows fold into a
   // single synthetic session so admins see one "Unscheduled" card.
@@ -686,6 +813,45 @@ const TrialClassesManager = () => {
     .filter((s) => s.lifecycle === "active")
     .sort((a, b) => (a.trial_date ?? "").localeCompare(b.trial_date ?? "") || a.start_time.localeCompare(b.start_time));
 
+  // advance_trial_slots() (the hourly rollover cron) marks a slot here when
+  // it can't move forward because another row already occupies the date and
+  // time it would land on — surfaced here, on the exact table Re already
+  // opens, rather than only in a log she'd have to know to go looking for.
+  const rolloverSkippedSlots = activeScheduleSlots.filter((s) => s.rollover_skipped_at);
+
+  /**
+   * Cairo is where every trial student is; the authoring timezone (still
+   * sometimes the teacher's own, per ADMIN_TIMEZONE) is secondary context,
+   * not the headline. `impliedPeriod` (derived from the real Cairo-local
+   * hour) is now the only session-period value shown — there is no stored
+   * label left for it to disagree with, which is exactly the point: a
+   * derived value cannot lie the way the old free-typed `session_period`
+   * field could (see issue #127).
+   *
+   * `asiaLabel`, English slots only: the same instant in Kuala Lumpur, so
+   * Re doesn't have to convert Asia-audience slots in her head. Illustrative
+   * only — there's no stored per-slot audience timezone, so this is one
+   * representative Asia city, not a claim about where every student is.
+   */
+  const cairoViewFor = (s: TrialSlotRow) => {
+    if (!s.trial_date) return null;
+    const cairo = convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Africa/Cairo");
+    if (Number.isNaN(cairo.hour24)) return null;
+    const d = new Date(`${cairo.dateStr}T00:00:00`);
+    const label = `${cairo.weekday.slice(0, 3)} ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${cairo.timeFormatted}`;
+    const impliedPeriod = deriveSessionPeriod(cairo.hour24);
+    const asiaLabel = s.class_language === "english"
+      ? convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Asia/Kuala_Lumpur").timeFormatted
+      : null;
+    return {
+      label,
+      dateStr: cairo.dateStr,
+      impliedPeriod,
+      asiaLabel,
+      authoredDiffers: s.timezone !== "Africa/Cairo",
+    };
+  };
+
   return (
     <div className="space-y-4">
       {/* Trial schedule — edit dates/times/language/capacity for your own availability */}
@@ -698,6 +864,12 @@ const TrialClassesManager = () => {
             <CardTitle className="text-sm flex items-center gap-2">
               <CalendarCog className="h-4 w-4" />
               Trial Schedule ({activeScheduleSlots.length} active {activeScheduleSlots.length === 1 ? "slot" : "slots"})
+              {rolloverSkippedSlots.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-destructive font-medium text-xs">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {rolloverSkippedSlots.length} didn't auto-advance
+                </span>
+              )}
             </CardTitle>
             <div className="flex items-center gap-2">
               <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -712,6 +884,19 @@ const TrialClassesManager = () => {
         </CardHeader>
         {scheduleOpen && (
           <CardContent className="pt-0">
+            {rolloverSkippedSlots.length > 0 && (
+              <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-1">
+                <p className="font-medium flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {rolloverSkippedSlots.length} slot{rolloverSkippedSlots.length === 1 ? "" : "s"} didn't auto-advance this week — move {rolloverSkippedSlots.length === 1 ? "it" : "them"} manually below.
+                </p>
+                {rolloverSkippedSlots.map((s) => (
+                  <p key={s.id} className="pl-5 text-muted-foreground">
+                    {DAY_NAMES[s.day_of_week]} {s.start_time} ({s.timezone.replace(/_/g, " ")}): {s.rollover_skip_reason}
+                  </p>
+                ))}
+              </div>
+            )}
             {allSlotsQ.isLoading ? (
               <p className="text-xs text-muted-foreground py-4">Loading schedule...</p>
             ) : activeScheduleSlots.length === 0 ? (
@@ -721,35 +906,60 @@ const TrialClassesManager = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Day</TableHead>
-                      <TableHead>Time</TableHead>
+                      <TableHead>Cairo time</TableHead>
+                      <TableHead>Session</TableHead>
                       <TableHead>Language</TableHead>
                       <TableHead className="text-right">Capacity</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {activeScheduleSlots.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="text-xs font-mono">{s.trial_date ?? "—"}</TableCell>
-                        <TableCell className="text-xs">{DAY_NAMES[s.day_of_week]}</TableCell>
-                        <TableCell className="text-xs font-mono">{s.start_time} ({s.timezone})</TableCell>
-                        <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
-                        <TableCell className="text-xs text-right">{s.capacity}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0"
-                            onClick={() => setEditingSlot(s)}
-                            title="Edit this trial slot"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {activeScheduleSlots.map((s) => {
+                      const cairo = cairoViewFor(s);
+                      return (
+                        <TableRow key={s.id}>
+                          <TableCell className="text-xs">
+                            {cairo ? (
+                              <>
+                                <div className="font-mono font-medium">{cairo.label}</div>
+                                {cairo.authoredDiffers && (
+                                  <div className="text-muted-foreground/70 text-[10px] font-mono">
+                                    authored {s.trial_date !== cairo.dateStr ? `${s.trial_date} ` : ""}{s.start_time} {s.timezone.replace(/_/g, " ")}
+                                  </div>
+                                )}
+                                {cairo.asiaLabel && (
+                                  <div className="text-muted-foreground/70 text-[10px] font-mono">
+                                    ≈ {cairo.asiaLabel} Kuala Lumpur
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <span className="font-mono">{s.start_time} ({s.timezone}) · {DAY_NAMES[s.day_of_week]}</span>
+                            )}
+                            {s.rollover_skipped_at && (
+                              <div className="text-destructive text-[10px] font-medium flex items-center gap-1 mt-0.5" title={s.rollover_skip_reason ?? undefined}>
+                                <AlertTriangle className="h-3 w-3 shrink-0" />
+                                didn't auto-advance
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs capitalize">{cairo?.impliedPeriod ?? "—"}</TableCell>
+                          <TableCell className="text-xs capitalize">{s.class_language ?? "—"}</TableCell>
+                          <TableCell className="text-xs text-right">{s.capacity}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => setEditingSlot(s)}
+                              title="Edit this trial slot"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -786,6 +996,14 @@ const TrialClassesManager = () => {
               <SelectItem value="confirmed">Confirmed only</SelectItem>
               <SelectItem value="no_show">No-show only</SelectItem>
               <SelectItem value="cancelled">Cancelled only</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={languageFilter} onValueChange={(v) => setLanguageFilter(v as LanguageFilter)}>
+            <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All languages</SelectItem>
+              <SelectItem value="arabic">Arabic only</SelectItem>
+              <SelectItem value="english">English only</SelectItem>
             </SelectContent>
           </Select>
           <AlertDialog>
@@ -832,7 +1050,22 @@ const TrialClassesManager = () => {
               ?? activeSlots.find((s) => s.start_time === session.time)
             : null;
           const sessionLanguage = slotMatch?.class_language ?? session.items[0]?.language ?? null;
-          const tbaUnsentCount = isTbaSession ? session.items.length : 0;
+          // The list the button counts IS the list the button sends to, and
+          // "already emailed" means emailed about THESE dates - see
+          // rebookTargets.ts. Before, the count was every row in the card
+          // (cancelled and already-emailed included) while the send was every
+          // TBA row in the table regardless of the admin's filters.
+          const tbaTargets = isTbaSession
+            ? pickRebookTargets(session.items, slotsUpdatedAt)
+            : [];
+          const tbaUnsentCount = tbaTargets.length;
+          const tbaSeats = isTbaSession ? seatsFor(tbaTargets) : 0;
+          const tbaOversubscribed = tbaUnsentCount > tbaSeats;
+          // Split by the language the letter would be written in, so an
+          // Arabic-only send is one click rather than a filter that gets the
+          // set slightly wrong.
+          const tbaArabic = tbaTargets.filter((b) => emailLanguageFor(b) === "ar");
+          const tbaArabicSeats = isTbaSession ? seatsFor(tbaArabic) : 0;
           return (
             <Card key={session.key}>
               <CardHeader className="py-3">
@@ -894,22 +1127,74 @@ const TrialClassesManager = () => {
                             variant="default"
                             className="h-7"
                             disabled={bulkBusy || tbaUnsentCount === 0}
-                            title={tbaUnsentCount === 0 ? "No unscheduled students" : `Email ${tbaUnsentCount} unscheduled student${tbaUnsentCount === 1 ? "" : "s"}`}
+                            title={tbaUnsentCount === 0 ? "Every unscheduled student here has already been emailed" : `Email ${tbaUnsentCount} unscheduled student${tbaUnsentCount === 1 ? "" : "s"}`}
                           >
                             <Mail className="h-3.5 w-3.5 mr-1" />
                             Resend with new dates ({tbaUnsentCount})
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-lg">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Send rebook email to {tbaUnsentCount} student{tbaUnsentCount === 1 ? "" : "s"}?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              An Arabic rebook email with active slot options will be sent to each unscheduled student in this TBA session.
+                            <AlertDialogTitle>Who gets a rebook email?</AlertDialogTitle>
+                            <AlertDialogDescription asChild>
+                              <div className="space-y-3">
+                                <p>
+                                  One email each, listing only upcoming slots in that student&apos;s own class language. Cancelled bookings, duplicate rows, and anyone already invited to <em>these</em> dates are excluded.
+                                </p>
+
+                                {/* The list itself. Names belong here - behind
+                                    the admin login, at the moment of the
+                                    decision - and nowhere else. */}
+                                <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
+                                  {tbaTargets.map((b) => {
+                                    const lang = emailLanguageFor(b);
+                                    return (
+                                      <div key={b.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs">
+                                        <span className="min-w-0">
+                                          <span className="font-medium text-foreground block truncate">{b.name || "—"}</span>
+                                          <span className="text-muted-foreground block truncate">{b.email}</span>
+                                        </span>
+                                        <span className="flex items-center gap-1 shrink-0">
+                                          {lang === "ar" && b.class_language !== "arabic" && (
+                                            <Badge variant="outline" className="text-[9px] px-1 py-0" title="English class, but an Egyptian number - the letter is written in Arabic">
+                                              EG number
+                                            </Badge>
+                                          )}
+                                          <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${lang === "ar" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                                            {lang === "ar" ? "AR" : "EN"}
+                                          </span>
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                                <p className={tbaOversubscribed ? "text-destructive font-medium" : ""}>
+                                  {tbaOversubscribed
+                                    ? `Only ${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are left across the upcoming classes. Emailing all ${tbaUnsentCount} means ${tbaUnsentCount - tbaSeats} of them open the invitation and find nothing to book.`
+                                    : `${tbaSeats} seat${tbaSeats === 1 ? "" : "s"} are open across the upcoming classes — enough for everyone on this list.`}
+                                </p>
+                                {tbaArabic.length > 0 && tbaArabic.length < tbaUnsentCount && (
+                                  <p className="text-muted-foreground">
+                                    {tbaArabic.length} of these would be written in Arabic, and {tbaArabicSeats} seat{tbaArabicSeats === 1 ? "" : "s"} cover them.
+                                  </p>
+                                )}
+                              </div>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleSendRebookToAllTBA}>Send {tbaUnsentCount}</AlertDialogAction>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
+                            {tbaArabic.length > 0 && tbaArabic.length < tbaUnsentCount && (
+                              <AlertDialogAction
+                                onClick={() => handleSendRebookToAllTBA(tbaArabic)}
+                                className="bg-emerald-600 hover:bg-emerald-700"
+                              >
+                                Send Arabic only ({tbaArabic.length})
+                              </AlertDialogAction>
+                            )}
+                            <AlertDialogAction onClick={() => handleSendRebookToAllTBA(tbaTargets)}>
+                              Send all {tbaUnsentCount}
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -927,7 +1212,17 @@ const TrialClassesManager = () => {
                         <TableHead>Phone</TableHead>
                         <TableHead>Level</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Booked</TableHead>
+                        <TableHead>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 hover:text-foreground"
+                            onClick={() => setBookedSort((s) => (s === "asc" ? "desc" : "asc"))}
+                            title={bookedSort === "asc" ? "Oldest signup first — click for newest first" : "Newest signup first — click for oldest first"}
+                          >
+                            Booked
+                            {bookedSort === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          </button>
+                        </TableHead>
                         <TableHead>Changed</TableHead>
                         <TableHead>Cancelled</TableHead>
                         <TableHead>Notes</TableHead>
@@ -935,7 +1230,13 @@ const TrialClassesManager = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {session.items.map((b) => (
+                      {[...session.items]
+                        .sort((a, b) =>
+                          bookedSort === "asc"
+                            ? a.created_at.localeCompare(b.created_at)
+                            : b.created_at.localeCompare(a.created_at),
+                        )
+                        .map((b) => (
                         <TableRow key={b.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-1 flex-wrap">

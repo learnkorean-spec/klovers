@@ -104,6 +104,28 @@ function formatTime12h(time: string): string {
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
+/**
+ * Validate a client-supplied IANA timezone.
+ *
+ * The value comes from `Intl.DateTimeFormat().resolvedOptions().timeZone` in
+ * the student's own browser, so it is normally right — but it arrives in a
+ * request body, which makes it untrusted input. Intl itself is the check: an
+ * unknown zone makes the constructor throw. Anything that fails returns null,
+ * and null is stored as null. We never substitute a guess for a zone we could
+ * not verify.
+ */
+function normalizeStudentTimezone(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const tz = value.trim();
+  if (!tz || tz.length > 64) return null;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz }).format(new Date());
+    return tz;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -123,7 +145,10 @@ Deno.serve(async (req) => {
       "unknown";
 
     const body = await req.json();
-    const { name, email, phone, country, level, goal, day_of_week, start_time, trial_date: bodyTrialDate, class_language, referrer_id, authed } = body;
+    const { name, email, phone, country, level, goal, day_of_week, start_time, trial_date: bodyTrialDate, class_language, referrer_id, authed, student_timezone } = body;
+    // The student's own zone, read from their browser. Distinct from the
+    // slot's `timezone` below, which is the teacher's.
+    const studentTimezone = normalizeStudentTimezone(student_timezone);
 
     // ── Authenticated path: derive identity from JWT, skip placeholder hacks ──
     // When the client passes `authed: true` AND a valid Authorization bearer
@@ -242,9 +267,12 @@ Deno.serve(async (req) => {
     const trialMs = new Date(trialDate + "T00:00:00Z").getTime();
     const todayMs = new Date(todayInSlotTz + "T00:00:00Z").getTime();
     if (Math.round((trialMs - todayMs) / 86_400_000) <= 1) {
+      // Same class of failure as the other pre-checks above (invalid email,
+      // bad day_of_week, bad start_time) -- a real 400, not a 200 wrapping
+      // an error. Body shape is unchanged.
       return new Response(
         JSON.stringify({ ok: false, success: false, error: "Booking is closed — registrations close 1 day before the class." }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -337,6 +365,12 @@ Deno.serve(async (req) => {
     // Authenticated rebook: mark previous booking cancelled (any kind) to allow
     // slot change while preserving changed_at/cancelled_at for admin.
     // Unauthenticated: only close TBA placeholders (or rollover bookings).
+    //
+    // NOTE for anyone touching the rejoin cooldown (migration 20260903170000):
+    // this is the reason cancel_reason matters. A reschedule writes a cancelled
+    // row with cancelled_at = now, milliseconds before the insert below. The
+    // cooldown trigger ignores 'student_reschedule' and 'tba_rebook' precisely
+    // so that rescheduling does not lock the student out for a month.
     const shouldCloseExisting = existingBooking && (authed || isTbaPlaceholder || isRollover);
     if (shouldCloseExisting) {
       const auditUpdate = await supabase
@@ -388,7 +422,8 @@ Deno.serve(async (req) => {
     const booking = newBookingId ? { id: newBookingId as string } : null;
 
     if (bookingError || !booking) {
-      // Unique constraint: user has a real booking
+      // Unique constraint: user has a real booking -- a real conflict, so a
+      // real 409, not a 200 wrapping an error.
       if (bookingError?.code === "23505") {
         return new Response(
           JSON.stringify({
@@ -396,7 +431,7 @@ Deno.serve(async (req) => {
             success: false,
             error: "You already have a trial class booked. Check your email for details.",
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Exclusion constraint: somebody else holds this exact slot.
@@ -418,7 +453,29 @@ Deno.serve(async (req) => {
             error: "Sorry — that time was just taken. Please pick another slot.",
             error_code: "slot_taken",
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // Rejoin cooldown: this email cancelled a trial recently (migration
+      // 20260903170000, trial_settings.rejoin_cooldown_days).
+      //
+      // Matched on the message, not the SQLSTATE: the trigger raises P0001,
+      // and the branch below already owns 23514 for "overlaps an existing
+      // class". Reusing that code would have shown a wrong reason, stated
+      // confidently. This branch must therefore stay ABOVE it.
+      //
+      // A cooldown is a policy decision, not a server fault, so it is a 409 —
+      // without this branch it fell through to the generic 500 and showed the
+      // student the raw Postgres exception text.
+      if (bookingError?.message?.includes("trial_rejoin_cooldown")) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            success: false,
+            error: "You cancelled a trial class recently. You can book another one a month after that date — message us on WhatsApp if you need it sooner.",
+            error_code: "rejoin_cooldown",
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Conflict trigger: trial time overlaps an existing enrolled class
@@ -429,19 +486,44 @@ Deno.serve(async (req) => {
             success: false,
             error: "This trial time overlaps with one of your existing classes. Please pick a different slot or contact us on WhatsApp.",
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Surface the real DB error in the response body instead of throwing a
       // generic 500 — this lets the UI show a meaningful message and lets us
       // see the error code/message without needing server-side log access.
+      // Genuinely unexpected (not one of the known conflict codes above), so
+      // a real 500 -- this was the most dangerous of the four 200s: an actual
+      // bug returning "success" to every caller and monitor.
       const errMsg = bookingError?.message ?? "Failed to insert trial booking";
       const errCode = bookingError?.code ?? "unknown";
       console.error("book-trial insert error:", errCode, errMsg, JSON.stringify(bookingError));
       return new Response(
         JSON.stringify({ ok: false, success: false, error: errMsg, error_code: errCode }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // 2b. Record the student's own timezone. Best effort, never fatal.
+    //
+    // This is a follow-up UPDATE rather than a new argument to
+    // upsert_trial_booking on purpose: changing that RPC's signature would
+    // touch every other caller, and a booking must never fail because a
+    // display preference could not be stored.
+    if (studentTimezone) {
+      const { error: tzError } = await supabase
+        .from("trial_bookings")
+        .update({ student_timezone: studentTimezone } as any)
+        .eq("id", booking.id);
+      if (tzError) {
+        // 42703 = column does not exist, i.e. migration 20260901100000 has
+        // not been dispatched yet. That window is expected between this
+        // deploy and the Apply Migrations run; the row simply keeps NULL and
+        // the emails fall back to the Cairo + GMT pair. Not worth an alert.
+        if (tzError.code !== "42703") {
+          console.warn("[book-trial] could not store student_timezone:", tzError.code, tzError.message);
+        }
+      }
     }
 
     // 3. Notify admin
@@ -498,6 +580,7 @@ Deno.serve(async (req) => {
           trial_date: trialDate,
           trial_time: start_time,
           trial_timezone: timezone,
+          student_timezone: studentTimezone,
           trial_duration_min: slotDurationMin,
           class_link_url: meetingUrl,
           booking_id: newBookingRow?.id ?? booking.id,
@@ -517,6 +600,7 @@ Deno.serve(async (req) => {
           trial_date: trialDate,
           trial_time: start_time,
           trial_timezone: timezone,
+          student_timezone: studentTimezone,
           trial_duration_min: slotDurationMin,
           level: level?.trim() || "",
           calendar_url: calendarUrl,
