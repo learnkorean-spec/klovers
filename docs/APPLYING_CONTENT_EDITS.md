@@ -64,6 +64,40 @@ Actions → **Apply Content Edits** → Run workflow:
    `scripts/content-edit-cli.mjs rollback` and confirms the restored count
    matches the backup's entry count.
 
+## What the checksum does and doesn't prove
+
+**The checksum handshake proves the file has not changed between `plan` and
+`apply`. It does not prove the file is the right one.** A stale-but-untouched
+proposal — an earlier batch that just happens to still be sitting in
+`content-edits/proposals/` — passes the checksum check with a perfectly
+valid checksum of the wrong content, because nothing about the check asks
+"is this the batch a human actually approved," only "is this exactly the
+file `plan` read."
+
+This is not hypothetical. On 2026-08-26, `plan` was dispatched with
+`proposal_path` set to what was, at that moment, the only proposal file on
+`main` — the batch had already been superseded by a corrected version the
+next day, but the superseded file was still sitting in the repo and `plan`
+had no way to know that. It printed a completely valid checksum for 53
+edits, one of which contained a factual error (Sino-Korean numbers mislabeled
+as Chinese), one a mistranslation ("drama lines" read as geometric lines),
+one a wrong term (Chinese *characters* read as Chinese *letters*), and one a
+religiously loaded phrase applied to a Korean folk figure. Every automated
+guard in this workflow — the checksum match, the staleness check, the
+row-count verification — would have passed a dispatch built from that run's
+output. **Nothing mechanical would have caught it.** What caught it was a
+human reading the Arabic in the `plan` job's rendered table and recognizing
+it didn't match the record of what had actually been approved.
+
+That's why the `plan` table has to be *read*, not skimmed past to the
+checksum at the bottom. To make a stale batch visible at a glance rather
+than only to someone who already knows what the right one looks like, the
+`plan` (and `apply`) job summary leads with the batch id and edit count in
+large type, before the checksum: `# Batch <batchId> — N edit(s), M stale`.
+If that line doesn't match what you expect to be reviewing — a different
+timestamp, a different edit count — stop and find out why before reading
+any further, checksum included.
+
 ## After every `apply` run
 
 Same rule as the CLI has always printed: **commit the backup file and the
