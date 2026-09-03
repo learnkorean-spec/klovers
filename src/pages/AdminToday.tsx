@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import AdminShell from "@/components/admin/AdminShell";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
 
 type SlotRow = {
@@ -156,154 +157,163 @@ const AdminToday = () => {
   });
 
   return (
-    <main id="main-content" className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
+    <AdminShell
+      activeId="today"
+      badges={{
+        trials: counts?.waitingTotal,
+        enrollments: counts?.awaitingPayment,
+        notifications: counts?.notifications,
+      }}
+    >
+      <main id="main-content">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
 
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold tracking-tight">Today</h1>
-            <p className="text-sm text-muted-foreground">{today}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <Link to="/admin?tab=trials">Open trials</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/admin?tab=trials">
-                Invite students <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </header>
-
-        {error && (
-          <Card className="border-destructive">
-            <CardContent className="p-5 text-sm">
-              <span className="font-semibold text-destructive">Could not load the summary.</span>{" "}
-              <span className="text-muted-foreground">{error}</span>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* NEEDS YOU */}
-        <section className="space-y-3">
-          <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">NEEDS YOU</h2>
-
-          {!counts && !error ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-lg" />)}
+          <header className="flex flex-wrap items-end justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-extrabold tracking-tight">Today</h1>
+              <p className="text-sm text-muted-foreground">{today}</p>
             </div>
-          ) : counts ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-              <ActionCard
-                icon={<CalendarDays className="h-4 w-4" />}
-                label="TRIAL INVITES"
-                value={counts.waitingTotal}
-                unit={`waiting · ${bookedTotal} booked`}
-                urgent={counts.waitingTotal > 0 && bookedTotal === 0}
-                body={
-                  `${counts.waitingArabic} Arabic · ${counts.waitingEnglish} English. ` +
-                  `${seatsTotal} seats across ${slots?.length ?? 0} sessions.` +
-                  (formatSignup(counts.oldestSignup)
-                    ? ` Oldest signup has waited since ${formatSignup(counts.oldestSignup)}.`
-                    : "")
-                }
-                to="/admin?tab=trials"
-                cta="Start inviting"
-                primary
-              />
-
-              <ActionCard
-                icon={<GraduationCap className="h-4 w-4" />}
-                label="PAYMENTS"
-                value={counts.awaitingPayment}
-                unit="awaiting payment"
-                urgent={counts.awaitingPayment > 0}
-                body="Enrollments approved but not yet paid."
-                to="/admin?tab=enrollments"
-                cta="Review"
-              />
-
-              <ActionCard
-                icon={<Users className="h-4 w-4" />}
-                label="UNLEVELLED"
-                value={counts.unlevelled}
-                unit="no level recorded"
-                body="They cannot be seated until they sit a placement test — guessing a level puts them in the wrong class."
-                to="/admin?tab=placement-tests"
-                cta="Placement tests"
-              />
-
-              <ActionCard
-                icon={<Bell className="h-4 w-4" />}
-                label="NOTIFICATIONS"
-                value={counts.notifications}
-                unit="total"
-                body="Booking alerts, waitlist notices and system warnings."
-                to="/admin?tab=notifications"
-                cta="Open"
-              />
-
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link to="/admin?tab=trials">Open trials</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/admin?tab=trials">
+                  Invite students <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-          ) : null}
-        </section>
+          </header>
 
-        {/* TRIAL WEEK */}
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
-              NEXT TRIAL SESSIONS
-            </h2>
-            <p className="text-xs text-muted-foreground">times as configured on each slot</p>
-          </div>
-
-          {!slots && !error ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
-            </div>
-          ) : slots && slots.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {slots.map(s => {
-                const cap = s.capacity ?? 0;
-                return (
-                  <Card key={s.id}>
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold">
-                          {formatSlotDate(s.trial_date)} · {s.start_time ?? "TBA"}
-                        </span>
-                        <Badge variant="secondary" className="capitalize">
-                          {s.class_language ?? "any"}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-1" aria-hidden="true">
-                        {Array.from({ length: Math.max(cap, 1) }).map((_, i) => (
-                          <span
-                            key={i}
-                            className={`h-1.5 flex-1 rounded-full ${i < s.booked ? "bg-primary" : "bg-muted"}`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {s.booked} of {cap} booked
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : slots ? (
-            <Card>
-              <CardContent className="p-5 text-sm text-muted-foreground">
-                No active trial sessions are scheduled.
+          {error && (
+            <Card className="border-destructive">
+              <CardContent className="p-5 text-sm">
+                <span className="font-semibold text-destructive">Could not load the summary.</span>{" "}
+                <span className="text-muted-foreground">{error}</span>
               </CardContent>
             </Card>
-          ) : null}
-        </section>
+          )}
 
-      </div>
-    </main>
+          {/* NEEDS YOU */}
+          <section className="space-y-3">
+            <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">NEEDS YOU</h2>
+
+            {!counts && !error ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-lg" />)}
+              </div>
+            ) : counts ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                <ActionCard
+                  icon={<CalendarDays className="h-4 w-4" />}
+                  label="TRIAL INVITES"
+                  value={counts.waitingTotal}
+                  unit={`waiting · ${bookedTotal} booked`}
+                  urgent={counts.waitingTotal > 0 && bookedTotal === 0}
+                  body={
+                    `${counts.waitingArabic} Arabic · ${counts.waitingEnglish} English. ` +
+                    `${seatsTotal} seats across ${slots?.length ?? 0} sessions.` +
+                    (formatSignup(counts.oldestSignup)
+                      ? ` Oldest signup has waited since ${formatSignup(counts.oldestSignup)}.`
+                      : "")
+                  }
+                  to="/admin?tab=trials"
+                  cta="Start inviting"
+                  primary
+                />
+
+                <ActionCard
+                  icon={<GraduationCap className="h-4 w-4" />}
+                  label="PAYMENTS"
+                  value={counts.awaitingPayment}
+                  unit="awaiting payment"
+                  urgent={counts.awaitingPayment > 0}
+                  body="Enrollments approved but not yet paid."
+                  to="/admin?tab=enrollments"
+                  cta="Review"
+                />
+
+                <ActionCard
+                  icon={<Users className="h-4 w-4" />}
+                  label="UNLEVELLED"
+                  value={counts.unlevelled}
+                  unit="no level recorded"
+                  body="They cannot be seated until they sit a placement test — guessing a level puts them in the wrong class."
+                  to="/admin?tab=placement-tests"
+                  cta="Placement tests"
+                />
+
+                <ActionCard
+                  icon={<Bell className="h-4 w-4" />}
+                  label="NOTIFICATIONS"
+                  value={counts.notifications}
+                  unit="total"
+                  body="Booking alerts, waitlist notices and system warnings."
+                  to="/admin?tab=notifications"
+                  cta="Open"
+                />
+
+              </div>
+            ) : null}
+          </section>
+
+          {/* TRIAL WEEK */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                NEXT TRIAL SESSIONS
+              </h2>
+              <p className="text-xs text-muted-foreground">times as configured on each slot</p>
+            </div>
+
+            {!slots && !error ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
+              </div>
+            ) : slots && slots.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {slots.map(s => {
+                  const cap = s.capacity ?? 0;
+                  return (
+                    <Card key={s.id}>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold">
+                            {formatSlotDate(s.trial_date)} · {s.start_time ?? "TBA"}
+                          </span>
+                          <Badge variant="secondary" className="capitalize">
+                            {s.class_language ?? "any"}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1" aria-hidden="true">
+                          {Array.from({ length: Math.max(cap, 1) }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={`h-1.5 flex-1 rounded-full ${i < s.booked ? "bg-primary" : "bg-muted"}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {s.booked} of {cap} booked
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : slots ? (
+              <Card>
+                <CardContent className="p-5 text-sm text-muted-foreground">
+                  No active trial sessions are scheduled.
+                </CardContent>
+              </Card>
+            ) : null}
+          </section>
+
+        </div>
+      </main>
+    </AdminShell>
   );
 };
 
