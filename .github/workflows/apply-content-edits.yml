@@ -115,16 +115,29 @@ jobs:
           fi
 
           checksum=$(sha256sum "$PROPOSAL_PATH" | awk '{print $1}')
+          batch_id=$(jq -r '.batchId' "$PROPOSAL_PATH")
           edit_count=$(jq -r '.editCount' "$PROPOSAL_PATH")
           stale_count=$(jq -r '.staleCount' "$PROPOSAL_PATH")
 
           {
+            # Batch and edit count go first, in large type, on purpose: the
+            # checksum below proves this exact file hasn't changed since you
+            # last looked at it, but it says nothing about whether it's the
+            # RIGHT file. A stale-but-unmodified proposal (an older batch
+            # that just happens to still be sitting on disk) passes the
+            # checksum check with a perfectly valid checksum of the wrong
+            # content. This line is what a reviewer skimming past the
+            # checksum still can't miss.
+            echo "# Batch \`$batch_id\` — $edit_count edit(s), $stale_count stale"
+            echo
             echo "**File:** \`$PROPOSAL_PATH\`"
             echo
             echo "**sha256:** \`$checksum\`"
             echo
             echo "Copy this checksum into the apply dispatch's expected_checksum field — apply"
-            echo "refuses to run if it does not match this file at apply time."
+            echo "refuses to run if it does not match this file at apply time. It does NOT"
+            echo "confirm this is the batch you meant to review — read the batch id and edit"
+            echo "count above, and the table below, before treating this run as authoritative."
             echo
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -198,8 +211,10 @@ jobs:
           PROPOSAL_PATH: ${{ inputs.proposal_path }}
         run: |
           set -euo pipefail
+          batch_id=$(jq -r '.batchId' "$PROPOSAL_PATH")
+          edit_count=$(jq -r '.editCount' "$PROPOSAL_PATH")
           {
-            echo "# Applying — this is what is about to be written"
+            echo "# Applying batch \`$batch_id\` — $edit_count edit(s) — this is what is about to be written"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
           node scripts/render-proposal-summary.mjs "$PROPOSAL_PATH" >> "$GITHUB_STEP_SUMMARY"
