@@ -104,9 +104,10 @@ jobs:
             check "/blog/this-slug-does-not-exist"
             check "/this-page-does-not-exist"
             check "/login"
-            echo "Note: ${RETIRED_POST} is a retired Arabic duplicate. It is"
-            echo "deliberately absent from the sitemap but still served, so a 200"
-            echo "with its own canonical is the expected result."
+            echo "Note: ${RETIRED_POST} is a retired Arabic duplicate, redirected"
+            echo "to its surviving 2025 partner by PR #85. A 308 with a location"
+            echo "header is the expected result, and it must not appear in the"
+            echo "sitemap. A 200 here would mean the redirect had been lost."
             echo
             echo "Note: /blog/this-slug-does-not-exist returning 404 is the expected"
             echo "result (PR #132, 2026-08-29) - this line is the regression check for"
