@@ -176,6 +176,11 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
                     No link! {noClassLinkDays}d
                   </Badge>
                 )}
+                {(e.id === "4d2d9f54-1848-4ba5-b3ba-07235aa81fa2" || e.id === "e50c8646-7187-48ee-a3d1-e4f2c64c72f2") && (
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 shrink-0 border-slate-400 text-slate-700 bg-slate-50 dark:text-slate-400 dark:border-slate-600 dark:bg-slate-950/20">
+                    TBA
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 {e.plan_type} · {e.duration}mo · {e.classes_included} classes · {formatMoney(e.amount, e.currency)} · Ref: {e.tx_ref || "—"}
