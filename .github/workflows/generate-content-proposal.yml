@@ -31,6 +31,7 @@ on:
         options:
           - internal-links
           - keyword-focus
+          - descriptions
       per_article:
         description: "internal-links only: how many related links per article (default 4)"
         required: false
@@ -85,6 +86,10 @@ jobs:
               ;;
             keyword-focus)
               node scripts/proposals/keyword-focus.mjs --contested-at "${{ inputs.contested_at }}" | tee gen-output.txt
+              ;;
+            descriptions)
+              # No parameters: the batch is a hand-curated list in the script.
+              node scripts/proposals/descriptions.mjs | tee gen-output.txt
               ;;
             *)
               echo "::error::unknown generator ${{ inputs.generator }}"; exit 1 ;;
