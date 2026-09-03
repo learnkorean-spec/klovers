@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Klovers">
+  <title>Klovers</title>
+  <circle cx="32" cy="32" r="32" fill="#FCFD01"/>
+  <path transform="translate(-5.5 0)" d="M19 14h9.5v17.2L43.6 14H55L38.6 31.9 56 50H44.2L28.5 33.6V50H19z" fill="#000"/>
+</svg>
