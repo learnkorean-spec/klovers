@@ -1,0 +1,352 @@
+/**
+ * /admin/today — the admin's default screen.
+ *
+ * Not a report. A queue of the things that need a decision, each with the
+ * link that resolves it. When every card is clear there is nothing to do,
+ * and that is the point: the empty state is the goal.
+ *
+ * Deliberately a separate route rather than a 26th tab. AdminDashboard.tsx
+ * is 1,871 lines and reads its screen from `?tab=`, so this page deep-links
+ * into it (`/admin?tab=trials`) without touching that file at all. Making
+ * Today the landing screen and restructuring the sidebar is a follow-up that
+ * edits AdminDashboard.tsx; this page is useful on its own before that lands.
+ */
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import AdminShell from "@/components/admin/AdminShell";
+import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
+
+type SlotRow = {
+  id: string;
+  trial_date: string | null;
+  start_time: string | null;
+  class_language: string | null;
+  capacity: number | null;
+  booked: number;
+};
+
+type Counts = {
+  waitingTotal: number;
+  waitingArabic: number;
+  waitingEnglish: number;
+  unlevelled: number;
+  awaitingPayment: number;
+  notifications: number;
+  oldestSignup: string | null;
+};
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** "2026-09-11" -> "Fri 11 Sep". Parsed as a plain date, never shifted by a timezone. */
+function formatSlotDate(iso: string | null): string {
+  if (!iso) return "Date TBA";
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const month = dt.toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
+  return `${DAY_NAMES[dt.getUTCDay()].slice(0, 3)} ${d} ${month}`;
+}
+
+function formatSignup(iso: string | null): string | null {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+}
+
+const AdminToday = () => {
+  const [counts, setCounts] = useState<Counts | null>(null);
+  const [slots, setSlots] = useState<SlotRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // Waiting list: pending with no date yet. Split by language because the
+        // two tracks are seated in different sessions.
+        const waitingBase = () =>
+          supabase
+            .from("trial_bookings")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "pending")
+            .is("trial_date", null);
+
+        const [
+          waitingAll,
+          waitingAr,
+          waitingEn,
+          unlevelled,
+          payments,
+          notifications,
+          oldest,
+          slotRows,
+        ] = await Promise.all([
+          waitingBase(),
+          waitingBase().eq("class_language", "arabic"),
+          waitingBase().eq("class_language", "english"),
+          waitingBase().or("level.is.null,level.eq."),
+          supabase
+            .from("enrollments")
+            .select("*", { count: "exact", head: true })
+            .ilike("approval_status", "pending%"),
+          supabase.from("admin_notifications").select("*", { count: "exact", head: true }),
+          supabase
+            .from("trial_bookings")
+            .select("created_at")
+            .eq("status", "pending")
+            .is("trial_date", null)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("trial_slots")
+            .select("id, trial_date, start_time, class_language, capacity")
+            .eq("is_active", true)
+            .eq("lifecycle", "active")
+            .order("trial_date", { ascending: true }),
+        ]);
+
+        if (cancelled) return;
+
+        // One booking count per slot. Matched on (trial_date, start_time) —
+        // the pair that is UNIQUE on trial_slots.
+        const rows: SlotRow[] = [];
+        for (const s of (slotRows.data ?? []) as Array<Omit<SlotRow, "booked">>) {
+          const { count } = await supabase
+            .from("trial_bookings")
+            .select("*", { count: "exact", head: true })
+            .eq("trial_date", s.trial_date as string)
+            .eq("start_time", s.start_time as string)
+            .neq("status", "cancelled");
+          rows.push({ ...s, booked: count ?? 0 });
+        }
+
+        if (cancelled) return;
+
+        setCounts({
+          waitingTotal: waitingAll.count ?? 0,
+          waitingArabic: waitingAr.count ?? 0,
+          waitingEnglish: waitingEn.count ?? 0,
+          unlevelled: unlevelled.count ?? 0,
+          awaitingPayment: payments.count ?? 0,
+          notifications: notifications.count ?? 0,
+          oldestSignup: (oldest.data as { created_at?: string } | null)?.created_at ?? null,
+        });
+        setSlots(rows);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Could not load today's summary.");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const seatsTotal = (slots ?? []).reduce((n, s) => n + (s.capacity ?? 0), 0);
+  const bookedTotal = (slots ?? []).reduce((n, s) => n + s.booked, 0);
+  const today = new Date().toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  return (
+    <AdminShell
+      activeId="today"
+      badges={{
+        trials: counts?.waitingTotal,
+        enrollments: counts?.awaitingPayment,
+        notifications: counts?.notifications,
+      }}
+    >
+      <main id="main-content">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
+
+          <header className="flex flex-wrap items-end justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-extrabold tracking-tight">Today</h1>
+              <p className="text-sm text-muted-foreground">{today}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link to="/admin?tab=trials">Open trials</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/admin?tab=trials">
+                  Invite students <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </header>
+
+          {error && (
+            <Card className="border-destructive">
+              <CardContent className="p-5 text-sm">
+                <span className="font-semibold text-destructive">Could not load the summary.</span>{" "}
+                <span className="text-muted-foreground">{error}</span>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* NEEDS YOU */}
+          <section className="space-y-3">
+            <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">NEEDS YOU</h2>
+
+            {!counts && !error ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-lg" />)}
+              </div>
+            ) : counts ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                <ActionCard
+                  icon={<CalendarDays className="h-4 w-4" />}
+                  label="TRIAL INVITES"
+                  value={counts.waitingTotal}
+                  unit={`waiting · ${bookedTotal} booked`}
+                  urgent={counts.waitingTotal > 0 && bookedTotal === 0}
+                  body={
+                    `${counts.waitingArabic} Arabic · ${counts.waitingEnglish} English. ` +
+                    `${seatsTotal} seats across ${slots?.length ?? 0} sessions.` +
+                    (formatSignup(counts.oldestSignup)
+                      ? ` Oldest signup has waited since ${formatSignup(counts.oldestSignup)}.`
+                      : "")
+                  }
+                  to="/admin?tab=trials"
+                  cta="Start inviting"
+                  primary
+                />
+
+                <ActionCard
+                  icon={<GraduationCap className="h-4 w-4" />}
+                  label="PAYMENTS"
+                  value={counts.awaitingPayment}
+                  unit="awaiting payment"
+                  urgent={counts.awaitingPayment > 0}
+                  body="Enrollments approved but not yet paid."
+                  to="/admin?tab=enrollments"
+                  cta="Review"
+                />
+
+                <ActionCard
+                  icon={<Users className="h-4 w-4" />}
+                  label="UNLEVELLED"
+                  value={counts.unlevelled}
+                  unit="no level recorded"
+                  body="They cannot be seated until they sit a placement test — guessing a level puts them in the wrong class."
+                  to="/admin?tab=placement-tests"
+                  cta="Placement tests"
+                />
+
+                <ActionCard
+                  icon={<Bell className="h-4 w-4" />}
+                  label="NOTIFICATIONS"
+                  value={counts.notifications}
+                  unit="total"
+                  body="Booking alerts, waitlist notices and system warnings."
+                  to="/admin?tab=notifications"
+                  cta="Open"
+                />
+
+              </div>
+            ) : null}
+          </section>
+
+          {/* TRIAL WEEK */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                NEXT TRIAL SESSIONS
+              </h2>
+              <p className="text-xs text-muted-foreground">times as configured on each slot</p>
+            </div>
+
+            {!slots && !error ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
+              </div>
+            ) : slots && slots.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {slots.map(s => {
+                  const cap = s.capacity ?? 0;
+                  return (
+                    <Card key={s.id}>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold">
+                            {formatSlotDate(s.trial_date)} · {s.start_time ?? "TBA"}
+                          </span>
+                          <Badge variant="secondary" className="capitalize">
+                            {s.class_language ?? "any"}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1" aria-hidden="true">
+                          {Array.from({ length: Math.max(cap, 1) }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={`h-1.5 flex-1 rounded-full ${i < s.booked ? "bg-primary" : "bg-muted"}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {s.booked} of {cap} booked
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : slots ? (
+              <Card>
+                <CardContent className="p-5 text-sm text-muted-foreground">
+                  No active trial sessions are scheduled.
+                </CardContent>
+              </Card>
+            ) : null}
+          </section>
+
+        </div>
+      </main>
+    </AdminShell>
+  );
+};
+
+const ActionCard = ({
+  icon, label, value, unit, body, to, cta, urgent, primary,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  unit: string;
+  body: string;
+  to: string;
+  cta: string;
+  urgent?: boolean;
+  primary?: boolean;
+}) => (
+  <Card className={urgent ? "border-foreground" : undefined}>
+    <CardContent className="p-5 flex h-full flex-col gap-2.5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        {urgent && <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-hidden="true" />}
+        {icon}
+        <span className="text-xs font-bold tracking-[0.04em]">{label}</span>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-extrabold leading-none tracking-tight">{value}</span>
+        <span className="text-sm text-muted-foreground">{unit}</span>
+      </div>
+      <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+      <Button asChild variant={primary ? "default" : "outline"} className="mt-auto w-full">
+        <Link to={to}>{cta}</Link>
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+export default AdminToday;
