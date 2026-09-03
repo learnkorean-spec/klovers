@@ -1,6 +1,15 @@
 import { Star, Facebook, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+/**
+ * The `level` field on each review is OUR badge, not the student's words — the
+ * quoted text is theirs and is never edited here.
+ *
+ * It used to be CEFR: "A1 → A2", "A1 → B1", and one "A0 ← A1" using a band
+ * that does not exist in CEFR at all. Those are the same journeys stated in a
+ * vocabulary the site no longer uses, so they now read in Klovers levels. No
+ * outcome has been changed — A1 → A2 is Level 1 → Level 2, one for one.
+ */
 const reviews = [
   {
     name: "Nada Tamer",
@@ -9,7 +18,7 @@ const reviews = [
     text: "Very professional and fun at the same time! Makes learning very easy and enjoyable. I highly recommend it to anyone ❤️",
     date: "Dec 2021",
     duration: "3 months",
-    level: "A1 → A2",
+    level: "Level 1 → Level 2",
   },
   {
     name: "Ayaya Salah",
@@ -18,7 +27,7 @@ const reviews = [
     text: "The course is absolutely entertaining. I enjoy every second of it — educational, not boring and I can already see progress. Highly recommend it!",
     date: "Dec 2021",
     duration: "4 months",
-    level: "A1 → A2",
+    level: "Level 1 → Level 2",
   },
   {
     name: "Maged M. Aziz",
@@ -27,7 +36,7 @@ const reviews = [
     text: "Very effective. Reham is soo awesome and I learnt a lot from her. I give her 10/10. Thank you for making things easier! 👊👊",
     date: "Jul 2023",
     duration: "6 months",
-    level: "A1 → B1",
+    level: "Level 1 → Level 3",
   },
   {
     name: "Nami Waka",
@@ -45,7 +54,7 @@ const reviews = [
     text: "One of the best courses I've ever enrolled in ❤️❤️❤️ How much I love how she strives and cares for us and our learning process. Highly recommend!",
     date: "Aug 2022",
     duration: "4 months",
-    level: "A1 → A2",
+    level: "Level 1 → Level 2",
   },
   {
     name: "Jomana Azouz",
@@ -54,7 +63,7 @@ const reviews = [
     text: "She is amazing and really a good teacher. She simplifies everything to make it understandable, and doing the homework you will notice the development in your accent!",
     date: "Jul 2023",
     duration: "5 months",
-    level: "A1 → B1",
+    level: "Level 1 → Level 3",
   },
   {
     name: "حياة مصطفى",
@@ -63,7 +72,7 @@ const reviews = [
     text: "ميرسي جداً على تعليمنا اللغة الكورية 😍 متشكرة جداً على المستويات اللي وصلنالها من الصفر — تعليم الحروف والكتابة والقراءة والكلام. الكلام ده مايوصفش جهدك وصبرك 선생님 감사합니다",
     date: "Jul 2023",
     duration: "٦ أشهر",
-    level: "A1 ← B1",
+    level: "من المستوى الأول للثالث",
   },
   {
     name: "يمنى دراهم",
@@ -72,7 +81,7 @@ const reviews = [
     text: "من الكورسات اللذيذة والممتعة جداً! طريقتها حلوة جداً وبتوضح الحاجة بصورة بسيطة وسهلة، دا غير شخصيتها العسولة وأنها هتساعدك في أي وقت 💕💕💕",
     date: "Jul 2023",
     duration: "٤ أشهر",
-    level: "A1 ← A2",
+    level: "من المستوى الأول للثاني",
   },
   {
     name: "سامة آدم",
@@ -81,7 +90,7 @@ const reviews = [
     text: "بجد أحلى سونتسينيم في الدنيا 😍 الكورس خفيف وبستمتع بيه جداً. قربت أكمل سنة وبجد اتحسنت كتير في الكوري والجرامر بتسهله جداً علينا ❤️❤️❤️",
     date: "Nov 2022",
     duration: "١١ شهر",
-    level: "A1 ← B2",
+    level: "من المستوى الأول للرابع",
   },
   {
     name: "مريم ميرا",
@@ -90,7 +99,7 @@ const reviews = [
     text: "بجد يستفاد كتير في الكورس ده ويتعلم أكتر. ممكن اني أكتب جملة كاملة بالكوري رغم اني مكنتش أعرف أقرأ أو أكتب كوري من قبل! 선생님 감사합니다 ❤️",
     date: "Nov 2022",
     duration: "٣ أشهر",
-    level: "A0 ← A1",
+    level: "من الصفر للمستوى الأول",
   },
   {
     name: "بوسي محمد",
@@ -108,7 +117,7 @@ const reviews = [
     text: "استفدت حلو أوي وبجد المستوى هايل ❤️",
     date: "Nov 2022",
     duration: "٣ أشهر",
-    level: "A1 ← A2",
+    level: "من المستوى الأول للثاني",
   },
 ];
 

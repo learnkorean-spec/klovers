@@ -1,0 +1,167 @@
+# Daily check for the exact incident class 20260829153926 was: a migration
+# whose effect is already live on production while its file still shows as
+# "pending" in schema_migrations - because it was applied outside this
+# repo's own Apply Migrations workflow (direct SQL access, a manual
+# apply_migration call, or anything else off the git -> PR -> workflow
+# path). Found by accident on 2026-08-30, not by any check - this exists
+# so the next one is found by a check.
+#
+# Read-only. No migration ever runs from this workflow, and it needs no
+# approval gate - it only ever SELECTs.
+#
+# What it checks, and what it does not
+# -------------------------------------
+# For every local migration file that is currently pending (no matching row
+# in schema_migrations - the same "pending" scripts/parse-migration-list.py
+# already computes for Apply Migrations), scripts/extract-migration-objects.py
+# pulls out the function/table/column names that file's DDL defines. Each
+# name is checked against the live database. A pending file whose objects
+# already exist live is exactly the 20260829153926 pattern - a migration
+# applied by someone or something other than this repo's own path.
+#
+# This is a heuristic aimed at the shapes that have actually happened
+# (CREATE [OR REPLACE] FUNCTION, CREATE TABLE, ALTER TABLE ... ADD COLUMN),
+# not a full schema differ - it will not notice a DROP, an ALTER COLUMN
+# TYPE, a changed RLS policy, or a migration that only touches data. See
+# scripts/extract-migration-objects.py's own docstring for the same caveat.
+# It also cannot flag an out-of-band change that additionally faked its own
+# schema_migrations row - only that the recorded and live states disagree,
+# which a forged row would hide. Closing that fully would need write access
+# this workflow deliberately does not have.
+#
+# A finding fails the job. GitHub emails workflow-failure notifications to
+# the repo's watchers by default on a scheduled run - that email is the
+# alert. There is no secondary notification wired up here.
+
+name: Schema Drift Check
+
+on:
+  schedule:
+    # 06:00 UTC daily - arbitrary, chosen only to land outside the hours
+    # migrations have actually been dispatched in so far.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'ewtdgpbybkceokfohhyg' }}
+
+jobs:
+  check:
+    name: Compare live schema against pending migration files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Supabase CLI
+        run: npx supabase@latest --version
+
+      - name: Link project
+        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+
+      - name: Work out what is pending
+        id: plan
+        run: |
+          set -euo pipefail
+          npx supabase@latest migration list | tee migration-list.txt
+
+          local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
+          python3 scripts/parse-migration-list.py migration-list.txt \
+            --min-rows "$local_migrations" | tee pending.txt
+
+          count=$(grep -oP '(?<=^pending_count=)\d+' pending.txt)
+          remote_only=$(grep -oP '(?<=^remote_only=)\d+' pending.txt)
+          grep '^pending=' pending.txt | sed 's/^pending=//' | sort > pending-versions.txt || true
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "Pending (no schema_migrations row yet): ${count}"
+          echo "Remote-only (schema_migrations row, no local file - the pre-existing MIGRATION_TRIAGE.md debt): ${remote_only}"
+
+      - name: Resolve the database connection
+        if: steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          DBHOST=""; DBUSER=""
+          for cand in \
+            "aws-1-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "aws-0-ap-south-1.pooler.supabase.com|postgres.$PROJECT_REF" \
+            "db.$PROJECT_REF.supabase.co|postgres" ; do
+            host="${cand%%|*}"; user="${cand##*|}"
+            if psql -h "$host" -p 5432 -U "$user" -d postgres -tAc 'SELECT 1' >/dev/null 2>&1; then
+              DBHOST="$host"; DBUSER="$user"; break
+            fi
+            echo "Could not connect via ${host} - trying next candidate."
+          done
+          if [ -z "$DBHOST" ]; then
+            echo "::error::Could not reach the database on any candidate host."
+            exit 1
+          fi
+          echo "Connected via ${DBHOST}."
+          echo "DBHOST=$DBHOST" >> "$GITHUB_ENV"
+          echo "DBUSER=$DBUSER" >> "$GITHUB_ENV"
+
+      - name: Check each pending file's objects against the live schema
+        if: steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+          drift_found=0
+          {
+            echo "## Schema drift check"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while read -r version; do
+            [ -n "$version" ] || continue
+            f=$(find supabase/migrations -maxdepth 1 -name "${version}_*.sql" | head -1)
+            [ -n "$f" ] || continue
+
+            while IFS=$'\t' read -r kind name; do
+              [ -n "$kind" ] || continue
+              exists=0
+              case "$kind" in
+                function)
+                  exists=$(psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -tAc \
+                    "SELECT count(*) FROM pg_proc WHERE proname = '${name//\'/\'\'}'")
+                  ;;
+                table)
+                  exists=$(psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -tAc \
+                    "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name = '${name//\'/\'\'}'")
+                  ;;
+                column)
+                  tbl="${name%%.*}"; col="${name#*.}"
+                  exists=$(psql -h "$DBHOST" -p 5432 -U "$DBUSER" -d postgres -tAc \
+                    "SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='${tbl//\'/\'\'}' AND column_name='${col//\'/\'\'}'")
+                  ;;
+              esac
+              if [ "${exists:-0}" != "0" ]; then
+                drift_found=1
+                msg="Pending migration $(basename "$f") defines ${kind} '${name}', which already exists live. This matches the 20260829153926 pattern - verify by hand whether this file was already applied outside the normal workflow before trusting 'pending'."
+                echo "::warning::${msg}"
+                echo "- ⚠️ ${msg}" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            done < <(python3 scripts/extract-migration-objects.py "$f")
+          done < pending-versions.txt
+
+          if [ "$drift_found" = "1" ]; then
+            echo "## Result: DRIFT DETECTED" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::One or more pending migrations already have live effects. See warnings above."
+            exit 1
+          fi
+
+          echo "No drift detected - no pending migration's extracted objects already exist live." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Nothing pending
+        if: steps.plan.outputs.count == '0'
+        run: echo "No pending migrations to check today."

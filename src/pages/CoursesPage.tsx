@@ -8,24 +8,48 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Clock, RotateCcw } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LEVELS } from "@/constants/levels";
 
 const CoursesPage = () => {
-  useSEO({ title: "Korean Courses", description: "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.", canonical: "https://kloversegy.com/courses" });
+  useSEO({
+    title: "Korean Courses",
+    description:
+      "Klovers Korean courses: the Hangul alphabet in four classes, then Levels 1-6 preparing you toward TOPIK 1-6. Live classes with a teacher, in Arabic or English.",
+    canonical: "https://kloversegy.com/courses",
+  });
 
   useEffect(() => {
+    /**
+     * Structured data is what Google repeats back to people, so it has to be
+     * the real catalogue. It used to list three invented courses — "Beginner
+     * Korean (A1–A2)", "Intermediate (B1–B2)", "Advanced (C1–C2)" — which
+     * named each course as a CEFR band and contradicted the nine cards
+     * rendered on this very page.
+     *
+     * Generated from LEVELS instead, so it cannot drift: seven entries, each
+     * saying what the course prepares you toward rather than what it is.
+     */
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.id = "courses-schema";
     script.text = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "ItemList",
-      "name": "Korean Language Courses at Klovers",
-      "url": "https://kloversegy.com/courses",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "item": { "@type": "Course", "name": "Beginner Korean (A1–A2)", "description": "Start from scratch with Hangul, basic vocabulary, and essential grammar.", "provider": { "@id": "https://kloversegy.com/#organization" }, "url": "https://kloversegy.com/courses" } },
-        { "@type": "ListItem", "position": 2, "item": { "@type": "Course", "name": "Intermediate Korean (B1–B2)", "description": "Build fluency with grammar patterns and real-life conversation practice.", "provider": { "@id": "https://kloversegy.com/#organization" }, "url": "https://kloversegy.com/courses" } },
-        { "@type": "ListItem", "position": 3, "item": { "@type": "Course", "name": "Advanced Korean (C1–C2)", "description": "Master advanced Korean and prepare for TOPIK II.", "provider": { "@id": "https://kloversegy.com/#organization" }, "url": "https://kloversegy.com/courses" } }
-      ]
+      name: "Korean Language Courses at Klovers",
+      url: "https://kloversegy.com/courses",
+      itemListElement: LEVELS.map((level, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Course",
+          name: level.name,
+          description: level.description_en,
+          inLanguage: ["ar", "en"],
+          teaches: "Korean",
+          provider: { "@id": "https://kloversegy.com/#organization" },
+          url: `https://kloversegy.com/courses#${level.key}`,
+        },
+      })),
     });
     document.head.appendChild(script);
     return () => { document.getElementById("courses-schema")?.remove(); };

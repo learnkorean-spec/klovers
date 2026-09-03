@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/useSEO";
 import { useAuth } from "@/hooks/useAuth";
+import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
@@ -37,25 +38,17 @@ const FreeTrialPage = () => {
     { icon: Sparkles,      num: "3", text: t("trialBooking.expectItem3") },
   ];
 
-  /** 4 official trial class timestamps (MYT / UTC+8). */
-  const TRIAL_INSTANTS_MYT = [
-    "2026-05-29T01:00:00+08:00",
-    "2026-05-30T23:00:00+08:00",
-    "2026-06-02T23:00:00+08:00",
-    "2026-06-07T09:00:00+08:00",
-  ];
+  /** The real upcoming trial slots, straight from the database. */
+  const { slots, loading: slotsLoading } = useUpcomingTrialSlots();
 
-  const userTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "Asia/Kuala_Lumpur"; } })();
-
-  const SLOT_HIGHLIGHTS = TRIAL_INSTANTS_MYT
-    .map((iso) => {
-      const d = new Date(iso);
-      if (d.getTime() <= Date.now()) return null;
-      const day = d.toLocaleDateString(isAr ? "ar-EG" : "en-US", { weekday: "long", month: "short", day: "numeric", timeZone: userTz });
-      const time = d.toLocaleTimeString(isAr ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: userTz });
-      return { day, time };
-    })
-    .filter(Boolean) as { day: string; time: string }[];
+  const SLOT_HIGHLIGHTS = useMemo(() => {
+    const locale = isAr ? "ar-EG" : "en-US";
+    const tz = viewerTimezone();
+    return slots.map((slot) => ({
+      day: slot.startsAt.toLocaleDateString(locale, { weekday: "long", month: "short", day: "numeric", timeZone: tz }),
+      time: slot.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz }),
+    }));
+  }, [slots, isAr]);
 
   const TESTIMONIALS: { quote: string; name: string; role: string }[] = [
     {
@@ -98,12 +91,16 @@ const FreeTrialPage = () => {
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "category": "Free Trial" },
         "inLanguage": "ko",
         "url": "https://kloversegy.com/free-trial",
-        "hasCourseInstance": [
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-05-29T01:00:00+08:00", "endDate": "2026-05-29T01:30:00+08:00" },
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-05-30T23:00:00+08:00", "endDate": "2026-05-30T23:30:00+08:00" },
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-06-02T23:00:00+08:00", "endDate": "2026-06-02T23:30:00+08:00" },
-          { "@type": "CourseInstance", "courseMode": "online", "startDate": "2026-06-07T09:00:00+08:00", "endDate": "2026-06-07T09:30:00+08:00" },
-        ],
+        ...(slots.length > 0
+          ? {
+              "hasCourseInstance": slots.map((slot) => ({
+                "@type": "CourseInstance",
+                "courseMode": "online",
+                "startDate": slot.startsAt.toISOString(),
+                "endDate": new Date(slot.startsAt.getTime() + slot.durationMin * 60000).toISOString(),
+              })),
+            }
+          : {}),
       },
       {
         "@context": "https://schema.org",
@@ -123,7 +120,7 @@ const FreeTrialPage = () => {
         "mainEntity": [
           { "@type": "Question", "name": "Is the trial class really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — completely free, no credit card required. You attend a 30-minute live class with a real teacher." } },
           { "@type": "Question", "name": "What level do I need to be?", "acceptedAnswer": { "@type": "Answer", "text": "Any level is welcome. Most students start from zero (Hangul). The teacher will assess your level during the class." } },
-          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "Upcoming sessions: July 3, July 4, July 5, and July 7 2026. All times are automatically shown in your local timezone when you visit the booking page." } },
+          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "New trial sessions open every week. The booking page always shows the next available dates, automatically converted to your own timezone." } },
           { "@type": "Question", "name": "How do I book?", "acceptedAnswer": { "@type": "Answer", "text": "Click 'Book My Free Class', choose a day, and confirm. You'll receive an email with the class link and a Google Calendar invite." } },
           { "@type": "Question", "name": "What happens after the trial?", "acceptedAnswer": { "@type": "Answer", "text": "After your trial you'll receive a level recommendation and pricing options if you'd like to continue with a full course." } },
         ],
@@ -131,7 +128,7 @@ const FreeTrialPage = () => {
     ]);
     document.head.appendChild(el);
     return () => { el.remove(); };
-  }, []);
+  }, [slots]);
 
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -392,30 +389,63 @@ const FreeTrialPage = () => {
               <p className="text-sm text-muted-foreground">{t("freeTrial.slotsSubtitle")}</p>
             </div>
 
-            {/* Ticket cards — 1-col mobile, 2-col / 4-col desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {SLOT_HIGHLIGHTS.map((s, i) => (
-                <div
-                  key={i}
-                  className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_black] hover:shadow-[2px_2px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
+            {/* Ticket cards — 1-col mobile, 2-col desktop. The list is empty
+                while the fetch is in flight, and empty again if trial_slots
+                genuinely has nothing upcoming. Neither case should render a
+                heading over a hole, which is what it did before. */}
+            {slotsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8" aria-hidden="true">
+                {[0, 1].map((i) => (
+                  <div key={i} className="border-2 border-border rounded-2xl overflow-hidden animate-pulse">
+                    <div className="bg-muted h-9" />
+                    <div className="bg-background h-[76px]" />
+                  </div>
+                ))}
+              </div>
+            ) : SLOT_HIGHLIGHTS.length === 0 ? (
+              <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center mb-8">
+                <p className="text-sm font-semibold text-foreground mb-1">
+                  {isAr ? "مواعيد الأسبوع الجاي لسه بتتفتح." : "Next week's sessions are still opening up."}
+                </p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {isAr
+                    ? "ابعتلنا على واتساب ونحجزلك أول ميعاد بيفتح."
+                    : "Message us on WhatsApp and we'll hold you the first seat that opens."}
+                </p>
+                <Button
+                  variant="outline"
+                  className="gap-2 font-bold"
+                  onClick={() => trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "free_trial_no_slots_whatsapp" })}
                 >
-                  {/* Header */}
-                  <div className="bg-foreground py-2.5 px-4 text-center">
-                    <p className="text-xs font-black text-primary uppercase tracking-widest">{s.day}</p>
+                  <MessageCircle className="h-4 w-4" />
+                  {isAr ? "واتساب" : "WhatsApp Us"}
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                {SLOT_HIGHLIGHTS.map((s, i) => (
+                  <div
+                    key={i}
+                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_black] hover:shadow-[2px_2px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
+                  >
+                    {/* Header */}
+                    <div className="bg-foreground py-2.5 px-4 text-center">
+                      <p className="text-xs font-black text-primary uppercase tracking-widest">{s.day}</p>
+                    </div>
+                    {/* Perforated divider */}
+                    <div className="relative flex items-center bg-background">
+                      <div className="absolute -left-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
+                      <div className="flex-1 border-t-2 border-dashed border-foreground/25 mx-1" />
+                      <div className="absolute -right-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
+                    </div>
+                    {/* Body */}
+                    <div className="bg-background py-5 px-4 text-center">
+                      <p className="text-2xl font-black text-foreground">{s.time}</p>
+                    </div>
                   </div>
-                  {/* Perforated divider */}
-                  <div className="relative flex items-center bg-background">
-                    <div className="absolute -left-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
-                    <div className="flex-1 border-t-2 border-dashed border-foreground/25 mx-1" />
-                    <div className="absolute -right-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
-                  </div>
-                  {/* Body */}
-                  <div className="bg-background py-5 px-4 text-center">
-                    <p className="text-2xl font-black text-foreground">{s.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Urgency */}
             <div className="flex items-center justify-center gap-1.5 mb-5 text-xs font-semibold text-orange-600 dark:text-orange-400">
