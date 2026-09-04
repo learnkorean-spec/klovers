@@ -16,6 +16,87 @@ interface BookingInfo {
   attendance_response: string | null;
 }
 
+/**
+ * This page in the reader's own language.
+ *
+ * It was English only. An Arabic-track student was sent an Arabic invitation,
+ * pressed an Arabic button, and landed on a page that said "Please confirm
+ * you'll be attending this trial class" — at the exact moment the academy is
+ * asking them to commit, and before they have met anyone.
+ *
+ * The language comes from the booking itself (`class_language`), not from the
+ * browser: it is the language the class will be taught in, which is what the
+ * letter was written in and what this reader chose. A student with an English
+ * browser who booked the Arabic cohort should read Arabic here.
+ */
+const COPY = {
+  en: {
+    dir: "ltr" as const,
+    lang: "en",
+    locale: "en-US",
+    tagline: "Korean Language Academy",
+    loading: "Loading your trial booking…",
+    greeting: (name: string) => `Hi ${name}!`,
+    greetingNoName: "Confirm your trial class",
+    intro: "Please confirm you'll be attending this trial class.",
+    language: "Language:",
+    date: "Date:",
+    time: "Time:",
+    tba: "To be announced",
+    forTeacher: (t: string) => `That's ${t} for your teacher.`,
+    confirmCta: "Confirm my attendance",
+    confirming: "Confirming your attendance…",
+    confirmedTitle: "Attendance Confirmed!",
+    confirmedNew: "You're all set. See you in class!",
+    confirmedAlready: "You've already confirmed your attendance. See you in class!",
+    accountTitle: "Keep everything in one place",
+    accountBody:
+      "Create a free account and your class link, materials and reminders all live in your dashboard.",
+    accountCta: "Create my account",
+    placement: "📝 Take Placement Test",
+    pricing: "💰 View Prices",
+    joinMeet: "Join via Google Meet",
+    errorTitle: "Link Invalid",
+    errorBody:
+      "This link is invalid or has already been used. Please contact us if you need help.",
+    whatsapp: "Contact us on WhatsApp",
+    arabic: "Arabic",
+    english: "English",
+  },
+  ar: {
+    dir: "rtl" as const,
+    lang: "ar",
+    locale: "ar-EG",
+    tagline: "أكاديمية كلوفرز لتعليم الكورية",
+    loading: "بنحمّل بيانات حصتك…",
+    greeting: (name: string) => `أهلاً ${name}!`,
+    greetingNoName: "أكّد حضورك للحصة التجريبية",
+    intro: "اضغط الزرار تحت عشان تأكّد إنك هتحضر الحصة التجريبية.",
+    language: "لغة الحصة:",
+    date: "التاريخ:",
+    time: "الساعة:",
+    tba: "هيتحدد قريبًا",
+    forTeacher: (t: string) => `ودي ${t} بتوقيت المدرّسة.`,
+    confirmCta: "أكّد حضوري",
+    confirming: "بنسجّل تأكيدك…",
+    confirmedTitle: "تم تأكيد حضورك!",
+    confirmedNew: "تمام، كل حاجة جاهزة. نشوفك في الحصة!",
+    confirmedAlready: "إنت مأكّد حضورك بالفعل. نشوفك في الحصة!",
+    accountTitle: "خلّي كل حاجة في مكان واحد",
+    accountBody:
+      "اعمل حساب مجاني، وهتلاقي لينك الحصة والمواد والتذكيرات كلها في صفحتك.",
+    accountCta: "اعمل حسابك",
+    placement: "📝 اختبار تحديد المستوى",
+    pricing: "💰 الأسعار",
+    joinMeet: "ادخل على Google Meet",
+    errorTitle: "اللينك مش شغّال",
+    errorBody: "اللينك ده غير صالح أو اتستخدم قبل كده. كلّمنا لو محتاج مساعدة.",
+    whatsapp: "كلّمنا على واتساب",
+    arabic: "عربي",
+    english: "إنجليزي",
+  },
+};
+
 /** "Asia/Kuala_Lumpur" -> "Kuala Lumpur" */
 const tzCity = (tz: string) => (tz.includes("/") ? tz.split("/").pop()!.replace(/_/g, " ") : tz);
 
@@ -77,6 +158,7 @@ const TrialConfirmPage = () => {
   const [state, setState] = useState<PageState>("loading");
   const [booking, setBooking] = useState<BookingInfo | null>(null);
   const [classLink, setClassLink] = useState<string | null>(null);
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -105,6 +187,28 @@ const TrialConfirmPage = () => {
 
     load();
   }, [token]);
+
+  // Whether to offer an account after confirming. The booking row cannot
+  // answer this - get_trial_booking_by_token deliberately returns no user_id -
+  // so the question asked is the one that matters for what to show: is the
+  // person reading this page signed in right now. Null until known, so the
+  // offer never flashes in and out.
+  useEffect(() => {
+    let alive = true;
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (alive) setHasAccount(Boolean(data.session));
+      })
+      .catch(() => {
+        // Treat an unreadable session as signed in: showing nothing is a
+        // smaller mistake than telling an existing student to sign up again.
+        if (alive) setHasAccount(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const fetchClassLink = async (trialDate: string | null, startTime: string | null) => {
     if (!trialDate || !startTime) return;
@@ -135,44 +239,59 @@ const TrialConfirmPage = () => {
     setState("success");
   };
 
-  const when = booking && !booking.is_tba ? renderWhen(booking, "en-US") : null;
+  const t = booking?.class_language === "arabic" ? COPY.ar : COPY.en;
+  const when = booking && !booking.is_tba ? renderWhen(booking, t.locale) : null;
+  const languageLabel =
+    booking?.class_language === "arabic"
+      ? t.arabic
+      : booking?.class_language === "english"
+        ? t.english
+        : "—";
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+      <div
+        dir={t.dir}
+        lang={t.lang}
+        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center"
+      >
         {/* Logo / brand */}
         <div className="mb-6">
-          <span className="text-4xl font-black tracking-tight text-black">
+          <span dir="ltr" className="text-4xl font-black tracking-tight text-black">
             K<span className="text-yellow-400">lovers</span>
           </span>
-          <p className="text-gray-500 text-sm mt-1">Korean Language Academy</p>
+          <p className="text-gray-500 text-sm mt-1">{t.tagline}</p>
         </div>
 
         {state === "loading" && (
           <div className="py-8">
             <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading your trial booking…</p>
+            <p className="text-gray-600">{t.loading}</p>
           </div>
         )}
 
         {state === "ready" && booking && (
           <div className="py-4">
             <h1 className="text-2xl font-bold text-black mb-1">
-              {booking.first_name ? `Hi ${booking.first_name}!` : "Confirm your trial class"}
+              {booking.first_name ? t.greeting(booking.first_name) : t.greetingNoName}
             </h1>
-            <p className="text-gray-600 mb-5">Please confirm you'll be attending this trial class.</p>
-            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left text-sm text-gray-700 space-y-1.5">
-              <p><span className="font-semibold text-black">Language:</span> {booking.class_language ?? "—"}</p>
+            <p className="text-gray-600 mb-5">{t.intro}</p>
+            <div
+              className={`bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1.5 ${
+                t.dir === "rtl" ? "text-right" : "text-left"
+              }`}
+            >
+              <p><span className="font-semibold text-black">{t.language}</span> {languageLabel}</p>
               <p>
-                <span className="font-semibold text-black">Date:</span>{" "}
-                {booking.is_tba ? "To be announced" : when ? when.dateLabel : "—"}
+                <span className="font-semibold text-black">{t.date}</span>{" "}
+                {booking.is_tba ? t.tba : when ? when.dateLabel : "—"}
               </p>
               {when && (
                 <p>
-                  <span className="font-semibold text-black">Time:</span> {when.timeLabel}
+                  <span className="font-semibold text-black">{t.time}</span> {when.timeLabel}
                   {when.alsoLabel && (
                     <span className="block text-xs text-gray-400 mt-0.5">
-                      That's {when.alsoLabel} for your teacher.
+                      {t.forTeacher(when.alsoLabel)}
                     </span>
                   )}
                 </p>
@@ -184,7 +303,7 @@ const TrialConfirmPage = () => {
               style={{ backgroundColor: "#000", color: "#FACC15" }}
               className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
             >
-              Confirm my attendance
+              {t.confirmCta}
             </button>
           </div>
         )}
@@ -192,7 +311,7 @@ const TrialConfirmPage = () => {
         {state === "confirming" && (
           <div className="py-8">
             <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Confirming your attendance…</p>
+            <p className="text-gray-600">{t.confirming}</p>
           </div>
         )}
 
@@ -201,11 +320,9 @@ const TrialConfirmPage = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">✅</span>
             </div>
-            <h1 className="text-2xl font-bold text-black mb-2">Attendance Confirmed!</h1>
+            <h1 className="text-2xl font-bold text-black mb-2">{t.confirmedTitle}</h1>
             <p className="text-gray-600 mb-2">
-              {state === "already"
-                ? "You've already confirmed your attendance. See you in class!"
-                : "You're all set. See you in class!"}
+              {state === "already" ? t.confirmedAlready : t.confirmedNew}
             </p>
             {when && (
               <p className="text-sm text-gray-500 mb-6">
@@ -213,20 +330,38 @@ const TrialConfirmPage = () => {
               </p>
             )}
             {!when && <div className="mb-6" />}
+
+            {/* Offered only to a reader with no session, and only after they
+                have said they are coming. Before that it is one more thing
+                between them and the seat. */}
+            {hasAccount === false && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+                <p className="font-semibold text-black text-sm mb-1">{t.accountTitle}</p>
+                <p className="text-gray-600 text-sm mb-3">{t.accountBody}</p>
+                <a
+                  href="/signup"
+                  style={{ backgroundColor: "#000", color: "#FACC15" }}
+                  className="inline-block font-bold px-5 py-2.5 rounded-xl text-sm hover:opacity-80 transition-opacity"
+                >
+                  {t.accountCta}
+                </a>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="/placement-test"
                 style={{ backgroundColor: "#000", color: "#FACC15" }}
                 className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
               >
-                📝 Take Placement Test
+                {t.placement}
               </a>
               <a
                 href="/pricing"
                 style={{ backgroundColor: "#000", color: "#FACC15" }}
                 className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
               >
-                💰 View Prices
+                {t.pricing}
               </a>
             </div>
             {classLink && (
@@ -236,7 +371,7 @@ const TrialConfirmPage = () => {
                 rel="noopener noreferrer"
                 className="inline-block mt-3 text-sm text-gray-500 underline hover:text-gray-700"
               >
-                Join via Google Meet
+                {t.joinMeet}
               </a>
             )}
           </div>
@@ -247,17 +382,15 @@ const TrialConfirmPage = () => {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">❌</span>
             </div>
-            <h1 className="text-2xl font-bold text-black mb-2">Link Invalid</h1>
-            <p className="text-gray-600 mb-6">
-              This link is invalid or has already been used. Please contact us if you need help.
-            </p>
+            <h1 className="text-2xl font-bold text-black mb-2">{t.errorTitle}</h1>
+            <p className="text-gray-600 mb-6">{t.errorBody}</p>
             <a
               href="https://wa.me/201010003084"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block bg-black text-yellow-400 font-bold px-6 py-3 rounded-xl text-base hover:opacity-90 transition-opacity"
             >
-              Contact us on WhatsApp
+              {t.whatsapp}
             </a>
           </div>
         )}
