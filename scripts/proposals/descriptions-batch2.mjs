@@ -43,6 +43,14 @@
  *   "مطالبة شخص ما بالخروج"     — "asking someone out" translated literally
  *                                 as demanding that a person exit.
  *
+ * BUT NOT THE SEARCH TERM ITSELF. Brand and exam names stay in Latin script
+ * even inside an Arabic sentence — Duolingo, Rosetta Stone, Memrise, Babbel,
+ * Klovers, TOPIK, K-Drama, K-Pop. Arabic speakers type those in Latin letters,
+ * Google bolds the matched query term in the snippet, and on
+ * korean-learning-apps-comparison-2026-ar the description is the ONLY place the
+ * metadata carries the brand names at all: that article's Arabic title has
+ * none. Transliterating them reads better and costs the click.
+ *
  * HARD CONSTRAINT: `description` only. Never title, slug, keywords or content.
  *
  * Usage: node scripts/proposals/descriptions-batch2.mjs
@@ -208,7 +216,9 @@ export const EDITS = [
     slug: "ar-korean-slang-words",
     lang: "ar",
     after:
-      "٣٥ كلمة وعبارة عامية كورية تسمعها في الدراما وأغاني الكيبوب، مع معناها ودرجة رسميتها وكيفية استخدامها في المحادثة اليومية.",
+      "٣٥ كلمة وعبارة عامية كورية تسمعها في K-Drama وK-Pop، مع معناها ودرجة رسميتها وكيفية استخدامها في المحادثة اليومية.",
+    reason:
+      "K-Drama and K-Pop deliberately kept in Latin script: they are the query, not just a word in the sentence.",
   },
   {
     slug: "ar-seoul-travel-korean-phrases",
@@ -236,7 +246,7 @@ export const EDITS = [
     after:
       "تعلّم كيف تقدّم نفسك بالكورية خطوة بخطوة، من تحية «أنيونغ هاسيو» إلى ذكر اسمك وعمرك وعملك، مع جمل جاهزة للحفظ والاستخدام.",
     reason:
-      "The old prefix repeated the article title verbatim, then the sentence restated it again. It also left 'annyeonghaseyo' in Latin letters inside an Arabic sentence.",
+      "The old prefix repeated the article title verbatim, then the sentence restated it again. It also left 'annyeonghaseyo' in Latin letters inside an Arabic sentence — a greeting, not a brand, so it is transliterated here.",
   },
   {
     slug: "korean-age-system-explained-ar",
@@ -256,7 +266,7 @@ export const EDITS = [
     after:
       "أكثر من ٤٠ عبارة مواعدة كورية وأشهر جمل الدراما: من دعوة شخص للخروج إلى الاعتراف بالمشاعر، مع شرح متى تُقال كل عبارة ولمن.",
     reason:
-      "Old value rendered 'asking someone out' literally as 'مطالبة شخص ما بالخروج' (demanding that a person exit) and left the drama titles in Latin script.",
+      "Old value rendered 'asking someone out' literally as 'مطالبة شخص ما بالخروج' (demanding that a person exit).",
   },
   {
     slug: "korean-drama-vocabulary-advanced-ar",
@@ -284,13 +294,17 @@ export const EDITS = [
     slug: "korean-learning-apps-comparison-2026-ar",
     lang: "ar",
     after:
-      "مقارنة شاملة لتطبيقات تعلّم الكورية: دوولينجو وروزيتا ستون وبابل وميمرايز وكلوفرز، بالأسعار والمميزات والعيوب وأنسب تطبيق لكل مستوى.",
+      "مقارنة شاملة لتطبيقات تعلّم الكورية: Duolingo وRosetta Stone وBabbel وMemrise وKlovers، بالأسعار والمميزات والعيوب وأنسب تطبيق لكل مستوى.",
+    reason:
+      "Brand names kept in Latin script. This article's Arabic title carries none of them, so the description is the only place the metadata holds the query the reader typed.",
+    confidence: "high",
   },
   {
     slug: "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
     lang: "ar",
     after:
-      "مقارنة ٢٠٢٦ لتطبيقات تعلّم الكورية: دوولينجو وروزيتا ستون وميمرايز وبابل وكلوفرز عبر اثني عشر معيارًا، بالأسعار والإيجابيات والسلبيات.",
+      "مقارنة ٢٠٢٦ لتطبيقات تعلّم الكورية: Duolingo وRosetta Stone وMemrise وBabbel وKlovers عبر اثني عشر معيارًا، بالأسعار والإيجابيات والسلبيات.",
+    reason: "Brand names kept in Latin script — they are the query.",
   },
   {
     slug: "korean-myths-legends-stories-kdrama-fans-ar",
@@ -298,7 +312,7 @@ export const EDITS = [
     after:
       "عشر أساطير كورية أساسية، من الثعلب ذي الذيول التسعة إلى الدوكايبي وأسطورة دانغون، والقصص التي تقف وراء كل حبكة في الدراما الكورية.",
     reason:
-      "Old value opened with 'الأساطير والأساطير الكورية' — 'myths and myths' — because 'myths and legends' collapsed into one Arabic word twice. It also left 'Dokkaebi' and 'Dangun' in Latin script.",
+      "Old value opened with 'الأساطير والأساطير الكورية' — 'myths and myths' — because 'myths and legends' collapsed into one Arabic word twice. Dokkaebi and Dangun are transliterated: folklore names, not brands, and Arabic readers search them in Arabic.",
   },
   {
     slug: "korean-numbers-guide-ar",
@@ -371,13 +385,15 @@ export const EDITS = [
     slug: "topik-1-vocabulary-list-800-words-ar",
     lang: "ar",
     after:
-      "القائمة الكاملة لأهم ٨٠٠ كلمة كورية لاجتياز اختبار توبيك الأول، مصنّفة حسب الموضوع مع الترجمة والنطق لكل كلمة.",
+      "القائمة الكاملة لأهم ٨٠٠ كلمة كورية لاجتياز اختبار TOPIK I، مصنّفة حسب الموضوع مع الترجمة والنطق لكل كلمة.",
+    reason: "TOPIK kept in Latin script — it is the exam's registered name and the query Arabic speakers type.",
   },
   {
     slug: "topik-exam-guide-ar",
     lang: "ar",
     after:
-      "دليل شامل لاجتياز اختبار توبيك للمتحدثين بالعربية: هيكل الامتحان ونظام الدرجات واستراتيجيات المذاكرة والمصادر التي تحتاجها.",
+      "دليل شامل لاجتياز اختبار TOPIK للمتحدثين بالعربية: هيكل الامتحان ونظام الدرجات واستراتيجيات المذاكرة والمصادر التي تحتاجها.",
+    reason: "TOPIK kept in Latin script — it is the query.",
   },
 ];
 
@@ -452,8 +468,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         `tail, 7 over 160 chars — 75 distinct articles. Replacements are hand-written, ` +
         `100-160 characters, complete sentences. The Arabic ones are written as Arabic, not ` +
         `repaired as translations, and correct five machine-translation errors including a ` +
-        `shamanic rite (굿) published as "the intestinal tract". description column only; ` +
-        `title, slug, keywords and content untouched. The ~29 prefix-only rows are batch 3.`,
+        `shamanic rite (굿) published as "the intestinal tract" — but brand and exam names ` +
+        `(Duolingo, Rosetta Stone, Memrise, Babbel, Klovers, TOPIK, K-Drama, K-Pop) stay in ` +
+        `Latin script, because those are the query. description column only; title, slug, ` +
+        `keywords and content untouched. The ~29 prefix-only rows are batch 3.`,
       edits,
     },
     store
