@@ -464,6 +464,37 @@ Deno.serve(async (req) => {
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      // Rejoin cooldown: this email cancelled a trial recently.
+      //
+      // Raised by tg_trial_bookings_rejoin_cooldown (migration 20260903170000)
+      // as P0001, with the date they may book again inside the message:
+      //
+      //   trial_rejoin_cooldown: this email cancelled a trial on 2026-08-02;
+      //   it can book again from 2026-09-01
+      //
+      // Without this branch the student falls through to the generic 500 and
+      // is shown that raw sentence - a database exception, in a booking form.
+      //
+      // The second date is pulled out and given to them, because "a month
+      // after you cancelled" is not an answer to someone who does not
+      // remember cancelling. If the message ever stops carrying it the
+      // wording degrades to the vaguer sentence rather than breaking.
+      if (bookingError?.message?.includes("trial_rejoin_cooldown")) {
+        const dates = bookingError.message.match(/\d{4}-\d{2}-\d{2}/g);
+        const bookAgainFrom = dates && dates.length >= 2 ? dates[1] : null;
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            success: false,
+            error: bookAgainFrom
+              ? `You cancelled a trial recently, so this email can book again from ${bookAgainFrom}. Message us on WhatsApp if you need to come sooner.`
+              : "You cancelled a trial recently. This email can book again a month after that date. Message us on WhatsApp if you need to come sooner.",
+            error_code: "rejoin_cooldown",
+            ...(bookAgainFrom ? { book_again_from: bookAgainFrom } : {}),
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       // Conflict trigger: trial time overlaps an existing enrolled class
       if (bookingError?.code === "23514" || bookingError?.message?.includes("trial_booking_conflict")) {
         return new Response(
