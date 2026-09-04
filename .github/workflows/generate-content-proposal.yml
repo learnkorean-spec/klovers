@@ -32,6 +32,7 @@ on:
           - internal-links
           - keyword-focus
           - descriptions
+          - descriptions-batch2
       per_article:
         description: "internal-links only: how many related links per article (default 4)"
         required: false
@@ -90,6 +91,10 @@ jobs:
             descriptions)
               # No parameters: the batch is a hand-curated list in the script.
               node scripts/proposals/descriptions.mjs | tee gen-output.txt
+              ;;
+            descriptions-batch2)
+              # No parameters: the batch is a hand-curated list in the script.
+              node scripts/proposals/descriptions-batch2.mjs | tee gen-output.txt
               ;;
             *)
               echo "::error::unknown generator ${{ inputs.generator }}"; exit 1 ;;
