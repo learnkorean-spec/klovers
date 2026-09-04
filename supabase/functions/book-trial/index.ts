@@ -365,12 +365,6 @@ Deno.serve(async (req) => {
     // Authenticated rebook: mark previous booking cancelled (any kind) to allow
     // slot change while preserving changed_at/cancelled_at for admin.
     // Unauthenticated: only close TBA placeholders (or rollover bookings).
-    //
-    // NOTE for anyone touching the rejoin cooldown (migration 20260903170000):
-    // this is the reason cancel_reason matters. A reschedule writes a cancelled
-    // row with cancelled_at = now, milliseconds before the insert below. The
-    // cooldown trigger ignores 'student_reschedule' and 'tba_rebook' precisely
-    // so that rescheduling does not lock the student out for a month.
     const shouldCloseExisting = existingBooking && (authed || isTbaPlaceholder || isRollover);
     if (shouldCloseExisting) {
       const auditUpdate = await supabase
@@ -397,8 +391,22 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Authenticated bookings use awaiting_attendance so students confirm via email link
-    const bookingStatus = authed && resolvedUserId ? "awaiting_attendance" : "confirmed";
+    // Every booking waits on the student's own confirmation.
+    //
+    // This used to be `authed && resolvedUserId ? "awaiting_attendance" : "confirmed"`,
+    // which meant the confirmation step existed only for students who happened
+    // to be signed in. Everyone else was written straight to "confirmed" and
+    // counted as attending without ever saying so, and there is nothing a
+    // reader could perceive that would explain why they got a different flow
+    // from the person next to them. It also made the number Reham looks at
+    // before a class untrue: a mix of people who confirmed and people who were
+    // assumed.
+    //
+    // Signing in is not needed to confirm. TrialConfirmPage works entirely
+    // from the token in the emailed link, and both RPCs behind it
+    // (get_trial_booking_by_token, respond_trial_attendance) are granted to
+    // anon - checked on production before making this change.
+    const bookingStatus = "awaiting_attendance";
 
     // Atomic insert via Postgres RPC. p_delete_id remains for older deployments,
     // but rebooks now preserve the old row as cancelled for admin visibility.
@@ -452,28 +460,6 @@ Deno.serve(async (req) => {
             success: false,
             error: "Sorry — that time was just taken. Please pick another slot.",
             error_code: "slot_taken",
-          }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      // Rejoin cooldown: this email cancelled a trial recently (migration
-      // 20260903170000, trial_settings.rejoin_cooldown_days).
-      //
-      // Matched on the message, not the SQLSTATE: the trigger raises P0001,
-      // and the branch below already owns 23514 for "overlaps an existing
-      // class". Reusing that code would have shown a wrong reason, stated
-      // confidently. This branch must therefore stay ABOVE it.
-      //
-      // A cooldown is a policy decision, not a server fault, so it is a 409 —
-      // without this branch it fell through to the generic 500 and showed the
-      // student the raw Postgres exception text.
-      if (bookingError?.message?.includes("trial_rejoin_cooldown")) {
-        return new Response(
-          JSON.stringify({
-            ok: false,
-            success: false,
-            error: "You cancelled a trial class recently. You can book another one a month after that date — message us on WhatsApp if you need it sooner.",
-            error_code: "rejoin_cooldown",
           }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -534,16 +520,18 @@ Deno.serve(async (req) => {
       });
     } catch { /* non-critical */ }
 
-    // 3b. Unauthenticated bookings are inserted as 'confirmed' immediately —
-    // check whether this just completed the group's 4th confirmed spot for
-    // this occurrence, and if so alert the teacher + this student. Best
-    // effort: never blocks or affects the booking response.
-    if (bookingStatus === "confirmed") {
-      try {
-        await checkAndSendTrialCapacityAlert(supabase, trialDate, start_time);
-      } catch (e) {
-        console.warn("checkAndSendTrialCapacityAlert failed:", e);
-      }
+    // 3b. Check whether this booking filled the slot, and if so alert the
+    // teacher and this student. Best effort: never blocks or affects the
+    // booking response.
+    //
+    // This was gated on `bookingStatus === "confirmed"`, a value this function
+    // no longer produces - so leaving the gate would have silently retired the
+    // alert. A seat is taken the moment the row exists, whatever its status,
+    // so the check belongs on every booking.
+    try {
+      await checkAndSendTrialCapacityAlert(supabase, trialDate, start_time);
+    } catch (e) {
+      console.warn("checkAndSendTrialCapacityAlert failed:", e);
     }
 
     // 4. Build calendar URL for the response
@@ -557,65 +545,78 @@ Deno.serve(async (req) => {
     });
     // meetingUrl already resolved from the merged slot query above
 
-    // 5. Send trial confirmation email
-    if (authed && resolvedUserId) {
-      // Authenticated booking: fetch confirmation_token and send attendance confirmation
-      const { data: newBookingRow } = await supabase
-        .from("trial_bookings")
-        .select("id, confirmation_token")
-        .eq("id", booking.id)
-        .maybeSingle();
+    // 5. One confirmation email, for everyone.
+    //
+    // There were two: trial_attendance_confirmation for signed-in students,
+    // carrying the Meet link and a "confirm my attendance" button, and
+    // trial_confirmed for everyone else, carrying the link and nothing to
+    // click. Two letters for one event, chosen by a detail the reader cannot
+    // see. Now one letter, and everybody gets the button.
+    //
+    // Awaited rather than fired and forgotten: this is the email the whole
+    // booking depends on, so a failure should be recorded before the response
+    // goes back, not after it.
+    const { data: newBookingRow } = await supabase
+      .from("trial_bookings")
+      .select("id, confirmation_token")
+      .eq("id", booking.id)
+      .maybeSingle();
 
-      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-confirmation-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+    const confirmationToken =
+      (newBookingRow as { confirmation_token?: string | null } | null)?.confirmation_token ?? null;
+
+    if (!confirmationToken) {
+      // The button in the email is built from this token. Without it the
+      // reader gets a letter they cannot act on, so it is worth an admin
+      // notification rather than a silent send.
+      console.error("[book-trial] no confirmation_token for booking", booking.id);
+      try {
+        await supabase.from("admin_notifications").insert({
+          message: `Trial booking ${booking.id} has no confirmation_token — the confirmation email has no working button.`,
+          type: "trial_confirmation_token_missing",
+        });
+      } catch { /* never let alerting break the booking flow */ }
+    }
+
+    try {
+      const emailResponse = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-confirmation-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            template: "trial_attendance_confirmation",
+            email: normalizedEmail,
+            name: finalName,
+            language: class_language === "arabic" ? "ar" : "en",
+            trial_date: trialDate,
+            trial_time: start_time,
+            trial_timezone: timezone,
+            student_timezone: studentTimezone,
+            trial_duration_min: slotDurationMin,
+            level: level?.trim() || "",
+            calendar_url: calendarUrl,
+            class_link_url: meetingUrl,
+            booking_id: newBookingRow?.id ?? booking.id,
+            confirmation_token: confirmationToken,
+          }),
         },
-        body: JSON.stringify({
-          template: "trial_attendance_confirmation",
-          email: normalizedEmail,
-          name: finalName,
-          language: class_language === "arabic" ? "ar" : "en",
-          trial_date: trialDate,
-          trial_time: start_time,
-          trial_timezone: timezone,
-          student_timezone: studentTimezone,
-          trial_duration_min: slotDurationMin,
-          class_link_url: meetingUrl,
-          booking_id: newBookingRow?.id ?? booking.id,
-          confirmation_token: (newBookingRow as { confirmation_token?: string | null } | null)?.confirmation_token ?? null,
-        }),
-      }).catch((e) => {
-        console.warn("trial_attendance_confirmation email failed:", e);
-      });
-    } else {
-      // Unauthenticated booking: send standard trial confirmed email
-      supabase.functions.invoke("send-confirmation-email", {
-        body: {
-          template: "trial_confirmed",
-          email: normalizedEmail,
-          name: finalName,
-          language: class_language === "arabic" ? "ar" : "en",
-          trial_date: trialDate,
-          trial_time: start_time,
-          trial_timezone: timezone,
-          student_timezone: studentTimezone,
-          trial_duration_min: slotDurationMin,
-          level: level?.trim() || "",
-          calendar_url: calendarUrl,
-          ...(meetingUrl ? { class_link_url: meetingUrl } : {}),
-        },
-      }).then(null, async (e) => {
-        console.warn("trial_confirmed email failed:", e);
-        // Mark failure so admin can see it in the dashboard and manually resend
-        try {
-          await supabase
-            .from("trial_bookings")
-            .update({ confirmation_email_failed_at: new Date().toISOString() })
-            .eq("id", booking.id);
-        } catch { /* non-critical */ }
-      });
+      );
+      if (!emailResponse.ok) {
+        throw new Error(`send-confirmation-email returned ${emailResponse.status}`);
+      }
+    } catch (e) {
+      console.warn("trial_attendance_confirmation email failed:", e);
+      // Mark it so admin sees it in the dashboard and can resend by hand.
+      try {
+        await supabase
+          .from("trial_bookings")
+          .update({ confirmation_email_failed_at: new Date().toISOString() })
+          .eq("id", booking.id);
+      } catch { /* non-critical */ }
     }
 
     return new Response(
