@@ -24,11 +24,13 @@ import RequestsTable from './trial/RequestsTable';
 import SuggestedSlots from './trial/SuggestedSlots';
 import TrialSettingsPanel from './trial/TrialSettings';
 import BroadcastTrackingTable from './trial/BroadcastTrackingTable';
+import TrialInviteGroups from './trial/TrialInviteGroups';
 
 type SubTab =
   | 'overview'
   | 'upcoming'
   | 'requests'
+  | 'invitations'
   | 'historical'
   | 'suggestions'
   | 'settings'
@@ -38,6 +40,7 @@ const SUBTABS: { key: SubTab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'upcoming', label: 'Upcoming Trial Slots' },
   { key: 'requests', label: 'Trial Requests / Bookings' },
+  { key: 'invitations', label: 'Invitations by group' },
   { key: 'historical', label: 'Previous Trial Classes' },
   { key: 'suggestions', label: 'Suggested New Slots' },
   { key: 'settings', label: 'Trial Settings' },
@@ -132,6 +135,10 @@ export default function TrialClassesTab() {
           )}
           {sub === 'upcoming' && <UpcomingSlots slots={slots} />}
           {sub === 'requests' && <RequestsTable bookings={bookings} />}
+          {/* Reads trial_bookings itself rather than `bookings` above: the
+              admin view does not expose rebook_email_sent_at, and without it
+              "never invited" cannot be told from "re-invite". */}
+          {sub === 'invitations' && <TrialInviteGroups />}
           {sub === 'historical' && <HistoricalBookings bookings={historical} />}
           {sub === 'suggestions' && (
             <SuggestedSlots suggestions={suggestions} fullSlotsCount={overview.fullSlots} />
