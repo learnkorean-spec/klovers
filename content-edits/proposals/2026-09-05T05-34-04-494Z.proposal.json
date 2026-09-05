@@ -1,0 +1,378 @@
+{
+  "batchId": "2026-09-05T05-34-04-494Z",
+  "createdAt": "2026-09-05T05:34:16.034Z",
+  "source": "scripts/proposals/descriptions-batch2.mjs",
+  "description": "Gate 2 Step 5 batch 2 — repair 46 meta descriptions that end mid-sentence in an ellipsis or run past the 160-character limit. Most also carry a stuffed keyword prefix or the duplicated \"تعلم المزيد مع أكاديمية كلوفرز\" tail, both repaired in the same edit. IMPORTANT CORRECTION: batch 1 reported 62 defective descriptions; that was measured with a Latin-only regex and missed every Arabic row. Re-measured 2026-09-04 across the same 200 published articles: 44 stuffed prefix, 39 ellipsis, 14 boilerplate tail, 7 over 160 chars — 75 distinct articles. Replacements are hand-written, 100-160 characters, complete sentences. The Arabic ones are written as Arabic, not repaired as translations, and correct five machine-translation errors including a shamanic rite (굿) published as \"the intestinal tract\" — but brand and exam names (Duolingo, Rosetta Stone, Memrise, Babbel, Klovers, TOPIK, K-Drama, K-Pop) stay in Latin script, because those are the query. description column only; title, slug, keywords and content untouched. The ~29 prefix-only rows are batch 3.",
+  "editCount": 46,
+  "staleCount": 0,
+  "edits": [
+    {
+      "slug": "best-kdrama-learn-korean-difficulty-ranked",
+      "lang": "en",
+      "column": "description",
+      "before": "15 popular K-dramas ranked by difficulty level for Korean learners. From beginner-friendly to advanced — with vocabulary cheat sheets, watching strategies,…",
+      "after": "Fifteen popular K-dramas ranked by difficulty for Korean learners, from beginner-friendly to advanced, each with a vocabulary sheet and watching tips.",
+      "stale": false
+    },
+    {
+      "slug": "hanbok-korean-traditional-clothing",
+      "lang": "en",
+      "column": "description",
+      "before": "Discover the world of Hanbok — Korea's stunning traditional clothing. Learn vocabulary, history, where to rent it in Seoul, and how it reflects Korean cultur...",
+      "after": "Everything to know about hanbok, Korea's traditional dress: its history, the vocabulary, where to rent one in Seoul, and what it says about Korean culture.",
+      "stale": false
+    },
+    {
+      "slug": "how-to-learn-korean-faster",
+      "lang": "en",
+      "column": "description",
+      "before": "10 research-backed strategies to learn Korean faster. Proven tips for beginners and intermediate learners — with a 30-day kickstart challenge and daily study…",
+      "after": "Ten research-backed strategies to learn Korean faster, for beginners and intermediate learners alike, plus a 30-day challenge and a daily study routine.",
+      "stale": false
+    },
+    {
+      "slug": "korean-animal-vocabulary-sounds",
+      "lang": "en",
+      "column": "description",
+      "before": "Learn Korean animal names and the fun onomatopoeia Koreans use for animal sounds — from 멍멍 (woof) to 야옹 (meow) — with a full vocabulary table and example sentences.",
+      "after": "Korean animal names plus the playful onomatopoeia Koreans use for animal sounds, from 멍멍 to 야옹, with a full vocabulary table and example sentences.",
+      "stale": false
+    },
+    {
+      "slug": "korean-body-parts-vocabulary",
+      "lang": "en",
+      "column": "description",
+      "before": "Learn Korean body parts vocabulary from head to toe, plus how to describe pain and symptoms at a Korean pharmacy or doctor's office, with a full table and examples.",
+      "after": "Korean body parts vocabulary from head to toe, plus how to describe pain and symptoms at a Korean pharmacy or clinic, with a full table and examples.",
+      "stale": false
+    },
+    {
+      "slug": "korean-clothing-fashion-vocabulary",
+      "lang": "en",
+      "column": "description",
+      "before": "Learn essential Korean clothing and fashion vocabulary for shopping, describing outfits, and talking about K-fashion trends, with a full vocabulary table and phrases.",
+      "after": "Essential Korean clothing and fashion vocabulary for shopping, describing outfits and talking about K-fashion trends, with a full table and useful phrases.",
+      "stale": false
+    },
+    {
+      "slug": "korean-daily-greetings",
+      "lang": "en",
+      "column": "description",
+      "before": "Learn the 40 most essential Korean greetings and daily phrases used by native speakers. From hello to goodbye, formal to casual — master Korean conversation ...",
+      "after": "The 40 Korean greetings and daily phrases native speakers actually use, from hello to goodbye and formal to casual, with pronunciation for every one.",
+      "stale": false
+    },
+    {
+      "slug": "korean-first-birthday-dol-traditions",
+      "lang": "en",
+      "column": "description",
+      "before": "Discover doljanchi, Korea's elaborate first-birthday celebration, including the doljabi fortune-telling tradition where babies pick their future from a table of objects.",
+      "after": "Doljanchi, Korea's elaborate first-birthday celebration, including the doljabi tradition in which the baby picks an object said to predict its future.",
+      "stale": false
+    },
+    {
+      "slug": "korean-grammar-particles",
+      "lang": "en",
+      "column": "description",
+      "before": "Korean particles (조사) are the key to understanding Korean grammar. This complete guide explains subject, object, topic, and location particles with clear exa...",
+      "after": "Korean particles (조사) are the key to Korean grammar. This guide explains subject, object, topic and location particles with clear examples of each.",
+      "stale": false
+    },
+    {
+      "slug": "korean-honorifics-formality-levels-grammar",
+      "lang": "en",
+      "column": "description",
+      "before": "Complete guide to Korean honorifics and formality levels. Learn 존댓말, 반말, and when to use each speech level — with practice dialogues, K-Drama examples, and a…",
+      "after": "A complete guide to Korean honorifics and formality levels. Learn 존댓말 and 반말, when each one belongs, with practice dialogues and K-drama examples.",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-duolingo-rosetta-stone",
+      "lang": "en",
+      "column": "description",
+      "before": "Comprehensive 2026 comparison of Korean learning apps. Duolingo, Rosetta Stone, Memrise, Babbel, and Klovers reviewed across 12 criteria — with pricing,…",
+      "after": "A 2026 comparison of the main Korean learning apps: Duolingo, Rosetta Stone, Memrise, Babbel and Klovers, reviewed across 12 criteria with pricing.",
+      "stale": false
+    },
+    {
+      "slug": "korean-pronunciation-guide-speaking",
+      "lang": "en",
+      "column": "description",
+      "before": "Master Korean pronunciation from day one. Learn consonants, vowels, sound change rules, and a 4-week practice routine — with special tips for Arabic speakers…",
+      "after": "Master Korean pronunciation from day one: consonants, vowels, sound change rules and a four-week practice routine, with tips for Arabic speakers.",
+      "stale": false
+    },
+    {
+      "slug": "korean-skincare-kbeauty-routine-guide",
+      "lang": "en",
+      "column": "description",
+      "before": "Discover the legendary 10-step Korean skincare routine that transformed global beauty standards. Learn the science, products, and cultural philosophy behind ...",
+      "after": "The ten-step Korean skincare routine that reshaped global beauty, explained: what each step does, which products matter, and the philosophy behind it.",
+      "stale": false
+    },
+    {
+      "slug": "korean-tattoo-culture-guide",
+      "lang": "en",
+      "column": "description",
+      "before": "Explore Korean tattoo culture — why tattoos were historically stigmatized, the legal gray area artists work in, and how attitudes are changing among younger generations.",
+      "after": "Korean tattoo culture explained: why tattoos were long stigmatised, the legal gray area artists still work in, and how younger attitudes are changing.",
+      "stale": false
+    },
+    {
+      "slug": "korean-transportation-guide-seoul",
+      "lang": "en",
+      "column": "description",
+      "before": "Learn the Korean transportation vocabulary and phrases you need to navigate Seoul's subway, buses, and taxis like a local, with a full vocabulary table and travel tips.",
+      "after": "The Korean transport vocabulary and phrases you need to navigate Seoul's subway, buses and taxis like a local, with a full table and practical tips.",
+      "stale": false
+    },
+    {
+      "slug": "korean-webtoon-reading-guide",
+      "lang": "en",
+      "column": "description",
+      "before": "Discover Korean webtoons — the vertical-scroll digital comics behind hits like Solo Leveling and True Beauty — plus the vocabulary you need to start reading them.",
+      "after": "Korean webtoons explained: the vertical-scroll comics behind hits like Solo Leveling and True Beauty, plus the vocabulary you need to start reading them.",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-alphabet-hangul-guide",
+      "lang": "en",
+      "column": "description",
+      "before": "Master the Korean alphabet (Hangul) in one day with this step-by-step guide. Learn all 40 letters, pronunciation, stroke order, and start reading Korean…",
+      "after": "Master the Korean alphabet in a single day. This step-by-step guide covers all 40 letters, pronunciation and stroke order, so you can start reading Hangul.",
+      "stale": false
+    },
+    {
+      "slug": "topik-exam-guide",
+      "lang": "en",
+      "column": "description",
+      "before": "Complete TOPIK exam guide for Arabic speakers — structure, scoring, preparation strategies, and study tips to pass TOPIK I (beginner) or TOPIK II (intermedia...",
+      "after": "A complete TOPIK guide for Arabic speakers: exam structure, scoring, preparation strategies and study tips for passing TOPIK I or TOPIK II.",
+      "stale": false
+    },
+    {
+      "slug": "topik-exam-preparation-complete-guide-2026",
+      "lang": "en",
+      "column": "description",
+      "before": "Complete TOPIK exam guide for 2026. Test format, scoring, registration dates, 12-week study plan, writing tips, vocabulary lists by level, and proven…",
+      "after": "A complete 2026 TOPIK preparation guide: test format, scoring, registration dates, a 12-week study plan, writing tips and vocabulary lists by level.",
+      "stale": false
+    },
+    {
+      "slug": "ar-korean-food-vocabulary",
+      "lang": "ar",
+      "column": "description",
+      "before": "طعام كوري — تعلم 60 كلمة ومصطلح في عالم الطعام الكوري — من البيبيمباب إلى التيبوكي — مع النطق والأمثلة العملية. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية...",
+      "after": "أكثر من ٦٠ كلمة ومصطلحًا من عالم الطعام الكوري، من البيبيمباب إلى التوكبوكي، مع النطق وأمثلة عملية على استخدام كل كلمة في المطعم.",
+      "stale": false
+    },
+    {
+      "slug": "ar-korean-slang-words",
+      "lang": "ar",
+      "column": "description",
+      "before": "تعلم 35 كلمة وعبارة عامية كورية تسمعها في K-Drama وK-Pop، مع معناها وكيفية استخدامها في المحادثة. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. دروس مباشرة ...",
+      "after": "٣٥ كلمة وعبارة عامية كورية تسمعها في K-Drama وK-Pop، مع معناها ودرجة رسميتها وكيفية استخدامها في المحادثة اليومية.",
+      "stale": false
+    },
+    {
+      "slug": "ar-seoul-travel-korean-phrases",
+      "lang": "ar",
+      "column": "description",
+      "before": "سفر كوريا — استعد لرحلتك إلى سيول بهذه العبارات الكورية الأساسية للمواصلات والفنادق والتسوق والطوارئ — بالنطق والترجمة. — تعلم المزيد مع أكاديمية كلوفرز للغة...",
+      "after": "العبارات الكورية الأساسية التي تحتاجها في رحلتك إلى سيول: المواصلات والفنادق والتسوق والطوارئ، مع النطق والترجمة لكل عبارة.",
+      "stale": false
+    },
+    {
+      "slug": "gumiho-nine-tailed-fox-korean-folklore-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "جوميهو — كل شيء عن ثعلب غوميهو ذو الذيول التسعة - أصله، وأساطيره، وتعديلات الدراما الكورية، ولماذا لا تزال هذه الأسطورة التي يبلغ عمرها 1000 عام تنوم…",
+      "after": "كل شيء عن الغوميهو، الثعلب ذو الذيول التسعة: أصل الأسطورة ورموزها وحضورها في الدراما الكورية، ولماذا ما زالت حيّة بعد ألف عام.",
+      "stale": false
+    },
+    {
+      "slug": "hanbok-korean-traditional-clothing-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "تعرف على الهانبوك، الزي الكوري التقليدي. تاريخه، أنواعه، مناسبات ارتدائه، وكيف أصبح رمزاً ثقافياً عالمياً. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. درو...",
+      "after": "الهانبوك، الزي الكوري التقليدي: تاريخه وأنواعه ومناسبات ارتدائه، وكيف تحوّل من لباس يومي إلى رمز ثقافي معروف حول العالم.",
+      "stale": false
+    },
+    {
+      "slug": "how-to-introduce-yourself-in-korean-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "كيف تقدم نفسك باللغة الكورية — تعرف على كيفية تقديم نفسك باللغة الكورية خطوة بخطوة، بدءًا من annyeonghaseyo وحتى اسمك وعمرك ووظيفتك - وهو مثالي لمحبي الدراما…",
+      "after": "تعلّم كيف تقدّم نفسك بالكورية خطوة بخطوة، من تحية «أنيونغ هاسيو» إلى ذكر اسمك وعمرك وعملك، مع جمل جاهزة للحفظ والاستخدام.",
+      "stale": false
+    },
+    {
+      "slug": "korean-age-system-explained-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "نظام العمر الكوري — شرح مفصل لنظام الأعمار الكوري الفريد. كيف يُحسب عمرك في كوريا ولماذا اختلف الكوريون عن بقية العالم. — تعلم المزيد مع أكاديمية كلوفرز للغة...",
+      "after": "شرح مبسّط لنظام الأعمار الكوري الفريد: كيف يُحسب عمرك في كوريا، ولماذا اختلف الكوريون عن بقية العالم، وما الذي تغيّر مؤخرًا.",
+      "stale": false
+    },
+    {
+      "slug": "korean-body-language-social-etiquette-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "آداب كورية — تعلم الآداب الاجتماعية وقواعد السلوك في كوريا. من تقديم البطاقة لتناول الطعام - كيف تتصرف بشكل صحيح. — تعلم المزيد مع أكاديمية كلوفرز للغة الكور...",
+      "after": "الآداب الاجتماعية وقواعد السلوك في كوريا: من تقديم بطاقة العمل بكلتا اليدين إلى آداب المائدة والانحناء، وكيف تتصرّف في كل موقف.",
+      "stale": false
+    },
+    {
+      "slug": "korean-dating-phrases-kdrama-lines-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "عبارات التعارف الكورية — تعلم أكثر من 40 عبارة مواعدة كورية وخطوط الدراما الكورية الشهيرة - بدءًا من مطالبة شخص ما بالخروج إلى الاعتراف بمشاعر مثل Goblin أو…",
+      "after": "أكثر من ٤٠ عبارة مواعدة كورية وأشهر جمل الدراما: من دعوة شخص للخروج إلى الاعتراف بالمشاعر، مع شرح متى تُقال كل عبارة ولمن.",
+      "stale": false
+    },
+    {
+      "slug": "korean-drama-vocabulary-advanced-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "المفردات الدراما — ارفع مستوى لغتك الكورية باستخدام 60 كلمة من المفردات المتقدمة شائعة الاستخدام في الأعمال الدرامية الكورية الشهيرة. نظمت حسب النوع مع…",
+      "after": "ارفع مستوى لغتك الكورية بستين كلمة متقدمة شائعة في الدراما الكورية، مرتّبة حسب النوع، مع سياق كل كلمة وأمثلة على استخدامها.",
+      "stale": false
+    },
+    {
+      "slug": "korean-family-terms-relationships-guide-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "أسماء أسرة كورية — دليل شامل لأسماء أفراد الأسرة الكورية. لماذا للكورية 40+ كلمة مختلفة لتسمية الأقارب وكيف تستخدمها. — تعلم المزيد مع أكاديمية كلوفرز للغة ا...",
+      "after": "دليل شامل لأسماء أفراد الأسرة بالكورية: لماذا فيها أكثر من ٤٠ كلمة للأقارب، وكيف تتغيّر الكلمة حسب من يتكلّم ومع من.",
+      "stale": false
+    },
+    {
+      "slug": "korean-grammar-particles-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "قواعد الكورية — تعلم حروف الجر الكورية (جسيمات) وكيفية استخدامها. شرح مبسط للمبتدئين مع أمثلة عملية لكل جسيم. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. ...",
+      "after": "أدوات الجملة الكورية (조사) وكيفية استخدامها: أداة الفاعل والمفعول والموضوع والمكان، بشرح مبسّط للمبتدئين ومثال عملي لكل أداة.",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "تطبيقات تعلم كوري — مقارنة شاملة لتطبيقات تعلم الكورية. قارن Duolingo وRosetta Stone وBabbel وMemrise وKlovers — مع الأسعار والمميزات والعيوب وأفضل تطبيق حسب…",
+      "after": "مقارنة شاملة لتطبيقات تعلّم الكورية: Duolingo وRosetta Stone وBabbel وMemrise وKlovers، بالأسعار والمميزات والعيوب وأنسب تطبيق لكل مستوى.",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "مقارنة شاملة 2026 لتطبيقات تعلم اللغة الكورية. تمت مراجعة Duolingo وRosetta Stone وMemrise وBabbel وKlovers عبر 12 معيارًا - مع التسعير والإيجابيات/السلبيات…",
+      "after": "مقارنة ٢٠٢٦ لتطبيقات تعلّم الكورية: Duolingo وRosetta Stone وMemrise وBabbel وKlovers عبر اثني عشر معيارًا، بالأسعار والإيجابيات والسلبيات.",
+      "stale": false
+    },
+    {
+      "slug": "korean-myths-legends-stories-kdrama-fans-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "الأساطير والأساطير الكورية — اكتشف 10 أساطير وأساطير كورية أساسية - بدءًا من الثعلب ذو الذيول التسعة وحتى Dokkaebi وDangun - والقصص الكامنة وراء كل تطور في…",
+      "after": "عشر أساطير كورية أساسية، من الثعلب ذي الذيول التسعة إلى الدوكايبي وأسطورة دانغون، والقصص التي تقف وراء كل حبكة في الدراما الكورية.",
+      "stale": false
+    },
+    {
+      "slug": "korean-numbers-guide-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "أرقام كورية — دليل شامل لنظامَي الأرقام في اللغة الكورية. اكتشف متى تستخدم كل نظام ولماذا الكوريون لديهم طريقتان للعد. — تعلم المزيد مع أكاديمية كلوفرز للغة ...",
+      "after": "دليل شامل لنظامَي الأرقام في الكورية: متى تستخدم كل نظام، ولماذا يعدّ الكوريون بطريقتين، مع جدول كامل وأمثلة على العدّ اليومي.",
+      "stale": false
+    },
+    {
+      "slug": "korean-past-tense-conjugation-guide-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "الزمن الماضي الكوري — أتقن تصريف الأفعال الكورية الماضية بقواعد واضحة، ومخططات تناغم حروف العلة، والأفعال الشاذة، وأكثر من 30 مثالًا للمتعلمين المبتدئين…",
+      "after": "أتقن تصريف الفعل الماضي في الكورية بقواعد واضحة وجداول تناغم الحروف المتحركة والأفعال الشاذة، مع أكثر من ٣٠ مثالًا للمبتدئين.",
+      "stale": false
+    },
+    {
+      "slug": "korean-pronunciation-guide-beginners-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "نطق كوري — تعلم قواعد النطق الكوري التي يتجاهلها معظم المبتدئين. كيف تنطق الكورية بشكل طبيعي وتبدو كناطق أصلي. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية....",
+      "after": "قواعد النطق الكوري التي يتجاهلها معظم المبتدئين: كيف تنطق الحروف والتغيّرات الصوتية بشكل طبيعي وتقترب من نطق الناطق الأصلي.",
+      "stale": false
+    },
+    {
+      "slug": "korean-shamanism-mudang-kdrama-tradition-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "الشامانية الكورية — مقدمة واضحة للشامانية الكورية وطقوس مودانج، واحتفالات القناة الهضمية، ومراجع الدراما الكورية، ولماذا عاد هذا التقليد البالغ من العمر 5000…",
+      "after": "مقدمة واضحة للشامانية الكورية: من هي المودانغ، وما طقس الغوت، ولماذا عاد هذا التقليد الممتد خمسة آلاف عام إلى الدراما الكورية.",
+      "stale": false
+    },
+    {
+      "slug": "korean-shopping-phrases-complete-guide-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "عبارات التسوق الكورية — أتقن أكثر من 50 عبارة تسوق كورية أساسية لميونغدونغ ودونغدايمون والمتاجر عبر الإنترنت - المساومة، واسأل عن الأحجام، وادفع مثل السكان…",
+      "after": "أكثر من ٥٠ عبارة تسوّق كورية تحتاجها في ميونغدونغ ودونغدايمون والمتاجر الإلكترونية: كيف تساوم وتسأل عن المقاس وتدفع كأهل البلد.",
+      "stale": false
+    },
+    {
+      "slug": "korean-superstitions-beliefs-daily-life-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "الخرافات الكورية — تعرف على 12 خرافة كورية لا يزال الكوريون يمارسونها في عام 2026 - موت المعجبين، والحبر الأحمر، والرقم 4، ونداءات الغربان، والقصص الثقافية…",
+      "after": "اثنتا عشرة خرافة كورية ما زال الكوريون يتعاملون معها اليوم: مروحة الموت والحبر الأحمر والرقم أربعة ونعيق الغراب، وأصل كل معتقد.",
+      "stale": false
+    },
+    {
+      "slug": "korean-traditional-holidays-chuseok-seollal-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "تعرف على أهم عيدين في الثقافة الكورية. تشوسوك وسيولال: تاريخهما وتقاليدهما والطعام الخاص بهما وكيف يحتفل الكوريون. — تعلم المزيد مع أكاديمية كلوفرز للغة الكو...",
+      "after": "أهم عيدين في الثقافة الكورية، تشوسوك وسولال: تاريخهما وطقوسهما وأطباقهما الخاصة، وكيف يحتفل بهما الكوريون اليوم.",
+      "stale": false
+    },
+    {
+      "slug": "korean-weather-seasons-vocabulary-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "مفردات الطقس الكورية — قم ببناء مفردات طقس كورية قوية تحتوي على أكثر من 100 كلمة، وعبارات موسمية، وخطوط طقس الدراما الكورية - مثالية للمبتدئين والمتعلمين…",
+      "after": "أكثر من ١٠٠ كلمة عن الطقس بالكورية مع العبارات الموسمية وجمل الطقس التي تسمعها في الدراما، مناسبة للمبتدئين والمستوى المتوسط.",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-alphabet-hangul-guide-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "دليل شامل لتعلم الهانغول في يوم واحد. تعرف على الحروف الساكنة والمتحركة وكيفية تركيبها لقراءة الكورية من الصفر. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية...",
+      "after": "دليل عملي لتعلّم الهانغول في يوم واحد: الحروف الساكنة والمتحركة وكيف تتركّب في مقاطع، حتى تقرأ الكورية من الصفر.",
+      "stale": false
+    },
+    {
+      "slug": "learn-korean-egypt-best-classes-2026-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "قارن بين أفضل دروس اللغة الكورية في مصر 2026 - عبر الإنترنت، في القاهرة والإسكندرية. تم تصنيف الأسعار والمناهج الدراسية والمدرسين الأصليين والنتائج جنبًا إلى…",
+      "after": "مقارنة بين أفضل أماكن تعلّم الكورية في مصر لعام ٢٠٢٦، أونلاين وفي القاهرة والإسكندرية: الأسعار والمناهج والمدرّسون والنتائج.",
+      "stale": false
+    },
+    {
+      "slug": "topik-1-vocabulary-list-800-words-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "مفردات TOPIK 1 — القائمة الكاملة لأهم 800 كلمة كورية لاجتياز TOPIK I. مصنفة حسب الموضوع مع الترجمة والنطق. — تعلم المزيد مع أكاديمية كلوفرز للغة الكورية. درو...",
+      "after": "القائمة الكاملة لأهم ٨٠٠ كلمة كورية لاجتياز اختبار TOPIK I، مصنّفة حسب الموضوع مع الترجمة والنطق لكل كلمة.",
+      "stale": false
+    },
+    {
+      "slug": "topik-exam-guide-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "دليل شامل لاجتياز امتحان TOPIK للمتحدثين بالعربية. تعرف على هيكل الامتحان والاستراتيجيات والموارد اللازمة للنجاح. — تعلم المزيد مع أكاديمية كلوفرز للغة الكور...",
+      "after": "دليل شامل لاجتياز اختبار TOPIK للمتحدثين بالعربية: هيكل الامتحان ونظام الدرجات واستراتيجيات المذاكرة والمصادر التي تحتاجها.",
+      "stale": false
+    }
+  ]
+}
