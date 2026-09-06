@@ -24,13 +24,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, RefreshCw, Users, FileCheck, Clock, Tag, Loader2, Image, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
+import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Package } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminKpiStrip } from "@/components/admin/AdminKpiStrip";
@@ -407,10 +407,8 @@ const AdminDashboard = () => {
   const [enrollmentPage, setEnrollmentPage] = useState(0);
   const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(new Set());
   const [bulkApproving, setBulkApproving] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [sendingResend, setSendingResend] = useState<Set<string>>(new Set());
   const [showOverdueOnly, setShowOverdueOnly] = useState(false);
-  const navigate = useNavigate();
 
   // Derived leadsByEmail map for level fallback
   const leadsByEmail = useMemo(() => {
@@ -978,8 +976,6 @@ const AdminDashboard = () => {
     invalidateAll();
   };
 
-  const handleLogout = async () => { await supabase.auth.signOut(); navigate("/admin/login"); };
-
   // Computed badge counts
   const actionableEnrollments = enrollments.filter(e =>
     e.approval_status === "UNDER_REVIEW" ||
@@ -1058,12 +1054,6 @@ const AdminDashboard = () => {
     [enrollments]
   );
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await invalidateAll();
-    setRefreshing(false);
-  };
-
   const TAB_CLS = "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium border border-border/60 data-[state=active]:bg-primary data-[state=active]:text-black data-[state=active]:border-primary data-[state=active]:shadow-sm bg-background hover:bg-muted transition-colors gap-1.5 h-auto";
 
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
@@ -1106,36 +1096,9 @@ const AdminDashboard = () => {
       >
         Skip to main content
       </a>
-      <div id="main-content" className="min-h-screen bg-muted/30">
-        {/* Header */}
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/60 shadow-sm">
-          <div className="h-0.5 w-full bg-gradient-to-r from-primary/80 via-primary to-primary/40" />
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 py-3 px-4 md:px-6">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center shadow-sm shrink-0">
-                <Sparkles className="h-4.5 w-4.5" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-base md:text-lg font-bold text-foreground leading-tight truncate">{t("dashboard.title")}</h1>
-                <p className="text-[11px] text-muted-foreground hidden sm:block">{t("dashboard.subtitle")}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-2" aria-label="Refresh dashboard data">
-                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">{refreshing ? t("dashboard.refreshing") : t("dashboard.refresh")}</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate("/admin/marketing")} className="gap-2" aria-label="Open marketing dashboard">
-                <Sparkles className="h-4 w-4" /> <span className="hidden sm:inline">{t("dashboard.marketing")}</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2" aria-label="Log out">
-                <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">{t("dashboard.logout")}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
+      <div id="main-content">
 
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6" aria-live="polite" aria-atomic="false">
+        <div className="px-4 md:px-6 py-6 space-y-6" aria-live="polite" aria-atomic="false">
           {leadsError && (
             <div role="alert" className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               <span className="mt-0.5 shrink-0">⚠️</span>
@@ -1264,7 +1227,7 @@ const AdminDashboard = () => {
               <div className="flex items-center gap-2 px-4 py-2 border-b border-amber-400/30">
                 <Bell className="h-4 w-4 text-amber-600 animate-pulse" />
                 <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">
-                  Action needed (1)
+                  Action needed ({actionableEnrollments})
                 </span>
               </div>
               <div className="divide-y divide-amber-400/20">
