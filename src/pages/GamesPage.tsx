@@ -40,7 +40,36 @@ const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGam
 const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
 const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
 
-const FREE_GAME_IDS = ["match", "hangul"];
+/**
+ * The games a signed-out visitor can play. THE ONLY SOURCE OF TRUTH for that.
+ *
+ * Raised from 2 to 10 deliberately: 102 profiles exist and 66 of them (65%)
+ * have never earned a single XP point, against 70 game plays in five months.
+ * With 2 of 20 games open, the signup wall stood in front of the thing people
+ * came for, so "nobody plays" and "nobody can play without signing up" were
+ * indistinguishable. Ten open games separates them.
+ *
+ * `match` must stay in this list. It is the initial `activeGame` (useState
+ * below), so it renders on mount without selectGame ever running — dropping it
+ * would show every signed-out visitor a locked wall as the page loads.
+ *
+ * The per-game `free:` flag that used to live in the `games` array is gone.
+ * It never gated play — it only drove the padlock and the FREE badge — so the
+ * two lists could disagree and ship a card that says FREE and then refuses to
+ * open. `isFree` is derived from this array at the one place it is consumed.
+ */
+const FREE_GAME_IDS = [
+  "match",
+  "hangul",
+  "numbers",
+  "colors",
+  "greetings",
+  "scramble",
+  "kdrama",
+  "time",
+  "flashcard",
+  "romanization",
+];
 
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
@@ -87,9 +116,9 @@ const GamesPage = () => {
     // The default game renders on mount without selectGame ever running, so
     // without this it would be the one game with starts and completions
     // against zero opens — which is worse than missing data, because it is
-    // shaped like data. It is also `match`: one of only two games playable
-    // without an account, and therefore the likeliest first game of the
-    // logged-out visitor this whole step exists to measure.
+    // shaped like data. It is also `match`: the first of the ten games
+    // playable without an account, and therefore the likeliest first game
+    // of the logged-out visitor this whole step exists to measure.
     void logGameEvent({ source_type: "game_opened", cta_label: activeGame });
     // activeGame is read once at mount on purpose — later changes come
     // through selectGame, which logs its own game_opened.
@@ -107,26 +136,26 @@ const GamesPage = () => {
   }, []);
 
   const games = [
-    { id: "match", title: t("games.matchTitle"), description: t("games.matchDesc"), icon: Layers, emoji: "🃏", difficulty: t("games.beginner"), free: true },
-    { id: "hangul", title: t("games.hangulTitle"), description: t("games.hangulDesc"), icon: Brain, emoji: "⚡", difficulty: t("games.beginner"), free: true },
-    { id: "sentence", title: t("games.sentenceTitle"), description: t("games.sentenceDesc"), icon: PenLine, emoji: "🧩", difficulty: t("games.beginner"), free: false },
-    { id: "numbers", title: t("games.numbersTitle"), description: t("games.numbersDesc"), icon: Hash, emoji: "🔢", difficulty: t("games.beginner"), free: false },
-    { id: "colors", title: t("games.colorsTitle"), description: t("games.colorsDesc"), icon: Palette, emoji: "🎨", difficulty: t("games.beginner"), free: false },
-    { id: "verbs", title: t("games.verbsTitle"), description: t("games.verbsDesc"), icon: BookOpen, emoji: "📝", difficulty: t("games.intermediate"), free: false },
-    { id: "greetings", title: t("games.greetingsTitle"), description: t("games.greetingsDesc"), icon: MessageCircle, emoji: "👋", difficulty: t("games.beginner"), free: false },
-    { id: "opposites", title: t("games.oppositesTitle"), description: t("games.oppositesDesc"), icon: ArrowLeftRight, emoji: "↔️", difficulty: t("games.intermediate"), free: false },
-    { id: "fillblank", title: t("games.fillblankTitle"), description: t("games.fillblankDesc"), icon: PenLine, emoji: "✏️", difficulty: t("games.intermediate"), free: false },
-    { id: "scramble", title: t("games.scrambleTitle"), description: t("games.scrambleDesc"), icon: Shuffle, emoji: "🔀", difficulty: t("games.beginner"), free: false },
-    { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate"), free: false },
-    { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner"), free: false },
-    { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner"), free: false },
-    { id: "typekorean", title: t("games.typekoreanTitle"), description: t("games.typekoreanDesc"), icon: Keyboard, emoji: "⌨️", difficulty: t("games.intermediate"), free: false },
-    { id: "romanization", title: t("games.romanizationTitle"), description: t("games.romanizationDesc"), icon: Volume2, emoji: "🔤", difficulty: t("games.beginner"), free: false },
-    { id: "flashcard", title: t("games.flashcardTitle"), description: t("games.flashcardDesc"), icon: CreditCard, emoji: "🃏", difficulty: t("games.beginner"), free: false },
-    { id: "speedread", title: t("games.speedreadTitle"), description: t("games.speedreadDesc"), icon: ZapIcon, emoji: "⚡", difficulty: t("games.intermediate"), free: false },
-    { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner"), free: false },
-    { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate"), free: false },
-    { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner"), free: false },
+    { id: "match", title: t("games.matchTitle"), description: t("games.matchDesc"), icon: Layers, emoji: "🃏", difficulty: t("games.beginner") },
+    { id: "hangul", title: t("games.hangulTitle"), description: t("games.hangulDesc"), icon: Brain, emoji: "⚡", difficulty: t("games.beginner") },
+    { id: "sentence", title: t("games.sentenceTitle"), description: t("games.sentenceDesc"), icon: PenLine, emoji: "🧩", difficulty: t("games.beginner") },
+    { id: "numbers", title: t("games.numbersTitle"), description: t("games.numbersDesc"), icon: Hash, emoji: "🔢", difficulty: t("games.beginner") },
+    { id: "colors", title: t("games.colorsTitle"), description: t("games.colorsDesc"), icon: Palette, emoji: "🎨", difficulty: t("games.beginner") },
+    { id: "verbs", title: t("games.verbsTitle"), description: t("games.verbsDesc"), icon: BookOpen, emoji: "📝", difficulty: t("games.intermediate") },
+    { id: "greetings", title: t("games.greetingsTitle"), description: t("games.greetingsDesc"), icon: MessageCircle, emoji: "👋", difficulty: t("games.beginner") },
+    { id: "opposites", title: t("games.oppositesTitle"), description: t("games.oppositesDesc"), icon: ArrowLeftRight, emoji: "↔️", difficulty: t("games.intermediate") },
+    { id: "fillblank", title: t("games.fillblankTitle"), description: t("games.fillblankDesc"), icon: PenLine, emoji: "✏️", difficulty: t("games.intermediate") },
+    { id: "scramble", title: t("games.scrambleTitle"), description: t("games.scrambleDesc"), icon: Shuffle, emoji: "🔀", difficulty: t("games.beginner") },
+    { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate") },
+    { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner") },
+    { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner") },
+    { id: "typekorean", title: t("games.typekoreanTitle"), description: t("games.typekoreanDesc"), icon: Keyboard, emoji: "⌨️", difficulty: t("games.intermediate") },
+    { id: "romanization", title: t("games.romanizationTitle"), description: t("games.romanizationDesc"), icon: Volume2, emoji: "🔤", difficulty: t("games.beginner") },
+    { id: "flashcard", title: t("games.flashcardTitle"), description: t("games.flashcardDesc"), icon: CreditCard, emoji: "🃏", difficulty: t("games.beginner") },
+    { id: "speedread", title: t("games.speedreadTitle"), description: t("games.speedreadDesc"), icon: ZapIcon, emoji: "⚡", difficulty: t("games.intermediate") },
+    { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner") },
+    { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate") },
+    { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner") },
   ];
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
@@ -215,7 +244,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              {isAr ? "أنشئ حساباً مجانياً لفتح جميع الألعاب الـ 30، حفظ XP الخاص بك، وبناء سلسلتك اليومية." : "Create a free account to unlock all 30 games, save your XP, and build your daily streak."}
+              {isAr ? `أنشئ حساباً مجانياً لفتح جميع الألعاب الـ ${games.length}، حفظ XP الخاص بك، وبناء سلسلتك اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -291,8 +320,8 @@ const GamesPage = () => {
             {/* Guest banner */}
             {!isLoggedIn && (
               <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
-                <span>{isAr ? "🎮 لعبتان مجانيتان · " : "🎮 2 free games · "}</span>
-                <a href="/signup" className="text-amber-700 font-semibold hover:underline">{isAr ? "سجّل لفتح جميع الألعاب الـ 30" : "Sign up to unlock all 30 games"}</a>
+                <span>{isAr ? `🎮 ${FREE_GAME_IDS.length} ألعاب مجانية · ` : `🎮 ${FREE_GAME_IDS.length} free games · `}</span>
+                <a href="/signup" className="text-amber-700 font-semibold hover:underline">{isAr ? `سجّل لفتح جميع الألعاب الـ ${games.length}` : `Sign up to unlock all ${games.length} games`}</a>
               </div>
             )}
 
@@ -324,7 +353,11 @@ const GamesPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
               {games.map((game) => {
                 const isActive = activeGame === game.id;
-                const isLocked = !isLoggedIn && !game.free;
+                // Derived, not stored. The padlock, the FREE badge and the play
+                // gate in renderGame() now all read the same array, so a card
+                // cannot advertise FREE and then refuse to open.
+                const isFree = FREE_GAME_IDS.includes(game.id);
+                const isLocked = !isLoggedIn && !isFree;
                 return (
                   <button key={game.id} onClick={() => selectGame(game.id)} className="text-left">
                     <Card className={`p-4 transition-all duration-200 border-2 cursor-pointer h-full relative ${
@@ -339,7 +372,7 @@ const GamesPage = () => {
                           <Lock className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                       )}
-                      {game.free && !isLoggedIn && (
+                      {isFree && !isLoggedIn && (
                         <div className="absolute top-2 right-2">
                           <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-medium">{isAr ? "مجاني" : "FREE"}</span>
                         </div>
@@ -478,13 +511,13 @@ const GamesPage = () => {
             <div className="text-center space-y-2">
               <div className="text-4xl">🎉</div>
               <h2 className="text-xl font-bold text-foreground">{isAr ? "أحسنت!" : "Nice work!"}</h2>
-              <p className="text-sm text-muted-foreground">{isAr ? "أنشئ حساباً مجانياً لحفظ تقدمك وفتح جميع الألعاب الـ 30." : "Create a free account to save your progress and unlock all 30 games."}</p>
+              <p className="text-sm text-muted-foreground">{isAr ? `أنشئ حساباً مجانياً لحفظ تقدمك وفتح جميع الألعاب الـ ${games.length}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
             </div>
 
             <div className="space-y-2">
               {[
                 { icon: "⭐", text: isAr ? "احفظ XP وسلسلتك" : "Save your XP and streak" },
-                { icon: "🔓", text: isAr ? "افتح جميع الألعاب الكورية الـ 30" : "Unlock all 30 Korean games" },
+                { icon: "🔓", text: isAr ? `افتح جميع الألعاب الكورية الـ ${games.length}` : `Unlock all ${games.length} Korean games` },
                 { icon: "📊", text: isAr ? "تتبع تقدمك في التعلّم" : "Track your learning progress" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">

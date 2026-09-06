@@ -101,13 +101,19 @@ const excerpt = (s, max = 160) => {
 // accepted, and it is why the emit loop asserts the shape of the fragment
 // rather than trusting it.
 //
+// The "ten of the twenty" below is the one number here that can go stale
+// silently: it is static HTML served to crawlers at /games, so nothing in the
+// app corrects it. scripts/lib/games-free-set.test.mjs reads BOTH this file and
+// src/pages/GamesPage.tsx and fails if this sentence disagrees with
+// FREE_GAME_IDS.length or with the length of the games array.
+//
 // The fragment is written into the document verbatim rather than through
 // text()/attr(), because it IS markup — the ampersands below are therefore
 // escaped by hand. Anything interpolated into it later must go through those
 // helpers.
 const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
       <h1>Korean Learning Games</h1>
-      <p>Klovers Korean Learning Games are free, interactive games for practising Korean in your browser — reading Hangul, matching vocabulary, unscrambling words, conjugating verbs and more. There is nothing to download and no sign-up is needed to start: two of the games are open to everyone. Signed-in learners earn XP for every round, build a daily streak and climb the leaderboard.</p>
+      <p>Klovers Korean Learning Games are free, interactive games for practising Korean in your browser — reading Hangul, matching vocabulary, unscrambling words, conjugating verbs and more. There is nothing to download and no sign-up is needed to start: ten of the twenty games are open to everyone. Signed-in learners earn XP for every round, build a daily streak and climb the leaderboard.</p>
       <h2>The games</h2>
       <ul>
         <li><strong>Vocabulary Match</strong> — Flip cards &amp; match Korean words with English meanings</li>
