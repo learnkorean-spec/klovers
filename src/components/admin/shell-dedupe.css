@@ -4,19 +4,21 @@
  *
  * WHAT THIS DOES
  * AdminDashboard.tsx was written before AdminShell existed, so it draws its
- * own chrome: a sticky header (title, subtitle, Refresh, Marketing, Logout)
- * and a row of group pills (Operations / Learning / Content / Config). Now
- * that AdminEntry renders it inside AdminShell, both are duplicates - the
- * header repeats the shell's top bar, the pills repeat the sidebar's grouping.
+ * own chrome and lays itself out as if it were the whole page: a sticky header
+ * (title, subtitle, Refresh, Marketing, Logout), a row of group pills
+ * (Operations / Learning / Content / Config), and a centred max-width content
+ * column. Now that AdminEntry renders it inside AdminShell, the header repeats
+ * the shell's top bar, the pills repeat the sidebar's grouping, and the
+ * centred column leaves a wide gap beside a sidebar that is already there.
  *
  * WHY IT IS CSS AND NOT A DELETION
- * Deleting them means removing two contiguous blocks from AdminDashboard.tsx
- * (its lines 1111-1136 and 1292-1326). That is a small, obvious diff to write
- * by hand, and it is what should happen. It is not what happened here only
- * because the tooling available to this session rewrites a remote file whole
- * rather than patching it, and re-emitting 1,872 lines risks a silent change
- * somewhere else in the file that would still typecheck and still pass CI.
- * Suppressing from the outside risks nothing in that file at all.
+ * Fixing this properly means editing AdminDashboard.tsx - removing its lines
+ * 1111-1136 and 1292-1326 and relaxing the container at line 1138. That is a
+ * small, obvious diff, and it is what should happen. It is not what happened
+ * here only because the tooling available to this session rewrites a remote
+ * file whole rather than patching it, and re-emitting 1,872 lines risks a
+ * silent change somewhere else in the file that would still typecheck and
+ * still pass CI. Overriding from the outside risks nothing in that file.
  *
  * WHY THESE SELECTORS
  * Both anchor on ids that AdminDashboard sets deliberately - #main-content on
@@ -30,7 +32,7 @@
  */
 
 /* The dashboard's own sticky header: the shell's top bar already carries
-   search, notifications, refresh and sign-out. */
+   search, refresh, notifications and sign-out. */
 .admin-shell #main-content > div.sticky:first-of-type {
   display: none;
 }
@@ -42,9 +44,22 @@
   background: transparent;
 }
 
+/* The content container is `max-w-7xl mx-auto` — a centred 1,280px column,
+   which is right for a full-width page and wrong beside a 248px sidebar. Let
+   it fill the shell's column; its own px-4/md:px-6 padding still holds the
+   content off both edges.
+
+   :last-of-type, not :last-child — the header above is hidden but still in
+   the tree, so it is still the first div. This matches the second one. */
+.admin-shell #main-content > div:last-of-type {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 /* The Operations / Learning / Content / Config pill row: the sidebar groups
    the same screens, permanently and without a click. The tab row underneath
-   it stays - that is the actual screen switcher. */
+   it stays — that is the actual screen switcher. */
 .admin-shell #admin-tabs-root > div > div:first-child {
   display: none;
 }
