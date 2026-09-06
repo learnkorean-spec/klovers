@@ -90,6 +90,13 @@ const GamesPage = () => {
   const isAr = language === "ar";
   const { toast } = useToast();
 
+  // "Top Players" names a board that has players on it. A signed-out visitor
+  // is now shown an invitation rather than a board, so for them the heading
+  // names the feature instead of claiming an occupied ranking.
+  const leaderboardHeading = isLoggedIn
+    ? (isAr ? "أفضل اللاعبين" : "Top Players")
+    : (isAr ? "الترتيب" : "Leaderboard");
+
   useEffect(() => {
     if (newBadges.length > 0) {
       newBadges.forEach(badgeKey => {
@@ -402,21 +409,35 @@ const GamesPage = () => {
           </div>
         </section>
 
-        {/* Leaderboard — real data for logged-in, teaser for guests */}
+        {/* Leaderboard — the real board for signed-in students, an invitation for
+            guests.
+
+            Guests used to be shown five invented people with invented XP
+            totals behind a gradient fade, as though a busy board were being
+            previewed. No such players existed: real activity is 70 game plays
+            across five months and 4 students active in the last 30 days.
+            Because the rows were static they never changed between visits,
+            which is also how a visitor would work it out. Opening ten games to
+            guests raised the number of people seeing it, so it is gone rather
+            than deferred.
+
+            Nothing replaces it with a different number. There is no honest
+            "N players" to show at this volume, and the empty state does not
+            need one to ask for a signup. */}
         <section className="py-8 px-4 bg-muted/20 border-t border-border">
           <div className="max-w-md mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-500" /> {isAr ? "أفضل اللاعبين" : "Top Players"}
+                <Trophy className="h-4 w-4 text-amber-500" /> {leaderboardHeading}
               </h2>
               {!isLoggedIn && (
                 <a href="/signup" className="text-xs text-amber-700 font-semibold hover:underline">{isAr ? "سجّل للانضمام ←" : "Sign up to join →"}</a>
               )}
             </div>
-            <div className={`relative rounded-2xl overflow-hidden border border-border bg-card ${!isLoggedIn ? "max-h-44" : ""}`}>
-              <div className="divide-y divide-border">
-                {isLoggedIn ? (
-                  lbLoading ? (
+            <div className="rounded-2xl overflow-hidden border border-border bg-card">
+              {isLoggedIn ? (
+                <div className="divide-y divide-border">
+                  {lbLoading ? (
                     <div className="py-8 text-center text-sm text-muted-foreground">{isAr ? "جارٍ تحميل الترتيب..." : "Loading leaderboard…"}</div>
                   ) : xpLeaderboard.length === 0 ? (
                     <div className="py-8 text-center text-sm text-muted-foreground">{isAr ? "لا توجد بيانات بعد. العب لكسب XP!" : "No data yet. Play games to earn XP!"}</div>
@@ -436,37 +457,22 @@ const GamesPage = () => {
                         </div>
                       );
                     })
-                  )
-                ) : (
-                  [
-                    { rank: 1, name: "Sara M.", xp: 1840, emoji: "🥇" },
-                    { rank: 2, name: "Ahmed K.", xp: 1620, emoji: "🥈" },
-                    { rank: 3, name: "Yuki T.", xp: 1380, emoji: "🥉" },
-                    { rank: 4, name: "Lin W.", xp: 1150, emoji: "4️⃣" },
-                    { rank: 5, name: "Omar F.", xp: 980, emoji: "5️⃣" },
-                  ].map((p) => (
-                    <div key={p.rank} className="flex items-center gap-3 px-4 py-2.5">
-                      <span className="text-base w-6 text-center">{p.emoji}</span>
-                      <span className="flex-1 text-sm font-medium text-foreground">{p.name}</span>
-                      <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full">
-                        {p.xp.toLocaleString()} XP
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-              {!isLoggedIn && (
-                <>
-                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-3">
-                    <a
-                      href="/signup"
-                      className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md border border-black/15"
-                    >
-                      {isAr ? "🏆 سجّل لرؤية ترتيبك" : "🏆 Sign up to see your rank"}
-                    </a>
-                  </div>
-                </>
+                  )}
+                </div>
+              ) : (
+                <div className="py-8 px-6 flex flex-col items-center gap-3 text-center">
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    {isAr
+                      ? "سجّل عشان تبدأ تجمع نقط وتدخل الترتيب."
+                      : "Sign up to start earning XP and take your place on the leaderboard."}
+                  </p>
+                  <a
+                    href="/signup"
+                    className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md border border-black/15"
+                  >
+                    {isAr ? "🏆 سجّل لرؤية ترتيبك" : "🏆 Sign up to see your rank"}
+                  </a>
+                </div>
               )}
             </div>
           </div>
