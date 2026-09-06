@@ -75,6 +75,33 @@ export const escapeText = (s) =>
 export const escapeAttr = (s) => escapeText(s).replace(/"/g, "&quot;");
 
 /**
+ * The exact inverse of `escapeText`, and only that.
+ *
+ * Needed because renderInline escapes the whole line before it looks for
+ * inline markup, so anything it captures out of that line — a link target, in
+ * practice — arrives already escaped and must be decoded before it can be
+ * re-encoded for a different context. Without this, `?a=1&b=2` was emitted as
+ * `?a=1&amp;amp;b=2`, which a browser resolves to a URL containing a literal
+ * `&amp;`.
+ *
+ * ORDER IS LOAD-BEARING: `&lt;` and `&gt;` are decoded BEFORE `&amp;`. The
+ * other order takes a source document's literal `&amp;lt;`, turns the `&amp;`
+ * into `&`, and then reads the resulting `&lt;` as an escape it just created,
+ * yielding `<` — a character the author never wrote, and a way back to raw
+ * markup. Decoding the longer, more specific entities first cannot do that.
+ *
+ * Deliberately does NOT decode `&quot;` or numeric entities: escapeText never
+ * produces them, so decoding them here would stop being an inverse and start
+ * being an HTML-entity parser, which is exactly the thing that turns a
+ * whitelist into a bypass.
+ */
+export const unescapeText = (s) =>
+  String(s ?? "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+
+/**
  * Link targets we are willing to emit as a live anchor: absolute http(s),
  * root-relative paths, in-page anchors and mailto. Protocol-relative "//host"
  * is excluded on purpose — it reads as a path but is not one.
@@ -96,11 +123,21 @@ export function renderInline(raw) {
   let s = escapeText(raw);
 
   // [label](target)
-  s = s.replace(/\[([^\]\n]*)\]\(([^)\s]+)\)/g, (whole, label, href) =>
-    isSafeUrl(href)
-      ? `<a href="${escapeAttr(href)}">${label}</a>`
-      : label // unsafe scheme: keep the words, drop the link
-  );
+  //
+  // `href` is captured out of an ALREADY-ESCAPED string, so it has to be
+  // decoded before being re-encoded as an attribute — otherwise a target of
+  // `?a=1&b=2` ends up as `?a=1&amp;amp;b=2`, a URL containing a literal
+  // `&amp;` that 404s. The label needs no such treatment: it is already
+  // escaped and is going straight back into a text position.
+  //
+  // isSafeUrl runs on the decoded value, so the check is made against the URL
+  // a browser will actually resolve rather than against its escaped spelling.
+  s = s.replace(/\[([^\]\n]*)\]\(([^)\s]+)\)/g, (whole, label, href) => {
+    const target = unescapeText(href);
+    return isSafeUrl(target)
+      ? `<a href="${escapeAttr(target)}">${label}</a>`
+      : label; // unsafe scheme: keep the words, drop the link
+  });
 
   s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
   s = s.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
