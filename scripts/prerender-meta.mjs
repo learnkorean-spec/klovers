@@ -66,8 +66,70 @@ const excerpt = (s, max = 160) => {
   return `${cut.slice(0, cut.lastIndexOf(" ")) || cut}…`;
 };
 
+// ── Hand-written body copy for marketing routes ─────────────────────────────
+//
+// A marketing route's prerendered <body> is empty apart from the mount point:
+// the emit loop copies index.html, and only /blog and the article routes write
+// anything inside #root. /games is the case worth fixing by hand. It is the
+// best-converting page on the site in Search Console — 495 impressions, 25
+// clicks, a 5% CTR, the highest of any URL — and it still averages position
+// 16.2, which is what a page with a good title and no crawlable text looks
+// like. A crawler that does not run JavaScript has been seeing a correct <head>
+// attached to a blank document.
+//
+// The game names and one-line descriptions below are DUPLICATED from the
+// `games` array in src/pages/GamesPage.tsx and the English `games.*Title` /
+// `games.*Desc` strings in src/i18n/translations.ts. The duplication is
+// deliberate and must not be replaced with an import. This script runs under
+// plain node after `vite build`; importing from src/ would drag TSX, the "@/"
+// path alias, the i18n runtime and React into a build step whose only job is to
+// emit static HTML, and would make a prerender that currently cannot fail
+// depend on the client bundle compiling. English only, for the same reason:
+// there is no language context here, and the document declares itself English.
+//
+// The cost of that choice is that this copy can drift from the app. That is
+// accepted, and it is why the emit loop asserts the shape of the fragment
+// rather than trusting it.
+//
+// The fragment is written into the document verbatim rather than through
+// text()/attr(), because it IS markup — the ampersands below are therefore
+// escaped by hand. Anything interpolated into it later must go through those
+// helpers.
+const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
+      <h1>Korean Learning Games</h1>
+      <p>Klovers Korean Learning Games are free, interactive games for practising Korean in your browser — reading Hangul, matching vocabulary, unscrambling words, conjugating verbs and more. There is nothing to download and no sign-up is needed to start: two of the games are open to everyone. Signed-in learners earn XP for every round, build a daily streak and climb the leaderboard.</p>
+      <h2>The games</h2>
+      <ul>
+        <li><strong>Vocabulary Match</strong> — Flip cards &amp; match Korean words with English meanings</li>
+        <li><strong>Hangul Speed Quiz</strong> — Identify Hangul characters against the clock</li>
+        <li><strong>Sentence Builder</strong> — Arrange words to build correct Korean sentences</li>
+        <li><strong>Korean Numbers</strong> — Master native &amp; Sino-Korean number systems</li>
+        <li><strong>Color Match</strong> — Learn Korean color names with visual cues</li>
+        <li><strong>Verb Conjugation</strong> — Practice present, past &amp; future verb forms</li>
+        <li><strong>Greeting Master</strong> — Match Korean greetings to real-life situations</li>
+        <li><strong>Opposite Words</strong> — Find the Korean antonym for each word</li>
+        <li><strong>Particle Pro</strong> — Fill in the correct Korean particles (은/는/이/가)</li>
+        <li><strong>Word Scramble</strong> — Unscramble Korean syllables to form words</li>
+        <li><strong>Counter Words</strong> — Learn Korean counting words (명, 개, 마리...)</li>
+        <li><strong>K-Drama Quiz</strong> — Guess meanings of popular K-Drama phrases</li>
+        <li><strong>Time Teller</strong> — Read Korean time expressions correctly</li>
+        <li><strong>Type Korean</strong> — See the English meaning and type the Korean word</li>
+        <li><strong>Romanization</strong> — Read Korean words and type their pronunciation</li>
+        <li><strong>Flashcards</strong> — Flip cards to test your Korean vocabulary recall</li>
+        <li><strong>Speed Read</strong> — Memorize a Korean word in a flash, then pick its meaning</li>
+        <li><strong>Reading Choice</strong> — See the English and romanization, choose the Korean</li>
+        <li><strong>Sentence Reading</strong> — Read Korean sentences and choose the correct meaning</li>
+        <li><strong>Phonics Practice</strong> — See the romanization and pick the correct Korean spelling</li>
+      </ul>
+      <p>Prefer to read first? The <a href="/blog">Klovers Korean blog</a> covers Hangul, grammar, TOPIK preparation and Korean culture, and the <a href="/courses">Korean courses</a> take you from the alphabet to real conversation with a certified teacher.</p>
+    </div>`;
+
 // ── Marketing routes ────────────────────────────────────────────────────────
 // Hand-maintained on purpose: these are static pages, not database rows.
+//
+// `body` is optional. A route that declares it gets that fragment written into
+// #root by the emit loop; a route that omits it keeps the empty mount point it
+// has always had.
 const MARKETING_ROUTES = [
   {
     path: "/",
@@ -128,6 +190,7 @@ const MARKETING_ROUTES = [
     title: "Korean Learning Games",
     description:
       "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.",
+    body: GAMES_BODY_HTML,
   },
   {
     path: "/free-trial",
@@ -532,6 +595,7 @@ let created = 0;
 let withHreflang = 0;
 let blogIndexLinks = 0;
 let relatedLinksWritten = 0;
+let marketingBodiesWritten = 0;
 let preloadRetargeted = 0;
 let preloadDropped = 0;
 
@@ -632,6 +696,37 @@ for (const route of routes) {
     relatedLinksWritten += relatedSlugs.length;
   }
 
+  // Marketing routes that carry hand-written body copy. Deliberately LAST of
+  // the three body writers and explicitly excluded from the other two: /blog
+  // and the article routes generate their bodies from the database and own the
+  // mount point, so this branch may only claim a #root that neither of them
+  // touched. Without those two conditions a future marketing entry that shared
+  // a path with them would silently overwrite generated content with static
+  // copy.
+  if (route.body && route.path !== "/blog" && !route.post) {
+    // Same spirit as the RELATED_MIN guard above: fail the deploy rather than
+    // ship the defect. The fragment is hand-written and duplicated from the app
+    // (see GAMES_BODY_HTML), so nothing but an assertion stops a later edit from
+    // shipping a page with two competing headings, or with none — and a missing
+    // h1 is precisely the state this whole branch exists to fix.
+    const h1Count = (route.body.match(/<h1[\s>]/g) || []).length;
+    if (h1Count !== 1) {
+      throw new Error(
+        `${route.path} declares a prerendered body with ${h1Count} <h1> element(s) ` +
+          `(expected exactly 1) — fix the fragment referenced from MARKETING_ROUTES`
+      );
+    }
+
+    const before = html;
+    html = html.replace(ROOT_DIV, `<div id="root">${route.body}</div>`);
+    if (html === before) {
+      throw new Error(
+        `could not find ${ROOT_DIV} in dist/index.html — ${route.path} got no prerendered body`
+      );
+    }
+    marketingBodiesWritten++;
+  }
+
   if (route.post && hreflangFor(route.post.slug)) withHreflang++;
 
   const filePath = isHome
@@ -692,6 +787,10 @@ console.log(
 );
 console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.`);
 console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.`);
+console.log(
+  `   ${marketingBodiesWritten} marketing route(s) carry hand-written body copy ` +
+    `(the rest keep an empty #root).`
+);
 console.log(
   `   LCP preload: ${preloadRetargeted} route(s) retargeted to their own hero, ` +
     `${preloadDropped} dropped (no hero to preload). The homepage keeps its own.`
