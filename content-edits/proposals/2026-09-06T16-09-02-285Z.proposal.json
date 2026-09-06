@@ -1,0 +1,30 @@
+{
+  "batchId": "2026-09-06T16-09-02-285Z",
+  "createdAt": "2026-09-06T16:09:02.285Z",
+  "source": "scripts/proposals/glossary-ar-arabic-terms.mjs",
+  "description": "Rewrite the title and description of korean-idol-fandom-glossary-ar so they are written in the script its searchers actually use. The page takes 380 impressions at average position 7.94 and ZERO clicks — its English twin takes 5.71% CTR from a worse position (12.03) — while ranking for Arabic-script queries («معنى كلمة بايس في الكيبوب», «معنى بايس», «ما معنى البايس في الكيبوب», «ما معنى ماكني في الكيبوب») against a title that spells those same terms in Latin as Bias, Maknae and Comeback. No query word can be bolded in the result and an Arabic reader sees Latin text where the answer should be. The new title leads with معنى and names the three searched terms in Arabic; the new description opens in the question form the queries use and carries both spellings of ماكني/ماكناي so the snippet matches the search while staying consistent with the article body. One row, two columns. slug, keywords and content untouched, so the URL does not move and no redirect is needed. All 100 published Arabic rows were checked: six have Latin in the title and four of those are TOPIK, which is correct — this is the only genuine instance.",
+  "editCount": 2,
+  "staleCount": 0,
+  "edits": [
+    {
+      "slug": "korean-idol-fandom-glossary-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "معجم مصطلحات معجبي الكيبوب: Bias و Maknae و Comeback وأكثر",
+      "after": "معنى بايس وماكني وكامباك — قاموس مصطلحات الكيبوب",
+      "reason": "Ranks 7.94 for Arabic-script queries about these exact terms and takes 0 clicks from 380 impressions. The live title spells بايس/ماكني/كامباك in Latin, so none of the query words can be bolded in the result and an Arabic reader sees Latin noise. Leads with معنى, the word the queries themselves lead with.",
+      "confidence": "high",
+      "stale": false
+    },
+    {
+      "slug": "korean-idol-fandom-glossary-ar",
+      "lang": "ar",
+      "column": "description",
+      "before": "افهم مصطلحات عالم معجبي الكيبوب بهذا المعجم الشامل — بايس وماكناي وكامباك وستان وأكثر — مشروحة ببساطة مع الكلمات الكورية الحقيقية وراءها.",
+      "after": "ما معنى بايس وماكني (ماكناي) وكامباك وستان؟ شرح مبسّط لأشهر مصطلحات معجبي الكيبوب بالعربي، مع الكلمات الكورية الأصلية وراء كل مصطلح.",
+      "reason": "Opens with the question form the queries use («ما معنى…؟») instead of an imperative, and carries both spellings of ماكني so the snippet matches the search while staying correct against the article body.",
+      "confidence": "high",
+      "stale": false
+    }
+  ]
+}
