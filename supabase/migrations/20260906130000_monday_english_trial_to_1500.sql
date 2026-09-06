@@ -37,6 +37,27 @@
 -- separately by hand. Moving a calendar event does not change its Meet link,
 -- so the link stored on this row stays correct either way.
 --
+-- WHY THIS FILE FAILED ONCE, AND WHAT CHANGED
+-- -------------------------------------------
+-- Apply Migrations #138 aborted this file with:
+--
+--   ERROR:  syntax error at or near ">"
+--
+-- The verification block below declared a variable called `overlaps`.
+-- OVERLAPS is a type_func_name keyword in Postgres - the period-comparison
+-- operator, `(a, b) OVERLAPS (c, d)` - so a bare `overlaps` is parsed as that
+-- operator, the `>` in `IF overlaps > 0` is left with nothing on its left,
+-- and the block never compiles. It is now v_overlaps.
+--
+-- An earlier comment here blamed make_interval's named-argument arrow. That
+-- was wrong, and it is corrected below rather than left to mislead the next
+-- person: the arrow is fine inside a DO block. 20260904050000 hit this same
+-- keyword and only applied once it was renamed too.
+--
+-- The failure was clean: this file manages its own transaction, so the move
+-- it had already made was rolled back with it. Confirmed on production - the
+-- slot was still 16:00 and this version was not recorded.
+--
 -- ROLLBACK
 -- --------
 --   update public.trial_slots set start_time = '16:00'
@@ -110,14 +131,15 @@ BEGIN
     v_old, v_new, v_date, v_moved;
 END $$;
 
--- Nothing may now overlap a paid cohort. Multiplication by an interval
--- literal rather than make_interval's named-argument form: PL/pgSQL's
--- expression scanner splits that arrow and the parse dies on it (see #244).
+-- Nothing may now overlap a paid cohort.
+--
+-- v_overlaps, not overlaps: see the header. OVERLAPS is a Postgres keyword and
+-- a variable of that name makes this whole block unparseable.
 DO $$
 DECLARE
-  overlaps int;
+  v_overlaps int;
 BEGIN
-  SELECT count(*) INTO overlaps
+  SELECT count(*) INTO v_overlaps
     FROM public.trial_slots ts
     JOIN public.schedule_packages sp
       ON sp.is_active
@@ -127,8 +149,8 @@ BEGIN
      AND ((ts.start_time)::time + (ts.duration_min * interval '1 minute')) > sp.start_time
    WHERE ts.is_active;
 
-  IF overlaps > 0 THEN
-    RAISE EXCEPTION '% trial slot(s) overlap a paid cohort on the same day', overlaps;
+  IF v_overlaps > 0 THEN
+    RAISE EXCEPTION '% trial slot(s) overlap a paid cohort on the same day', v_overlaps;
   END IF;
 
   RAISE NOTICE 'No active trial slot overlaps a paid cohort.';
