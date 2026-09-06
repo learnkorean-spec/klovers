@@ -25,8 +25,10 @@ import SuggestedSlots from './trial/SuggestedSlots';
 import TrialSettingsPanel from './trial/TrialSettings';
 import BroadcastTrackingTable from './trial/BroadcastTrackingTable';
 import TrialInviteGroups from './trial/TrialInviteGroups';
+import WeekTimetable from './trial/WeekTimetable';
 
 type SubTab =
+  | 'week'
   | 'overview'
   | 'upcoming'
   | 'requests'
@@ -36,7 +38,12 @@ type SubTab =
   | 'settings'
   | 'broadcasts';
 
+// The week comes first on purpose. Every other section answers "what
+// happened"; this one answers "can this happen at all" — the question asked
+// before a slot is moved or a cohort opened, and the one that was previously
+// answered from memory across four screens.
 const SUBTABS: { key: SubTab; label: string }[] = [
+  { key: 'week', label: 'The week' },
   { key: 'overview', label: 'Overview' },
   { key: 'upcoming', label: 'Upcoming Trial Slots' },
   { key: 'requests', label: 'Trial Requests / Bookings' },
@@ -126,6 +133,9 @@ export default function TrialClassesTab() {
         </div>
       ) : (
         <>
+          {/* Reads trial_slots, schedule_packages, pkg_groups and
+              teacher_availability_rules itself — none of them reach this file. */}
+          {sub === 'week' && <WeekTimetable />}
           {sub === 'overview' && (
             <div className="space-y-6">
               <OverviewCards metrics={overview} />
