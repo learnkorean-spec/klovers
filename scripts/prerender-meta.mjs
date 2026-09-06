@@ -29,6 +29,7 @@ import { buildFaqJsonLd } from "./lib/faq-parser.mjs";
 import { PRELOAD_PATTERN, preloadTagFor } from "./lib/lcp-preload.mjs";
 import { markdownToHtml } from "./lib/markdown-to-html.mjs";
 import { MARKER_START, MARKER_END } from "./lib/related-links.mjs";
+import { replaceLiteral } from "./lib/replace-literal.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -688,24 +689,35 @@ for (const route of routes) {
 
   let html = isHome ? baseHTML : baseWithoutOrgJsonLd;
 
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${attr(fullTitle)}</title>`);
-  html = html.replace(
+  // Every rewrite below embeds a database value, so every one goes through
+  // replaceLiteral. attr() escapes &, <, > and " — it does NOT escape $, and a
+  // string replacement expands $&, $`, $' and $1-$99. A title containing `$&`
+  // would splice the matched <title>…</title> into itself; a backtick-dollar
+  // would splice the entire document prefix into the tag. See
+  // scripts/lib/replace-literal.mjs.
+  html = replaceLiteral(html, /<title>[^<]*<\/title>/, `<title>${attr(fullTitle)}</title>`);
+  html = replaceLiteral(
+    html,
     /<meta name="description" content="[^"]*"\s*\/?>/,
     `<meta name="description" content="${attr(description)}" />`
   );
-  html = html.replace(
+  html = replaceLiteral(
+    html,
     /<meta property="og:title" content="[^"]*"\s*\/?>/,
     `<meta property="og:title" content="${attr(fullTitle)}" />`
   );
-  html = html.replace(
+  html = replaceLiteral(
+    html,
     /<meta property="og:description" content="[^"]*"\s*\/?>/,
     `<meta property="og:description" content="${attr(description)}" />`
   );
-  html = html.replace(
+  html = replaceLiteral(
+    html,
     /<meta name="twitter:title" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:title" content="${attr(fullTitle)}" />`
   );
-  html = html.replace(
+  html = replaceLiteral(
+    html,
     /<meta name="twitter:description" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:description" content="${attr(description)}" />`
   );
@@ -723,7 +735,10 @@ for (const route of routes) {
       { attr }
     );
     const before = html;
-    html = html.replace(PRELOAD_PATTERN, replacement);
+    // `replacement` carries the article's own hero_image URL, which is a
+    // database value: 82 of the 200 rows already contain "&" (Unsplash query
+    // strings), and nothing stops one containing "$&".
+    html = replaceLiteral(html, PRELOAD_PATTERN, replacement);
     if (html !== before) {
       if (replacement) preloadRetargeted++;
       else preloadDropped++;
@@ -738,7 +753,12 @@ for (const route of routes) {
   html = html.replace(/[ \t]*<meta name="twitter:card" content="[^"]*"\s*\/?>\n?/g, "");
   html = html.replace(/[ \t]*<meta name="twitter:image" content="[^"]*"\s*\/?>\n?/g, "");
 
-  html = html.replace("</head>", `${buildHeadTags(route)}\n  </head>`);
+  // The largest of these by far: buildHeadTags returns the canonical, every OG
+  // and Twitter tag, hreflang, and the BlogPosting / FAQPage / BreadcrumbList
+  // JSON-LD — and the FAQPage carries question and answer text lifted straight
+  // out of the article's markdown, up to 800 characters per answer. That is
+  // the least predictable string in the whole build.
+  html = replaceLiteral(html, "</head>", `${buildHeadTags(route)}\n  </head>`);
 
   // The blog index is the one route whose <body> has to carry real content:
   // it is the only page that can make the articles reachable by a crawler.
@@ -828,7 +848,12 @@ for (const route of routes) {
 
 PRELOAD_PATTERN.lastIndex = 0;
 const shellHTML = baseWithoutOrgJsonLd
-  .replace(/<title>[^<]*<\/title>/, `<title>${SITE_NAME}</title>`)
+  // SITE_NAME is a module constant containing no "$", so this is safe today —
+  // but "safe because a constant happens not to contain a character" is a fact
+  // that changes silently. The arrow is the same mechanism replaceLiteral
+  // wraps; it is written inline here only because this is a method chain.
+  // Every other replacement in this chain is a pure literal and needs nothing.
+  .replace(/<title>[^<]*<\/title>/, () => `<title>${SITE_NAME}</title>`)
   .replace(
     /<meta name="description" content="[^"]*"\s*\/?>/,
     `<meta name="description" content="Klovers Korean Lovers Academy." />`
