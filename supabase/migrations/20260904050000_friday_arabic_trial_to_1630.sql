@@ -50,6 +50,27 @@
 -- separately, by hand, at the same time. Moving a calendar event does not
 -- change its Meet link, so the link stored in this row stays correct either
 -- way.
+--
+-- WHY THIS FILE FAILED ONCE, AND WHAT CHANGED
+-- -------------------------------------------
+-- Apply Migrations #125 aborted this file with:
+--
+--   ERROR:  syntax error at or near ">"
+--   LINE 15:   IF overlaps > 0 THEN
+--
+-- The verification block below declared a variable called `overlaps`.
+-- OVERLAPS is a type_func_name keyword in Postgres - the period-comparison
+-- operator, `(a, b) OVERLAPS (c, d)` - so a bare `overlaps` is parsed as that
+-- operator and the IF never reaches its comparison. It is now v_overlaps, the
+-- same prefix every variable in the first block already uses. Nothing else in
+-- this file changed.
+--
+-- The failure was clean: the file manages its own transaction, so the move it
+-- had already made was rolled back with it. Confirmed on production
+-- afterwards - the slot was still 15:00 and this version was not recorded in
+-- schema_migrations. Worth knowing because the log shows the NOTICE saying the
+-- move happened; that NOTICE is printed inside the transaction that then
+-- aborted.
 
 BEGIN;
 
@@ -123,11 +144,14 @@ BEGIN
 END $$;
 
 -- Prove Friday no longer double-books, from the two tables that decide it.
+--
+-- v_overlaps, not overlaps: see the header. OVERLAPS is a Postgres keyword and
+-- a variable of that name makes this whole block unparseable.
 DO $$
 DECLARE
-  overlaps int;
+  v_overlaps int;
 BEGIN
-  SELECT count(*) INTO overlaps
+  SELECT count(*) INTO v_overlaps
     FROM public.trial_slots ts
     JOIN public.schedule_packages sp
       ON sp.is_active
@@ -137,8 +161,8 @@ BEGIN
      AND ((ts.start_time)::time + make_interval(mins => ts.duration_min)) > sp.start_time
    WHERE ts.is_active;
 
-  IF overlaps > 0 THEN
-    RAISE EXCEPTION '% trial slot(s) still overlap a paid cohort on the same day', overlaps;
+  IF v_overlaps > 0 THEN
+    RAISE EXCEPTION '% trial slot(s) still overlap a paid cohort on the same day', v_overlaps;
   END IF;
 
   RAISE NOTICE 'No active trial slot overlaps a paid cohort any more.';
