@@ -133,8 +133,22 @@ BEGIN
       ON sp.is_active
      AND sp.day_of_week = ts.day_of_week
      AND sp.timezone    = ts.timezone
-     AND (ts.start_time)::time <  (sp.start_time + make_interval(mins => sp.duration_min))
-     AND ((ts.start_time)::time + make_interval(mins => ts.duration_min)) > sp.start_time
+     -- Multiplied by an interval literal rather than make_interval's named
+     -- argument form.
+     --
+     -- This is the whole reason 20260904050000 failed three times (runs #123,
+     -- #124, #125 on 2026-09-06) with `syntax error at or near ">"` while
+     -- every guard inside it was satisfied by the live data. The named
+     -- argument arrow is fine in plain SQL - the identical join runs there and
+     -- returns the expected count - but this query lives inside a DO block,
+     -- and PL/pgSQL's own expression scanner splits that arrow into an equals
+     -- and a greater-than. The greater-than then has nothing on its left, and
+     -- the parse dies on it.
+     --
+     -- This is the same arithmetic with no arrow in it, so it parses the same
+     -- way in both places.
+     AND (ts.start_time)::time <  (sp.start_time + (sp.duration_min * interval '1 minute'))
+     AND ((ts.start_time)::time + (ts.duration_min * interval '1 minute')) > sp.start_time
    WHERE ts.is_active;
 
   IF overlaps > 0 THEN
