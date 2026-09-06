@@ -50,6 +50,13 @@ export function useLeaderboard(): LeaderboardData {
   const [currentUserStreakRank, setCurrentUserStreakRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Who is asking, and whether we know yet. Tracked as the user id rather than
+  // a boolean on purpose: TOKEN_REFRESHED fires with the same user, and an
+  // identical string bails out of the re-render, so a token refresh does not
+  // restart the fetch.
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authResolved, setAuthResolved] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchLeaderboard = useCallback(async () => {
@@ -81,9 +88,65 @@ export function useLeaderboard(): LeaderboardData {
     debounceRef.current = setTimeout(() => { fetchLeaderboard(); }, 2000);
   }, [fetchLeaderboard]);
 
+  // Every one of the five leaderboard RPCs is `revoke all ... from public,
+  // anon` and granted only to `authenticated`
+  // (supabase/migrations/20260830120000_games_leaderboard_rpcs.sql), so a
+  // signed-out visitor could never be handed a board. What actually happened
+  // was five permission errors per guest page load, collected by
+  // fetchLeaderboardBundle's allSettled and logged as
+  // "Leaderboard: partial failure" — five failing round-trips to render
+  // nothing. /games mounted this hook for guests only to sit beside a
+  // hardcoded board; with that board gone, nothing on the guest path wants
+  // this data at all.
   useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      setUserId(session?.user?.id ?? null);
+      setAuthResolved(true);
+    });
+
+    // Signing in and signing out DURING the session both land here, and this
+    // is what keeps the guard from becoming a permanent block: a visitor who
+    // signs in on this same page gets userId set, which re-runs the fetch
+    // effect below. Only setState happens in this callback — calling back into
+    // supabase from inside onAuthStateChange is what deadlocks the client.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserId(session?.user?.id ?? null);
+      setAuthResolved(true);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Wait for the answer before acting on it. Without this, the first render —
+    // where userId is still null only because getSession has not resolved —
+    // is indistinguishable from a guest, and a signed-in student would be
+    // treated as one.
+    if (!authResolved) return;
+
+    if (!userId) {
+      // Definitively a guest. Fetch nothing, and clear anything a previous
+      // session left behind so signing out does not leave the last student's
+      // standings on screen.
+      setXpLeaderboard([]);
+      setStreakLeaderboard([]);
+      setWeeklyLeaderboard([]);
+      setCurrentUserXpRank(null);
+      setCurrentUserStreakRank(null);
+      // `loading` starts true. A guest is not waiting for anything, and a
+      // consumer that renders a spinner while loading would spin forever.
+      setLoading(false);
+      return;
+    }
+
     fetchLeaderboard();
-  }, [fetchLeaderboard]);
+  }, [authResolved, userId, fetchLeaderboard]);
 
   // Realtime — decision recorded rather than left implicit.
   //
@@ -96,6 +159,11 @@ export function useLeaderboard(): LeaderboardData {
   // few times a month. Revisit if activity picks up — swap this for
   // setInterval(fetchLeaderboard, 60_000).
   useEffect(() => {
+    // No channel for guests either. Under own-row RLS a signed-out subscriber
+    // can never be delivered a row, so the socket was held open purely to wait
+    // for events that could not arrive.
+    if (!userId) return;
+
     const channel = supabase
       .channel("leaderboard-student-xp")
       .on(
@@ -109,7 +177,7 @@ export function useLeaderboard(): LeaderboardData {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       supabase.removeChannel(channel);
     };
-  }, [debouncedFetch]);
+  }, [userId, debouncedFetch]);
 
   return {
     xpLeaderboard,
