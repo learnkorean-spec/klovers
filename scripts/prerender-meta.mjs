@@ -27,6 +27,8 @@ import { baseOf, buildRelatedMap, RELATED_MIN } from "./lib/related-posts.mjs";
 import { RETIRED_SLUGS } from "./lib/retired-arabic-slugs.mjs";
 import { buildFaqJsonLd } from "./lib/faq-parser.mjs";
 import { PRELOAD_PATTERN, preloadTagFor } from "./lib/lcp-preload.mjs";
+import { markdownToHtml } from "./lib/markdown-to-html.mjs";
+import { MARKER_START, MARKER_END } from "./lib/related-links.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -395,11 +397,52 @@ function hreflangFor(slug) {
 // where it can be unit tested.
 
 /**
+ * Cut the related-links block out of an article's markdown.
+ *
+ * scripts/proposals/internal-links.mjs appended a delimited "Related Articles"
+ * block to the `content` column of 175 of the 200 published articles, so the
+ * links exist twice over once the body carries rendered content: once in the
+ * prose, once in the <nav> below it. The nav is the copy that stays — it is
+ * built from the scoring in related-posts.mjs and is present on all 200
+ * articles, not 175.
+ *
+ * The markers are imported rather than retyped so this cannot drift from the
+ * script that writes them.
+ */
+function stripRelatedBlock(markdown) {
+  const body = String(markdown ?? "");
+  const start = body.indexOf(MARKER_START);
+  const end = body.indexOf(MARKER_END);
+  if (start === -1 || end === -1 || end < start) return body;
+  return body.slice(0, start) + body.slice(end + MARKER_END.length);
+}
+
+/**
  * The block written into an article page's <body>.
  *
  * Title and description come from the same row that already fills the <head>,
  * so a raw fetch gets a page that says what it is rather than a bare list of
  * links floating on an otherwise blank document.
+ *
+ * The article's own text sits between them and the related nav. Before that,
+ * this function wrote roughly forty words per article — an h1, the meta
+ * description, and the link list — while `post.content`, 1,911 to 11,849
+ * characters of markdown per article, was fetched on the same row and used
+ * only to extract FAQ JSON-LD. Every crawler that does not execute JavaScript
+ * (GPTBot, ClaudeBot, PerplexityBot, Bing's non-JS path, Facebook, WhatsApp)
+ * therefore saw a headline and a snippet where an article was supposed to be.
+ * docs/RENDERING_DECISION_2026-08.md §6 names this the highest-remaining-impact
+ * gap on the site.
+ *
+ * That document costed a headless-browser DOM snapshot (Option A2) as the way
+ * to close it. This is cheaper: the markdown is already in hand at build time,
+ * so it only has to be rendered, which scripts/lib/markdown-to-html.mjs does
+ * in-process with no Chromium, no new dependency, and no per-page browser
+ * boot. It also sidesteps A2's hydration-mismatch risk class entirely — see
+ * the note on createRoot in buildBlogIndexHtml below.
+ *
+ * The h1, the description paragraph, the lang/dir attributes and the nav are
+ * unchanged; this is purely additive.
  */
 function buildArticleBodyHtml(route, relatedSlugs, bySlug) {
   const isAr = route.post.lang === "ar";
@@ -409,9 +452,17 @@ function buildArticleBodyHtml(route, relatedSlugs, bySlug) {
     .map((r) => `          <li><a href="${attr(r.path)}">${text(r.title)}</a></li>`)
     .join("\n");
 
+  // headingFloor: 2 keeps the <h1> above as the page's only one. 67 of the 200
+  // articles open with an `#` heading of their own; those are demoted to <h2>
+  // rather than dropped, because only 24 of the 67 repeat the title verbatim.
+  const article = markdownToHtml(stripRelatedBlock(route.post.content), {
+    headingFloor: 2,
+  });
+
   return `<div id="article-prerendered" lang="${isAr ? "ar" : "en"}" dir="${isAr ? "rtl" : "ltr"}">
       <h1>${text(route.title)}</h1>
       <p>${text(route.description)}</p>
+${article}
       <nav aria-labelledby="related-articles">
         <h2 id="related-articles">${isAr ? "مقالات ذات صلة" : "Related articles"}</h2>
         <ul>
@@ -586,6 +637,33 @@ const baseWithoutOrgJsonLd = baseHTML.replace(
 /** The SPA mount point, as vite emits it. */
 const ROOT_DIV = '<div id="root"></div>';
 
+/**
+ * Write a fragment into the mount point.
+ *
+ * The replacement is passed as a FUNCTION, never as a string, and that is the
+ * whole reason this helper exists. `String.prototype.replace` interprets `$&`,
+ * `` $` ``, `$'` and `$1`-`$99` inside a *string* replacement even when the
+ * pattern is a plain string — so the moment article prose goes through here, a
+ * `$&` in an article would expand to the matched `<div id="root"></div>` and a
+ * `` $` `` would splice the entire <head> into the <body>. Three published
+ * articles already contain `$` next to a digit (app-pricing tables), and the
+ * content column is arbitrary prose that changes without this file changing.
+ *
+ * A function replacement is returned verbatim, with no substitution pass.
+ * Throws rather than returning silently if the mount point is missing: a vite
+ * upgrade that renames or reformats it would otherwise empty every page this
+ * script exists to fill.
+ */
+function writeIntoRoot(html, fragment, routePath, what) {
+  const out = html.replace(ROOT_DIV, () => `<div id="root">${fragment}</div>`);
+  if (out === html) {
+    throw new Error(
+      `could not find ${ROOT_DIV} in dist/index.html — ${routePath} got no ${what}`
+    );
+  }
+  return out;
+}
+
 const { related: relatedMap, inbound: inboundCount } = buildRelatedMap(
   blogRoutes.map((r) => r.post)
 );
@@ -596,6 +674,8 @@ let withHreflang = 0;
 let blogIndexLinks = 0;
 let relatedLinksWritten = 0;
 let marketingBodiesWritten = 0;
+let articleBodiesWritten = 0;
+let articleBodyChars = 0;
 let preloadRetargeted = 0;
 let preloadDropped = 0;
 
@@ -663,16 +743,10 @@ for (const route of routes) {
   // The blog index is the one route whose <body> has to carry real content:
   // it is the only page that can make the articles reachable by a crawler.
   if (route.path === "/blog") {
-    const before = html;
-    html = html.replace(ROOT_DIV, `<div id="root">${buildBlogIndexHtml(blogRoutes)}</div>`);
-    if (html === before) {
-      // A vite upgrade that renames or reformats the mount point would leave
-      // /blog silently empty again, which is the exact regression this change
-      // exists to fix. Fail the build instead of shipping it.
-      throw new Error(
-        `could not find ${ROOT_DIV} in dist/index.html — the blog index links were not written`
-      );
-    }
+    // writeIntoRoot throws if the mount point is missing: a vite upgrade that
+    // renames or reformats it would leave /blog silently empty again, which is
+    // the exact regression this branch exists to fix.
+    html = writeIntoRoot(html, buildBlogIndexHtml(blogRoutes), route.path, "index links");
     blogIndexLinks = blogRoutes.length;
   }
 
@@ -686,14 +760,11 @@ for (const route of routes) {
           `(minimum ${RELATED_MIN}) — it would ship as an orphan`
       );
     }
-    const before = html;
-    html = html.replace(ROOT_DIV, `<div id="root">${buildArticleBodyHtml(route, relatedSlugs, routeBySlug)}</div>`);
-    if (html === before) {
-      throw new Error(
-        `could not find ${ROOT_DIV} in dist/index.html — ${route.path} got no related links`
-      );
-    }
+    const body = buildArticleBodyHtml(route, relatedSlugs, routeBySlug);
+    html = writeIntoRoot(html, body, route.path, "article body");
     relatedLinksWritten += relatedSlugs.length;
+    articleBodiesWritten++;
+    articleBodyChars += body.length;
   }
 
   // Marketing routes that carry hand-written body copy. Deliberately LAST of
@@ -717,13 +788,7 @@ for (const route of routes) {
       );
     }
 
-    const before = html;
-    html = html.replace(ROOT_DIV, `<div id="root">${route.body}</div>`);
-    if (html === before) {
-      throw new Error(
-        `could not find ${ROOT_DIV} in dist/index.html — ${route.path} got no prerendered body`
-      );
-    }
+    html = writeIntoRoot(html, route.body, route.path, "prerendered body");
     marketingBodiesWritten++;
   }
 
@@ -790,6 +855,11 @@ console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.`)
 console.log(
   `   ${marketingBodiesWritten} marketing route(s) carry hand-written body copy ` +
     `(the rest keep an empty #root).`
+);
+console.log(
+  `   ${articleBodiesWritten} article bodies rendered into raw HTML ` +
+    `(${articleBodyChars.toLocaleString("en-US")} characters, ` +
+    `avg ${articleBodiesWritten ? Math.round(articleBodyChars / articleBodiesWritten) : 0} per article).`
 );
 console.log(
   `   LCP preload: ${preloadRetargeted} route(s) retargeted to their own hero, ` +
