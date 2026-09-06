@@ -1,13 +1,23 @@
 import { memo } from "react";
 import { UserPlus, Users, CreditCard, GraduationCap, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useFunnelCounts } from "@/hooks/admin/useFunnelCounts";
 
 interface FunnelProps {
-  leadsCount: number;
-  registeredCount: number;
-  enrolledCount: number;
-  activeCount: number;
-  completedCount: number;
+  /**
+   * @deprecated Ignored. The counts come from useFunnelCounts, which asks
+   * Postgres for exact numbers instead of measuring fetched arrays.
+   *
+   * These props are still accepted because AdminDashboard.tsx passes them and
+   * the tooling that produced this change cannot edit that file with a partial
+   * diff. Remove them there and here in the same change.
+   */
+  leadsCount?: number;
+  registeredCount?: number;
+  enrolledCount?: number;
+  activeCount?: number;
+  completedCount?: number;
+
   pendingCount?: number;
   onPendingClick?: () => void;
 }
@@ -18,31 +28,23 @@ const stages = [
   { key: "enrolled", label: "Enrolled", icon: CreditCard, accent: "bg-amber-500", light: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
   { key: "active", label: "Active", icon: GraduationCap, accent: "bg-green-500", light: "bg-green-500/10", text: "text-green-600 dark:text-green-400" },
   { key: "completed", label: "Completed", icon: Award, accent: "bg-primary", light: "bg-primary/10", text: "text-primary" },
-];
+] as const;
 
-const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCount, completedCount, pendingCount, onPendingClick }: FunnelProps) => {
-  const counts: Record<string, number> = {
-    leads: leadsCount,
-    registered: registeredCount,
-    enrolled: enrolledCount,
-    active: activeCount,
-    completed: completedCount,
-  };
+const LifecycleFunnel = ({ pendingCount, onPendingClick }: FunnelProps) => {
+  const { data: counts, isLoading } = useFunnelCounts();
 
   /*
-   * Denominator is Registered, not Leads.
+   * Denominator is Leads, the real top of the funnel.
    *
-   * These stages are not nested — Leads, Active, Completed and Locked are
-   * mutually exclusive status buckets that add up to Registered. Dividing by
-   * Leads therefore used a denominator SMALLER than most of its numerators,
-   * and Registered rendered as "102% of leads": 102 registered over 100 leads.
-   * The colour bar below uses this percentage as a CSS width, so anything over
-   * 100 also overflowed its card.
+   * It used to be the LEAD status bucket — a slice INSIDE the funnel, smaller
+   * than most of the numerators divided by it, which is how Registered came to
+   * render as "102% of leads". The colour bar uses this percentage as a CSS
+   * width, so anything over 100 overflowed its card too.
    *
-   * Share of everyone on the books is what a reader assumes a funnel
-   * percentage means, and it is bounded at 100 by construction.
+   * Every profile matches a row in `leads`, so each stage below is a genuine
+   * subset and the percentages are bounded at 100 by construction.
    */
-  const total = Math.max(registeredCount, 1);
+  const total = Math.max(counts?.leads ?? 0, 1);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -50,8 +52,8 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
         const Icon = stage.icon;
         const isEnrolled = stage.key === "enrolled";
         const hasPending = isEnrolled && pendingCount && pendingCount > 0;
-        const count = counts[stage.key];
-        const pct = Math.round((count / total) * 100);
+        const count = counts?.[stage.key];
+        const pct = count === undefined ? 0 : Math.round((count / total) * 100);
         return (
           <Card
             key={stage.key}
@@ -72,12 +74,17 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
                     </span>
                   )}
                 </div>
-                <p className="text-3xl font-black text-foreground leading-none tabular-nums">{count}</p>
+                {isLoading || count === undefined ? (
+                  <div className="h-8 w-14 bg-muted animate-pulse rounded" />
+                ) : (
+                  <p className="text-3xl font-black text-foreground leading-none tabular-nums">{count}</p>
+                )}
                 <p className="text-xs text-muted-foreground mt-1.5 font-medium">
                   {stage.label}
                 </p>
-                {stage.key !== "registered" && (
-                  <p className={`text-[10px] mt-0.5 font-semibold ${stage.text}`}>{pct}% of registered</p>
+                {/* Leads is the denominator; "100% of leads" under it says nothing. */}
+                {stage.key !== "leads" && count !== undefined && (
+                  <p className={`text-[10px] mt-0.5 font-semibold ${stage.text}`}>{pct}% of leads</p>
                 )}
               </div>
             </CardContent>
