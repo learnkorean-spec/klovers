@@ -13,8 +13,11 @@
 # production-content-apply environment.
 #
 # Output: a new branch holding the generated proposal .json/.md, plus the same
-# files as a workflow artifact. Open a PR from that branch, read the table in
-# the .md, then dispatch Apply Content Edits (plan, then apply).
+# files as a workflow artifact. THAT BRANCH MUST BE MERGED TO main before Apply
+# Content Edits can see the file - apply reads proposal_path out of a main
+# checkout, and skipping this step cost three failed runs on the batch-2
+# descriptions. Open a PR from the branch, read the before/after table in the
+# .md, merge, then dispatch Apply Content Edits (plan, then apply).
 #
 # See docs/APPLYING_CONTENT_EDITS.md for the rest of the flow.
 
@@ -34,6 +37,7 @@ on:
           - descriptions
           - descriptions-batch2
           - descriptions-batch3
+          - titles-batch4
       per_article:
         description: "internal-links only: how many related links per article (default 4)"
         required: false
@@ -101,6 +105,10 @@ jobs:
               # No parameters: the batch is a hand-curated list in the script.
               node scripts/proposals/descriptions-batch3.mjs | tee gen-output.txt
               ;;
+            titles-batch4)
+              # No parameters: the batch is a hand-curated list in the script.
+              node scripts/proposals/titles-batch4.mjs | tee gen-output.txt
+              ;;
             *)
               echo "::error::unknown generator ${{ inputs.generator }}"; exit 1 ;;
           esac
@@ -127,8 +135,9 @@ jobs:
             echo "**sha256:** \`$checksum\`"
             echo
             echo "Nothing has been written to the database. Next: open a PR from the branch"
-            echo "below, read the before/after table in the .md, then dispatch **Apply Content"
-            echo "Edits** with mode=plan, and only then mode=apply."
+            echo "below and MERGE IT — Apply Content Edits reads this file out of a main"
+            echo "checkout and cannot see it while it sits on the branch. Then dispatch"
+            echo "**Apply Content Edits** with mode=plan, and only then mode=apply."
             echo
             echo '```'
             cat gen-output.txt
@@ -154,7 +163,7 @@ jobs:
           git push origin "$branch"
           {
             echo
-            echo "**Branch:** \`$branch\`"
+            echo "**Branch:** \`$branch\` — merge this to main before running plan or apply."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the proposal as an artifact
