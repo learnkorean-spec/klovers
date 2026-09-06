@@ -4,6 +4,7 @@ import {
   renderInline,
   escapeText,
   escapeAttr,
+  unescapeText,
   isSafeUrl,
 } from "./markdown-to-html.mjs";
 import { MARKER_START, MARKER_END } from "./related-links.mjs";
@@ -150,6 +151,104 @@ describe("safety", () => {
 
   it("drops HTML comments entirely", () => {
     expect(markdownToHtml("<!-- hidden -->\n\ntext")).toBe("<p>text</p>");
+  });
+});
+
+describe("unescapeText", () => {
+  it("decodes the three entities escapeText produces", () => {
+    expect(unescapeText("a &amp; b")).toBe("a & b");
+    expect(unescapeText("a &lt; b")).toBe("a < b");
+    expect(unescapeText("a &gt; b")).toBe("a > b");
+  });
+
+  it("decodes &lt; and &gt; before &amp;, so an escaped entity does not become a tag character", () => {
+    // The trap: decoding &amp; first turns "&amp;lt;" into "&lt;", which the
+    // next pass would then read as an escape it had just manufactured and
+    // decode to "<" — a character the author never wrote, and a route back to
+    // raw markup. Decoding the longer entities first cannot do that.
+    expect(unescapeText("&amp;lt;")).toBe("&lt;");
+    expect(unescapeText("&amp;gt;")).toBe("&gt;");
+    expect(unescapeText("&amp;amp;")).toBe("&amp;");
+  });
+
+  it("is the exact inverse of escapeText", () => {
+    for (const s of ["a & b", "a < b > c", "&amp;", "&lt;", "&amp;lt;", "x&amp;lt;y", "plain"]) {
+      expect(unescapeText(escapeText(s))).toBe(s);
+    }
+  });
+
+  it("leaves entities escapeText never produces alone", () => {
+    // Decoding &quot; or numeric entities here would stop this being an
+    // inverse and start it being an HTML parser.
+    expect(unescapeText("&quot;")).toBe("&quot;");
+    expect(unescapeText("&#106;")).toBe("&#106;");
+  });
+
+  it("returns an empty string for null and undefined", () => {
+    expect(unescapeText(null)).toBe("");
+    expect(unescapeText(undefined)).toBe("");
+  });
+});
+
+describe("link targets are escaped exactly once", () => {
+  // renderInline escapes the whole line before it looks for inline markup, so
+  // a captured href arrives already escaped. Re-escaping it as an attribute
+  // without decoding first emitted "?a=1&amp;amp;b=2" — a URL containing a
+  // literal "&amp;", which 404s. No link in the corpus contains "&" today;
+  // the content column is arbitrary prose that changes without this file
+  // changing.
+  it("emits one level of escaping for a query string with an ampersand", () => {
+    const out = markdownToHtml("see [search](/blog?q=korean&lang=ar) now");
+    expect(out).toContain('href="/blog?q=korean&amp;lang=ar"');
+    expect(out).not.toContain("&amp;amp;");
+  });
+
+  it("handles several ampersands in one target", () => {
+    const out = markdownToHtml("[x](/s?q=a&b=c&d=e)");
+    expect(out).toContain('href="/s?q=a&amp;b=c&amp;d=e"');
+    expect(out).not.toContain("&amp;amp;");
+  });
+
+  it("handles an ampersand in an absolute target", () => {
+    const out = markdownToHtml("[k](https://kloversegy.com/blog?x=1&y=2)");
+    expect(out).toContain('href="https://kloversegy.com/blog?x=1&amp;y=2"');
+    expect(out).not.toContain("&amp;amp;");
+  });
+
+  it("round-trips a target where the author typed the entity", () => {
+    // The author wrote the five characters "&amp;". Representing those five
+    // characters inside an attribute is "&amp;amp;" — one decoding fewer
+    // would silently change what the author wrote.
+    const out = markdownToHtml("[x](/a?b=1&amp;c=2)");
+    expect(out).toContain('href="/a?b=1&amp;amp;c=2"');
+    expect(out).not.toContain("&amp;amp;amp;");
+  });
+
+  it("leaves a target with no ampersand untouched", () => {
+    expect(markdownToHtml("[courses](/courses)")).toBe(
+      '<p><a href="/courses">courses</a></p>'
+    );
+  });
+
+  it("still refuses an unsafe scheme that arrives with an ampersand in it", () => {
+    // The safety check runs on the DECODED target, so it tests the URL a
+    // browser would resolve rather than its escaped spelling.
+    const out = markdownToHtml("[click](javascript:x&y=1)");
+    expect(out).toBe("<p>click</p>");
+    expect(out).not.toContain("javascript");
+    expect(out).not.toContain("<a ");
+  });
+
+  it("still refuses a protocol-relative target containing an ampersand", () => {
+    const out = markdownToHtml("[go](//evil.example/x?a=1&b=2)");
+    expect(out).toContain("go");
+    expect(out).not.toContain("<a ");
+  });
+
+  it("escapes a double quote in a target rather than breaking out of the attribute", () => {
+    const out = renderInline('[x](/a?q="z")');
+    expect(out).not.toMatch(/href="[^"]*"[^>]*"/);
+    expect(out).toContain("&quot;");
   });
 });
 
