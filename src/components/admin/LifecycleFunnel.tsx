@@ -28,16 +28,30 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
     active: activeCount,
     completed: completedCount,
   };
-  const total = Math.max(leadsCount, 1);
+
+  /*
+   * Denominator is Registered, not Leads.
+   *
+   * These stages are not nested — Leads, Active, Completed and Locked are
+   * mutually exclusive status buckets that add up to Registered. Dividing by
+   * Leads therefore used a denominator SMALLER than most of its numerators,
+   * and Registered rendered as "102% of leads": 102 registered over 100 leads.
+   * The colour bar below uses this percentage as a CSS width, so anything over
+   * 100 also overflowed its card.
+   *
+   * Share of everyone on the books is what a reader assumes a funnel
+   * percentage means, and it is bounded at 100 by construction.
+   */
+  const total = Math.max(registeredCount, 1);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-      {stages.map((stage, idx) => {
+      {stages.map((stage) => {
         const Icon = stage.icon;
         const isEnrolled = stage.key === "enrolled";
         const hasPending = isEnrolled && pendingCount && pendingCount > 0;
         const count = counts[stage.key];
-        const pct = idx === 0 ? 100 : Math.round((count / total) * 100);
+        const pct = Math.round((count / total) * 100);
         return (
           <Card
             key={stage.key}
@@ -62,8 +76,8 @@ const LifecycleFunnel = ({ leadsCount, registeredCount, enrolledCount, activeCou
                 <p className="text-xs text-muted-foreground mt-1.5 font-medium">
                   {stage.label}
                 </p>
-                {idx > 0 && (
-                  <p className={`text-[10px] mt-0.5 font-semibold ${stage.text}`}>{pct}% of leads</p>
+                {stage.key !== "registered" && (
+                  <p className={`text-[10px] mt-0.5 font-semibold ${stage.text}`}>{pct}% of registered</p>
                 )}
               </div>
             </CardContent>
