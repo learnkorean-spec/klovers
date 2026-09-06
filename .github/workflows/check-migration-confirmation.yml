@@ -1,0 +1,116 @@
+# Tell me WHY the confirmation phrase is being rejected, without revealing it.
+#
+# Apply Migrations refuses to run when the `confirmation` input does not match
+# the MIGRATION_APPLY_CONFIRMATION environment secret. That is correct and
+# stays. What it does not do is say WHY, and nobody - not the person who set
+# the secret, not anyone reading this repo - can read a stored secret back to
+# compare. So a mismatch turns into guessing: retype it, re-dispatch, wait,
+# fail, repeat. That happened three times on 2026-09-05/06 with four
+# migrations sitting pending the whole time.
+#
+# This workflow closes that loop. It runs the SAME comparison the apply job
+# runs, and when it fails it reports which of the known traps applies:
+#
+#   - a trailing newline or space stored in the secret (GitHub does not strip
+#     one, and pressing Enter in the value box puts one there - the single
+#     most likely cause, and completely invisible afterwards)
+#   - whitespace around what you typed into the dispatch box (a copy-paste
+#     almost always carries one)
+#   - a capitalisation difference
+#
+# WHAT IT DELIBERATELY NEVER PRINTS
+# ---------------------------------
+# The secret, any part of it, and its length. Only booleans about the
+# RELATIONSHIP between the two strings. Someone who can dispatch this can
+# already dispatch the apply job, which gives them the same pass/fail signal,
+# so this adds convenience for the person who set the secret - not reach for
+# anyone who did not already have it.
+#
+# It touches nothing. No checkout, no database connection, no SQL, no CLI. It
+# reads two strings and prints booleans. Running it can never change anything.
+#
+# It runs under the production-db-apply environment for one reason only: that
+# is where the secret lives.
+
+name: Check migration confirmation
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "The phrase you would type into Apply Migrations. This tells you whether it matches - and if not, why - without applying anything."
+        required: true
+        default: ""
+        type: string
+
+permissions: {}
+
+jobs:
+  check:
+    name: Does the phrase match?
+    runs-on: ubuntu-latest
+    environment: production-db-apply
+    steps:
+      - name: Compare, and explain a mismatch
+        env:
+          EXPECTED: ${{ secrets.MIGRATION_APPLY_CONFIRMATION }}
+          GOT: ${{ inputs.confirmation }}
+        run: |
+          set -uo pipefail
+
+          say() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1"; }
+
+          if [ -z "${EXPECTED}" ]; then
+            say "## The secret is not set"
+            say ""
+            say "\`MIGRATION_APPLY_CONFIRMATION\` does not exist on the \`production-db-apply\` environment, so Apply Migrations will refuse every apply run."
+            say ""
+            say "Settings -> Environments -> production-db-apply -> Environment secrets -> Add secret."
+            exit 1
+          fi
+
+          if [ "$GOT" = "$EXPECTED" ]; then
+            say "## Match"
+            say ""
+            say "This exact phrase will be accepted. Dispatch **Apply Migrations** with \`mode: apply\` and type it the same way."
+            exit 0
+          fi
+
+          # Same comparison, with one difference removed at a time, so the
+          # report names the single thing that is wrong instead of listing
+          # everything it could be.
+          trim() { printf '%s' "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
+          exp_trim=$(trim "$EXPECTED")
+          got_trim=$(trim "$GOT")
+
+          say "## No match - nothing was applied"
+          say ""
+
+          if [ "$got_trim" = "$exp_trim" ]; then
+            # The characters are right; only surrounding whitespace differs.
+            if [ "$exp_trim" != "$EXPECTED" ]; then
+              say "**The stored secret has a space or newline around it.**"
+              say ""
+              say "This is the usual cause and it is invisible once saved - pressing Enter in the value box, or pasting, stores the extra character with it."
+              say ""
+              say "Fix it once: Settings -> Environments -> production-db-apply -> \`MIGRATION_APPLY_CONFIRMATION\` -> Update. Clear the box, type the phrase, do **not** press Enter, then click Save changes with the mouse."
+            fi
+            if [ "$got_trim" != "$GOT" ]; then
+              say "**What you typed has a space or newline around it.**"
+              say ""
+              say "Re-dispatch and type the phrase by hand rather than pasting it."
+            fi
+            exit 1
+          fi
+
+          if [ "$(lower "$got_trim")" = "$(lower "$exp_trim")" ]; then
+            say "**Only the capitalisation differs.** The comparison is case-sensitive - match the stored phrase exactly."
+            exit 1
+          fi
+
+          say "The phrase itself is different - not whitespace, not capitalisation."
+          say ""
+          say "Nobody can read a stored secret back, so rather than guessing, set it again to something you choose now: Settings -> Environments -> production-db-apply -> \`MIGRATION_APPLY_CONFIRMATION\` -> Update. Then run this check again with that value before dispatching an apply."
+          exit 1
