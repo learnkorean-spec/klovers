@@ -13,19 +13,22 @@
  * away: depth only costs something when search is unreliable.
  *
  * Screens still live in AdminDashboard.tsx and are selected by `?tab=`, so
- * every link here is a deep link into it. Nothing in that file changes.
+ * every link here is a deep link into it. Nothing in that file changes —
+ * including the chrome it draws for itself, which shell-dedupe.css suppresses
+ * from the outside. See that file for why it is CSS and not a deletion.
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
-  ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut,
+  ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
+import "./shell-dedupe.css";
 
 export type NavItem = {
   /** `?tab=` value on /admin, or an absolute path of its own. */
@@ -179,7 +182,7 @@ const AdminShell = ({
   const current = activeId ?? (location.pathname === "/admin/today" ? "today" : undefined);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="admin-shell flex min-h-screen bg-background">
 
       <aside className="hidden w-[248px] shrink-0 flex-col border-r lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-2.5 border-b px-5">
@@ -237,6 +240,18 @@ const AdminShell = ({
               Ctrl K
             </kbd>
           </button>
+
+          {/* The one action from the dashboard's own header that the shell did
+              not already provide. Same behaviour: reload the document. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            aria-label="Refresh"
+            onClick={() => { window.location.reload(); }}
+          >
+            <RefreshCw className="h-[18px] w-[18px]" />
+          </Button>
 
           <Button asChild variant="outline" size="icon" className="relative shrink-0" aria-label="Notifications">
             <Link to="/admin?tab=notifications">
