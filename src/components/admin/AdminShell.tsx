@@ -12,10 +12,16 @@
  * from the palette (Ctrl/Cmd+K). That is what makes it safe to fold the rest
  * away: depth only costs something when search is unreliable.
  *
+ * THIS LIST IS THE ONLY WAY INTO MOST SCREENS. AdminDashboard renders a
+ * <TabsContent> for a tab whether or not anything links to it, so a screen
+ * missing from here is not broken — it is invisible, which is worse, because
+ * nothing fails and nobody notices. Campaigns, Books and Trial books sat that
+ * way until #266. When a tab is added there, add it here in the same change.
+ *
  * Screens still live in AdminDashboard.tsx and are selected by `?tab=`, so
  * every link here is a deep link into it. Nothing in that file changes —
- * including the chrome it draws for itself, which shell-dedupe.css suppresses
- * from the outside. See that file for why it is CSS and not a deletion.
+ * including the group-pill row it draws for itself, which shell-dedupe.css
+ * suppresses from the outside. See that file for why it is still CSS.
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -63,6 +69,13 @@ export const ADMIN_NAV: {
         { id: "blog", label: "Blog", to: "/admin?tab=blog" },
         { id: "seo-orchestration", label: "SEO", to: "/admin?tab=seo-orchestration" },
         { id: "image-audit", label: "Images", to: "/admin?tab=image-audit" },
+        // These three render real screens that nothing linked to until #266:
+        // bulk email + reminders + the trial-interest campaign, and the two
+        // book assignment screens. Visible, not palette-only — a screen nobody
+        // can find is not fixed by hiding it more carefully.
+        { id: "campaigns", label: "Campaigns", to: "/admin?tab=campaigns" },
+        { id: "books", label: "Books", to: "/admin?tab=books" },
+        { id: "trial-books", label: "Trial books", to: "/admin?tab=trial-books" },
       ],
     },
     {
