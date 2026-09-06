@@ -2,6 +2,7 @@ import { useMemo, memo } from "react";
 import { Users, TrendingUp, AlertTriangle, DollarSign } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, Tooltip as RechartsTooltip } from "recharts";
 import { AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
+import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
 import type { OverviewRow } from "@/types/admin";
 
 interface Props {
@@ -33,21 +34,32 @@ function buildEnrollmentSparkline(rows: OverviewRow[]): { v: number }[] {
   return counts.map(v => ({ v }));
 }
 
+/**
+ * Abbreviate only where abbreviating cannot mislead.
+ *
+ * The old formatter sent anything over 1,000 through `.toFixed(0)` + "K", so
+ * 2,866 rendered as "3K" — a 5% rounding error on the exact figure that was
+ * wrong in the first place. Below 10,000 the full number fits in the tile, so
+ * show it; above that, a rounded K/M reads more easily than seven digits.
+ */
+function formatMoney(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 10_000) return `${(n / 1_000).toFixed(0)}K`;
+  return n.toLocaleString("en-US");
+}
+
 export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actionableEnrollments, isLoading }: Props) {
+  const { data: revenue, isLoading: revenueLoading } = useCollectedRevenue();
+
   const kpis = useMemo<KpiCard[]>(() => {
     const activeRows = overviewRows.filter(r => r.derived_status === "ACTIVE");
+    // `> 0` is deliberate: a student at exactly 0 sessions is COMPLETED, not
+    // ACTIVE, so they are already outside activeRows. At-risk means "running
+    // low", not "run out".
     const atRisk = activeRows.filter(
       r => r.sessions_remaining <= AT_RISK_SESSION_THRESHOLD && r.sessions_remaining > 0
     );
     const locked = overviewRows.filter(r => r.derived_status === "LOCKED");
-
-    const totalRevenue = overviewRows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
-    const revenueStr = totalRevenue >= 1_000_000
-      ? `${(totalRevenue / 1_000_000).toFixed(1)}M`
-      : totalRevenue >= 1_000
-      ? `${(totalRevenue / 1_000).toFixed(0)}K`
-      : String(totalRevenue);
-    const currency = overviewRows.find(r => r.currency)?.currency ?? "EGP";
 
     const enrollSparkline = buildEnrollmentSparkline(overviewRows);
 
@@ -66,9 +78,11 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         icon: DollarSign,
         iconBg: "bg-green-100 dark:bg-green-900/30",
         iconColor: "text-green-600 dark:text-green-400",
-        value: `${revenueStr} ${currency}`,
+        // Money received: PAID + APPROVED enrollments, all of them, not just
+        // each student's most recent. See useCollectedRevenue.
+        value: revenue ? `${formatMoney(revenue.total)} ${revenue.currency}` : "—",
         label: "Total Revenue",
-        sublabel: "all enrollments",
+        sublabel: revenue ? `paid · ${revenue.count} enrollments` : "paid enrollments",
       },
       {
         icon: AlertTriangle,
@@ -89,7 +103,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         alert: actionableEnrollments > 0 || locked.length > 0,
       },
     ];
-  }, [overviewRows, actionableEnrollments]);
+  }, [overviewRows, actionableEnrollments, revenue]);
 
   return (
     <div
@@ -100,6 +114,9 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
     >
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
+        // The revenue tile has its own query, so it keeps its skeleton until
+        // that resolves rather than following the shared overview spinner.
+        const cardLoading = isLoading || (kpi.label === "Total Revenue" && revenueLoading);
         return (
           <div
             key={kpi.label}
@@ -109,7 +126,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
               <Icon className={`h-4 w-4 ${kpi.iconColor}`} aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              {isLoading ? (
+              {cardLoading ? (
                 <div className="h-5 w-12 bg-muted animate-pulse rounded mb-1" />
               ) : (
                 <p className="text-lg font-bold text-foreground leading-tight tabular-nums">{kpi.value}</p>
