@@ -1,0 +1,90 @@
+{
+  "batchId": "2026-09-06T11-23-33-100Z",
+  "createdAt": "2026-09-06T11:23:36.282Z",
+  "source": "scripts/proposals/titles-batch4.mjs",
+  "description": "Repair 10 Arabic titles. Four were cut off mid-word at exactly 60 characters, three opened with a stuffed keyword prefix and then repeated themselves, two had a doubled colon from a prefix bolted onto a title that already had one, and three carry machine-translation artefacts - including \"وأوضح\" (the verb \"explained\") stranded at the front of a title, and 조사 rendered as \"جسيمات\", the physics term for subatomic particles, in the h1 of a grammar guide. Replacements are hand-written, 30-52 characters, and checked against each other so the two near-duplicate app-comparison articles do not end up sharing a title. title column only; slug, description, keywords and content untouched, so no redirects are needed.",
+  "editCount": 10,
+  "staleCount": 0,
+  "edits": [
+    {
+      "slug": "how-to-learn-korean-faster-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "تعلم كوري أسرع — 10 طرق مثبتة علمياً لتعلم الكورية أسرع (بتش",
+      "after": "10 طرق مثبتة علميًا لتعلّم الكورية أسرع",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "تطبيقات تعلم اللغة الكورية — أفضل تطبيقات التعلم الكورية مقا",
+      "after": "مقارنة تطبيقات تعلم الكورية 2026: 12 معيارًا",
+      "stale": false
+    },
+    {
+      "slug": "korean-learning-apps-comparison-2026-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "تطبيقات تعلم كوري — أفضل تطبيقات تعلم الكورية 2026",
+      "after": "أفضل تطبيقات تعلم الكورية 2026",
+      "stale": false
+    },
+    {
+      "slug": "korean-texting-slang-internet-2026-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "الرسائل النصية الكورية — اللغة العامية للرسائل النصية الكوري",
+      "after": "عامية الرسائل النصية الكورية واختصارات الإنترنت 2026",
+      "stale": false
+    },
+    {
+      "slug": "gumiho-nine-tailed-fox-korean-folklore-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "وأوضح جوميهو: الثعلب ذو الذيول التسعة في الفولكلور الكوري",
+      "after": "الغوميهو: الثعلب ذو الذيول التسعة في الفولكلور الكوري",
+      "stale": false
+    },
+    {
+      "slug": "ar-topik-exam-guide",
+      "lang": "ar",
+      "column": "title",
+      "before": "اختبار توبيك: TOPIK: دليل شامل لاجتياز الاختبار",
+      "after": "اختبار TOPIK: دليل شامل لاجتياز الاختبار",
+      "stale": false
+    },
+    {
+      "slug": "ar-seoul-travel-korean-phrases",
+      "lang": "ar",
+      "column": "title",
+      "before": "سفر كوريا: سيول: دليل العبارات الكورية للمسافرين",
+      "after": "سيول: دليل العبارات الكورية للمسافرين",
+      "stale": false
+    },
+    {
+      "slug": "korean-grammar-particles-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "دليل جسيمات الكورية (조사): أتقنها وافتح أسرار قواعد الكورية",
+      "after": "أدوات الجملة الكورية (조사): دليل شامل للمبتدئين",
+      "stale": false
+    },
+    {
+      "slug": "best-kdrama-learn-korean-difficulty-ranked-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "أفضل 15 دراما كورية مرتبة حسب صعوبة التعلم: شاهد واتعلم كوري",
+      "after": "أفضل 15 دراما كورية مرتبة حسب صعوبة التعلم",
+      "stale": false
+    },
+    {
+      "slug": "korean-education-system-hagwon-culture-ar",
+      "lang": "ar",
+      "column": "title",
+      "before": "نظام التعليم الكوري وثقافة الهاغوون (المعاهد الخاصة) بالشرح",
+      "after": "نظام التعليم الكوري وثقافة الهاغوون (المعاهد الخاصة)",
+      "stale": false
+    }
+  ]
+}
