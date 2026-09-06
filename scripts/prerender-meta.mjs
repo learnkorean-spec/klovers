@@ -30,6 +30,13 @@ import { PRELOAD_PATTERN, preloadTagFor } from "./lib/lcp-preload.mjs";
 import { markdownToHtml } from "./lib/markdown-to-html.mjs";
 import { MARKER_START, MARKER_END } from "./lib/related-links.mjs";
 import { replaceLiteral } from "./lib/replace-literal.mjs";
+import {
+  HTML_TAG_PATTERN,
+  languageOf,
+  ogLocaleOf,
+  otherLanguage,
+  htmlTagFor,
+} from "./lib/document-language.mjs";
 
 const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
@@ -557,12 +564,18 @@ function buildHeadTags(route) {
   const image = absoluteUrl(isPost ? route.post.heroImage : null);
   const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : SITE_NAME;
 
+  // The document's own language, which is also what the <html> element and the
+  // article wrapper declare. index.html hardcodes og:locale="en_US" for every
+  // route; it is stripped below and re-emitted here so an Arabic page says so.
+  const lang = languageOf(route);
+
   const tags = [
     `  <link rel="canonical" href="${attr(url)}" />`,
     `  <meta property="og:type" content="${isPost ? "article" : "website"}" />`,
     `  <meta property="og:url" content="${attr(url)}" />`,
     `  <meta property="og:image" content="${attr(image)}" />`,
     `  <meta property="og:image:alt" content="${attr(imageAlt)}" />`,
+    `  <meta property="og:locale" content="${ogLocaleOf(lang)}" />`,
     `  <meta name="twitter:card" content="summary_large_image" />`,
     `  <meta name="twitter:image" content="${attr(image)}" />`,
   ];
@@ -579,6 +592,15 @@ function buildHeadTags(route) {
       tags.push(`  <link rel="alternate" hreflang="en" href="${attr(alts.en)}" />`);
       tags.push(`  <link rel="alternate" hreflang="ar" href="${attr(alts.ar)}" />`);
       tags.push(`  <link rel="alternate" hreflang="x-default" href="${attr(alts.en)}" />`);
+      // The alternate locale hangs off the SAME honest-pair check as hreflang,
+      // deliberately. index.html declared an ar_EG alternate on all 220 routes,
+      // including the ~20 marketing pages, none of which has an Arabic URL at
+      // all (docs/RENDERING_DECISION_2026-08.md §5) — an alternate for a
+      // translation that does not exist. A page only claims a translation here
+      // when hreflangFor has already confirmed one is published.
+      tags.push(
+        `  <meta property="og:locale:alternate" content="${ogLocaleOf(otherLanguage(lang))}" />`
+      );
     }
 
     tags.push(
@@ -689,6 +711,18 @@ for (const route of routes) {
 
   let html = isHome ? baseHTML : baseWithoutOrgJsonLd;
 
+  // The document element. index.html ships `<html lang="en">` with no `dir`,
+  // and this loop copies that document to every route — so all 100 published
+  // Arabic articles declared themselves English at the document level while
+  // their own content wrapper said `lang="ar" dir="rtl"` and their BlogPosting
+  // JSON-LD said `"inLanguage": "ar"`. The two signals a crawler reads first,
+  // and which scope the entire document, were the two that were wrong.
+  //
+  // The whole element is replaced rather than patched: that is what makes
+  // `<html lang="en" lang="ar">` unrepresentable, and a duplicate lang would
+  // resolve to the FIRST occurrence and silently keep the bug.
+  html = replaceLiteral(html, HTML_TAG_PATTERN, htmlTagFor(languageOf(route)));
+
   // Every rewrite below embeds a database value, so every one goes through
   // replaceLiteral. attr() escapes &, <, > and " — it does NOT escape $, and a
   // string replacement expands $&, $`, $' and $1-$99. A title containing `$&`
@@ -752,6 +786,12 @@ for (const route of routes) {
   html = html.replace(/[ \t]*<meta property="og:image" content="[^"]*"\s*\/?>\n?/g, "");
   html = html.replace(/[ \t]*<meta name="twitter:card" content="[^"]*"\s*\/?>\n?/g, "");
   html = html.replace(/[ \t]*<meta name="twitter:image" content="[^"]*"\s*\/?>\n?/g, "");
+  // og:locale joins that list. It was the one Open Graph tag left hardcoded,
+  // so every Arabic page shipped `en_US`; the alternate shipped `ar_EG`, which
+  // is not a value in Facebook's locale enumeration at all. Both are re-emitted
+  // per route by buildHeadTags — the alternate only where a translation exists.
+  html = html.replace(/[ \t]*<meta property="og:locale" content="[^"]*"\s*\/?>\n?/g, "");
+  html = html.replace(/[ \t]*<meta property="og:locale:alternate" content="[^"]*"\s*\/?>\n?/g, "");
 
   // The largest of these by far: buildHeadTags returns the canonical, every OG
   // and Twitter tag, hreflang, and the BlogPosting / FAQPage / BreadcrumbList
