@@ -148,10 +148,30 @@ const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
 // has always had.
 const MARKETING_ROUTES = [
   {
+    // The homepage carries the brand-entity work, so it is commented where the
+    // other routes are not.
+    //
+    // "klovers" takes 218 impressions at average position 7.8 and ONE click;
+    // the whole brand cluster (klovers, k lovers, k lover, k-lovers) is 410
+    // impressions and 4 clicks — about 13% of site impressions converting at
+    // ~1%. The Latin name is not winnable: klovers.net is a Korean-topic
+    // community running since 2011, and there is also klovers.io, a Klovers
+    // surname, a Brenau University society and the Klover fintech app. A US
+    // search for "klovers" does not return this domain at all.
+    //
+    // The Arabic name is unclaimed instead — «كلوفرز» has zero impressions,
+    // and a survey of Arabic Korean-learning found only government institutes
+    // and literally-keyword-named sites, none with a real brand name. So the
+    // title leads with the brand and says what nothing else in that market
+    // says, and the description carries the Arabic name in prose so a crawler
+    // can bind the two strings to one entity.
+    //
+    // No " | Klovers" suffix is appended to this one: the emit loop only adds
+    // it when the title does not already contain SITE_NAME, and this does.
     path: "/",
-    title: "Learn Korean Online",
+    title: "Klovers Korean Academy — Learn Korean in Arabic",
     description:
-      "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.",
+      "Klovers (كلوفرز — أكاديمية محبي الكورية): interactive online Korean lessons, a free placement test, and gamified learning for all levels.",
   },
   {
     path: "/courses",
