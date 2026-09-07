@@ -1,38 +1,44 @@
 /*
- * One override left. Delete this file, and its import in AdminShell.tsx, if
- * the group-pill row is ever removed from AdminDashboard.tsx.
+ * One override. Delete this file, and its import in AdminShell.tsx, if the
+ * group-pill row is ever removed from AdminDashboard.tsx.
  *
- * WHAT WENT AWAY
- * The header and layout overrides that used to live here are gone, because the
- * markup they suppressed is gone. AdminDashboard.tsx no longer renders its own
- * sticky header, and its content container no longer carries max-w-7xl mx-auto
- * or min-h-screen bg-muted/30 — all three were deleted from the source. That
- * is what this file was always meant to make unnecessary, and for those three
- * it now has.
+ * WHAT THIS HIDES
+ * The Operations / Learning / Content / Config pill row that AdminDashboard
+ * draws above its tabs. The sidebar groups the same screens permanently and
+ * without a click, so inside the shell that row is a duplicate.
  *
- * WHAT IS LEFT, AND WHY IT IS NOT LAZINESS
- * The Operations / Learning / Content / Config pill row. It looks like the
- * header did — a contiguous block, obviously redundant next to the sidebar —
- * and it is not the same kind of deletion:
+ * READ THIS BEFORE CHANGING THE SELECTOR
+ * The first version of this rule was:
  *
- *   - every <TabsTrigger> is gated on inActiveGroup(tab)
- *   - the pills are the control that sets tabGroup
- *   - removing them leaves the Tooltip / TooltipTrigger / TooltipContent
- *     imports and pendingAttendance unused
+ *     .admin-shell #admin-tabs-root > div > div:first-child
  *
- * Hiding them is safe: tabGroup re-derives from `?tab=` on every change, so
- * sidebar navigation still selects the right group and the right triggers
- * render. Deleting them is a decision about whether a second navigation layer
- * should exist at all now that the sidebar covers it — a UX call, not a
- * cleanup, and worth taking deliberately rather than sweeping up.
+ * which looks like it says "the pill row inside the tabs card". It does not.
+ * Radix renders every <TabsContent> as a direct div child of the Tabs root
+ * too, so `#admin-tabs-root > div` matched all 25 tab panels as well as the
+ * card, and `> div:first-child` then blanked the first element inside each
+ * one. Campaigns wraps its entire panel in a single <div class="space-y-6">,
+ * so that screen went completely empty; other tabs quietly lost their first
+ * card. It shipped, and it was live for a day.
  *
- * WHY THIS SELECTOR
- * It anchors on #admin-tabs-root, an id the dashboard sets on its <Tabs>,
- * rather than on Tailwind classes that change whenever anyone restyles. If the
- * structure moves, the row reappears — visible and harmless, which is the
- * right direction for a rule like this to fail in.
+ * The DOM is:
+ *
+ *   #admin-tabs-root
+ *     ├── div            <- the card: pill row, mobile select, TabsList
+ *     │     └── div      <- THE PILL ROW, the only thing this file may hide
+ *     ├── div[role=tabpanel]   students
+ *     ├── div[role=tabpanel]   enrollments
+ *     └── … one per tab
+ *
+ * So the rule must anchor on the card being FIRST, not on "some div":
+ * `> div:first-child` selects the card, and only then `> div:first-child`
+ * selects the pill row within it.
+ *
+ * The general lesson: a display:none aimed at markup this file does not own
+ * must be anchored so it cannot generalise. If a future edit needs a different
+ * selector, spell out which element each combinator lands on, as above, and
+ * check it against a tab panel before shipping.
  */
 
-.admin-shell #admin-tabs-root > div > div:first-child {
+.admin-shell #admin-tabs-root > div:first-child > div:first-child {
   display: none;
 }
