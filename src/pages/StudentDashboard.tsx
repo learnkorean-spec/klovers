@@ -886,6 +886,26 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
+              {/* Unit placement for 세종한국어 1 — shown to unenrolled students too, the
+                  same way the level test above is. Mirrors the enrolled branch. */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BookMarked className="h-5 w-5" /> Sejong Korean 1 — Unit Placement
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      Find out which unit of the book you should start from
+                    </p>
+                    <Button size="sm" variant="outline" onClick={() => navigate("/unit-placement")}>
+                      <BookMarked className="h-3.5 w-3.5 mr-1.5" /> Start
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Still show gamification for unenrolled learners */}
               <Suspense fallback={<div className="h-40 bg-muted/30 rounded-2xl animate-pulse" />}>
               <div className="grid md:grid-cols-2 gap-4">
