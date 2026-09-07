@@ -74,6 +74,7 @@ const TrialConfirmPage = lazy(() => import("./pages/TrialConfirmPage"));
 const EnrollmentStatusPage = lazy(() => import("./pages/EnrollmentStatusPage"));
 const HangulStarterPage = lazy(() => import("./pages/HangulStarterPage"));
 const RsvpConfirmationPage = lazy(() => import("./pages/RsvpConfirmationPage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -207,6 +208,9 @@ const App = () => (
                 <Route path="/admin/korean-orchestra" element={<ProtectedRoute><KoreanOrchestratorPage /></ProtectedRoute>} />
                 <Route path="/admin/today" element={<ProtectedRoute><AdminToday /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminEntry /></ProtectedRoute>} />
+                {/* Public and unguarded on purpose — requiring a login to opt
+                    out is how a campaign gets reported as spam instead. */}
+                <Route path="/unsubscribe" element={<UnsubscribePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
