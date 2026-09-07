@@ -10,6 +10,7 @@ import { attachLeadToUser } from "@/lib/attachLeadToUser";
 import { attachSessionToUser } from "@/lib/attachSessionToUser";
 import { captureUtmFromUrl } from "@/lib/leadSession";
 import { identify, trackPageView, capture } from "@/lib/analytics";
+import { installChunkReload } from "@/lib/chunk-reload";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import WhatsAppButton from "./components/WhatsAppButton";
 import CookieBanner from "./components/CookieBanner";
@@ -103,6 +104,10 @@ const AppInner = () => {
   useEffect(() => {
     captureUtmFromUrl();
 
+    // A tab open across a deploy holds an index pointing at chunk filenames
+    // that no longer exist. Recover by reloading once. See chunk-reload.ts.
+    const removeChunkReload = installChunkReload();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         attachLeadToUser(session.user);
@@ -122,7 +127,10 @@ const AppInner = () => {
       });
     }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      removeChunkReload();
+    };
   }, []);
 
   return null;
