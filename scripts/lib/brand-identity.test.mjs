@@ -38,6 +38,23 @@ const replyToSrc = readFileSync(
   join(repoRoot, "supabase/functions/send-confirmation-email/index.ts"),
   "utf-8"
 );
+const indexPageSrc = readFileSync(join(repoRoot, "src/pages/Index.tsx"), "utf-8");
+
+/** Every .ts/.tsx file under src/, read once and shared by the blocks below. */
+function walkSrc(dir, out = []) {
+  for (const entry of readdirSync(dir)) {
+    if (entry === "node_modules" || entry.startsWith(".")) continue;
+    const p = join(dir, entry);
+    if (statSync(p).isDirectory()) walkSrc(p, out);
+    else if (/\.(ts|tsx)$/.test(entry)) out.push(p);
+  }
+  return out;
+}
+
+const socialSrcFiles = walkSrc(join(repoRoot, "src")).map((p) => ({
+  path: relative(repoRoot, p).split("\\").join("/"),
+  text: readFileSync(p, "utf-8"),
+}));
 
 /**
  * CONTACT_EMAIL as siteConfig.ts declares it — read, not assumed, exactly as
@@ -156,17 +173,85 @@ describe("the WebSite knows its Arabic name", () => {
   });
 });
 
-describe("sameAs is untouched", () => {
-  // Both social handles are named after klovers.net, the competitor. That is a
-  // real problem and it is Re's to fix — it needs her Google Business Profile
-  // URL and her Instagram/YouTube. Pinned here so this PR cannot be blamed for
-  // a change it did not make, and so a future edit is deliberate.
-  it("still holds exactly the three profiles it held before", () => {
+describe("sameAs points at profiles that still resolve", () => {
+  /**
+   * sameAs is how Google confirms that this site and a set of social profiles
+   * are one entity. An entry that no longer resolves is therefore worse than
+   * no entry at all: it does not merely fail to help, it actively weakens the
+   * association.
+   *
+   * Both handles were renamed on 2026-09-07 to unify the brand. They had been
+   * named after klovers.net — a Korean-topic community running since 2011,
+   * i.e. the competitor this site cannot outrank for the Latin name — and the
+   * old Facebook path now redirects to the Facebook home feed rather than to
+   * the page. So the flag raised alongside the Arabic brand name is closed:
+   * the handles no longer carry a competitor's name.
+   *
+   * Instagram was added on 2026-09-07 once the live profile was confirmed, so
+   * all three social handles are now `kloversegy`. One gap is still open and
+   * is deliberately NOT papered over here: the Google entry is a share.google
+   * shortlink rather than a stable Google Business Profile URL, which is why
+   * it sits last in the array.
+   *
+   * Pinned exactly rather than by pattern. A pattern would have gone on
+   * passing through this rename, which is the failure this pin exists to
+   * prevent — the point is that changing a profile URL is a deliberate edit
+   * with a visible diff.
+   */
+  it("holds exactly the four profiles, on the current handles", () => {
+    // Ordered strongest first: order in sameAs is a preference signal
+    // (https://developers.google.com/search/docs/appearance/site-names), and
+    // Facebook (2.4K followers) outweighs Instagram (412). The share.google
+    // shortlink is last precisely because it is the weakest entry — it is a
+    // share link, not a stable Google Business Profile URL.
     expect(orgLd.sameAs).toEqual([
+      "https://www.facebook.com/kloversegy",
+      "https://www.tiktok.com/@kloversegy",
+      "https://www.instagram.com/kloversegy/",
       "https://share.google/4pWiAGlbXHCmd8hpi",
-      "https://www.facebook.com/Klovers.net/",
-      "https://www.tiktok.com/@klovers.net",
     ]);
+  });
+
+  it("uses one casing for the handle everywhere", () => {
+    // Facebook paths are case-insensitive, so a stray "Kloversegy" would
+    // resolve and never show up as a broken link — it would just sit in the
+    // codebase as a second spelling of one identity. Instagram and TikTok are
+    // lowercase, so lowercase is the house form.
+    const handles = [...indexHtml.matchAll(/(?:facebook|tiktok|instagram)\.com\/@?([A-Za-z0-9._]+)/g)]
+      .map((m) => m[1])
+      .filter((h) => /kloversegy/i.test(h));
+    expect(handles.length).toBeGreaterThan(0);
+    for (const h of handles) expect(h).toBe(h.toLowerCase());
+  });
+
+  it("the homepage JSON-LD claims the same profiles as index.html", () => {
+    // Index.tsx injects a second EducationalOrganization block at runtime with
+    // its own duplicate sameAs array. If the two disagree the page asserts two
+    // different identities at once — which is exactly what a rename produces
+    // when only one of them is updated.
+    const block = indexPageSrc.match(/sameAs: \[([\s\S]*?)\]/);
+    expect(block, "no sameAs array found in src/pages/Index.tsx").not.toBeNull();
+    const social = (u) => /facebook\.com|tiktok\.com|instagram\.com/.test(u);
+    const fromPage = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).filter(social);
+    const fromHtml = orgLd.sameAs.filter(social);
+    expect(fromPage).toEqual(fromHtml);
+  });
+
+  it("no retired handle survives in any social URL", () => {
+    // Matches the URL FORMS only, never the bare string. "klovers.net" appears
+    // legitimately in prose here and in prerender-meta.mjs describing the
+    // competitor, and a blind substring check would fail on an accurate
+    // comment — or, worse, invite someone to edit the comment to get green.
+    const RETIRED = /(?:facebook\.com\/Klovers\.net|tiktok\.com\/@klovers\.net)/i;
+    const offenders = [
+      { path: "index.html", text: indexHtml },
+      ...socialSrcFiles,
+    ].filter((f) => RETIRED.test(f.text)).map((f) => f.path);
+    expect(
+      offenders,
+      `These files still link to a renamed social handle that no longer ` +
+        `resolves:\n` + offenders.map((p) => `  ${p}`).join("\n")
+    ).toEqual([]);
   });
 });
 
@@ -252,21 +337,8 @@ describe("the contact address has exactly one source of truth", () => {
    * these assertions are what stop the next one from being pasted back in.
    */
 
-  /** Every .ts/.tsx file under src/, so a new hardcode anywhere is caught. */
-  function walk(dir, out = []) {
-    for (const entry of readdirSync(dir)) {
-      if (entry === "node_modules" || entry.startsWith(".")) continue;
-      const p = join(dir, entry);
-      if (statSync(p).isDirectory()) walk(p, out);
-      else if (/\.(ts|tsx)$/.test(entry)) out.push(p);
-    }
-    return out;
-  }
-
-  const srcFiles = walk(join(repoRoot, "src")).map((p) => ({
-    path: relative(repoRoot, p).split("\\").join("/"),
-    text: readFileSync(p, "utf-8"),
-  }));
+  /** Shared with the sameAs block above — one walk, not two. */
+  const srcFiles = socialSrcFiles;
 
   it("siteConfig declares a plausible address", () => {
     expect(CONTACT_EMAIL).toMatch(/^[^@\s]+@[^@\s]+\.[^@\s]+$/);
