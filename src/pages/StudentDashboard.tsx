@@ -50,7 +50,7 @@ const StreakCalendar = lazy(() =>
 const DailyBonusCard = lazy(() =>
   import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
 );
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookMarked, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -980,6 +980,26 @@ const StudentDashboard = () => {
                         </Button>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* Unit placement for 세종한국어 1 — which unit of the book to start
+                    from. Separate from the course-level test above on purpose. */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <BookMarked className="h-5 w-5" /> Sejong Korean 1 — Unit Placement
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        Find out which unit of the book you should start from
+                      </p>
+                      <Button size="sm" variant="outline" onClick={() => navigate("/unit-placement")}>
+                        <BookMarked className="h-3.5 w-3.5 mr-1.5" /> Start
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
