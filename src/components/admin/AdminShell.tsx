@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
+import { useUnreadAlerts } from "@/hooks/admin/useUnreadAlerts";
 import "./shell-dedupe.css";
 
 export type NavItem = {
@@ -179,6 +180,13 @@ const AdminShell = ({
   const location = useLocation();
   const navigate = useNavigate();
 
+  // The bell fetches its own count. It used to depend on a caller passing
+  // `badges.notifications`, and no caller ever did — so it stayed dark while
+  // 174 notifications piled up unread, 36 of them saying the trial follow-up
+  // jobs were not running. An alarm that has to be wired up by whoever mounts
+  // it is not an alarm.
+  const { data: alerts } = useUnreadAlerts();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -198,6 +206,12 @@ const AdminShell = ({
   ];
 
   const current = activeId ?? (location.pathname === "/admin/today" ? "today" : undefined);
+
+  // An explicit prop still wins, so anything that sets it deliberately keeps
+  // working. Otherwise: unread total on the badge, red only when at least one
+  // of them means something is broken.
+  const bellCount = badges.notifications ?? alerts?.total ?? 0;
+  const bellIsProblem = badges.notifications === undefined && (alerts?.problems ?? 0) > 0;
 
   return (
     <div className="admin-shell flex min-h-screen bg-background">
@@ -271,12 +285,32 @@ const AdminShell = ({
             <RefreshCw className="h-[18px] w-[18px]" />
           </Button>
 
-          <Button asChild variant="outline" size="icon" className="relative shrink-0" aria-label="Notifications">
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="relative shrink-0"
+            aria-label={
+              bellCount > 0
+                ? `Notifications — ${bellCount} unread${bellIsProblem ? ", including problems" : ""}`
+                : "Notifications"
+            }
+          >
             <Link to="/admin?tab=notifications">
               <Bell className="h-[18px] w-[18px]" />
-              {(badges.notifications ?? 0) > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 rounded-full border-2 border-background bg-destructive px-1.5 text-[10px] font-bold leading-4 text-destructive-foreground">
-                  {badges.notifications}
+              {bellCount > 0 && (
+                <span
+                  className={`absolute -right-1.5 -top-1.5 rounded-full border-2 border-background px-1.5 text-[10px] font-bold leading-4 ${
+                    // Red means something is wrong. Ordinary unread activity —
+                    // a new booking, a new enrollment — stays grey, because a
+                    // bell that is always red is a bell you stop looking at,
+                    // and that is exactly how 36 warnings went unread.
+                    bellIsProblem
+                      ? "bg-destructive text-destructive-foreground"
+                      : "bg-muted-foreground text-background"
+                  }`}
+                >
+                  {bellCount > 99 ? "99+" : bellCount}
                 </span>
               )}
             </Link>
