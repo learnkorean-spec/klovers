@@ -20,6 +20,9 @@ import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
 import { logGameEvent } from "@/lib/leadTracking";
+// The two brand characters, inlined. See src/assets/characters.ts for why
+// they are data URIs and why they are busts rather than full-body poses.
+import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
 const NumbersGame = lazy(() => import("@/components/games/NumbersGame"));
@@ -71,6 +74,46 @@ const FREE_GAME_IDS = [
   "romanization",
 ];
 
+/**
+ * A guest who finishes a game is asked to sign up — once per browser session.
+ *
+ * It used to be once per completion, with the dismissal not remembered, so a
+ * guest playing five games was asked five times. That was survivable when two
+ * of twenty games were open to guests; ten are open now, so the same code
+ * fires roughly five times as often at exactly the visitors this site is
+ * trying not to annoy.
+ *
+ * sessionStorage rather than localStorage on purpose: someone who comes back
+ * next week is a different visit and worth asking again. Someone playing four
+ * games in one sitting is not.
+ *
+ * Both accessors swallow their errors. sessionStorage does not merely return
+ * null in a locked-down privacy mode — accessing it throws — and a modal that
+ * cannot be shown is a far better outcome than a page that cannot render. A
+ * read that throws reports "not seen", so the failure mode is the old
+ * behaviour rather than a nudge that never appears.
+ */
+const NUDGE_SEEN_KEY = "klovers.games.signupNudgeSeen";
+
+const nudgeAlreadySeen = (): boolean => {
+  try {
+    return sessionStorage.getItem(NUDGE_SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const markNudgeSeen = (): void => {
+  try {
+    sessionStorage.setItem(NUDGE_SEEN_KEY, "1");
+  } catch {
+    /* privacy mode — the nudge simply reverts to once per completion */
+  }
+};
+
+/** At or above this share of the rounds, the result is celebrated rather than consoled. */
+const CHEER_THRESHOLD = 0.5;
+
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
     <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -82,6 +125,9 @@ const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
+  // The last finished round, kept only so the completion modal can pick which
+  // character to lead with. Not persisted and not read anywhere else.
+  const [lastResult, setLastResult] = useState<{ score: number; total: number } | null>(null);
   const { awardGameXp, progress, league, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [xpFloat, setXpFloat] = useState<number | null>(null);
   const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
@@ -96,6 +142,11 @@ const GamesPage = () => {
   const leaderboardHeading = isLoggedIn
     ? (isAr ? "أفضل اللاعبين" : "Top Players")
     : (isAr ? "الترتيب" : "Leaderboard");
+
+  // A round with no rounds in it, or none recorded, is not a failure worth
+  // consoling — default to the cheer.
+  const cheered =
+    !lastResult || lastResult.total === 0 || lastResult.score / lastResult.total >= CHEER_THRESHOLD;
 
   useEffect(() => {
     if (newBadges.length > 0) {
@@ -175,6 +226,8 @@ const GamesPage = () => {
       metadata: { score, totalRounds },
     });
 
+    setLastResult({ score, total: totalRounds });
+
     if (isLoggedIn) {
       const xp = await awardGameXp(gameId, score, totalRounds);
       if (xp && xp > 0) {
@@ -185,7 +238,11 @@ const GamesPage = () => {
       if (score === totalRounds && totalRounds > 0) {
         setShowPerfectScore({ score, total: totalRounds });
       }
-    } else {
+    } else if (!nudgeAlreadySeen()) {
+      // Marked before showing, not on dismiss: the two dismiss paths and the
+      // backdrop would each need to remember, and a guest who navigates away
+      // with it open has still been asked.
+      markNudgeSeen();
       setShowSignupNudge(true);
     }
   }, [awardGameXp, league, isLoggedIn]);
@@ -478,9 +535,39 @@ const GamesPage = () => {
           </div>
         </section>
 
-        {/* Active game */}
-        <div id="active-game-area" ref={gameAreaRef} className="border-t border-border scroll-mt-20">
-          {renderGame()}
+        {/* Active game.
+
+            The id and the ref are on different elements on purpose. selectGame
+            scrolls to the id, so the host has to be inside it or picking a game
+            scrolls straight past her. gameAreaRef carries the capture-phase
+            listener that raises game_started on first interaction, so the host
+            has to be OUTSIDE it — tapping a speech bubble is not playing a
+            game, and counting it as one would put the same "shaped like data"
+            noise into the funnel that the listener's own comment warns about. */}
+        <div id="active-game-area" className="border-t border-border scroll-mt-20">
+          {/* The host. Rendered only where a game will actually appear: the
+              locked-game wall is its own message and does not want a second
+              voice above it. */}
+          {(isLoggedIn || FREE_GAME_IDS.includes(activeGame)) && (
+            <div className="max-w-2xl mx-auto px-4 pt-6 flex items-center gap-3">
+              <img
+                src={CHARACTER_GIRL}
+                alt=""
+                aria-hidden="true"
+                width={56}
+                height={56}
+                loading="lazy"
+                decoding="async"
+                className="w-14 h-14 rounded-full border-[3px] border-[#FCFD01] shadow-sm shrink-0"
+              />
+              <p className="bg-muted text-foreground rounded-2xl px-4 py-2.5 text-sm">
+                {isAr ? "يلا نشوف إنت فاكر إيه 👀" : "Let's see what you remember 👀"}
+              </p>
+            </div>
+          )}
+          <div ref={gameAreaRef}>
+            {renderGame()}
+          </div>
         </div>
         <FinalCTA />
       </main>
@@ -502,7 +589,7 @@ const GamesPage = () => {
           onClose={clearLeaguePromotion}
         />
       )}
-      {/* Signup nudge modal */}
+      {/* Signup nudge modal — guests only, once per session (see NUDGE_SEEN_KEY). */}
       {showSignupNudge && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-background border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 relative">
@@ -515,8 +602,21 @@ const GamesPage = () => {
             </button>
 
             <div className="text-center space-y-2">
-              <div className="text-4xl">🎉</div>
-              <h2 className="text-xl font-bold text-foreground">{isAr ? "أحسنت!" : "Nice work!"}</h2>
+              {/* Decorative: the heading right below carries the same meaning. */}
+              <img
+                src={cheered ? CHARACTER_GIRL : CHARACTER_BOY}
+                alt=""
+                aria-hidden="true"
+                width={96}
+                height={96}
+                decoding="async"
+                className="w-24 h-24 rounded-full border-4 border-[#FCFD01] shadow-md mx-auto"
+              />
+              <h2 className="text-xl font-bold text-foreground">
+                {cheered
+                  ? (isAr ? "أحسنت! 잘했어요" : "Nice work! 잘했어요")
+                  : (isAr ? "قربت! جرّب تاني" : "So close — try again!")}
+              </h2>
               <p className="text-sm text-muted-foreground">{isAr ? `أنشئ حساباً مجانياً لحفظ تقدمك وفتح جميع الألعاب الـ ${games.length}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
             </div>
 
