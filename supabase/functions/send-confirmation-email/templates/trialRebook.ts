@@ -22,9 +22,18 @@
  *
  * The copy is ordered by the objections a reader actually has, in the order
  * they occur: which dates (slots), in my time? (local-time note), how long do
- * I have to decide (deadline), will I be put on the spot (what-happens box),
- * who is teaching (teacher line), then the ask, then what comes after, then an
- * exit for anyone none of the dates suit.
+ * I have to decide (deadline), what IS this half hour and will I be put on the
+ * spot (what-happens box), who is teaching (teacher box), then the ask, then
+ * what comes after, then an exit for anyone none of the dates suit.
+ *
+ * WHAT THE TRIAL IS
+ * -----------------
+ * An introduction, not a lesson. Thirty minutes, shared with up to fifteen
+ * people: how the course works, which level the reader belongs in, and who is
+ * teaching. The letter used to describe it as a first Korean class and promise
+ * a learning outcome from it — see the whatHappens comment below for why that
+ * had to go. Anything written into this file that reads like teaching content
+ * belongs in the course section instead.
  *
  * GENDER
  * ------
@@ -45,11 +54,21 @@ import {
 /**
  * Seats per trial class.
  *
- * Matches `trial_slots.capacity` and the capacity of the Hangul cohorts in
- * `schedule_packages`. If that changes, change it here in the same commit —
- * `available_slots` carries no capacity field, so this cannot yet be derived.
+ * Matches `trial_slots.capacity`, which migration 20260906120000 raised from
+ * 8 to 15. This number was left at 8 by that migration and the letter then
+ * told every reader there were 8 places when there were 15 — understating a
+ * free class is not a safe error, it is a reason to not bother replying.
+ *
+ * It is NOT the cohort capacity. The paid Hangul cohorts in
+ * `schedule_packages` are deliberately still 8, and that migration asserts it:
+ * a trial is a room you sit in once, a cohort is a room you learn in for
+ * weeks, and they do not want the same number of people. Do not "fix" the two
+ * back into one constant.
+ *
+ * Hardcoded because `available_slots` carries no capacity field. If
+ * `trial_slots.capacity` moves again, move it here in the same commit.
  */
-const TRIAL_CAPACITY = 8;
+const TRIAL_CAPACITY = 15;
 
 /**
  * Minutes in a trial class. The trial is 30; the Hangul course that follows is
@@ -141,35 +160,81 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const minutesLabel = isAr ? toArabicDigits(minutes) : String(minutes);
 
   /**
-   * The objection this answers is not price — the class is free. It is "will I
-   * be put on the spot in front of strangers", which is the real reason people
-   * do not turn up to a first language class. So: how long, camera optional,
-   * and one concrete thing they will walk away having done.
+   * WHAT THE 30 MINUTES ACTUALLY ARE — and what they are not.
+   *
+   * This box used to promise "by the end you'll write your own name in
+   * Korean". That is a LESSON, and the trial is not one. Reham's words: the
+   * trial exists so a person can hear how the course works, find out which
+   * level they belong in, and meet the teacher — in thirty minutes, shared
+   * with up to fifteen other people. Teaching Hangul to fifteen strangers in
+   * half an hour is not something that happens, so the letter was selling an
+   * outcome the session cannot deliver, and every attendee would have
+   * discovered that during it.
+   *
+   * A promise a free session breaks costs more than the session earns: the
+   * first thing the reader learns about Klovers is that its emails overstate.
+   * So the box now says plainly what the half hour is, and puts the real
+   * teaching where it belongs — in the course, on the next screen down.
+   *
+   * The reassurance that mattered is kept and strengthened: camera optional,
+   * and now no obligation to speak at all. The objection is still "will I be
+   * put on the spot in front of strangers" — and the honest answer is better
+   * than the old one, because nobody is being asked to perform.
    */
   const whatHappens = isAr
     ? `<div style="background-color: ${BRAND_GRAY}; border-radius: 12px; padding: 18px 22px; margin: 22px 0; text-align: right;">
-        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">تفاصيل الحصة</p>
-        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• ${minutesLabel} دقيقة على Google Meet</p>
-        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>الكاميرا اختيارية</strong> — الحضور والمشاركة على راحتك</p>
-        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• في آخر الحصة <strong>هتكتب اسمك بالكوري</strong></p>
+        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">الجلسة دي إيه بالظبط؟</p>
+        <p style="margin: 0 0 10px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">${minutesLabel} دقيقة على Google Meet — <strong>تعارف على الكورس، مش أول حصة فيه</strong>. الشرح والدراسة بيبدأوا في الكورس نفسه.</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• إزاي الكورس ماشي: المستويات، المدة، والكتاب</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>المستوى المناسب لك</strong> — سواء بتبدأ من الصفر أو معاك أساس</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• تتعرف على المدرِّسة وتسأل أي حاجة في بالك</p>
+        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>الكاميرا اختيارية</strong>، ومحدش مطالَب يتكلم — تقدر تسمع وبس</p>
       </div>`
     : `<div style="background-color: ${BRAND_GRAY}; border-radius: 12px; padding: 18px 22px; margin: 22px 0;">
-        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">What the class looks like</p>
-        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• ${minutesLabel} minutes on Google Meet</p>
-        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>Camera optional</strong> — join and take part at your own pace</p>
-        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• By the end you'll <strong>write your own name in Korean</strong></p>
+        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">What this session actually is</p>
+        <p style="margin: 0 0 10px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">${minutesLabel} minutes on Google Meet — <strong>an introduction to the course, not its first lesson</strong>. The teaching itself starts in the course.</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• How the course works: the levels, the length, the book</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>Which level is yours</strong> — whether you're starting at zero or already know some</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• Meet the teacher and ask anything you want</p>
+        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>Camera optional</strong>, and nobody has to speak — you can just listen</p>
       </div>`;
 
-  // The letter came from a brand with no face. A named teacher in a live room
-  // is the one thing an app cannot copy.
-  const teacherLine = isAr
-    ? `<p style="margin: 0 0 16px;">الحصة معايا شخصيًا — <strong>ريهام</strong>، مؤسِّسة كلوفرز. حصة مباشرة، مش فيديو مسجّل ولا تطبيق.</p>`
-    : `<p style="margin: 0 0 16px;">The class is with me — <strong>Reham</strong>, who founded Klovers. Live, not a recorded video or an app.</p>`;
+  /**
+   * WHO IS TEACHING.
+   *
+   * The letter came from a brand with no face, and one line saying "Reham,
+   * who founded Klovers" answered the wrong question — founding a company is
+   * not a reason to trust someone with your Korean. The reader's actual
+   * question at this point in the letter is "does this person know the
+   * language, and can they teach it".
+   *
+   * So: the full name, the degree, and the years. Both facts are Reham's own
+   * and are stated as she states them. Nothing here is inferred or rounded up.
+   */
+  const teacherBox = isAr
+    ? `<div style="background-color: #fffdf0; border: 1px solid #f0e6a8; border-radius: 12px; padding: 18px 22px; margin: 22px 0; text-align: right;">
+        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">هتقابل مين؟</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          <strong>ريهام الشرقاوي</strong> — خرّيجة كلية الألسن، قسم اللغة والأدب الكوري، ومؤسِّسة كلوفرز.
+        </p>
+        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          أكتر من ١٣ سنة في تدريس اللغات. الجلسة معاها شخصيًا ومباشرة — مش فيديو مسجّل ولا تطبيق.
+        </p>
+      </div>`
+    : `<div style="background-color: #fffdf0; border: 1px solid #f0e6a8; border-radius: 12px; padding: 18px 22px; margin: 22px 0;">
+        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">Who you'll meet</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          <strong>Reham Elshrkawy</strong> — graduate of the Faculty of Al-Alsun, Korean Language and Literature, and the founder of Klovers.
+        </p>
+        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
+          Over 13 years teaching languages. The session is with her, live — not a recorded video or an app.
+        </p>
+      </div>`;
 
   const meetLinkSection = p.class_link_url
     ? (isAr
         ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
-            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet — يُفضَّل حفظه ليوم الحصة</p>
+            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet — يُفضّل حفظه ليوم الحصة</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">الدخول للكلاس</a>
             <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">الرابط ده شخصي — من فضلك ما تشاركهوش مع حد.</p>
           </div>`
@@ -232,7 +297,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
         <p style="margin: 0 0 14px;">كل ميعاد بلغة واحدة: الميعاد <strong>الإنجليزي</strong> حصته بالإنجليزي بالكامل، و<strong>العربي</strong> بالعربي بالكامل.</p>
         <p style="margin: 0 0 6px;">عدد المقاعد <strong>${seats} لكل حصة</strong>، فننصح بالحجز مبكرًا.</p>
         ${whatHappens}
-        ${teacherLine}
+        ${teacherBox}
         ${chooseBtn}
         ${meetLinkSection}
         ${nextStep}
@@ -257,7 +322,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
       <p style="margin: 0 0 14px;">Each slot is taught in one language only: an <strong>English</strong> slot runs entirely in English, an <strong>Arabic</strong> slot entirely in Arabic.</p>
       <p style="margin: 0 0 6px;">There are <strong>${seats} places per class</strong>, so it is worth booking early.</p>
       ${whatHappens}
-      ${teacherLine}
+      ${teacherBox}
       ${chooseBtn}
       ${meetLinkSection}
       ${nextStep}
