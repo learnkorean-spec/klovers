@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
+import { CONTACT_EMAIL } from "@/lib/siteConfig";
 
 interface ReportData {
   name: string;
@@ -138,7 +139,7 @@ const ProgressReportPage = () => {
 
           {/* Footer */}
           <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ margin: 0, color: "#777", fontSize: 12 }}>kloversegy.com · koreanlovers.net@gmail.com</p>
+            <p style={{ margin: 0, color: "#777", fontSize: 12 }}>kloversegy.com · {CONTACT_EMAIL}</p>
             <p style={{ margin: 0, color: "#777", fontSize: 12 }}>{isAr ? "تم الإنشاء" : "Generated"} {new Date().toLocaleDateString(dateLocale)}</p>
           </div>
         </div>
