@@ -1,0 +1,826 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
+import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
+import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
+import { track } from "@/lib/tracking";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
+import {
+  CheckCircle, AlertCircle, ArrowRight, ArrowLeft, GraduationCap, Share2,
+  Download, RefreshCw, Mic, Square, Play, RotateCcw, PenLine, Loader2,
+} from "lucide-react";
+import {
+  SEJONG1_SECTIONS, SEJONG1_QUESTIONS, SEJONG1_READING_TEXT,
+  SEJONG1_WRITING, SEJONG1_SPEAKING,
+  type SejongQuestion, type SejongSectionId,
+} from "@/constants/sejong1Placement";
+import {
+  STAGE2_GRADE2, STAGE2_ABOVE, STAGE2_BLOCK_PASS, STAGE1_MAX, STAGE2_MAX,
+  computeTopikPlacement, G1_NUANCE,
+  type TopikGrade, type TopikPlacementResult,
+} from "@/constants/topikPlacement";
+
+/**
+ * The Korean placement test — one test, answered as a TOPIK grade (급).
+ *
+ * Replaces the older PlacementTestPage at /placement-test. Two things had to
+ * survive that swap unchanged, because they are why the page is public:
+ *
+ *   1. The lead funnel. Every `logLeadEvent` cta_label below is the same
+ *      literal the old page used, so the existing funnel queries keep working
+ *      across the change instead of splitting into before/after buckets.
+ *      `source_type: "placement"` on two of them is not a typo — it is what
+ *      the old page sent, and historical rows use it.
+ *   2. `source: "placement_test"` on the leads insert. An RLS policy
+ *      (20260404000001_placement_leads_anon_policy.sql) allows anonymous
+ *      inserts ONLY with that exact string. Change it and every logged-out
+ *      lead is silently rejected.
+ *
+ * Grading lives in topikPlacement.ts; this file only sequences and renders.
+ */
+
+const STORAGE_KEY = "klovers_placement_draft_v3"; // v3: staged 급 test
+const AUDIO_BUCKET = "placement-audio";
+
+/** Stage 2 is shown as two blocks of six, in this order. */
+const STAGE2_BLOCKS = [STAGE2_GRADE2, STAGE2_ABOVE];
+
+const CIRCLED = ["①", "②", "③", "④"];
+const FILLED = ["❶", "❷", "❸", "❹"];
+
+const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
+  pre1: { emoji: "🌱", tagline: "Hangul Foundation" },
+  g1: { emoji: "📗", tagline: "TOPIK Level 1" },
+  g2: { emoji: "📘", tagline: "TOPIK Level 2" },
+  g3plus: { emoji: "🏆", tagline: "TOPIK Level 3+" },
+};
+
+type Phase = "intro" | "stage1" | "stage2" | "extras" | "result";
+
+interface Draft {
+  sejong: Record<string, number>;
+  stage2: Record<number, number>;
+  phase: Extract<Phase, "stage1" | "stage2">;
+  step: number;
+  startedAt: number;
+}
+
+const KoreanPlacementPage = () => {
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  const { toast } = useToast();
+
+  useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
+
+  const [phase, setPhase] = useState<Phase>("intro");
+  const [step, setStep] = useState(0);
+  const [sejong, setSejong] = useState<Record<string, number>>({});
+  const [stage2, setStage2] = useState<Record<number, number>>({});
+  const [result, setResult] = useState<TopikPlacementResult | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [startedAt, setStartedAt] = useState(() => Date.now());
+
+  // Optional teacher-marked extras, logged-in students only
+  const [writing, setWriting] = useState<Record<string, string>>({});
+  const [audio, setAudio] = useState<Record<string, Blob>>({});
+  const [recordingId, setRecordingId] = useState<string | null>(null);
+  const [micError, setMicError] = useState<string | null>(null);
+  const [savingExtras, setSavingExtras] = useState(false);
+  const [extrasSaved, setExtrasSaved] = useState(false);
+
+  // Lead capture
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadSaving, setLeadSaving] = useState(false);
+  const [leadSaved, setLeadSaved] = useState(false);
+
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const topRef = useRef<HTMLDivElement | null>(null);
+
+  const questionsBySection = useMemo(() => {
+    const map = {} as Record<SejongSectionId, SejongQuestion[]>;
+    for (const s of SEJONG1_SECTIONS) map[s.id] = [];
+    for (const q of SEJONG1_QUESTIONS) map[q.section].push(q);
+    return map;
+  }, []);
+
+  // ---- instrumentation ----------------------------------------------------
+  // Mirrors the old page's funnel exactly: one mount event, one per band.
+  useEffect(() => {
+    logLeadEvent({ source_type: "placement_test", cta_label: "test_started" });
+  }, []);
+  useEffect(() => {
+    if (phase === "stage1" || phase === "stage2") {
+      logLeadEvent({ source_type: "placement_test", cta_label: `band_${step + 1}_viewed`, metadata: { page: step } });
+    }
+  }, [step, phase]);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "placement-schema";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Quiz",
+      "name": "Free Korean Language Placement Test",
+      "description": "Take the free Klovers Korean placement test to discover your level from A1 beginner to C2 advanced and find the perfect course.",
+      "url": "https://kloversegy.com/placement-test",
+      "provider": { "@id": "https://kloversegy.com/#organization" },
+      "educationalAlignment": {
+        "@type": "AlignmentObject",
+        "educationalFramework": "TOPIK",
+        "targetName": "Korean Language Proficiency"
+      }
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById("placement-schema")?.remove(); };
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setUserId(session.user.id);
+    });
+  }, []);
+
+  // ---- draft --------------------------------------------------------------
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const d = JSON.parse(saved) as Draft;
+        if (d?.sejong && Object.keys(d.sejong).length > 0) {
+          setSejong(d.sejong);
+          setStage2(d.stage2 ?? {});
+          setPhase(d.phase ?? "stage1");
+          setStep(d.step ?? 0);
+          setStartedAt(d.startedAt ?? Date.now());
+          toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
+        }
+      }
+    } catch { /* ignore */ }
+    // The older tests wrote different shapes under these keys; a stale one
+    // would restore nonsense into the new state machine.
+    localStorage.removeItem("klovers_placement_draft");
+    localStorage.removeItem("klovers_placement_draft_v2");
+    localStorage.removeItem("klovers_unit_placement_draft_v1");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "stage1" && phase !== "stage2") return;
+    try {
+      const d: Draft = { sejong, stage2, phase, step, startedAt };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+    } catch { /* ignore */ }
+  }, [sejong, stage2, phase, step, startedAt]);
+
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step, phase]);
+
+  // ---- audio --------------------------------------------------------------
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    recorderRef.current?.stream.getTracks().forEach((t) => t.stop());
+    recorderRef.current = null;
+    setRecordingId(null);
+  };
+  useEffect(() => () => stopRecording(), []);
+
+  const startRecording = async (promptId: string) => {
+    setMicError(null);
+    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setMicError(isAr
+        ? "المتصفح ده مش بيدعم التسجيل الصوتي. سيبي القسم ده والمدرّس هيقيّمه في الحصة."
+        : "This browser cannot record audio. Skip this part — your teacher will assess it live.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        setAudio((prev) => ({ ...prev, [promptId]: blob }));
+      };
+      rec.start();
+      recorderRef.current = rec;
+      setRecordingId(promptId);
+    } catch {
+      setMicError(isAr
+        ? "مقدرناش نوصل للمايك. اسمحي للمتصفح باستخدامه، أو سيبي القسم ده."
+        : "Microphone access was denied. Allow it, or skip this part.");
+      setRecordingId(null);
+    }
+  };
+
+  const playBack = (promptId: string) => {
+    const blob = audio[promptId];
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const el = new Audio(url);
+    el.onended = () => URL.revokeObjectURL(url);
+    void el.play();
+  };
+
+  // ---- flow ---------------------------------------------------------------
+  const sectionPassed = (id: SejongSectionId, answers: Record<string, number>) => {
+    const section = SEJONG1_SECTIONS.find((s) => s.id === id);
+    if (!section) return false;
+    const correct = questionsBySection[id].filter((q) => answers[q.id] === q.answerIndex).length;
+    return correct >= section.pass;
+  };
+
+  const finish = async (finalSejong: Record<string, number>, finalStage2: Record<number, number>) => {
+    const res = computeTopikPlacement(finalSejong, finalStage2);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+
+    // Result first, network second — the old page did the same, and a slow
+    // insert must never hold up the thing the student came for.
+    setResult(res);
+    setPhase("result");
+    track.custom("placement_recommendation_shown", { level: res.info.levelKey, score: res.totalScore });
+    logLeadEvent({ source_type: "placement", cta_label: "recommendation_shown", metadata: { level: res.info.levelKey, score: res.totalScore } });
+
+    if (userId) {
+      const { error } = await supabase.from("placement_tests").insert({
+        user_id: userId, score: res.totalScore, level: res.info.levelKey,
+      });
+      if (!error) {
+        // course_level_key is the canonical, machine-set column. profiles.level
+        // is the learner's own free-form self-assessment and stays untouched.
+        await supabase.from("profiles").update({ course_level_key: res.info.levelKey } as any).eq("user_id", userId);
+      }
+    }
+  };
+
+  const nextFromStage1 = () => {
+    const section = SEJONG1_SECTIONS[step];
+    // The gate: a failed section ends the test here. Everything after it would
+    // measure knowledge that sits on top of the gap just found, so asking is
+    // both pointless and discouraging.
+    if (!sectionPassed(section.id, sejong)) { void finish(sejong, stage2); return; }
+    if (step < SEJONG1_SECTIONS.length - 1) { setStep(step + 1); return; }
+    setPhase("stage2");
+    setStep(0);
+  };
+
+  const nextFromStage2 = () => {
+    const block = STAGE2_BLOCKS[step];
+    const correct = block.filter((q) => stage2[q.id] === q.correctIndex).length;
+    if (correct < STAGE2_BLOCK_PASS) { void finish(sejong, stage2); return; }
+    if (step < STAGE2_BLOCKS.length - 1) { setStep(step + 1); return; }
+    void finish(sejong, stage2);
+  };
+
+  const handleRetake = () => {
+    setSejong({}); setStage2({}); setResult(null); setStep(0);
+    setWriting({}); setAudio({}); setExtrasSaved(false);
+    setLeadSaved(false); setLeadName(""); setLeadEmail("");
+    setStartedAt(Date.now());
+    setPhase("stage1");
+  };
+
+  // ---- result-screen actions (funnel-critical literals) --------------------
+  const handleShare = (res: TopikPlacementResult) => {
+    const label = isAr ? res.info.labelAr : res.info.labelEn;
+    const text = `I took the Klovers Korean Placement Test!\nMy level: ${label}\nFind yours → ${SITE_URL}/placement-test`;
+    navigator.clipboard.writeText(text)
+      .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "شارك مستواك مع أصدقائك." : "Share your level with friends." }))
+      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "انسخ الرابط لمشاركة نتيجتك." : "Copy the link to share your result." }));
+  };
+
+  const handleWhatsAppEnroll = (res: TopikPlacementResult) => {
+    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى ومستواي: ${res.info.labelAr}. هل يمكنني الحجز؟`);
+    trackAndOpenWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, { cta_label: "placement_enroll", metadata: { level: res.info.levelKey, score: res.totalScore } });
+  };
+
+  const handleDownloadCard = (res: TopikPlacementResult) => {
+    const meta = GRADE_META[res.info.grade];
+    const canvas = document.createElement("canvas");
+    drawPlacementCard(canvas, {
+      levelEmoji: meta.emoji,
+      levelLabel: `${res.info.labelKo} — ${res.info.labelEn}`,
+      tagline: meta.tagline,
+      score: res.totalScore,
+      total: res.totalMax,
+    });
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `klovers-${res.info.grade}.png`;
+    a.click();
+    toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "شارك مستواك على مواقع التواصل." : "Share your level on social media." });
+  };
+
+  const handleDownloadCertificate = (res: TopikPlacementResult) => {
+    const meta = GRADE_META[res.info.grade];
+    const canvas = document.createElement("canvas");
+    drawPlacementCertificate(canvas, {
+      levelEmoji: meta.emoji,
+      levelLabel: `${res.info.labelKo} — ${res.info.labelEn}`,
+      tagline: meta.tagline,
+      score: res.totalScore,
+      total: res.totalMax,
+      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+    });
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `klovers-certificate-${res.info.grade}.png`;
+    a.click();
+    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "شارك إنجازك على LinkedIn أو سيرتك الذاتية." : "Share your achievement on LinkedIn or CV." });
+  };
+
+  const handleLeadSubmit = async () => {
+    if (!leadName.trim() || !leadEmail.trim()) {
+      toast({ title: isAr ? "يرجى إدخال اسمك وبريدك الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
+    }
+    setLeadSaving(true);
+    // `source` must stay exactly "placement_test": the anon INSERT policy on
+    // public.leads checks that literal, so any other value is rejected by RLS.
+    const { error } = await supabase.from("leads").insert({
+      name: leadName.trim(),
+      email: leadEmail.trim(),
+      level: result?.info.levelKey ?? "",
+      source: "placement_test",
+      status: "new",
+    });
+    setLeadSaving(false);
+    if (error) {
+      // The old page ignored this and showed success regardless, which meant a
+      // rejected lead looked identical to a captured one.
+      toast({ title: isAr ? "لم نستطع الحفظ. حاول مرة أخرى." : "We could not save that. Please try again.", variant: "destructive" });
+      return;
+    }
+    setLeadSaved(true);
+    logLeadEvent({ source_type: "email", cta_label: "placement_study_plan", metadata: { level: result?.info.levelKey } });
+  };
+
+  const saveExtras = async () => {
+    if (!userId || !result) return;
+    setSavingExtras(true);
+    const attemptId = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const speaking: { id: string; prompt: string; path: string }[] = [];
+    for (const p of SEJONG1_SPEAKING) {
+      const blob = audio[p.id];
+      if (!blob) continue;
+      const path = `${userId}/${attemptId}/${p.id}.webm`;
+      const { error } = await supabase.storage.from(AUDIO_BUCKET)
+        .upload(path, blob, { contentType: blob.type || "audio/webm", upsert: true });
+      if (error) continue; // one failed clip must not cost the whole attempt
+      speaking.push({ id: p.id, prompt: p.ko, path });
+    }
+
+    const writingRows = SEJONG1_WRITING
+      .filter((p) => (writing[p.id] || "").trim().length > 0)
+      .map((p) => ({ id: p.id, prompt: p.ko, text: writing[p.id].trim() }));
+
+    const { error } = await (supabase as any).from("unit_placement_tests").insert({
+      id: attemptId,
+      user_id: userId,
+      book: "sejong1",
+      section_scores: result.sejongSectionScores,
+      mcq_score: result.totalScore,
+      start_unit: result.info.grade,
+      failed_section: result.failedSection,
+      suggested_level_key: result.info.levelKey,
+      answers: sejong,
+      writing: writingRows,
+      speaking_audio: speaking,
+      duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+    });
+
+    setSavingExtras(false);
+    if (error) {
+      toast({ variant: "destructive", title: isAr ? "لم يتم الحفظ" : "Could not save", description: isAr ? "جرّب مرة أخرى." : "Please try again." });
+      return;
+    }
+    setExtrasSaved(true);
+  };
+
+  const t = (ar: string, en: string) => (isAr ? ar : en);
+
+  // ---- shared question renderers ------------------------------------------
+  const renderSejongQuestion = (q: SejongQuestion) => (
+    <div key={q.id} className="space-y-2">
+      {q.group && <p className="text-sm font-semibold pt-4" dir="ltr">{q.group}</p>}
+      {q.bogi && (
+        <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1.5" dir="ltr">
+          <p className="text-xs text-muted-foreground">&lt;보기&gt;</p>
+          <p className="text-sm">{q.bogi.stem}</p>
+          <p className="text-sm">
+            {q.bogi.options.map((o, i) => (
+              <span key={i} className={cn("mr-4", i === q.bogi!.answerIndex && "font-bold")}>
+                {i === q.bogi!.answerIndex ? FILLED[i] : CIRCLED[i]} {o}
+              </span>
+            ))}
+          </p>
+        </div>
+      )}
+      <p className="text-sm font-medium" dir="ltr">
+        <span className="text-muted-foreground mr-1.5">{q.id}.</span>
+        {q.stem.split("\n").map((line, li) => (
+          <span key={li} className={li > 0 ? "block ml-6" : undefined}>{line}</span>
+        ))}
+      </p>
+      {q.hintAr && isAr && (
+        <p className="text-xs text-muted-foreground border-r-2 border-primary/40 pr-2" dir="rtl">{q.hintAr}</p>
+      )}
+      <RadioGroup
+        value={sejong[q.id]?.toString()}
+        onValueChange={(v) => setSejong((prev) => ({ ...prev, [q.id]: parseInt(v, 10) }))}
+        className="space-y-1.5 ml-1"
+        dir="ltr"
+      >
+        {q.options.map((opt, oi) => (
+          <div key={oi} className="flex items-center space-x-3">
+            <RadioGroupItem value={oi.toString()} id={`${q.id}-o${oi}`} />
+            <Label htmlFor={`${q.id}-o${oi}`} className="cursor-pointer text-sm">
+              <span className="text-muted-foreground mr-1 text-xs">{CIRCLED[oi]}</span> {opt}
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+    </div>
+  );
+
+  // ---- intro --------------------------------------------------------------
+  if (phase === "intro") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 px-4 py-10 max-w-2xl mx-auto w-full">
+          <Card dir={isAr ? "rtl" : "ltr"}>
+            <CardContent className="pt-6 space-y-4 text-sm">
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <GraduationCap className="h-6 w-6 text-primary" />
+                {t("اختبار تحديد المستوى", "Korean Placement Test")}
+              </h1>
+              <p>
+                {t("الاختبار بيقولك مستواك بنظام TOPIK — من تأسيس الهانغول لحد 3급 فأعلى.",
+                   "This test tells you your level on the TOPIK scale — from Hangul foundation up to 3급 and above.")}
+              </p>
+              <ul className="space-y-1.5 list-disc ms-5 text-muted-foreground">
+                <li>{t("الأسئلة مرتبة من الأسهل للأصعب، والاختبار بيقف عند أول قسم تتعثر فيه — مش هتجاوب على حاجة فوق مستواك.", "Questions run easiest-first and the test stops at the first section you struggle with — you never answer far above your level.")}</li>
+                <li>{t("المبتدئ تمامًا بيخلص في ٨ أسئلة. الأعلى مستوى بيوصل لحوالي ٦٢.", "A complete beginner finishes in 8 questions. The highest level reaches about 62.")}</li>
+                <li>{t("تقدر تقفل الصفحة وترجع — إجاباتك محفوظة.", "You can close the page and come back — your answers are saved.")}</li>
+                <li>{t("من غير قاموس ولا ترجمة.", "No dictionary or translator.")}</li>
+              </ul>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={() => { setStartedAt(Date.now()); setPhase("stage1"); }}>
+                  {t("ابدأ الاختبار", "Start the test")}
+                  <ArrowRight className={cn("h-4 w-4", isAr ? "mr-2 rotate-180" : "ml-2")} />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ---- result -------------------------------------------------------------
+  if (phase === "result" && result) {
+    const nuance = result.info.grade === "g1"
+      ? (result.failedSection === null ? G1_NUANCE.completed : G1_NUANCE.inside)
+      : null;
+
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+          <Card dir={isAr ? "rtl" : "ltr"}>
+            <CardContent className="pt-6 space-y-5">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
+                <p className="text-4xl">{GRADE_META[result.info.grade].emoji}</p>
+                <p className="text-sm text-muted-foreground">{t("مستواك", "Your level")}</p>
+                <p className="text-3xl font-bold" dir="ltr">{result.info.labelKo}</p>
+                <p className="text-sm font-medium">{isAr ? result.info.labelAr : result.info.labelEn}</p>
+                <p className="text-sm text-muted-foreground">{isAr ? result.info.noteAr : result.info.noteEn}</p>
+                {nuance && <p className="text-sm text-muted-foreground">{isAr ? nuance.ar : nuance.en}</p>}
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2">{t("تفصيل الإجابات", "Answer breakdown")}</p>
+                <div className="space-y-1.5">
+                  {SEJONG1_SECTIONS.map((s) => {
+                    const score = result.sejongSectionScores[s.id];
+                    const reached = result.failedSection === null
+                      || SEJONG1_SECTIONS.findIndex((x) => x.id === s.id) <= SEJONG1_SECTIONS.findIndex((x) => x.id === result.failedSection);
+                    if (!reached) return null;
+                    const passed = score >= s.pass;
+                    return (
+                      <div key={s.id} className={cn(
+                        "flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
+                        result.failedSection === s.id ? "border-primary bg-primary/5" : "border-border",
+                      )}>
+                        <span className="flex items-center gap-2">
+                          {passed ? <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                                  : <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />}
+                          <span>{isAr ? s.titleAr : s.titleEn}</span>
+                        </span>
+                        <Badge variant={passed ? "secondary" : "outline"} dir="ltr">{score} / {s.max}</Badge>
+                      </div>
+                    );
+                  })}
+                  {result.grade2Score !== null && (
+                    <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+                      <span>{t("أسئلة المستوى الثاني", "Level 2 questions")}</span>
+                      <Badge variant="secondary" dir="ltr">{result.grade2Score} / 6</Badge>
+                    </div>
+                  )}
+                  {result.aboveScore !== null && result.grade2Score !== null && result.grade2Score >= STAGE2_BLOCK_PASS && (
+                    <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+                      <span>{t("أسئلة ما فوق الثاني", "Above level 2")}</span>
+                      <Badge variant="secondary" dir="ltr">{result.aboveScore} / 6</Badge>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {t("مستواك اتحدد من أول قسم لم تجتزه، مش من مجموع الدرجات.",
+                     "Your level comes from the first section you did not pass, not from a total score.")}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => navigate("/free-trial")}
+                  className="flex-1 min-w-[9rem] font-semibold">
+                  {t("احجز تجربتي المجانية", "Book My Free Trial")}
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 min-w-[9rem]" onClick={() => handleWhatsAppEnroll(result)}>
+                  {t("تواصل واتساب", "WhatsApp us")}
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => setLeadDialogOpen(true)}>
+                  {t("📚 احصل على خطة دراسية مجانية", "📚 Get free study plan")}
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
+                  <Download className="h-3.5 w-3.5" /> {t("بطاقة", "Card")}
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCertificate(result)}>
+                  <Download className="h-3.5 w-3.5" /> {t("شهادة", "Certificate")}
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleShare(result)}>
+                  <Share2 className="h-3.5 w-3.5" /> {t("مشاركة", "Share")}
+                </Button>
+                <Button variant="ghost" size="sm" className="flex-1 text-xs gap-1.5" onClick={handleRetake}>
+                  <RefreshCw className="h-3.5 w-3.5" /> {t("إعادة", "Retake")}
+                </Button>
+              </div>
+
+              {userId && !extrasSaved && (
+                <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm space-y-2">
+                  <p className="font-semibold flex items-center gap-2"><PenLine className="h-4 w-4" />
+                    {t("عايز تقييم أدق؟", "Want a sharper placement?")}</p>
+                  <p className="text-muted-foreground">
+                    {t("أضف عيّنة كتابة وتسجيل صوتي قصير، والمدرّس يراجعهم قبل أول حصة. اختياري تمامًا.",
+                       "Add a short writing sample and a voice recording for your teacher to review before your first class. Entirely optional.")}
+                  </p>
+                  <Button size="sm" variant="outline" onClick={() => setPhase("extras")}>
+                    {t("أضف الكتابة والصوت", "Add writing and voice")}
+                  </Button>
+                </div>
+              )}
+              {extrasSaved && (
+                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  {t("اتحفظت للمدرّس. شكرًا!", "Saved for your teacher. Thank you!")}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>{isAr ? "احصل على خطة دراستك المجانية" : "Get your free study plan"}</DialogTitle>
+                <DialogDescription>
+                  {isAr ? `سنرسل خطة دراسية مخصصة لمستوى ${result.info.labelAr} لبريدك.` : `We'll send a personalised ${result.info.labelEn} study plan to your inbox.`}
+                </DialogDescription>
+              </DialogHeader>
+              {leadSaved ? (
+                <div className="text-center py-4 space-y-2">
+                  <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
+                  <p className="font-semibold text-sm">{isAr ? "سنرسل خطتك قريباً!" : "We'll send your plan shortly!"}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Input placeholder={isAr ? "اسمك" : "Your name"} value={leadName} onChange={e => setLeadName(e.target.value)} />
+                  <Input placeholder={isAr ? "بريدك الإلكتروني" : "Your email"} type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)} />
+                  <Button className="w-full" onClick={handleLeadSubmit} disabled={leadSaving}>
+                    {leadSaving ? (isAr ? "جارٍ الإرسال..." : "Sending…") : (isAr ? "أرسل لي الخطة" : "Send me the plan")}
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ---- extras (logged-in only) -------------------------------------------
+  if (phase === "extras") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+          <div ref={topRef} />
+          <Card dir={isAr ? "rtl" : "ltr"}>
+            <CardContent className="pt-6 space-y-5">
+              <h2 className="text-lg font-bold">{t("الكتابة والصوت — للمدرّس", "Writing and voice — for your teacher")}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("مفيش تصحيح آلي هنا. المدرّس هو اللي يراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
+              </p>
+
+              {SEJONG1_WRITING.map((p) => (
+                <div key={p.id} className="space-y-1.5">
+                  <p className="text-sm font-medium" dir="ltr">{p.id}. {p.ko}</p>
+                  {isAr && <p className="text-xs text-muted-foreground" dir="rtl">{p.ar}</p>}
+                  {p.useKo && <p className="text-xs text-muted-foreground" dir="ltr">※ {p.useKo}</p>}
+                  <Textarea dir="ltr" rows={3} lang="ko" placeholder="한국어로 쓰세요…"
+                    value={writing[p.id] || ""}
+                    onChange={(e) => setWriting((prev) => ({ ...prev, [p.id]: e.target.value }))} />
+                </div>
+              ))}
+
+              {micError && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{micError}</p>
+              )}
+              {SEJONG1_SPEAKING.map((p) => {
+                const recorded = !!audio[p.id];
+                const isRec = recordingId === p.id;
+                return (
+                  <div key={p.id} className="rounded-lg border border-border p-3 space-y-2">
+                    <p className="text-sm font-medium" dir="ltr">{p.id}. {p.ko}</p>
+                    {isAr && <p className="text-xs text-muted-foreground" dir="rtl">{p.ar}</p>}
+                    <div className="flex flex-wrap gap-2">
+                      {!isRec ? (
+                        <Button type="button" size="sm" variant={recorded ? "outline" : "default"}
+                          onClick={() => startRecording(p.id)} disabled={recordingId !== null}>
+                          {recorded ? <RotateCcw className="h-3.5 w-3.5 me-1.5" /> : <Mic className="h-3.5 w-3.5 me-1.5" />}
+                          {recorded ? t("سجّل تاني", "Re-record") : t("سجّل", "Record")}
+                        </Button>
+                      ) : (
+                        <Button type="button" size="sm" variant="destructive" onClick={stopRecording}>
+                          <Square className="h-3.5 w-3.5 me-1.5" /> {t("إيقاف", "Stop")}
+                        </Button>
+                      )}
+                      {recorded && !isRec && (
+                        <Button type="button" size="sm" variant="ghost" onClick={() => playBack(p.id)}>
+                          <Play className="h-3.5 w-3.5 me-1.5" /> {t("تشغيل", "Play")}
+                        </Button>
+                      )}
+                      {recorded && <Badge variant="secondary" className="self-center">{t("متسجّل", "Recorded")}</Badge>}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="flex gap-2">
+                <Button onClick={saveExtras} disabled={savingExtras || recordingId !== null}>
+                  {savingExtras && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
+                  {t("احفظ للمدرّس", "Save for my teacher")}
+                </Button>
+                <Button variant="ghost" onClick={() => setPhase("result")}>{t("رجوع للنتيجة", "Back to result")}</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ---- the test -----------------------------------------------------------
+  const inStage1 = phase === "stage1";
+  const section = inStage1 ? SEJONG1_SECTIONS[step] : null;
+  const block = inStage1 ? null : STAGE2_BLOCKS[step];
+  const totalSteps = SEJONG1_SECTIONS.length + STAGE2_BLOCKS.length;
+  const stepIndex = inStage1 ? step : SEJONG1_SECTIONS.length + step;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full space-y-4">
+        <div ref={topRef} />
+
+        <div dir={isAr ? "rtl" : "ltr"} className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold">{t("اختبار تحديد المستوى", "Korean Placement Test")}</span>
+            <span className="text-muted-foreground" dir="ltr">{stepIndex + 1} / {totalSteps}</span>
+          </div>
+          <Progress value={((stepIndex + 1) / totalSteps) * 100} />
+        </div>
+
+        <Card dir={isAr ? "rtl" : "ltr"}>
+          <CardContent className="pt-6 space-y-4">
+            {section && (
+              <>
+                <h2 className="text-lg font-bold">{isAr ? section.titleAr : section.titleEn}</h2>
+                <p className="text-xs text-muted-foreground" dir="ltr">{section.titleKo}</p>
+                <p className="text-sm text-muted-foreground">{isAr ? section.instrAr : section.instrEn}</p>
+                {section.focusKo && <p className="text-xs text-muted-foreground" dir="ltr">※ {section.focusKo}</p>}
+                {section.groupKo && <p className="text-sm font-semibold" dir="ltr">{section.groupKo}</p>}
+                {section.id === "F" && (
+                  <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-1" dir="ltr">
+                    {SEJONG1_READING_TEXT.map((line, i) => (
+                      <p key={i} className="text-sm leading-relaxed">{line}</p>
+                    ))}
+                  </div>
+                )}
+                <div className="space-y-4">{questionsBySection[section.id].map(renderSejongQuestion)}</div>
+              </>
+            )}
+
+            {block && (
+              <>
+                <h2 className="text-lg font-bold">
+                  {step === 0 ? t("أسئلة المستوى الثاني", "Level 2 questions")
+                              : t("أسئلة ما فوق المستوى الثاني", "Above level 2")}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("وصلت لآخر كتاب المستوى الأول. الأسئلة دي بتحدد لو إنت فوقه.",
+                     "You have cleared the whole of level 1. These decide whether you are past it.")}
+                </p>
+                <div className="space-y-5">
+                  {block.map((q) => (
+                    <div key={q.id} className="space-y-2">
+                      {q.passage && (
+                        <div className="rounded-lg border border-border bg-muted/40 p-3" dir="ltr">
+                          <p className="text-sm leading-relaxed">{q.passage}</p>
+                        </div>
+                      )}
+                      <p className="text-sm font-medium">{q.question}</p>
+                      {q.arabicTip && isAr && (
+                        <p className="text-xs text-muted-foreground border-r-2 border-primary/40 pr-2" dir="rtl">💡 {q.arabicTip}</p>
+                      )}
+                      <RadioGroup
+                        value={stage2[q.id]?.toString()}
+                        onValueChange={(v) => setStage2((prev) => ({ ...prev, [q.id]: parseInt(v, 10) }))}
+                        className="space-y-1.5 ml-1"
+                      >
+                        {q.options.map((opt, oi) => (
+                          <div key={oi} className="flex items-center space-x-3">
+                            <RadioGroupItem value={oi.toString()} id={`s2-${q.id}-o${oi}`} />
+                            <Label htmlFor={`s2-${q.id}-o${oi}`} className="cursor-pointer text-sm">
+                              <span className="text-muted-foreground mr-1 text-xs">{CIRCLED[oi]}</span> {opt}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-between gap-2" dir={isAr ? "rtl" : "ltr"}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (step > 0) { setStep(step - 1); return; }
+              if (!inStage1) { setPhase("stage1"); setStep(SEJONG1_SECTIONS.length - 1); }
+            }}
+            disabled={inStage1 && step === 0}
+          >
+            <ArrowLeft className={cn("h-4 w-4 me-1.5", isAr && "rotate-180")} />
+            {t("السابق", "Back")}
+          </Button>
+          <Button onClick={inStage1 ? nextFromStage1 : nextFromStage2}>
+            {t("التالي", "Next")}
+            <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
+          </Button>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default KoreanPlacementPage;
