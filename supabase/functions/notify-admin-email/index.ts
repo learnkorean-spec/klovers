@@ -1,12 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { adminRecipients } from "../_shared/adminRecipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const ADMIN_EMAIL = "reham.elshrkawy@gmail.com";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -51,6 +50,10 @@ serve(async (req) => {
       </div>
     `;
 
+    // Both mailboxes, so an alert about kloversegy.com is readable from
+    // kloversegy.com and not only from one personal inbox.
+    const to = adminRecipients();
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -59,16 +62,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "KLovers <noreply@kloversegy.com>",
-        to: [ADMIN_EMAIL],
+        to,
         subject: `[KLovers] ${type}: ${message.substring(0, 80)}`,
         html,
       }),
     });
 
     const result = await res.json();
-    console.log("Email sent:", JSON.stringify(result));
+    console.log(`Email sent to ${to.join(", ")}:`, JSON.stringify(result));
 
-    return new Response(JSON.stringify({ success: true, result }), {
+    return new Response(JSON.stringify({ success: true, to, result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
