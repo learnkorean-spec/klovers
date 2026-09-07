@@ -8,13 +8,60 @@ const corsHeaders = {
 
 const SITE_URL = "https://kloversegy.com";
 
-function buildEmail(htmlBody: string, recipientName: string | null): string {
+/**
+ * Where an unsubscribe click lands.
+ *
+ * Two different URLs on purpose:
+ *
+ *  - the VISIBLE footer link goes to the site route, so a recipient sees a
+ *    kloversegy.com URL rather than a *.supabase.co one. That route redirects
+ *    here.
+ *  - the List-Unsubscribe HEADER goes straight to the edge function. One-click
+ *    unsubscribe is an unattended POST from Gmail's servers; it must not land
+ *    on a single-page app that only works once JavaScript has run.
+ */
+const unsubscribeSiteUrl = (token: string, lang: string) =>
+  `${SITE_URL}/unsubscribe?token=${token}&lang=${lang}`;
+
+const unsubscribeApiUrl = (token: string, lang: string) =>
+  `${Deno.env.get("SUPABASE_URL")}/functions/v1/unsubscribe-email?token=${token}&lang=${lang}`;
+
+/**
+ * Appended by the sender, not written into the templates.
+ *
+ * All eight templates in BulkEmailManager were authored without one. Putting
+ * it here means the next person to add a template cannot leave it out.
+ */
+function unsubscribeFooter(token: string, isAr: boolean): string {
+  const url = unsubscribeSiteUrl(token, isAr ? "ar" : "en");
+  return isAr
+    ? `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e5e5;font-family:sans-serif;font-size:12px;color:#888;text-align:center;direction:rtl">
+         <p style="margin:0">وصلتك هذه الرسالة لأنك مسجّل في KLovers.</p>
+         <p style="margin:6px 0 0"><a href="${url}" style="color:#888;text-decoration:underline">إلغاء الاشتراك في الرسائل التسويقية</a></p>
+       </div>`
+    : `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e5e5;font-family:sans-serif;font-size:12px;color:#888;text-align:center">
+         <p style="margin:0">You are receiving this because you registered with KLovers.</p>
+         <p style="margin:6px 0 0"><a href="${url}" style="color:#888;text-decoration:underline">Unsubscribe from marketing emails</a></p>
+       </div>`;
+}
+
+function buildEmail(
+  htmlBody: string,
+  recipientName: string | null,
+  unsubscribeToken?: string | null,
+  language?: string | null,
+): string {
   const firstName = recipientName?.split(" ")[0]?.trim();
   const greeting = firstName ? `Hi ${firstName},` : "Hi there,";
-  return htmlBody
+  const body = htmlBody
     .replace(/\{\{greeting\}\}/g, greeting)
     .replace(/\{\{dashboard_url\}\}/g, `${SITE_URL}/dashboard`)
     .replace(/\{\{courses_url\}\}/g, `${SITE_URL}/courses`);
+
+  // A test send has no recipient row, so no token — that is the only case
+  // where a campaign email legitimately goes out without a footer.
+  if (!unsubscribeToken) return body;
+  return body + unsubscribeFooter(unsubscribeToken, language !== "en");
 }
 
 Deno.serve(async (req) => {
@@ -74,11 +121,16 @@ Deno.serve(async (req) => {
       const { subject, html_body } = body;
       const { data: profile } = await adminClient
         .from("profiles")
-        .select("email, name")
+        .select("email, name, unsubscribe_token, language")
         .eq("user_id", userId)
         .single();
 
-      const html = buildEmail(html_body, profile?.name || null);
+      const html = buildEmail(
+        html_body,
+        profile?.name || null,
+        profile?.unsubscribe_token || null,
+        profile?.language || null,
+      );
 
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -127,23 +179,60 @@ Deno.serve(async (req) => {
         .limit(50);
 
       if (batch && batch.length > 0) {
-        // Get profile names for personalization
+        // Personalisation, opt-out state and the unsubscribe token all come
+        // from the same row. The opt-out check has to happen HERE, not only in
+        // the admin UI that enqueued these rows: a campaign can sit queued for
+        // days, and someone can unsubscribe in between.
         const userIds = batch.map((s: any) => s.user_id);
         const { data: profiles } = await adminClient
           .from("profiles")
-          .select("user_id, name")
+          .select("user_id, name, unsubscribe_token, email_unsubscribed, language")
           .in("user_id", userIds);
 
-        const nameMap: Record<string, string> = {};
+        const profileMap: Record<string, any> = {};
         if (profiles) {
           for (const p of profiles) {
-            nameMap[p.user_id] = p.name;
+            profileMap[p.user_id] = p;
           }
         }
 
         for (const send of batch as any[]) {
+          const profile = profileMap[send.user_id];
+
+          // Opted out — record why, and do not send. Marked rather than
+          // deleted so the campaign history still accounts for the row.
+          if (profile?.email_unsubscribed) {
+            await adminClient
+              .from("email_sends")
+              .update({ status: "skipped", error: "recipient unsubscribed" })
+              .eq("id", send.id);
+            continue;
+          }
+
+          // No token means no way to offer an opt-out, and a marketing email
+          // without one should not go out at all. Every profile has had a
+          // token since the 2026-04-24 migration, so this is a guard against
+          // a future row created without one.
+          if (!profile?.unsubscribe_token) {
+            await adminClient
+              .from("email_sends")
+              .update({ status: "skipped", error: "no unsubscribe token on profile" })
+              .eq("id", send.id);
+            continue;
+          }
+
           try {
-            const html = buildEmail(campaign.html_body, nameMap[send.user_id] || null);
+            const html = buildEmail(
+              campaign.html_body,
+              profile?.name || null,
+              profile.unsubscribe_token,
+              profile?.language || null,
+            );
+
+            const apiUrl = unsubscribeApiUrl(
+              profile.unsubscribe_token,
+              profile?.language === "en" ? "en" : "ar",
+            );
 
             const res = await fetch("https://api.resend.com/emails", {
               method: "POST",
@@ -156,6 +245,14 @@ Deno.serve(async (req) => {
                 to: [send.email],
                 subject: campaign.subject,
                 html,
+                // RFC 8058. Gmail and Yahoo require these of bulk senders;
+                // without them the only exit from a mailing list is the spam
+                // button, and those complaints degrade the sending reputation
+                // of the address that also carries payment confirmations.
+                headers: {
+                  "List-Unsubscribe": `<${apiUrl}>`,
+                  "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                },
               }),
             });
 
@@ -195,12 +292,13 @@ Deno.serve(async (req) => {
         .select("status")
         .eq("campaign_id", campaign_id);
 
-      const result = { queued: 0, sent: 0, failed: 0 };
+      const result = { queued: 0, sent: 0, failed: 0, skipped: 0 };
       if (counts) {
         for (const c of counts as any[]) {
           if (c.status === "queued") result.queued++;
           else if (c.status === "sent") result.sent++;
           else if (c.status === "failed") result.failed++;
+          else if (c.status === "skipped") result.skipped++;
         }
       }
 
