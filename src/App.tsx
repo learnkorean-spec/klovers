@@ -30,6 +30,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminEntry = lazy(() => import("./pages/AdminEntry"));
 const AdminToday = lazy(() => import("./pages/AdminToday"));
+const AdminWeek = lazy(() => import("./pages/AdminWeek"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const EnrollPage = lazy(() => import("./pages/EnrollPage"));
@@ -207,6 +208,10 @@ const App = () => (
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} />
                 <Route path="/admin/korean-orchestra" element={<ProtectedRoute><KoreanOrchestratorPage /></ProtectedRoute>} />
                 <Route path="/admin/today" element={<ProtectedRoute><AdminToday /></ProtectedRoute>} />
+                {/* Must sit BEFORE /admin — /admin is exact-match in v6, so the
+                    order is not load-bearing, but keeping the specific paths
+                    above it matches how the rest of this block reads. */}
+                <Route path="/admin/week" element={<ProtectedRoute><AdminWeek /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminEntry /></ProtectedRoute>} />
                 {/* Public and unguarded on purpose — requiring a login to opt
                     out is how a campaign gets reported as spam instead. */}
