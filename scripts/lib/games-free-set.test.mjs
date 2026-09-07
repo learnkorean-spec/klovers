@@ -149,10 +149,84 @@ describe("one source of truth for what is free", () => {
     expect(gamesPageSrc).not.toMatch(/game\.free/);
   });
 
-  it("still gates actual play on FREE_GAME_IDS in both places", () => {
-    // renderGame's wall, and the game_started telemetry guard.
+  it("consults the gate at each of its three call sites", () => {
+    // Named rather than merely counted, because a bare number tells whoever
+    // trips this nothing about whether they have added a legitimate consumer
+    // or deleted a gate. The three, in source order:
+    //
+    //   1. the game_started telemetry guard — a locked game the visitor cannot
+    //      play must not emit a start event;
+    //   2. the host strip — the character is shown only where a game will
+    //      actually render, never above the locked-game wall;
+    //   3. renderGame's wall itself — the gate that decides play.
+    //
+    // If this count changes, work out which of the three moved before
+    // adjusting the number. Deleting site 3 is a security-shaped bug: every
+    // locked game becomes playable.
     const uses = [...gamesPageSrc.matchAll(/FREE_GAME_IDS\.includes\(activeGame\)/g)];
-    expect(uses.length).toBe(2);
+    expect(uses.length).toBe(3);
+  });
+
+  it("still gates renderGame on the array, whatever else consults it", () => {
+    // The one call site that must never go away, pinned by its own shape so
+    // the count above cannot be satisfied by three copies of the wrong thing.
+    expect(gamesPageSrc).toMatch(/const isGameFree = FREE_GAME_IDS\.includes\(activeGame\)/);
+    expect(gamesPageSrc).toMatch(/if \(!isLoggedIn && !isGameFree\)/);
+  });
+});
+
+describe("the signup nudge is shown once per session", () => {
+  // It used to fire on every guest completion with the dismissal not
+  // remembered, so a guest playing five games saw it five times. Survivable at
+  // 2 open games; PR #261 made it 10.
+  it("reads and writes a sessionStorage flag", () => {
+    expect(gamesPageSrc).toMatch(/sessionStorage\.getItem\(NUDGE_SEEN_KEY\)/);
+    expect(gamesPageSrc).toMatch(/sessionStorage\.setItem\(NUDGE_SEEN_KEY, "1"\)/);
+  });
+
+  it("guards every sessionStorage access", () => {
+    // Accessing sessionStorage THROWS in some privacy modes rather than
+    // returning null, so an unguarded read takes the whole page down.
+    const accesses = [...gamesPageSrc.matchAll(/sessionStorage\./g)];
+    const tries = [...gamesPageSrc.matchAll(/try \{/g)];
+    expect(accesses.length).toBeGreaterThan(0);
+    expect(tries.length).toBeGreaterThanOrEqual(accesses.length);
+  });
+
+  it("uses sessionStorage, not localStorage", () => {
+    // Someone returning next week is a new visit and worth asking once more.
+    expect(gamesPageSrc).not.toMatch(/localStorage/);
+  });
+
+  it("checks the flag before showing the nudge", () => {
+    expect(gamesPageSrc).toMatch(/nudgeAlreadySeen\(\)/);
+    expect(gamesPageSrc).toMatch(/markNudgeSeen\(\)/);
+  });
+});
+
+describe("the characters", () => {
+  it("are imported from the shared asset module", () => {
+    expect(gamesPageSrc).toMatch(
+      /import \{ CHARACTER_GIRL, CHARACTER_BOY \} from "@\/assets\/characters"/
+    );
+  });
+
+  it("are used, both of them", () => {
+    expect(gamesPageSrc).toContain("CHARACTER_GIRL");
+    expect(gamesPageSrc).toContain("CHARACTER_BOY");
+  });
+
+  it("are decorative — every character image is hidden from screen readers", () => {
+    // The heading or bubble beside each one already carries the meaning, so a
+    // screen reader announcing the image would only repeat it. What must not
+    // happen is an image with neither alt text nor aria-hidden.
+    const imgs = [...gamesPageSrc.matchAll(/<img[\s\S]*?\/>/g)].map((m) => m[0]);
+    const characterImgs = imgs.filter((t) => t.includes("CHARACTER_"));
+    expect(characterImgs.length).toBeGreaterThan(0);
+    for (const tag of characterImgs) {
+      expect(tag).toMatch(/alt=""/);
+      expect(tag).toMatch(/aria-hidden="true"/);
+    }
   });
 });
 
