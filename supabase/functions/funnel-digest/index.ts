@@ -15,12 +15,30 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { cairoDateKey, cairoHour, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
+import { adminRecipients } from "../_shared/adminRecipients.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const ADMIN_EMAIL = Deno.env.get("FUNNEL_DIGEST_TO") ?? "learnkorean@kloversegy.com";
 const FROM_EMAIL = "KLovers Funnel <noreply@kloversegy.com>";
+
+/**
+ * This used to be a bare `FUNNEL_DIGEST_TO ?? "learnkorean@kloversegy.com"`.
+ * That mailbox is retired — Re confirmed on 2026-09-07 she no longer reads it —
+ * so every daily digest for months went somewhere nobody opened.
+ *
+ * Resolving through the shared list means one place to change, and no address
+ * can quietly drift out of use in a single function again. FUNNEL_DIGEST_TO is
+ * kept as an override for the case where this one report wants its own list.
+ */
+function digestRecipients(): string[] {
+  const override = Deno.env.get("FUNNEL_DIGEST_TO");
+  if (override) {
+    const list = override.split(",").map((s) => s.trim()).filter((s) => s.includes("@"));
+    if (list.length > 0) return list;
+  }
+  return adminRecipients();
+}
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -253,18 +271,19 @@ Deno.serve(async (req) => {
       flags,
     });
 
+    const to = digestRecipients();
     const subject = `📊 Klovers funnel — ${yLabel} · ${signups}/${sessions} signups · ${flags.length} flags`;
     const sent = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [ADMIN_EMAIL], subject, html }),
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
     });
     if (!sent.ok) {
       const errText = await sent.text();
       throw new Error(`Resend ${sent.status}: ${errText}`);
     }
 
-    return new Response(JSON.stringify({ ok: true, sent: true, sessions, signups, flags }), {
+    return new Response(JSON.stringify({ ok: true, sent: true, to, sessions, signups, flags }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
