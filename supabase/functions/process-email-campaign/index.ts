@@ -58,10 +58,69 @@ function buildEmail(
     .replace(/\{\{dashboard_url\}\}/g, `${SITE_URL}/dashboard`)
     .replace(/\{\{courses_url\}\}/g, `${SITE_URL}/courses`);
 
-  // A test send has no recipient row, so no token — that is the only case
-  // where a campaign email legitimately goes out without a footer.
   if (!unsubscribeToken) return body;
   return body + unsubscribeFooter(unsubscribeToken, language !== "en");
+}
+
+/**
+ * The ONE place a campaign email is handed to Resend.
+ *
+ * Test sends and real sends both come through here. They used to be two
+ * separate fetch calls, and the headers were added to only one of them — so
+ * the email an admin inspected before approving a campaign was not the email
+ * recipients received. A test that differs from production is worse than no
+ * test: it manufactures confidence in the exact thing being checked.
+ */
+async function sendCampaignEmail(opts: {
+  apiKey: string;
+  to: string;
+  subject: string;
+  htmlBody: string;
+  recipientName: string | null;
+  unsubscribeToken: string | null;
+  language: string | null;
+}): Promise<void> {
+  const html = buildEmail(
+    opts.htmlBody,
+    opts.recipientName,
+    opts.unsubscribeToken,
+    opts.language,
+  );
+
+  const payload: Record<string, unknown> = {
+    from: Deno.env.get("FROM_EMAIL") || "KLovers <noreply@kloversegy.com>",
+    to: [opts.to],
+    subject: opts.subject,
+    html,
+  };
+
+  // RFC 8058. Gmail and Yahoo require these of bulk senders; without them the
+  // only exit from a mailing list is the spam button, and those complaints
+  // degrade the sending reputation of the address that also carries payment
+  // confirmations and receipts.
+  if (opts.unsubscribeToken) {
+    const apiUrl = unsubscribeApiUrl(
+      opts.unsubscribeToken,
+      opts.language === "en" ? "en" : "ar",
+    );
+    payload.headers = {
+      "List-Unsubscribe": `<${apiUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${opts.apiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
 }
 
 Deno.serve(async (req) => {
@@ -125,31 +184,15 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .single();
 
-      const html = buildEmail(
-        html_body,
-        profile?.name || null,
-        profile?.unsubscribe_token || null,
-        profile?.language || null,
-      );
-
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: Deno.env.get("FROM_EMAIL") || "KLovers <noreply@kloversegy.com>",
-          to: [profile?.email || claims.claims.email],
-          subject,
-          html,
-        }),
+      await sendCampaignEmail({
+        apiKey: RESEND_API_KEY,
+        to: profile?.email || (claims.claims.email as string),
+        subject,
+        htmlBody: html_body,
+        recipientName: profile?.name || null,
+        unsubscribeToken: profile?.unsubscribe_token || null,
+        language: profile?.language || null,
       });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Resend error: ${err}`);
-      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -222,44 +265,15 @@ Deno.serve(async (req) => {
           }
 
           try {
-            const html = buildEmail(
-              campaign.html_body,
-              profile?.name || null,
-              profile.unsubscribe_token,
-              profile?.language || null,
-            );
-
-            const apiUrl = unsubscribeApiUrl(
-              profile.unsubscribe_token,
-              profile?.language === "en" ? "en" : "ar",
-            );
-
-            const res = await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${RESEND_API_KEY}`,
-              },
-              body: JSON.stringify({
-                from: Deno.env.get("FROM_EMAIL") || "KLovers <noreply@kloversegy.com>",
-                to: [send.email],
-                subject: campaign.subject,
-                html,
-                // RFC 8058. Gmail and Yahoo require these of bulk senders;
-                // without them the only exit from a mailing list is the spam
-                // button, and those complaints degrade the sending reputation
-                // of the address that also carries payment confirmations.
-                headers: {
-                  "List-Unsubscribe": `<${apiUrl}>`,
-                  "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-                },
-              }),
+            await sendCampaignEmail({
+              apiKey: RESEND_API_KEY,
+              to: send.email,
+              subject: campaign.subject,
+              htmlBody: campaign.html_body,
+              recipientName: profile?.name || null,
+              unsubscribeToken: profile.unsubscribe_token,
+              language: profile?.language || null,
             });
-
-            if (!res.ok) {
-              const errText = await res.text();
-              throw new Error(errText);
-            }
 
             await adminClient
               .from("email_sends")
