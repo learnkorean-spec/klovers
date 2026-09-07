@@ -135,6 +135,15 @@ export function unsubscribeFooter(token: string | undefined, isAr: boolean): str
  * from the width/height ATTRIBUTES, and ignores border-radius entirely. There
  * the disc becomes a yellow square with a black K — still the brand, still
  * legible, which is more than a broken-image icon managed.
+ *
+ * ⚠ `brandWrapper` no longer calls this. Its header is now a one-line lockup
+ * (see below) in which the disc has to BE a `<td>` in the same row as the
+ * wordmark, not a centred table of its own, so the cell is written inline
+ * there. Kept exported, and kept correct, because it is the standalone form
+ * of the mark and the three functions that hold their own headers
+ * (send-class-reminders, send-name-collection-email,
+ * abandoned-checkout-recovery) are the obvious next things to move onto it.
+ * If it is still unused when one of those is next opened, delete it then.
  */
 export function brandMark(size = 64): string {
   const font = Math.round(size * 0.58);
@@ -156,19 +165,48 @@ export function brandMark(size = 64): string {
  *    of them.
  *  • The header is black, so a client that strips backgrounds still leaves
  *    yellow type on white rather than yellow on yellow.
+ *
+ * THE HEADER IS A LOCKUP, NOT A SPLASH SCREEN
+ * -------------------------------------------
+ * It used to stack four centred things — a 64px disc, then KLOVERS at 26px
+ * with 5px of tracking, then a small rule, then the tagline — over 180px of
+ * black. On a phone that is most of the first screen spent before the reader
+ * reaches a single word that is addressed to them, and it said the brand
+ * twice: a disc whose only content is "K", directly above the word KLOVERS.
+ *
+ * Now the mark and the wordmark sit on ONE line, as a letterhead does, with
+ * the tagline tucked under the wordmark. Same four elements of brand, about
+ * half the height, and the greeting is visible without scrolling.
+ *
+ * The 5px yellow strip along the top replaces the height that was carrying
+ * the colour. It costs 5px instead of 90 and survives Outlook, which honours
+ * a background-color on a block but not much else.
+ *
+ * Centred rather than left-aligned on purpose: this wrapper renders both the
+ * Arabic and English letters, and a lockup pinned to the left edge reads as
+ * misplaced in an RTL layout. Centred is correct in both directions.
+ *
+ * The tagline is #9a9a9a, not #b8b8b8: on black that is a deliberate step
+ * back so the wordmark leads. Both clear 4.5:1 against #000.
  */
 export function brandWrapper(content: string, isRtl: boolean) {
   const dir = isRtl ? 'direction: rtl; text-align: right;' : '';
   return `
   <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 14px; overflow: hidden;">
+    <!-- Brand edge: the colour the old header spent 90px of black to carry. -->
+    <div style="height: 5px; background-color: ${BRAND_YELLOW}; font-size: 0; line-height: 0;">&nbsp;</div>
     <!-- Header -->
-    <div style="background-color: ${BRAND_BLACK}; padding: 30px 24px 26px; text-align: center;">
-      ${brandMark(64)}
-      <div translate="no" class="notranslate" style="margin: 16px 0 0;">
-        <span style="color: ${BRAND_YELLOW}; font-size: 26px; font-weight: 700; letter-spacing: 5px; line-height: 1;">KLOVERS</span>
-      </div>
-      <div style="width: 40px; height: 2px; background-color: ${BRAND_YELLOW}; margin: 12px auto 0; opacity: 0.55; font-size: 0; line-height: 0;">&nbsp;</div>
-      <p style="color: #b8b8b8; margin: 12px 0 0; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">Korean Language Academy</p>
+    <div style="background-color: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
+        <tr>
+          <td width="42" height="42" align="center" valign="middle" style="width: 42px; height: 42px; background-color: ${BRAND_YELLOW}; border-radius: 50%; font-family: Arial, Helvetica, sans-serif; font-size: 25px; font-weight: bold; line-height: 42px; color: ${BRAND_BLACK}; text-align: center;">K</td>
+          <td width="12" style="width: 12px; font-size: 0; line-height: 0;">&nbsp;</td>
+          <td align="left" valign="middle" style="text-align: left;">
+            <div translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; font-size: 23px; font-weight: 700; letter-spacing: 2.5px; line-height: 1.1;">KLOVERS</div>
+            <div style="color: #9a9a9a; font-size: 9px; letter-spacing: 2.4px; text-transform: uppercase; padding-top: 4px;">Korean Language Academy</div>
+          </td>
+        </tr>
+      </table>
     </div>
     <!-- Body -->
     <div style="padding: 32px 28px; ${dir} color: ${BRAND_TEXT}; font-size: 15px; line-height: 1.75;">
