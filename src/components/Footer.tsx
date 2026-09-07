@@ -24,7 +24,7 @@ const Footer = () => {
   const social = [
     { href: "https://t.me/+Fu5T7d4wLMsxNDY9", Icon: MessageCircle, label: "Telegram", color: "hover:bg-blue-500 hover:border-blue-500" },
     { href: "https://www.tiktok.com/@kloversegy", Icon: TiktokIcon, label: "TikTok", color: "hover:bg-black hover:border-black" },
-    { href: "https://www.facebook.com/Kloversegy", Icon: Facebook, label: "Facebook", color: "hover:bg-blue-600 hover:border-blue-600" },
+    { href: "https://www.facebook.com/kloversegy", Icon: Facebook, label: "Facebook", color: "hover:bg-blue-600 hover:border-blue-600" },
   ];
 
   return (
