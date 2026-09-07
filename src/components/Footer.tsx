@@ -1,6 +1,7 @@
 import { MessageCircle, Facebook, Phone, Mail, Youtube, Instagram } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
+import { CONTACT_EMAIL } from "@/lib/siteConfig";
 
 const TiktokIcon = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -42,8 +43,8 @@ const Footer = () => {
               {t("footer", "tagline")}
             </p>
             <div className="space-y-1.5 text-background/70 text-sm">
-              <a href="mailto:koreanlovers.net@gmail.com" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <Mail className="h-3.5 w-3.5 shrink-0" /> koreanlovers.net@gmail.com
+              <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Mail className="h-3.5 w-3.5 shrink-0" /> {CONTACT_EMAIL}
               </a>
               <a href="tel:+201010003084" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Phone className="h-3.5 w-3.5 shrink-0" /> +201010003084

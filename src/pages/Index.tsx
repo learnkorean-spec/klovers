@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { logLeadEvent } from "@/lib/leadTracking";
+import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
@@ -140,7 +141,7 @@ const Index = () => {
       url: "https://kloversegy.com",
       logo: "https://kloversegy.com/klovers-logo.jpg",
       description: "Online Korean language school teaching Arabic speakers. Live classes, small groups, A1–C2 levels.",
-      email: "koreanlovers.net@gmail.com",
+      email: CONTACT_EMAIL,
       telephone: "+201010003084",
       sameAs: [
         "https://www.facebook.com/Klovers.net/",
