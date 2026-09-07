@@ -60,7 +60,7 @@ type ViewZone = keyof typeof VIEW_TZ;
 /** The week the "after the clock change" view is anchored to. 1 Nov 2026 is a Sunday. */
 const AFTER_ANCHOR = "2026-11-01";
 
-/* ── time helpers ─────────────────────────────────────────────────────────── */
+/* ── time helpers ───────────────────────────────────────────────── */
 
 const hhmm = (t: string) => {
   const [h, m] = t.split(":");
@@ -120,11 +120,39 @@ const label = (min: number) => {
   return m ? `${h12}:${String(m).padStart(2, "0")}${ampm}` : `${h12}${ampm}`;
 };
 
-/* ── data ─────────────────────────────────────────────────────────────────── */
+/* ── data ───────────────────────────────────────────────────────── */
 
 interface RawRow {
   id: string; weekday: number; start: string; minutes: number;
   tz: string; kind: Kind; title: string; sub?: string;
+  /**
+   * Only `teacher_availability_rules` carries these. A rule is drawn on the
+   * week being viewed only while it is in effect there — see `inEffect`.
+   * Trials and cohorts have no equivalent and are always current.
+   */
+  from?: string | null;
+  to?: string | null;
+}
+
+/**
+ * Is a rule in effect on `date`?
+ *
+ * `teacher_availability_rules` has always had `effective_from` / `effective_to`,
+ * and until now nothing read `effective_to` — not this screen, not
+ * fn_teacher_timezone, not the booking guards. So retiring a rule by dating it
+ * did nothing at all: it kept drawing here forever, which made the column a
+ * promise the app did not keep.
+ *
+ * That mattered the day the day-job block was retired. Ending a commitment is a
+ * thing that HAPPENS ON A DATE, not a thing that erases the past, and the
+ * "After 30 Oct" view still has to show the week as it will really be. Deleting
+ * the rows would have lost the fact that those hours were ever taken; dating
+ * them keeps the history and lets both views be right about their own week.
+ */
+function inEffect(r: RawRow, date: string): boolean {
+  if (r.from && date < r.from) return false;
+  if (r.to && date > r.to) return false;
+  return true;
 }
 
 function useScheduleRows() {
@@ -140,7 +168,7 @@ function useScheduleRows() {
           .eq("course_type", "group"),
         supabase.from("pkg_groups").select("package_id, name"),
         supabase.from("teacher_availability_rules")
-          .select("id, weekday, start_time, end_time, timezone, note")
+          .select("id, weekday, start_time, end_time, timezone, note, effective_from, effective_to")
           .eq("kind", "blocked"),
       ]);
       for (const r of [slots, packages, groups, rules]) if (r.error) throw r.error;
@@ -195,6 +223,8 @@ function useScheduleRows() {
           tz: (r.timezone as string) || "Africa/Cairo",
           kind: "blocked",
           title: (r.note as string) || "Blocked",
+          from: (r.effective_from as string | null) ?? null,
+          to: (r.effective_to as string | null) ?? null,
         });
       }
 
@@ -203,7 +233,7 @@ function useScheduleRows() {
   });
 }
 
-/* ── presentation ─────────────────────────────────────────────────────────── */
+/* ── presentation ───────────────────────────────────────────────── */
 
 const TONE: Record<Kind, string> = {
   trial: "bg-blue-50 text-blue-800 ring-1 ring-blue-200 dark:bg-blue-950/60 dark:text-blue-200 dark:ring-blue-900",
@@ -251,16 +281,18 @@ const WeekTimetable = () => {
     if (!rows) return [];
     const anchor = period === "now" ? sundayOf(new Date()) : AFTER_ANCHOR;
     const tz = VIEW_TZ[view];
-    return rows.map(r => {
+    return rows.flatMap(r => {
       const date = addDays(anchor, r.weekday);
+      // Dated out of the week being viewed: not drawn here, still in the table.
+      if (!inEffect(r, date)) return [];
       const at = readIn(instantOf(date, r.start, r.tz), tz);
-      return {
+      return [{
         id: r.id, kind: r.kind, title: r.title, sub: r.sub,
         weekday: at.weekday,
         start: at.minutes,
         // Clip anything running past midnight so it cannot draw outside the grid.
         minutes: Math.min(r.minutes, 1440 - at.minutes),
-      };
+      }];
     });
   }, [rows, view, period]);
 
