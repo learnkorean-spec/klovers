@@ -234,7 +234,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const meetLinkSection = p.class_link_url
     ? (isAr
         ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
-            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet — يُفضّل حفظه ليوم الحصة</p>
+            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet — يُفضَّل حفظه ليوم الحصة</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">الدخول للكلاس</a>
             <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">الرابط ده شخصي — من فضلك ما تشاركهوش مع حد.</p>
           </div>`
