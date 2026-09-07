@@ -60,7 +60,7 @@ type ViewZone = keyof typeof VIEW_TZ;
 /** The week the "after the clock change" view is anchored to. 1 Nov 2026 is a Sunday. */
 const AFTER_ANCHOR = "2026-11-01";
 
-/* ── time helpers ───────────────────────────────────────────────── */
+/* ── time helpers ──────────────────────────────────────────────────────────── */
 
 const hhmm = (t: string) => {
   const [h, m] = t.split(":");
@@ -120,7 +120,7 @@ const label = (min: number) => {
   return m ? `${h12}:${String(m).padStart(2, "0")}${ampm}` : `${h12}${ampm}`;
 };
 
-/* ── data ───────────────────────────────────────────────────────── */
+/* ── data ─────────────────────────────────────────────────────────────────── */
 
 interface RawRow {
   id: string; weekday: number; start: string; minutes: number;
@@ -233,7 +233,7 @@ function useScheduleRows() {
   });
 }
 
-/* ── presentation ───────────────────────────────────────────────── */
+/* ── presentation ────────────────────────────────────────────────────────── */
 
 const TONE: Record<Kind, string> = {
   trial: "bg-blue-50 text-blue-800 ring-1 ring-blue-200 dark:bg-blue-950/60 dark:text-blue-200 dark:ring-blue-900",
