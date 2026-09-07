@@ -28,6 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
+  CalendarRange,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,10 @@ export const ADMIN_NAV: {
     { id: "leads", label: "Leads", to: "/admin?tab=leads", icon: Users },
   ],
   secondary: [
+    // Not a `?tab=` deep link — a route of its own (/admin/week), because the
+    // timetable is not a screen inside AdminDashboard.tsx. It reads the four
+    // scheduling tables live; see WeekTimetable.tsx.
+    { id: "week", label: "The week", to: "/admin/week", icon: CalendarRange },
     { id: "my-students", label: "My students", to: "/admin?tab=my-students", icon: LayoutDashboard },
     { id: "placement-tests", label: "Placement tests", to: "/admin?tab=placement-tests", icon: ClipboardCheck },
     { id: "availability", label: "Availability", to: "/admin?tab=availability", icon: Clock },
