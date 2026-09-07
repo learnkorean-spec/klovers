@@ -421,7 +421,7 @@ const StudentDashboard = () => {
     if (key === "Full name") setUserName(_value);
   };
 
-  // ── Hooks that must live before any early return ────────────────────────
+  // ── Hooks that must live before any early return ──────────────────────────
   const lessonsCompleted = Object.values(gamification.lessonProgress).filter((p) => p.chapter_completed).length;
 
   // Level-up flash: detect league change since last session
@@ -455,7 +455,7 @@ const StudentDashboard = () => {
     { label: "Games", desc: "20 fun games", emoji: "🎮", path: "/games", bg: "bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/25" },
     { label: "Vocab Review", desc: "Spaced repetition", emoji: "🧠", path: "/review", bg: "bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 shadow-violet-500/25" },
   ], []);
-  // ──────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
 
   if (gateLoading || resetBlocked || loading) {
     return (
