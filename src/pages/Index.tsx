@@ -53,7 +53,7 @@ const CommunityBand = () => {
               {isAr ? "تيليغرام" : "Telegram"}
             </a>
             <a
-              href="https://www.facebook.com/Klovers.net/"
+              href="https://www.facebook.com/Kloversegy"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#1877F2] hover:bg-[#1565d8] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
@@ -144,8 +144,8 @@ const Index = () => {
       email: CONTACT_EMAIL,
       telephone: "+201010003084",
       sameAs: [
-        "https://www.facebook.com/Klovers.net/",
-        "https://www.tiktok.com/@klovers.net",
+        "https://www.facebook.com/Kloversegy",
+        "https://www.tiktok.com/@kloversegy",
         "https://t.me/+Fu5T7d4wLMsxNDY9",
       ],
       hasOfferCatalog: {
