@@ -187,22 +187,41 @@ describe("sameAs points at profiles that still resolve", () => {
    * the page. So the flag raised alongside the Arabic brand name is closed:
    * the handles no longer carry a competitor's name.
    *
-   * Two gaps are still open and are deliberately NOT papered over here:
-   *   - the Google entry is a share.google shortlink, not a stable Google
-   *     Business Profile URL;
-   *   - there is no Instagram entry, because the current handle is unknown.
+   * Instagram was added on 2026-09-07 once the live profile was confirmed, so
+   * all three social handles are now `kloversegy`. One gap is still open and
+   * is deliberately NOT papered over here: the Google entry is a share.google
+   * shortlink rather than a stable Google Business Profile URL, which is why
+   * it sits last in the array.
    *
    * Pinned exactly rather than by pattern. A pattern would have gone on
    * passing through this rename, which is the failure this pin exists to
    * prevent — the point is that changing a profile URL is a deliberate edit
    * with a visible diff.
    */
-  it("holds exactly the three profiles, on the current handles", () => {
+  it("holds exactly the four profiles, on the current handles", () => {
+    // Ordered strongest first: order in sameAs is a preference signal
+    // (https://developers.google.com/search/docs/appearance/site-names), and
+    // Facebook (2.4K followers) outweighs Instagram (412). The share.google
+    // shortlink is last precisely because it is the weakest entry — it is a
+    // share link, not a stable Google Business Profile URL.
     expect(orgLd.sameAs).toEqual([
-      "https://share.google/4pWiAGlbXHCmd8hpi",
-      "https://www.facebook.com/Kloversegy",
+      "https://www.facebook.com/kloversegy",
       "https://www.tiktok.com/@kloversegy",
+      "https://www.instagram.com/kloversegy/",
+      "https://share.google/4pWiAGlbXHCmd8hpi",
     ]);
+  });
+
+  it("uses one casing for the handle everywhere", () => {
+    // Facebook paths are case-insensitive, so a stray "Kloversegy" would
+    // resolve and never show up as a broken link — it would just sit in the
+    // codebase as a second spelling of one identity. Instagram and TikTok are
+    // lowercase, so lowercase is the house form.
+    const handles = [...indexHtml.matchAll(/(?:facebook|tiktok|instagram)\.com\/@?([A-Za-z0-9._]+)/g)]
+      .map((m) => m[1])
+      .filter((h) => /kloversegy/i.test(h));
+    expect(handles.length).toBeGreaterThan(0);
+    for (const h of handles) expect(h).toBe(h.toLowerCase());
   });
 
   it("the homepage JSON-LD claims the same profiles as index.html", () => {
@@ -212,7 +231,7 @@ describe("sameAs points at profiles that still resolve", () => {
     // when only one of them is updated.
     const block = indexPageSrc.match(/sameAs: \[([\s\S]*?)\]/);
     expect(block, "no sameAs array found in src/pages/Index.tsx").not.toBeNull();
-    const social = (u) => /facebook\.com|tiktok\.com/.test(u);
+    const social = (u) => /facebook\.com|tiktok\.com|instagram\.com/.test(u);
     const fromPage = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).filter(social);
     const fromHtml = orgLd.sameAs.filter(social);
     expect(fromPage).toEqual(fromHtml);
