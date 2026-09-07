@@ -1,16 +1,22 @@
 // Notifies students whose trial group didn't reach the minimum to run
 // (claim_trial_min_run_check() marks them rollover_status='pending_notification')
 // once next month's schedule actually has bookable slots. Idempotent via
-// rollover_notified_at. Same dual-auth pattern as send-trial-followups.
+// rollover_notified_at.
+//
+// Auth comes from _shared/cronAuth.ts — a cron secret verified against Vault,
+// or an admin JWT. It used to be a local copy that read CRON_SECRET from the
+// environment; nothing ever set it, so every scheduled call got 401 and no
+// rollover notification has ever been sent.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 interface RolloverBooking {
@@ -34,24 +40,6 @@ function formatPreviousDate(iso: string | null): string {
   });
 }
 
-async function isAuthorised(req: Request, supabase: ReturnType<typeof createClient>): Promise<boolean> {
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && req.headers.get("x-cron-secret") === cronSecret) return true;
-
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token) return false;
-  if (cronSecret && token === cronSecret) return true;
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return false;
-
-  const { data: roleRow } = await supabase
-    .from("user_roles").select("role")
-    .eq("user_id", user.id).eq("role", "admin").maybeSingle();
-  return !!roleRow;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -61,7 +49,7 @@ Deno.serve(async (req) => {
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    if (!(await isAuthorised(req, supabase))) {
+    if (!(await isCronOrAdmin(req, supabase))) {
       return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
