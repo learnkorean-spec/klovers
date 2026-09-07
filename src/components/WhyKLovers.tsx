@@ -20,7 +20,7 @@ const WhyKLovers = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <span className="inline-block bg-primary text-black text-xs font-bold uppercase tracking-widest px-5 py-2 rounded-full border border-black/25 shadow-sm mb-5">
-            {t("why", "badge") || "Why K-Lovers"}
+            {t("why", "badge") || "Why Klovers"}
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {t("why", "title")}
