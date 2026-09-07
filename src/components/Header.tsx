@@ -70,9 +70,9 @@ const Header = () => {
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/98 backdrop-blur-md shadow-sm" : "bg-background/95 backdrop-blur-sm"} border-b border-border`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="K-Lovers homepage">
-            <img src={kloversLogo} alt="K-Lovers" className="h-9 w-9 rounded-full object-cover" loading="eager" />
-            <span className="font-bold text-lg text-foreground">K-Lovers</span>
+          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="Klovers homepage">
+            <img src={kloversLogo} alt="Klovers" className="h-9 w-9 rounded-full object-cover" loading="eager" />
+            <span className="font-bold text-lg text-foreground">Klovers</span>
           </Link>
 
           {/* Desktop Nav */}
