@@ -4,7 +4,7 @@
 export const WHATSAPP_NUMBER = "201010003084"; // Update this if your number changes
 export const WHATSAPP_BASE = `https://wa.me/${WHATSAPP_NUMBER}`;
 
-export const CONTACT_EMAIL = "koreanlovers.net@gmail.com";
+export const CONTACT_EMAIL = "kloversegy@gmail.com";
 export const SITE_URL = "https://kloversegy.com";
 export const ENROLL_URL = `${SITE_URL}/enroll-now`;
 
