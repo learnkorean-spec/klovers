@@ -48,6 +48,7 @@ const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
 const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage"));
 const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
 const PlacementTestPage = lazy(() => import("./pages/PlacementTestPage"));
+const UnitPlacementPage = lazy(() => import("./pages/UnitPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
 const TextbookPage = lazy(() => import("./pages/TextbookPage"));
@@ -185,6 +186,9 @@ const App = () => (
                 <Route path="/dashboard/schedule" element={<AuthProtectedRoute><MySchedulePage /></AuthProtectedRoute>} />
                 <Route path="/resubmit-schedule" element={<AuthProtectedRoute><ResubmitSchedulePage /></AuthProtectedRoute>} />
                 <Route path="/placement-test" element={<PlacementTestPage />} />
+                {/* Unit placement inside 세종한국어 1 — login-only, unlike the
+                    public /placement-test above, which captures leads. */}
+                <Route path="/unit-placement" element={<AuthProtectedRoute><UnitPlacementPage /></AuthProtectedRoute>} />
                 <Route path="/games" element={<GamesPage />} />
                 <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
                 <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
