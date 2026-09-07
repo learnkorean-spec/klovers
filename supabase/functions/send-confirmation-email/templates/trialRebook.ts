@@ -135,10 +135,18 @@ export function buildTrialRebookEmail(p: EmailPayload) {
           slotTz: s.timezone || "Africa/Cairo",
           studentTz: p.student_timezone, isAr,
         });
-        return `<div style="background-color: ${BRAND_GRAY}; border: 1px solid #e6e6e6; border-radius: 10px; padding: 14px 18px; margin: 10px 0; ${isAr ? "text-align: right;" : ""}">
-          <p style="margin: 0; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">📅 ${dayPart}</p>
-          <p style="margin: 5px 0 0; color: ${BRAND_MUTED}; font-size: 13px;">⏰ ${ct.timeLine}</p>
-        </div>`;
+        // A table with a coloured first cell, not a div with a border-left:
+        // Outlook drops border-left on a div, which would leave four
+        // identical grey slabs. As cells, the yellow edge survives.
+        return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width: 100%; border-collapse: separate; margin: 10px 0;" dir="${isAr ? "rtl" : "ltr"}">
+          <tr>
+            <td width="4" style="width: 4px; background-color: ${BRAND_YELLOW}; font-size: 0; line-height: 0;">&nbsp;</td>
+            <td style="background-color: #fafafa; border: 1px solid #ebebeb; ${isAr ? "border-right: 0;" : "border-left: 0;"} padding: 13px 18px; ${isAr ? "text-align: right;" : ""}">
+              <div style="font-weight: 700; color: ${BRAND_DARK}; font-size: 15.5px; line-height: 1.4;">${dayPart}</div>
+              <div style="margin-top: 3px; color: ${BRAND_MUTED}; font-size: 13.5px;">${ct.timeLine}</div>
+            </td>
+          </tr>
+        </table>`;
       }).join("")
     : "";
 
@@ -245,10 +253,19 @@ export function buildTrialRebookEmail(p: EmailPayload) {
           </div>`)
     : "";
 
-  const chooseBtn = `<div style="margin: 26px 0; text-align: center;">
-    <a href="${url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 15px 36px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; border: 1px solid rgba(0,0,0,0.25);">
+  // The one action the letter is for, so it is given the weight of one: a
+  // wide bar rather than a modest inline button, and a line under it that
+  // removes the last hesitation before the click.
+  //
+  // The border is solid black rather than a 25%-alpha black. Outlook does not
+  // composite rgba on a border and falls back to nothing, which left the
+  // yellow bar edgeless there — and yellow needs its edge, which is the same
+  // reason the site carries a `.text-outlined` utility for this colour.
+  const chooseBtn = `<div style="margin: 28px 0 10px; text-align: center;">
+    <a href="${url}" style="display: block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 17px 24px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 17px; letter-spacing: 0.2px; border: 2px solid ${BRAND_BLACK}; text-align: center;">
       ${isAr ? "احجز موعدك" : "Choose My Date"}
     </a>
+    <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12.5px;">${isAr ? "الحجز بياخد أقل من دقيقة، ومن غير أي دفع." : "Booking takes under a minute. No payment, no card."}</p>
   </div>`;
 
   // The missing half of this letter. A free class with nothing after it is a
