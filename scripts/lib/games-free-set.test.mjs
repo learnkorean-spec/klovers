@@ -21,6 +21,23 @@ import { join } from "path";
  * disagreeing with a list in another, which is exactly how "30 games" survived
  * in four places while the array held 20.
  *
+ * RAW SOURCE OR STRIPPED SOURCE — GET THIS RIGHT
+ *
+ * `gamesPageSrc` is the file verbatim. `gamesPageCopy` is the same file with
+ * comments removed. Which one an assertion reads is not a detail:
+ *
+ *   - Asserting what the CODE DOES ("does not use localStorage") must read
+ *     gamesPageCopy. A comment explaining why localStorage was rejected
+ *     contains the word, and an assertion that fails on a true explanation
+ *     leaves only two ways out — delete the comment, or weaken the check.
+ *   - Asserting what a VISITOR SEES ("no hardcoded game count") must read
+ *     gamesPageCopy, for the same reason.
+ *   - Only assertions about the source text itself — an import's exact shape,
+ *     a constant's spelling — may read gamesPageSrc raw.
+ *
+ * This was learned the direct way: the localStorage check below was written
+ * against raw source and failed CI on a comment.
+ *
  * THE DRIFT THIS EXISTS TO PREVENT
  *
  * Before this change there were two independent lists: FREE_GAME_IDS gated
@@ -55,12 +72,8 @@ function parseRenderableIds(src) {
 }
 
 /**
- * Source with comments removed, for the assertions about rendered copy.
- *
- * The count checks below are about what a visitor SEES. Comments legitimately
- * discuss the numbers — "with 2 of 20 games open", "a listener for all 20
- * games" — and failing on those would push a maintainer to delete an accurate
- * comment to get a test green, which is the wrong incentive entirely.
+ * Source with comments removed. See the note at the top of this file for which
+ * assertions must use this and which may read the raw source.
  *
  * Only whole comment lines and block comments are stripped, so a "//" inside a
  * string literal (a URL) is left alone.
@@ -136,7 +149,7 @@ describe("one source of truth for what is free", () => {
     // The second list. It never gated play — it only drove the padlock and the
     // FREE badge — so the two could disagree and ship a card that says FREE and
     // then refuses to open.
-    expect(gamesPageSrc).not.toMatch(/free:\s*(true|false)/);
+    expect(gamesPageCopy).not.toMatch(/free:\s*(true|false)/);
   });
 
   it("derives isFree from FREE_GAME_IDS", () => {
@@ -146,13 +159,93 @@ describe("one source of truth for what is free", () => {
   it("gates the padlock and the badge on the derived value, not a stored one", () => {
     expect(gamesPageSrc).toMatch(/const isLocked = !isLoggedIn && !isFree/);
     expect(gamesPageSrc).toMatch(/\{isFree && !isLoggedIn &&/);
-    expect(gamesPageSrc).not.toMatch(/game\.free/);
+    expect(gamesPageCopy).not.toMatch(/game\.free/);
   });
 
-  it("still gates actual play on FREE_GAME_IDS in both places", () => {
-    // renderGame's wall, and the game_started telemetry guard.
-    const uses = [...gamesPageSrc.matchAll(/FREE_GAME_IDS\.includes\(activeGame\)/g)];
-    expect(uses.length).toBe(2);
+  it("consults the gate at each of its three call sites", () => {
+    // Named rather than merely counted, because a bare number tells whoever
+    // trips this nothing about whether they have added a legitimate consumer
+    // or deleted a gate. The three, in source order:
+    //
+    //   1. the game_started telemetry guard — a locked game the visitor cannot
+    //      play must not emit a start event;
+    //   2. the host strip — the character is shown only where a game will
+    //      actually render, never above the locked-game wall;
+    //   3. renderGame's wall itself — the gate that decides play.
+    //
+    // If this count changes, work out which of the three moved before
+    // adjusting the number. Deleting site 3 is a security-shaped bug: every
+    // locked game becomes playable.
+    const uses = [...gamesPageCopy.matchAll(/FREE_GAME_IDS\.includes\(activeGame\)/g)];
+    expect(uses.length).toBe(3);
+  });
+
+  it("still gates renderGame on the array, whatever else consults it", () => {
+    // The one call site that must never go away, pinned by its own shape so
+    // the count above cannot be satisfied by three copies of the wrong thing.
+    expect(gamesPageSrc).toMatch(/const isGameFree = FREE_GAME_IDS\.includes\(activeGame\)/);
+    expect(gamesPageSrc).toMatch(/if \(!isLoggedIn && !isGameFree\)/);
+  });
+});
+
+describe("the signup nudge is shown once per session", () => {
+  // It used to fire on every guest completion with the dismissal not
+  // remembered, so a guest playing five games saw it five times. Survivable at
+  // 2 open games; PR #261 made it 10.
+  it("reads and writes a session-scoped flag", () => {
+    expect(gamesPageSrc).toMatch(/sessionStorage\.getItem\(NUDGE_SEEN_KEY\)/);
+    expect(gamesPageSrc).toMatch(/sessionStorage\.setItem\(NUDGE_SEEN_KEY, "1"\)/);
+  });
+
+  it("guards every storage access", () => {
+    // Accessing web storage THROWS in some privacy modes rather than returning
+    // null, so an unguarded read takes the whole page down. Counted against
+    // stripped source: a comment that merely discusses storage is not access.
+    const accesses = [...gamesPageCopy.matchAll(/sessionStorage\./g)];
+    const tries = [...gamesPageCopy.matchAll(/try \{/g)];
+    expect(accesses.length).toBeGreaterThan(0);
+    expect(tries.length).toBeGreaterThanOrEqual(accesses.length);
+  });
+
+  it("scopes the flag to the session, not the device", () => {
+    // Someone returning next week is a new visit and worth asking once more,
+    // so this must not be persisted across sessions.
+    //
+    // Stripped source, deliberately: the docblock in GamesPage.tsx explains
+    // why localStorage was rejected, and that explanation contains the word.
+    // Reading raw source here failed CI on a true comment.
+    expect(gamesPageCopy).not.toMatch(/localStorage/);
+  });
+
+  it("checks the flag before showing the nudge", () => {
+    expect(gamesPageSrc).toMatch(/nudgeAlreadySeen\(\)/);
+    expect(gamesPageSrc).toMatch(/markNudgeSeen\(\)/);
+  });
+});
+
+describe("the characters", () => {
+  it("are imported from the shared asset module", () => {
+    expect(gamesPageSrc).toMatch(
+      /import \{ CHARACTER_GIRL, CHARACTER_BOY \} from "@\/assets\/characters"/
+    );
+  });
+
+  it("are both actually rendered, not just imported", () => {
+    expect(gamesPageCopy).toContain("CHARACTER_GIRL");
+    expect(gamesPageCopy).toContain("CHARACTER_BOY");
+  });
+
+  it("are decorative — every character image is hidden from screen readers", () => {
+    // The heading or bubble beside each one already carries the meaning, so a
+    // screen reader announcing the image would only repeat it. What must not
+    // happen is an image with neither alt text nor aria-hidden.
+    const imgs = [...gamesPageCopy.matchAll(/<img[\s\S]*?\/>/g)].map((m) => m[0]);
+    const characterImgs = imgs.filter((t) => t.includes("CHARACTER_"));
+    expect(characterImgs.length).toBeGreaterThan(0);
+    for (const tag of characterImgs) {
+      expect(tag).toMatch(/alt=""/);
+      expect(tag).toMatch(/aria-hidden="true"/);
+    }
   });
 });
 
@@ -175,7 +268,7 @@ describe("published counts agree with the arrays", () => {
     // "لعبتان" is a grammatical dual — the "two" is inside the word form, so
     // swapping a numeral would have left it saying "two" in Arabic. For 3-10
     // Arabic takes the plural, "ألعاب".
-    expect(gamesPageSrc).not.toContain("لعبتان");
+    expect(gamesPageCopy).not.toContain("لعبتان");
     expect(gamesPageSrc).toMatch(/\$\{FREE_GAME_IDS\.length\} ألعاب مجانية/);
   });
 
