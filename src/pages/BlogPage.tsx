@@ -118,7 +118,7 @@ const BlogPage = () => {
               {language === "ar" ? "📝 المدونة" : "📝 Blog"}
             </Badge>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
-              {language === "ar" ? "مدونة K-Lovers" : "K-Lovers Blog"}
+              {language === "ar" ? "مدونة Klovers" : "Klovers Blog"}
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
               {language === "ar"
