@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readdirSync, readFileSync, statSync } from "fs";
+import { join, relative } from "path";
 
 /**
  * brand-identity.test.mjs — guards the two places the business states its own
@@ -33,6 +33,23 @@ import { join } from "path";
 const repoRoot = process.cwd();
 const indexHtml = readFileSync(join(repoRoot, "index.html"), "utf-8");
 const prerenderSrc = readFileSync(join(repoRoot, "scripts/prerender-meta.mjs"), "utf-8");
+const siteConfigSrc = readFileSync(join(repoRoot, "src/lib/siteConfig.ts"), "utf-8");
+const replyToSrc = readFileSync(
+  join(repoRoot, "supabase/functions/send-confirmation-email/index.ts"),
+  "utf-8"
+);
+
+/**
+ * CONTACT_EMAIL as siteConfig.ts declares it — read, not assumed, exactly as
+ * SITE_NAME is read out of prerender-meta.mjs above.
+ *
+ * Reading siteConfig.ts from here is no more awkward than that: it is plain
+ * text at a fixed path with one `export const NAME = "value"` per line, and
+ * nothing about it needs a bundler, the "@/" alias or a TS transform to read
+ * as source. Parsing it with a regex is the same technique this file already
+ * uses, not a contortion adopted to make the assertion possible.
+ */
+const CONTACT_EMAIL = siteConfigSrc.match(/export const CONTACT_EMAIL = "([^"]+)"/)[1];
 
 /** SITE_NAME as prerender-meta.mjs defines it — read, not assumed. */
 const SITE_NAME = prerenderSrc.match(/const SITE_NAME = "([^"]+)"/)[1];
@@ -220,5 +237,71 @@ describe("the homepage description", () => {
   it("fits the meta description budget", () => {
     expect([...home.description].length).toBeLessThanOrEqual(160);
     expect([...home.description].length).toBeGreaterThan(70);
+  });
+});
+
+describe("the contact address has exactly one source of truth", () => {
+  /**
+   * WHY THIS BLOCK EXISTS
+   *
+   * siteConfig.ts has exported CONTACT_EMAIL as the single source of truth for
+   * a while, and Footer.tsx, Index.tsx and ProgressReportPage.tsx each ignored
+   * it and hardcoded the address instead — so changing the business email
+   * meant finding five literals across four files plus the JSON-LD, and
+   * missing one was silent. The three display sites now import the constant;
+   * these assertions are what stop the next one from being pasted back in.
+   */
+
+  /** Every .ts/.tsx file under src/, so a new hardcode anywhere is caught. */
+  function walk(dir, out = []) {
+    for (const entry of readdirSync(dir)) {
+      if (entry === "node_modules" || entry.startsWith(".")) continue;
+      const p = join(dir, entry);
+      if (statSync(p).isDirectory()) walk(p, out);
+      else if (/\.(ts|tsx)$/.test(entry)) out.push(p);
+    }
+    return out;
+  }
+
+  const srcFiles = walk(join(repoRoot, "src")).map((p) => ({
+    path: relative(repoRoot, p).split("\\").join("/"),
+    text: readFileSync(p, "utf-8"),
+  }));
+
+  it("siteConfig declares a plausible address", () => {
+    expect(CONTACT_EMAIL).toMatch(/^[^@\s]+@[^@\s]+\.[^@\s]+$/);
+  });
+
+  it("the Organization JSON-LD email matches siteConfig", () => {
+    // The two live in different files and different languages, so nothing but
+    // this assertion keeps them equal.
+    expect(orgLd.email).toBe(CONTACT_EMAIL);
+  });
+
+  it("the transactional reply-to matches siteConfig", () => {
+    // supabase/functions/send-confirmation-email/index.ts. This one decides
+    // where a student's reply physically lands, and an edge function genuinely
+    // cannot import from src/ — so it is a deliberate duplicate, and this is
+    // the check that keeps the duplicate honest.
+    const m = replyToSrc.match(/const REPLY_TO_EMAIL = "([^"]+)"/);
+    expect(m).not.toBeNull();
+    expect(m[1]).toBe(CONTACT_EMAIL);
+  });
+
+  it("no file under src/ hardcodes the address instead of importing it", () => {
+    const offenders = srcFiles
+      .filter((f) => f.path !== "src/lib/siteConfig.ts" && f.text.includes(CONTACT_EMAIL))
+      .map((f) => f.path);
+    expect(
+      offenders,
+      `These files hardcode the contact address instead of importing ` +
+        `CONTACT_EMAIL from @/lib/siteConfig:\n` +
+        offenders.map((p) => `  ${p}`).join("\n")
+    ).toEqual([]);
+  });
+
+  it("the address is declared exactly once in src/", () => {
+    const declaring = srcFiles.filter((f) => f.text.includes(CONTACT_EMAIL)).map((f) => f.path);
+    expect(declaring).toEqual(["src/lib/siteConfig.ts"]);
   });
 });
