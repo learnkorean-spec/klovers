@@ -18,12 +18,12 @@
  *   trial_slots                 the free 30-minute sessions
  *   schedule_packages           the paid cohorts (inactive ones shown dashed)
  *   pkg_groups                  the only place a cohort's LANGUAGE is recorded
- *   teacher_availability_rules  kind='blocked' — the day job and private lessons
+ *   teacher_availability_rules  kind='blocked' — the teacher's private lessons
  *
  * THE TIMEZONE PROBLEM THIS SOLVES
  * --------------------------------
  * Rows do not share a clock. Klovers rows are anchored to Africa/Cairo; the
- * teacher's own commitments are stored against Asia/Kuala_Lumpur or Cairo. Egypt
+ * teacher's own commitments are stored against Asia/Bangkok or Cairo. Egypt
  * leaves summer time on 30 October 2026 and the gap between the two widens by an
  * hour, so a pair that does not overlap today can overlap in November.
  *
@@ -54,7 +54,15 @@ interface Block {
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const VIEW_TZ = { cairo: "Africa/Cairo", vietnam: "Asia/Ho_Chi_Minh" } as const;
+/**
+ * The two clocks worth reading this grid in: the students' and the teacher's.
+ *
+ * The teacher's was Asia/Ho_Chi_Minh and is now Asia/Bangkok. Both are UTC+7
+ * with no daylight saving, so this particular move drew not one pixel
+ * differently - the label was simply naming the wrong country. It is written
+ * out rather than left as "+7" because the next move might not be free.
+ */
+const VIEW_TZ = { cairo: "Africa/Cairo", thailand: "Asia/Bangkok" } as const;
 type ViewZone = keyof typeof VIEW_TZ;
 
 /** The week the "after the clock change" view is anchored to. 1 Nov 2026 is a Sunday. */
@@ -328,7 +336,7 @@ const WeekTimetable = () => {
         <h2 className="text-lg font-bold tracking-tight">The teaching week</h2>
         <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
           Trials, Hangul cohorts and blocked hours on one grid, read live from the rows that
-          govern them. Klovers classes are anchored to Cairo; work and private lessons are not —
+          govern them. Klovers classes are anchored to Cairo; private lessons are not —
           so the two sets move apart when Egypt leaves summer time on 30&nbsp;October.
         </p>
       </div>
@@ -338,7 +346,7 @@ const WeekTimetable = () => {
           <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground">SHOW TIMES IN</p>
           <div className="flex gap-1 rounded-lg border p-1">
             <button type="button" className={seg(view === "cairo")} onClick={() => setView("cairo")}>Cairo</button>
-            <button type="button" className={seg(view === "vietnam")} onClick={() => setView("vietnam")}>Vietnam</button>
+            <button type="button" className={seg(view === "thailand")} onClick={() => setView("thailand")}>Thailand</button>
           </div>
         </div>
         <div className="space-y-1.5">
@@ -353,7 +361,7 @@ const WeekTimetable = () => {
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
         {([
           ["trial", "Trial"], ["cohort", "Course — open"],
-          ["cohort-closed", "Course — not open yet"], ["blocked", "Work or private lesson"],
+          ["cohort-closed", "Course — not open yet"], ["blocked", "Private lesson"],
         ] as [Kind, string][]).map(([k, t]) => (
           <span key={k} className="flex items-center gap-2">
             <span className={`h-3 w-3 shrink-0 rounded-sm ${DOT[k]}`} />{t}
