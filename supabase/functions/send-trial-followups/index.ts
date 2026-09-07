@@ -9,16 +9,22 @@
 //   day3  — trial was 3 days ago (Cairo)     → WhatsApp final nudge
 //
 // Users who already have an APPROVED enrollment are skipped (they converted).
+//
+// Auth comes from _shared/cronAuth.ts — a cron secret verified against Vault,
+// or an admin JWT. It used to be a local copy that read CRON_SECRET from the
+// environment; nothing ever set it, so every scheduled call was refused with
+// 401 and not one follow-up email has ever been sent.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { cairoDateKey, shiftDateKey } from "../_shared/cairoTime.ts";
+import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 type Stage = "prep" | "day1" | "day3" | "day7";
@@ -61,6 +67,10 @@ const STAGE_COLUMN: Record<Stage, "followup_prep_sent_at" | "followup_day1_sent_
 // day1  → 2 days after trial (-2) — softer cadence, not next morning
 // day3  → 3 days after trial (-3) — WhatsApp nudge
 // day7  → 7 days after trial (-7) — qualitative check-in + share link
+//
+// Because each stage matches an EXACT date, turning this endpoint back on does
+// not replay a backlog: bookings whose trial has already passed by more than
+// the offset are never selected again.
 const STAGE_DAY_OFFSET: Record<Stage, number> = {
   prep: 1,
   day1: -2,
@@ -158,30 +168,6 @@ async function dispatchStage(
   return { stage, attempted: rows.length, sent, skipped, errors };
 }
 
-// ── Auth helper ──────────────────────────────────────────────────────────────
-// Accepts either:
-//   a) An admin JWT (Authorization: Bearer <token>) — for manual invocations
-//   b) A shared cron secret (x-cron-secret: <CRON_SECRET>) — for pg_cron
-async function isAuthorised(req: Request, supabase: ReturnType<typeof createClient>): Promise<boolean> {
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && req.headers.get("x-cron-secret") === cronSecret) return true;
-
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token) return false;
-
-  // pg_cron passes CRON_SECRET as a Bearer token; accept it directly
-  if (cronSecret && token === cronSecret) return true;
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return false;
-
-  const { data: roleRow } = await supabase
-    .from("user_roles").select("role")
-    .eq("user_id", user.id).eq("role", "admin").maybeSingle();
-  return !!roleRow;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -191,7 +177,7 @@ Deno.serve(async (req) => {
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    if (!(await isAuthorised(req, supabase))) {
+    if (!(await isCronOrAdmin(req, supabase))) {
       return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
