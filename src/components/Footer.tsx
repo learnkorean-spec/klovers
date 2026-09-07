@@ -37,7 +37,7 @@ const Footer = () => {
           <div className="sm:col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-3">
               <span className="text-2xl">🇰🇷</span>
-              <span className="font-bold text-xl">K-Lovers</span>
+              <span className="font-bold text-xl">Klovers</span>
             </Link>
             <p className="text-background/70 text-sm leading-relaxed mb-4">
               {t("footer", "tagline")}
