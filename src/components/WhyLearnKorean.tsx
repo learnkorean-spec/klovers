@@ -12,17 +12,22 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * is the payoff: front is the motivation and its Korean word, back is the
  * explanation.
  *
- * COLOUR (revised 2026-09-08, Re asked for better colours)
- * -------------------------------------------------------
- * The first pass used Tailwind's sky-900 / emerald-900 / rose-900 /
- * violet-900 over slate-900. Those are desaturated and near-identical in
- * value, so four cards read as one grey-blue smear and the brand yellow sat
- * badly on them.
+ * COLOUR (Re chose this on 2026-09-08 from a side-by-side)
+ * --------------------------------------------------------
+ * Hanbok pastels - 담청 pale blue, 옥색 jade, 연분홍 soft pink, 연자주 soft
+ * plum. The first pass used Tailwind's -900 steps, which are desaturated and
+ * near-identical in value; the second used deep dancheong temple colours.
+ * Re looked at both and picked the pastels, with the Korean word in black.
  *
- * These are drawn from dancheong (단청), the painted decoration on Korean
- * temple eaves and gates: vermillion, cobalt, malachite green and a deep
- * plum. High chroma, distinct hues, all dark enough that the yellow icon
- * bubble and white text sit at full contrast on every one of them.
+ * THE TEXT HAD TO FOLLOW THE BACKGROUND. On a pastel face, white text is
+ * about 1.4:1 - unreadable - so the title and the Korean watermark are both
+ * dark ink. Measured: ink on these grounds is 10.1:1 at the darkest point of
+ * every gradient, against a 4.5:1 requirement.
+ *
+ * THE YELLOW CHIP KEEPS THE BRAND, but its fill is only ~1.2:1 against a
+ * pastel, so its edge is a solid dark ring rather than a 25% wash. The icon
+ * inside is black on yellow at 19.6:1, which is why the chip still reads
+ * instantly - it is the border, not the fill, doing the separating.
  *
  * Gradients are INLINE STYLES, not Tailwind classes, on purpose. Tailwind's
  * JIT only emits classes it can see as complete literal strings in source;
@@ -30,11 +35,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * purged from the production build, so it works locally and ships unstyled.
  * Inline styles cannot be purged.
  *
- * ACCENT: the back face is theme-aware (light and dark), so its icon cannot
- * be the brand yellow - yellow on white is the P0-3 contrast problem, and
- * the first pass of this component shipped exactly that. The accents below
- * are mid-tone versions of each front, picked to stay legible on both a
- * white and a near-black background.
+ * THE BACK stays theme-aware, so it cannot wear the pastel: a pale panel on
+ * a dark page is a white blob. It uses the saturated ancestor of its front
+ * instead - as a rule along the top edge and as the icon colour - so the two
+ * faces still read as one card in both themes. It is not the brand yellow,
+ * because in light mode that face is white and yellow-on-white is the P0-3
+ * fault this plan already has open.
  */
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -52,20 +58,33 @@ const koreanWord: Record<string, string> = {
   culture: "문화",
 };
 
-type Tone = { from: string; to: string; accent: string };
+type Tone = { from: string; to: string; deep: string; accent: string };
 
+/**
+ * `from`/`to` paint the pastel front.
+ *
+ * The back face is theme-aware, so it needs two different values from the
+ * same hue: `deep` for the rule along its top edge - decorative, so its
+ * contrast does not have to carry meaning - and `accent`, a mid-tone, for
+ * the icon. `deep` on a dark background is only about 2:1, which is why the
+ * icon does not use it.
+ */
 const tones: Record<string, Tone> = {
-  // 청 cobalt - the scholar's blue
-  study: { from: "#0A4DA6", to: "#061E3D", accent: "#2C74C9" },
-  // 녹 malachite - growth
-  career: { from: "#0B6E52", to: "#04241C", accent: "#0E8F6F" },
-  // 적 vermillion - the dancheong red
-  travel: { from: "#B3122E", to: "#3A0812", accent: "#CE3350" },
-  // plum - the arts
-  culture: { from: "#7B1E6A", to: "#2B0A26", accent: "#A63D96" },
+  // 담청 pale blue
+  study: { from: "#D6E4F5", to: "#AFC9E9", deep: "#0A4DA6", accent: "#2C74C9" },
+  // 옥색 jade
+  career: { from: "#C9E8E0", to: "#A3D4C8", deep: "#0B6E52", accent: "#0E8F6F" },
+  // 연분홍 soft pink
+  travel: { from: "#FADCE0", to: "#F2BFC6", deep: "#B3122E", accent: "#CE3350" },
+  // 연자주 soft plum
+  culture: { from: "#E9D8ED", to: "#D6BCDD", deep: "#7B1E6A", accent: "#A63D96" },
 };
 
-const fallbackTone: Tone = { from: "#334155", to: "#0F172A", accent: "#64748B" };
+/** Dark ink for everything on a pastel face. Not a theme token: the card is
+ *  a light object in both themes, so its text must not follow the theme. */
+const INK = "#131A24";
+
+const fallbackTone: Tone = { from: "#E2E8F0", to: "#CBD5E1", deep: "#334155", accent: "#64748B" };
 
 /** Optional photographs, keyed by icon. Empty until real images exist. */
 const IMAGES: Record<string, string> = {};
@@ -130,22 +149,26 @@ const WhyLearnKorean = () => {
                       className="absolute inset-0"
                       style={{
                         backgroundImage:
-                          "radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 60%)",
+                          "radial-gradient(120% 80% at 50% -8%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 62%)",
                       }}
                     />
                     <div className="relative h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
                       <span
                         aria-hidden="true"
-                        className="text-4xl md:text-5xl font-extrabold text-white/30 leading-none select-none"
+                        className="text-4xl md:text-5xl font-extrabold leading-none select-none"
+                        style={{ color: INK, opacity: 0.22 }}
                       >
                         {koreanWord[item.icon] || "한국"}
                       </span>
-                      <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center border border-black/25 shadow-sm">
+                      <div
+                        className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-sm"
+                        style={{ border: `2px solid ${INK}` }}
+                      >
                         <span className="text-black">
                           {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
                         </span>
                       </div>
-                      <h3 className="font-bold text-white text-base md:text-lg leading-tight drop-shadow-sm">
+                      <h3 className="font-bold text-base md:text-lg leading-tight" style={{ color: INK }}>
                         {item.title}
                       </h3>
                     </div>
@@ -157,11 +180,12 @@ const WhyLearnKorean = () => {
                     <div
                       aria-hidden="true"
                       className="absolute inset-x-0 top-0 h-1.5"
-                      style={{ backgroundColor: tone.accent }}
+                      style={{ backgroundColor: tone.deep }}
                     />
                     <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-5">
-                      {/* Accent, never the brand yellow: this face is white in
-                          light mode, and yellow-on-white is the P0-3 problem. */}
+                      {/* Mid-tone, not `deep`: this face is white in light
+                          mode and near-black in dark, and only the mid-tone
+                          clears 3:1 on both. Never the brand yellow. */}
                       <span aria-hidden="true" style={{ color: tone.accent }}>
                         {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
                       </span>
