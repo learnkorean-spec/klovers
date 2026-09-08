@@ -20,60 +20,42 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import {
-  CheckCircle, AlertCircle, ArrowRight, ArrowLeft, GraduationCap, Share2,
+  CheckCircle, AlertCircle, ArrowRight, ArrowLeft, Share2,
   Download, RefreshCw, Mic, Square, Play, RotateCcw, PenLine, Loader2,
   Sparkles, Target, Clock, Save, Ban,
 } from "lucide-react";
 import {
-  SEJONG1_SECTIONS, SEJONG1_QUESTIONS, SEJONG1_READING_TEXT,
-  SEJONG1_WRITING, SEJONG1_SPEAKING,
-  type SejongQuestion, type SejongSectionId,
-} from "@/constants/sejong1Placement";
+  TOPIK1_SECTIONS, TOPIK1_QUESTIONS,
+  type Topik1Question, type Topik1SectionId,
+} from "@/constants/topik1Reading";
 import {
-  STAGE2_GRADE2, STAGE2_ABOVE, STAGE2_BLOCK_PASS, STAGE1_MAX, STAGE2_MAX,
-  computeTopikPlacement, G1_NUANCE,
+  computeTopikPlacement,
   type TopikGrade, type TopikPlacementResult,
 } from "@/constants/topikPlacement";
+import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement";
 
 /**
  * The Korean placement test — one test, answered as a TOPIK grade (급).
  *
- * Replaces the older PlacementTestPage at /placement-test. Two things had to
- * survive that swap unchanged, because they are why the page is public:
+ * The bank is TOPIK I 읽기 in format and scope (topik1Reading.ts); grading and
+ * the ceiling live in topikPlacement.ts. This file only sequences and renders.
+ *
+ * Two things must survive every future edit, because they are why the page is
+ * public:
  *
  *   1. The lead funnel. Every `logLeadEvent` cta_label below is the same
- *      literal the old page used, so the existing funnel queries keep working
- *      across the change instead of splitting into before/after buckets.
- *      `source_type: "placement"` on two of them is not a typo — it is what
- *      the old page sent, and historical rows use it.
+ *      literal the page has always sent, so the funnel queries keep working
+ *      across changes instead of splitting into before/after buckets.
+ *      `source_type: "placement"` on `recommendation_shown` is not a typo — it
+ *      is what historical rows use.
  *   2. `source: "placement_test"` on the leads insert. An RLS policy
  *      (20260404000001_placement_leads_anon_policy.sql) allows anonymous
  *      inserts ONLY with that exact string. Change it and every logged-out
  *      lead is silently rejected.
- *
- * Grading lives in topikPlacement.ts; this file only sequences and renders.
  */
 
-const STORAGE_KEY = "klovers_placement_draft_v3"; // v3: staged 급 test
+const STORAGE_KEY = "klovers_placement_draft_v4"; // v4: TOPIK I reading bank
 const AUDIO_BUCKET = "placement-audio";
-
-/** Stage 2 is shown as two blocks of six, in this order. */
-const STAGE2_BLOCKS = [STAGE2_GRADE2, STAGE2_ABOVE];
-
-/**
- * Arabic glosses for section A's ※ headers.
- *
- * Those headers are TOPIK-style and Korean-only, and section A is the FIRST
- * screen of the test — the one the funnel says 82 people reached and 32 got
- * past. An Egyptian beginner met three lines of Korean instructions before a
- * single question, with nothing in a language they read. Keyed by the question
- * that opens each group, which is where `group` lives.
- */
-const GROUP_AR: Record<string, string> = {
-  A1: "[A1~A3] اختر ما يملأ الفراغ (   ) كما في المثال ‹보기›.",
-  A4: "[A4~A6] اقرأ ثم اختر الإجابة الصحيحة.",
-  A7: "[A7~A8] اختر ما يُقال في الموقف التالي.",
-};
 
 const CIRCLED = ["①", "②", "③", "④"];
 const FILLED = ["❶", "❷", "❸", "❹"];
@@ -82,29 +64,26 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
   pre1: { emoji: "🌱", tagline: "Hangul Foundation" },
   g1: { emoji: "📗", tagline: "TOPIK Level 1" },
   g2: { emoji: "📘", tagline: "TOPIK Level 2" },
-  g3plus: { emoji: "🏆", tagline: "TOPIK Level 3+" },
+  above: { emoji: "🏆", tagline: "Past TOPIK I" },
 };
 
 /**
- * The four answers the test can give, shown on the intro screen.
+ * The answers the test can give, shown on the intro screen.
  *
  * Nothing else on the site tells a visitor what the result will look like, and
- * "we will tell you your level" is a weaker promise than showing the four
- * levels it chooses between. The order is the order of the ladder.
+ * "we will tell you your level" is a weaker promise than showing the levels it
+ * chooses between. The order is the order of the ladder.
  */
 const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
   { ko: "1급", ar: "المستوى الأول", en: "Level 1", emoji: "📗" },
   { ko: "2급", ar: "المستوى الثاني", en: "Level 2", emoji: "📘" },
-  { ko: "3급 이상", ar: "الثالث فأعلى", en: "Level 3+", emoji: "🏆" },
 ];
 
-type Phase = "intro" | "stage1" | "stage2" | "extras" | "result";
+type Phase = "intro" | "test" | "extras" | "result";
 
 interface Draft {
-  sejong: Record<string, number>;
-  stage2: Record<number, number>;
-  phase: Extract<Phase, "stage1" | "stage2">;
+  answers: Record<string, number>;
   step: number;
   startedAt: number;
 }
@@ -115,12 +94,11 @@ const KoreanPlacementPage = () => {
   const isAr = language === "ar";
   const { toast } = useToast();
 
-  useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
+  useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your TOPIK level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [step, setStep] = useState(0);
-  const [sejong, setSejong] = useState<Record<string, number>>({});
-  const [stage2, setStage2] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<TopikPlacementResult | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(() => Date.now());
@@ -144,19 +122,18 @@ const KoreanPlacementPage = () => {
   const topRef = useRef<HTMLDivElement | null>(null);
 
   const questionsBySection = useMemo(() => {
-    const map = {} as Record<SejongSectionId, SejongQuestion[]>;
-    for (const s of SEJONG1_SECTIONS) map[s.id] = [];
-    for (const q of SEJONG1_QUESTIONS) map[q.section].push(q);
+    const map = {} as Record<Topik1SectionId, Topik1Question[]>;
+    for (const s of TOPIK1_SECTIONS) map[s.id] = [];
+    for (const q of TOPIK1_QUESTIONS) map[q.section].push(q);
     return map;
   }, []);
 
   // ---- instrumentation ----------------------------------------------------
-  // Mirrors the old page's funnel exactly: one mount event, one per band.
   useEffect(() => {
     logLeadEvent({ source_type: "placement_test", cta_label: "test_started" });
   }, []);
   useEffect(() => {
-    if (phase === "stage1" || phase === "stage2") {
+    if (phase === "test") {
       logLeadEvent({ source_type: "placement_test", cta_label: `band_${step + 1}_viewed`, metadata: { page: step } });
     }
   }, [step, phase]);
@@ -169,7 +146,7 @@ const KoreanPlacementPage = () => {
       "@context": "https://schema.org",
       "@type": "Quiz",
       "name": "Free Korean Language Placement Test",
-      "description": "Take the free Klovers Korean placement test to discover your level from A1 beginner to C2 advanced and find the perfect course.",
+      "description": "Take the free Klovers Korean placement test to discover your TOPIK level and find the perfect course.",
       "url": "https://kloversegy.com/placement-test",
       "provider": { "@id": "https://kloversegy.com/#organization" },
       "educationalAlignment": {
@@ -194,31 +171,30 @@ const KoreanPlacementPage = () => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const d = JSON.parse(saved) as Draft;
-        if (d?.sejong && Object.keys(d.sejong).length > 0) {
-          setSejong(d.sejong);
-          setStage2(d.stage2 ?? {});
-          setPhase(d.phase ?? "stage1");
+        if (d?.answers && Object.keys(d.answers).length > 0) {
+          setAnswers(d.answers);
           setStep(d.step ?? 0);
           setStartedAt(d.startedAt ?? Date.now());
+          setPhase("test");
           toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
         }
       }
     } catch { /* ignore */ }
-    // The older tests wrote different shapes under these keys; a stale one
-    // would restore nonsense into the new state machine.
+    // Older versions of this page wrote different shapes under these keys; a
+    // stale one would restore nonsense into the new state machine.
     localStorage.removeItem("klovers_placement_draft");
     localStorage.removeItem("klovers_placement_draft_v2");
+    localStorage.removeItem("klovers_placement_draft_v3");
     localStorage.removeItem("klovers_unit_placement_draft_v1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (phase !== "stage1" && phase !== "stage2") return;
+    if (phase !== "test") return;
     try {
-      const d: Draft = { sejong, stage2, phase, step, startedAt };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, step, startedAt } satisfies Draft));
     } catch { /* ignore */ }
-  }, [sejong, stage2, phase, step, startedAt]);
+  }, [answers, phase, step, startedAt]);
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -271,19 +247,19 @@ const KoreanPlacementPage = () => {
   };
 
   // ---- flow ---------------------------------------------------------------
-  const sectionPassed = (id: SejongSectionId, answers: Record<string, number>) => {
-    const section = SEJONG1_SECTIONS.find((s) => s.id === id);
+  const sectionPassed = (id: Topik1SectionId, given: Record<string, number>) => {
+    const section = TOPIK1_SECTIONS.find((s) => s.id === id);
     if (!section) return false;
-    const correct = questionsBySection[id].filter((q) => answers[q.id] === q.answerIndex).length;
+    const correct = questionsBySection[id].filter((q) => given[q.id] === q.answerIndex).length;
     return correct >= section.pass;
   };
 
-  const finish = async (finalSejong: Record<string, number>, finalStage2: Record<number, number>) => {
-    const res = computeTopikPlacement(finalSejong, finalStage2);
+  const finish = async (finalAnswers: Record<string, number>) => {
+    const res = computeTopikPlacement(finalAnswers);
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 
-    // Result first, network second — the old page did the same, and a slow
-    // insert must never hold up the thing the student came for.
+    // Result first, network second — a slow insert must never hold up the
+    // thing the student came for.
     setResult(res);
     setPhase("result");
     track.custom("placement_recommendation_shown", { level: res.info.levelKey, score: res.totalScore });
@@ -301,51 +277,36 @@ const KoreanPlacementPage = () => {
     }
   };
 
-  const nextFromStage1 = () => {
-    const section = SEJONG1_SECTIONS[step];
+  const nextSection = () => {
+    const section = TOPIK1_SECTIONS[step];
     // The gate: a failed section ends the test here. Everything after it would
     // measure knowledge that sits on top of the gap just found, so asking is
     // both pointless and discouraging.
-    if (!sectionPassed(section.id, sejong)) { void finish(sejong, stage2); return; }
-    if (step < SEJONG1_SECTIONS.length - 1) { setStep(step + 1); return; }
-    setPhase("stage2");
-    setStep(0);
+    if (!sectionPassed(section.id, answers)) { void finish(answers); return; }
+    if (step < TOPIK1_SECTIONS.length - 1) { setStep(step + 1); return; }
+    void finish(answers);
   };
 
   /**
    * The way out of section A for someone who cannot read Hangul at all.
    *
    * The funnel is unambiguous about where this test loses people: 82 sessions
-   * reached the first question screen and 32 reached the second. The 50 who
-   * left were, judging by the screen they left from, beginners who could not
-   * read the alphabet — and closing the tab is the one action that gives them
-   * nothing back. Failing section A already produces 한글 기초; this button
-   * produces the same answer without making them guess eight times first, and
-   * lands them on the result screen, which is where the trial CTA and the
-   * email capture live.
-   *
-   * It is only rendered on section A. Later sections need no such button: a
-   * student who can read but does not know the grammar simply presses Next.
+   * reached the first question screen and 32 reached the second. Failing
+   * section A already produces 한글 기초; this button produces the same answer
+   * without making them guess eight times first, and lands them on the result
+   * screen, where the trial CTA and the email capture live.
    */
   const handleCannotReadHangul = () => {
     logLeadEvent({ source_type: "placement_test", cta_label: "cannot_read_hangul" });
-    void finish({}, {});
-  };
-
-  const nextFromStage2 = () => {
-    const block = STAGE2_BLOCKS[step];
-    const correct = block.filter((q) => stage2[q.id] === q.correctIndex).length;
-    if (correct < STAGE2_BLOCK_PASS) { void finish(sejong, stage2); return; }
-    if (step < STAGE2_BLOCKS.length - 1) { setStep(step + 1); return; }
-    void finish(sejong, stage2);
+    void finish({});
   };
 
   const handleRetake = () => {
-    setSejong({}); setStage2({}); setResult(null); setStep(0);
+    setAnswers({}); setResult(null); setStep(0);
     setWriting({}); setAudio({}); setExtrasSaved(false);
     setLeadSaved(false); setLeadName(""); setLeadEmail("");
     setStartedAt(Date.now());
-    setPhase("stage1");
+    setPhase("test");
   };
 
   // ---- result-screen actions (funnel-critical literals) --------------------
@@ -413,15 +374,10 @@ const KoreanPlacementPage = () => {
     });
     setLeadSaving(false);
     if (error) {
-      // The old page ignored this and showed success regardless, which meant a
-      // rejected lead looked identical to a captured one.
       toast({ title: isAr ? "لم نستطع الحفظ. حاول مرة أخرى." : "We could not save that. Please try again.", variant: "destructive" });
       return;
     }
     setLeadSaved(true);
-    // The old page's capture fired nothing at all, so a converted visitor was
-    // invisible in both lead_events and the pixel — one captured email in five
-    // months could not be told apart from a broken form.
     track.custom("placement_lead_captured", { level: result?.info.levelKey });
     logLeadEvent({ source_type: "email", cta_label: "placement_study_plan", metadata: { level: result?.info.levelKey } });
   };
@@ -451,13 +407,13 @@ const KoreanPlacementPage = () => {
     const { error } = await (supabase as any).from("unit_placement_tests").insert({
       id: attemptId,
       user_id: userId,
-      book: "sejong1",
-      section_scores: result.sejongSectionScores,
+      book: "topik1",
+      section_scores: result.sectionScores,
       mcq_score: result.totalScore,
       start_unit: result.info.grade,
       failed_section: result.failedSection,
       suggested_level_key: result.info.levelKey,
-      answers: sejong,
+      answers,
       writing: writingRows,
       speaking_audio: speaking,
       duration_seconds: Math.round((Date.now() - startedAt) / 1000),
@@ -473,16 +429,11 @@ const KoreanPlacementPage = () => {
 
   const t = (ar: string, en: string) => (isAr ? ar : en);
 
-  // ---- shared question renderers ------------------------------------------
-  const renderSejongQuestion = (q: SejongQuestion) => (
+  // ---- question renderer ---------------------------------------------------
+  const renderQuestion = (q: Topik1Question) => (
     <div key={q.id} className="space-y-2">
       {q.group && (
-        <div className="pt-4 space-y-0.5">
-          <p className="text-sm font-semibold" dir="ltr">{q.group}</p>
-          {isAr && GROUP_AR[q.id] && (
-            <p className="text-xs text-muted-foreground" dir="rtl">{GROUP_AR[q.id]}</p>
-          )}
-        </div>
+        <p className="pt-4 text-sm font-semibold" dir="ltr">{q.group}</p>
       )}
       {q.bogi && (
         <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1.5" dir="ltr">
@@ -497,6 +448,13 @@ const KoreanPlacementPage = () => {
           </p>
         </div>
       )}
+      {q.passage && (
+        <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-1" dir="ltr">
+          {q.passage.split("\n").map((line, i) => (
+            <p key={i} className="text-sm leading-relaxed">{line}</p>
+          ))}
+        </div>
+      )}
       <p className="text-sm font-medium" dir="ltr">
         <span className="text-muted-foreground mr-1.5">{q.id}.</span>
         {q.stem.split("\n").map((line, li) => (
@@ -507,8 +465,8 @@ const KoreanPlacementPage = () => {
         <p className="text-xs text-muted-foreground border-r-2 border-primary/40 pr-2" dir="rtl">{q.hintAr}</p>
       )}
       <RadioGroup
-        value={sejong[q.id]?.toString()}
-        onValueChange={(v) => setSejong((prev) => ({ ...prev, [q.id]: parseInt(v, 10) }))}
+        value={answers[q.id]?.toString()}
+        onValueChange={(v) => setAnswers((prev) => ({ ...prev, [q.id]: parseInt(v, 10) }))}
         className="space-y-1.5 ml-1"
         dir="ltr"
       >
@@ -527,7 +485,7 @@ const KoreanPlacementPage = () => {
   // ---- intro --------------------------------------------------------------
   if (phase === "intro") {
     const FEATURES = [
-      { icon: Target, text: t("بيقف عند أول قسم تتعثر فيه", "Stops at the first section you struggle with") },
+      { icon: Target, text: t("بأسئلة على شكل TOPIK I الحقيقي", "Questions in the real TOPIK I format") },
       { icon: Clock,  text: t("٨ أسئلة بس لو مبتدئ", "Just 8 questions if you are a beginner") },
       { icon: Save,   text: t("اقفل وارجع — محفوظ", "Close it and come back — saved") },
       { icon: Ban,    text: t("من غير قاموس ولا ترجمة", "No dictionary, no translator") },
@@ -536,10 +494,8 @@ const KoreanPlacementPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        {/* pt-24 clears the fixed h-16 header. Every other page on the site
-            does this (pt-16 / pt-24); this one only had py-10, so the top of
-            the card sat underneath the header bar. items-center then puts it
-            in the middle of what is left. */}
+        {/* pt-24 clears the fixed h-16 header, items-center puts the card in the
+            middle of what is left. */}
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 pt-24 pb-14">
           <div className="relative w-full max-w-2xl">
 
@@ -572,8 +528,8 @@ const KoreanPlacementPage = () => {
                   </h1>
 
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    {t("النتيجة بنظام TOPIK — من تأسيس الهانغول لحد المستوى الثالث فأعلى.",
-                       "Your answer on the TOPIK scale — from the Hangul alphabet up to level 3 and above.")}
+                    {t("أسئلة قراءة على شكل TOPIK I — الامتحان اللي بيقيس المستوى الأول والتاني.",
+                       "Reading questions in the TOPIK I format — the exam that measures levels 1 and 2.")}
                   </p>
                 </div>
 
@@ -583,7 +539,7 @@ const KoreanPlacementPage = () => {
                   <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center mb-3">
                     {t("نتيجتك هتكون واحدة من دول", "YOUR RESULT WILL BE ONE OF THESE")}
                   </p>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {LADDER.map((l) => (
                       <div
                         key={l.ko}
@@ -597,6 +553,10 @@ const KoreanPlacementPage = () => {
                       </div>
                     ))}
                   </div>
+                  <p className="text-[11px] text-muted-foreground text-center mt-2">
+                    {t("ولو عدّيت الاختبار كله، معناها إنك فوق TOPIK I وهنقيّمك بنفسنا.",
+                       "Clear every section and it means you are past TOPIK I — we assess that ourselves.")}
+                  </p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-2.5">
@@ -612,7 +572,7 @@ const KoreanPlacementPage = () => {
                   <Button
                     size="lg"
                     className="w-full h-12 text-base font-bold gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow"
-                    onClick={() => { setStartedAt(Date.now()); setPhase("stage1"); }}
+                    onClick={() => { setStartedAt(Date.now()); setPhase("test"); }}
                   >
                     {t("ابدأ الاختبار", "Start the test")}
                     <ArrowRight className={cn("h-4 w-4", isAr && "rotate-180")} />
@@ -634,10 +594,6 @@ const KoreanPlacementPage = () => {
 
   // ---- result -------------------------------------------------------------
   if (phase === "result" && result) {
-    const nuance = result.info.grade === "g1"
-      ? (result.failedSection === null ? G1_NUANCE.completed : G1_NUANCE.inside)
-      : null;
-
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -650,16 +606,15 @@ const KoreanPlacementPage = () => {
                 <p className="text-3xl font-bold" dir="ltr">{result.info.labelKo}</p>
                 <p className="text-sm font-medium">{isAr ? result.info.labelAr : result.info.labelEn}</p>
                 <p className="text-sm text-muted-foreground">{isAr ? result.info.noteAr : result.info.noteEn}</p>
-                {nuance && <p className="text-sm text-muted-foreground">{isAr ? nuance.ar : nuance.en}</p>}
               </div>
 
               <div>
                 <p className="text-sm font-semibold mb-2">{t("تفصيل الإجابات", "Answer breakdown")}</p>
                 <div className="space-y-1.5">
-                  {SEJONG1_SECTIONS.map((s) => {
-                    const score = result.sejongSectionScores[s.id];
+                  {TOPIK1_SECTIONS.map((s) => {
+                    const score = result.sectionScores[s.id];
                     const reached = result.failedSection === null
-                      || SEJONG1_SECTIONS.findIndex((x) => x.id === s.id) <= SEJONG1_SECTIONS.findIndex((x) => x.id === result.failedSection);
+                      || TOPIK1_SECTIONS.findIndex((x) => x.id === s.id) <= TOPIK1_SECTIONS.findIndex((x) => x.id === result.failedSection);
                     if (!reached) return null;
                     const passed = score >= s.pass;
                     return (
@@ -676,18 +631,6 @@ const KoreanPlacementPage = () => {
                       </div>
                     );
                   })}
-                  {result.grade2Score !== null && (
-                    <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
-                      <span>{t("أسئلة المستوى الثاني", "Level 2 questions")}</span>
-                      <Badge variant="secondary" dir="ltr">{result.grade2Score} / 6</Badge>
-                    </div>
-                  )}
-                  {result.aboveScore !== null && result.grade2Score !== null && result.grade2Score >= STAGE2_BLOCK_PASS && (
-                    <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
-                      <span>{t("أسئلة ما فوق الثاني", "Above level 2")}</span>
-                      <Badge variant="secondary" dir="ltr">{result.aboveScore} / 6</Badge>
-                    </div>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   {t("مستواك اتحدد من أول قسم لم تجتزه، مش من مجموع الدرجات.",
@@ -696,9 +639,7 @@ const KoreanPlacementPage = () => {
               </div>
 
               {/* Email capture, inline and above the CTAs rather than behind a
-                  small button. Only for visitors we do not already have: a
-                  signed-in student's email is already on their profile, so
-                  asking again is noise. */}
+                  small button. Only for visitors we do not already have. */}
               {!userId && (
                 <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
                   {leadSaved ? (
@@ -774,7 +715,6 @@ const KoreanPlacementPage = () => {
               )}
             </CardContent>
           </Card>
-
         </main>
         <Footer />
       </div>
@@ -855,11 +795,8 @@ const KoreanPlacementPage = () => {
   }
 
   // ---- the test -----------------------------------------------------------
-  const inStage1 = phase === "stage1";
-  const section = inStage1 ? SEJONG1_SECTIONS[step] : null;
-  const block = inStage1 ? null : STAGE2_BLOCKS[step];
-  const totalSteps = SEJONG1_SECTIONS.length + STAGE2_BLOCKS.length;
-  const stepIndex = inStage1 ? step : SEJONG1_SECTIONS.length + step;
+  const section = TOPIK1_SECTIONS[step];
+  const totalSteps = TOPIK1_SECTIONS.length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -870,88 +807,40 @@ const KoreanPlacementPage = () => {
         <div dir={isAr ? "rtl" : "ltr"} className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold">{t("اختبار تحديد المستوى", "Korean Placement Test")}</span>
-            <span className="text-muted-foreground" dir="ltr">{stepIndex + 1} / {totalSteps}</span>
+            <span className="text-muted-foreground" dir="ltr">{step + 1} / {totalSteps}</span>
           </div>
-          <Progress value={((stepIndex + 1) / totalSteps) * 100} />
+          <Progress value={((step + 1) / totalSteps) * 100} />
         </div>
 
         <Card dir={isAr ? "rtl" : "ltr"}>
           <CardContent className="pt-6 space-y-4">
-            {section && (
-              <>
-                <h2 className="text-lg font-bold">{isAr ? section.titleAr : section.titleEn}</h2>
-                <p className="text-xs text-muted-foreground" dir="ltr">{section.titleKo}</p>
-                <p className="text-sm text-muted-foreground">{isAr ? section.instrAr : section.instrEn}</p>
-                {section.focusKo && <p className="text-xs text-muted-foreground" dir="ltr">※ {section.focusKo}</p>}
-                {section.groupKo && <p className="text-sm font-semibold" dir="ltr">{section.groupKo}</p>}
-                {section.id === "F" && (
-                  <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-1" dir="ltr">
-                    {SEJONG1_READING_TEXT.map((line, i) => (
-                      <p key={i} className="text-sm leading-relaxed">{line}</p>
-                    ))}
-                  </div>
-                )}
-                {section.id === "A" && (
-                  <p className="text-sm">
-                    {t("٨ أسئلة بس في القسم ده. عدّيه ونكمّل، وإلا الاختبار بيقف هنا ويقولك مستواك.",
-                       "Eight questions in this section. Clear it and we continue; otherwise the test stops here and tells you your level.")}
-                  </p>
-                )}
-                <div className="space-y-4">{questionsBySection[section.id].map(renderSejongQuestion)}</div>
-                {section.id === "A" && (
-                  <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      {t("لسه مابتعرفش تقرا الحروف الكورية؟ ده مش رسوب — ده بالظبط المستوى اللي بنبدأ منه.",
-                         "Cannot read the Korean alphabet yet? That is not a fail — it is exactly where we start.")}
-                    </p>
-                    <Button type="button" variant="outline" size="sm" onClick={handleCannotReadHangul}>
-                      {t("لسه مش عارف أقرا الهانغول — وريني مستواي", "I cannot read Hangul yet — show my level")}
-                    </Button>
-                  </div>
-                )}
-              </>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-bold">{isAr ? section.titleAr : section.titleEn}</h2>
+              <Badge variant="outline" dir="ltr" className="shrink-0">{section.gradeKo}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground" dir="ltr">{section.titleKo}</p>
+            <p className="text-sm text-muted-foreground">{isAr ? section.instrAr : section.instrEn}</p>
+            {section.focusKo && <p className="text-xs text-muted-foreground" dir="ltr">※ {section.focusKo}</p>}
+
+            {section.id === "A" && (
+              <p className="text-sm">
+                {t("٨ أسئلة بس في القسم ده. عدّيه ونكمّل، وإلا الاختبار بيقف هنا ويقولك مستواك.",
+                   "Eight questions in this section. Clear it and we continue; otherwise the test stops here and tells you your level.")}
+              </p>
             )}
 
-            {block && (
-              <>
-                <h2 className="text-lg font-bold">
-                  {step === 0 ? t("أسئلة المستوى الثاني", "Level 2 questions")
-                              : t("أسئلة ما فوق المستوى الثاني", "Above level 2")}
-                </h2>
+            <div className="space-y-4">{questionsBySection[section.id].map(renderQuestion)}</div>
+
+            {section.id === "A" && (
+              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {t("وصلت لآخر كتاب المستوى الأول. الأسئلة دي بتحدد لو إنت فوقه.",
-                     "You have cleared the whole of level 1. These decide whether you are past it.")}
+                  {t("لسه مابتعرفش تقرا الحروف الكورية؟ ده مش رسوب — ده بالظبط المستوى اللي بنبدأ منه.",
+                     "Cannot read the Korean alphabet yet? That is not a fail — it is exactly where we start.")}
                 </p>
-                <div className="space-y-5">
-                  {block.map((q) => (
-                    <div key={q.id} className="space-y-2">
-                      {q.passage && (
-                        <div className="rounded-lg border border-border bg-muted/40 p-3" dir="ltr">
-                          <p className="text-sm leading-relaxed">{q.passage}</p>
-                        </div>
-                      )}
-                      <p className="text-sm font-medium">{q.question}</p>
-                      {q.arabicTip && isAr && (
-                        <p className="text-xs text-muted-foreground border-r-2 border-primary/40 pr-2" dir="rtl">💡 {q.arabicTip}</p>
-                      )}
-                      <RadioGroup
-                        value={stage2[q.id]?.toString()}
-                        onValueChange={(v) => setStage2((prev) => ({ ...prev, [q.id]: parseInt(v, 10) }))}
-                        className="space-y-1.5 ml-1"
-                      >
-                        {q.options.map((opt, oi) => (
-                          <div key={oi} className="flex items-center space-x-3">
-                            <RadioGroupItem value={oi.toString()} id={`s2-${q.id}-o${oi}`} />
-                            <Label htmlFor={`s2-${q.id}-o${oi}`} className="cursor-pointer text-sm">
-                              <span className="text-muted-foreground mr-1 text-xs">{CIRCLED[oi]}</span> {opt}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  ))}
-                </div>
-              </>
+                <Button type="button" variant="outline" size="sm" onClick={handleCannotReadHangul}>
+                  {t("لسه مش عارف أقرا الهانغول — وريني مستواي", "I cannot read Hangul yet — show my level")}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -959,17 +848,14 @@ const KoreanPlacementPage = () => {
         <div className="flex items-center justify-between gap-2" dir={isAr ? "rtl" : "ltr"}>
           <Button
             variant="outline"
-            onClick={() => {
-              if (step > 0) { setStep(step - 1); return; }
-              if (!inStage1) { setPhase("stage1"); setStep(SEJONG1_SECTIONS.length - 1); }
-            }}
-            disabled={inStage1 && step === 0}
+            onClick={() => { if (step > 0) setStep(step - 1); }}
+            disabled={step === 0}
           >
             <ArrowLeft className={cn("h-4 w-4 me-1.5", isAr && "rotate-180")} />
             {t("السابق", "Back")}
           </Button>
-          <Button onClick={inStage1 ? nextFromStage1 : nextFromStage2}>
-            {t("التالي", "Next")}
+          <Button onClick={nextSection}>
+            {step === totalSteps - 1 ? t("إنهاء الاختبار", "Finish") : t("التالي", "Next")}
             <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
           </Button>
         </div>
