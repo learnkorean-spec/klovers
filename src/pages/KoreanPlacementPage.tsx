@@ -59,6 +59,21 @@ const AUDIO_BUCKET = "placement-audio";
 /** Stage 2 is shown as two blocks of six, in this order. */
 const STAGE2_BLOCKS = [STAGE2_GRADE2, STAGE2_ABOVE];
 
+/**
+ * Arabic glosses for section A's ※ headers.
+ *
+ * Those headers are TOPIK-style and Korean-only, and section A is the FIRST
+ * screen of the test — the one the funnel says 82 people reached and 32 got
+ * past. An Egyptian beginner met three lines of Korean instructions before a
+ * single question, with nothing in a language they read. Keyed by the question
+ * that opens each group, which is where `group` lives.
+ */
+const GROUP_AR: Record<string, string> = {
+  A1: "[A1~A3] اختر ما يملأ الفراغ (   ) كما في المثال ‹보기›.",
+  A4: "[A4~A6] اقرأ ثم اختر الإجابة الصحيحة.",
+  A7: "[A7~A8] اختر ما يُقال في الموقف التالي.",
+};
+
 const CIRCLED = ["①", "②", "③", "④"];
 const FILLED = ["❶", "❷", "❸", "❹"];
 
@@ -282,6 +297,26 @@ const KoreanPlacementPage = () => {
     setStep(0);
   };
 
+  /**
+   * The way out of section A for someone who cannot read Hangul at all.
+   *
+   * The funnel is unambiguous about where this test loses people: 82 sessions
+   * reached the first question screen and 32 reached the second. The 50 who
+   * left were, judging by the screen they left from, beginners who could not
+   * read the alphabet — and closing the tab is the one action that gives them
+   * nothing back. Failing section A already produces 한글 기초; this button
+   * produces the same answer without making them guess eight times first, and
+   * lands them on the result screen, which is where the trial CTA and the
+   * email capture live.
+   *
+   * It is only rendered on section A. Later sections need no such button: a
+   * student who can read but does not know the grammar simply presses Next.
+   */
+  const handleCannotReadHangul = () => {
+    logLeadEvent({ source_type: "placement_test", cta_label: "cannot_read_hangul" });
+    void finish({}, {});
+  };
+
   const nextFromStage2 = () => {
     const block = STAGE2_BLOCKS[step];
     const correct = block.filter((q) => stage2[q.id] === q.correctIndex).length;
@@ -426,7 +461,14 @@ const KoreanPlacementPage = () => {
   // ---- shared question renderers ------------------------------------------
   const renderSejongQuestion = (q: SejongQuestion) => (
     <div key={q.id} className="space-y-2">
-      {q.group && <p className="text-sm font-semibold pt-4" dir="ltr">{q.group}</p>}
+      {q.group && (
+        <div className="pt-4 space-y-0.5">
+          <p className="text-sm font-semibold" dir="ltr">{q.group}</p>
+          {isAr && GROUP_AR[q.id] && (
+            <p className="text-xs text-muted-foreground" dir="rtl">{GROUP_AR[q.id]}</p>
+          )}
+        </div>
+      )}
       {q.bogi && (
         <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1.5" dir="ltr">
           <p className="text-xs text-muted-foreground">&lt;보기&gt;</p>
@@ -762,7 +804,24 @@ const KoreanPlacementPage = () => {
                     ))}
                   </div>
                 )}
+                {section.id === "A" && (
+                  <p className="text-sm">
+                    {t("٨ أسئلة بس في القسم ده. عدّيه ونكمّل، وإلا الاختبار بيقف هنا ويقولك مستواك.",
+                       "Eight questions in this section. Clear it and we continue; otherwise the test stops here and tells you your level.")}
+                  </p>
+                )}
                 <div className="space-y-4">{questionsBySection[section.id].map(renderSejongQuestion)}</div>
+                {section.id === "A" && (
+                  <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      {t("لسه مابتعرفش تقرا الحروف الكورية؟ ده مش رسوب — ده بالظبط المستوى اللي بنبدأ منه.",
+                         "Cannot read the Korean alphabet yet? That is not a fail — it is exactly where we start.")}
+                    </p>
+                    <Button type="button" variant="outline" size="sm" onClick={handleCannotReadHangul}>
+                      {t("لسه مش عارف أقرا الهانغول — وريني مستواي", "I cannot read Hangul yet — show my level")}
+                    </Button>
+                  </div>
+                )}
               </>
             )}
 
