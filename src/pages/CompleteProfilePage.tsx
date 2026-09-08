@@ -34,6 +34,12 @@ import { useSEO } from "@/hooks/useSEO";
  * profile write is therefore keyed on the SESSION, never on ?email=. Signed
  * in -> own row only, enforced by RLS. Not signed in -> lead only, as
  * before, and the page says so instead of implying otherwise.
+ *
+ * Which makes the "Sign in first" link the actual flow for a signed-out
+ * reader, not a footnote: it is the only path by which what they type
+ * reaches their profile. It pointed at /auth, a route that does not exist
+ * (App.tsx has /login and /signup), so it fell through to NotFound. It now
+ * carries ?redirect=/complete-profile so they return to this form.
  */
 
 const COUNTRIES = [
@@ -262,7 +268,7 @@ const CompleteProfilePage = () => {
           {signedIn === false && (
             <div className="mb-5 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
               {tx("signInPrompt")}{" "}
-              <Link to="/auth" className="underline font-medium text-foreground">
+              <Link to="/login?redirect=/complete-profile" className="underline font-medium text-foreground">
                 {tx("signInLink")}
               </Link>
             </div>
