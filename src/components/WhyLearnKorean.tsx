@@ -12,33 +12,48 @@ import { scenery } from "./whyLearnKoreanScenes";
  * got nothing. There is no Travel page to point them at, so the card itself
  * is the payoff: front is a Korean scene, back is the explanation.
  *
- * HOW THE FRONT ARRIVED HERE (three passes, Re steering each one)
- * ---------------------------------------------------------------
- * 1. Tailwind's -900 steps. Desaturated and near-identical in value, so four
- *    motivations read as one grey-blue smear.
- * 2. Deep dancheong (단청) temple colours, then hanbok pastels with the
- *    Korean word in black, which Re picked from a side-by-side.
- * 3. Re then asked for pictures of Korea instead of a colour. So the front is
- *    now artwork: see whyLearnKoreanScenes.tsx for why these are drawn rather
- *    than photographed, and for the shape of a Korean roof.
+ * THE FRONT, IN FOUR PASSES
+ * -------------------------
+ * 1. Tailwind's -900 steps: desaturated, near-identical in value, four
+ *    motivations reading as one grey-blue smear.
+ * 2. Deep dancheong (단청) temple colours, then hanbok pastels.
+ * 3. Re asked for pictures of Korea, so the colour became artwork - see
+ *    whyLearnKoreanScenes.tsx.
+ * 4. The layout itself, which was the part still wrong: three things centred
+ *    in a 288px card that held about 110px of content, leaving a third of it
+ *    empty at the top and the bottom, with a 56px slab of pure yellow as the
+ *    loudest element on a card whose message is its title.
  *
- * THE TEXT FOLLOWS THE BACKGROUND, EVERY TIME. That is the whole lesson of
- * those three passes. On the pastels, white text was 1.4:1 and everything had
- * to go dark. On artwork it inverts again: the scenes run from a bright spring
- * sky to a night sky, so no single text colour clears every card on its own.
- * Hence the scrim below - it is what makes white text safe on all four, not a
- * darkening effect for its own sake. Change a scene's brightness and you are
- * changing whether the title is readable; check it.
+ * SO THE FRONT IS NOW COMPOSED, not centred. Korean word at the top, title
+ * at the bottom, scene running the full height between them. The card is
+ * full, and among the things a reader can actually parse the title comes
+ * first. The yellow is a 32px rule and the icon's stroke - present, brand,
+ * and no longer the first thing the eye lands on.
  *
- * THE BACK stays theme-aware, so it cannot wear the artwork or a pastel: a
- * pale panel on a dark page is a white blob. It takes its front's saturated
- * hue as a rule along the top edge, and a mid-tone of it as the icon colour.
- * Not the brand yellow - in light mode that face is white, and yellow on
- * white is the P0-3 fault this plan already has open. The first version of
- * this component shipped exactly that bug.
+ * THE TEXT FOLLOWS THE BACKGROUND, EVERY TIME. On the pastels white was
+ * 1.4:1 and every label had to go dark. On artwork it inverts: the scenes
+ * run from a bright spring sky to a night sky, so no single text colour
+ * clears all four alone. The scrim is what makes white safe on every card -
+ * it is not a darkening effect for taste. Change a scene's brightness and
+ * you change whether its title is readable; check it.
+ *
+ * THE BACK stays theme-aware, so it cannot wear the artwork: a pale panel on
+ * a dark page is a white blob. It takes its front's saturated hue as a rule
+ * along the top edge and a mid-tone of it as the icon. Not the brand yellow -
+ * in light mode that face is white, and yellow on white is the P0-3 fault
+ * this plan already has open. The first version of this component shipped
+ * exactly that bug.
  */
 
 const iconMap: Record<string, React.ReactNode> = {
+  study: <BookOpen className="h-6 w-6" />,
+  career: <Briefcase className="h-6 w-6" />,
+  travel: <Plane className="h-6 w-6" />,
+  culture: <Music className="h-6 w-6" />,
+};
+
+/** Larger on the back, where it is the only mark on a plain panel. */
+const backIconMap: Record<string, React.ReactNode> = {
   study: <BookOpen className="h-8 w-8" />,
   career: <Briefcase className="h-8 w-8" />,
   travel: <Plane className="h-8 w-8" />,
@@ -54,12 +69,12 @@ const koreanWord: Record<string, string> = {
 };
 
 /**
- * Back-face colour only; the front's colour now comes from its scene.
+ * Back-face colour only; the front's colour comes from its scene.
  *
  * Two values from one hue, because the back renders on both a white and a
- * near-black ground: `deep` for the top rule, which is decorative and so its
- * contrast carries no meaning, and `accent` - a mid-tone - for the icon.
- * `deep` on a dark background is about 2:1, which is why the icon never uses it.
+ * near-black ground: `deep` for the top rule, decorative so its contrast
+ * carries no meaning, and `accent` - a mid-tone - for the icon. `deep` on a
+ * dark background is about 2:1, which is why the icon never uses it.
  */
 type Tone = { deep: string; accent: string };
 
@@ -113,7 +128,7 @@ const WhyLearnKorean = () => {
                 type="button"
                 aria-expanded={isFlipped}
                 onClick={() => setFlipped(isFlipped ? null : index)}
-                className="group relative h-56 md:h-72 w-full rounded-3xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card [perspective:1200px]"
+                className="group relative h-56 md:h-72 w-full rounded-3xl text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card [perspective:1200px]"
               >
                 <div
                   className={`relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none ${
@@ -125,9 +140,9 @@ const WhyLearnKorean = () => {
                     {image ? (
                       <img src={image} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
                     ) : (
-                      // `slice` so the scene fills the card at any aspect and
-                      // is cropped rather than letterboxed; each is composed
-                      // with its subject low and centred to survive that crop.
+                      // `slice` so the scene fills the card at any aspect and is
+                      // cropped rather than letterboxed; each is composed with
+                      // its subject low and centred to survive that crop.
                       <svg
                         aria-hidden="true"
                         viewBox="0 0 200 240"
@@ -140,38 +155,39 @@ const WhyLearnKorean = () => {
 
                     {/* The scrim. Not decoration: it is the only reason white
                         text clears 4.5:1 on the bright spring card as well as
-                        the night one. Heaviest at the bottom, where the title
-                        sits over the busiest part of every scene. */}
+                        the night one. Weighted to the bottom, where the title
+                        now sits over the busiest part of every scene. */}
                     <div
                       aria-hidden="true"
                       className="absolute inset-0"
                       style={{
                         backgroundImage:
-                          "linear-gradient(to bottom, rgba(8,10,20,0.12) 0%, rgba(8,10,20,0.34) 46%, rgba(8,10,20,0.62) 100%)",
+                          "linear-gradient(to bottom, rgba(8,10,20,0.10) 0%, rgba(8,10,20,0.20) 38%, rgba(8,10,20,0.80) 100%)",
                       }}
                     />
 
-                    <div className="relative h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
+                    {/* Composed, not centred: word at the top, title at the
+                        bottom, scene filling everything between. */}
+                    <div className="relative h-full flex flex-col justify-between p-4 pb-5 md:p-5 md:pb-6">
                       <span
                         aria-hidden="true"
-                        className="text-4xl md:text-5xl font-extrabold leading-none select-none text-white/[0.28]"
+                        className="text-3xl md:text-[40px] font-extrabold leading-none select-none text-white/[0.34]"
                       >
                         {koreanWord[item.icon] || "한국"}
                       </span>
-                      <div
-                        className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-sm"
-                        style={{ border: "2px solid rgba(0,0,0,0.55)" }}
-                      >
-                        <span className="text-black">
-                          {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
+
+                      <div className="flex flex-col items-start gap-2 md:gap-2.5">
+                        <span aria-hidden="true" className="block w-8 h-[3px] rounded-full bg-primary" />
+                        <span aria-hidden="true" className="block text-primary">
+                          {iconMap[item.icon] || <BookOpen className="h-6 w-6" />}
                         </span>
+                        <h3
+                          className="font-bold text-white text-lg md:text-xl leading-snug"
+                          style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
+                        >
+                          {item.title}
+                        </h3>
                       </div>
-                      <h3
-                        className="font-bold text-white text-base md:text-lg leading-tight"
-                        style={{ textShadow: "0 1px 6px rgba(0,0,0,0.5)" }}
-                      >
-                        {item.title}
-                      </h3>
                     </div>
                   </div>
 
@@ -184,7 +200,7 @@ const WhyLearnKorean = () => {
                     />
                     <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-5">
                       <span aria-hidden="true" style={{ color: tone.accent }}>
-                        {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
+                        {backIconMap[item.icon] || <BookOpen className="h-8 w-8" />}
                       </span>
                       <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">
                         {item.title}
