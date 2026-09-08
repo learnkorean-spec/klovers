@@ -62,7 +62,25 @@ const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const { count: studentCount, ref: studentRef } = useCountUp(500);
+
+  /**
+   * THE TWO LARGEST NUMBERS ON THE SITE. Both were unsupported.
+   *
+   * Measured on production, 2026-09-08: 102 rows in `profiles`, 76 trial
+   * bookings, 25 enrolments, and 16 Facebook reviews. "500+ Students Taught"
+   * was not a rounding of anything.
+   *
+   * Re's call: the 200+ figure is real, but it counts every student she has
+   * taught across 13 years - not this platform. A number is only honest with
+   * the sentence that scopes it, so the LABEL carries "in 13 years" and is
+   * part of the claim, not decoration. Do not shorten it back to "Students
+   * Taught" without changing the number too.
+   *
+   * The rating is 4.9 and stays 4.9 - it is the count that was missing. 16
+   * reviews with the source named reads as true; an unattributed 4.9 next to
+   * "500+" read as marketing.
+   */
+  const { count: studentCount, ref: studentRef } = useCountUp(200);
   const { count: ratingCount, ref: ratingRef } = useCountUp(49, 1200);
   const { count: countryCount, ref: countryRef } = useCountUp(15);
 
@@ -89,7 +107,7 @@ const HeroSection = () => {
       className="relative min-h-[100svh] flex flex-col items-center justify-center pt-16 overflow-hidden"
       style={{ backgroundColor: "#1a1a1a" }}
     >
-      {/* ── Background layer ─────────────────────────────────── */}
+      {/* ── Background layer ──────────────────────────────── */}
       <img
         src={heroPoster}
         alt=""
@@ -128,7 +146,7 @@ const HeroSection = () => {
         style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.18) 0%, transparent 70%)" }}
       />
 
-      {/* ── Decorative large Korean text (backdrop) ──────────── */}
+      {/* ── Decorative large Korean text (backdrop) ─────────────────── */}
       <span
         aria-hidden="true"
         className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
@@ -144,14 +162,14 @@ const HeroSection = () => {
         한국어
       </span>
 
-      {/* ── Hero text content — truly centered ───────────────── */}
+      {/* ── Hero text content — truly centered ──────────────────── */}
       <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-36">
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
           {/* Live badge — split pill design */}
           <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-black/30 backdrop-blur-md">
             <div className="bg-primary px-4 py-2 flex items-center gap-2">
-              <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 K-LOVERS</span>
+              <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 KLOVERS</span>
             </div>
             <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
               <span className="relative flex h-2 w-2 shrink-0">
@@ -193,7 +211,13 @@ const HeroSection = () => {
             </span>
           </h1>
 
-          {/* Subtitle */}
+          {/* Subtitle.
+              ⚠ This string still says "500+" and lives in
+              src/i18n/translations.ts (`hero.subtitle`), which is 231 KB and
+              cannot be edited through the API path available here - the only
+              write is a whole-file replace. Same for `ctaSubtitle` and the
+              `highlights` array ("500+ / Students Taught", "4.9 / 5"). They
+              need a real checkout; see the note in the stats strip below. */}
           <p
             className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
@@ -235,7 +259,10 @@ const HeroSection = () => {
             </Button>
           </div>
 
-          {/* Micro trust line */}
+          {/* Micro trust line.
+              ⚠ "98% satisfaction" is a third unverified figure. Left alone
+              because Re has not ruled on it, but it belongs in the same sweep
+              as the strings above. */}
           <p className="text-white/60 text-xs" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}>
             {isAr ? "✓ بدون بطاقة بنكية · ✓ ٩٨٪ راضون · ✓ رد خلال دقائق" : "✓ No credit card · ✓ 98% satisfaction · ✓ Reply in minutes"}
           </p>
@@ -265,14 +292,17 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* ── Stats strip — absolutely pinned to bottom ─────────── */}
+      {/* ── Stats strip — absolutely pinned to bottom ────────── */}
       <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 sm:pb-10 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-6" />
           <div className="grid grid-cols-3 gap-4 md:gap-8">
             {[
-              { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: isAr ? "طالب تعلّموا" : "Students Taught" },
-              { icon: Star,  ref: ratingRef,  display: `${(ratingCount / 10).toFixed(1)} ★`, label: isAr ? "متوسط التقييم" : "Average Rating" },
+              // The label is part of the claim here, not a caption under it.
+              // "200+ / Students in 13 years" is true; "200+ / Students Taught"
+              // beside a platform with 102 accounts is not.
+              { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
+              { icon: Star,  ref: ratingRef,  display: `${(ratingCount / 10).toFixed(1)} ★`, label: isAr ? "من ١٦ مراجعة" : "From 16 reviews" },
               { icon: Globe, ref: countryRef, display: isAr ? "٦ أشهر" : "6 Months", label: isAr ? "للمحادثة" : "To Conversational" },
             ].map(({ icon: Icon, ref: itemRef, display, label }) => (
               <div key={label} className="flex flex-col items-center gap-1 text-center group">

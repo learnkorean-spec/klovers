@@ -7,19 +7,21 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type {
-  BundleBalance,
-  BundleEdit,
-  BundleSource,
-  BundleStatus,
-  MyStudent,
-  MyStudentWithClasses,
-  SessionOutcome,
-  StudentBundle,
-  StudentClassSchedule,
-  StudentClassSession,
-  StudentStatus,
-  StudentSubject,
+import { TIMEZONE } from "@/constants/scheduling";
+import {
+  localDateKey,
+  type BundleBalance,
+  type BundleEdit,
+  type BundleSource,
+  type BundleStatus,
+  type MyStudent,
+  type MyStudentWithClasses,
+  type SessionOutcome,
+  type StudentBundle,
+  type StudentClassSchedule,
+  type StudentClassSession,
+  type StudentStatus,
+  type StudentSubject,
 } from "@/types/students";
 
 const KEYS = {
@@ -208,6 +210,7 @@ export function useDeleteClass() {
 const BUNDLE_KEYS = {
   balances: ["admin", "student-bundles"] as const,
   sessions: ["admin", "student-sessions"] as const,
+  upcoming: ["admin", "student-sessions", "upcoming"] as const,
 };
 
 function invalidateCredits(qc: ReturnType<typeof useQueryClient>) {
@@ -231,6 +234,9 @@ export function useBundleBalances() {
 const BUNDLE_COLUMNS =
   "id, student_id, source, catalog_key, label, total_classes, total_price, currency, " +
   "purchased_on, coverage_start, coverage_start_confirmed_at, status, voided_reason, voided_at, note";
+
+const SESSION_COLUMNS =
+  "id, student_id, bundle_id, class_id, session_date, start_time, outcome, counted, confirmed_at, note";
 
 /** Every bundle a student has ever had, newest first — the payment history. */
 export function useStudentBundles(studentId: string | null) {
@@ -313,7 +319,7 @@ export function useAllStudentSessions(studentId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_class_sessions")
-        .select("id, student_id, bundle_id, class_id, session_date, start_time, outcome, counted, confirmed_at, note")
+        .select(SESSION_COLUMNS)
         .eq("student_id", studentId!)
         .order("session_date", { ascending: false })
         .order("start_time", { ascending: false });
@@ -364,9 +370,37 @@ export function useRecentSessions(sinceDate: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_class_sessions")
-        .select("id, student_id, bundle_id, class_id, session_date, start_time, outcome, counted, confirmed_at, note")
+        .select(SESSION_COLUMNS)
         .gte("session_date", sinceDate)
         .order("session_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as StudentClassSession[];
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * The private lessons the weekly generator has already put on the calendar and
+ * nobody has answered for yet, soonest first.
+ *
+ * Today counts as upcoming: a lesson taught this morning is exactly the one Re
+ * wants to answer for, and dropping it the moment midnight passes in some other
+ * timezone would hide it. The cutoff is read in the teacher's own zone for the
+ * same reason every other date in this feature is.
+ */
+export function useUpcomingScheduledSessions() {
+  return useQuery<StudentClassSession[]>({
+    queryKey: BUNDLE_KEYS.upcoming,
+    queryFn: async () => {
+      const today = localDateKey(new Date(), TIMEZONE);
+      const { data, error } = await supabase
+        .from("student_class_sessions")
+        .select(SESSION_COLUMNS)
+        .eq("outcome", "scheduled")
+        .gte("session_date", today)
+        .order("session_date", { ascending: true })
+        .order("start_time", { ascending: true });
       if (error) throw error;
       return (data ?? []) as StudentClassSession[];
     },
@@ -577,24 +611,68 @@ export interface ConfirmSessionInput {
 }
 
 /**
- * Confirms one or many sessions in a single insert.
+ * Confirms one or many sessions in a single statement.
  *
- * A single insert is the batch guarantee: Postgres applies it as one statement,
- * so a batch containing a day that is already confirmed is refused whole by
- * uq_student_class_sessions_slot and nothing is partially applied. The UI never
- * has to reason about which half of a catch-up landed.
+ * A single statement is the batch guarantee: Postgres applies it whole, so a
+ * batch is never partially applied and the UI never has to reason about which
+ * half of a catch-up landed. That is unchanged; what changed is which
+ * statement.
+ *
+ * It is an upsert on uq_student_class_sessions_slot rather than an insert
+ * because the weekly generator may already have written a `scheduled` row into
+ * that exact (student, date, time) slot. Against a plain insert that row is a
+ * unique-constraint violation, and one pre-scheduled lesson anywhere in a batch
+ * refused the entire batch — Re could not confirm a class the system itself had
+ * put on her calendar. Confirming is precisely the act of answering for that
+ * slot, so overwriting the placeholder with the real outcome is the correct
+ * resolution, not a collision. confirmed_at is stamped here for the same
+ * reason: a scheduled row carries null until somebody answers, and this is
+ * where somebody does.
  */
 export function useConfirmSessions() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (rows: ConfirmSessionInput[]) => {
       if (rows.length === 0) return;
-      const { error } = await supabase.from("student_class_sessions").insert(
-        rows.map(r => ({ ...r, counted: r.outcome === "attended" })),
+      const { error } = await supabase.from("student_class_sessions").upsert(
+        rows.map(r => ({
+          ...r,
+          counted: r.outcome === "attended",
+          confirmed_at: new Date().toISOString(),
+        })),
+        { onConflict: "student_id,session_date,start_time" },
       );
       if (error) throw error;
     },
     onSuccess: () => invalidateCredits(qc),
+  });
+}
+
+/**
+ * Answers for a lesson the generator already put on the calendar: the row
+ * exists, so this updates it in place rather than writing a second one into a
+ * slot the unique constraint reserves for exactly one. `counted` is derived
+ * from the outcome here, never passed in — the database CHECK ties the two
+ * together and a caller that could disagree with it would only ever be wrong.
+ */
+export function useResolveScheduledSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, outcome }: { id: string; outcome: SessionOutcome }) => {
+      const { error } = await supabase
+        .from("student_class_sessions")
+        .update({
+          outcome,
+          counted: outcome === "attended",
+          confirmed_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateCredits(qc);
+      qc.invalidateQueries({ queryKey: BUNDLE_KEYS.upcoming });
+    },
   });
 }
 

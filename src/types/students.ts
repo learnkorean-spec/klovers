@@ -169,8 +169,25 @@ export interface BundleBalance {
   purchased_on: string;
 }
 
+/**
+ * The outcomes a human can CHOOSE for a class. Deliberately not every state a
+ * session row can be in — see SESSION_STATES — because every picker in the
+ * admin offers exactly these two and must never offer "scheduled", which is
+ * something the generator writes, not something Re decides.
+ */
 export const SESSION_OUTCOMES = ["attended", "cancelled_no_charge"] as const;
 export type SessionOutcome = (typeof SESSION_OUTCOMES)[number];
+
+/**
+ * Every state a student_class_sessions row can actually be READ in, which is
+ * the two choosable outcomes plus "scheduled": on the calendar, not yet
+ * answered, and never counted. The weekly generator materialises upcoming
+ * private lessons as scheduled rows so they can be seen and answered in one
+ * click; until someone answers, such a row carries confirmed_at = null and
+ * counted = false, and must not be mistaken for a confirmation.
+ */
+export const SESSION_STATES = ["attended", "cancelled_no_charge", "scheduled"] as const;
+export type SessionState = (typeof SESSION_STATES)[number];
 
 export interface StudentClassSession {
   id: string;
@@ -179,17 +196,30 @@ export interface StudentClassSession {
   class_id: string | null;
   session_date: string;
   start_time: string;
-  outcome: SessionOutcome;
+  outcome: SessionState;
   counted: boolean;
-  confirmed_at: string;
+  /** Null on a scheduled row — nobody has answered for that lesson yet. */
+  confirmed_at: string | null;
   note: string | null;
+}
+
+/** A row somebody has actually answered for. A scheduled row is not one. */
+export function isResolved(s: StudentClassSession): boolean {
+  return s.outcome !== "scheduled";
 }
 
 /**
  * A class the weekly schedule says should have happened, paired with whatever
- * was confirmed for it. Built in the browser from teacher_student_classes; an
- * unconfirmed occurrence has no database row at all, which is what lets this
- * list be rebuilt at any time without consulting stored state.
+ * the database holds for it. Built in the browser from teacher_student_classes,
+ * which is what lets this list be rebuilt at any time without consulting
+ * stored state.
+ *
+ * The two row fields are not interchangeable and only one is ever set. A slot
+ * holding a generated, still-unanswered row is UNCONFIRMED — it is precisely
+ * the class Re has yet to answer for — so it gets `scheduledRow` and a null
+ * `confirmed`. Treating that row as a confirmation would silently drop the
+ * class out of the confirm queue and out of its bundle's count, which is the
+ * defect this split exists to prevent.
  */
 export interface ExpectedSession {
   student_id: string;
@@ -199,7 +229,10 @@ export interface ExpectedSession {
   /** "HH:MM". */
   start_time: string;
   duration_minutes: number;
+  /** The answered row for this occurrence, attended or cancelled. */
   confirmed: StudentClassSession | null;
+  /** The generator's placeholder sitting in this slot, still unanswered. */
+  scheduledRow: StudentClassSession | null;
 }
 
 /**
@@ -252,9 +285,14 @@ function daysBetween(fromKey: string, toKey: string): number {
 /**
  * A queue, not a recent-activity list: every occurrence of a student's weekly
  * classes from each class's own effective_from up to today, newest first, each
- * paired with its confirmation if one exists. An occurrence never ages out —
- * a class the schedule says happened stays in this list until it is answered,
- * however far back effective_from goes.
+ * paired with whatever row the database holds for it. An occurrence never ages
+ * out — a class the schedule says happened stays in this list until it is
+ * answered, however far back effective_from goes.
+ *
+ * A slot whose only row is the generator's `scheduled` placeholder still counts
+ * as unanswered: it comes back with `confirmed` null and `scheduledRow` set, so
+ * a lesson that was merely put on the calendar and then let past its date keeps
+ * asking to be answered instead of quietly reading as done.
  *
  * Only looks backwards, and never past today: a class that has not happened yet
  * cannot be marked as done. `now` is injected so this is testable without
@@ -298,13 +336,16 @@ export function buildExpectedSessions(
         if (start > nowHM) continue;
       }
 
+      const row = bySlot.get(`${dateKey}|${start}`) ?? null;
+
       out.push({
         student_id: c.student_id,
         class_id: c.id,
         session_date: dateKey,
         start_time: start,
         duration_minutes: c.duration_minutes,
-        confirmed: bySlot.get(`${dateKey}|${start}`) ?? null,
+        confirmed: row && isResolved(row) ? row : null,
+        scheduledRow: row && !isResolved(row) ? row : null,
       });
     }
   }

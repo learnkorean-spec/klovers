@@ -45,6 +45,7 @@ const AdminAttendancePanel = lazy(() => import("@/components/admin/AdminAttendan
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
 const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
+const UpcomingPrivateClasses = lazy(() => import("@/components/admin/UpcomingPrivateClasses"));
 const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
 const BulkEmailManager = lazy(() => import("@/components/admin/BulkEmailManager"));
 const SchedulingManager = lazy(() => import("@/components/admin/SchedulingManager"));
@@ -1056,12 +1057,33 @@ const AdminDashboard = () => {
 
   const TAB_CLS = "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium border border-border/60 data-[state=active]:bg-primary data-[state=active]:text-black data-[state=active]:border-primary data-[state=active]:shadow-sm bg-background hover:bg-muted transition-colors gap-1.5 h-auto";
 
+  // EVERY value that has a <TabsContent> below must appear in exactly one group.
+  // A tab missing from here is not merely ungrouped - `activeGroup` falls back
+  // to "ops", so the link opens the Operations pill row, `inActiveGroup` is
+  // false for the tab that was actually asked for, and its own pill is never
+  // drawn. The visitor asked for one screen and got a different one, with
+  // nothing to explain it. Five tabs were in that state: session-attendance
+  // (the one labelled "Attendance"), books, trial-books, campaigns and manage.
+  // The last four were made visible in the sidebar by #266 without being given
+  // a group, so they were findable and still went to the wrong place.
+  // The assertion under this list fails loudly if it happens again.
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
-    { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos"] },
-    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "league-users"] },
-    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit"] },
+    { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
+    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
+    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings"] },
   ];
+
+  // Development-only. A tab that is linked but ungrouped fails silently in
+  // production - it just shows the wrong screen - so say it out loud here,
+  // where the person adding the tab is looking.
+  if (import.meta.env.DEV && !TAB_GROUPS.some(g => g.tabs.includes(adminTab))) {
+    console.warn(
+      `[admin] tab "${adminTab}" belongs to no TAB_GROUPS entry, so the Operations ` +
+      `group will open instead of it. Add it to a group in AdminDashboard.tsx.`
+    );
+  }
+
   const activeGroup = TAB_GROUPS.find(g => g.tabs.includes(adminTab))?.id ?? "ops";
   const [tabGroup, setTabGroup] = useState<string>(activeGroup);
   useEffect(() => { setTabGroup(activeGroup); }, [activeGroup]);
@@ -1711,6 +1733,7 @@ const AdminDashboard = () => {
                 lists people registered on the site. */}
             <TabsContent value="my-students">
               <TabErrorBoundary name="My Students">
+                <UpcomingPrivateClasses />
                 <MyStudentsManager />
               </TabErrorBoundary>
             </TabsContent>

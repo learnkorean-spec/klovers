@@ -41,7 +41,7 @@ interface QuizResult {
 const DailyQuizPage = () => {
   const { t } = useLanguage();
   useSEO({
-    title: "Daily Quiz - K-Lovers",
+    title: "Daily Quiz - Klovers",
     description: "Test your vocabulary knowledge with our daily quiz.",
     canonical: "https://kloversegy.com/daily-quiz",
   });

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BADGES } from "@/constants/gamification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users } from "lucide-react";
+import { toPublicDisplayName } from "@/lib/displayName";
 
 interface FeedItem {
   id: string;
@@ -71,8 +72,17 @@ export default function CommunityFeed() {
           id: r.id,
           badgeKey: r.badge_key,
           earnedAt: r.created_at,
+          // `.split(" ")[0]` was the whole privacy rule here, and it is not
+          // enough: a stored name that IS an email has no space in it, so the
+          // first "word" is the entire address. That is exactly how a
+          // student's gmail address reached rank 10 of the live XP
+          // leaderboard on 2026-09-08, rendered to every signed-in visitor. RLS
+          // scopes this feed to the caller's own row, so nobody else's address
+          // could leak here — but the rule is now one function, applied
+          // everywhere a stored name is rendered, rather than a habit repeated
+          // by hand at each call site.
           displayName: r.profiles?.name
-            ? r.profiles.name.split(" ")[0]   // first name only for privacy
+            ? toPublicDisplayName(r.profiles.name)
             : "You",
         }));
 

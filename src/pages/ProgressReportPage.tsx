@@ -92,7 +92,7 @@ const ProgressReportPage = () => {
         {/* Header */}
         <div style={{ background: "#000", padding: "32px 40px", textAlign: "center" }}>
           <div style={{ display: "inline-block", width: 60, height: 60, borderRadius: "50%", background: "#FFFF00", lineHeight: "60px", fontSize: 28, fontWeight: 900, color: "#000", marginBottom: 12 }}>K</div>
-          <h1 style={{ color: "#FFFF00", margin: "0 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: 1 }}>KLovers Korean Academy</h1>
+          <h1 style={{ color: "#FFFF00", margin: "0 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: 1 }}>Klovers Korean Academy</h1>
           <p style={{ color: "#bbb", margin: 0, fontSize: 13 }}>{isAr ? "تقرير تقدم الطالب" : "Student Progress Report"} · {month}</p>
         </div>
 
@@ -134,7 +134,7 @@ const ProgressReportPage = () => {
                 : <>Keep up the great work, <strong>{data.name.split(" ")[0]}</strong>! Consistency is the key to mastering Korean. Even 10 minutes of daily practice compounds into fluency over time.</>
               }
             </p>
-            <p style={{ margin: 0, color: "#555", fontSize: 13 }}>화이팅! 💪 — Reham &amp; the K-Lovers team</p>
+            <p style={{ margin: 0, color: "#555", fontSize: 13 }}>화이팅! 💪 — Reham &amp; the Klovers team</p>
           </div>
 
           {/* Footer */}

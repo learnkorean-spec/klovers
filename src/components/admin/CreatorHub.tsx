@@ -59,7 +59,7 @@ const PREMIUM_POSTS: { mainText: string; subtitle: string; extraText: string; st
   { mainText: "4.9★", subtitle: "Average Rating\nRated by real students across 15+ countries. We don't just teach — we deliver results.", extraText: "#Klovers #KoreanAcademy #Rated", style: "klovers_stats" },
   { mainText: "감사합니다", subtitle: "gam-sa-ham-ni-da\nThank you — The first phrase every learner needs", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
   { mainText: "SMALL GROUPS.\nBIG PROGRESS.", subtitle: "Max 6 students per class. Everyone speaks. Everyone improves.", extraText: "#LiveClasses #Klovers #SmallGroup", style: "klovers_varsity" },
-  { mainText: "\"I tried apps for a year. Three months with K-Lovers taught me more than all of them combined.\"", subtitle: "— Ahmed, Saudi Arabia\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
+  { mainText: "\"I tried apps for a year. Three months with Klovers taught me more than all of them combined.\"", subtitle: "— Ahmed, Saudi Arabia\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
   { mainText: "FREE TRIAL\nCLASS.\nNO COMMITMENT.\nJUST TRY.", subtitle: "See what real Korean learning feels like — book your free session now.", extraText: "#FreeTrial #LearnKorean #Klovers", style: "klovers_bold" },
   { mainText: "WHAT YOU GET IN\nEVERY CLASS", subtitle: "Live interaction with your teacher\nSpeaking practice every session\nReal Korean, not textbook Korean\nHomework & personalized feedback\nCultural context with every lesson", extraText: "#KoreanClass #Klovers", style: "klovers_list" },
   { mainText: "맛있다", subtitle: "ma-sit-da\nDelicious — Perfect for your next Korean food adventure", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
@@ -67,7 +67,7 @@ const PREMIUM_POSTS: { mainText: string; subtitle: string; extraText: string; st
   { mainText: "YOUR KOREAN\nJOURNEY STARTS\nWITH ONE CLASS", subtitle: "Book your free trial. We handle the rest.", extraText: "#LearnKorean #Klovers #StartNow", style: "klovers_varsity" },
   { mainText: "CONSISTENCY\nBEATS\nTALENT.\nEVERY TIME.", subtitle: "30 minutes a day beats 5 hours on a weekend. Stay consistent.", extraText: "#Motivation #Klovers #LearnKorean", style: "klovers_bold" },
   { mainText: "15+", subtitle: "Countries\nOur community spans the Middle East, North Africa, and beyond. Korean connects us all.", extraText: "#Klovers #Global #KoreanCommunity", style: "klovers_stats" },
-  { mainText: "\"My Korean teacher said my pronunciation was nearly perfect. That's K-Lovers training.\"", subtitle: "— Nour, UAE\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
+  { mainText: "\"My Korean teacher said my pronunciation was nearly perfect. That's Klovers training.\"", subtitle: "— Nour, UAE\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
   { mainText: "꿈", subtitle: "kkum\nDream — Chase yours. Start learning Korean today.", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
   { mainText: "WATCHING\nK-POP VIDEOS\nISN'T STUDYING.\nBUT IT CAN BE.", subtitle: "We show you how to turn your hobby into real language skills.", extraText: "#KPop #LearnKorean #Klovers", style: "klovers_bold" },
   { mainText: "OUR LEVELS", subtitle: "Beginner — Hangul to basic conversations\nElementary — Daily life Korean\nIntermediate — Express opinions & feelings\nAdvanced — Fluent discussions & formal Korean", extraText: "#KoreanLevels #Klovers", style: "klovers_list" },
@@ -243,7 +243,7 @@ function PlatformGridPreviews({ posts, template, theme, bgImage, postTemplates }
                   <div className="flex items-center gap-2 p-2.5">
                     <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-[10px]">K</div>
                     <div>
-                      <p className="text-[10px] font-semibold text-foreground">KLovers Academy</p>
+                      <p className="text-[10px] font-semibold text-foreground">Klovers Academy</p>
                       <p className="text-[9px] text-muted-foreground">Sponsored · 🌐</p>
                     </div>
                   </div>
