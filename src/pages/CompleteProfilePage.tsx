@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -19,6 +19,23 @@ import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 
+/**
+ * This page links from the "Complete your profile" reminder email, and it
+ * did not complete a profile: it called submit-lead, which writes to `leads`
+ * and never touches `profiles`. So the fields stayed missing, and the email
+ * arrived again the next morning. Full write-up in PR.
+ *
+ * `phone` and `timezone` were never asked for here - NULL on 102 of 102
+ * profiles on 2026-09-08.
+ *
+ * AUTHORISATION (Re's call, 2026-09-08): this route is deliberately
+ * unguarded so the ?email= link works for someone who has never signed in,
+ * which means the URL cannot be trusted to say who the visitor is. The
+ * profile write is therefore keyed on the SESSION, never on ?email=. Signed
+ * in -> own row only, enforced by RLS. Not signed in -> lead only, as
+ * before, and the page says so instead of implying otherwise.
+ */
+
 const COUNTRIES = [
   "Egypt", "Saudi Arabia", "UAE", "Kuwait", "Qatar", "Bahrain", "Oman",
   "Jordan", "Lebanon", "Syria", "Iraq", "Palestine", "Libya", "Tunisia",
@@ -26,12 +43,43 @@ const COUNTRIES = [
   "Canada", "Australia", "Other",
 ];
 
+/**
+ * Local ON PURPOSE. These belong in src/i18n/translations.ts and should be
+ * moved there by a pass with a real working copy. They are here because that
+ * file can only be edited through this tooling by rewriting it whole, which
+ * took three attempts on a smaller file in #300 - risking the whole site's
+ * copy to add seven strings is the wrong trade. `t()` returns the key itself
+ * when a key is missing, so the alternative is a form labelled
+ * "completeProfile.phoneLabel" in production.
+ */
+const COPY = {
+  en: {
+    phoneLabel: "Phone number",
+    phonePlaceholder: "+20 100 123 4567",
+    timezoneLabel: "Your timezone",
+    timezoneHint: "Detected from your device. Change it if it looks wrong - we use it to tell you the right class time.",
+    signInPrompt: "You are not signed in, so this will be saved as an enquiry rather than to your account.",
+    signInLink: "Sign in first",
+    notSignedInNote: "Saved as an enquiry. Sign in and fill this in again to save it to your account.",
+  },
+  ar: {
+    phoneLabel: "رقم الهاتف",
+    phonePlaceholder: "+20 100 123 4567",
+    timezoneLabel: "المنطقة الزمنية",
+    timezoneHint: "تم تحديدها من جهازك. غيّرها إذا كانت غير صحيحة — نستخدمها لنخبرك بموعد الحصة بتوقيتك.",
+    signInPrompt: "لم تسجّل دخولك، لذلك ستُحفظ بياناتك كطلب استفسار لا في حسابك.",
+    signInLink: "سجّل دخولك أولاً",
+    notSignedInNote: "حُفظت بياناتك كطلب استفسار. سجّل دخولك ثم أعد ملء النموذج لحفظها في حسابك.",
+  },
+} as const;
+
 const CompleteProfilePage = () => {
   // Transactional page: real content for the signed-in user, nothing a
   // search result should land on. Mirrors the Disallow in robots.txt.
   useSEO({ title: "Complete Your Profile", description: "Finish setting up your Klovers account.", noindex: true });
 
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const tx = (k: keyof typeof COPY["en"]) => COPY[language === "ar" ? "ar" : "en"][k];
   const [searchParams] = useSearchParams();
   const emailFromUrl = searchParams.get("email") || "";
 
@@ -51,15 +99,46 @@ const CompleteProfilePage = () => {
     { value: "Other", label: t("completeProfile.goal7") },
   ];
 
+  // Read from the browser rather than asking. A visitor should not have to
+  // find themselves in a list of 400 IANA zones, and a wrong zone here is
+  // what puts a student in a class five hours after it ended.
+  const detectedTimezone = (() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch {
+      return "";
+    }
+  })();
+
   const [form, setForm] = useState({
     name: "",
     email: emailFromUrl,
     country: "",
     level: "",
     goal: "",
+    phone: "",
+    timezone: detectedTimezone,
   });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  // null while the session is still being read, so the page does not flash
+  // the signed-out notice at someone who is in fact signed in.
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [savedToProfile, setSavedToProfile] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      setSignedIn(!!session?.user);
+      // The session is the identity, so prefill from it and let the address
+      // in the URL lose the argument.
+      if (session?.user?.email) {
+        setForm((f) => ({ ...f, email: session.user!.email as string }));
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const set = (key: keyof typeof form) => (val: string) =>
     setForm((f) => ({ ...f, [key]: val }));
@@ -82,12 +161,42 @@ const CompleteProfilePage = () => {
           country: form.country,
           level: form.level,
           goal: form.goal,
+          timezone: form.timezone,
           source: "complete-profile",
           user_id: session?.user?.id,
         },
       });
 
       if (error) throw new Error(error.message || t("completeProfile.saveFailedGeneric"));
+
+      // The part that was missing. Only for a signed-in user, and only ever
+      // their own row - RLS enforces that regardless of what is in the URL.
+      if (session?.user?.id) {
+        const patch: Record<string, string> = { name: form.name.trim() };
+        if (form.country) patch.country = form.country;
+        if (form.level) patch.level = form.level;
+        if (form.phone.trim()) patch.phone = form.phone.trim();
+        if (form.timezone) patch.timezone = form.timezone;
+
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update(patch)
+          .eq("user_id", session.user.id);
+
+        if (profileError) {
+          // The lead was saved, so this is not a total failure - but the
+          // reminder email keys off `profiles`, so staying quiet here would
+          // send them round the same loop again. Say it.
+          console.error("complete-profile: profile update failed:", profileError.message);
+          toast({
+            title: t("common.error"),
+            description: profileError.message,
+            variant: "destructive",
+          });
+        } else {
+          setSavedToProfile(true);
+        }
+      }
 
       setDone(true);
     } catch (err: any) {
@@ -110,6 +219,13 @@ const CompleteProfilePage = () => {
             <p className="text-muted-foreground leading-relaxed">
               {t("completeProfile.doneDesc")}
             </p>
+            {!savedToProfile && (
+              // Do not let someone walk away believing their account is
+              // updated when only a lead row was written.
+              <p className="text-sm text-muted-foreground border border-border rounded-xl p-3">
+                {tx("notSignedInNote")}
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <Button asChild>
                 <Link to="/enroll">
@@ -143,6 +259,15 @@ const CompleteProfilePage = () => {
             </p>
           </div>
 
+          {signedIn === false && (
+            <div className="mb-5 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+              {tx("signInPrompt")}{" "}
+              <Link to="/auth" className="underline font-medium text-foreground">
+                {tx("signInLink")}
+              </Link>
+            </div>
+          )}
+
           {/* Form card */}
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -167,9 +292,23 @@ const CompleteProfilePage = () => {
                   placeholder={t("completeProfile.emailPlaceholder")}
                   value={form.email}
                   onChange={(e) => set("email")(e.target.value)}
-                  readOnly={!!emailFromUrl}
-                  className={emailFromUrl ? "bg-muted text-muted-foreground" : ""}
+                  readOnly={!!emailFromUrl || signedIn === true}
+                  className={emailFromUrl || signedIn ? "bg-muted text-muted-foreground" : ""}
                   required
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">{tx("phoneLabel")}</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder={tx("phonePlaceholder")}
+                  value={form.phone}
+                  onChange={(e) => set("phone")(e.target.value)}
                 />
               </div>
 
@@ -186,6 +325,20 @@ const CompleteProfilePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Timezone - detected, editable, never silently guessed */}
+              <div className="space-y-1.5">
+                <Label htmlFor="timezone">{tx("timezoneLabel")}</Label>
+                <Input
+                  id="timezone"
+                  value={form.timezone}
+                  onChange={(e) => set("timezone")(e.target.value)}
+                  placeholder="Africa/Cairo"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {tx("timezoneHint")}
+                </p>
               </div>
 
               {/* Level */}
