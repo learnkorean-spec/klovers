@@ -391,7 +391,12 @@ export function buildTrialRebookEmail(p: EmailPayload) {
 
 export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
   const isAr = p.language === "ar";
-  const confirmUrl = `https://kloversegy.com/trial-confirm?id=${p.booking_id || ""}&token=${p.confirmation_token || ""}`;
+  // `id=` was carried here since the first version of this email and the
+  // confirmation page has never read it — it only ever looks at `token`. A
+  // parameter that does nothing is one more thing to get truncated or mangled
+  // when a mail client rewrites the link, so it is gone.
+  const confirmUrl = `https://kloversegy.com/trial-confirm?token=${p.confirmation_token || ""}&response=yes`;
+  const declineUrl = `https://kloversegy.com/trial-confirm?token=${p.confirmation_token || ""}&response=no`;
   const classLink = p.class_link_url || p.meeting_url || null;
   const tzIana = p.trial_timezone || "Asia/Kuala_Lumpur";
   const tzLabel = tzIana.replace(/_/g, " ");
@@ -440,6 +445,36 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         : `<div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;">
             <p style="margin: 0; color: ${BRAND_DARK}; font-size: 14px;">🕐 Your class link will be sent to you 24 hours before your session</p>
           </div>`);
+
+  // Two answers, because "declined" and "never opened the email" are different
+  // problems and the academy has to act on them differently. Yellow stays the
+  // one loud button; the decline is a quiet outline so saying no is easy but
+  // never the thing the eye lands on first.
+  //
+  // Without a token both links would land the student on the "Link Invalid"
+  // card, which reads as if we lost her booking. Nothing is better than that,
+  // so we ask her to reply instead.
+  const hasConfirmToken = Boolean(p.confirmation_token);
+
+  const respondSectionAr = hasConfirmToken
+    ? `<div style="margin: 24px 0; text-align: center;">
+        <p style="color: ${BRAND_MUTED}; font-size: 14px; margin: 0 0 14px;">أي رد بيساعدنا: «أكّد حضوري» بيحجزلك مقعدك، و«مش هقدر أحضر» بيفضّيه لطالب تاني ونرتبلك ميعاد جديد.</p>
+        <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ أكّد حضوري</a>
+        <div style="margin-top: 12px;">
+          <a href="${declineUrl}" style="display: inline-block; background-color: #ffffff !important; color: ${BRAND_MUTED} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: 1px solid #d4d4d4;">مش هقدر أحضر</a>
+        </div>
+      </div>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: right;">مش عارفين نعمل لينك التأكيد دلوقتي. رد على الإيميل ده وقولنا هتحضر ولا لأ. 📩</p>`;
+
+  const respondSectionEn = hasConfirmToken
+    ? `<div style="margin: 24px 0; text-align: center;">
+        <p style="color: ${BRAND_MUTED}; font-size: 14px; margin: 0 0 14px;">Either answer helps us: yes holds your seat, and "I can't make it" frees it for someone else so we can find you another time.</p>
+        <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ Confirm My Attendance</a>
+        <div style="margin-top: 12px;">
+          <a href="${declineUrl}" style="display: inline-block; background-color: #ffffff !important; color: ${BRAND_MUTED} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: 1px solid #d4d4d4;">I can't make it</a>
+        </div>
+      </div>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: left;">We couldn't build your confirmation link this time. Just reply to this email and tell us whether you'll be there. 📩</p>`;
 
   const breakdownAr = `
     <h2 style="color: ${BRAND_DARK}; font-size: 18px; margin: 28px 0 8px;">✨ ماذا سيحدث في هذه الحصة؟</h2>
@@ -504,9 +539,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
           ["⏰ الوقت", ct.timeLine],
           ["🌍 التوقيت", tzDisplay],
         ])}
-        <div style="margin: 24px 0; text-align: center;">
-          <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ أكّد حضوري</a>
-        </div>
+        ${respondSectionAr}
         ${meetSection}
         ${breakdownAr}
         <div style="margin: 28px 0 8px; text-align: center;">
@@ -536,9 +569,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         ["⏰ Time", ct.timeLine],
         ["🌍 Timezone", tzDisplay],
       ])}
-      <div style="margin: 24px 0; text-align: center;">
-        <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ Confirm My Attendance</a>
-      </div>
+      ${respondSectionEn}
       ${meetSection}
       ${breakdownEn}
       <div style="margin: 28px 0 8px; text-align: center;">
