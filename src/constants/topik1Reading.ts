@@ -146,7 +146,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "A7", section: "A",
-    stem: "가: 이름이 뱐예요?\n     나: 제 이름은 하나(       ).",
+    stem: "가: 이름이 뭐예요?\n     나: 제 이름은 하나(       ).",
     options: ["이에요", "에요", "예요", "이요"], answerIndex: 2,
   },
   {
@@ -174,7 +174,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "B4", section: "B",
-    stem: "가: 주말에 뭐 할 거예요?\n     나: 부모님 댑에 (       ).",
+    stem: "가: 주말에 뭐 할 거예요?\n     나: 부모님 댓에 (       ).",
     options: ["갈 거예요", "갔어요", "가고 있어요", "가지 마세요"], answerIndex: 0,
   },
   {
@@ -186,7 +186,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "대회는 토요일에 합니다.",
       "대회는 두 시간 동안 합니다.",
       "대회는 학생회관에서 합니다.",
-      "대회에 나가려면 돈을 내야 합니다."
+      "대회에 나가려면 돈을 내야 합니다.",
     ],
     answerIndex: 3,
   },
@@ -198,7 +198,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "파티는 저녁에 합니다.",
       "민수 씨가 음식을 준비합니다.",
       "파티는 수진 씨 집에서 합니다.",
-      "선물을 안 가져와도 됩니다."
+      "선물을 안 가져와도 됩니다.",
     ],
     answerIndex: 1,
   },
@@ -211,7 +211,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "저는 다음 주말에 부산에 갑니다.",
       "부산은 날씨가 더웠습니다.",
       "저는 바다에서 수영을 했습니다.",
-      "저는 부산에서 불고기를 먹었습니다."
+      "저는 부산에서 불고기를 먹었습니다.",
     ],
     answerIndex: 1,
   },
@@ -223,7 +223,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "우리 반에 남자가 더 많습니다.",
       "여자는 네 명입니다.",
       "저는 우리 반에서 제일 어립니다.",
-      "우리 반 학생은 모두 열 명입니다."
+      "우리 반 학생은 모두 열 명입니다.",
     ],
     answerIndex: 3,
   },
@@ -256,7 +256,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "C3", section: "C",
     stem: "어제는 (       ) 오늘은 시간이 많아요.",
-    options: ["바빠서", "바쁘고", "바빌지만", "바쁘면"], answerIndex: 2,
+    options: ["바빠서", "바쁘고", "바쁜지만", "바쁘면"], answerIndex: 2,
   },
   {
     id: "C4", section: "C",
@@ -272,7 +272,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "걷기는 힘든 운동입니다.",
       "매일 조금씩 운동하는 것이 좋습니다.",
       "아침에는 걷기가 좋습니다.",
-      "삼십 분은 짧은 시간입니다."
+      "삼십 분은 짧은 시간입니다.",
     ],
     answerIndex: 1,
   },
@@ -284,7 +284,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "드라마는 교과서보다 재미있습니다.",
       "한국어 교과서는 어렵습니다.",
       "드라마를 매일 봐야 합니다.",
-      "드라마로 공부하면 말을 더 잘 기억할 수 있습니다."
+      "드라마로 공부하면 말을 더 잘 기억할 수 있습니다.",
     ],
     answerIndex: 3,
   },
@@ -296,7 +296,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "(나)-(라)-(가)-(다)",
       "(가)-(나)-(다)-(라)",
       "(나)-(가)-(라)-(다)",
-      "(가)-(라)-(나)-(다)"
+      "(가)-(라)-(나)-(다)",
     ],
     answerIndex: 2,
   },
@@ -307,7 +307,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "(나)-(라)-(가)-(다)",
       "(나)-(가)-(라)-(다)",
       "(라)-(나)-(가)-(다)",
-      "(라)-(가)-(나)-(다)"
+      "(라)-(가)-(나)-(다)",
     ],
     answerIndex: 0,
   },
@@ -325,7 +325,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
       "저는 한국어를 배운 적이 없습니다.",
       "저는 어려운 말도 모두 압니다.",
       "저는 지금 회의에서 말을 할 수 있습니다.",
-      "저는 올해 회사에 들어갔습니다."
+      "저는 올해 회사에 들어갔습니다.",
     ],
     answerIndex: 2,
   },
