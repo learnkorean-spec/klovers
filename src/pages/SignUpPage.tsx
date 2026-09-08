@@ -121,7 +121,7 @@ const SignUpPage = () => {
 
     toast({
       title: t("auth.accountCreated") || "Account created!",
-      description: t("auth.welcomeMessage") || "Welcome to K-Lovers! You can now sign in.",
+      description: t("auth.welcomeMessage") || "Welcome to Klovers! You can now sign in.",
     });
     setLoading(false);
 
@@ -161,7 +161,7 @@ const SignUpPage = () => {
             )}
             <CardTitle className="text-2xl">{t("auth.createAccount") || "Create Account"}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {t("auth.signUpSubtitle") || "Join K-Lovers and start learning Korean today"}
+              {t("auth.signUpSubtitle") || "Join Klovers and start learning Korean today"}
             </p>
             {/* Benefit pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-3">

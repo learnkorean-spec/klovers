@@ -136,7 +136,7 @@ serve(async (req) => {
         hero_alt: altText,
         hero_caption: description
           ? description.slice(0, 100)
-          : `${title} | K-Lovers Blog`,
+          : `${title} | Klovers Blog`,
       }),
       {
         status: 200,

@@ -10,7 +10,7 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
+const FROM_EMAIL = "Klovers <noreply@kloversegy.com>";
 const DASHBOARD_URL = "https://kloversegy.com/dashboard";
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -57,19 +57,19 @@ function buildEmail(name: string, missing: MissingField[], lang: string, planTyp
     : (isAr ? "الحصص الخاصة" : "private classes");
 
   const subjectAr = isGroup
-    ? "KLovers — أكمل بياناتك لبدء حصص المجموعة 📝"
-    : "KLovers — أكمل بياناتك لبدء حصصك الخاصة 📝";
+    ? "Klovers — أكمل بياناتك لبدء حصص المجموعة 📝"
+    : "Klovers — أكمل بياناتك لبدء حصصك الخاصة 📝";
   const subjectEn = isGroup
-    ? "KLovers — Complete your info to join group classes 📝"
-    : "KLovers — Complete your info to start private classes 📝";
+    ? "Klovers — Complete your info to join group classes 📝"
+    : "Klovers — Complete your info to start private classes 📝";
 
   const headerLine = `
     <div style="background: #FFFF00; padding: 18px 24px; border-radius: 8px 8px 0 0; margin: -32px -20px 24px -20px;">
-      <span style="font-size: 22px; font-weight: 900; color: #000; letter-spacing: -0.5px;">K-Lovers</span>
+      <span style="font-size: 22px; font-weight: 900; color: #000; letter-spacing: -0.5px;">Klovers</span>
     </div>`;
 
-  const footer = `<p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;"><span translate="no" class="notranslate">— The KLovers Team</span> · <a href="https://kloversegy.com" style="color: #999;">kloversegy.com</a></p>`;
-  const footerAr = `<p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">— فريق KLovers · <a href="https://kloversegy.com" style="color: #999;">kloversegy.com</a></p>`;
+  const footer = `<p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;"><span translate="no" class="notranslate">— The Klovers Team</span> · <a href="https://kloversegy.com" style="color: #999;">kloversegy.com</a></p>`;
+  const footerAr = `<p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">— فريق Klovers · <a href="https://kloversegy.com" style="color: #999;">kloversegy.com</a></p>`;
 
   if (isAr) {
     return {

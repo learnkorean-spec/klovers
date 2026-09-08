@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
+const FROM_EMAIL = "Klovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
 const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
 
@@ -38,7 +38,7 @@ function reminderEmail(name: string, sessionDate: string, startTime: string, dur
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
   <!-- Header -->
   <tr><td style="background:${headerColor};padding:28px 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="KLovers" style="width:52px;height:52px;border-radius:50%;border:3px solid ${headerTextColor};" />
+    <img src="${LOGO_URL}" alt="Klovers" style="width:52px;height:52px;border-radius:50%;border:3px solid ${headerTextColor};" />
     <h2 style="color:${headerTextColor};margin:10px 0 4px;font-size:20px;font-weight:700;">${badgeText}</h2>
     <p style="color:${headerTextColor};opacity:0.8;margin:0;font-size:13px;">Korean Language Academy</p>
   </td></tr>
@@ -86,7 +86,7 @@ function reminderEmail(name: string, sessionDate: string, startTime: string, dur
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:8px 0 20px;" />
     <p style="color:#9ca3af;font-size:13px;margin:0;line-height:1.6;">
       Keep practicing between sessions — even 10 minutes a day makes a huge difference! 화이팅! 💪<br /><br />
-      <em>Reham · K-Lovers Academy</em>
+      <em>Reham · Klovers Academy</em>
     </p>
   </td></tr>
 </table>
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
 
   const results: string[] = [];
 
-  // ── 24-hour reminder ────────────────────────────────────────────────────────
+  // ── 24-hour reminder ───────────────────────────────────────────────
   if (reminderType === "24h" || reminderType === "both") {
     // Sessions happening tomorrow in Cairo — the actual comparison happens
     // inside get_sessions_for_reminder_24h(), via `AT TIME ZONE 'Africa/Cairo'`
@@ -141,21 +141,21 @@ Deno.serve(async (req) => {
     for (const s of sessions24h ?? []) {
       const ok = await sendEmail(
         s.email,
-        "📅 Your Korean class is tomorrow! – KLovers",
+        "📅 Your Korean class is tomorrow! – Klovers",
         reminderEmail(s.name, s.session_date, s.start_time, s.duration_min, s.group_name, s.level, zoomUrl, "24h")
       );
       results.push(`24h → ${s.email}: ${ok ? "✓" : "✗"}`);
     }
   }
 
-  // ── 1-hour reminder ─────────────────────────────────────────────────────────
+  // ── 1-hour reminder ────────────────────────────────────────────────
   if (reminderType === "1h" || reminderType === "both") {
     const { data: sessions1h } = await supabase.rpc("get_sessions_for_reminder_1h") as any;
 
     for (const s of sessions1h ?? []) {
       const ok = await sendEmail(
         s.email,
-        "⏰ Your Korean class starts in 1 hour! – KLovers",
+        "⏰ Your Korean class starts in 1 hour! – Klovers",
         reminderEmail(s.name, s.session_date, s.start_time, s.duration_min, s.group_name, s.level, zoomUrl, "1h")
       );
       results.push(`1h  → ${s.email}: ${ok ? "✓" : "✗"}`);

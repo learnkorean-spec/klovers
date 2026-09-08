@@ -35,7 +35,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: "welcome",
     name: "🎉 Welcome",
-    subject: "Welcome to KLovers! 🎉",
+    subject: "Welcome to Klovers! 🎉",
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -44,7 +44,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
   <tr><td style="background:#FFFF00;padding:32px 40px;text-align:center;">
-    <h1 style="margin:0;color:#000000;font-size:24px;font-weight:700;">Welcome to KLovers! 🎉</h1>
+    <h1 style="margin:0;color:#000000;font-size:24px;font-weight:700;">Welcome to Klovers! 🎉</h1>
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
@@ -58,7 +58,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{dashboard_url}}" style="color:#000000;text-decoration:underline;font-size:14px;font-weight:600;">Your Dashboard</a>
     </p>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">Warm regards,<br><strong>Reham</strong>, Founder of K-Lovers</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">Warm regards,<br><strong>Reham</strong>, Founder of Klovers</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -67,7 +67,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: "new_course",
     name: "📚 New Course Announcement",
-    subject: "New Course Available at K-Lovers! 🎓",
+    subject: "New Course Available at Klovers! 🎓",
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -89,7 +89,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{courses_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">View Courses →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">— The Klovers Team</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -119,7 +119,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{dashboard_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Go to Dashboard →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">See you in class! ✨<br><strong>Reham</strong>, KLovers</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">See you in class! ✨<br><strong>Reham</strong>, Klovers</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -151,7 +151,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{courses_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Claim Offer →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">— The Klovers Team</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -160,7 +160,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: "update",
     name: "📢 General Update",
-    subject: "Important Update from K-Lovers 📢",
+    subject: "Important Update from Klovers 📢",
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -173,12 +173,12 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
-    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Write your update message here. You can include any important announcements, schedule changes, or news about K-Lovers.]</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Write your update message here. You can include any important announcements, schedule changes, or news about Klovers.]</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
       <a href="{{dashboard_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Visit Dashboard →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">Best,<br><strong>Reham</strong>, KLovers</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">Best,<br><strong>Reham</strong>, Klovers</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -202,7 +202,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">Our April Korean Language batch is now officially open for enrollment.</p>
-    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">At KLovers, we follow a structured 6-level curriculum aligned with official TOPIK progression, ensuring steady development from beginner foundations to exam readiness. Our small-group format allows for personal feedback and real speaking practice from the first weeks.</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">At Klovers, we follow a structured 6-level curriculum aligned with official TOPIK progression, ensuring steady development from beginner foundations to exam readiness. Our small-group format allows for personal feedback and real speaking practice from the first weeks.</p>
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;"><strong>Special pricing is available for Egyptian students.</strong> Seats are limited and enrollment will close once the group is full.</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:10px 0 24px;">
       <a href="https://kloversegy.com" style="background:#FFFF00;color:#000000;text-decoration:none;padding:14px 34px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Register Now →</a>
@@ -233,7 +233,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">{{greeting}}</p>
-    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">We're thrilled to announce that <strong>KLovers' interactive Korean Textbook</strong> is now available — and it's completely <strong>free</strong>! 🎉</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">We're thrilled to announce that <strong>Klovers' interactive Korean Textbook</strong> is now available — and it's completely <strong>free</strong>! 🎉</p>
 
     <div style="background:#FFFDE7;border-left:4px solid #FFFF00;border-radius:4px;padding:20px;margin:0 0 24px;">
       <p style="margin:0 0 12px;font-weight:700;color:#111827;font-size:15px;">✨ What's inside:</p>
@@ -254,7 +254,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     <p style="text-align:center;color:#9CA3AF;font-size:13px;margin:0 0 28px;">No sign-up required to browse lessons</p>
 
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;text-align:center;">Happy studying! 💛<br><strong style="color:#111827;">Reham</strong>, Founder of KLovers</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;text-align:center;">Happy studying! 💛<br><strong style="color:#111827;">Reham</strong>, Founder of Klovers</p>
     <p style="text-align:center;margin:12px 0 0;"><a href="https://kloversegy.com" style="color:#000000;text-decoration:none;font-size:13px;font-weight:600;">🌐 kloversegy.com</a></p>
   </td></tr>
 </table>
@@ -276,7 +276,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Your message here]</p>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">— The KLovers Team</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">— The Klovers Team</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -607,7 +607,7 @@ const BulkEmailManager = () => {
             </div>
             <div className="space-y-2">
               <Label>Subject</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Welcome to K-Lovers" />
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Welcome to Klovers" />
             </div>
           </div>
 

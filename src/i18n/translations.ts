@@ -70,7 +70,7 @@ export const translations = {
     },
     testimonials: {
       title: "What Our Students Say",
-      subtitle: "Real stories from real K-Lovers",
+      subtitle: "Real stories from real Klovers",
       items: [
         { name: "Nada Tamer", quote: "Very professional and fun at the same time! Makes learning very easy and enjoyable. I highly recommend it to anyone ❤️", location: "Egypt", duration: "3 months", level: "A1 → A2" },
         { name: "Jomana Azouz", quote: "She is amazing and really a good teacher. She simplifies everything to make it understandable, and doing the homework you will notice the development in your accent!", location: "Egypt", duration: "5 months", level: "A1 → B1" },
@@ -85,7 +85,7 @@ export const translations = {
     returningStudents: {
       banner: {
         badge: "RETURNING STUDENTS",
-        text: "Welcome Back, K-Lovers! Returning students get 20% off — Take your Placement Test today",
+        text: "Welcome Back, Klovers! Returning students get 20% off — Take your Placement Test today",
         cta: "Take Placement Test",
       },
       section: {
@@ -125,7 +125,7 @@ export const translations = {
     },
     welcomeBack: {
       hero: {
-        badge: "Welcome Back, K-Lovers!",
+        badge: "Welcome Back, Klovers!",
         title: "Continue Your Korean Journey",
         subtitle: "Returning students get 20% off — enroll now and pick up where you left off.",
         ctaPrimary: "Enroll Now",
@@ -157,7 +157,7 @@ export const translations = {
         items: [
           { title: "Updated Curriculum", description: "Fresh content aligned with the latest TOPIK standards." },
           { title: "Flexible Scheduling", description: "More class times to fit your busy life." },
-          { title: "Growing Community", description: "Join 500+ active K-Lovers students." },
+          { title: "Growing Community", description: "Join 500+ active Klovers students." },
           { title: "Exam Preparation", description: "Dedicated TOPIK I & II preparation tracks." },
         ],
       },
@@ -186,21 +186,21 @@ export const translations = {
       },
       finalCta: {
         title: "Ready to Continue?",
-        subtitle: "Your 20% discount is waiting. Enroll now and rejoin the K-Lovers community.",
+        subtitle: "Your 20% discount is waiting. Enroll now and rejoin the Klovers community.",
         button: "Enroll Now",
         whatsapp: "Questions? Chat on WhatsApp",
         note: "Use code KLOVERSOLDSTUDENT1 at checkout",
       },
     },
     why: {
-      title: "Why K-Lovers?",
+      title: "Why Klovers?",
       subtitle: "Everything you need to master Korean in one place",
       features: [
         { title: "Structured Levels", description: "From Hangul to Advanced fluency" },
         { title: "Flexible Classes", description: "Group & private options available" },
         { title: "Speaking-Focused", description: "Practical conversation lessons" },
         { title: "TOPIK Prep", description: "Exam preparation courses" },
-        { title: "Supportive Community", description: "Learn with fellow K-Lovers" },
+        { title: "Supportive Community", description: "Learn with fellow Klovers" },
         { title: "Special Discounts", description: "For Egyptian students 🇪🇬" },
       ],
     },
@@ -258,14 +258,14 @@ export const translations = {
       cta: "View Pricing Plans",
     },
     aboutPage: {
-      title: "About K-Lovers",
+      title: "About Klovers",
       story: {
         title: "Reham's Story",
-        content: "K-Lovers was founded by Reham, a passionate Korean language educator who discovered her love for Korean through K-Drama and K-Pop. After years of studying and teaching Korean, she created K-Lovers to make Korean language education accessible, structured, and enjoyable for students worldwide. What started as small tutoring sessions has grown into a thriving community of 500+ students across 15+ countries.",
+        content: "Klovers was founded by Reham, a passionate Korean language educator who discovered her love for Korean through K-Drama and K-Pop. After years of studying and teaching Korean, she created Klovers to make Korean language education accessible, structured, and enjoyable for students worldwide. What started as small tutoring sessions has grown into a thriving community of 500+ students across 15+ countries.",
       },
       philosophy: {
         title: "Teaching Philosophy",
-        content: "At K-Lovers, we believe language learning should be interactive, structured, and fun. Our methodology focuses on practical conversation skills from day one, combined with solid grammar foundations. We use real-world content like K-Drama dialogues and K-Pop lyrics to make learning engaging and culturally enriching.",
+        content: "At Klovers, we believe language learning should be interactive, structured, and fun. Our methodology focuses on practical conversation skills from day one, combined with solid grammar foundations. We use real-world content like K-Drama dialogues and K-Pop lyrics to make learning engaging and culturally enriching.",
       },
       experience: {
         title: "Experience & Credentials",
@@ -282,7 +282,7 @@ export const translations = {
     faqPage: {
       badge: "❓ FAQ",
       title: "Korean Language Course FAQ",
-      subtitle: "Everything you need to know about learning Korean with K-Lovers Academy",
+      subtitle: "Everything you need to know about learning Korean with Klovers Academy",
       ctaTitle: "Still have questions?",
       ctaText: "Our team is happy to help. Reach out or start your Korean journey today!",
       ctaContact: "Contact Us",
@@ -294,18 +294,18 @@ export const translations = {
         progress: "Progress & Certification",
       },
       items: [
-        { question: "Do I need prior knowledge of Korean to enroll?", answer: "Not at all! K-Lovers offers a dedicated Hangul beginner course designed for absolute beginners. You'll learn the Korean alphabet (Hangul) from scratch, then progress through vocabulary, grammar, and conversation — step by step.", category: "gettingStarted" },
+        { question: "Do I need prior knowledge of Korean to enroll?", answer: "Not at all! Klovers offers a dedicated Hangul beginner course designed for absolute beginners. You'll learn the Korean alphabet (Hangul) from scratch, then progress through vocabulary, grammar, and conversation — step by step.", category: "gettingStarted" },
         { question: "How do I know which level is right for me?", answer: "We provide a free online placement test that evaluates your reading, listening, and grammar skills. Based on your score, we recommend the ideal level — from Hangul Beginner to Advanced. You can take the test before enrolling.", category: "gettingStarted" },
-        { question: "Are classes online or in-person?", answer: "All K-Lovers classes are conducted 100% online via live video sessions. You can join from anywhere in the world — all you need is a stable internet connection and a computer or tablet.", category: "classes" },
+        { question: "Are classes online or in-person?", answer: "All Klovers classes are conducted 100% online via live video sessions. You can join from anywhere in the world — all you need is a stable internet connection and a computer or tablet.", category: "classes" },
         { question: "What is the class schedule like?", answer: "Group classes are held once per week. The exact day and time are coordinated with your group to find the most convenient slot. Private classes offer fully flexible scheduling based on your availability.", category: "classes" },
         { question: "How many students are in a group class?", answer: "Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the instructor.", category: "classes" },
         { question: "What's the difference between group and private classes?", answer: "Group classes (once/week) let you learn alongside peers in a collaborative environment at an affordable price. Private classes (1-on-1) offer personalized lessons, flexible scheduling, and faster progression tailored to your goals.", category: "classes" },
         { question: "What payment methods do you accept?", answer: "We accept international payments via Stripe (credit/debit cards) and local bank transfers for Egyptian students. After payment, simply upload your receipt and our team will activate your account within 24 hours.", category: "payment" },
         { question: "Can I pay in installments?", answer: "Yes! We offer 1-month, 3-month, and 6-month plans. Longer plans come with better per-class pricing. You can choose the duration that fits your budget when enrolling.", category: "payment" },
-        { question: "Do I get a certificate after completing a course?", answer: "Yes! Upon successfully completing your course level, you'll receive an official K-Lovers certificate of completion. This certificate can be added to your CV, LinkedIn profile, or university application portfolio.", category: "progress" },
+        { question: "Do I get a certificate after completing a course?", answer: "Yes! Upon successfully completing your course level, you'll receive an official Klovers certificate of completion. This certificate can be added to your CV, LinkedIn profile, or university application portfolio.", category: "progress" },
         { question: "How is my progress tracked?", answer: "Your student dashboard shows your attendance history, current level, and remaining sessions. Your instructor also provides regular feedback on your speaking, reading, and writing skills throughout the course.", category: "progress" },
         { question: "Can I switch between group and private classes?", answer: "Yes, you can switch your plan type when you renew. Contact our team and we'll help you transition smoothly to your preferred class format.", category: "gettingStarted" },
-        { question: "Is K-Lovers suitable for TOPIK preparation?", answer: "Absolutely! Our curriculum is aligned with TOPIK standards, and our teaching team has experience preparing students for TOPIK exams with high pass rates. We cover reading, listening, and writing skills tested in TOPIK I and II.", category: "progress" },
+        { question: "Is Klovers suitable for TOPIK preparation?", answer: "Absolutely! Our curriculum is aligned with TOPIK standards, and our teaching team has experience preparing students for TOPIK exams with high pass rates. We cover reading, listening, and writing skills tested in TOPIK I and II.", category: "progress" },
       ],
     },
     contactPage: {
@@ -376,8 +376,8 @@ export const translations = {
     enroll: {
       urgency: "🔥 Spots are limited! Enroll now before classes fill up.",
       badge: "📝 How to Enroll",
-      title: "Join K-Lovers Korean Courses Today",
-      subtitle: "At K-Lovers, enrolling is simple and fast. Follow these 3 steps to secure your spot!",
+      title: "Join Klovers Korean Courses Today",
+      subtitle: "At Klovers, enrolling is simple and fast. Follow these 3 steps to secure your spot!",
       steps: [
         { title: "Create Your Account", description: "Sign up on our platform to get started with your Korean learning journey.", buttonText: "Sign Up" },
         { title: "Choose Your Plan & Pay", description: "Select your preferred plan (Group or Private), duration, and complete the payment.", buttonText: "View Pricing" },
@@ -393,7 +393,7 @@ export const translations = {
         { question: "Do I need prior knowledge of Korean?", answer: "No — we offer a Hangul course specifically designed for absolute beginners. You'll learn the Korean alphabet from scratch before moving on to vocabulary and grammar." },
         { question: "Are classes online or offline?", answer: "All our classes are conducted online, making it convenient for you to learn from anywhere. You just need a stable internet connection and a device to join the sessions." },
         { question: "Is there a placement test?", answer: "Yes, we offer a placement test to help you choose the right level. This ensures you're placed in a class that matches your current Korean proficiency." },
-        { question: "Do I get a certificate?", answer: "Yes, after successfully completing your course, you will receive a certificate of completion from K-Lovers that you can add to your portfolio or resume." },
+        { question: "Do I get a certificate?", answer: "Yes, after successfully completing your course, you will receive a certificate of completion from Klovers that you can add to your portfolio or resume." },
         { question: "What is the class schedule?", answer: "Classes are held once per week. The specific day and time will be coordinated with your group or instructor to find the most convenient schedule for everyone." },
         { question: "Can I switch from group to private classes?", answer: "Yes! You can switch between class types. Simply contact our team and we'll help you make the transition smoothly." },
       ],
@@ -402,7 +402,7 @@ export const translations = {
       tagline: "Learn Korean. Love the Culture. Speak with Confidence.",
       quickLinks: "Quick Links",
       joinCommunity: "Join Our Community",
-      copyright: "K-Lovers Korean Courses. All rights reserved.",
+      copyright: "Klovers Korean Courses. All rights reserved.",
     },
     auth: {
       createAccount: "Create your account",
@@ -455,10 +455,10 @@ export const translations = {
       passwordsDontMatch: "Please make sure both passwords are the same.",
       samePassword: "New password must be different from your current password.",
       passwordUpdated: "You can now log in with your new password.",
-      signUpSubtitle: "Join K-Lovers and start learning Korean today",
+      signUpSubtitle: "Join Klovers and start learning Korean today",
       creatingAccount: "Creating account...",
       accountCreated: "Account created!",
-      welcomeMessage: "Welcome to K-Lovers! You can now sign in.",
+      welcomeMessage: "Welcome to Klovers! You can now sign in.",
     },
     enrollNow: {
       choosePlan: "Choose Plan",
@@ -1038,10 +1038,10 @@ export const translations = {
       socialCountText: "students already learning",
       testimonial1Quote: "Very effective. Reham is soo awesome and I learnt a lot from her. I give her 10/10. Thank you for making things easier!",
       testimonial1Name: "Maged M.",
-      testimonial1Role: "K-Lovers student · Cairo",
+      testimonial1Role: "Klovers student · Cairo",
       testimonial2Quote: "The course is absolutely entertaining. I enjoy every second of it — educational, not boring and I can already see progress. Highly recommend!",
       testimonial2Name: "Ayaya S.",
-      testimonial2Role: "K-Lovers student · Egypt",
+      testimonial2Role: "Klovers student · Egypt",
       testimonialsTitle: "What students say",
       whatToExpectTitle: "What happens in your trial",
       slotsTitle: "Pick your session",
@@ -1175,7 +1175,7 @@ export const translations = {
       notFound: "Enrollment not found.",
     },
     certificatePage: {
-      pageTitle: "Your KLovers Certificate",
+      pageTitle: "Your Klovers Certificate",
       pageSubtitle: "Download and share on Instagram, Facebook, or LinkedIn!",
       generating: "Generating certificate…",
       downloadPng: "Download Certificate (PNG)",
@@ -1842,7 +1842,7 @@ export const translations = {
       home: "الرئيسية",
       courses: "الدورات",
       pricing: "الأسعار",
-      about: "عن K-Lovers",
+      about: "عن Klovers",
       faq: "الأسئلة الشائعة",
       contact: "تواصل معنا",
       enrollNow: "ابدأ الآن",
@@ -1923,7 +1923,7 @@ export const translations = {
     returningStudents: {
       banner: {
         badge: "الطلاب العائدون",
-        text: "أهلاً بعودتكم يا K-Lovers! خصم 20% للطلاب العائدين — خذ اختبار تحديد المستوى اليوم",
+        text: "أهلاً بعودتكم يا Klovers! خصم 20% للطلاب العائدين — خذ اختبار تحديد المستوى اليوم",
         cta: "خذ اختبار المستوى",
       },
       section: {
@@ -1963,7 +1963,7 @@ export const translations = {
     },
     welcomeBack: {
       hero: {
-        badge: "!أهلاً بعودتكم يا K-Lovers",
+        badge: "!أهلاً بعودتكم يا Klovers",
         title: "أكمل رحلتك في تعلم الكورية",
         subtitle: "خصم 20% للطلاب العائدين — سجّل الآن وأكمل من حيث توقفت.",
         ctaPrimary: "سجّل الآن",
@@ -1995,7 +1995,7 @@ export const translations = {
         items: [
           { title: "منهج محدّث", description: "محتوى جديد متوافق مع أحدث معايير TOPIK." },
           { title: "جدول مرن", description: "مواعيد حصص أكثر تناسب حياتك المزدحمة." },
-          { title: "مجتمع متنامي", description: "انضم إلى أكثر من 500 طالب نشط في K-Lovers." },
+          { title: "مجتمع متنامي", description: "انضم إلى أكثر من 500 طالب نشط في Klovers." },
           { title: "إعداد للامتحان", description: "مسارات تحضيرية مخصصة لـ TOPIK I و II." },
         ],
       },
@@ -2024,14 +2024,14 @@ export const translations = {
       },
       finalCta: {
         title: "مستعد للاستمرار؟",
-        subtitle: "خصمك 20% في انتظارك. سجّل الآن وانضم مجددًا لمجتمع K-Lovers.",
+        subtitle: "خصمك 20% في انتظارك. سجّل الآن وانضم مجددًا لمجتمع Klovers.",
         button: "سجّل الآن",
         whatsapp: "أسئلة؟ تحدث معنا على واتساب",
         note: "استخدم الكود KLOVERSOLDSTUDENT1 عند الدفع",
       },
     },
     why: {
-      title: "لماذا K-Lovers؟",
+      title: "لماذا Klovers؟",
       subtitle: "كل ما تحتاجه لإتقان الكورية في مكان واحد",
       features: [
         { title: "مستويات منظمة", description: "من الهانغول إلى الطلاقة المتقدمة" },
@@ -2096,14 +2096,14 @@ export const translations = {
       cta: "عرض خطط الأسعار",
     },
     aboutPage: {
-      title: "عن K-Lovers",
+      title: "عن Klovers",
       story: {
         title: "قصة ريهام",
-        content: "تأسست K-Lovers على يد ريهام، معلمة لغة كورية شغوفة اكتشفت حبها للكورية من خلال الدراما والكيبوب. بعد سنوات من دراسة وتدريس الكورية، أنشأت K-Lovers لجعل تعليم اللغة الكورية متاحًا ومنظمًا وممتعًا للطلاب الناطقين بالعربية حول العالم. ما بدأ كجلسات تعليم صغيرة نما إلى مجتمع مزدهر من أكثر من 2,000 طالب عبر الشرق الأوسط وجنوب شرق آسيا.",
+        content: "تأسست Klovers على يد ريهام، معلمة لغة كورية شغوفة اكتشفت حبها للكورية من خلال الدراما والكيبوب. بعد سنوات من دراسة وتدريس الكورية، أنشأت Klovers لجعل تعليم اللغة الكورية متاحًا ومنظمًا وممتعًا للطلاب الناطقين بالعربية حول العالم. ما بدأ كجلسات تعليم صغيرة نما إلى مجتمع مزدهر من أكثر من 2,000 طالب عبر الشرق الأوسط وجنوب شرق آسيا.",
       },
       philosophy: {
         title: "فلسفة التدريس",
-        content: "في K-Lovers، نؤمن بأن تعلم اللغة يجب أن يكون تفاعليًا ومنظمًا وممتعًا. تركز منهجيتنا على مهارات المحادثة العملية من اليوم الأول، مع أسس نحوية صلبة. نستخدم محتوى واقعي مثل حوارات الدراما وكلمات الكيبوب لجعل التعلم جذابًا وغنيًا ثقافيًا.",
+        content: "في Klovers، نؤمن بأن تعلم اللغة يجب أن يكون تفاعليًا ومنظمًا وممتعًا. تركز منهجيتنا على مهارات المحادثة العملية من اليوم الأول، مع أسس نحوية صلبة. نستخدم محتوى واقعي مثل حوارات الدراما وكلمات الكيبوب لجعل التعلم جذابًا وغنيًا ثقافيًا.",
       },
       experience: {
         title: "الخبرة والمؤهلات",
@@ -2119,7 +2119,7 @@ export const translations = {
     faqPage: {
       badge: "❓ الأسئلة الشائعة",
       title: "أسئلة شائعة حول دورات اللغة الكورية",
-      subtitle: "كل ما تحتاج معرفته عن تعلّم الكورية مع أكاديمية K-Lovers",
+      subtitle: "كل ما تحتاج معرفته عن تعلّم الكورية مع أكاديمية Klovers",
       ctaTitle: "لا تزال لديك أسئلة؟",
       ctaText: "فريقنا سعيد بمساعدتك. تواصل معنا أو ابدأ رحلتك في تعلّم الكورية اليوم!",
       ctaContact: "تواصل معنا",
@@ -2131,18 +2131,18 @@ export const translations = {
         progress: "التقدم والشهادات",
       },
       items: [
-        { question: "هل أحتاج إلى معرفة مسبقة بالكورية للتسجيل؟", answer: "لا على الإطلاق! تقدم K-Lovers دورة هانغول مخصصة للمبتدئين تمامًا. ستتعلم الأبجدية الكورية (الهانغول) من الصفر، ثم تتقدم عبر المفردات والقواعد والمحادثة خطوة بخطوة.", category: "gettingStarted" },
+        { question: "هل أحتاج إلى معرفة مسبقة بالكورية للتسجيل؟", answer: "لا على الإطلاق! تقدم Klovers دورة هانغول مخصصة للمبتدئين تمامًا. ستتعلم الأبجدية الكورية (الهانغول) من الصفر، ثم تتقدم عبر المفردات والقواعد والمحادثة خطوة بخطوة.", category: "gettingStarted" },
         { question: "كيف أعرف المستوى المناسب لي؟", answer: "نوفر اختبار تحديد مستوى مجاني أونلاين يقيّم مهاراتك في القراءة والاستماع والقواعد. بناءً على نتيجتك، نوصي بالمستوى المثالي — من مبتدئ الهانغول إلى المتقدم.", category: "gettingStarted" },
-        { question: "هل الحصص أونلاين أم حضورية؟", answer: "جميع حصص K-Lovers تُقدم أونلاين 100% عبر جلسات فيديو مباشرة. يمكنك الانضمام من أي مكان في العالم — كل ما تحتاجه هو اتصال إنترنت مستقر وجهاز كمبيوتر أو تابلت.", category: "classes" },
+        { question: "هل الحصص أونلاين أم حضورية؟", answer: "جميع حصص Klovers تُقدم أونلاين 100% عبر جلسات فيديو مباشرة. يمكنك الانضمام من أي مكان في العالم — كل ما تحتاجه هو اتصال إنترنت مستقر وجهاز كمبيوتر أو تابلت.", category: "classes" },
         { question: "ما هو جدول الحصص؟", answer: "تُعقد الحصص الجماعية مرة واحدة في الأسبوع. يتم تنسيق اليوم والوقت المحددين مع مجموعتك. الحصص الخاصة توفر جدولة مرنة بالكامل حسب توفرك.", category: "classes" },
         { question: "كم عدد الطلاب في الحصة الجماعية؟", answer: "نحافظ على حصصنا الجماعية صغيرة — عادة من 4 إلى 8 طلاب لكل مجموعة. هذا يضمن حصول كل طالب على اهتمام شخصي ووقت للممارسة وملاحظات من المدرب.", category: "classes" },
         { question: "ما الفرق بين الحصص الجماعية والخاصة؟", answer: "الحصص الجماعية (مرة/أسبوع) تتيح لك التعلم مع زملاء في بيئة تعاونية بسعر معقول. الحصص الخاصة (1 على 1) توفر دروسًا مخصصة وجدولة مرنة وتقدمًا أسرع.", category: "classes" },
         { question: "ما طرق الدفع المتاحة؟", answer: "نقبل الدفع الدولي عبر Stripe (بطاقات الائتمان/الخصم) والتحويلات البنكية المحلية للطلاب المصريين. بعد الدفع، ارفع إيصالك وسيفعّل فريقنا حسابك خلال 24 ساعة.", category: "payment" },
         { question: "هل يمكنني الدفع بالتقسيط؟", answer: "نعم! نوفر خطط لمدة شهر و3 أشهر و6 أشهر. الخطط الأطول تأتي بسعر أفضل لكل حصة. يمكنك اختيار المدة المناسبة عند التسجيل.", category: "payment" },
-        { question: "هل أحصل على شهادة بعد إكمال الدورة؟", answer: "نعم! عند إكمال مستوى الدورة بنجاح، ستحصل على شهادة إتمام رسمية من K-Lovers. يمكن إضافتها إلى سيرتك الذاتية أو ملفك على LinkedIn أو ملف طلب الجامعة.", category: "progress" },
+        { question: "هل أحصل على شهادة بعد إكمال الدورة؟", answer: "نعم! عند إكمال مستوى الدورة بنجاح، ستحصل على شهادة إتمام رسمية من Klovers. يمكن إضافتها إلى سيرتك الذاتية أو ملفك على LinkedIn أو ملف طلب الجامعة.", category: "progress" },
         { question: "كيف يتم تتبع تقدمي؟", answer: "تعرض لوحة الطالب سجل حضورك ومستواك الحالي والجلسات المتبقية. كما يقدم مدربك ملاحظات منتظمة على مهاراتك في التحدث والقراءة والكتابة.", category: "progress" },
         { question: "هل يمكنني التبديل بين الحصص الجماعية والخاصة؟", answer: "نعم، يمكنك تغيير نوع خطتك عند التجديد. تواصل مع فريقنا وسنساعدك في الانتقال بسلاسة.", category: "gettingStarted" },
-        { question: "هل K-Lovers مناسبة للتحضير لاختبار TOPIK؟", answer: "بالتأكيد! منهجنا متوافق مع معايير TOPIK، وفريق التدريس لدينا لديه خبرة في تحضير الطلاب لاختبارات TOPIK بنسب نجاح عالية.", category: "progress" },
+        { question: "هل Klovers مناسبة للتحضير لاختبار TOPIK؟", answer: "بالتأكيد! منهجنا متوافق مع معايير TOPIK، وفريق التدريس لدينا لديه خبرة في تحضير الطلاب لاختبارات TOPIK بنسب نجاح عالية.", category: "progress" },
       ],
     },
     contactPage: {
@@ -2213,8 +2213,8 @@ export const translations = {
     enroll: {
       urgency: "🔥 الأماكن محدودة! سجّل الآن قبل امتلاء الحصص.",
       badge: "📝 كيفية التسجيل",
-      title: "انضم إلى دورات K-Lovers الكورية اليوم",
-      subtitle: "في K-Lovers، التسجيل بسيط وسريع. اتبع هذه الخطوات الثلاث لحجز مكانك!",
+      title: "انضم إلى دورات Klovers الكورية اليوم",
+      subtitle: "في Klovers، التسجيل بسيط وسريع. اتبع هذه الخطوات الثلاث لحجز مكانك!",
       steps: [
         { title: "أنشئ حسابك", description: "سجّل على منصتنا لبدء رحلتك في تعلّم الكورية.", buttonText: "إنشاء حساب" },
         { title: "اختر خطتك وادفع", description: "اختر الخطة المفضلة (جماعية أو خاصة) والمدة، وأكمل الدفع.", buttonText: "عرض الأسعار" },
@@ -2239,7 +2239,7 @@ export const translations = {
       tagline: "تعلّم الكورية. أحب الثقافة. تحدّث بثقة.",
       quickLinks: "روابط سريعة",
       joinCommunity: "انضم إلى مجتمعنا",
-      copyright: "K-Lovers دورات كورية. جميع الحقوق محفوظة.",
+      copyright: "Klovers دورات كورية. جميع الحقوق محفوظة.",
     },
     auth: {
       createAccount: "أنشئ حسابك",
@@ -2292,10 +2292,10 @@ export const translations = {
       passwordsDontMatch: "يرجى التأكد من تطابق كلمتي المرور.",
       samePassword: "يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمة المرور الحالية.",
       passwordUpdated: "يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
-      signUpSubtitle: "انضم إلى K-Lovers وابدأ تعلّم الكورية اليوم",
+      signUpSubtitle: "انضم إلى Klovers وابدأ تعلّم الكورية اليوم",
       creatingAccount: "جارٍ إنشاء الحساب...",
       accountCreated: "تم إنشاء الحساب!",
-      welcomeMessage: "مرحبًا بك في K-Lovers! يمكنك الآن تسجيل الدخول.",
+      welcomeMessage: "مرحبًا بك في Klovers! يمكنك الآن تسجيل الدخول.",
     },
     enrollNow: {
       choosePlan: "اختر الخطة",
@@ -2874,7 +2874,7 @@ export const translations = {
       testimonial1Role: "طالبة · القاهرة",
       testimonial2Quote: "تعلمت الحروف والأرقام وأبدأت أحس بالفرق! أجرب وحقيقي من أوائل المحاضرين حسيت بفرق جامد ❤️",
       testimonial2Name: "بوسي م.",
-      testimonial2Role: "طالبة K-Lovers · مصر",
+      testimonial2Role: "طالبة Klovers · مصر",
       testimonialsTitle: "ماذا يقول الطلاب",
       whatToExpectTitle: "ماذا يحدث في حصتك التجريبية",
       slotsTitle: "اختر موعدك",

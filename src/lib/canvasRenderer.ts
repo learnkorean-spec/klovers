@@ -1122,7 +1122,7 @@ function renderKloversQuote(ctx: CanvasRenderingContext2D, post: PostData, w: nu
   ctx.font = `900 ${Math.round(h * 0.18)}px Georgia, serif`;
   ctx.fillStyle = hasPhoto ? "rgba(255,255,0,0.35)" : "rgba(255,255,0,0.25)";
   ctx.textAlign = L === "ar" ? "right" : "left";
-  ctx.fillText(L === "ar" ? "\u201D" : "\u201C", L === "ar" ? w - pad : pad, h * 0.28);
+  ctx.fillText(L === "ar" ? "”" : "“", L === "ar" ? w - pad : pad, h * 0.28);
 
   // ── Quote text (main) ──
   const quoteSize = Math.min(42 * S, (w - pad * 2) / 8);
@@ -1437,7 +1437,7 @@ function renderKloversStats(ctx: CanvasRenderingContext2D, post: PostData, w: nu
   // ── Brand tag ──
   ctx.font = fontStack(L, 700, 11 * S);
   ctx.fillStyle = "#FFFF00";
-  ctx.fillText("K-LOVERS", pad, h * 0.08);
+  ctx.fillText("KLOVERS", pad, h * 0.08);
 
   // ── Large number (focal point) ──
   const numText = post.mainText;
@@ -1494,7 +1494,7 @@ function renderKloversList(ctx: CanvasRenderingContext2D, post: PostData, w: num
   // ── Brand tag ──
   ctx.font = fontStack(L, 700, 11 * S);
   ctx.fillStyle = "#FFFF00";
-  ctx.fillText("K-LOVERS", pad, h * 0.08);
+  ctx.fillText("KLOVERS", pad, h * 0.08);
 
   // ── Headline ──
   const hlSize = Math.min(40 * S, (w - pad * 2) / 8);

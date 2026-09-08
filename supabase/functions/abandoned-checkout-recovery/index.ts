@@ -21,7 +21,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
+const FROM_EMAIL = "Klovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
 const CHECKOUT_URL = `${SITE_URL}/enroll-now`;
 const UNSUBSCRIBE_BASE = `${SUPABASE_URL}/functions/v1/checkout-recovery-unsubscribe`;
@@ -38,13 +38,13 @@ function brandWrapper(content: string) {
   return `
   <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
     <div style="background: ${BRAND_BLACK}; padding: 24px; text-align: center;">
-      <img src="${LOGO_URL}" alt="KLovers" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid ${BRAND_YELLOW};" />
-      <h2 translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; margin: 12px 0 0; font-size: 22px; letter-spacing: 1px;">KLovers</h2>
+      <img src="${LOGO_URL}" alt="Klovers" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid ${BRAND_YELLOW};" />
+      <h2 translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; margin: 12px 0 0; font-size: 22px; letter-spacing: 1px;">Klovers</h2>
       <p style="color: #cccccc; margin: 4px 0 0; font-size: 12px;">Korean Language Academy</p>
     </div>
     <div style="padding: 28px 24px; color: ${BRAND_TEXT};">${content}</div>
     <div style="background: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
-      <p style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;"><span translate="no" class="notranslate">— The KLovers Team</span></p>
+      <p style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;"><span translate="no" class="notranslate">— The Klovers Team</span></p>
       <a href="${SITE_URL}" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
     </div>
   </div>`;
@@ -75,7 +75,7 @@ function stage1({ name, checkout, token }: { name: string; checkout: string; tok
       You can complete your enrollment in less than a minute here:</p>
       <div style="margin: 24px 0; text-align: center;">${brandButton("Complete my enrollment", checkout)}</div>
       <p>If you have any questions, feel free to reply to this email.</p>
-      <p>– K-Lovers Team</p>
+      <p>– Klovers Team</p>
       ${unsubFooter(token)}
     `),
   };
@@ -91,7 +91,7 @@ function stage2({ name, checkout, token }: { name: string; checkout: string; tok
       <p>Many students reserve their spots quickly, so if you still want to join the class, you can finish your enrollment here:</p>
       <div style="margin: 24px 0; text-align: center;">${brandButton("Finish enrollment", checkout)}</div>
       <p>We'd love to see you in the next class.</p>
-      <p>– K-Lovers Team</p>
+      <p>– Klovers Team</p>
       ${unsubFooter(token)}
     `),
   };
@@ -107,7 +107,7 @@ function stage3({ name, checkout, token }: { name: string; checkout: string; tok
       <p>If you still want to join, you can complete your enrollment here:</p>
       <div style="margin: 24px 0; text-align: center;">${brandButton("Complete enrollment", checkout)}</div>
       <p>If you changed your mind, no problem — and if you need help choosing the right level, we're happy to help.</p>
-      <p>– K-Lovers Team</p>
+      <p>– Klovers Team</p>
       ${unsubFooter(token)}
     `),
   };
