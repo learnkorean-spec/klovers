@@ -536,8 +536,12 @@ const KoreanPlacementPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main id="main-content" className="flex-1 px-4 py-10">
-          <div className="relative max-w-2xl mx-auto w-full">
+        {/* pt-24 clears the fixed h-16 header. Every other page on the site
+            does this (pt-16 / pt-24); this one only had py-10, so the top of
+            the card sat underneath the header bar. items-center then puts it
+            in the middle of what is left. */}
+        <main id="main-content" className="flex-1 flex items-center justify-center px-4 pt-24 pb-14">
+          <div className="relative w-full max-w-2xl">
 
             {/* Same texture the homepage CTA that sends people here uses, so the
                 page they land on looks like the page they came from. */}
@@ -637,7 +641,7 @@ const KoreanPlacementPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+        <main id="main-content" className="flex-1 px-4 pt-24 pb-14 max-w-xl mx-auto w-full space-y-4">
           <Card dir={isAr ? "rtl" : "ltr"}>
             <CardContent className="pt-6 space-y-5">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
@@ -782,7 +786,7 @@ const KoreanPlacementPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main id="main-content" className="flex-1 px-4 py-10 max-w-xl mx-auto w-full space-y-4">
+        <main id="main-content" className="flex-1 px-4 pt-24 pb-14 max-w-xl mx-auto w-full space-y-4">
           <div ref={topRef} />
           <Card dir={isAr ? "rtl" : "ltr"}>
             <CardContent className="pt-6 space-y-5">
@@ -860,7 +864,7 @@ const KoreanPlacementPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full space-y-4">
+      <main id="main-content" className="flex-1 px-4 pt-24 pb-12 max-w-3xl mx-auto w-full space-y-4">
         <div ref={topRef} />
 
         <div dir={isAr ? "rtl" : "ltr"} className="space-y-2">
