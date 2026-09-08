@@ -40,6 +40,13 @@ type SlotRow = {
    * How many were actually SENT the confirmation request. Without this the
    * screen cannot tell "nine people ignored us" from "nobody was asked", and
    * those two call for opposite decisions.
+   *
+   * Counted from attendance_email_sent_at, the stamp the confirmation letter
+   * writes. It used to count email_sent_at, which is the INVITATION stamp —
+   * a different letter, asking a different question, written only by
+   * send-trial-invitations. Nothing recorded the confirmation letter at all,
+   * so this number was zero for every session no matter how many people had
+   * been asked, and the line below said so in words.
    */
   asked: number;
 };
@@ -143,7 +150,7 @@ const AdminToday = () => {
         // catch below, which shows the banner.
         const { data: bookingRows, error: bookingRowsError } = await supabase
           .from("trial_bookings")
-          .select("trial_date, start_time, attendance_response, email_sent_at")
+          .select("trial_date, start_time, attendance_response, attendance_email_sent_at")
           .neq("status", "cancelled")
           .not("trial_date", "is", null);
         if (bookingRowsError) throw bookingRowsError;
@@ -156,14 +163,14 @@ const AdminToday = () => {
           trial_date: string | null;
           start_time: string | null;
           attendance_response: string | null;
-          email_sent_at: string | null;
+          attendance_email_sent_at: string | null;
         }>) {
           const k = key(b.trial_date, b.start_time);
           const t = tally.get(k) ?? { booked: 0, confirmed: 0, declined: 0, asked: 0 };
           t.booked += 1;
           if (b.attendance_response === "yes") t.confirmed += 1;
           if (b.attendance_response === "no") t.declined += 1;
-          if (b.email_sent_at) t.asked += 1;
+          if (b.attendance_email_sent_at) t.asked += 1;
           tally.set(k, t);
         }
 
@@ -399,6 +406,10 @@ const AdminToday = () => {
  * mean opposite things. Nine silent people who were emailed is a session in
  * trouble. Nine silent people who were never emailed is a task nobody has
  * done yet, and reading it as apathy would be reading a mirror.
+ *
+ * `asked` is the count of attendance_email_sent_at, so the sentences below
+ * are now true statements about the confirmation letter rather than about the
+ * invitation, which is a different letter that answers a different question.
  */
 const AttendanceNote = ({
   booked, confirmed, declined, asked,
