@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 
-type PageState = "loading" | "ready" | "confirming" | "success" | "already" | "error";
+type PageState = "loading" | "ready" | "responding" | "success" | "already" | "error";
+type Answer = "yes" | "no";
 
 interface BookingInfo {
   first_name: string | null;
@@ -39,16 +40,27 @@ const COPY = {
     greeting: (name: string) => `Hi ${name}!`,
     greetingNoName: "Confirm your trial class",
     intro: "Please confirm you'll be attending this trial class.",
+    introEither:
+      "Let us know whether you'll be there. Either answer helps — we'll hold your seat or free it up.",
     language: "Language:",
     date: "Date:",
     time: "Time:",
     tba: "To be announced",
     forTeacher: (t: string) => `That's ${t} for your teacher.`,
     confirmCta: "Confirm my attendance",
+    declineCta: "I can't make it",
     confirming: "Confirming your attendance…",
+    declining: "Recording your answer…",
     confirmedTitle: "Attendance Confirmed!",
     confirmedNew: "You're all set. See you in class!",
     confirmedAlready: "You've already confirmed your attendance. See you in class!",
+    declinedTitle: "Thanks for telling us",
+    declinedNew:
+      "We've released your seat for this session. You can book another time whenever you're ready.",
+    declinedAlready:
+      "You told us you can't make this session, so your seat was released. You can book another time whenever you're ready.",
+    declinedChanged: "Changed your mind? You can still tell us you're coming.",
+    bookAnother: "Book another time",
     accountTitle: "Keep everything in one place",
     accountBody:
       "Create a free account and your class link, materials and reminders all live in your dashboard.",
@@ -72,16 +84,26 @@ const COPY = {
     greeting: (name: string) => `أهلاً ${name}!`,
     greetingNoName: "أكّد حضورك للحصة التجريبية",
     intro: "اضغط الزرار تحت عشان تأكّد إنك هتحضر الحصة التجريبية.",
+    introEither:
+      "قولنا هتحضر الحصة ولا لأ. أي رد بيساعدنا — يا إما نحجزلك مقعدك، يا إما نفضّيه.",
     language: "لغة الحصة:",
     date: "التاريخ:",
     time: "الساعة:",
     tba: "هيتحدد قريبًا",
     forTeacher: (t: string) => `ودي ${t} بتوقيت المدرّسة.`,
     confirmCta: "أكّد حضوري",
+    declineCta: "مش هقدر أحضر",
     confirming: "بنسجّل تأكيدك…",
+    declining: "بنسجّل ردّك…",
     confirmedTitle: "تم تأكيد حضورك!",
     confirmedNew: "تمام، كل حاجة جاهزة. نشوفك في الحصة!",
     confirmedAlready: "إنت مأكّد حضورك بالفعل. نشوفك في الحصة!",
+    declinedTitle: "شكراً إنك قلتلنا",
+    declinedNew: "فضّينا مقعدك في الحصة دي. تقدر تحجز ميعاد تاني في أي وقت.",
+    declinedAlready:
+      "إنت قلتلنا إنك مش هتقدر تحضر الحصة دي، وفضّينا مقعدك. تقدر تحجز ميعاد تاني في أي وقت.",
+    declinedChanged: "غيّرت رأيك؟ لسه تقدر تقولنا إنك جاي.",
+    bookAnother: "احجز ميعاد تاني",
     accountTitle: "خلّي كل حاجة في مكان واحد",
     accountBody:
       "اعمل حساب مجاني، وهتلاقي لينك الحصة والمواد والتذكيرات كلها في صفحتك.",
@@ -148,6 +170,14 @@ function renderWhen(booking: BookingInfo, locale: string) {
   };
 }
 
+/** Shared button chrome, so the primary action looks the same wherever it appears. */
+const PRIMARY_STYLE = { backgroundColor: "#000", color: "#FACC15" } as const;
+const PRIMARY_CLASS =
+  "inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity";
+const OUTLINE_CLASS =
+  "inline-block font-bold px-6 py-3 rounded-xl text-base border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors";
+const QUIET_CLASS = "text-sm text-gray-500 underline hover:text-gray-700";
+
 const TrialConfirmPage = () => {
   // Transactional page: real content for the signed-in user, nothing a
   // search result should land on. Mirrors the Disallow in robots.txt.
@@ -155,7 +185,20 @@ const TrialConfirmPage = () => {
 
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
+
+  // Which answer the email button suggested — nothing more than that.
+  //
+  // Mail clients and corporate link scanners fetch every URL in a message with
+  // no human involved, so arriving here with ?response=no must NOT record a
+  // decline: it would cancel the seat of a student who never touched the link.
+  // The param only decides which button this page leads with; the write still
+  // waits for a real click. Anything other than yes/no is treated as absent.
+  const responseParam = searchParams.get("response");
+  const suggested: Answer | null =
+    responseParam === "yes" || responseParam === "no" ? responseParam : null;
+
   const [state, setState] = useState<PageState>("loading");
+  const [answer, setAnswer] = useState<Answer | null>(null);
   const [booking, setBooking] = useState<BookingInfo | null>(null);
   const [classLink, setClassLink] = useState<string | null>(null);
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
@@ -168,8 +211,8 @@ const TrialConfirmPage = () => {
 
     const load = async () => {
       // Read-only, STABLE, no write — safe for a mail client or link
-      // scanner to prefetch. The confirming write only happens on a
-      // real button click, below.
+      // scanner to prefetch. The write only happens on a real button
+      // click, below.
       const { data, error } = await (supabase.rpc as any)(
         "get_trial_booking_by_token",
         { p_token: token },
@@ -181,7 +224,15 @@ const TrialConfirmPage = () => {
       }
 
       setBooking(data);
-      setState(data.attendance_response === "yes" ? "already" : "ready");
+      // Both answers are already-answered: someone who declined and clicks the
+      // link again should be told what they said, not shown a fresh choice as
+      // if we never heard from them.
+      const existing: Answer | null =
+        data.attendance_response === "yes" || data.attendance_response === "no"
+          ? data.attendance_response
+          : null;
+      setAnswer(existing);
+      setState(existing ? "already" : "ready");
       fetchClassLink(data.trial_date, data.start_time);
     };
 
@@ -222,12 +273,13 @@ const TrialConfirmPage = () => {
     if (url) setClassLink(url);
   };
 
-  const handleConfirm = async () => {
-    setState("confirming");
+  const handleRespond = async (response: Answer) => {
+    setAnswer(response);
+    setState("responding");
 
     const { data, error } = await (supabase.rpc as any)(
       "respond_trial_attendance",
-      { p_token: token, p_response: "yes" },
+      { p_token: token, p_response: response },
     ).maybeSingle();
 
     if (error || !data) {
@@ -275,7 +327,9 @@ const TrialConfirmPage = () => {
             <h1 className="text-2xl font-bold text-black mb-1">
               {booking.first_name ? t.greeting(booking.first_name) : t.greetingNoName}
             </h1>
-            <p className="text-gray-600 mb-5">{t.intro}</p>
+            <p className="text-gray-600 mb-5">
+              {suggested === "yes" ? t.intro : t.introEither}
+            </p>
             <div
               className={`bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1.5 ${
                 t.dir === "rtl" ? "text-right" : "text-left"
@@ -297,25 +351,72 @@ const TrialConfirmPage = () => {
                 </p>
               )}
             </div>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              style={{ backgroundColor: "#000", color: "#FACC15" }}
-              className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
-            >
-              {t.confirmCta}
-            </button>
+
+            {/* The email's button decides which answer leads; the other one is
+                always one click away, never hidden. With no param — someone
+                who typed the link or forwarded it — neither answer is assumed. */}
+            {suggested === "no" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleRespond("no")}
+                  style={PRIMARY_STYLE}
+                  className={PRIMARY_CLASS}
+                >
+                  {t.declineCta}
+                </button>
+                <div className="mt-4">
+                  <button type="button" onClick={() => handleRespond("yes")} className={QUIET_CLASS}>
+                    {t.confirmCta}
+                  </button>
+                </div>
+              </>
+            ) : suggested === "yes" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleRespond("yes")}
+                  style={PRIMARY_STYLE}
+                  className={PRIMARY_CLASS}
+                >
+                  {t.confirmCta}
+                </button>
+                <div className="mt-4">
+                  <button type="button" onClick={() => handleRespond("no")} className={QUIET_CLASS}>
+                    {t.declineCta}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={() => handleRespond("yes")}
+                  style={PRIMARY_STYLE}
+                  className={PRIMARY_CLASS}
+                >
+                  {t.confirmCta}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRespond("no")}
+                  className={OUTLINE_CLASS}
+                >
+                  {t.declineCta}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {state === "confirming" && (
+        {state === "responding" && (
           <div className="py-8">
             <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">{t.confirming}</p>
+            <p className="text-gray-600">{answer === "no" ? t.declining : t.confirming}</p>
           </div>
         )}
 
-        {(state === "success" || state === "already") && (
+        {(state === "success" || state === "already") && answer !== "no" && (
           <div className="py-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">✅</span>
@@ -374,6 +475,29 @@ const TrialConfirmPage = () => {
                 {t.joinMeet}
               </a>
             )}
+          </div>
+        )}
+
+        {/* A decline is not a failure and must not look like one. The seat is
+            gone, so say that plainly and point at the one thing worth doing
+            next — /free-trial, the public picker, because /trial-booking sits
+            behind AuthProtectedRoute and would ask her to sign up first. */}
+        {(state === "success" || state === "already") && answer === "no" && (
+          <div className="py-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🗓️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-black mb-2">{t.declinedTitle}</h1>
+            <p className="text-gray-600 mb-6">
+              {state === "already" ? t.declinedAlready : t.declinedNew}
+            </p>
+            <a href="/free-trial" style={PRIMARY_STYLE} className={PRIMARY_CLASS}>
+              {t.bookAnother}
+            </a>
+            <p className="text-sm text-gray-500 mt-6 mb-2">{t.declinedChanged}</p>
+            <button type="button" onClick={() => handleRespond("yes")} className={QUIET_CLASS}>
+              {t.confirmCta}
+            </button>
           </div>
         )}
 
