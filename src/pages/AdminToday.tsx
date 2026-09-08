@@ -134,11 +134,19 @@ const AdminToday = () => {
         //
         // Only the four fields the tally needs are selected. No name, no email,
         // no phone reaches this screen — it shows totals, never people.
-        const { data: bookingRows } = await supabase
+        //
+        // The error is thrown, not swallowed. A rejected request here returns
+        // null, which would leave the tally empty and render "0 of 12 booked"
+        // and "Nobody has been asked to confirm yet" for every session — two
+        // false statements that both look like data, on the screen built to
+        // tell "ignored us" apart from "never asked". Throwing hands it to the
+        // catch below, which shows the banner.
+        const { data: bookingRows, error: bookingRowsError } = await supabase
           .from("trial_bookings")
           .select("trial_date, start_time, attendance_response, email_sent_at")
           .neq("status", "cancelled")
           .not("trial_date", "is", null);
+        if (bookingRowsError) throw bookingRowsError;
 
         type Tally = { booked: number; confirmed: number; declined: number; asked: number };
         const tally = new Map<string, Tally>();
