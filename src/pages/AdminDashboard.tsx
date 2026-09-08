@@ -45,6 +45,7 @@ const AdminAttendancePanel = lazy(() => import("@/components/admin/AdminAttendan
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
 const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
+const UpcomingPrivateClasses = lazy(() => import("@/components/admin/UpcomingPrivateClasses"));
 const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
 const BulkEmailManager = lazy(() => import("@/components/admin/BulkEmailManager"));
 const SchedulingManager = lazy(() => import("@/components/admin/SchedulingManager"));
@@ -1732,6 +1733,7 @@ const AdminDashboard = () => {
                 lists people registered on the site. */}
             <TabsContent value="my-students">
               <TabErrorBoundary name="My Students">
+                <UpcomingPrivateClasses />
                 <MyStudentsManager />
               </TabErrorBoundary>
             </TabsContent>
