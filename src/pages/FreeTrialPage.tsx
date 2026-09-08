@@ -13,6 +13,17 @@ import { Gift, Users, Clock, Star, ArrowRight, Video, ClipboardList, Sparkles, C
 import { useLanguage } from "@/contexts/LanguageContext";
 import AvatarInitials from "@/components/AvatarInitials";
 
+/**
+ * Below this many completed trials the count is not shown at all — the whole
+ * social-proof cluster is hidden instead.
+ *
+ * A small true number argues against booking ("3+ students" reads as "nobody
+ * comes here"), and zero is worse than small: it is a placeholder that
+ * escaped, which is exactly what this page was rendering. See the note on
+ * `bookedCount` below for what production actually returns.
+ */
+const SOCIAL_PROOF_MIN_COUNT = 10;
+
 const Stars = ({ count = 5 }: { count?: number }) => (
   <div className="flex gap-0.5" role="img" aria-label={`${count} out of 5 stars`}>
     {Array.from({ length: count }).map((_, i) => (
@@ -135,7 +146,30 @@ const FreeTrialPage = () => {
   const [searchParams] = useSearchParams();
   const referredBy = searchParams.get("ref") || "";
 
-  // Live booking count for social proof
+  // Live booking count for social proof.
+  //
+  // ⚠️ This renders as "N+ students". There was no floor, so a count of 0
+  // rendered the literal string "0+ students" on the main conversion page —
+  // the placeholder the UX audit caught (plan item P0-7).
+  //
+  // It is not hypothetical and it is not a staging artefact. Measured against
+  // production on 2026-09-08, `trial_bookings` held 57 rows at status
+  // 'pending' and 19 at 'cancelled', and ZERO at 'confirmed' or 'completed'.
+  // This query therefore returned exactly 0, and every visitor to /free-trial
+  // was told that 0+ students had taken the class.
+  //
+  // The filter is deliberately NOT widened to include 'pending'. Those 57
+  // students booked; nothing in the data says they attended, and "57+
+  // students" would be a claim the database does not support. Why no booking
+  // ever reaches 'confirmed' or 'completed' is a pipeline question, and it is
+  // not answered by changing what this page says.
+  //
+  // The old fallback for "no live number" was t("freeTrial.socialCount"),
+  // which is the hardcoded string "500+". Falling back to that would have
+  // swapped a placeholder that undersells for a claim that oversells: the
+  // database holds 102 profiles, 76 trial bookings and 25 enrolments in
+  // total. So when there is no supportable number the cluster is hidden
+  // rather than filled in. Nothing is lost by declining to make a claim.
   const [bookedCount, setBookedCount] = useState<number | null>(null);
   useEffect(() => {
     supabase
@@ -204,7 +238,7 @@ const FreeTrialPage = () => {
       <Header />
       <main className="pt-16">
 
-        {/* ── HERO ──────────────────────────────────────────── */}
+        {/* ── HERO ────────────────────────────────────── */}
         <section className="py-16 md:py-24 border-b border-border overflow-hidden">
           <div className="container mx-auto px-4 max-w-5xl">
             <div className="grid md:grid-cols-[1fr_200px] gap-12 items-center">
@@ -257,20 +291,23 @@ const FreeTrialPage = () => {
                       <ArrowRight className="h-5 w-5" />
                     </Button>
 
-                    {/* Inline social proof */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {["S","M","H","Y","A"].map((l) => (
-                          <div key={l} className="w-8 h-8 rounded-full bg-foreground border-2 border-background flex items-center justify-center text-[10px] font-black text-background">{l}</div>
-                        ))}
+                    {/* Inline social proof — shown only when the live count
+                        supports it. See SOCIAL_PROOF_MIN_COUNT. */}
+                    {bookedCount !== null && bookedCount >= SOCIAL_PROOF_MIN_COUNT && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex -space-x-2">
+                          {["S","M","H","Y","A"].map((l) => (
+                            <div key={l} className="w-8 h-8 rounded-full bg-foreground border-2 border-background flex items-center justify-center text-[10px] font-black text-background">{l}</div>
+                          ))}
+                        </div>
+                        <div className="text-start">
+                          <p className="text-sm font-black text-foreground leading-tight">
+                            {`${bookedCount}+ students`}
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-tight">{t("freeTrial.socialCountText")}</p>
+                        </div>
                       </div>
-                      <div className="text-start">
-                        <p className="text-sm font-black text-foreground leading-tight">
-                          {bookedCount !== null ? `${bookedCount}+ students` : t("freeTrial.socialCount")}
-                        </p>
-                        <p className="text-xs text-muted-foreground leading-tight">{t("freeTrial.socialCountText")}</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                   {user && (
                     <p className="text-xs text-muted-foreground text-center md:text-start">
@@ -329,7 +366,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ──────────────────────────────────── */}
+        {/* ── TESTIMONIALS ────────────────────────────────── */}
         <section className="py-16 bg-muted/40 border-b border-border">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl font-black text-foreground text-center mb-8">
@@ -355,7 +392,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ─────────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ────────────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
@@ -377,7 +414,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── SCHEDULE — ticket style ────────────────────────── */}
+        {/* ── SCHEDULE — ticket style ───────────────────────── */}
         <section className="py-20 pb-28">
           <div className="container mx-auto px-4 max-w-xl">
 
