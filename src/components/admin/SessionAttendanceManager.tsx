@@ -285,7 +285,7 @@ const SessionAttendanceManager = () => {
             </p>
             <p className="text-amber-800 dark:text-amber-200">
               Generating sessions here will produce empty registers. Add members from{" "}
-              <Link to="/admin?tab=groups" className="underline font-medium">Groups</Link>{" "}
+              <Link to="/admin?tab=group-matcher" className="underline font-medium">Matcher</Link>{" "}
               first. Private one-to-one lessons are not groups and are never listed on this
               screen — their attendance lives on{" "}
               <Link to="/admin?tab=my-students" className="underline font-medium">My students</Link>.
