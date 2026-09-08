@@ -1,7 +1,9 @@
 /**
  * The catch-up list is built in the browser from the weekly schedule — an
- * unconfirmed class has no database row — so getting this wrong means either
- * offering Re a class that never happened or hiding one she needs to confirm.
+ * unanswered class either has no database row at all, or has one the weekly
+ * generator wrote and nobody has answered yet — so getting this wrong means
+ * either offering Re a class that never happened or hiding one she needs to
+ * confirm.
  *
  * All times are the teacher's own (Asia/Kuala_Lumpur, UTC+8). `now` is injected
  * rather than mocked so the boundary cases are readable.
@@ -13,6 +15,7 @@ import {
   bundleTone,
   formatMoney,
   formatSessionDate,
+  isResolved,
   localDateKey,
   localWeekday,
   pricePerClass,
@@ -51,6 +54,10 @@ const session = (over: Partial<StudentClassSession> = {}): StudentClassSession =
   ...over,
 });
 
+/** What the weekly generator writes: on the calendar, unanswered, uncounted. */
+const scheduled = (over: Partial<StudentClassSession> = {}): StudentClassSession =>
+  session({ outcome: "scheduled", counted: false, confirmed_at: null, ...over });
+
 // Sunday 23 Aug 2026, 12:00 in Kuala Lumpur.
 const SUNDAY_NOON = new Date("2026-08-23T04:00:00Z");
 
@@ -83,6 +90,7 @@ describe("buildExpectedSessions", () => {
     const [recent, older] = out;
     expect(recent.session_date).toBe("2026-08-17");
     expect(recent.confirmed?.outcome).toBe("attended");
+    expect(recent.scheduledRow).toBeNull();
     expect(older.confirmed).toBeNull();
   });
 
@@ -94,6 +102,40 @@ describe("buildExpectedSessions", () => {
     );
     expect(out[0].confirmed).not.toBeNull();
     expect(out[0].start_time).toBe("22:00");
+  });
+
+  it("still counts a past occurrence as unanswered when its only row is scheduled", () => {
+    // The defect this split exists to prevent: the generator puts Monday's
+    // lesson on the calendar, the date passes, nobody answers. Reading that
+    // placeholder as a confirmation would drop the class out of the queue AND
+    // out of its bundle's count, and Re would believe she had confirmed a
+    // lesson she never touched.
+    const out = buildExpectedSessions(
+      [cls({ effective_from: "2026-08-17" })],
+      [scheduled({ session_date: "2026-08-17" })],
+      { timeZone: TZ, now: SUNDAY_NOON },
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].session_date).toBe("2026-08-17");
+    expect(out[0].confirmed).toBeNull();
+    expect(out[0].scheduledRow?.id).toBe("sess-1");
+  });
+
+  it("keeps the scheduled and answered slots apart within one student's week", () => {
+    const classes = [1, 2].map(w => cls({ id: `c${w}`, weekday: w, effective_from: "2026-08-17" }));
+    const out = buildExpectedSessions(
+      classes,
+      [
+        session({ id: "answered", session_date: "2026-08-17" }),
+        scheduled({ id: "placeholder", session_date: "2026-08-18" }),
+      ],
+      { timeZone: TZ, now: SUNDAY_NOON },
+    );
+    const byDate = new Map(out.map(o => [o.session_date, o]));
+    expect(byDate.get("2026-08-17")!.confirmed?.id).toBe("answered");
+    expect(byDate.get("2026-08-17")!.scheduledRow).toBeNull();
+    expect(byDate.get("2026-08-18")!.confirmed).toBeNull();
+    expect(byDate.get("2026-08-18")!.scheduledRow?.id).toBe("placeholder");
   });
 
   it("does not offer a class that has not happened yet today", () => {
@@ -191,6 +233,14 @@ describe("buildExpectedSessions", () => {
     expect(localDateKey(lateSunday, TZ)).toBe("2026-08-24");
     expect(localWeekday(lateSunday, TZ)).toBe(1);
     expect(localDateKey(lateSunday, "UTC")).toBe("2026-08-23");
+  });
+});
+
+describe("isResolved", () => {
+  it("treats both choosable outcomes as answered and a scheduled row as not", () => {
+    expect(isResolved(session({ outcome: "attended" }))).toBe(true);
+    expect(isResolved(session({ outcome: "cancelled_no_charge", counted: false }))).toBe(true);
+    expect(isResolved(scheduled())).toBe(false);
   });
 });
 

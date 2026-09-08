@@ -50,11 +50,11 @@ const StreakCalendar = lazy(() =>
 const DailyBonusCard = lazy(() =>
   import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
 );
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookMarked, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { getLevelByKey } from "@/constants/levels";
+import { getLevelShortLabel } from "@/constants/levels";
 import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
 import { useCountUp } from "@/hooks/useCountUp";
 
@@ -300,13 +300,18 @@ const StudentDashboard = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("avatar_url, name, level, country")
+        .select("avatar_url, name, level, course_level_key, country")
         .eq("user_id", session.user.id)
         .maybeSingle();
       if (profile) {
         setAvatarUrl(profile.avatar_url || "");
         setUserName(profile.name || "");
-        setProfileLevel(profile.level || "");
+        // course_level_key is the column the placement test writes; `level` is the
+        // older, hand-edited one. Of the 21 accounts that have taken a placement
+        // test, all 21 have course_level_key and only 11 have `level` — reading
+        // `level` alone showed ten students an empty card and a "Take Test"
+        // button for a test they had already finished.
+        setProfileLevel((profile as any).course_level_key || profile.level || "");
       }
 
       // Fetch latest placement test result
@@ -348,7 +353,9 @@ const StudentDashboard = () => {
           if (autoUpdates.name) setUserName(autoUpdates.name);
         }
 
-        const effectiveLevel = autoUpdates.level || p?.level || "";
+        // course_level_key counts here too, or a student whose level came from
+        // the placement test keeps being nagged that their profile is incomplete.
+        const effectiveLevel = autoUpdates.level || p?.level || (p as any)?.course_level_key || "";
         const effectiveName = autoUpdates.name || p?.name || "";
 
         const items: ChecklistItem[] = [
@@ -866,9 +873,12 @@ const StudentDashboard = () => {
                   {profileLevel ? (
                     <div className="flex items-center justify-between">
                       <div>
-                        <Badge className="text-sm px-3 py-1">{getLevelByKey(profileLevel)?.shortLabel || profileLevel}</Badge>
+                        <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel) || profileLevel}</Badge>
+                        {/* No score out of anything: the old test scored out of 30 and the
+                            merged one out of up to 62, so a fixed "/40" was wrong either
+                            way. The date is what a student can act on — how stale it is. */}
                         {placementTest && (
-                          <p className="text-xs text-muted-foreground mt-1">Score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Tested {new Date(placementTest.created_at).toLocaleDateString()}</p>
                         )}
                       </div>
                       <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
@@ -883,26 +893,6 @@ const StudentDashboard = () => {
                       </Button>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Unit placement for 세종한국어 1 — shown to unenrolled students too, the
-                  same way the level test above is. Mirrors the enrolled branch. */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookMarked className="h-5 w-5" /> Sejong Korean 1 — Unit Placement
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-muted-foreground">
-                      Find out which unit of the book you should start from
-                    </p>
-                    <Button size="sm" variant="outline" onClick={() => navigate("/unit-placement")}>
-                      <BookMarked className="h-3.5 w-3.5 mr-1.5" /> Start
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -983,9 +973,12 @@ const StudentDashboard = () => {
                     {profileLevel ? (
                       <div className="flex items-center justify-between">
                         <div>
-                          <Badge className="text-sm px-3 py-1">{getLevelByKey(profileLevel)?.shortLabel || profileLevel}</Badge>
+                          <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel) || profileLevel}</Badge>
+                          {/* No score out of anything: the old test scored out of 30 and the
+                              merged one out of up to 62, so a fixed "/40" was wrong either
+                              way. The date is what a student can act on — how stale it is. */}
                           {placementTest && (
-                            <p className="text-xs text-muted-foreground mt-1">Score: {placementTest.score}/40 — {new Date(placementTest.created_at).toLocaleDateString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Tested {new Date(placementTest.created_at).toLocaleDateString()}</p>
                           )}
                         </div>
                         <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
@@ -1000,26 +993,6 @@ const StudentDashboard = () => {
                         </Button>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-
-                {/* Unit placement for 세종한국어 1 — which unit of the book to start
-                    from. Separate from the course-level test above on purpose. */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <BookMarked className="h-5 w-5" /> Sejong Korean 1 — Unit Placement
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm text-muted-foreground">
-                        Find out which unit of the book you should start from
-                      </p>
-                      <Button size="sm" variant="outline" onClick={() => navigate("/unit-placement")}>
-                        <BookMarked className="h-3.5 w-3.5 mr-1.5" /> Start
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
 

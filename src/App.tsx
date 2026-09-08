@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { attachLeadToUser } from "@/lib/attachLeadToUser";
@@ -47,8 +47,7 @@ const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
 const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage"));
 const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
-const PlacementTestPage = lazy(() => import("./pages/PlacementTestPage"));
-const UnitPlacementPage = lazy(() => import("./pages/UnitPlacementPage"));
+const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
 const TextbookPage = lazy(() => import("./pages/TextbookPage"));
@@ -185,10 +184,12 @@ const App = () => (
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                 <Route path="/dashboard/schedule" element={<AuthProtectedRoute><MySchedulePage /></AuthProtectedRoute>} />
                 <Route path="/resubmit-schedule" element={<AuthProtectedRoute><ResubmitSchedulePage /></AuthProtectedRoute>} />
-                <Route path="/placement-test" element={<PlacementTestPage />} />
-                {/* Unit placement inside 세종한국어 1 — login-only, unlike the
-                    public /placement-test above, which captures leads. */}
-                <Route path="/unit-placement" element={<AuthProtectedRoute><UnitPlacementPage /></AuthProtectedRoute>} />
+                {/* One placement test, answered as a TOPIK grade. Public on
+                    purpose — the lead funnel lives on this route. */}
+                <Route path="/placement-test" element={<KoreanPlacementPage />} />
+                {/* Superseded by /placement-test. Kept as a redirect so links
+                    already sent to students do not 404. */}
+                <Route path="/unit-placement" element={<Navigate to="/placement-test" replace />} />
                 <Route path="/games" element={<GamesPage />} />
                 <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
                 <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
