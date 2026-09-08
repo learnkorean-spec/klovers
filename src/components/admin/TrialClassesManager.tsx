@@ -75,6 +75,33 @@ interface TrialBooking {
   is_tba?: boolean;
   attendance_confirmed_at?: string | null;
   confirmation_token?: string | null;
+  /** "yes" or "no", written by respond_trial_attendance when the student clicks. */
+  attendance_response?: string | null;
+  /**
+   * When the "are you coming?" letter was last sent. Distinct from
+   * email_sent_at, which is the invitation telling them when and where.
+   */
+  attendance_email_sent_at?: string | null;
+  student_timezone?: string | null;
+}
+
+/** The body send-attendance-confirmations returns, dry run or real. */
+interface AttendanceSendResult {
+  dry_run: boolean;
+  candidates: number;
+  sent: number;
+  failed: number;
+  failures: { booking_id: string; error: string }[];
+  skipped: { booking_id: string; reason: string }[];
+  preview?: {
+    booking_id: string;
+    email: string | null;
+    trial_date: string | null;
+    trial_time: string | null;
+    already_answered?: string | null;
+  }[];
+  message?: string;
+  error?: string;
 }
 
 // Source of truth for unscheduled placeholders. Post-migration, TBA rows
@@ -152,6 +179,14 @@ const TrialClassesManager = () => {
   // else in this view sorted by it before this.
   const [bookedSort, setBookedSort] = useState<BookedSort>("asc");
   const [trialSlotMap, setTrialSlotMap] = useState<Record<string, string>>({});
+  // The "Ask them to confirm" dialog: a dry run the admin reads, then the
+  // outcome of the real send in the same place. Null means closed.
+  const [askDialog, setAskDialog] = useState<{
+    trialDate: string;
+    preview: AttendanceSendResult;
+    outcome: AttendanceSendResult | null;
+  } | null>(null);
+  const [askBusy, setAskBusy] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<TrialSlotRow | null>(null);
   const allSlotsQ = useAllTrialSlots();
@@ -743,17 +778,44 @@ const TrialClassesManager = () => {
       });
   }, [filtered]);
 
-  const sendResendConfirmation = async (booking: TrialBooking) => {
+  /**
+   * Ask ONE student whether they are coming.
+   *
+   * Deliberately still a direct send rather than a call into
+   * send-attendance-confirmations: that function skips anyone already stamped,
+   * which is exactly right for a batch and exactly wrong for the button an
+   * admin presses when one person says they never got the letter.
+   *
+   * It stamps attendance_email_sent_at anyway, for the same reason the batch
+   * does — otherwise this send is invisible to /admin/today and the student
+   * gets asked a second time by the next batch.
+   */
+  const sendAttendanceConfirmation = async (booking: TrialBooking) => {
     setActioningId(booking.id);
     try {
-      const { data: slotRow } = await supabase
+      const { data: slotRow, error: slotErr } = await supabase
         .from("trial_slots")
-        .select("meeting_url, class_language, timezone")
+        .select("meeting_url, class_language, timezone, duration_min")
         .eq("trial_date", booking.trial_date ?? "")
         .eq("start_time", booking.start_time ?? "")
         .maybeSingle();
-      const meetingUrl = (slotRow as { meeting_url?: string | null; class_language?: string | null } | null)?.meeting_url ?? null;
-      const resendLang = (slotRow as { class_language?: string | null } | null)?.class_language ?? booking.class_language ?? "en";
+      if (slotErr) throw slotErr;
+      const slot = slotRow as {
+        meeting_url?: string | null; class_language?: string | null;
+        timezone?: string | null; duration_min?: number | null;
+      } | null;
+      const meetingUrl = slot?.meeting_url ?? null;
+      if (!meetingUrl) {
+        // Same rule the batch enforces: a letter that cannot be joined is
+        // worse than no letter.
+        toast({
+          title: "No Google Meet link on this slot",
+          description: "Add it in the trial slot settings before asking anyone to confirm.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const resendLang = slot?.class_language ?? booking.class_language ?? "en";
       const resendEmailLang = resendLang === "arabic" ? "ar" : resendLang === "english" ? "en" : resendLang;
       const { error: emailErr } = await supabase.functions.invoke("send-confirmation-email", {
         body: {
@@ -763,17 +825,89 @@ const TrialClassesManager = () => {
           language: resendEmailLang,
           trial_date: booking.trial_date,
           trial_time: booking.start_time,
+          // From the slot. Letting the template fall back puts a Cairo class
+          // five hours out in the one line the student acts on.
+          trial_timezone: slot?.timezone ?? undefined,
+          student_timezone: booking.student_timezone ?? null,
+          trial_duration_min: slot?.duration_min ?? 30,
+          level: booking.level ?? undefined,
           class_link_url: meetingUrl,
           booking_id: booking.id,
           confirmation_token: booking.confirmation_token,
         },
       });
       if (emailErr) throw emailErr;
-      toast({ title: "Confirmation resent", description: booking.email });
+      const { error: stampErr } = await supabase
+        .from("trial_bookings")
+        .update({ attendance_email_sent_at: new Date().toISOString() } as any)
+        .eq("id", booking.id);
+      if (stampErr) {
+        // The student has the letter; only our record of it is missing. Say
+        // so plainly rather than reporting a send that did happen as a failure.
+        toast({
+          title: "Sent, but not recorded",
+          description: `${booking.email} was asked, but the timestamp could not be saved: ${stampErr.message}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Asked to confirm", description: booking.email });
+      }
+      fetchData();
     } catch (err: any) {
       toast({ title: "Email failed", description: err.message, variant: "destructive" });
     } finally {
       setActioningId(null);
+    }
+  };
+
+  /**
+   * Ask a whole session to confirm — one date per press, never all of them.
+   *
+   * Two steps on purpose. The first press is a dry run: send-attendance-
+   * confirmations selects exactly who it would write to and why it would skip
+   * anyone else, and that list is what the dialog shows. Only the button inside
+   * that dialog sends. Nothing here can send without a person having read the
+   * list of names first.
+   *
+   * Fanning out across every session at once is not offered. The sessions are
+   * on different days with different rooms, and a mistake made once per date is
+   * a mistake caught after the first date rather than after all six.
+   */
+  const previewAttendanceConfirmations = async (trialDate: string) => {
+    setAskBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-attendance-confirmations", {
+        body: { dry_run: true, trial_date: trialDate },
+      });
+      if (error) throw error;
+      const result = data as AttendanceSendResult;
+      if (result?.error) throw new Error(result.error);
+      setAskDialog({ trialDate, preview: result, outcome: null });
+    } catch (err: any) {
+      toast({ title: "Could not build the preview", description: err.message, variant: "destructive" });
+    } finally {
+      setAskBusy(false);
+    }
+  };
+
+  const sendAttendanceConfirmations = async () => {
+    if (!askDialog) return;
+    setAskBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-attendance-confirmations", {
+        body: { dry_run: false, trial_date: askDialog.trialDate },
+      });
+      if (error) throw error;
+      const result = data as AttendanceSendResult;
+      if (result?.error) throw new Error(result.error);
+      // Kept on screen instead of collapsed into a toast: "3 failed" without
+      // the three reasons is a number nobody can act on.
+      setAskDialog((prev) => (prev ? { ...prev, outcome: result } : prev));
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Sending failed", description: err.message, variant: "destructive" });
+    } finally {
+      setAskBusy(false);
     }
   };
 
@@ -1199,6 +1333,25 @@ const TrialClassesManager = () => {
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
+                    {/* One session, one press. The dry run runs first and the
+                        dialog it opens is where the sending happens. */}
+                    {!isTbaSession && session.date && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7"
+                        disabled={askBusy || bulkBusy || past}
+                        onClick={() => previewAttendanceConfirmations(session.date!)}
+                        title={
+                          past
+                            ? "This session has already happened"
+                            : "Show who would be asked whether they are coming, before anything is sent"
+                        }
+                      >
+                        <Mail className="h-3.5 w-3.5 mr-1" />
+                        Ask them to confirm
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -1303,18 +1456,47 @@ const TrialClassesManager = () => {
                                   </div>
                                 </>
                               )}
-                              {b.status === "awaiting_attendance" && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7"
-                                  disabled={actioningId === b.id}
-                                  onClick={() => sendResendConfirmation(b)}
-                                  title="Resend attendance confirmation email"
-                                >
-                                  <Mail className="h-3.5 w-3.5 mr-1" />
-                                  Resend confirmation
-                                </Button>
+                              {/* Gated on the booking being live and joinable,
+                                  not on status. It used to require
+                                  status === "awaiting_attendance", which meant
+                                  the 57 students sitting at "pending" — every
+                                  student actually waiting on a September
+                                  session — could not be asked at all. Whether
+                                  we can ask someone depends on there being a
+                                  room and a token, never on which status the
+                                  booking happens to be parked in. */}
+                              {!isTbaSession && b.status !== "cancelled" && slotMatch?.meeting_url && (
+                                <div className="flex flex-col items-end gap-0.5">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7"
+                                    disabled={actioningId === b.id || !b.confirmation_token}
+                                    onClick={() => sendAttendanceConfirmation(b)}
+                                    title={
+                                      !b.confirmation_token
+                                        ? "This booking has no confirmation token, so the letter would have no confirm or decline button"
+                                        : b.attendance_email_sent_at
+                                          ? `Last asked ${new Date(b.attendance_email_sent_at).toLocaleString()}`
+                                          : "Ask this student whether they are coming"
+                                    }
+                                  >
+                                    <Mail className="h-3.5 w-3.5 mr-1" />
+                                    {b.attendance_email_sent_at ? "Ask again" : "Ask to confirm"}
+                                  </Button>
+                                  {/* What they said, if anything — an answer
+                                      already given is the whole reason to
+                                      press this button or leave it alone. */}
+                                  {b.attendance_response === "yes" && (
+                                    <span className="text-[10px] text-emerald-700">Said yes</span>
+                                  )}
+                                  {b.attendance_response === "no" && (
+                                    <span className="text-[10px] text-destructive">Said no</span>
+                                  )}
+                                  {!b.attendance_response && b.attendance_email_sent_at && (
+                                    <span className="text-[10px] text-muted-foreground">Asked, no reply</span>
+                                  )}
+                                </div>
                               )}
                               {b.status === "pending" && (
                                 <>
@@ -1406,6 +1588,136 @@ const TrialClassesManager = () => {
           );
         })
       )}
+
+      {/* One dialog for the whole page, holding one date at a time. It opens on
+          the dry run, so the list below is the function's own answer to "who
+          would this write to", not a second guess made here that could drift
+          from it. */}
+      <AlertDialog open={!!askDialog} onOpenChange={(open) => { if (!open) setAskDialog(null); }}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {askDialog?.outcome
+                ? "Asked to confirm"
+                : `Ask the ${askDialog?.trialDate ?? ""} session to confirm?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                {askDialog && !askDialog.outcome && (
+                  <>
+                    <p>
+                      One email each, asking whether they are coming, with a confirm and a decline
+                      button. Nothing has been sent yet — this is the list the send would use.
+                    </p>
+
+                    {askDialog.preview.candidates === 0 ? (
+                      <p className="font-medium text-foreground">
+                        {askDialog.preview.message ?? "Nobody on this date is waiting to be asked."}
+                      </p>
+                    ) : (
+                      /* Names belong here — behind the admin login, at the
+                         moment of the decision — and nowhere else. */
+                      <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
+                        {(askDialog.preview.preview ?? []).map((p) => {
+                          const b = bookings.find((x) => x.id === p.booking_id);
+                          return (
+                            <div key={p.booking_id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs">
+                              <span className="min-w-0">
+                                <span className="font-medium text-foreground block truncate">{b?.name || "—"}</span>
+                                <span className="text-muted-foreground block truncate">{p.email}</span>
+                              </span>
+                              {p.already_answered && (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">
+                                  already said {p.already_answered}
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {askDialog.preview.skipped.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="font-medium text-foreground">
+                          {askDialog.preview.skipped.length} skipped, and why:
+                        </p>
+                        <ul className="rounded-md border max-h-32 overflow-y-auto divide-y text-xs">
+                          {askDialog.preview.skipped.map((s) => {
+                            const b = bookings.find((x) => x.id === s.booking_id);
+                            return (
+                              <li key={s.booking_id} className="px-2.5 py-1.5">
+                                <span className="font-medium text-foreground">{b?.name || b?.email || s.booking_id}</span>
+                                {" — "}
+                                {s.reason}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {askDialog?.outcome && (
+                  <>
+                    <p className="font-medium text-foreground">
+                      {askDialog.outcome.sent} sent
+                      {askDialog.outcome.failed ? `, ${askDialog.outcome.failed} failed` : ""}
+                      {askDialog.outcome.skipped.length ? `, ${askDialog.outcome.skipped.length} skipped` : ""}.
+                    </p>
+                    {askDialog.outcome.failures.length > 0 && (
+                      <ul className="rounded-md border border-destructive/40 max-h-40 overflow-y-auto divide-y text-xs">
+                        {askDialog.outcome.failures.map((f) => {
+                          const b = bookings.find((x) => x.id === f.booking_id);
+                          return (
+                            <li key={f.booking_id} className="px-2.5 py-1.5">
+                              <span className="font-medium text-foreground">{b?.name || b?.email || f.booking_id}</span>
+                              {" — "}
+                              <span className="text-destructive">{f.error}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    {askDialog.outcome.skipped.length > 0 && (
+                      <ul className="rounded-md border max-h-32 overflow-y-auto divide-y text-xs">
+                        {askDialog.outcome.skipped.map((s) => {
+                          const b = bookings.find((x) => x.id === s.booking_id);
+                          return (
+                            <li key={s.booking_id} className="px-2.5 py-1.5">
+                              <span className="font-medium text-foreground">{b?.name || b?.email || s.booking_id}</span>
+                              {" — "}
+                              {s.reason}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{askDialog?.outcome ? "Close" : "Cancel"}</AlertDialogCancel>
+            {askDialog && !askDialog.outcome && askDialog.preview.candidates > 0 && (
+              <AlertDialogAction
+                disabled={askBusy}
+                onClick={(e) => {
+                  // The dialog stays open so the outcome — including every
+                  // failure reason — is read in the same place the decision
+                  // was made.
+                  e.preventDefault();
+                  sendAttendanceConfirmations();
+                }}
+              >
+                {askBusy ? "Sending…" : `Send to ${askDialog.preview.candidates}`}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
