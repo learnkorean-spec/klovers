@@ -5,30 +5,36 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * P0-4 of claude/WEBSITE_UX_CRO_ACTION_PLAN_2026-09-07.md.
  *
- * WHAT WAS WRONG: these four cards were plain <div>s with no href and no
- * onClick, while carrying hover:border-primary/50, hover:shadow-xl and
- * hover:-translate-y-1 - lift, glow and border change, the complete
- * vocabulary of a link. A visitor motivated enough to click got nothing.
- * On a section whose whole job is to catch intent, a dead end is worse
- * than a plain paragraph.
+ * These four cards used to be plain <div>s carrying hover:shadow-xl,
+ * hover:-translate-y-1 and a border change - the complete vocabulary of a
+ * link - with no href and no onClick. A visitor interested enough to click
+ * got nothing. There is no Travel page to point them at, so the card itself
+ * is the payoff: front is the motivation and its Korean word, back is the
+ * explanation.
  *
- * WHY NOT JUST LINK THEM: there is no Travel page on this site, and the
- * nearest existing pages (/learn-korean-kdramas, /interview-training,
- * /topik-exam-preparation) do not map onto Culture / Study / Career /
- * Travel without inventing content. Four links where one goes nowhere is
- * the same bug with more steps.
+ * COLOUR (revised 2026-09-08, Re asked for better colours)
+ * -------------------------------------------------------
+ * The first pass used Tailwind's sky-900 / emerald-900 / rose-900 /
+ * violet-900 over slate-900. Those are desaturated and near-identical in
+ * value, so four cards read as one grey-blue smear and the brand yellow sat
+ * badly on them.
  *
- * SO THE CARD IS THE PAYOFF. Front: the motivation and its Korean word.
- * Back: the explanation that used to sit unread under the title. The
- * hover now does what the hover was already promising.
+ * These are drawn from dancheong (단청), the painted decoration on Korean
+ * temple eaves and gates: vermillion, cobalt, malachite green and a deep
+ * plum. High chroma, distinct hues, all dark enough that the yellow icon
+ * bubble and white text sit at full contrast on every one of them.
  *
- * IMAGES: `image` on a card renders as the front instead of the gradient.
- * Nothing in the repo supplies one yet, so every card falls back to the
- * designed front. Adding photographs later is filling in IMAGES below -
- * no change to this component.
+ * Gradients are INLINE STYLES, not Tailwind classes, on purpose. Tailwind's
+ * JIT only emits classes it can see as complete literal strings in source;
+ * an arbitrary value assembled at runtime (from-[${hex}]) is not seen and is
+ * purged from the production build, so it works locally and ships unstyled.
+ * Inline styles cannot be purged.
  *
- * NO NEW TRANSLATION KEYS: front and back both come from the existing
- * whyLearn.items entries, so this ships without touching translations.ts.
+ * ACCENT: the back face is theme-aware (light and dark), so its icon cannot
+ * be the brand yellow - yellow on white is the P0-3 contrast problem, and
+ * the first pass of this component shipped exactly that. The accents below
+ * are mid-tone versions of each front, picked to stay legible on both a
+ * white and a near-black background.
  */
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -46,13 +52,20 @@ const koreanWord: Record<string, string> = {
   culture: "문화",
 };
 
-/** Front-face gradients. Distinct per motivation, all brand-compatible. */
-const frontTone: Record<string, string> = {
-  study: "from-sky-900 to-slate-900",
-  career: "from-emerald-900 to-slate-900",
-  travel: "from-rose-900 to-slate-900",
-  culture: "from-violet-900 to-slate-900",
+type Tone = { from: string; to: string; accent: string };
+
+const tones: Record<string, Tone> = {
+  // 청 cobalt - the scholar's blue
+  study: { from: "#0A4DA6", to: "#061E3D", accent: "#2C74C9" },
+  // 녹 malachite - growth
+  career: { from: "#0B6E52", to: "#04241C", accent: "#0E8F6F" },
+  // 적 vermillion - the dancheong red
+  travel: { from: "#B3122E", to: "#3A0812", accent: "#CE3350" },
+  // plum - the arts
+  culture: { from: "#7B1E6A", to: "#2B0A26", accent: "#A63D96" },
 };
+
+const fallbackTone: Tone = { from: "#334155", to: "#0F172A", accent: "#64748B" };
 
 /** Optional photographs, keyed by icon. Empty until real images exist. */
 const IMAGES: Record<string, string> = {};
@@ -82,6 +95,7 @@ const WhyLearnKorean = () => {
           {items.map((item, index) => {
             const isFlipped = flipped === index;
             const image = IMAGES[item.icon];
+            const tone = tones[item.icon] || fallbackTone;
 
             return (
               <button
@@ -97,19 +111,32 @@ const WhyLearnKorean = () => {
                   }`}
                 >
                   {/* Front */}
-                  <div className="absolute inset-0 rounded-3xl border border-border overflow-hidden [backface-visibility:hidden]">
+                  <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-lg [backface-visibility:hidden]">
                     {image ? (
                       <img src={image} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
                     ) : null}
+                    {/* Base gradient. Inline, not a Tailwind class - see header. */}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-br ${frontTone[item.icon] || "from-slate-800 to-slate-900"} ${
-                        image ? "opacity-80" : ""
-                      }`}
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `linear-gradient(150deg, ${tone.from} 0%, ${tone.to} 100%)`,
+                        opacity: image ? 0.82 : 1,
+                      }}
+                    />
+                    {/* A single soft highlight so the face reads as lit rather
+                        than as a flat swatch. */}
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage:
+                          "radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 60%)",
+                      }}
                     />
                     <div className="relative h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
                       <span
                         aria-hidden="true"
-                        className="text-4xl md:text-5xl font-extrabold text-white/25 leading-none select-none"
+                        className="text-4xl md:text-5xl font-extrabold text-white/30 leading-none select-none"
                       >
                         {koreanWord[item.icon] || "한국"}
                       </span>
@@ -118,23 +145,33 @@ const WhyLearnKorean = () => {
                           {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
                         </span>
                       </div>
-                      <h3 className="font-bold text-white text-base md:text-lg leading-tight">
+                      <h3 className="font-bold text-white text-base md:text-lg leading-tight drop-shadow-sm">
                         {item.title}
                       </h3>
                     </div>
                   </div>
 
                   {/* Back */}
-                  <div className="absolute inset-0 rounded-3xl border border-primary/40 bg-background p-5 flex flex-col items-center justify-center text-center gap-3 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                    <span aria-hidden="true" className="text-primary">
-                      {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
-                    </span>
-                    <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                      {item.description}
-                    </p>
+                  <div className="absolute inset-0 rounded-3xl border border-border bg-background overflow-hidden shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                    {/* Colour rule, so the back still belongs to its card. */}
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-x-0 top-0 h-1.5"
+                      style={{ backgroundColor: tone.accent }}
+                    />
+                    <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-5">
+                      {/* Accent, never the brand yellow: this face is white in
+                          light mode, and yellow-on-white is the P0-3 problem. */}
+                      <span aria-hidden="true" style={{ color: tone.accent }}>
+                        {iconMap[item.icon] || <BookOpen className="h-8 w-8" />}
+                      </span>
+                      <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">
+                        {item.title}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </button>
