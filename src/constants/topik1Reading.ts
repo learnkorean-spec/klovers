@@ -174,7 +174,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "B4", section: "B",
-    stem: "가: 주말에 뭐 할 거예요?\n     나: 부모님 댓에 (       ).",
+    stem: "가: 주말에 뭐 할 거예요?\n     나: 부모님 댁에 (       ).",
     options: ["갈 거예요", "갔어요", "가고 있어요", "가지 마세요"], answerIndex: 0,
   },
   {
@@ -256,7 +256,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "C3", section: "C",
     stem: "어제는 (       ) 오늘은 시간이 많아요.",
-    options: ["바빠서", "바쁘고", "바쁜지만", "바쁘면"], answerIndex: 2,
+    options: ["바빠서", "바쁘고", "바빴지만", "바쁘면"], answerIndex: 2,
   },
   {
     id: "C4", section: "C",
@@ -314,8 +314,8 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "C9", section: "C",
     group: "※ [C9~C10] 다음을 읽고 물음에 답하십시오.",
-    passage: "저는 작년부터 한국 회사에서 일하고 있습니다. 처음에는 한국어를 잘 못해서 회의 때 아주 힘들었습니다. (   ㈜   ) 저녁마다 두 시간씩 한국어를 공부했습니다. 요즘은 회의에서 제 생각을 말할 수 있습니다. 아직 어려운 말은 모르지만 매일 조금씩 좋아지고 있습니다.",
-    stem: "㈜에 들어갈 알맞은 것을 고르십시오.",
+    passage: "저는 작년부터 한국 회사에서 일하고 있습니다. 처음에는 한국어를 잘 못해서 회의 때 아주 힘들었습니다. (   ㉠   ) 저녁마다 두 시간씩 한국어를 공부했습니다. 요즘은 회의에서 제 생각을 말할 수 있습니다. 아직 어려운 말은 모르지만 매일 조금씩 좋아지고 있습니다.",
+    stem: "㉠에 들어갈 알맞은 것을 고르십시오.",
     options: ["그런데", "그래서", "그러면", "그렇지만"], answerIndex: 1,
   },
   {
