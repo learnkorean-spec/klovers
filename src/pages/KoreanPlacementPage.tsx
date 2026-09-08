@@ -57,6 +57,21 @@ import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement"
 const STORAGE_KEY = "klovers_placement_draft_v4"; // v4: TOPIK I reading bank
 const AUDIO_BUCKET = "placement-audio";
 
+/**
+ * The card / certificate / share row on the result screen, held back for now.
+ *
+ * Re asked for it to come off on 8 Sep. It is a flag rather than a deletion
+ * because the three handlers and the canvas renderers behind them are intact
+ * and the row is one boolean away from returning.
+ *
+ * There is a reason to leave it off until the copy is revisited: both images
+ * are drawn with `score` out of `totalMax`, and under the section-gate the two
+ * numbers no longer belong together. A beginner who stops after section A can
+ * hold 3 of 8 in the only section they were shown, and the certificate would
+ * print "3 / 28" — a number that reads like a failure and measures nothing.
+ */
+const SHOW_RESULT_SHARING = false;
+
 const CIRCLED = ["①", "②", "③", "④"];
 const FILLED = ["❶", "❷", "❸", "❹"];
 
@@ -681,15 +696,19 @@ const KoreanPlacementPage = () => {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
-                  <Download className="h-3.5 w-3.5" /> {t("بطاقة", "Card")}
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCertificate(result)}>
-                  <Download className="h-3.5 w-3.5" /> {t("شهادة", "Certificate")}
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleShare(result)}>
-                  <Share2 className="h-3.5 w-3.5" /> {t("مشاركة", "Share")}
-                </Button>
+                {SHOW_RESULT_SHARING && (
+                  <>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
+                      <Download className="h-3.5 w-3.5" /> {t("بطاقة", "Card")}
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCertificate(result)}>
+                      <Download className="h-3.5 w-3.5" /> {t("شهادة", "Certificate")}
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleShare(result)}>
+                      <Share2 className="h-3.5 w-3.5" /> {t("مشاركة", "Share")}
+                    </Button>
+                  </>
+                )}
                 <Button variant="ghost" size="sm" className="flex-1 text-xs gap-1.5" onClick={handleRetake}>
                   <RefreshCw className="h-3.5 w-3.5" /> {t("إعادة", "Retake")}
                 </Button>
