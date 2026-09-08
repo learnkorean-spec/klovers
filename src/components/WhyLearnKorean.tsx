@@ -86,7 +86,83 @@ const INK = "#131A24";
 
 const fallbackTone: Tone = { from: "#E2E8F0", to: "#CBD5E1", deep: "#334155", accent: "#64748B" };
 
-/** Optional photographs, keyed by icon. Empty until real images exist. */
+/**
+ * A Korean scene per card, drawn rather than photographed.
+ *
+ * Re asked for pictures of Korea. Stock photography would mean putting images
+ * whose licence nobody here has checked onto the homepage of a real business,
+ * so these are original line drawings instead - and they suit the pastel
+ * better than a photograph would: each is stroked in its own card's saturated
+ * hue at low opacity, so it reads as tone-on-tone texture and never competes
+ * with the title sitting on top of it.
+ *
+ * Drawn as one set, not four separate motifs: every scene shares a ground
+ * line at the same height and the same stroke weight, so the row reads as one
+ * family. Bottom-anchored, decorative, aria-hidden.
+ *
+ * A real photograph still wins if one arrives - fill in IMAGES and it renders
+ * instead of these.
+ */
+const scenery: Record<string, React.ReactNode> = {
+  // 서원 - an academy hall among pines
+  study: (
+    <>
+      <path d="M0 96 Q26 82 52 93" />
+      <path d="M46 80 C70 60 130 60 154 80" />
+      <path d="M56 80 H144" />
+      <path d="M64 80 V102 M136 80 V102" />
+      <path d="M88 102 V88 H112 V102" />
+      <path d="M74 88 h8 M118 88 h8" />
+      <path d="M26 102 V90" />
+      <path d="M14 90 L26 74 L38 90 Z M17 78 L26 66 L35 78 Z" />
+      <path d="M0 102 H200" />
+    </>
+  ),
+  // Seoul - the towers, and the tower on the hill
+  career: (
+    <>
+      <path d="M8 102 V72 h18 v30 M32 102 V56 h14 v46 M52 102 V80 h16 v22" />
+      <path d="M74 102 V64 h20 v38 M100 102 V86 h13 v16" />
+      <path d="M14 80 h6 M14 88 h6 M38 64 h4 M38 74 h4 M38 84 h4 M80 72 h8 M80 82 h8 M80 92 h8" />
+      <path d="M150 102 V88" />
+      <path d="M142 88 L150 62 L158 88 Z" />
+      <path d="M144 70 h12" />
+      <path d="M150 62 V48" />
+      <path d="M126 102 V78 h10 v24 M170 102 V84 h12 v18" />
+      <path d="M0 102 H200" />
+    </>
+  ),
+  // a palace gate below the mountains
+  travel: (
+    <>
+      <path d="M0 94 L26 68 L46 88 L72 56 L100 88 L118 74 L136 94" />
+      <path d="M58 92 C80 76 138 76 160 92" />
+      <path d="M78 74 C94 62 126 62 142 74" />
+      <path d="M86 74 H134" />
+      <path d="M68 92 V102 M150 92 V102" />
+      <path d="M96 102 V94 A13 13 0 0 1 122 94 V102" />
+      <path d="M0 102 H200" />
+    </>
+  ),
+  // a pavilion under the moon, with a blossom branch
+  culture: (
+    <>
+      <circle cx="30" cy="26" r="11" />
+      <path d="M104 74 C124 56 166 56 186 74" />
+      <path d="M112 74 H178" />
+      <path d="M118 74 V102 M172 74 V102" />
+      <path d="M104 102 H186" />
+      <path d="M0 88 C24 88 44 80 60 68 C70 61 80 58 90 58" />
+      <path d="M28 86 L34 76 M50 78 L56 68 M72 62 L78 54" />
+      <circle cx="34" cy="73" r="3.4" /><circle cx="40" cy="78" r="3.4" />
+      <circle cx="56" cy="65" r="3.4" /><circle cx="62" cy="70" r="3.4" />
+      <circle cx="78" cy="51" r="3.4" /><circle cx="84" cy="56" r="3.4" />
+      <path d="M0 102 H200" />
+    </>
+  ),
+};
+
+/** Optional photographs. When one exists it renders over the drawing. */
 const IMAGES: Record<string, string> = {};
 
 const WhyLearnKorean = () => {
@@ -152,6 +228,25 @@ const WhyLearnKorean = () => {
                           "radial-gradient(120% 80% at 50% -8%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 62%)",
                       }}
                     />
+                    {/* The scene. Bottom-anchored, its own card's hue, low
+                        enough that the title reads cleanly across it. */}
+                    {!image && (
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 200 110"
+                        preserveAspectRatio="xMidYMax meet"
+                        className="absolute inset-x-0 bottom-0 h-[58%] w-full"
+                        fill="none"
+                        stroke={tone.deep}
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ opacity: 0.24 }}
+                      >
+                        {scenery[item.icon]}
+                      </svg>
+                    )}
+
                     <div className="relative h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
                       <span
                         aria-hidden="true"
