@@ -59,7 +59,7 @@ function emailWrapper(content: string): string {
                   You received this email because an action was taken on your Klovers account.
                 </p>
                 <p style="margin:0;font-size:12px;color:#999999;">
-                  © 2025 Klovers · <a href="https://kloversegy.com" style="color:${MID_GRAY};text-decoration:none;">kloversegy.com</a>
+                  © ${new Date().getFullYear()} Klovers · <a href="https://kloversegy.com" style="color:${MID_GRAY};text-decoration:none;">kloversegy.com</a>
                 </p>
               </div>
 
