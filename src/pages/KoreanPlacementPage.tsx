@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
 import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
@@ -105,7 +104,6 @@ const KoreanPlacementPage = () => {
   const [extrasSaved, setExtrasSaved] = useState(false);
 
   // Lead capture
-  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadSaving, setLeadSaving] = useState(false);
@@ -371,6 +369,10 @@ const KoreanPlacementPage = () => {
       return;
     }
     setLeadSaved(true);
+    // The old page's capture fired nothing at all, so a converted visitor was
+    // invisible in both lead_events and the pixel — one captured email in five
+    // months could not be told apart from a broken form.
+    track.custom("placement_lead_captured", { level: result?.info.levelKey });
     logLeadEvent({ source_type: "email", cta_label: "placement_study_plan", metadata: { level: result?.info.levelKey } });
   };
 
@@ -564,6 +566,41 @@ const KoreanPlacementPage = () => {
                 </p>
               </div>
 
+              {/* Email capture, inline and above the CTAs rather than behind a
+                  small button. Only for visitors we do not already have: a
+                  signed-in student's email is already on their profile, so
+                  asking again is noise. */}
+              {!userId && (
+                <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
+                  {leadSaved ? (
+                    <div className="text-center py-2 space-y-2">
+                      <CheckCircle className="h-9 w-9 text-green-600 mx-auto" />
+                      <p className="font-semibold text-sm">{t("هنبعتلك خطتك قريب!", "We'll send your plan shortly!")}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {t("عايز خطة دراسية لمستواك؟", "Want a study plan for your level?")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {isAr
+                            ? `اكتب اسمك وبريدك وهنبعتلك خطة مخصصة لمستوى ${result.info.labelAr}.`
+                            : `Leave your name and email and we'll send a plan built for ${result.info.labelEn}.`}
+                        </p>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        <Input placeholder={t("اسمك", "Your name")} value={leadName} onChange={e => setLeadName(e.target.value)} />
+                        <Input placeholder={t("بريدك الإلكتروني", "Your email")} type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)} />
+                      </div>
+                      <Button className="w-full" size="sm" onClick={handleLeadSubmit} disabled={leadSaving}>
+                        {leadSaving ? t("جارٍ الإرسال...", "Sending…") : t("ابعتوا لي الخطة", "Send me the plan")}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => navigate("/free-trial")}
                   className="flex-1 min-w-[9rem] font-semibold">
@@ -574,9 +611,6 @@ const KoreanPlacementPage = () => {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => setLeadDialogOpen(true)}>
-                  {t("📚 احصل على خطة دراسية مجانية", "📚 Get free study plan")}
-                </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
                   <Download className="h-3.5 w-3.5" /> {t("بطاقة", "Card")}
                 </Button>
@@ -612,30 +646,6 @@ const KoreanPlacementPage = () => {
             </CardContent>
           </Card>
 
-          <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
-            <DialogContent className="max-w-sm">
-              <DialogHeader>
-                <DialogTitle>{isAr ? "احصل على خطة دراستك المجانية" : "Get your free study plan"}</DialogTitle>
-                <DialogDescription>
-                  {isAr ? `سنرسل خطة دراسية مخصصة لمستوى ${result.info.labelAr} لبريدك.` : `We'll send a personalised ${result.info.labelEn} study plan to your inbox.`}
-                </DialogDescription>
-              </DialogHeader>
-              {leadSaved ? (
-                <div className="text-center py-4 space-y-2">
-                  <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
-                  <p className="font-semibold text-sm">{isAr ? "سنرسل خطتك قريباً!" : "We'll send your plan shortly!"}</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Input placeholder={isAr ? "اسمك" : "Your name"} value={leadName} onChange={e => setLeadName(e.target.value)} />
-                  <Input placeholder={isAr ? "بريدك الإلكتروني" : "Your email"} type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)} />
-                  <Button className="w-full" onClick={handleLeadSubmit} disabled={leadSaving}>
-                    {leadSaving ? (isAr ? "جارٍ الإرسال..." : "Sending…") : (isAr ? "أرسل لي الخطة" : "Send me the plan")}
-                  </Button>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
         </main>
         <Footer />
       </div>
