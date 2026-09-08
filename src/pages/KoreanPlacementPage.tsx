@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import {
   CheckCircle, AlertCircle, ArrowRight, ArrowLeft, GraduationCap, Share2,
   Download, RefreshCw, Mic, Square, Play, RotateCcw, PenLine, Loader2,
+  Sparkles, Target, Clock, Save, Ban,
 } from "lucide-react";
 import {
   SEJONG1_SECTIONS, SEJONG1_QUESTIONS, SEJONG1_READING_TEXT,
@@ -83,6 +84,20 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
   g2: { emoji: "📘", tagline: "TOPIK Level 2" },
   g3plus: { emoji: "🏆", tagline: "TOPIK Level 3+" },
 };
+
+/**
+ * The four answers the test can give, shown on the intro screen.
+ *
+ * Nothing else on the site tells a visitor what the result will look like, and
+ * "we will tell you your level" is a weaker promise than showing the four
+ * levels it chooses between. The order is the order of the ladder.
+ */
+const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
+  { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
+  { ko: "1급", ar: "المستوى الأول", en: "Level 1", emoji: "📗" },
+  { ko: "2급", ar: "المستوى الثاني", en: "Level 2", emoji: "📘" },
+  { ko: "3급 이상", ar: "الثالث فأعلى", en: "Level 3+", emoji: "🏆" },
+];
 
 type Phase = "intro" | "stage1" | "stage2" | "extras" | "result";
 
@@ -511,34 +526,102 @@ const KoreanPlacementPage = () => {
 
   // ---- intro --------------------------------------------------------------
   if (phase === "intro") {
+    const FEATURES = [
+      { icon: Target, text: t("بيقف عند أول قسم تتعثر فيه", "Stops at the first section you struggle with") },
+      { icon: Clock,  text: t("٨ أسئلة بس لو مبتدئ", "Just 8 questions if you are a beginner") },
+      { icon: Save,   text: t("اقفل وارجع — محفوظ", "Close it and come back — saved") },
+      { icon: Ban,    text: t("من غير قاموس ولا ترجمة", "No dictionary, no translator") },
+    ];
+
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main id="main-content" className="flex-1 px-4 py-10 max-w-2xl mx-auto w-full">
-          <Card dir={isAr ? "rtl" : "ltr"}>
-            <CardContent className="pt-6 space-y-4 text-sm">
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <GraduationCap className="h-6 w-6 text-primary" />
-                {t("اختبار تحديد المستوى", "Korean Placement Test")}
-              </h1>
-              <p>
-                {t("الاختبار بيقولك مستواك بنظام TOPIK — من تأسيس الهانغول لحد 3급 فأعلى.",
-                   "This test tells you your level on the TOPIK scale — from Hangul foundation up to 3급 and above.")}
-              </p>
-              <ul className="space-y-1.5 list-disc ms-5 text-muted-foreground">
-                <li>{t("الأسئلة مرتبة من الأسهل للأصعب، والاختبار بيقف عند أول قسم تتعثر فيه — مش هتجاوب على حاجة فوق مستواك.", "Questions run easiest-first and the test stops at the first section you struggle with — you never answer far above your level.")}</li>
-                <li>{t("المبتدئ تمامًا بيخلص في ٨ أسئلة. الأعلى مستوى بيوصل لحوالي ٦٢.", "A complete beginner finishes in 8 questions. The highest level reaches about 62.")}</li>
-                <li>{t("تقدر تقفل الصفحة وترجع — إجاباتك محفوظة.", "You can close the page and come back — your answers are saved.")}</li>
-                <li>{t("من غير قاموس ولا ترجمة.", "No dictionary or translator.")}</li>
-              </ul>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={() => { setStartedAt(Date.now()); setPhase("stage1"); }}>
-                  {t("ابدأ الاختبار", "Start the test")}
-                  <ArrowRight className={cn("h-4 w-4", isAr ? "mr-2 rotate-180" : "ml-2")} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <main id="main-content" className="flex-1 px-4 py-10">
+          <div className="relative max-w-2xl mx-auto w-full">
+
+            {/* Same texture the homepage CTA that sends people here uses, so the
+                page they land on looks like the page they came from. */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden>
+              {["한", "국", "어", "급"].map((char, i) => (
+                <span
+                  key={char}
+                  className="absolute text-6xl font-bold text-amber-300/10 dark:text-amber-400/[0.07]"
+                  style={{ top: `${8 + i * 24}%`, left: `${4 + i * 24}%`, transform: `rotate(${-14 + i * 9}deg)` }}
+                >
+                  {char}
+                </span>
+              ))}
+            </div>
+
+            <Card dir={isAr ? "rtl" : "ltr"} className="relative overflow-hidden border-border/70 shadow-xl">
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/70 to-primary" />
+              <CardContent className="pt-8 pb-7 space-y-7">
+
+                <div className="space-y-4 text-center">
+                  <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-950/40 border border-black/10 dark:border-amber-800/40 px-4 py-1.5 rounded-full text-xs font-semibold text-amber-700 dark:text-amber-400">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {t("مجاني · من غير تسجيل", "Free · no sign-up")}
+                  </div>
+
+                  <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
+                    {t("اعرف مستواك في الكوري", "Find your Korean level")}
+                  </h1>
+
+                  <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
+                    {t("النتيجة بنظام TOPIK — من تأسيس الهانغول لحد المستوى الثالث فأعلى.",
+                       "Your answer on the TOPIK scale — from the Hangul alphabet up to level 3 and above.")}
+                  </p>
+                </div>
+
+                {/* What the test can answer. Shown before they start, because a
+                    named result is a clearer promise than "we'll tell you". */}
+                <div>
+                  <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center mb-3">
+                    {t("نتيجتك هتكون واحدة من دول", "YOUR RESULT WILL BE ONE OF THESE")}
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {LADDER.map((l) => (
+                      <div
+                        key={l.ko}
+                        className="rounded-xl border border-border bg-muted/40 px-2 py-3 text-center space-y-1"
+                      >
+                        <div className="text-xl leading-none">{l.emoji}</div>
+                        <div className="text-sm font-bold leading-tight" dir="ltr">{l.ko}</div>
+                        <div className="text-[10px] text-muted-foreground leading-tight">
+                          {isAr ? l.ar : l.en}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-2.5">
+                  {FEATURES.map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-2.5 bg-muted/60 rounded-xl px-3 py-2.5 text-sm font-medium">
+                      <Icon className="h-4 w-4 text-amber-600 dark:text-amber-500 shrink-0" />
+                      <span className="leading-snug">{text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2.5 pt-1">
+                  <Button
+                    size="lg"
+                    className="w-full h-12 text-base font-bold gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow"
+                    onClick={() => { setStartedAt(Date.now()); setPhase("stage1"); }}
+                  >
+                    {t("ابدأ الاختبار", "Start the test")}
+                    <ArrowRight className={cn("h-4 w-4", isAr && "rotate-180")} />
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    {t("لو لسه مش عارف تقرا الحروف الكورية، ده مش مانع — فيه زرار في أول سؤال بيوديك لنتيجتك على طول.",
+                       "If you cannot read the Korean alphabet yet, that is not a problem — the first screen has a button that takes you straight to your result.")}
+                  </p>
+                </div>
+
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <Footer />
       </div>
