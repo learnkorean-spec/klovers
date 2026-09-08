@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, memo } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ interface Group {
   level: string;
   day_of_week: number;
   start_time: string;
+  members: number;
 }
 
 interface SessionSummary {
@@ -76,16 +78,34 @@ const SessionAttendanceManager = () => {
         .eq("is_active", true)
         .order("name");
 
-      if (data) {
-        setGroups(data.map((g: any) => ({
-          id: g.id,
-          name: g.name,
-          package_id: g.package_id,
-          level: g.schedule_packages?.level || "",
-          day_of_week: g.schedule_packages?.day_of_week ?? 0,
-          start_time: g.schedule_packages?.start_time || "",
-        })));
+      if (!data) return;
+
+      // How many students are actually in each group. Without this the picker
+      // offers empty groups that look exactly like full ones, and the only way
+      // to find out is to pick one, generate sessions, open a session, and read
+      // "No active students in this group" four clicks later.
+      const ids = data.map((g: any) => g.id);
+      const counts: Record<string, number> = {};
+      if (ids.length) {
+        const { data: members } = await (supabase as any)
+          .from("pkg_group_members")
+          .select("group_id")
+          .in("group_id", ids)
+          .eq("member_status", "active");
+        (members || []).forEach((m: any) => {
+          counts[m.group_id] = (counts[m.group_id] || 0) + 1;
+        });
       }
+
+      setGroups(data.map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        package_id: g.package_id,
+        level: g.schedule_packages?.level || "",
+        day_of_week: g.schedule_packages?.day_of_week ?? 0,
+        start_time: g.schedule_packages?.start_time || "",
+        members: counts[g.id] || 0,
+      })));
     };
     load();
   }, []);
@@ -211,7 +231,14 @@ const SessionAttendanceManager = () => {
                 <SelectContent>
                   {groups.map(g => (
                     <SelectItem key={g.id} value={g.id}>
-                      {(() => { const adminTz = getAdminTimezone(); const l = convertSlotToTimezone(g.day_of_week, g.start_time, "Africa/Cairo", adminTz); return `${g.name} — ${g.level} · ${l.weekday.slice(0,3)} ${l.timeFormatted}`; })()}
+                      {(() => {
+                        const adminTz = getAdminTimezone();
+                        const l = convertSlotToTimezone(g.day_of_week, g.start_time, "Africa/Cairo", adminTz);
+                        const who = g.members === 0
+                          ? "no students yet"
+                          : `${g.members} student${g.members === 1 ? "" : "s"}`;
+                        return `${g.name} — ${g.level} · ${l.weekday.slice(0,3)} ${l.timeFormatted} · ${who}`;
+                      })()}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -245,6 +272,27 @@ const SessionAttendanceManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* An empty group is not a broken screen, and it is not a screen worth
+          four clicks either. Say so at the point of selection, and say where
+          the students who ARE being taught are recorded — private lessons are
+          not groups and never appear here. */}
+      {selectedGroup && selectedGroup.members === 0 && (
+        <Card className="border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-950">
+          <CardContent className="pt-5 text-sm space-y-1">
+            <p className="font-semibold text-amber-900 dark:text-amber-100">
+              This group has no students in it.
+            </p>
+            <p className="text-amber-800 dark:text-amber-200">
+              Generating sessions here will produce empty registers. Add members from{" "}
+              <Link to="/admin?tab=groups" className="underline font-medium">Groups</Link>{" "}
+              first. Private one-to-one lessons are not groups and are never listed on this
+              screen — their attendance lives on{" "}
+              <Link to="/admin?tab=my-students" className="underline font-medium">My students</Link>.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Session list + attendance side-by-side */}
       {selectedGroupId && (
