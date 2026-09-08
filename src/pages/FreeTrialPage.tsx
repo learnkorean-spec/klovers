@@ -238,7 +238,7 @@ const FreeTrialPage = () => {
       <Header />
       <main className="pt-16">
 
-        {/* ── HERO ────────────────────────────────────── */}
+        {/* ── HERO ──────────────────────────────────────────── */}
         <section className="py-16 md:py-24 border-b border-border overflow-hidden">
           <div className="container mx-auto px-4 max-w-5xl">
             <div className="grid md:grid-cols-[1fr_200px] gap-12 items-center">
@@ -366,7 +366,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ────────────────────────────────── */}
+        {/* ── TESTIMONIALS ──────────────────────────────────── */}
         <section className="py-16 bg-muted/40 border-b border-border">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl font-black text-foreground text-center mb-8">
@@ -392,7 +392,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ────────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ─────────────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
