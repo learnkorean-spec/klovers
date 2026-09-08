@@ -5,6 +5,10 @@
  * link that resolves it. When every card is clear there is nothing to do,
  * and that is the point: the empty state is the goal.
  *
+ * Each trial session also carries its attendance picture, because "eleven
+ * booked" and "eleven coming" are different numbers and only the second one
+ * decides whether a session runs.
+ *
  * Deliberately a separate route rather than a 26th tab. AdminDashboard.tsx
  * is 1,871 lines and reads its screen from `?tab=`, so this page deep-links
  * into it (`/admin?tab=trials`) without touching that file at all. Making
@@ -28,6 +32,16 @@ type SlotRow = {
   class_language: string | null;
   capacity: number | null;
   booked: number;
+  /** Said yes to the attendance question. */
+  confirmed: number;
+  /** Said no — the seat is bookable again. */
+  declined: number;
+  /**
+   * How many were actually SENT the confirmation request. Without this the
+   * screen cannot tell "nine people ignored us" from "nobody was asked", and
+   * those two call for opposite decisions.
+   */
+  asked: number;
 };
 
 type Counts = {
@@ -113,18 +127,48 @@ const AdminToday = () => {
 
         if (cancelled) return;
 
-        // One booking count per slot. Matched on (trial_date, start_time) —
-        // the pair that is UNIQUE on trial_slots.
-        const rows: SlotRow[] = [];
-        for (const s of (slotRows.data ?? []) as Array<Omit<SlotRow, "booked">>) {
-          const { count } = await supabase
-            .from("trial_bookings")
-            .select("*", { count: "exact", head: true })
-            .eq("trial_date", s.trial_date as string)
-            .eq("start_time", s.start_time as string)
-            .neq("status", "cancelled");
-          rows.push({ ...s, booked: count ?? 0 });
+        // Every live dated booking, in ONE query, then tallied per slot in
+        // memory. This replaced a count-per-slot loop: six sessions meant six
+        // round trips before the page could paint, and adding attendance would
+        // have made it eighteen.
+        //
+        // Only the four fields the tally needs are selected. No name, no email,
+        // no phone reaches this screen — it shows totals, never people.
+        const { data: bookingRows } = await supabase
+          .from("trial_bookings")
+          .select("trial_date, start_time, attendance_response, email_sent_at")
+          .neq("status", "cancelled")
+          .not("trial_date", "is", null);
+
+        type Tally = { booked: number; confirmed: number; declined: number; asked: number };
+        const tally = new Map<string, Tally>();
+        const key = (d: string | null, t: string | null) => `${d ?? ""}|${t ?? ""}`;
+
+        for (const b of (bookingRows ?? []) as Array<{
+          trial_date: string | null;
+          start_time: string | null;
+          attendance_response: string | null;
+          email_sent_at: string | null;
+        }>) {
+          const k = key(b.trial_date, b.start_time);
+          const t = tally.get(k) ?? { booked: 0, confirmed: 0, declined: 0, asked: 0 };
+          t.booked += 1;
+          if (b.attendance_response === "yes") t.confirmed += 1;
+          if (b.attendance_response === "no") t.declined += 1;
+          if (b.email_sent_at) t.asked += 1;
+          tally.set(k, t);
         }
+
+        // Matched on (trial_date, start_time) — the pair that is UNIQUE on
+        // trial_slots.
+        const rows: SlotRow[] = ((slotRows.data ?? []) as Array<
+          Omit<SlotRow, "booked" | "confirmed" | "declined" | "asked">
+        >).map(s => ({
+          ...s,
+          ...(tally.get(key(s.trial_date, s.start_time)) ?? {
+            booked: 0, confirmed: 0, declined: 0, asked: 0,
+          }),
+        }));
 
         if (cancelled) return;
 
@@ -290,13 +334,35 @@ const AdminToday = () => {
                           {Array.from({ length: Math.max(cap, 1) }).map((_, i) => (
                             <span
                               key={i}
-                              className={`h-1.5 flex-1 rounded-full ${i < s.booked ? "bg-primary" : "bg-muted"}`}
+                              className={`h-1.5 flex-1 rounded-full ${
+                                i < s.confirmed
+                                  ? "bg-primary"
+                                  : i < s.booked
+                                    ? "bg-primary/35"
+                                    : "bg-muted"
+                              }`}
                             />
                           ))}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {s.booked} of {cap} booked
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground">
+                            {s.booked} of {cap} booked
+                            {s.booked > 0 && (
+                              <span className="text-foreground">
+                                {" · "}
+                                <span className="font-semibold">{s.confirmed}</span> confirmed
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            <AttendanceNote
+                              booked={s.booked}
+                              confirmed={s.confirmed}
+                              declined={s.declined}
+                              asked={s.asked}
+                            />
+                          </p>
+                        </div>
                       </CardContent>
                     </Card>
                   );
@@ -315,6 +381,41 @@ const AdminToday = () => {
       </main>
     </AdminShell>
   );
+};
+
+/**
+ * One honest line about attendance for a session.
+ *
+ * The distinction this exists to draw: "no reply" and "not asked" look
+ * identical in the data — attendance_response is null either way — and they
+ * mean opposite things. Nine silent people who were emailed is a session in
+ * trouble. Nine silent people who were never emailed is a task nobody has
+ * done yet, and reading it as apathy would be reading a mirror.
+ */
+const AttendanceNote = ({
+  booked, confirmed, declined, asked,
+}: {
+  booked: number; confirmed: number; declined: number; asked: number;
+}) => {
+  if (booked === 0) return <>No bookings yet.</>;
+
+  const silent = Math.max(0, booked - confirmed - declined);
+
+  if (asked === 0) {
+    return (
+      <>
+        <span className="font-semibold text-foreground">Nobody has been asked to confirm yet.</span>
+        {declined > 0 && ` ${declined} already said no.`}
+      </>
+    );
+  }
+
+  const parts: string[] = [];
+  if (declined > 0) parts.push(`${declined} can't make it`);
+  if (silent > 0) parts.push(`${silent} no reply`);
+  if (asked < booked) parts.push(`${booked - asked} not asked yet`);
+
+  return <>{parts.length ? parts.join(" · ") : "Everyone has answered."}</>;
 };
 
 const ActionCard = ({
