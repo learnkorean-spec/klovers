@@ -62,7 +62,7 @@ export const ADMIN_NAV: {
     // Not a `?tab=` deep link — a route of its own (/admin/week), because the
     // timetable is not a screen inside AdminDashboard.tsx. It reads the four
     // scheduling tables live; see WeekTimetable.tsx.
-    { id: "week", label: "The week", to: "/admin/week", icon: CalendarRange },
+    { id: "week", label: "The week", to: "/admin/week", icon: CalendarRange },{ id: "guide", label: "دليل الإرسال", to: "/admin/guide", icon: CalendarRange },
     { id: "my-students", label: "My students", to: "/admin?tab=my-students", icon: LayoutDashboard },
     { id: "placement-tests", label: "Placement tests", to: "/admin?tab=placement-tests", icon: ClipboardCheck },
     { id: "availability", label: "Availability", to: "/admin?tab=availability", icon: Clock },
