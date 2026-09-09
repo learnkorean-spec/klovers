@@ -443,7 +443,7 @@ const AttendanceNote = ({
   if (asked === 0) {
     return (
       <>
-        <span className="font-semibold text-foreground">Nobody has been asked to confirm yet.</span>
+        <Link to="/admin?tab=trials" className="font-semibold text-foreground underline decoration-2 underline-offset-2">محدش اتسأل لسه — ابعتيلهم ←</Link>
         {declined > 0 && ` ${declined} already said no.`}
       </>
     );
