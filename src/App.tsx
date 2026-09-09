@@ -45,7 +45,7 @@ const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const MySchedulePage = lazy(() => import("./pages/MySchedulePage"));
 const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
-const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage")); const AdminGuide = lazy(() => import("./pages/AdminGuide")); const AdminGuide = lazy(() => import("./pages/AdminGuide")); const AdminGuide = lazy(() => import("./pages/AdminGuide")); const AdminGuide = lazy(() => import("./pages/AdminGuide")); const AdminGuide = lazy(() => import("./pages/AdminGuide"));
+const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage")); const AdminGuide = lazy(() => import("./pages/AdminGuide"));
 const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
 const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
