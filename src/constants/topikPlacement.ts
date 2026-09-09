@@ -2,29 +2,45 @@ import {
   TOPIK1_SECTIONS,
   TOPIK1_QUESTIONS,
   TOPIK1_MAX,
-  computeTopik1Placement,
   type Topik1SectionId,
 } from "@/constants/topik1Reading";
 
 /**
- * Grading for the Klovers placement test.
+ * The grades the placement test can award, and what each one says to a student.
  *
- * One stage, three sections, TOPIK I only. The student is placed at the FIRST
- * section they fail — the section whose material they still need:
+ * WHAT CHANGED, 9 SEP 2026
  *
- *   fail A  → 한글 기초   (not yet at 1급)
- *   fail B  → 1급         (inside level 1)
- *   fail C  → 2급         (level 1 done, working through level 2)
- *   pass C  → past TOPIK I
+ * This module used to own the grading as well as the copy, and the grading was
+ * a gate: the student was placed at the FIRST section they failed, and the test
+ * ended there. Two problems with that, one product and one pedagogical.
  *
- * The ceiling is deliberate. TOPIK I covers 1급 and 2급 and nothing above, so
- * this bank holds no evidence about 3급. Clearing every section is reported as
- * "past TOPIK I" and routed to a teacher rather than turned into a number the
- * test cannot justify — a placement that overstates a level costs a real
- * student a term in a class they cannot follow.
+ * The product one: ending an exam three questions in and showing a result reads
+ * as being thrown out. Owner feedback, verbatim — "this is so confusing in the
+ * middle of an exam".
+ *
+ * The pedagogical one: it is not how TOPIK works, and TOPIK is the scale these
+ * students already know. A real candidate sits the whole paper and their total
+ * falls into a band.
+ *
+ * Grading therefore moved to `topikPapers.ts`, which defines two papers — TOPIK
+ * I covering 1급/2급 and TOPIK II covering 3급/4급 — each answered in full and
+ * graded on its total against a cut score. This file keeps what it was always
+ * best at: the words a student reads when the number comes back.
+ *
+ * `above` now means "past 4급", not "past 2급", and points at `l5`. Below the
+ * intermediate paper's floor there is a new grade, `belowII`, which awards no
+ * number at all: scoring under the 3급 cut on TOPIK II tells us the student is
+ * on the wrong paper, and nothing about whether they are 1급 or 2급. Guessing
+ * there would be inventing a placement, so the result screen offers Paper I
+ * instead. Its `levelKey` is `l2` only because the columns it is written to
+ * require a real level key; the copy never claims it.
+ *
+ * Every note says "prepares you toward" and never "you are". A 24-hour Klovers
+ * level is not a TOPIK certificate and must not read like one — `validateLevels`
+ * in levels.ts throws on any description that equates the two.
  */
 
-export type TopikGrade = "pre1" | "g1" | "g2" | "above";
+export type TopikGrade = "pre1" | "g1" | "g2" | "belowII" | "g3" | "g4" | "above";
 
 export interface TopikGradeInfo {
   grade: TopikGrade;
@@ -71,53 +87,50 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
     noteEn: "Level 1 is behind you and you read short texts. Level 2 is your work now.",
     levelKey: "l2",
   },
+  belowII: {
+    grade: "belowII",
+    labelKo: "TOPIK I 수준",
+    labelAr: "مستواك في نطاق TOPIK I",
+    labelEn: "Still in the TOPIK I range",
+    noteAr:
+      "ورقة TOPIK II أصعب من مستواك دلوقتي، وعشان كده مش هنديك رقم منها — الورقة دي مش بتقيس الفرق بين المستوى الأول والتاني. اقعد الورقة الأولى وهتطلع بمستوى مظبوط.",
+    noteEn:
+      "The TOPIK II paper is above where you are right now, so we will not put a number on it — this paper cannot tell level 1 from level 2. Sit the TOPIK I paper and you will get a placement you can trust.",
+    levelKey: "l2",
+  },
+  g3: {
+    grade: "g3",
+    labelKo: "3급",
+    labelAr: "المستوى الثالث (3급)",
+    labelEn: "TOPIK level 3 (3급)",
+    noteAr: "بتقرا نصوص يومية كاملة وبتمسك المعنى من غير ترجمة. المستوى الثالث هو مكانك.",
+    noteEn: "You read whole everyday texts and hold the meaning without translating. Level 3 is where you belong.",
+    levelKey: "l3",
+  },
+  g4: {
+    grade: "g4",
+    labelKo: "4급",
+    labelAr: "المستوى الرابع (4급)",
+    labelEn: "TOPIK level 4 (4급)",
+    noteAr: "بتتعامل مع مقالات وعناوين أخبار وموضوعات مجرّدة. شغلك دلوقتي في المستوى الرابع.",
+    noteEn: "You handle articles, headlines and abstract topics. Level 4 is your work now.",
+    levelKey: "l4",
+  },
   above: {
     grade: "above",
-    labelKo: "TOPIK I 이상",
-    labelAr: "فوق TOPIK I",
-    labelEn: "Past TOPIK I",
+    labelKo: "4급 이상",
+    labelAr: "فوق المستوى الرابع",
+    labelEn: "Past 4급",
     noteAr:
-      "عدّيت كل أقسام TOPIK I. الاختبار ده بيقيس المستوى الأول والتاني بس، فمش هيدّيك رقم فوق كده — كلّمنا وهنعملك تقييم TOPIK II قصير.",
+      "عدّيت ورقة TOPIK II كلها. الاختبار ده بيقيس لحد المستوى الرابع، فمش هيدّيك رقم فوق كده — كلّمنا وهنعملك تقييم قصير للمستوى الخامس والسادس.",
     noteEn:
-      "You cleared every TOPIK I section. This test only measures levels 1 and 2, so it will not put a number above that — talk to us and we will run a short TOPIK II assessment.",
-    levelKey: "l3",
+      "You cleared the whole TOPIK II paper. This test measures up to level 4, so it will not put a number above that — talk to us and we will run a short assessment for levels 5 and 6.",
+    levelKey: "l5",
   },
 };
 
-export interface TopikPlacementResult {
-  info: TopikGradeInfo;
-  /** Per-section correct answers (A–C) */
-  sectionScores: Record<Topik1SectionId, number>;
-  /** The section that decided the placement, null when all were passed */
-  failedSection: Topik1SectionId | null;
-  totalScore: number;
-  totalMax: number;
-}
+/** The grades that name an actual Klovers level, in ladder order. */
+export const GRADE_ORDER: TopikGrade[] = ["pre1", "g1", "g2", "g3", "g4", "above"];
 
-export const PLACEMENT_MAX = TOPIK1_MAX;
-
-const GRADE_FOR_FAILED_SECTION: Record<Topik1SectionId, TopikGrade> = {
-  A: "pre1",
-  B: "g1",
-  C: "g2",
-};
-
-export function computeTopikPlacement(
-  answers: Record<string, number>,
-): TopikPlacementResult {
-  const r = computeTopik1Placement(answers);
-  const grade: TopikGrade =
-    r.failedSection === null ? "above" : GRADE_FOR_FAILED_SECTION[r.failedSection];
-
-  return {
-    info: TOPIK_GRADES[grade],
-    sectionScores: r.sectionScores,
-    failedSection: r.failedSection,
-    totalScore: r.score,
-    totalMax: TOPIK1_MAX,
-  };
-}
-
-/** Re-exported so the page imports one module, not two. */
 export { TOPIK1_SECTIONS, TOPIK1_QUESTIONS, TOPIK1_MAX };
 export type { Topik1SectionId };
