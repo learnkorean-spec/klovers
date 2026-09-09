@@ -23,6 +23,7 @@ import { getLevelShortLabel } from "@/constants/levels";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
+import TrialSlotProposals from "@/components/admin/trial/TrialSlotProposals";
 import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
 import { emailLanguageFor } from "@/components/admin/trial/emailLanguage";
 import { TrialSlotRow } from "@/types/trial-admin";
@@ -988,6 +989,12 @@ const TrialClassesManager = () => {
 
   return (
     <div className="space-y-4">
+      {/* Sessions the hourly job suggested because a language filled up. It
+          renders nothing unless one is waiting, and it is the only place a
+          suggestion can be turned into a real class — the email that announced
+          it carries no button. */}
+      <TrialSlotProposals />
+
       {/* Trial schedule — edit dates/times/language/capacity for your own availability */}
       <Card>
         <CardHeader
