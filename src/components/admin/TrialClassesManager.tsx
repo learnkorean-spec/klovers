@@ -704,7 +704,7 @@ const TrialClassesManager = () => {
       const ids = pending.map((p) => p.id);
       const { error } = await supabase
         .from("trial_bookings")
-        .update({ status: "confirmed", confirmed_at: new Date().toISOString() } as any)
+        .update({ status: "awaiting_attendance" } as any)
         .in("id", ids);
       if (error) throw error;
       toast({ title: "All pending accepted", description: `${ids.length} booking${ids.length === 1 ? "" : "s"} marked confirmed.` });
