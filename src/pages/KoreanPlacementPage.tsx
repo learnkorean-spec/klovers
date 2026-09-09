@@ -85,11 +85,16 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
 };
 
 /**
- * The answers the test can give, shown on the intro screen.
+ * The levels the test measures, shown on the intro screen.
  *
  * Nothing else on the site tells a visitor what the result will look like, and
  * "we will tell you your level" is a weaker promise than showing the levels it
  * chooses between. The order is the order of the ladder.
+ *
+ * Two of the seven grades are deliberately absent. `belowII` and `above` are
+ * not levels — they are the paper saying it has run out of room in one
+ * direction or the other — so listing them here would promise a placement the
+ * result screen then refuses to make.
  */
 const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
@@ -548,8 +553,8 @@ const KoreanPlacementPage = () => {
   // place that can set one, so it is also where a refused draft lands.
   if (phase === "intro" || (phase === "test" && !paper)) {
     const FEATURES = [
-      { icon: Target, text: t("بأسئلة على شكل TOPIK I الحقيقي", "Questions in the real TOPIK I format") },
-      { icon: Clock,  text: t("٨ أسئلة بس لو مبتدئ", "Just 8 questions if you are a beginner") },
+      { icon: Target, text: t("بأسئلة على شكل امتحان TOPIK الحقيقي", "Questions in the real TOPIK reading formats") },
+      { icon: Clock,  text: t("٢٤ أو ٢٨ سؤال حسب الورقة", "24 or 28 questions, depending on the paper") },
       { icon: Save,   text: t("اقفل وارجع — محفوظ", "Close it and come back — saved") },
       { icon: Ban,    text: t("من غير قاموس ولا ترجمة", "No dictionary, no translator") },
     ];
@@ -602,7 +607,7 @@ const KoreanPlacementPage = () => {
                     named result is a clearer promise than "we'll tell you". */}
                 <div>
                   <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center mb-3">
-                    {t("نتيجتك هتكون واحدة من دول", "YOUR RESULT WILL BE ONE OF THESE")}
+                    {t("المستويات اللي الاختبار ده بيقيسها", "THE LEVELS THIS TEST MEASURES")}
                   </p>
                   {/* Three across on a phone and five once there is room: five
                       cells at phone width leave each one too narrow for
