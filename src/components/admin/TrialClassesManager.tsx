@@ -1471,7 +1471,7 @@ const TrialClassesManager = () => {
                                     size="sm"
                                     variant="outline"
                                     className="h-7"
-                                    disabled={actioningId === b.id || !b.confirmation_token}
+                                    disabled={actioningId === b.id || !b.confirmation_token || (!!b.attendance_email_sent_at && Date.now() - new Date(b.attendance_email_sent_at).getTime() < 48 * 3600000)}
                                     onClick={() => sendAttendanceConfirmation(b)}
                                     title={
                                       !b.confirmation_token
