@@ -1,65 +1,66 @@
 /**
- * Two papers, graded the way TOPIK grades.
+ * One placement test. Fifty-two reading items, easiest first, levels 1 to 4.
  *
- * WHAT THIS REPLACES
+ * WHY ONE AND NOT TWO
  *
- * The test used to stop the moment a student missed a section's pass mark, and
- * the level was "the first section you did not pass". That is a sensible way to
- * find a floor quickly, and it is not how the exam it is named after works. A
- * real TOPIK candidate sits the whole paper and their TOTAL score falls into a
- * band. Stopping someone three questions in and showing them a result also
- * reads as being thrown out of an exam — which is exactly what it looked like.
+ * The previous design asked the student to choose between a TOPIK I paper and
+ * a TOPIK II paper before the first question. That choice is the very thing
+ * she came here to find out. Someone who genuinely does not know whether she
+ * is 2급 or 3급 — which is most people, and exactly the person a placement
+ * test is for — has to guess her own level before the test will measure it,
+ * and a wrong guess costs her a whole sitting. Owner decision, 9 Sep 2026:
+ * merge the two banks into a single test.
  *
- * Owner decision, 9 Sep 2026: two papers, each answered in full, graded on the
- * total. It mirrors the real thing — TOPIK I is one sitting covering 1급 and
- * 2급, TOPIK II is another covering 3급 upward — and it removes the mid-exam
- * stop.
+ * WHY IT DOES NOT SIMPLY GET LONGER
  *
- * THE CUT SCORES
+ * Fifty-two questions is a real TOPIK reading load, and it is far too many for
+ * a beginner who cannot read past section B. The answer is not to cut the test
+ * short for her — that is the mid-exam ejection this design already removed —
+ * but to hand her the decision: from section C onward there is a "that is as
+ * far as I can go" button. Nothing stops the student; the student stops.
  *
- * TOPIK's own cut scores are proportions of the paper:
+ * HOW THE GRADE IS READ
  *
- *   TOPIK I    1급  80/200 = 40%      2급 140/200 = 70%
- *   TOPIK II   3급 120/300 = 40%      4급 150/300 = 50%
+ * The sections are cumulative, so the raw total already encodes where a
+ * student's Korean runs out:
  *
- * Paper I uses those two ratios unchanged.
+ *   A          8 items   한글 기초 · basic reading
+ *   A+B       18 items   through 1급
+ *   A+B+C     28 items   through 2급
+ *   A+B+C+D   40 items   through 3급
+ *   A+B+C+D+E 52 items   through 4급
  *
- * Paper II does NOT, and the reason is worth stating because it is the one
- * place these papers deliberately diverge from the exam. The real TOPIK II
- * total includes 듣기 and 쓰기; ours is reading only, and reading is the part
- * most students score highest on. Applying the full-paper ratio to a
- * reading-only score therefore places people ABOVE where they sit, and being
- * placed too high is the expensive error: a student lands in a class she cannot
- * follow and leaves. Being placed one level low costs a promotion conversation
- * in week two. So Paper II is set slightly stricter than the real ratios — 45%
- * for 3급, 60% for 4급 — and every result says "prepares you toward", never
- * "you are".
+ * A student who answers what she can and stops lands on her own boundary
+ * without anyone calculating a percentage at her. The bands below are those
+ * boundaries, in raw marks rather than ratios, because a ratio of a paper the
+ * student chose to stop early on means nothing.
  *
- * These four numbers are the whole policy. They are here, named, in one place,
- * so changing where a student lands is a one-line edit and not an archaeology
- * expedition through the page component.
+ * ONE KNOWN SOFT SPOT, STATED RATHER THAN HIDDEN
+ *
+ * A student who guesses at all fifty-two questions scores thirteen by chance
+ * on four options, which lands in the 1급 band. That is the safe direction —
+ * being placed a level low costs a promotion conversation in week two, while
+ * being placed high costs a student who sits in a class she cannot follow and
+ * leaves — but it is a real limit, and no reading test priced at zero can
+ * close it. The teacher's judgement in the first class is what closes it.
+ *
+ * The six numbers below are the whole placement policy. Changing where a
+ * student lands is a one-line edit here.
  */
 import {
   TOPIK1_QUESTIONS,
   TOPIK1_SECTIONS,
-  type Topik1Question,
-  type Topik1Section,
 } from "./topik1Reading";
 import {
   TOPIK2_QUESTIONS,
   TOPIK2_SECTIONS,
-  type Topik2Question,
-  type Topik2Section,
 } from "./topik2Reading";
 import type { TopikGrade } from "./topikPlacement";
 
-export type PaperId = "I" | "II";
-
 /**
- * The two banks were written independently and their section types differ only
- * in the id union. Widening `section` to string is what lets one renderer draw
- * either paper, and nothing downstream needs the narrow type: sections are
- * looked up by id from the paper's own list.
+ * The two banks were written independently and their section id unions differ.
+ * Widening `section` to string is what lets one renderer draw all five, and
+ * nothing downstream needs the narrow type — sections are looked up by id.
  */
 export interface ExamQuestion {
   id: string;
@@ -83,151 +84,135 @@ export interface ExamSection {
   instrEn: string;
   focusKo?: string;
   max: number;
+  /**
+   * Whether a student may finish the test on this section. False for the first
+   * two: someone who stops before section C has not yet answered enough for
+   * the total to separate 한글 기초 from 1급, and offering the button there
+   * would produce placements the paper cannot support.
+   */
+  mayStopAfter: boolean;
 }
 
-/** A cut score, as a share of the paper, and the grade it awards. */
+/** Award this grade at or above this raw mark. Highest first. */
 interface Band {
-  /** Award this grade at or above this fraction of the paper. */
-  minRatio: number;
+  minScore: number;
   grade: TopikGrade;
 }
 
-export interface Paper {
-  id: PaperId;
-  /** Stored on unit_placement_tests.book. Existing rows carry "topik1". */
-  bookKey: "topik1" | "topik2";
-  labelKo: string;
-  labelEn: string;
-  labelAr: string;
-  /** One line telling a student whether this is their paper, before they start. */
-  forWhoEn: string;
-  forWhoAr: string;
-  sections: ExamSection[];
-  questions: ExamQuestion[];
-  max: number;
-  /** Highest band first. The first one the score reaches is the grade awarded. */
-  bands: Band[];
-  /** Grade awarded below every band. */
-  floorGrade: TopikGrade;
-}
+const withStop = (sections: readonly unknown[], allow: boolean[]): ExamSection[] =>
+  (sections as ExamSection[]).map((s, i) => ({ ...s, mayStopAfter: allow[i] }));
 
-export const PAPER_I: Paper = {
-  id: "I",
-  bookKey: "topik1",
-  labelKo: "TOPIK I 읽기",
-  labelEn: "TOPIK I — reading",
-  labelAr: "TOPIK I — قراءة",
-  forWhoEn: "You can read Hangul, and you are somewhere in your first year or two.",
-  forWhoAr: "بتعرف تقرا الهانغول، ولسه في أول سنة أو سنتين.",
-  sections: TOPIK1_SECTIONS as unknown as ExamSection[],
-  questions: TOPIK1_QUESTIONS as unknown as ExamQuestion[],
-  max: TOPIK1_QUESTIONS.length,
-  // The real TOPIK I cut scores, unchanged: 70% for 2급, 40% for 1급.
-  bands: [
-    { minRatio: 0.7, grade: "g2" },
-    { minRatio: 0.4, grade: "g1" },
-  ],
-  floorGrade: "pre1",
-};
+export const EXAM_SECTIONS: ExamSection[] = [
+  ...withStop(TOPIK1_SECTIONS, [false, false, true]),
+  ...withStop(TOPIK2_SECTIONS, [true, true]),
+];
 
-export const PAPER_II: Paper = {
-  id: "II",
-  bookKey: "topik2",
-  labelKo: "TOPIK II 읽기",
-  labelEn: "TOPIK II — reading",
-  labelAr: "TOPIK II — قراءة",
-  forWhoEn: "You read paragraphs and news headlines without translating word by word.",
-  forWhoAr: "بتقرا فقرات وعناوين أخبار من غير ما تترجم كلمة كلمة.",
-  sections: TOPIK2_SECTIONS as unknown as ExamSection[],
-  questions: TOPIK2_QUESTIONS as unknown as ExamQuestion[],
-  max: TOPIK2_QUESTIONS.length,
-  // Stricter than the real 40/50, because this paper is reading only. See the
-  // file header — this is the deliberate divergence, not an oversight.
-  //
-  // The top band exists so `above` is reachable. Without it the highest result
-  // this test could ever give was 4급, and a 5급 reader would have been handed
-  // a number one and a half levels below herself with nothing on screen saying
-  // the paper had run out of room. 85% of an intermediate paper is not proof of
-  // 5급 — which is why `above` awards no number and asks for a real
-  // conversation instead.
-  bands: [
-    { minRatio: 0.85, grade: "above" },
-    { minRatio: 0.6, grade: "g4" },
-    { minRatio: 0.45, grade: "g3" },
-  ],
-  // Below 45% on the intermediate paper says nothing about 1급 versus 2급 —
-  // only that this is the wrong paper. The result screen offers Paper I rather
-  // than guessing a number.
-  floorGrade: "belowII",
-};
+export const EXAM_QUESTIONS: ExamQuestion[] = [
+  ...(TOPIK1_QUESTIONS as unknown as ExamQuestion[]),
+  ...(TOPIK2_QUESTIONS as unknown as ExamQuestion[]),
+];
 
-export const PAPERS: Record<PaperId, Paper> = { I: PAPER_I, II: PAPER_II };
+export const EXAM_MAX = EXAM_QUESTIONS.length;
+
+/** Stored on unit_placement_tests.book. Older rows carry "topik1". */
+export const EXAM_BOOK_KEY = "topik1_4";
+
+/**
+ * The section boundaries, as raw marks. Read the table in the file header
+ * alongside these: 8 is all of A, 18 is A+B, 28 is A+B+C, 40 adds D, 48 is
+ * most of E.
+ */
+export const EXAM_BANDS: Band[] = [
+  { minScore: 48, grade: "above" },
+  { minScore: 40, grade: "g4" },
+  { minScore: 28, grade: "g3" },
+  { minScore: 18, grade: "g2" },
+  { minScore: 8, grade: "g1" },
+];
+
+export const EXAM_FLOOR_GRADE: TopikGrade = "pre1";
 
 export interface ExamResult {
-  paper: PaperId;
   grade: TopikGrade;
   score: number;
+  /** Out of the whole test, always 52, whether or not the student stopped. */
   max: number;
-  /** 0–1, the share of the paper answered correctly. */
-  ratio: number;
+  /** How many questions she was actually shown, so the result can say so. */
+  attempted: number;
   sectionScores: Record<string, number>;
-  /**
-   * True when the score sits at the top of this paper and the student may
-   * belong on the harder one — or at the bottom, and belongs on the easier one.
-   * The result screen turns this into an offer, never an automatic redirect.
-   */
-  suggestOtherPaper: boolean;
+  /** Ids of the sections she reached, in order. */
+  sectionsSeen: string[];
+  /** True when she chose to finish rather than reaching the end. */
+  stoppedEarly: boolean;
 }
 
 /**
- * Grade a completed paper.
+ * Grade the test.
  *
- * Unanswered questions count as wrong, which is what an exam does. The page
- * does not let a student leave a question blank, so this only bites on the
- * "I cannot read Hangul yet" escape hatch, where an empty answer set is
- * precisely the claim being made.
+ * `sectionsSeen` is what the student was actually shown. Everything outside it
+ * is not counted as wrong so much as not asked — the score is the same either
+ * way, since an unasked question earns no mark, but the result screen needs to
+ * know the difference to avoid telling someone she got twenty-four questions
+ * wrong that she never saw.
  */
-export function gradePaper(paper: Paper, answers: Record<string, number>): ExamResult {
+export function gradeExam(
+  answers: Record<string, number>,
+  sectionsSeen: string[],
+): ExamResult {
+  const seen = new Set(sectionsSeen);
   const sectionScores: Record<string, number> = {};
-  for (const s of paper.sections) sectionScores[s.id] = 0;
+  for (const s of EXAM_SECTIONS) sectionScores[s.id] = 0;
 
   let score = 0;
-  for (const q of paper.questions) {
+  for (const q of EXAM_QUESTIONS) {
     if (answers[q.id] === q.answerIndex) {
       score += 1;
       sectionScores[q.section] = (sectionScores[q.section] ?? 0) + 1;
     }
   }
 
-  const ratio = paper.max > 0 ? score / paper.max : 0;
-  const band = paper.bands.find((b) => ratio >= b.minRatio);
-  const grade = band?.grade ?? paper.floorGrade;
+  const attempted = EXAM_SECTIONS
+    .filter((s) => seen.has(s.id))
+    .reduce((n, s) => n + s.max, 0);
 
-  // Paper I: a clean sweep of the top band means the ceiling may be hiding a
-  // higher level. Paper II: falling under the floor means the easier paper is
-  // the one that can actually place them.
-  const suggestOtherPaper =
-    paper.id === "I" ? grade === "g2" && ratio >= 0.9 : grade === "belowII";
+  const band = EXAM_BANDS.find((b) => score >= b.minScore);
 
-  return { paper: paper.id, grade, score, max: paper.max, ratio, sectionScores, suggestOtherPaper };
+  return {
+    grade: band?.grade ?? EXAM_FLOOR_GRADE,
+    score,
+    max: EXAM_MAX,
+    attempted,
+    sectionScores,
+    sectionsSeen: EXAM_SECTIONS.filter((s) => seen.has(s.id)).map((s) => s.id),
+    stoppedEarly: attempted < EXAM_MAX,
+  };
 }
 
 if (import.meta.env.DEV) {
-  for (const paper of Object.values(PAPERS)) {
-    if (paper.max !== paper.questions.length) {
-      throw new Error(`topikPapers: paper ${paper.id} max drifted from its question count`);
+  if (EXAM_MAX !== 52) {
+    throw new Error(`topikPapers: expected 52 items, the banks hold ${EXAM_MAX}`);
+  }
+  const declared = EXAM_SECTIONS.reduce((n, s) => n + s.max, 0);
+  if (declared !== EXAM_MAX) {
+    throw new Error(
+      `topikPapers: sections declare ${declared} questions but the banks hold ${EXAM_MAX}`,
+    );
+  }
+  // Bands must descend, or `find` awards the wrong grade to a high score.
+  for (let i = 1; i < EXAM_BANDS.length; i += 1) {
+    if (EXAM_BANDS[i].minScore >= EXAM_BANDS[i - 1].minScore) {
+      throw new Error("topikPapers: bands are not in descending order");
     }
-    const declared = paper.sections.reduce((n, s) => n + s.max, 0);
-    if (declared !== paper.max) {
-      throw new Error(
-        `topikPapers: paper ${paper.id} sections declare ${declared} questions but the bank holds ${paper.max}`,
-      );
-    }
-    // Bands must be strictly descending, or `find` awards the wrong grade.
-    for (let i = 1; i < paper.bands.length; i += 1) {
-      if (paper.bands[i].minRatio >= paper.bands[i - 1].minRatio) {
-        throw new Error(`topikPapers: paper ${paper.id} bands are not in descending order`);
-      }
-    }
+  }
+  // Every band must be reachable, and the lowest must sit above pure chance on
+  // four options (52 / 4 = 13) for anything it awards to mean something.
+  if (EXAM_BANDS[EXAM_BANDS.length - 1].minScore > EXAM_MAX) {
+    throw new Error("topikPapers: the lowest band is above the maximum score");
+  }
+  // The stop button must never appear before the test can tell two levels
+  // apart, which is the end of section C.
+  const firstStop = EXAM_SECTIONS.findIndex((s) => s.mayStopAfter);
+  if (firstStop < 2) {
+    throw new Error("topikPapers: a student must not be able to stop before section C");
   }
 }

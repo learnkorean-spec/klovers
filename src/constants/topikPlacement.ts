@@ -11,36 +11,32 @@ import {
  * WHAT CHANGED, 9 SEP 2026
  *
  * This module used to own the grading as well as the copy, and the grading was
- * a gate: the student was placed at the FIRST section they failed, and the test
+ * a gate: the student was placed at the FIRST section she failed, and the test
  * ended there. Two problems with that, one product and one pedagogical.
  *
- * The product one: ending an exam three questions in and showing a result reads
- * as being thrown out. Owner feedback, verbatim — "this is so confusing in the
- * middle of an exam".
+ * The product one: ending an exam three questions in and showing a result
+ * reads as being thrown out. Owner feedback, verbatim — "this is so confusing
+ * in the middle of an exam".
  *
  * The pedagogical one: it is not how TOPIK works, and TOPIK is the scale these
- * students already know. A real candidate sits the whole paper and their total
- * falls into a band.
+ * students already know.
  *
- * Grading therefore moved to `topikPapers.ts`, which defines two papers — TOPIK
- * I covering 1급/2급 and TOPIK II covering 3급/4급 — each answered in full and
- * graded on its total against a cut score. This file keeps what it was always
- * best at: the words a student reads when the number comes back.
+ * Grading therefore moved to `topikPapers.ts`. That module briefly held two
+ * separate papers, which turned out to have the same flaw in a politer form —
+ * it asked the student to choose between a TOPIK I and a TOPIK II paper, which
+ * is asking her to place herself before the placement test will place her. It
+ * is now one test of fifty-two items, easiest first, that she may finish
+ * herself once the questions are past her.
  *
- * `above` now means "past 4급", not "past 2급", and points at `l5`. Below the
- * intermediate paper's floor there is a new grade, `belowII`, which awards no
- * number at all: scoring under the 3급 cut on TOPIK II tells us the student is
- * on the wrong paper, and nothing about whether they are 1급 or 2급. Guessing
- * there would be inventing a placement, so the result screen offers Paper I
- * instead. Its `levelKey` is `l2` only because the columns it is written to
- * require a real level key; the copy never claims it.
+ * `above` means past 4급 and points at `l5`. There is no grade for "wrong
+ * paper" any more, because there is only one paper.
  *
  * Every note says "prepares you toward" and never "you are". A 24-hour Klovers
  * level is not a TOPIK certificate and must not read like one — `validateLevels`
  * in levels.ts throws on any description that equates the two.
  */
 
-export type TopikGrade = "pre1" | "g1" | "g2" | "belowII" | "g3" | "g4" | "above";
+export type TopikGrade = "pre1" | "g1" | "g2" | "g3" | "g4" | "above";
 
 export interface TopikGradeInfo {
   grade: TopikGrade;
@@ -87,17 +83,6 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
     noteEn: "Level 1 is behind you and you read short texts. Level 2 is your work now.",
     levelKey: "l2",
   },
-  belowII: {
-    grade: "belowII",
-    labelKo: "TOPIK I 수준",
-    labelAr: "مستواك في نطاق TOPIK I",
-    labelEn: "Still in the TOPIK I range",
-    noteAr:
-      "ورقة TOPIK II أصعب من مستواك دلوقتي، وعشان كده مش هنديك رقم منها — الورقة دي مش بتقيس الفرق بين المستوى الأول والتاني. اقعد الورقة الأولى وهتطلع بمستوى مظبوط.",
-    noteEn:
-      "The TOPIK II paper is above where you are right now, so we will not put a number on it — this paper cannot tell level 1 from level 2. Sit the TOPIK I paper and you will get a placement you can trust.",
-    levelKey: "l2",
-  },
   g3: {
     grade: "g3",
     labelKo: "3급",
@@ -122,9 +107,9 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
     labelAr: "فوق المستوى الرابع",
     labelEn: "Past 4급",
     noteAr:
-      "عدّيت ورقة TOPIK II كلها. الاختبار ده بيقيس لحد المستوى الرابع، فمش هيدّيك رقم فوق كده — كلّمنا وهنعملك تقييم قصير للمستوى الخامس والسادس.",
+      "وصلت لآخر الاختبار. الاختبار ده بيقيس لحد المستوى الرابع، فمش هيدّيك رقم فوق كده — كلّمنا وهنعملك تقييم قصير للمستوى الخامس والسادس.",
     noteEn:
-      "You cleared the whole TOPIK II paper. This test measures up to level 4, so it will not put a number above that — talk to us and we will run a short assessment for levels 5 and 6.",
+      "You reached the end of the test. It measures up to level 4, so it will not put a number above that — talk to us and we will run a short assessment for levels 5 and 6.",
     levelKey: "l5",
   },
 };
