@@ -134,7 +134,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "A4", section: "A",
-    group: "※ [A4~A8] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
+    group: "※ [A4~A8] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "물(　　　) 마셔요.",
     hintAr: "الفعل 마시다 معناه «يشرب».",
     options: ["을", "이", "에", "에서"], answerIndex: 0,
@@ -163,7 +163,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   // ---- B — 1급 (10) ------------------------------------------------------
   {
     id: "B1", section: "B",
-    group: "※ [B1~B4] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
+    group: "※ [B1~B4] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "어제 친구를 (　　　). 같이 영화를 봤어요.",
     options: ["만나요", "만날 거예요", "만났어요", "만나고 싶어요"], answerIndex: 2,
   },
@@ -234,7 +234,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "B9", section: "B",
-    group: "※ [B9~B10] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
+    group: "※ [B9~B10] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "머리가 아파서 (　　　)에 갔어요.",
     options: ["은행", "병원", "시장", "극장"], answerIndex: 1,
   },
@@ -248,7 +248,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   // ---- C — 2급 (10) ------------------------------------------------------
   {
     id: "C1", section: "C",
-    group: "※ [C1~C4] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
+    group: "※ [C1~C4] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "시간이 (　　　) 같이 점심을 먹읍시다.",
     options: ["있어도", "있으면", "있고", "있어서"], answerIndex: 1,
   },

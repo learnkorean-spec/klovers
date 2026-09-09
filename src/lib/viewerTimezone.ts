@@ -38,7 +38,7 @@ const ADMIN_TZ_LS_KEY = "klovers_admin_timezone";
 
 /**
  * Admin/teacher viewer timezone.
- * Default: Asia/Kuala_Lumpur (current teacher is Malaysia-based).
+ * Default: ADMIN_TIMEZONE from constants/scheduling (currently Asia/Bangkok).
  * Overridable via localStorage so a future admin can change it without a code push.
  */
 export function getAdminTimezone(): string {
