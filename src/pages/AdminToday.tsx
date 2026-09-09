@@ -209,6 +209,11 @@ const AdminToday = () => {
 
   const seatsTotal = (slots ?? []).reduce((n, s) => n + (s.capacity ?? 0), 0);
   const bookedTotal = (slots ?? []).reduce((n, s) => n + s.booked, 0);
+  const askedTotal = (slots ?? []).reduce((n, s) => n + s.asked, 0);
+  // Everyone has a date; nobody has been asked whether they are coming. That
+  // is a different job from inviting, and the card used to offer the wrong one.
+  const toAsk = Math.max(0, bookedTotal - askedTotal);
+  const invitingDone = (counts?.waitingTotal ?? 0) === 0 && bookedTotal > 0;
   const today = new Date().toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
@@ -266,19 +271,34 @@ const AdminToday = () => {
 
                 <ActionCard
                   icon={<CalendarDays className="h-4 w-4" />}
-                  label="TRIAL INVITES"
-                  value={counts.waitingTotal}
-                  unit={`waiting · ${bookedTotal} booked`}
-                  urgent={counts.waitingTotal > 0 && bookedTotal === 0}
+                  label={invitingDone ? "TRIAL CONFIRMATIONS" : "TRIAL INVITES"}
+                  value={invitingDone ? toAsk : counts.waitingTotal}
+                  unit={
+                    invitingDone
+                      ? `to ask · ${bookedTotal} booked`
+                      : `waiting · ${bookedTotal} booked`
+                  }
+                  urgent={invitingDone ? toAsk > 0 : counts.waitingTotal > 0 && bookedTotal === 0}
                   body={
-                    `${counts.waitingArabic} Arabic · ${counts.waitingEnglish} English. ` +
-                    `${seatsTotal} seats across ${slots?.length ?? 0} sessions.` +
-                    (formatSignup(counts.oldestSignup)
-                      ? ` Oldest signup has waited since ${formatSignup(counts.oldestSignup)}.`
-                      : "")
+                    invitingDone
+                      ? `${seatsTotal} seats across ${slots?.length ?? 0} sessions. ` +
+                        (toAsk > 0
+                          ? `${toAsk} of them have not been asked whether they are coming.`
+                          : "Everyone has been asked.")
+                      : `${counts.waitingArabic} Arabic · ${counts.waitingEnglish} English. ` +
+                        `${seatsTotal} seats across ${slots?.length ?? 0} sessions.` +
+                        (formatSignup(counts.oldestSignup)
+                          ? ` Oldest signup has waited since ${formatSignup(counts.oldestSignup)}.`
+                          : "")
                   }
                   to="/admin?tab=trials"
-                  cta="Start inviting"
+                  cta={
+                    invitingDone
+                      ? toAsk > 0
+                        ? "Ask them to confirm"
+                        : "Open trials"
+                      : "Start inviting"
+                  }
                   primary
                 />
 
