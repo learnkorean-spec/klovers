@@ -134,7 +134,7 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "A4", section: "A",
-    group: "※ [A4~A8] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
+    group: "※ [A4~A8] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "물(　　　) 마셔요.",
     hintAr: "الفعل 마시다 معناه «يشرب».",
     options: ["을", "이", "에", "에서"], answerIndex: 0,
