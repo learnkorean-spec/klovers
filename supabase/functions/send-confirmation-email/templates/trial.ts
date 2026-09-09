@@ -533,7 +533,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
       subject: "KLovers — أكّد حضورك لحصتك التجريبية ✅",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}! 🎉</h1>
-        <p>تم تأكيد حصتك التجريبية في اللغة الكورية!</p>
+        <p>عارفين إنك مستني من زمان، وآسفين على التأخير فعلاً. مواعيد الحصص التجريبية فتحت دلوقتي، وحجزنالك مكان في الميعاد اللي تحت. لو مناسب أكّده، ولو مش مناسب اختار «مش هقدر أحضر» ونرتّبلك غيره.</p>
         ${brandTable([
           ["📅 التاريخ", ct.dateLabel],
           ["⏰ الوقت", ct.timeLine],
