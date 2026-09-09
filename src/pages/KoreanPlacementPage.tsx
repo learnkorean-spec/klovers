@@ -25,19 +25,28 @@ import {
   Sparkles, Target, Clock, Save, Ban,
 } from "lucide-react";
 import {
-  PAPERS, PAPER_I, PAPER_II, gradePaper,
-  type ExamQuestion, type ExamResult, type Paper, type PaperId,
+  EXAM_SECTIONS, EXAM_QUESTIONS, EXAM_MAX, EXAM_BOOK_KEY, gradeExam,
+  type ExamQuestion, type ExamResult,
 } from "@/constants/topikPapers";
 import { TOPIK_GRADES, type TopikGrade } from "@/constants/topikPlacement";
 import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement";
 
 /**
- * The Korean placement test — two papers, each answered as a TOPIK grade (급).
+ * The Korean placement test — one test of fifty-two reading items, answered as
+ * a TOPIK grade (급).
  *
- * The student picks a paper before the first question: TOPIK I 읽기 covers
- * 1급/2급, TOPIK II 읽기 covers 3급/4급. Both banks, the cut scores and the
- * grading live in topikPapers.ts; the copy for each grade lives in
- * topikPlacement.ts. This file only sequences and renders.
+ * The page briefly asked the student to choose between a TOPIK I paper and a
+ * TOPIK II paper before the first question. That is asking her to place herself
+ * before the placement test will place her, so the two banks are now a single
+ * test, easiest first. The bank, the cut scores and the grading live in
+ * topikPapers.ts; the copy for each grade lives in topikPlacement.ts. This file
+ * only sequences and renders.
+ *
+ * Fifty-two questions is a lot to put in front of a beginner, and the page
+ * answers that by handing her the decision rather than making it for her: from
+ * section C onward there is a control that finishes the test on what she has
+ * answered. Nothing ejects her mid-exam, which is the behaviour this page
+ * removed and must not grow back.
  *
  * Two things must survive every future edit, because they are why the page is
  * public:
@@ -53,7 +62,7 @@ import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement"
  *      lead is silently rejected.
  */
 
-const STORAGE_KEY = "klovers_placement_draft_v5"; // v5: two papers, paper id stored
+const STORAGE_KEY = "klovers_placement_draft_v6"; // v6: one test, sectionsSeen stored
 const AUDIO_BUCKET = "placement-audio";
 
 /**
@@ -64,10 +73,10 @@ const AUDIO_BUCKET = "placement-audio";
  * and the row is one boolean away from returning.
  *
  * There is a reason to leave it off until the copy is revisited: both images
- * are drawn with `score` out of `max`, and the one student who never sees a
- * question — the person who says up front that they cannot read Hangul — would
- * be handed a certificate reading "0 / 28", a number that reads like a failure
- * and measures nothing they were ever asked.
+ * are drawn with `score` out of `max`, and every student who finishes early —
+ * including the person who says up front that she cannot read Hangul — would be
+ * handed a certificate reading something over 52, a denominator counting
+ * questions she was never asked.
  */
 const SHOW_RESULT_SHARING = false;
 
@@ -78,7 +87,6 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
   pre1: { emoji: "🌱", tagline: "Hangul Foundation" },
   g1: { emoji: "📗", tagline: "TOPIK Level 1" },
   g2: { emoji: "📘", tagline: "TOPIK Level 2" },
-  belowII: { emoji: "🧭", tagline: "TOPIK I range" },
   g3: { emoji: "📙", tagline: "TOPIK Level 3" },
   g4: { emoji: "📕", tagline: "TOPIK Level 4" },
   above: { emoji: "🏆", tagline: "Past 4급" },
@@ -91,10 +99,9 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
  * "we will tell you your level" is a weaker promise than showing the levels it
  * chooses between. The order is the order of the ladder.
  *
- * Two of the seven grades are deliberately absent. `belowII` and `above` are
- * not levels — they are the paper saying it has run out of room in one
- * direction or the other — so listing them here would promise a placement the
- * result screen then refuses to make.
+ * One of the six grades is deliberately absent. `above` is not a level — it is
+ * the test saying it has run out of room — so listing it here would promise a
+ * placement the result screen then refuses to make.
  */
 const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
@@ -104,13 +111,15 @@ const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "4급", ar: "المستوى الرابع", en: "Level 4", emoji: "📕" },
 ];
 
+const SECTION_IDS = EXAM_SECTIONS.map((s) => s.id);
+
 type Phase = "intro" | "test" | "extras" | "result";
 
 interface Draft {
   answers: Record<string, number>;
   step: number;
   startedAt: number;
-  paper: PaperId;
+  sectionsSeen: string[];
 }
 
 const KoreanPlacementPage = () => {
@@ -124,7 +133,12 @@ const KoreanPlacementPage = () => {
   const [phase, setPhase] = useState<Phase>("intro");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [paper, setPaper] = useState<Paper | null>(null);
+  /**
+   * The sections the student has actually been shown, in order. This is the
+   * difference between a question she got wrong and a question she was never
+   * asked, and the result screen is unusable without it.
+   */
+  const [sectionsSeen, setSectionsSeen] = useState<string[]>([SECTION_IDS[0]]);
   const [result, setResult] = useState<ExamResult | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(() => Date.now());
@@ -149,11 +163,10 @@ const KoreanPlacementPage = () => {
 
   const questionsBySection = useMemo(() => {
     const map: Record<string, ExamQuestion[]> = {};
-    if (!paper) return map;
-    for (const s of paper.sections) map[s.id] = [];
-    for (const q of paper.questions) map[q.section].push(q);
+    for (const s of EXAM_SECTIONS) map[s.id] = [];
+    for (const q of EXAM_QUESTIONS) map[q.section]?.push(q);
     return map;
-  }, [paper]);
+  }, []);
 
   // ---- instrumentation ----------------------------------------------------
   useEffect(() => {
@@ -198,15 +211,20 @@ const KoreanPlacementPage = () => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const d = JSON.parse(saved) as Draft;
-        // A draft that does not name one of the two papers cannot be resumed:
-        // the answer ids in it belong to a question bank we can no longer
-        // identify, and restoring them against the wrong paper would score a
-        // student on questions they never saw.
-        const draftPaper = d?.paper === "I" || d?.paper === "II" ? PAPERS[d.paper] : null;
-        if (draftPaper && d?.answers && Object.keys(d.answers).length > 0) {
-          setPaper(draftPaper);
+        // A draft that cannot say which sections were shown cannot be graded:
+        // the result would either credit the student with sections she never
+        // reached or claim she got wrong the questions behind them. An
+        // unreadable `sectionsSeen` is therefore a discarded draft, not a
+        // repairable one.
+        const seen = Array.isArray(d?.sectionsSeen)
+          && d.sectionsSeen.length > 0
+          && d.sectionsSeen.every((id) => SECTION_IDS.includes(id))
+          ? d.sectionsSeen
+          : null;
+        if (seen && d?.answers && Object.keys(d.answers).length > 0) {
           setAnswers(d.answers);
-          setStep(Math.min(Math.max(d.step ?? 0, 0), draftPaper.sections.length - 1));
+          setSectionsSeen(seen);
+          setStep(Math.min(Math.max(d.step ?? 0, 0), EXAM_SECTIONS.length - 1));
           setStartedAt(d.startedAt ?? Date.now());
           setPhase("test");
           toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
@@ -219,16 +237,17 @@ const KoreanPlacementPage = () => {
     localStorage.removeItem("klovers_placement_draft_v2");
     localStorage.removeItem("klovers_placement_draft_v3");
     localStorage.removeItem("klovers_placement_draft_v4");
+    localStorage.removeItem("klovers_placement_draft_v5");
     localStorage.removeItem("klovers_unit_placement_draft_v1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (phase !== "test" || !paper) return;
+    if (phase !== "test") return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, step, startedAt, paper: paper.id } satisfies Draft));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, step, startedAt, sectionsSeen } satisfies Draft));
     } catch { /* ignore */ }
-  }, [answers, phase, step, startedAt, paper]);
+  }, [answers, phase, step, startedAt, sectionsSeen]);
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -281,8 +300,13 @@ const KoreanPlacementPage = () => {
   };
 
   // ---- flow ---------------------------------------------------------------
-  const finish = async (sat: Paper, finalAnswers: Record<string, number>) => {
-    const res = gradePaper(sat, finalAnswers);
+  /**
+   * `seen` is passed in rather than read from state because both callers know
+   * something state does not yet: the stop button finishes on the sections
+   * shown so far, and the student who cannot read Hangul was shown none.
+   */
+  const finish = async (finalAnswers: Record<string, number>, seen: string[]) => {
+    const res = gradeExam(finalAnswers, seen);
     const info = TOPIK_GRADES[res.grade];
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 
@@ -309,28 +333,33 @@ const KoreanPlacementPage = () => {
   };
 
   const nextSection = () => {
-    if (!paper) return;
     // Nothing is graded until the last section is behind them. The level comes
-    // from the total, so there is no question this point in the paper could
+    // from the total, so there is no question this point in the test could
     // answer, and stopping someone here is the behaviour this page removed.
-    if (step < paper.sections.length - 1) { setStep(step + 1); return; }
-    void finish(paper, answers);
+    if (step < EXAM_SECTIONS.length - 1) {
+      const nextId = EXAM_SECTIONS[step + 1].id;
+      setSectionsSeen((prev) => (prev.includes(nextId) ? prev : [...prev, nextId]));
+      setStep(step + 1);
+      return;
+    }
+    void finish(answers, sectionsSeen);
   };
 
   /**
-   * Starting a paper is also where the funnel learns which one was chosen.
+   * Beginning the test is also where the funnel learns she got past the intro.
    *
-   * `paper_chosen` is a new label rather than a second `test_started`. The
-   * mount-time event has five months of history behind it and means "reached
-   * the placement page"; sending it again here would quietly double its volume
-   * and change what every query already written against it returns.
+   * This is the event that used to be `paper_chosen`, relabelled now that there
+   * is no paper to choose. It stays a label of its own rather than becoming a
+   * second `test_started`: the mount-time event has five months behind it and
+   * means "reached the placement page", so sending it again here would quietly
+   * double its volume and change what every query written against it returns.
    */
-  const startPaper = (p: Paper) => {
-    logLeadEvent({ source_type: "placement_test", cta_label: "paper_chosen", metadata: { paper: p.id } });
-    setPaper(p);
+  const startTest = () => {
+    logLeadEvent({ source_type: "placement_test", cta_label: "test_begun" });
     setAnswers({});
     setResult(null);
     setStep(0);
+    setSectionsSeen([SECTION_IDS[0]]);
     setStartedAt(Date.now());
     setPhase("test");
   };
@@ -339,29 +368,34 @@ const KoreanPlacementPage = () => {
    * The way out for someone who cannot read Hangul at all.
    *
    * The funnel is unambiguous about where this test loses people: 82 sessions
-   * reached the first question screen and 32 reached the second. An empty
-   * TOPIK I paper grades to 한글 기초; this button produces the same answer
-   * without making them guess their way through it first, and lands them on the
-   * result screen, where the trial CTA and the email capture live.
+   * reached the first question screen and 32 reached the second. An unanswered
+   * test grades to 한글 기초; this button produces the same answer without
+   * making them guess their way through it first, and lands them on the result
+   * screen, where the trial CTA and the email capture live. No section is
+   * recorded as seen, so the breakdown does not report a score on questions
+   * that were never put in front of her.
    */
   const handleCannotReadHangul = () => {
     logLeadEvent({ source_type: "placement_test", cta_label: "cannot_read_hangul" });
-    setPaper(PAPER_I);
-    void finish(PAPER_I, {});
+    void finish({}, []);
   };
 
   /**
-   * The offer to sit the other paper, when this one could not place them well.
+   * Finishing on what she has answered, offered from section C onward.
    *
-   * It is an offer and never a redirect: a student who is content with the
-   * grade they just read should be able to keep it and book a trial instead.
+   * The event is separate from `recommendation_shown` because the two ask
+   * different questions of the funnel: one counts results delivered, this one
+   * counts the students for whom fifty-two questions was more test than they
+   * needed, and where in the test that became true.
    */
-  const handleOtherPaper = (res: ExamResult) => {
-    startPaper(res.paper === "I" ? PAPER_II : PAPER_I);
+  const stopHere = (sectionId: string) => {
+    logLeadEvent({ source_type: "placement_test", cta_label: "stopped_early", metadata: { section: sectionId } });
+    void finish(answers, sectionsSeen);
   };
 
   const handleRetake = () => {
     setAnswers({}); setResult(null); setStep(0);
+    setSectionsSeen([SECTION_IDS[0]]);
     setWriting({}); setAudio({}); setExtrasSaved(false);
     setLeadSaved(false); setLeadName(""); setLeadEmail("");
     setStartedAt(Date.now());
@@ -447,7 +481,7 @@ const KoreanPlacementPage = () => {
   };
 
   const saveExtras = async () => {
-    if (!userId || !result || !paper) return;
+    if (!userId || !result) return;
     setSavingExtras(true);
     const attemptId = typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
@@ -471,7 +505,7 @@ const KoreanPlacementPage = () => {
     const { error } = await (supabase as any).from("unit_placement_tests").insert({
       id: attemptId,
       user_id: userId,
-      book: paper.bookKey,
+      book: EXAM_BOOK_KEY,
       section_scores: result.sectionScores,
       mcq_score: result.score,
       start_unit: result.grade,
@@ -548,18 +582,14 @@ const KoreanPlacementPage = () => {
     </div>
   );
 
-  // ---- intro: choose your paper -------------------------------------------
-  // A `test` phase with no paper cannot be rendered, and this screen is the only
-  // place that can set one, so it is also where a refused draft lands.
-  if (phase === "intro" || (phase === "test" && !paper)) {
+  // ---- intro ---------------------------------------------------------------
+  if (phase === "intro") {
     const FEATURES = [
       { icon: Target, text: t("بأسئلة على شكل امتحان TOPIK الحقيقي", "Questions in the real TOPIK reading formats") },
-      { icon: Clock,  text: t("٢٤ أو ٢٨ سؤال حسب الورقة", "24 or 28 questions, depending on the paper") },
+      { icon: Clock,  text: t("٥٢ سؤال — وتقدر تنهيه بدري", `${EXAM_MAX} questions — and you can finish early`) },
       { icon: Save,   text: t("اقفل وارجع — محفوظ", "Close it and come back — saved") },
       { icon: Ban,    text: t("من غير قاموس ولا ترجمة", "No dictionary, no translator") },
     ];
-
-    const PAPER_CHOICES: Paper[] = [PAPER_I, PAPER_II];
 
     return (
       <div className="min-h-screen flex flex-col">
@@ -598,8 +628,8 @@ const KoreanPlacementPage = () => {
                   </h1>
 
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    {t("أسئلة قراءة على شكل امتحان TOPIK الحقيقي. في ورقتين: واحدة بتقيس المستوى الأول والتاني، والتانية بتقيس الثالث والرابع.",
-                       "Reading questions in the real TOPIK formats. There are two papers: one measures levels 1 and 2, the other measures levels 3 and 4.")}
+                    {t("أسئلة قراءة على شكل امتحان TOPIK الحقيقي. اختبار واحد، ٥٢ سؤال، بيبدأ من الأسهل وبيغطّي من المستوى الأول للرابع — وأول ما الأسئلة تعدّي مستواك تقدر تنهيه بنفسك.",
+                       `Reading questions in the real TOPIK formats. One test of ${EXAM_MAX} questions, easiest first, covering levels 1 to 4 — and once the questions are past you, you can finish it yourself.`)}
                   </p>
                 </div>
 
@@ -627,8 +657,8 @@ const KoreanPlacementPage = () => {
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center mt-2">
-                    {t("بتجاوب الورقة كلها ومجموعك هو اللي بيحدد مستواك، زي درجات القطع في TOPIK نفسه — مفيش قسم بينهي الاختبار بدري.",
-                       "You answer the whole paper and your total decides the level, the way TOPIK's own cut scores work — no section ends the test early.")}
+                    {t("بتجاوب اللي تقدر عليه ومجموعك هو اللي بيحدد مستواك، زي درجات القطع في TOPIK نفسه — مفيش قسم بينهي الاختبار في وشك.",
+                       "You answer what you can and your total decides the level, the way TOPIK's own cut scores work — no section ends the test on you.")}
                   </p>
                 </div>
 
@@ -641,14 +671,16 @@ const KoreanPlacementPage = () => {
                   ))}
                 </div>
 
-                {/* The paper is chosen before the first question rather than
-                    inferred from one. A student already knows roughly how far
-                    along they are, and each `forWho` line is written so they can
-                    recognise themselves in it without knowing the exam. */}
+                {/* One button, because there is now one test. The second choice
+                    below it is not a variant of the test — it is the answer for
+                    the student the first question would already be too hard for,
+                    and it is styled quietly so it reads as a way out rather than
+                    a competing option. */}
                 <div className="space-y-2.5 pt-1">
-                  <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center">
-                    {t("ابدأ الاختبار — اختار اللي بيوصفك", "START THE TEST — PICK THE ONE THAT DESCRIBES YOU")}
-                  </p>
+                  <Button size="lg" className="w-full font-semibold" onClick={startTest}>
+                    {t("ابدأ الاختبار", "Start the test")}
+                    <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
+                  </Button>
 
                   <button
                     type="button"
@@ -664,28 +696,6 @@ const KoreanPlacementPage = () => {
                          "No questions — this takes you straight to your result.")}
                     </span>
                   </button>
-
-                  {PAPER_CHOICES.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => startPaper(p)}
-                      className="w-full text-start rounded-xl border border-border bg-card px-4 py-3 hover:border-primary/60 transition-colors"
-                    >
-                      <span className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold leading-snug" dir="ltr">
-                          {isAr ? p.labelAr : p.labelEn}
-                        </span>
-                        <ArrowRight className={cn("h-4 w-4 shrink-0 text-muted-foreground", isAr && "rotate-180")} />
-                      </span>
-                      <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
-                        {isAr ? p.forWhoAr : p.forWhoEn}
-                      </span>
-                      <span className="block text-[11px] text-muted-foreground mt-1">
-                        {isAr ? `${p.max} سؤال` : `${p.max} questions`}
-                      </span>
-                    </button>
-                  ))}
                 </div>
 
               </CardContent>
@@ -700,7 +710,7 @@ const KoreanPlacementPage = () => {
   // ---- result -------------------------------------------------------------
   if (phase === "result" && result) {
     const info = TOPIK_GRADES[result.grade];
-    const sat = PAPERS[result.paper];
+    const seenSections = EXAM_SECTIONS.filter((s) => result.sectionsSeen.includes(s.id));
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -715,35 +725,38 @@ const KoreanPlacementPage = () => {
                 <p className="text-sm text-muted-foreground">{isAr ? info.noteAr : info.noteEn}</p>
               </div>
 
-              {/* Offered, never applied for them: a student content with the
-                  grade they just read keeps it and books a trial instead. */}
-              {result.suggestOtherPaper && (
-                <Button variant="outline" size="sm" className="w-full" onClick={() => handleOtherPaper(result)}>
-                  {result.paper === "I"
-                    ? t("عدّيت الورقة دي — جرّب ورقة TOPIK II", "You cleared this paper — try the TOPIK II paper")
-                    : t("اقعد ورقة TOPIK I بدل منها", "Sit the TOPIK I paper instead")}
-                </Button>
+              {/* The breakdown is skipped for the student who was never shown a
+                  question: a table of nothing over a total of "0 / 0" is not
+                  information, and her grade note already says what happened. */}
+              {result.attempted > 0 && (
+                <div>
+                  <p className="text-sm font-semibold mb-2">{t("تفصيل الإجابات", "Answer breakdown")}</p>
+                  {/* Out of what she was asked, never out of 52. Nobody should be
+                      told they got wrong a question they never saw. */}
+                  <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm mb-1.5">
+                    <span className="font-semibold">{t("المجموع", "Total")}</span>
+                    <Badge dir="ltr">{result.score} / {result.attempted}</Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    {seenSections.map((s) => (
+                      <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+                        <span>{isAr ? s.titleAr : s.titleEn}</span>
+                        <Badge variant="secondary" dir="ltr">{result.sectionScores[s.id] ?? 0} / {s.max}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                  {result.stoppedEarly && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("انت اللي اخترت تنهي هنا، والمستوى ده متحسب على الأقسام اللي جاوبتها فعلًا.",
+                         "You chose to finish here, and this level is worked out from the sections you actually answered.")}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {t("مستواك اتحدد من مجموع درجاتك في الأقسام اللي شُفتها، بنفس طريقة TOPIK اللي بيقارن مجموعك بدرجة قطع.",
+                       "Your level comes from your total across the sections you were shown, the same way TOPIK measures a total against a cut score.")}
+                  </p>
+                </div>
               )}
-
-              <div>
-                <p className="text-sm font-semibold mb-2">{t("تفصيل الإجابات", "Answer breakdown")}</p>
-                <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm mb-1.5">
-                  <span className="font-semibold">{t("المجموع", "Total")}</span>
-                  <Badge dir="ltr">{result.score} / {result.max}</Badge>
-                </div>
-                <div className="space-y-1.5">
-                  {sat.sections.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
-                      <span>{isAr ? s.titleAr : s.titleEn}</span>
-                      <Badge variant="secondary" dir="ltr">{result.sectionScores[s.id] ?? 0} / {s.max}</Badge>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {t("مستواك اتحدد من مجموع درجاتك في الورقة كلها، بنفس طريقة TOPIK اللي بيقارن مجموعك بدرجة قطع.",
-                     "Your level comes from your total score on the whole paper, the same way TOPIK measures a total against a cut score.")}
-                </p>
-              </div>
 
               {/* Email capture, inline and above the CTAs rather than behind a
                   small button. Only for visitors we do not already have. */}
@@ -906,9 +919,16 @@ const KoreanPlacementPage = () => {
   }
 
   // ---- the test -----------------------------------------------------------
-  const activePaper = paper!;
-  const section = activePaper.sections[step];
-  const totalSteps = activePaper.sections.length;
+  const section = EXAM_SECTIONS[step];
+  const totalSteps = EXAM_SECTIONS.length;
+  const sectionQuestions = questionsBySection[section.id] ?? [];
+  /**
+   * Progress is counted inside the section and never across all fifty-two.
+   * A bar creeping one fifty-second at a time tells a beginner she has barely
+   * started when she is in fact most of the way through everything she can do,
+   * which is exactly the discouragement the stop button exists to prevent.
+   */
+  const answeredHere = sectionQuestions.filter((q) => answers[q.id] !== undefined).length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -919,9 +939,15 @@ const KoreanPlacementPage = () => {
         <div dir={isAr ? "rtl" : "ltr"} className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold">{t("اختبار تحديد المستوى", "Korean Placement Test")}</span>
-            <span className="text-muted-foreground" dir="ltr">{step + 1} / {totalSteps}</span>
+            <span className="text-muted-foreground">
+              {t(`القسم ${step + 1} من ${totalSteps}`, `Section ${step + 1} of ${totalSteps}`)}
+            </span>
           </div>
-          <Progress value={((step + 1) / totalSteps) * 100} />
+          <Progress value={sectionQuestions.length ? (answeredHere / sectionQuestions.length) * 100 : 0} />
+          <p className="text-xs text-muted-foreground">
+            {t(`جاوبت ${answeredHere} من ${sectionQuestions.length} في القسم ده`,
+               `${answeredHere} of ${sectionQuestions.length} answered in this section`)}
+          </p>
         </div>
 
         <Card dir={isAr ? "rtl" : "ltr"}>
@@ -930,20 +956,20 @@ const KoreanPlacementPage = () => {
               <h2 className="text-lg font-bold">{isAr ? section.titleAr : section.titleEn}</h2>
               <Badge variant="outline" dir="ltr" className="shrink-0">{section.gradeKo}</Badge>
             </div>
-            <p className="text-xs text-muted-foreground" dir="ltr">{activePaper.labelKo} · {section.titleKo}</p>
+            <p className="text-xs text-muted-foreground" dir="ltr">{section.titleKo}</p>
             <p className="text-sm text-muted-foreground">{isAr ? section.instrAr : section.instrEn}</p>
             {section.focusKo && <p className="text-xs text-muted-foreground" dir="ltr">※ {section.focusKo}</p>}
 
             {step === 0 && (
               <p className="text-sm">
-                {t("جاوب الورقة كلها. مفيش قسم بيوقف الاختبار — مستواك بيتحسب من مجموعك في الآخر.",
-                   "Answer the whole paper. No section ends the test — your level is worked out from your total at the end.")}
+                {t("جاوب اللي تقدر عليه. مفيش قسم بيوقف الاختبار — ومن القسم التالت وانت اللي تقرر تكمّل ولا تقف.",
+                   "Answer what you can. No section stops the test — and from the third section onward it is you who decides whether to carry on.")}
               </p>
             )}
 
-            <div className="space-y-4">{questionsBySection[section.id]?.map(renderQuestion)}</div>
+            <div className="space-y-4">{sectionQuestions.map(renderQuestion)}</div>
 
-            {activePaper.id === "I" && section.id === "A" && (
+            {section.id === "A" && (
               <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
                 <p className="text-sm text-muted-foreground">
                   {t("لسه مابتعرفش تقرا الحروف الكورية؟ ده مش رسوب — ده بالظبط المستوى اللي بنبدأ منه.",
@@ -957,7 +983,7 @@ const KoreanPlacementPage = () => {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-between gap-2" dir={isAr ? "rtl" : "ltr"}>
+        <div className="flex flex-wrap items-center justify-between gap-2" dir={isAr ? "rtl" : "ltr"}>
           <Button
             variant="outline"
             onClick={() => { if (step > 0) setStep(step - 1); }}
@@ -966,10 +992,20 @@ const KoreanPlacementPage = () => {
             <ArrowLeft className={cn("h-4 w-4 me-1.5", isAr && "rotate-180")} />
             {t("السابق", "Back")}
           </Button>
-          <Button onClick={nextSection}>
-            {step === totalSteps - 1 ? t("إنهاء الاختبار", "Finish") : t("التالي", "Next")}
-            <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* Ghost and muted, sitting next to the primary rather than against
+                it: finishing early is a real choice but it is not the one the
+                page is asking her to make. */}
+            {section.mayStopAfter && (
+              <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => stopHere(section.id)}>
+                {t("مش قادر أكمل أكتر من كده — وريني مستواي", "That's as far as I can go — show me my level")}
+              </Button>
+            )}
+            <Button onClick={nextSection}>
+              {step === totalSteps - 1 ? t("إنهاء الاختبار", "Finish") : t("التالي", "Next")}
+              <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />
