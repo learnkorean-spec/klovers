@@ -213,13 +213,34 @@ function renderWhen(
   };
 }
 
-/** Shared button chrome, so the primary action looks the same wherever it appears. */
-const PRIMARY_STYLE = { backgroundColor: "#000", color: "#FACC15" } as const;
+/**
+ * Shared button chrome, so the primary action looks the same wherever it
+ * appears — and looks like the rest of Klovers.
+ *
+ * This page was styled in raw Tailwind scale colours that belong to no brand:
+ * `#FACC15` (Tailwind yellow-400) for the button, `bg-yellow-50` for the
+ * selected day, `text-gray-500` for every secondary line, `bg-green-100` and
+ * `bg-red-100` for the outcome badges. Klovers' yellow is `#FFFF00` — the
+ * `--primary` token, and `BRAND_YELLOW` in the email templates — so the one
+ * screen where a student commits to a class was wearing a slightly-off yellow
+ * that appears nowhere else on the site or in the letter that brought her here.
+ *
+ * Everything now goes through the design tokens in src/index.css, the same way
+ * PricingSection, PlacementTestCTA and the enrolment day picker already do:
+ * primary / primary-foreground, card, border, muted-foreground, destructive.
+ * Fixing the colour once in :root now fixes it here too.
+ *
+ * The button is yellow on black rather than black on yellow, matching both
+ * `bg-primary text-primary-foreground` across the site and `brandButton` in
+ * the email — the letter and the page it links to should not disagree.
+ */
 const PRIMARY_CLASS =
-  "inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity";
+  "inline-block bg-primary text-primary-foreground border-2 border-foreground " +
+  "font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity";
 const OUTLINE_CLASS =
-  "inline-block font-bold px-6 py-3 rounded-xl text-base border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors";
-const QUIET_CLASS = "text-sm text-gray-500 underline hover:text-gray-700";
+  "inline-block font-bold px-6 py-3 rounded-xl text-base border border-border " +
+  "text-muted-foreground hover:bg-muted transition-colors";
+const QUIET_CLASS = "text-sm text-muted-foreground underline hover:text-foreground";
 
 const TrialConfirmPage = () => {
   // Transactional page: real content for the signed-in user, nothing a
@@ -400,46 +421,49 @@ const TrialConfirmPage = () => {
   // not a choice, and showing a single locked radio would suggest otherwise.
   const canChoose = options.length > 1 && !booking?.is_tba;
 
+  // The black backdrop is the brand, not a leftover: BRAND_BLACK is #000000 and
+  // the wordmark is yellow on black wherever it appears. The card on top of it
+  // uses the card token, so it follows the theme like every other panel.
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div
         dir={t.dir}
         lang={t.lang}
-        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center"
+        className="bg-card text-card-foreground rounded-2xl shadow-xl max-w-md w-full p-8 text-center"
       >
         {/* Logo / brand */}
         <div className="mb-6">
-          <span dir="ltr" className="text-4xl font-black tracking-tight text-black">
-            K<span className="text-yellow-400">lovers</span>
+          <span dir="ltr" className="text-4xl font-black tracking-tight text-foreground">
+            K<span className="text-primary">lovers</span>
           </span>
-          <p className="text-gray-500 text-sm mt-1">{t.tagline}</p>
+          <p className="text-muted-foreground text-sm mt-1">{t.tagline}</p>
         </div>
 
         {state === "loading" && (
           <div className="py-8">
-            <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">{t.loading}</p>
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">{t.loading}</p>
           </div>
         )}
 
         {state === "ready" && booking && (
           <div className="py-4">
-            <h1 className="text-2xl font-bold text-black mb-1">
+            <h1 className="text-2xl font-bold text-foreground mb-1">
               {booking.first_name ? t.greeting(booking.first_name) : t.greetingNoName}
             </h1>
-            <p className="text-gray-600 mb-5">
+            <p className="text-muted-foreground mb-5">
               {canChoose ? t.introChoose : suggested === "yes" ? t.intro : t.introEither}
             </p>
 
             {notice && (
-              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mb-5 text-sm text-amber-900">
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-5 text-sm text-foreground">
                 {notice}
               </div>
             )}
 
             {canChoose ? (
               <div className={`mb-6 ${t.dir === "rtl" ? "text-right" : "text-left"}`}>
-                <p className="text-xs font-bold tracking-wide text-gray-500 mb-2">
+                <p className="text-xs font-bold tracking-wide text-muted-foreground mb-2">
                   {t.pickHeading}
                 </p>
                 <div className="space-y-2">
@@ -459,19 +483,19 @@ const TrialConfirmPage = () => {
                           t.dir === "rtl" ? "text-right" : "text-left"
                         } ${
                           selected
-                            ? "border-black bg-yellow-50"
+                            ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                             : full
-                              ? "border-gray-200 opacity-50 cursor-not-allowed"
-                              : "border-gray-200 hover:border-gray-400"
+                              ? "border-border opacity-50 cursor-not-allowed"
+                              : "border-border hover:border-primary/50"
                         }`}
                       >
-                        <span className="block text-sm font-bold text-black">
+                        <span className="block text-sm font-bold text-foreground">
                           {w ? w.shortLabel : o.trial_date ?? t.tba}
                         </span>
-                        <span className="block text-sm text-gray-600">
+                        <span className="block text-sm text-muted-foreground">
                           {w ? w.timeLabel : o.start_time ?? ""}
                         </span>
-                        <span className="block text-xs text-gray-400 mt-0.5">
+                        <span className="block text-xs text-muted-foreground/70 mt-0.5">
                           {full ? t.seatsFull : t.seatsLeft(seats)}
                           {o.is_current ? ` · ${t.yourCurrent}` : ""}
                         </span>
@@ -482,20 +506,20 @@ const TrialConfirmPage = () => {
               </div>
             ) : (
               <div
-                className={`bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1.5 ${
+                className={`bg-muted/50 rounded-xl p-4 mb-6 text-sm text-foreground space-y-1.5 ${
                   t.dir === "rtl" ? "text-right" : "text-left"
                 }`}
               >
-                <p><span className="font-semibold text-black">{t.language}</span> {languageLabel}</p>
+                <p><span className="font-semibold text-foreground">{t.language}</span> {languageLabel}</p>
                 <p>
-                  <span className="font-semibold text-black">{t.date}</span>{" "}
+                  <span className="font-semibold text-foreground">{t.date}</span>{" "}
                   {booking.is_tba ? t.tba : when ? when.dateLabel : "—"}
                 </p>
                 {when && (
                   <p>
-                    <span className="font-semibold text-black">{t.time}</span> {when.timeLabel}
+                    <span className="font-semibold text-foreground">{t.time}</span> {when.timeLabel}
                     {when.alsoLabel && (
-                      <span className="block text-xs text-gray-400 mt-0.5">
+                      <span className="block text-xs text-muted-foreground/70 mt-0.5">
                         {t.forTeacher(when.alsoLabel)}
                       </span>
                     )}
@@ -515,7 +539,7 @@ const TrialConfirmPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRespond("no")}
-                  style={PRIMARY_STYLE}
+                 
                   className={PRIMARY_CLASS}
                 >
                   {t.declineCta}
@@ -531,7 +555,7 @@ const TrialConfirmPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRespond("yes")}
-                  style={PRIMARY_STYLE}
+                 
                   className={PRIMARY_CLASS}
                 >
                   {t.confirmCta}
@@ -548,7 +572,7 @@ const TrialConfirmPage = () => {
                   type="button"
                   onClick={() => handleRespond("yes")}
                   disabled={canChoose && !chosenSlot}
-                  style={PRIMARY_STYLE}
+                 
                   className={`${PRIMARY_CLASS} disabled:opacity-40`}
                 >
                   {t.confirmCta}
@@ -567,22 +591,22 @@ const TrialConfirmPage = () => {
 
         {state === "responding" && (
           <div className="py-8">
-            <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">{answer === "no" ? t.declining : t.confirming}</p>
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">{answer === "no" ? t.declining : t.confirming}</p>
           </div>
         )}
 
         {(state === "success" || state === "already") && answer !== "no" && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">✅</span>
             </div>
-            <h1 className="text-2xl font-bold text-black mb-2">{t.confirmedTitle}</h1>
-            <p className="text-gray-600 mb-2">
+            <h1 className="text-2xl font-bold text-foreground mb-2">{t.confirmedTitle}</h1>
+            <p className="text-muted-foreground mb-2">
               {state === "already" ? t.confirmedAlready : t.confirmedNew}
             </p>
             {when && (
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 {when.dateLabel} · {when.timeLabel}
               </p>
             )}
@@ -592,13 +616,12 @@ const TrialConfirmPage = () => {
                 have said they are coming. Before that it is one more thing
                 between them and the seat. */}
             {hasAccount === false && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-                <p className="font-semibold text-black text-sm mb-1">{t.accountTitle}</p>
-                <p className="text-gray-600 text-sm mb-3">{t.accountBody}</p>
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
+                <p className="font-semibold text-foreground text-sm mb-1">{t.accountTitle}</p>
+                <p className="text-muted-foreground text-sm mb-3">{t.accountBody}</p>
                 <a
                   href="/signup"
-                  style={{ backgroundColor: "#000", color: "#FACC15" }}
-                  className="inline-block font-bold px-5 py-2.5 rounded-xl text-sm hover:opacity-80 transition-opacity"
+                  className="inline-block bg-primary text-primary-foreground border-2 border-foreground font-bold px-5 py-2.5 rounded-xl text-sm hover:opacity-80 transition-opacity"
                 >
                   {t.accountCta}
                 </a>
@@ -608,15 +631,13 @@ const TrialConfirmPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="/placement-test"
-                style={{ backgroundColor: "#000", color: "#FACC15" }}
-                className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
+                className={PRIMARY_CLASS}
               >
                 {t.placement}
               </a>
               <a
                 href="/pricing"
-                style={{ backgroundColor: "#000", color: "#FACC15" }}
-                className="inline-block font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity"
+                className={PRIMARY_CLASS}
               >
                 {t.pricing}
               </a>
@@ -626,7 +647,7 @@ const TrialConfirmPage = () => {
                 href={classLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-3 text-sm text-gray-500 underline hover:text-gray-700"
+                className="inline-block mt-3 text-sm text-muted-foreground underline hover:text-foreground"
               >
                 {t.joinMeet}
               </a>
@@ -640,17 +661,17 @@ const TrialConfirmPage = () => {
             behind AuthProtectedRoute and would ask her to sign up first. */}
         {(state === "success" || state === "already") && answer === "no" && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">🗓️</span>
             </div>
-            <h1 className="text-2xl font-bold text-black mb-2">{t.declinedTitle}</h1>
-            <p className="text-gray-600 mb-6">
+            <h1 className="text-2xl font-bold text-foreground mb-2">{t.declinedTitle}</h1>
+            <p className="text-muted-foreground mb-6">
               {state === "already" ? t.declinedAlready : t.declinedNew}
             </p>
-            <a href="/free-trial" style={PRIMARY_STYLE} className={PRIMARY_CLASS}>
+            <a href="/free-trial" className={PRIMARY_CLASS}>
               {t.bookAnother}
             </a>
-            <p className="text-sm text-gray-500 mt-6 mb-2">{t.declinedChanged}</p>
+            <p className="text-sm text-muted-foreground mt-6 mb-2">{t.declinedChanged}</p>
             <button type="button" onClick={() => handleRespond("yes")} className={QUIET_CLASS}>
               {t.confirmCta}
             </button>
@@ -659,23 +680,23 @@ const TrialConfirmPage = () => {
 
         {state === "error" && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">❌</span>
             </div>
-            <h1 className="text-2xl font-bold text-black mb-2">{t.errorTitle}</h1>
-            <p className="text-gray-600 mb-6">{t.errorBody}</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{t.errorTitle}</h1>
+            <p className="text-muted-foreground mb-6">{t.errorBody}</p>
             <a
               href="https://wa.me/201010003084"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-black text-yellow-400 font-bold px-6 py-3 rounded-xl text-base hover:opacity-90 transition-opacity"
+              className="inline-block bg-primary text-primary-foreground border-2 border-foreground font-bold px-6 py-3 rounded-xl text-base hover:opacity-90 transition-opacity"
             >
               {t.whatsapp}
             </a>
           </div>
         )}
 
-        <p className="text-gray-400 text-xs mt-8">
+        <p className="text-muted-foreground/70 text-xs mt-8">
           <a href="https://kloversegy.com" className="hover:underline">kloversegy.com</a>
         </p>
       </div>
