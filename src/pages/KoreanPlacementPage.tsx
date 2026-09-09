@@ -95,6 +95,8 @@ const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
   { ko: "1급", ar: "المستوى الأول", en: "Level 1", emoji: "📗" },
   { ko: "2급", ar: "المستوى الثاني", en: "Level 2", emoji: "📘" },
+  { ko: "3급", ar: "المستوى الثالث", en: "Level 3", emoji: "📙" },
+  { ko: "4급", ar: "المستوى الرابع", en: "Level 4", emoji: "📕" },
 ];
 
 type Phase = "intro" | "test" | "extras" | "result";
@@ -313,13 +315,13 @@ const KoreanPlacementPage = () => {
   /**
    * Starting a paper is also where the funnel learns which one was chosen.
    *
-   * The mount-time `test_started` event stays where it is: it has always meant
-   * "reached the placement page", and the historical rows are counted that way.
-   * This second one carries the paper, so the two papers can be told apart
-   * without reinterpreting every row recorded before today.
+   * `paper_chosen` is a new label rather than a second `test_started`. The
+   * mount-time event has five months of history behind it and means "reached
+   * the placement page"; sending it again here would quietly double its volume
+   * and change what every query already written against it returns.
    */
   const startPaper = (p: Paper) => {
-    logLeadEvent({ source_type: "placement_test", cta_label: "test_started", metadata: { paper: p.id } });
+    logLeadEvent({ source_type: "placement_test", cta_label: "paper_chosen", metadata: { paper: p.id } });
     setPaper(p);
     setAnswers({});
     setResult(null);
@@ -591,8 +593,8 @@ const KoreanPlacementPage = () => {
                   </h1>
 
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    {t("أسئلة قراءة على شكل TOPIK I — الامتحان اللي بيقيس المستوى الأول والتاني.",
-                       "Reading questions in the TOPIK I format — the exam that measures levels 1 and 2.")}
+                    {t("أسئلة قراءة على شكل امتحان TOPIK الحقيقي. في ورقتين: واحدة بتقيس المستوى الأول والتاني، والتانية بتقيس الثالث والرابع.",
+                       "Reading questions in the real TOPIK formats. There are two papers: one measures levels 1 and 2, the other measures levels 3 and 4.")}
                   </p>
                 </div>
 
@@ -602,7 +604,10 @@ const KoreanPlacementPage = () => {
                   <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center mb-3">
                     {t("نتيجتك هتكون واحدة من دول", "YOUR RESULT WILL BE ONE OF THESE")}
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* Three across on a phone and five once there is room: five
+                      cells at phone width leave each one too narrow for
+                      "المستوى الثالث" to sit on a single line. */}
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     {LADDER.map((l) => (
                       <div
                         key={l.ko}
@@ -617,8 +622,8 @@ const KoreanPlacementPage = () => {
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center mt-2">
-                    {t("ولو عدّيت الاختبار كله، معناها إنك فوق TOPIK I وهنقيّمك بنفسنا.",
-                       "Clear every section and it means you are past TOPIK I — we assess that ourselves.")}
+                    {t("بتجاوب الورقة كلها ومجموعك هو اللي بيحدد مستواك، زي درجات القطع في TOPIK نفسه — مفيش قسم بينهي الاختبار بدري.",
+                       "You answer the whole paper and your total decides the level, the way TOPIK's own cut scores work — no section ends the test early.")}
                   </p>
                 </div>
 
