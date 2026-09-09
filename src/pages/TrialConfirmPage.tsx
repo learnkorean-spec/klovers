@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
@@ -15,6 +15,21 @@ interface BookingInfo {
   class_language: string | null;
   is_tba: boolean | null;
   attendance_response: string | null;
+}
+
+/**
+ * A session this student may choose between: same language, active, ahead of
+ * today, with room. Her current one is always in the list even at zero seats,
+ * because her own booking is what filled it.
+ */
+interface SlotOption {
+  slot_id: string;
+  trial_date: string | null;
+  start_time: string | null;
+  timezone: string | null;
+  duration_min: number | null;
+  seats_left: number | null;
+  is_current: boolean | null;
 }
 
 /**
@@ -42,6 +57,11 @@ const COPY = {
     intro: "Please confirm you'll be attending this trial class.",
     introEither:
       "Let us know whether you'll be there. Either answer helps — we'll hold your seat or free it up.",
+    introChoose: "Pick the day that suits you, then confirm. Both run the same class.",
+    pickHeading: "Choose your day",
+    seatsLeft: (n: number) => (n === 1 ? "1 seat left" : `${n} seats left`),
+    seatsFull: "Full",
+    yourCurrent: "Currently booked",
     language: "Language:",
     date: "Date:",
     time: "Time:",
@@ -60,6 +80,8 @@ const COPY = {
     declinedAlready:
       "You told us you can't make this session, so your seat was released. You can book another time whenever you're ready.",
     declinedChanged: "Changed your mind? You can still tell us you're coming.",
+    slotFull: "That day filled up while you were deciding. Please pick another — your seat is still safe.",
+    slotGone: "That day is no longer available. Please pick another one below.",
     bookAnother: "Book another time",
     accountTitle: "Keep everything in one place",
     accountBody:
@@ -86,6 +108,11 @@ const COPY = {
     intro: "اضغط الزرار تحت عشان تأكّد إنك هتحضر الحصة التجريبية.",
     introEither:
       "قولنا هتحضر الحصة ولا لأ. أي رد بيساعدنا — يا إما نحجزلك مقعدك، يا إما نفضّيه.",
+    introChoose: "اختار اليوم اللي يناسبك، وبعدين أكّد. الاتنين نفس الحصة بالظبط.",
+    pickHeading: "اختار يومك",
+    seatsLeft: (n: number) => (n === 1 ? "فاضل مقعد واحد" : `فاضل ${n} مقاعد`),
+    seatsFull: "كاملة",
+    yourCurrent: "ميعادك الحالي",
     language: "لغة الحصة:",
     date: "التاريخ:",
     time: "الساعة:",
@@ -103,6 +130,8 @@ const COPY = {
     declinedAlready:
       "إنت قلتلنا إنك مش هتقدر تحضر الحصة دي، وفضّينا مقعدك. تقدر تحجز ميعاد تاني في أي وقت.",
     declinedChanged: "غيّرت رأيك؟ لسه تقدر تقولنا إنك جاي.",
+    slotFull: "اليوم ده كمل وإنت بتقرر. اختار يوم تاني — مقعدك لسه محفوظ.",
+    slotGone: "اليوم ده مبقاش متاح. اختار واحد من اللي تحت.",
     bookAnother: "احجز ميعاد تاني",
     accountTitle: "خلّي كل حاجة في مكان واحد",
     accountBody:
@@ -131,7 +160,7 @@ const viewerTimezone = (): string => {
 };
 
 /**
- * The class as this reader should see it: their own date and their own time.
+ * A class as this reader should see it: their own date and their own time.
  *
  * This screen used to print `booking.start_time` straight from the database
  * next to the slot's timezone - "14:00 (Africa/Cairo)" - on the one page
@@ -142,11 +171,19 @@ const viewerTimezone = (): string => {
  *
  * Converting both together is the point: a time without its date moving with
  * it is how someone arrives on the wrong day.
+ *
+ * Takes loose fields rather than a booking, because the day picker needs the
+ * same treatment for every option on offer and not only for the one already
+ * on the row.
  */
-function renderWhen(booking: BookingInfo, locale: string) {
-  const { trial_date: date, start_time: time } = booking;
+function renderWhen(
+  date: string | null,
+  time: string | null,
+  timezone: string | null,
+  locale: string,
+) {
   if (!date || !time) return null;
-  const slotTz = booking.timezone || "Africa/Cairo";
+  const slotTz = timezone || "Africa/Cairo";
   const viewerTz = viewerTimezone() || slotTz;
   const local = convertDateTimeToTimezone(date, time, slotTz, viewerTz);
   if (Number.isNaN(local.hour24)) return null;
@@ -159,12 +196,18 @@ function renderWhen(booking: BookingInfo, locale: string) {
     month: "long",
     day: "numeric",
   });
+  const shortLabel = new Date(y, m - 1, d).toLocaleDateString(locale, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   const sameZone = viewerTz === slotTz;
   const slotLocal = sameZone ? null : convertDateTimeToTimezone(date, time, slotTz, slotTz);
 
   return {
     dateLabel,
+    shortLabel,
     timeLabel: `${local.timeFormatted} (${tzCity(viewerTz)})`,
     alsoLabel: slotLocal ? `${slotLocal.timeFormatted} ${tzCity(slotTz)}` : null,
   };
@@ -197,11 +240,53 @@ const TrialConfirmPage = () => {
   const suggested: Answer | null =
     responseParam === "yes" || responseParam === "no" ? responseParam : null;
 
+  // Same rule for the day: a `slot` in the link only preselects a radio. The
+  // move happens on a click, never on a page load.
+  const suggestedSlot = searchParams.get("slot");
+
   const [state, setState] = useState<PageState>("loading");
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [booking, setBooking] = useState<BookingInfo | null>(null);
+  const [options, setOptions] = useState<SlotOption[]>([]);
+  const [chosenSlot, setChosenSlot] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [classLink, setClassLink] = useState<string | null>(null);
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+
+  const fetchClassLink = useCallback(async (trialDate: string | null, startTime: string | null) => {
+    if (!trialDate || !startTime) return;
+    const { data: slotRow, error } = await supabase
+      .from("trial_slots")
+      .select("meeting_url")
+      .eq("trial_date", trialDate)
+      .eq("start_time", startTime)
+      .maybeSingle();
+    if (error) return;
+    const url = (slotRow as { meeting_url?: string | null } | null)?.meeting_url ?? null;
+    if (url) setClassLink(url);
+  }, []);
+
+  /**
+   * The days on offer. Read-only and safe to prefetch, like the booking read
+   * beside it. A failure here is not fatal: the page falls back to the single
+   * date already on the booking, which is what it showed before choosing was
+   * possible at all.
+   */
+  const loadOptions = useCallback(async (currentSlotPreference?: string | null) => {
+    const { data, error } = await (supabase.rpc as any)("get_trial_slot_options", {
+      p_token: token,
+    });
+    if (error || !Array.isArray(data)) return [] as SlotOption[];
+    const rows = data as SlotOption[];
+    setOptions(rows);
+    setChosenSlot(prev => {
+      const wanted = currentSlotPreference ?? prev;
+      if (wanted && rows.some(r => r.slot_id === wanted)) return wanted;
+      const current = rows.find(r => r.is_current);
+      return current?.slot_id ?? rows[0]?.slot_id ?? null;
+    });
+    return rows;
+  }, [token]);
 
   useEffect(() => {
     if (!token) {
@@ -234,10 +319,11 @@ const TrialConfirmPage = () => {
       setAnswer(existing);
       setState(existing ? "already" : "ready");
       fetchClassLink(data.trial_date, data.start_time);
+      loadOptions(suggestedSlot);
     };
 
     load();
-  }, [token]);
+  }, [token, suggestedSlot, fetchClassLink, loadOptions]);
 
   // Whether to offer an account after confirming. The booking row cannot
   // answer this - get_trial_booking_by_token deliberately returns no user_id -
@@ -261,44 +347,58 @@ const TrialConfirmPage = () => {
     };
   }, []);
 
-  const fetchClassLink = async (trialDate: string | null, startTime: string | null) => {
-    if (!trialDate || !startTime) return;
-    const { data: slotRow } = await supabase
-      .from("trial_slots")
-      .select("meeting_url")
-      .eq("trial_date", trialDate)
-      .eq("start_time", startTime)
-      .maybeSingle();
-    const url = (slotRow as { meeting_url?: string | null } | null)?.meeting_url ?? null;
-    if (url) setClassLink(url);
-  };
-
   const handleRespond = async (response: Answer) => {
+    setNotice(null);
     setAnswer(response);
     setState("responding");
 
+    // Always the three-argument form, so a decline and a confirm take the same
+    // path through the database. The slot is ignored on a decline.
     const { data, error } = await (supabase.rpc as any)(
       "respond_trial_attendance",
-      { p_token: token, p_response: response },
+      { p_token: token, p_response: response, p_slot_id: response === "yes" ? chosenSlot : null },
     ).maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      // A session that filled up between loading this page and pressing the
+      // button is not a broken link, and must not be shown as one: her booking
+      // is untouched and the only thing she needs to do is pick another day.
+      const msg = String(error.message ?? "");
+      if (msg.includes("trial_slot_full") || msg.includes("trial_slot_unavailable")) {
+        await loadOptions(null);
+        setNotice(msg.includes("trial_slot_full") ? t.slotFull : t.slotGone);
+        setAnswer(null);
+        setState("ready");
+        return;
+      }
+      setState("error");
+      return;
+    }
+
+    if (!data) {
       setState("error");
       return;
     }
 
     setBooking(data);
+    fetchClassLink(data.trial_date, data.start_time);
     setState("success");
   };
 
   const t = booking?.class_language === "arabic" ? COPY.ar : COPY.en;
-  const when = booking && !booking.is_tba ? renderWhen(booking, t.locale) : null;
+  const when = booking && !booking.is_tba
+    ? renderWhen(booking.trial_date, booking.start_time, booking.timezone, t.locale)
+    : null;
   const languageLabel =
     booking?.class_language === "arabic"
       ? t.arabic
       : booking?.class_language === "english"
         ? t.english
         : "—";
+
+  // The picker earns its space only when there is a real choice. One option is
+  // not a choice, and showing a single locked radio would suggest otherwise.
+  const canChoose = options.length > 1 && !booking?.is_tba;
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -328,34 +428,89 @@ const TrialConfirmPage = () => {
               {booking.first_name ? t.greeting(booking.first_name) : t.greetingNoName}
             </h1>
             <p className="text-gray-600 mb-5">
-              {suggested === "yes" ? t.intro : t.introEither}
+              {canChoose ? t.introChoose : suggested === "yes" ? t.intro : t.introEither}
             </p>
-            <div
-              className={`bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1.5 ${
-                t.dir === "rtl" ? "text-right" : "text-left"
-              }`}
-            >
-              <p><span className="font-semibold text-black">{t.language}</span> {languageLabel}</p>
-              <p>
-                <span className="font-semibold text-black">{t.date}</span>{" "}
-                {booking.is_tba ? t.tba : when ? when.dateLabel : "—"}
-              </p>
-              {when && (
-                <p>
-                  <span className="font-semibold text-black">{t.time}</span> {when.timeLabel}
-                  {when.alsoLabel && (
-                    <span className="block text-xs text-gray-400 mt-0.5">
-                      {t.forTeacher(when.alsoLabel)}
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
 
-            {/* The email's button decides which answer leads; the other one is
-                always one click away, never hidden. With no param — someone
-                who typed the link or forwarded it — neither answer is assumed. */}
-            {suggested === "no" ? (
+            {notice && (
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mb-5 text-sm text-amber-900">
+                {notice}
+              </div>
+            )}
+
+            {canChoose ? (
+              <div className={`mb-6 ${t.dir === "rtl" ? "text-right" : "text-left"}`}>
+                <p className="text-xs font-bold tracking-wide text-gray-500 mb-2">
+                  {t.pickHeading}
+                </p>
+                <div className="space-y-2">
+                  {options.map(o => {
+                    const w = renderWhen(o.trial_date, o.start_time, o.timezone, t.locale);
+                    const seats = o.seats_left ?? 0;
+                    const full = seats <= 0 && !o.is_current;
+                    const selected = chosenSlot === o.slot_id;
+                    return (
+                      <button
+                        key={o.slot_id}
+                        type="button"
+                        disabled={full}
+                        onClick={() => setChosenSlot(o.slot_id)}
+                        aria-pressed={selected}
+                        className={`w-full rounded-xl border p-3 transition-colors ${
+                          t.dir === "rtl" ? "text-right" : "text-left"
+                        } ${
+                          selected
+                            ? "border-black bg-yellow-50"
+                            : full
+                              ? "border-gray-200 opacity-50 cursor-not-allowed"
+                              : "border-gray-200 hover:border-gray-400"
+                        }`}
+                      >
+                        <span className="block text-sm font-bold text-black">
+                          {w ? w.shortLabel : o.trial_date ?? t.tba}
+                        </span>
+                        <span className="block text-sm text-gray-600">
+                          {w ? w.timeLabel : o.start_time ?? ""}
+                        </span>
+                        <span className="block text-xs text-gray-400 mt-0.5">
+                          {full ? t.seatsFull : t.seatsLeft(seats)}
+                          {o.is_current ? ` · ${t.yourCurrent}` : ""}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div
+                className={`bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1.5 ${
+                  t.dir === "rtl" ? "text-right" : "text-left"
+                }`}
+              >
+                <p><span className="font-semibold text-black">{t.language}</span> {languageLabel}</p>
+                <p>
+                  <span className="font-semibold text-black">{t.date}</span>{" "}
+                  {booking.is_tba ? t.tba : when ? when.dateLabel : "—"}
+                </p>
+                {when && (
+                  <p>
+                    <span className="font-semibold text-black">{t.time}</span> {when.timeLabel}
+                    {when.alsoLabel && (
+                      <span className="block text-xs text-gray-400 mt-0.5">
+                        {t.forTeacher(when.alsoLabel)}
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* With a day picker on screen, confirm is always the loud button:
+                the reader has just made a choice and the next move is to
+                commit to it. Without one, the email's button decides which
+                answer leads; the other is always one click away, never hidden.
+                With no param — someone who typed the link or forwarded it —
+                neither answer is assumed. */}
+            {!canChoose && suggested === "no" ? (
               <>
                 <button
                   type="button"
@@ -371,7 +526,7 @@ const TrialConfirmPage = () => {
                   </button>
                 </div>
               </>
-            ) : suggested === "yes" ? (
+            ) : !canChoose && suggested === "yes" ? (
               <>
                 <button
                   type="button"
@@ -392,8 +547,9 @@ const TrialConfirmPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRespond("yes")}
+                  disabled={canChoose && !chosenSlot}
                   style={PRIMARY_STYLE}
-                  className={PRIMARY_CLASS}
+                  className={`${PRIMARY_CLASS} disabled:opacity-40`}
                 >
                   {t.confirmCta}
                 </button>
