@@ -26,6 +26,14 @@
  * format; none of the passages, sentences or options are taken from a past
  * paper.
  *
+ * HINTS NAME THE TASK, NEVER THE MEANING. Same rule as the TOPIK II bank. An
+ * Arabic hint that explains what the target grammar or the target word means
+ * turns a Korean item into an Arabic one: a student told that 입다 is for
+ * clothing worn on the body has answered B10 without reading Korean. This file
+ * carried three such hints — A4 glossed 마시다, B10 glossed 입다, C2 translated
+ * its key sentence outright — and all three were removed on 9 Sep. There is no
+ * hintAr in this bank now, which is why the field's comment is true again.
+ *
  * THE BLANK is three U+3000 IDEOGRAPHIC SPACEs, not ASCII spaces. HTML
  * collapses a run of ASCII spaces to one, which rendered every gap-fill
  * question as an empty "( )"; U+3000 is not collapsed, so the gap keeps its
@@ -136,17 +144,21 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
     id: "A4", section: "A",
     group: "※ [A4~A8] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "물(　　　) 마셔요.",
-    hintAr: "الفعل 마시다 معناه «يشرب».",
     options: ["을", "이", "에", "에서"], answerIndex: 0,
   },
+  // A5 and A6 asked 에 against 에서 and printed the answer in the 가 line one
+  // line above the blank — 어디에 가요? then 도서관(　)가요, 어디에서 공부해요?
+  // then 집(　)공부해요. A student who has met neither particle could copy the
+  // string. The dialogue is gone rather than reworded: a flat statement cannot
+  // leak a particle it does not contain.
   {
     id: "A5", section: "A",
-    stem: "가: 어디에 가요?\n     나: 도서관(　　　) 가요.",
+    stem: "도서관(　　　) 갑니다.",
     options: ["에서", "에", "이", "의"], answerIndex: 1,
   },
   {
     id: "A6", section: "A",
-    stem: "가: 어디에서 공부해요?\n     나: 집(　　　) 공부해요.",
+    stem: "집(　　　) 공부합니다.",
     options: ["에서", "에", "을", "도"], answerIndex: 0,
   },
   {
@@ -187,11 +199,14 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
     group: "※ [B5~B6] 다음을 읽고 맞지 않는 것을 고르십시오.",
     passage: "한국어 말하기 대회\n날짜: 10월 5일 (토요일)\n시간: 오후 2시 ~ 4시\n장소: 학생회관 3층\n※ 참가비는 없습니다.",
     stem: "맞지 않는 것을 고르십시오.",
+    // The key used to read 대회에 나가려면 돈을 내야 합니다 — -(으)려면 and
+    // -아야 하다 are both 2급 forms, so a 1급 student who read the notice
+    // correctly could still miss it on grammar she has not met.
     options: [
       "대회는 토요일에 합니다.",
       "대회는 두 시간 동안 합니다.",
       "대회는 학생회관에서 합니다.",
-      "대회에 나가려면 돈을 내야 합니다.",
+      "참가비는 오천 원입니다.",
     ],
     answerIndex: 3,
   },
@@ -212,11 +227,15 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
     group: "※ [B7~B8] 다음을 읽고 내용이 같은 것을 고르십시오.",
     passage: "저는 지난 주말에 부산에 갔습니다. 바다를 보고 회를 먹었습니다. 날씨가 아주 더웠지만 재미있었습니다.",
     stem: "내용이 같은 것을 고르십시오.",
+    // Only the key used to be built from the passage's own words; the three
+    // distractors introduced 다음 주말, 수영 and 불고기, none of which appear in
+    // it. Scanning for the option whose words are all present answered the
+    // question. Every option now draws on the passage, so scanning fails.
     options: [
-      "저는 다음 주말에 부산에 갑니다.",
+      "저는 부산에서 바다를 못 봤습니다.",
       "부산은 날씨가 더웠습니다.",
-      "저는 바다에서 수영을 했습니다.",
-      "저는 부산에서 불고기를 먹었습니다.",
+      "저는 부산에서 회를 먹지 않았습니다.",
+      "날씨가 시원해서 재미있었습니다.",
     ],
     answerIndex: 1,
   },
@@ -224,13 +243,16 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
     id: "B8", section: "B",
     passage: "우리 반에는 학생이 열 명 있습니다. 남자가 네 명이고 여자가 여섯 명입니다. 저는 우리 반에서 나이가 제일 많습니다.",
     stem: "내용이 같은 것을 고르십시오.",
+    // The key was 우리 반 학생은 모두 열 명입니다 — a restatement of the first
+    // clause, which left the counts and the superlative in the passage doing no
+    // work at all. The key now turns on 남자가 네 명이고 여자가 여섯 명입니다.
     options: [
       "우리 반에 남자가 더 많습니다.",
-      "여자는 네 명입니다.",
+      "우리 반에 여자가 남자보다 많습니다.",
       "저는 우리 반에서 제일 어립니다.",
-      "우리 반 학생은 모두 열 명입니다.",
+      "우리 반에는 남자만 있습니다.",
     ],
-    answerIndex: 3,
+    answerIndex: 1,
   },
   {
     id: "B9", section: "B",
@@ -241,8 +263,11 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "B10", section: "B",
     stem: "날씨가 추워서 (　　　)를 입었어요.",
-    hintAr: "الفعل 입다 بيتقال على اللبس اللي بيتلبس على الجسم.",
-    options: ["모자", "신발", "코트", "우산"], answerIndex: 2,
+    // 를 attaches only to a vowel-final noun, so the old 신발 and 우산 were
+    // ungrammatical and could be struck out before vocabulary entered — half the
+    // item decided on phonology. All four options are vowel-final now, and each
+    // takes a different verb: 쓰다, 입다, 신다, 차다.
+    options: ["모자", "코트", "구두", "시계"], answerIndex: 1,
   },
 
   // ---- C — 2급 (10) ------------------------------------------------------
@@ -254,14 +279,20 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "C2", section: "C",
-    stem: "저는 한국 회사에서 (　　　) 한국어를 배웁니다.",
-    hintAr: "المعنى المقصود: بتعلّم كوري «عشان» أشتغل في شركة كورية.",
+    // The stem was 저는 한국 회사에서 (　) 한국어를 배웁니다, which 일하는데 also
+    // answers: 한국 회사에서 일하는데 한국어를 배웁니다 is a natural sentence,
+    // so a student reading for sense rather than for the target form was marked
+    // wrong. 내년에 puts the work in the future, where -는데 cannot follow.
+    stem: "저는 내년에 한국 회사에서 (　　　) 지금 한국어를 공부합니다.",
     options: ["일하지만", "일하거나", "일하려고", "일하는데"], answerIndex: 2,
   },
   {
     id: "C3", section: "C",
     stem: "어제는 (　　　) 오늘은 시간이 많아요.",
-    options: ["바빠서", "바쁘고", "바빴지만", "바쁘면"], answerIndex: 2,
+    // 바빴지만 was the only past-marked option, so the item was answerable by
+    // spotting -았- without knowing what -지만 does. Two options carry the tense
+    // now, and the connective is what separates them.
+    options: ["바빴기 때문에", "바쁘거나", "바빴지만", "바쁘면"], answerIndex: 2,
   },
   {
     id: "C4", section: "C",
@@ -273,10 +304,15 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
     group: "※ [C5~C6] 다음을 읽고 중심 생각을 고르십시오.",
     passage: "저는 아침마다 삼십 분씩 걷습니다. 처음에는 힘들었지만 지금은 몸이 아주 가볍습니다. 여러분도 매일 조금씩 운동해 보세요.",
     stem: "중심 생각을 고르십시오.",
+    // The key was 매일 조금씩 운동하는 것이 좋습니다 — the closing sentence with
+    // its ending swapped, so the last line answered the question on its own. The
+    // key now joins the recommendation to the result the passage reports, which
+    // cannot be lifted from any one line. 아침에는 걷기가 좋습니다 went too: the
+    // passage is entirely about walking in the morning, so it was arguable.
     options: [
       "걷기는 힘든 운동입니다.",
-      "매일 조금씩 운동하는 것이 좋습니다.",
-      "아침에는 걷기가 좋습니다.",
+      "매일 운동하면 몸이 좋아집니다.",
+      "아침 운동이 저녁 운동보다 좋습니다.",
       "삼십 분은 짧은 시간입니다.",
     ],
     answerIndex: 1,
@@ -307,7 +343,11 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "C8", section: "C",
-    stem: "(가) 우리는 같이 사진을 많이 찍었습니다.\n     (나) 지난주에 친구가 한국에 왔습니다.\n     (다) 친구는 다음 달에 또 올 겁니다.\n     (라) 저는 친구와 함께 경복궁에 갔습니다.",
+    // These four sentences carried no connective at all — C7 has 그래서 and
+    // 하지만 doing the ordering work, and this item had nothing. (나)-(가)-(라)-(다)
+    // read as well as the key, because only real-world habit put photographing a
+    // place after arriving at it. 그곳 has no referent until 경복궁 appears.
+    stem: "(가) 그곳에서 우리는 사진을 많이 찍었습니다.\n     (나) 지난주에 친구가 한국에 왔습니다.\n     (다) 친구는 다음 달에 또 올 겁니다.\n     (라) 저는 친구와 함께 경복궁에 갔습니다.",
     options: [
       "(나)-(라)-(가)-(다)",
       "(나)-(가)-(라)-(다)",
@@ -325,6 +365,11 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   },
   {
     id: "C10", section: "C",
+    // The repeat is deliberate. This question asks about 위 글 and used to carry
+    // no passage of its own, so it read correctly only because the page happens
+    // to paint a whole section on one screen and C9's box sat above it. The
+    // TOPIK II bank repeats its passages on E9 and E11 for the same reason.
+    passage: "저는 작년부터 한국 회사에서 일하고 있습니다. 처음에는 한국어를 잘 못해서 회의 때 아주 힘들었습니다. (   ㉠   ) 저녁마다 두 시간씩 한국어를 공부했습니다. 요즘은 회의에서 제 생각을 말할 수 있습니다. 아직 어려운 말은 모르지만 매일 조금씩 좋아지고 있습니다.",
     stem: "위 글의 내용과 같은 것을 고르십시오.",
     options: [
       "저는 한국어를 배운 적이 없습니다.",
