@@ -26,6 +26,11 @@
  * format; none of the passages, sentences or options are taken from a past
  * paper.
  *
+ * THE BLANK is three U+3000 IDEOGRAPHIC SPACEs, not ASCII spaces. HTML
+ * collapses a run of ASCII spaces to one, which rendered every gap-fill
+ * question as an empty "( )"; U+3000 is not collapsed, so the gap keeps its
+ * width with no CSS involved.
+ *
  * THE GATE. Sections run easiest-first and the student is placed at the FIRST
  * section they fail — the section whose material they still need. So a true
  * beginner answers eight questions and stops, and nobody is asked about level 2
@@ -82,7 +87,7 @@ export const TOPIK1_SECTIONS: Topik1Section[] = [
     instrAr: "اقرأ واختر الإجابة الصحيحة. القسم ده بيقيس قراءة الهانغول والجُمل الأساسية وحروف الجر.",
     instrEn: "Read and choose the correct answer. This section covers reading Hangul, basic sentences and particles.",
     focusKo: "은/는 · 이/가 · 을/를 · 에 · 에서 · 이에요/예요",
-    max: 8, pass: 6,
+    max: 8, pass: 5,
   },
   {
     id: "B",
@@ -130,28 +135,28 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "A4", section: "A",
     group: "※ [A4~A8] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
-    stem: "물(       ) 마셔요.",
+    stem: "물(　　　) 마셔요.",
     hintAr: "الفعل 마시다 معناه «يشرب».",
     options: ["을", "이", "에", "에서"], answerIndex: 0,
   },
   {
     id: "A5", section: "A",
-    stem: "가: 어디에 가요?\n     나: 도서관(       ) 가요.",
+    stem: "가: 어디에 가요?\n     나: 도서관(　　　) 가요.",
     options: ["에서", "에", "이", "의"], answerIndex: 1,
   },
   {
     id: "A6", section: "A",
-    stem: "가: 어디에서 공부해요?\n     나: 집(       ) 공부해요.",
+    stem: "가: 어디에서 공부해요?\n     나: 집(　　　) 공부해요.",
     options: ["에서", "에", "을", "도"], answerIndex: 0,
   },
   {
     id: "A7", section: "A",
-    stem: "가: 이름이 뭐예요?\n     나: 제 이름은 하나(       ).",
+    stem: "가: 이름이 뭐예요?\n     나: 제 이름은 하나(　　　).",
     options: ["이에요", "에요", "예요", "이요"], answerIndex: 2,
   },
   {
     id: "A8", section: "A",
-    stem: "책상 위(       ) 책이 있어요.",
+    stem: "책상 위(　　　) 책이 있어요.",
     options: ["와", "에", "에서", "을"], answerIndex: 1,
   },
 
@@ -159,22 +164,22 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "B1", section: "B",
     group: "※ [B1~B4] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
-    stem: "어제 친구를 (       ). 같이 영화를 봤어요.",
+    stem: "어제 친구를 (　　　). 같이 영화를 봤어요.",
     options: ["만나요", "만날 거예요", "만났어요", "만나고 싶어요"], answerIndex: 2,
   },
   {
     id: "B2", section: "B",
-    stem: "저는 한국 음식을 좋아해요. (       ) 김치는 안 먹어요.",
+    stem: "저는 한국 음식을 좋아해요. (　　　) 김치는 안 먹어요.",
     options: ["그래서", "하지만", "그리고", "그러면"], answerIndex: 1,
   },
   {
     id: "B3", section: "B",
-    stem: "가: 지금 몇 시예요?\n     나: (       )이에요.",
+    stem: "가: 지금 몇 시예요?\n     나: (　　　)이에요.",
     options: ["삼 시 반", "세 시간", "세 시 반", "삼 시간"], answerIndex: 2,
   },
   {
     id: "B4", section: "B",
-    stem: "가: 주말에 뭐 할 거예요?\n     나: 부모님 댁에 (       ).",
+    stem: "가: 주말에 뭐 할 거예요?\n     나: 부모님 댁에 (　　　).",
     options: ["갈 거예요", "갔어요", "가고 있어요", "가지 마세요"], answerIndex: 0,
   },
   {
@@ -230,12 +235,12 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "B9", section: "B",
     group: "※ [B9~B10] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
-    stem: "머리가 아파서 (       )에 갔어요.",
+    stem: "머리가 아파서 (　　　)에 갔어요.",
     options: ["은행", "병원", "시장", "극장"], answerIndex: 1,
   },
   {
     id: "B10", section: "B",
-    stem: "날씨가 추워서 (       )를 입었어요.",
+    stem: "날씨가 추워서 (　　　)를 입었어요.",
     hintAr: "الفعل 입다 بيتقال على اللبس اللي بيتلبس على الجسم.",
     options: ["모자", "신발", "코트", "우산"], answerIndex: 2,
   },
@@ -244,23 +249,23 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
   {
     id: "C1", section: "C",
     group: "※ [C1~C4] 다음 (   )에 들어갈 가장 알맞은 것을 고르십시오.",
-    stem: "시간이 (       ) 같이 점심을 먹읍시다.",
+    stem: "시간이 (　　　) 같이 점심을 먹읍시다.",
     options: ["있어도", "있으면", "있고", "있어서"], answerIndex: 1,
   },
   {
     id: "C2", section: "C",
-    stem: "저는 한국 회사에서 (       ) 한국어를 배웁니다.",
+    stem: "저는 한국 회사에서 (　　　) 한국어를 배웁니다.",
     hintAr: "المعنى المقصود: بتعلّم كوري «عشان» أشتغل في شركة كورية.",
     options: ["일하지만", "일하거나", "일하려고", "일하는데"], answerIndex: 2,
   },
   {
     id: "C3", section: "C",
-    stem: "어제는 (       ) 오늘은 시간이 많아요.",
+    stem: "어제는 (　　　) 오늘은 시간이 많아요.",
     options: ["바빠서", "바쁘고", "바빴지만", "바쁘면"], answerIndex: 2,
   },
   {
     id: "C4", section: "C",
-    stem: "숙제를 다 (       ) 후에 텔레비전을 봤어요.",
+    stem: "숙제를 다 (　　　) 후에 텔레비전을 봤어요.",
     options: ["하는", "한", "할", "해서"], answerIndex: 1,
   },
   {
