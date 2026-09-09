@@ -24,6 +24,7 @@ import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
 import TrialSlotProposals from "@/components/admin/trial/TrialSlotProposals";
+import TrialAttendanceRoster from "@/components/admin/trial/TrialAttendanceRoster";
 import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
 import { emailLanguageFor } from "@/components/admin/trial/emailLanguage";
 import { TrialSlotRow } from "@/types/trial-admin";
@@ -994,6 +995,12 @@ const TrialClassesManager = () => {
           suggestion can be turned into a real class — the email that announced
           it carries no button. */}
       <TrialSlotProposals />
+
+      {/* Who said yes, who said no, who never answered and who was never
+          asked — named, per session. The answer already existed elsewhere,
+          but only as a caption hidden behind a meeting link, so a session
+          without one showed nothing at all. */}
+      <TrialAttendanceRoster />
 
       {/* Trial schedule — edit dates/times/language/capacity for your own availability */}
       <Card>
