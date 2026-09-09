@@ -26,17 +26,51 @@ window.addEventListener("vite:preloadError", () => {
   window.location.reload();
 });
 
-// Redirect any non-production domain to kloversegy.com
+/**
+ * Send stray domains to kloversegy.com — but not the preview deployments.
+ *
+ * This redirect used to fire on ANY hostname that was not the canonical one,
+ * which included every Vercel preview build. Opening a branch preview bounced
+ * you straight to production, so the preview showed the code already live
+ * rather than the code under review. The effect was that no change could be
+ * looked at before it was merged: the only way to see a branch was to ship it.
+ * Two separate reviews on 9 Sep hit this within an hour of each other.
+ *
+ * The redirect is still worth having. Its job is SEO — a second host serving
+ * the same pages splits ranking signals — and the hosts that actually threaten
+ * that are the stable ones: www.kloversegy.com and the short production alias
+ * klovers.vercel.app. Both still redirect.
+ *
+ * Preview deployments do not threaten it. Vercel serves them with
+ * `X-Robots-Tag: noindex` by default, they are not linked from anywhere, and
+ * their hostnames are per-deployment. They all sit under this team's suffix,
+ * which is what the exemption matches — a branch alias like
+ * `klovers-git-<branch>-learnkorean-specs-projects.vercel.app` and a build URL
+ * like `klovers-<hash>-learnkorean-specs-projects.vercel.app` both end in it,
+ * while `klovers.vercel.app` does not and keeps redirecting.
+ *
+ * localhost and 127.0.0.1 were already exempt; 0.0.0.0 and the *.local
+ * hostnames a phone uses to reach a dev server on the same wifi were not, and
+ * are now, because testing a layout on a real phone is the other time this bit.
+ */
 const CANONICAL = "kloversegy.com";
-if (
-  typeof window !== "undefined" &&
-  window.location.hostname !== CANONICAL &&
-  window.location.hostname !== "localhost" &&
-  !window.location.hostname.includes("127.0.0.1")
-) {
-  window.location.replace(
-    `https://${CANONICAL}${window.location.pathname}${window.location.search}${window.location.hash}`
-  );
+const PREVIEW_SUFFIX = "-learnkorean-specs-projects.vercel.app";
+
+const isCanonicalHost = (host: string) => host === CANONICAL;
+const isLocalHost = (host: string) =>
+  host === "localhost" ||
+  host === "0.0.0.0" ||
+  host.includes("127.0.0.1") ||
+  host.endsWith(".local");
+const isPreviewHost = (host: string) => host.endsWith(PREVIEW_SUFFIX);
+
+if (typeof window !== "undefined") {
+  const host = window.location.hostname;
+  if (!isCanonicalHost(host) && !isLocalHost(host) && !isPreviewHost(host)) {
+    window.location.replace(
+      `https://${CANONICAL}${window.location.pathname}${window.location.search}${window.location.hash}`
+    );
+  }
 }
 
 createRoot(document.getElementById("root")!).render(

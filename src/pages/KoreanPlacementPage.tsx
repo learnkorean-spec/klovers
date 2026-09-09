@@ -20,25 +20,33 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import {
-  CheckCircle, AlertCircle, ArrowRight, ArrowLeft, Share2,
+  CheckCircle, ArrowRight, ArrowLeft, Share2,
   Download, RefreshCw, Mic, Square, Play, RotateCcw, PenLine, Loader2,
   Sparkles, Target, Clock, Save, Ban,
 } from "lucide-react";
 import {
-  TOPIK1_SECTIONS, TOPIK1_QUESTIONS,
-  type Topik1Question, type Topik1SectionId,
-} from "@/constants/topik1Reading";
-import {
-  computeTopikPlacement,
-  type TopikGrade, type TopikPlacementResult,
-} from "@/constants/topikPlacement";
+  EXAM_SECTIONS, EXAM_QUESTIONS, EXAM_MAX, EXAM_BOOK_KEY, gradeExam,
+  type ExamQuestion, type ExamResult,
+} from "@/constants/topikPapers";
+import { TOPIK_GRADES, type TopikGrade } from "@/constants/topikPlacement";
 import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement";
 
 /**
- * The Korean placement test — one test, answered as a TOPIK grade (급).
+ * The Korean placement test — one test of fifty-two reading items, answered as
+ * a TOPIK grade (급).
  *
- * The bank is TOPIK I 읽기 in format and scope (topik1Reading.ts); grading and
- * the ceiling live in topikPlacement.ts. This file only sequences and renders.
+ * The page briefly asked the student to choose between a TOPIK I paper and a
+ * TOPIK II paper before the first question. That is asking her to place herself
+ * before the placement test will place her, so the two banks are now a single
+ * test, easiest first. The bank, the cut scores and the grading live in
+ * topikPapers.ts; the copy for each grade lives in topikPlacement.ts. This file
+ * only sequences and renders.
+ *
+ * Fifty-two questions is a lot to put in front of a beginner, and the page
+ * answers that by handing her the decision rather than making it for her: from
+ * section C onward there is a control that finishes the test on what she has
+ * answered. Nothing ejects her mid-exam, which is the behaviour this page
+ * removed and must not grow back.
  *
  * Two things must survive every future edit, because they are why the page is
  * public:
@@ -54,7 +62,7 @@ import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement"
  *      lead is silently rejected.
  */
 
-const STORAGE_KEY = "klovers_placement_draft_v4"; // v4: TOPIK I reading bank
+const STORAGE_KEY = "klovers_placement_draft_v6"; // v6: one test, sectionsSeen stored
 const AUDIO_BUCKET = "placement-audio";
 
 /**
@@ -65,10 +73,10 @@ const AUDIO_BUCKET = "placement-audio";
  * and the row is one boolean away from returning.
  *
  * There is a reason to leave it off until the copy is revisited: both images
- * are drawn with `score` out of `totalMax`, and under the section-gate the two
- * numbers no longer belong together. A beginner who stops after section A can
- * hold 3 of 8 in the only section they were shown, and the certificate would
- * print "3 / 28" — a number that reads like a failure and measures nothing.
+ * are drawn with `score` out of `max`, and every student who finishes early —
+ * including the person who says up front that she cannot read Hangul — would be
+ * handed a certificate reading something over 52, a denominator counting
+ * questions she was never asked.
  */
 const SHOW_RESULT_SHARING = false;
 
@@ -79,21 +87,31 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
   pre1: { emoji: "🌱", tagline: "Hangul Foundation" },
   g1: { emoji: "📗", tagline: "TOPIK Level 1" },
   g2: { emoji: "📘", tagline: "TOPIK Level 2" },
-  above: { emoji: "🏆", tagline: "Past TOPIK I" },
+  g3: { emoji: "📙", tagline: "TOPIK Level 3" },
+  g4: { emoji: "📕", tagline: "TOPIK Level 4" },
+  above: { emoji: "🏆", tagline: "Past 4급" },
 };
 
 /**
- * The answers the test can give, shown on the intro screen.
+ * The levels the test measures, shown on the intro screen.
  *
  * Nothing else on the site tells a visitor what the result will look like, and
  * "we will tell you your level" is a weaker promise than showing the levels it
  * chooses between. The order is the order of the ladder.
+ *
+ * One of the six grades is deliberately absent. `above` is not a level — it is
+ * the test saying it has run out of room — so listing it here would promise a
+ * placement the result screen then refuses to make.
  */
 const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
   { ko: "1급", ar: "المستوى الأول", en: "Level 1", emoji: "📗" },
   { ko: "2급", ar: "المستوى الثاني", en: "Level 2", emoji: "📘" },
+  { ko: "3급", ar: "المستوى الثالث", en: "Level 3", emoji: "📙" },
+  { ko: "4급", ar: "المستوى الرابع", en: "Level 4", emoji: "📕" },
 ];
+
+const SECTION_IDS = EXAM_SECTIONS.map((s) => s.id);
 
 type Phase = "intro" | "test" | "extras" | "result";
 
@@ -101,6 +119,7 @@ interface Draft {
   answers: Record<string, number>;
   step: number;
   startedAt: number;
+  sectionsSeen: string[];
 }
 
 const KoreanPlacementPage = () => {
@@ -114,7 +133,13 @@ const KoreanPlacementPage = () => {
   const [phase, setPhase] = useState<Phase>("intro");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [result, setResult] = useState<TopikPlacementResult | null>(null);
+  /**
+   * The sections the student has actually been shown, in order. This is the
+   * difference between a question she got wrong and a question she was never
+   * asked, and the result screen is unusable without it.
+   */
+  const [sectionsSeen, setSectionsSeen] = useState<string[]>([SECTION_IDS[0]]);
+  const [result, setResult] = useState<ExamResult | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(() => Date.now());
 
@@ -137,9 +162,9 @@ const KoreanPlacementPage = () => {
   const topRef = useRef<HTMLDivElement | null>(null);
 
   const questionsBySection = useMemo(() => {
-    const map = {} as Record<Topik1SectionId, Topik1Question[]>;
-    for (const s of TOPIK1_SECTIONS) map[s.id] = [];
-    for (const q of TOPIK1_QUESTIONS) map[q.section].push(q);
+    const map: Record<string, ExamQuestion[]> = {};
+    for (const s of EXAM_SECTIONS) map[s.id] = [];
+    for (const q of EXAM_QUESTIONS) map[q.section]?.push(q);
     return map;
   }, []);
 
@@ -186,9 +211,20 @@ const KoreanPlacementPage = () => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const d = JSON.parse(saved) as Draft;
-        if (d?.answers && Object.keys(d.answers).length > 0) {
+        // A draft that cannot say which sections were shown cannot be graded:
+        // the result would either credit the student with sections she never
+        // reached or claim she got wrong the questions behind them. An
+        // unreadable `sectionsSeen` is therefore a discarded draft, not a
+        // repairable one.
+        const seen = Array.isArray(d?.sectionsSeen)
+          && d.sectionsSeen.length > 0
+          && d.sectionsSeen.every((id) => SECTION_IDS.includes(id))
+          ? d.sectionsSeen
+          : null;
+        if (seen && d?.answers && Object.keys(d.answers).length > 0) {
           setAnswers(d.answers);
-          setStep(d.step ?? 0);
+          setSectionsSeen(seen);
+          setStep(Math.min(Math.max(d.step ?? 0, 0), EXAM_SECTIONS.length - 1));
           setStartedAt(d.startedAt ?? Date.now());
           setPhase("test");
           toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
@@ -200,6 +236,8 @@ const KoreanPlacementPage = () => {
     localStorage.removeItem("klovers_placement_draft");
     localStorage.removeItem("klovers_placement_draft_v2");
     localStorage.removeItem("klovers_placement_draft_v3");
+    localStorage.removeItem("klovers_placement_draft_v4");
+    localStorage.removeItem("klovers_placement_draft_v5");
     localStorage.removeItem("klovers_unit_placement_draft_v1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -207,9 +245,9 @@ const KoreanPlacementPage = () => {
   useEffect(() => {
     if (phase !== "test") return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, step, startedAt } satisfies Draft));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, step, startedAt, sectionsSeen } satisfies Draft));
     } catch { /* ignore */ }
-  }, [answers, phase, step, startedAt]);
+  }, [answers, phase, step, startedAt, sectionsSeen]);
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -262,62 +300,102 @@ const KoreanPlacementPage = () => {
   };
 
   // ---- flow ---------------------------------------------------------------
-  const sectionPassed = (id: Topik1SectionId, given: Record<string, number>) => {
-    const section = TOPIK1_SECTIONS.find((s) => s.id === id);
-    if (!section) return false;
-    const correct = questionsBySection[id].filter((q) => given[q.id] === q.answerIndex).length;
-    return correct >= section.pass;
-  };
-
-  const finish = async (finalAnswers: Record<string, number>) => {
-    const res = computeTopikPlacement(finalAnswers);
+  /**
+   * `seen` is passed in rather than read from state because both callers know
+   * something state does not yet: the stop button finishes on the sections
+   * shown so far, and the student who cannot read Hangul was shown none.
+   */
+  const finish = async (finalAnswers: Record<string, number>, seen: string[]) => {
+    const res = gradeExam(finalAnswers, seen);
+    const info = TOPIK_GRADES[res.grade];
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 
     // Result first, network second — a slow insert must never hold up the
     // thing the student came for.
     setResult(res);
     setPhase("result");
-    track.custom("placement_recommendation_shown", { level: res.info.levelKey, score: res.totalScore });
-    logLeadEvent({ source_type: "placement", cta_label: "recommendation_shown", metadata: { level: res.info.levelKey, score: res.totalScore } });
+    track.custom("placement_recommendation_shown", { level: info.levelKey, score: res.score });
+    logLeadEvent({ source_type: "placement", cta_label: "recommendation_shown", metadata: { level: info.levelKey, score: res.score } });
 
     if (userId) {
       const { error } = await supabase.from("placement_tests").insert({
-        user_id: userId, score: res.totalScore, level: res.info.levelKey,
+        user_id: userId, score: res.score, level: info.levelKey,
       });
       if (!error) {
         // course_level_key is the canonical, machine-set column. profiles.level
         // is the learner's own free-form self-assessment and stays untouched.
-        await supabase.from("profiles").update({ course_level_key: res.info.levelKey } as any).eq("user_id", userId);
+        const { error: profileError } = await supabase.from("profiles").update({ course_level_key: info.levelKey } as any).eq("user_id", userId);
+        // The placement row is already written, so a failed profile update
+        // costs the student nothing they can see; the next attempt corrects it.
+        if (profileError) return;
       }
     }
   };
 
   const nextSection = () => {
-    const section = TOPIK1_SECTIONS[step];
-    // The gate: a failed section ends the test here. Everything after it would
-    // measure knowledge that sits on top of the gap just found, so asking is
-    // both pointless and discouraging.
-    if (!sectionPassed(section.id, answers)) { void finish(answers); return; }
-    if (step < TOPIK1_SECTIONS.length - 1) { setStep(step + 1); return; }
-    void finish(answers);
+    // Nothing is graded until the last section is behind them. The level comes
+    // from the total, so there is no question this point in the test could
+    // answer, and stopping someone here is the behaviour this page removed.
+    if (step < EXAM_SECTIONS.length - 1) {
+      const nextId = EXAM_SECTIONS[step + 1].id;
+      setSectionsSeen((prev) => (prev.includes(nextId) ? prev : [...prev, nextId]));
+      setStep(step + 1);
+      return;
+    }
+    void finish(answers, sectionsSeen);
   };
 
   /**
-   * The way out of section A for someone who cannot read Hangul at all.
+   * Beginning the test is also where the funnel learns she got past the intro.
+   *
+   * This is the event that used to be `paper_chosen`, relabelled now that there
+   * is no paper to choose. It stays a label of its own rather than becoming a
+   * second `test_started`: the mount-time event has five months behind it and
+   * means "reached the placement page", so sending it again here would quietly
+   * double its volume and change what every query written against it returns.
+   */
+  const startTest = () => {
+    logLeadEvent({ source_type: "placement_test", cta_label: "test_begun" });
+    setAnswers({});
+    setResult(null);
+    setStep(0);
+    setSectionsSeen([SECTION_IDS[0]]);
+    setStartedAt(Date.now());
+    setPhase("test");
+  };
+
+  /**
+   * The way out for someone who cannot read Hangul at all.
    *
    * The funnel is unambiguous about where this test loses people: 82 sessions
-   * reached the first question screen and 32 reached the second. Failing
-   * section A already produces 한글 기초; this button produces the same answer
-   * without making them guess eight times first, and lands them on the result
-   * screen, where the trial CTA and the email capture live.
+   * reached the first question screen and 32 reached the second. An unanswered
+   * test grades to 한글 기초; this button produces the same answer without
+   * making them guess their way through it first, and lands them on the result
+   * screen, where the trial CTA and the email capture live. No section is
+   * recorded as seen, so the breakdown does not report a score on questions
+   * that were never put in front of her.
    */
   const handleCannotReadHangul = () => {
     logLeadEvent({ source_type: "placement_test", cta_label: "cannot_read_hangul" });
-    void finish({});
+    void finish({}, []);
+  };
+
+  /**
+   * Finishing on what she has answered, offered from section C onward.
+   *
+   * The event is separate from `recommendation_shown` because the two ask
+   * different questions of the funnel: one counts results delivered, this one
+   * counts the students for whom fifty-two questions was more test than they
+   * needed, and where in the test that became true.
+   */
+  const stopHere = (sectionId: string) => {
+    logLeadEvent({ source_type: "placement_test", cta_label: "stopped_early", metadata: { section: sectionId } });
+    void finish(answers, sectionsSeen);
   };
 
   const handleRetake = () => {
     setAnswers({}); setResult(null); setStep(0);
+    setSectionsSeen([SECTION_IDS[0]]);
     setWriting({}); setAudio({}); setExtrasSaved(false);
     setLeadSaved(false); setLeadName(""); setLeadEmail("");
     setStartedAt(Date.now());
@@ -325,50 +403,54 @@ const KoreanPlacementPage = () => {
   };
 
   // ---- result-screen actions (funnel-critical literals) --------------------
-  const handleShare = (res: TopikPlacementResult) => {
-    const label = isAr ? res.info.labelAr : res.info.labelEn;
+  const handleShare = (res: ExamResult) => {
+    const info = TOPIK_GRADES[res.grade];
+    const label = isAr ? info.labelAr : info.labelEn;
     const text = `I took the Klovers Korean Placement Test!\nMy level: ${label}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
       .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "شارك مستواك مع أصدقائك." : "Share your level with friends." }))
       .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "انسخ الرابط لمشاركة نتيجتك." : "Copy the link to share your result." }));
   };
 
-  const handleWhatsAppEnroll = (res: TopikPlacementResult) => {
-    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى ومستواي: ${res.info.labelAr}. هل يمكنني الحجز؟`);
-    trackAndOpenWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, { cta_label: "placement_enroll", metadata: { level: res.info.levelKey, score: res.totalScore } });
+  const handleWhatsAppEnroll = (res: ExamResult) => {
+    const info = TOPIK_GRADES[res.grade];
+    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى ومستواي: ${info.labelAr}. هل يمكنني الحجز؟`);
+    trackAndOpenWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, { cta_label: "placement_enroll", metadata: { level: info.levelKey, score: res.score } });
   };
 
-  const handleDownloadCard = (res: TopikPlacementResult) => {
-    const meta = GRADE_META[res.info.grade];
+  const handleDownloadCard = (res: ExamResult) => {
+    const info = TOPIK_GRADES[res.grade];
+    const meta = GRADE_META[res.grade];
     const canvas = document.createElement("canvas");
     drawPlacementCard(canvas, {
       levelEmoji: meta.emoji,
-      levelLabel: `${res.info.labelKo} — ${res.info.labelEn}`,
+      levelLabel: `${info.labelKo} — ${info.labelEn}`,
       tagline: meta.tagline,
-      score: res.totalScore,
-      total: res.totalMax,
+      score: res.score,
+      total: res.max,
     });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
-    a.download = `klovers-${res.info.grade}.png`;
+    a.download = `klovers-${res.grade}.png`;
     a.click();
     toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "شارك مستواك على مواقع التواصل." : "Share your level on social media." });
   };
 
-  const handleDownloadCertificate = (res: TopikPlacementResult) => {
-    const meta = GRADE_META[res.info.grade];
+  const handleDownloadCertificate = (res: ExamResult) => {
+    const info = TOPIK_GRADES[res.grade];
+    const meta = GRADE_META[res.grade];
     const canvas = document.createElement("canvas");
     drawPlacementCertificate(canvas, {
       levelEmoji: meta.emoji,
-      levelLabel: `${res.info.labelKo} — ${res.info.labelEn}`,
+      levelLabel: `${info.labelKo} — ${info.labelEn}`,
       tagline: meta.tagline,
-      score: res.totalScore,
-      total: res.totalMax,
+      score: res.score,
+      total: res.max,
       date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
     });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
-    a.download = `klovers-certificate-${res.info.grade}.png`;
+    a.download = `klovers-certificate-${res.grade}.png`;
     a.click();
     toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "شارك إنجازك على LinkedIn أو سيرتك الذاتية." : "Share your achievement on LinkedIn or CV." });
   };
@@ -378,12 +460,13 @@ const KoreanPlacementPage = () => {
       toast({ title: isAr ? "يرجى إدخال اسمك وبريدك الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
     }
     setLeadSaving(true);
+    const levelKey = result ? TOPIK_GRADES[result.grade].levelKey : "";
     // `source` must stay exactly "placement_test": the anon INSERT policy on
     // public.leads checks that literal, so any other value is rejected by RLS.
     const { error } = await supabase.from("leads").insert({
       name: leadName.trim(),
       email: leadEmail.trim(),
-      level: result?.info.levelKey ?? "",
+      level: levelKey,
       source: "placement_test",
       status: "new",
     });
@@ -393,8 +476,8 @@ const KoreanPlacementPage = () => {
       return;
     }
     setLeadSaved(true);
-    track.custom("placement_lead_captured", { level: result?.info.levelKey });
-    logLeadEvent({ source_type: "email", cta_label: "placement_study_plan", metadata: { level: result?.info.levelKey } });
+    track.custom("placement_lead_captured", { level: levelKey });
+    logLeadEvent({ source_type: "email", cta_label: "placement_study_plan", metadata: { level: levelKey } });
   };
 
   const saveExtras = async () => {
@@ -422,12 +505,14 @@ const KoreanPlacementPage = () => {
     const { error } = await (supabase as any).from("unit_placement_tests").insert({
       id: attemptId,
       user_id: userId,
-      book: "topik1",
+      book: EXAM_BOOK_KEY,
       section_scores: result.sectionScores,
-      mcq_score: result.totalScore,
-      start_unit: result.info.grade,
-      failed_section: result.failedSection,
-      suggested_level_key: result.info.levelKey,
+      mcq_score: result.score,
+      start_unit: result.grade,
+      // No section can fail on its own any more, so there is nothing to name
+      // here; the column stays for the rows written before today.
+      failed_section: null,
+      suggested_level_key: TOPIK_GRADES[result.grade].levelKey,
       answers,
       writing: writingRows,
       speaking_audio: speaking,
@@ -445,7 +530,7 @@ const KoreanPlacementPage = () => {
   const t = (ar: string, en: string) => (isAr ? ar : en);
 
   // ---- question renderer ---------------------------------------------------
-  const renderQuestion = (q: Topik1Question) => (
+  const renderQuestion = (q: ExamQuestion) => (
     <div key={q.id} className="space-y-2">
       {q.group && (
         <p className="pt-4 text-sm font-semibold" dir="ltr">{q.group}</p>
@@ -497,11 +582,11 @@ const KoreanPlacementPage = () => {
     </div>
   );
 
-  // ---- intro --------------------------------------------------------------
+  // ---- intro ---------------------------------------------------------------
   if (phase === "intro") {
     const FEATURES = [
-      { icon: Target, text: t("بأسئلة على شكل TOPIK I الحقيقي", "Questions in the real TOPIK I format") },
-      { icon: Clock,  text: t("٨ أسئلة بس لو مبتدئ", "Just 8 questions if you are a beginner") },
+      { icon: Target, text: t("بأسئلة على شكل امتحان TOPIK الحقيقي", "Questions in the real TOPIK reading formats") },
+      { icon: Clock,  text: t("٥٢ سؤال — وتقدر تنهيه بدري", `${EXAM_MAX} questions — and you can finish early`) },
       { icon: Save,   text: t("اقفل وارجع — محفوظ", "Close it and come back — saved") },
       { icon: Ban,    text: t("من غير قاموس ولا ترجمة", "No dictionary, no translator") },
     ];
@@ -543,8 +628,8 @@ const KoreanPlacementPage = () => {
                   </h1>
 
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    {t("أسئلة قراءة على شكل TOPIK I — الامتحان اللي بيقيس المستوى الأول والتاني.",
-                       "Reading questions in the TOPIK I format — the exam that measures levels 1 and 2.")}
+                    {t("أسئلة قراءة على شكل امتحان TOPIK الحقيقي. اختبار واحد، ٥٢ سؤال، بيبدأ من الأسهل وبيغطّي من المستوى الأول للرابع — وأول ما الأسئلة تعدّي مستواك تقدر تنهيه بنفسك.",
+                       `Reading questions in the real TOPIK formats. One test of ${EXAM_MAX} questions, easiest first, covering levels 1 to 4 — and once the questions are past you, you can finish it yourself.`)}
                   </p>
                 </div>
 
@@ -552,9 +637,12 @@ const KoreanPlacementPage = () => {
                     named result is a clearer promise than "we'll tell you". */}
                 <div>
                   <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center mb-3">
-                    {t("نتيجتك هتكون واحدة من دول", "YOUR RESULT WILL BE ONE OF THESE")}
+                    {t("المستويات اللي الاختبار ده بيقيسها", "THE LEVELS THIS TEST MEASURES")}
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* Three across on a phone and five once there is room: five
+                      cells at phone width leave each one too narrow for
+                      "المستوى الثالث" to sit on a single line. */}
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     {LADDER.map((l) => (
                       <div
                         key={l.ko}
@@ -569,8 +657,8 @@ const KoreanPlacementPage = () => {
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center mt-2">
-                    {t("ولو عدّيت الاختبار كله، معناها إنك فوق TOPIK I وهنقيّمك بنفسنا.",
-                       "Clear every section and it means you are past TOPIK I — we assess that ourselves.")}
+                    {t("بتجاوب اللي تقدر عليه ومجموعك هو اللي بيحدد مستواك، زي درجات القطع في TOPIK نفسه — مفيش قسم بينهي الاختبار في وشك.",
+                       "You answer what you can and your total decides the level, the way TOPIK's own cut scores work — no section ends the test on you.")}
                   </p>
                 </div>
 
@@ -583,19 +671,31 @@ const KoreanPlacementPage = () => {
                   ))}
                 </div>
 
+                {/* One button, because there is now one test. The second choice
+                    below it is not a variant of the test — it is the answer for
+                    the student the first question would already be too hard for,
+                    and it is styled quietly so it reads as a way out rather than
+                    a competing option. */}
                 <div className="space-y-2.5 pt-1">
-                  <Button
-                    size="lg"
-                    className="w-full h-12 text-base font-bold gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow"
-                    onClick={() => { setStartedAt(Date.now()); setPhase("test"); }}
-                  >
+                  <Button size="lg" className="w-full font-semibold" onClick={startTest}>
                     {t("ابدأ الاختبار", "Start the test")}
-                    <ArrowRight className={cn("h-4 w-4", isAr && "rotate-180")} />
+                    <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
                   </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    {t("لو لسه مش عارف تقرا الحروف الكورية، ده مش مانع — فيه زرار في أول سؤال بيوديك لنتيجتك على طول.",
-                       "If you cannot read the Korean alphabet yet, that is not a problem — the first screen has a button that takes you straight to your result.")}
-                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleCannotReadHangul}
+                    className="w-full text-start rounded-xl border border-border bg-muted/40 px-4 py-3 hover:border-primary/60 transition-colors"
+                  >
+                    <span className="block text-sm font-bold leading-snug">
+                      {t("لسه مش عارف أقرا الهانغول — وريني مستواي",
+                         "I can't read Hangul yet — show me my level")}
+                    </span>
+                    <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
+                      {t("من غير أسئلة — بنوديك لنتيجتك على طول.",
+                         "No questions — this takes you straight to your result.")}
+                    </span>
+                  </button>
                 </div>
 
               </CardContent>
@@ -609,6 +709,8 @@ const KoreanPlacementPage = () => {
 
   // ---- result -------------------------------------------------------------
   if (phase === "result" && result) {
+    const info = TOPIK_GRADES[result.grade];
+    const seenSections = EXAM_SECTIONS.filter((s) => result.sectionsSeen.includes(s.id));
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -616,42 +718,45 @@ const KoreanPlacementPage = () => {
           <Card dir={isAr ? "rtl" : "ltr"}>
             <CardContent className="pt-6 space-y-5">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
-                <p className="text-4xl">{GRADE_META[result.info.grade].emoji}</p>
+                <p className="text-4xl">{GRADE_META[result.grade].emoji}</p>
                 <p className="text-sm text-muted-foreground">{t("مستواك", "Your level")}</p>
-                <p className="text-3xl font-bold" dir="ltr">{result.info.labelKo}</p>
-                <p className="text-sm font-medium">{isAr ? result.info.labelAr : result.info.labelEn}</p>
-                <p className="text-sm text-muted-foreground">{isAr ? result.info.noteAr : result.info.noteEn}</p>
+                <p className="text-3xl font-bold" dir="ltr">{info.labelKo}</p>
+                <p className="text-sm font-medium">{isAr ? info.labelAr : info.labelEn}</p>
+                <p className="text-sm text-muted-foreground">{isAr ? info.noteAr : info.noteEn}</p>
               </div>
 
-              <div>
-                <p className="text-sm font-semibold mb-2">{t("تفصيل الإجابات", "Answer breakdown")}</p>
-                <div className="space-y-1.5">
-                  {TOPIK1_SECTIONS.map((s) => {
-                    const score = result.sectionScores[s.id];
-                    const reached = result.failedSection === null
-                      || TOPIK1_SECTIONS.findIndex((x) => x.id === s.id) <= TOPIK1_SECTIONS.findIndex((x) => x.id === result.failedSection);
-                    if (!reached) return null;
-                    const passed = score >= s.pass;
-                    return (
-                      <div key={s.id} className={cn(
-                        "flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
-                        result.failedSection === s.id ? "border-primary bg-primary/5" : "border-border",
-                      )}>
-                        <span className="flex items-center gap-2">
-                          {passed ? <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                                  : <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />}
-                          <span>{isAr ? s.titleAr : s.titleEn}</span>
-                        </span>
-                        <Badge variant={passed ? "secondary" : "outline"} dir="ltr">{score} / {s.max}</Badge>
+              {/* The breakdown is skipped for the student who was never shown a
+                  question: a table of nothing over a total of "0 / 0" is not
+                  information, and her grade note already says what happened. */}
+              {result.attempted > 0 && (
+                <div>
+                  <p className="text-sm font-semibold mb-2">{t("تفصيل الإجابات", "Answer breakdown")}</p>
+                  {/* Out of what she was asked, never out of 52. Nobody should be
+                      told they got wrong a question they never saw. */}
+                  <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm mb-1.5">
+                    <span className="font-semibold">{t("المجموع", "Total")}</span>
+                    <Badge dir="ltr">{result.score} / {result.attempted}</Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    {seenSections.map((s) => (
+                      <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+                        <span>{isAr ? s.titleAr : s.titleEn}</span>
+                        <Badge variant="secondary" dir="ltr">{result.sectionScores[s.id] ?? 0} / {s.max}</Badge>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+                  {result.stoppedEarly && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("انت اللي اخترت تنهي هنا، والمستوى ده متحسب على الأقسام اللي جاوبتها فعلًا.",
+                         "You chose to finish here, and this level is worked out from the sections you actually answered.")}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {t("مستواك اتحدد من مجموع درجاتك في الأقسام اللي شُفتها، بنفس طريقة TOPIK اللي بيقارن مجموعك بدرجة قطع.",
+                       "Your level comes from your total across the sections you were shown, the same way TOPIK measures a total against a cut score.")}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {t("مستواك اتحدد من أول قسم لم تجتزه، مش من مجموع الدرجات.",
-                     "Your level comes from the first section you did not pass, not from a total score.")}
-                </p>
-              </div>
+              )}
 
               {/* Email capture, inline and above the CTAs rather than behind a
                   small button. Only for visitors we do not already have. */}
@@ -670,8 +775,8 @@ const KoreanPlacementPage = () => {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {isAr
-                            ? `اكتب اسمك وبريدك وهنبعتلك خطة مخصصة لمستوى ${result.info.labelAr}.`
-                            : `Leave your name and email and we'll send a plan built for ${result.info.labelEn}.`}
+                            ? `اكتب اسمك وبريدك وهنبعتلك خطة مخصصة لمستوى ${info.labelAr}.`
+                            : `Leave your name and email and we'll send a plan built for ${info.labelEn}.`}
                         </p>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-2">
@@ -814,8 +919,16 @@ const KoreanPlacementPage = () => {
   }
 
   // ---- the test -----------------------------------------------------------
-  const section = TOPIK1_SECTIONS[step];
-  const totalSteps = TOPIK1_SECTIONS.length;
+  const section = EXAM_SECTIONS[step];
+  const totalSteps = EXAM_SECTIONS.length;
+  const sectionQuestions = questionsBySection[section.id] ?? [];
+  /**
+   * Progress is counted inside the section and never across all fifty-two.
+   * A bar creeping one fifty-second at a time tells a beginner she has barely
+   * started when she is in fact most of the way through everything she can do,
+   * which is exactly the discouragement the stop button exists to prevent.
+   */
+  const answeredHere = sectionQuestions.filter((q) => answers[q.id] !== undefined).length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -826,9 +939,15 @@ const KoreanPlacementPage = () => {
         <div dir={isAr ? "rtl" : "ltr"} className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold">{t("اختبار تحديد المستوى", "Korean Placement Test")}</span>
-            <span className="text-muted-foreground" dir="ltr">{step + 1} / {totalSteps}</span>
+            <span className="text-muted-foreground">
+              {t(`القسم ${step + 1} من ${totalSteps}`, `Section ${step + 1} of ${totalSteps}`)}
+            </span>
           </div>
-          <Progress value={((step + 1) / totalSteps) * 100} />
+          <Progress value={sectionQuestions.length ? (answeredHere / sectionQuestions.length) * 100 : 0} />
+          <p className="text-xs text-muted-foreground">
+            {t(`جاوبت ${answeredHere} من ${sectionQuestions.length} في القسم ده`,
+               `${answeredHere} of ${sectionQuestions.length} answered in this section`)}
+          </p>
         </div>
 
         <Card dir={isAr ? "rtl" : "ltr"}>
@@ -841,14 +960,14 @@ const KoreanPlacementPage = () => {
             <p className="text-sm text-muted-foreground">{isAr ? section.instrAr : section.instrEn}</p>
             {section.focusKo && <p className="text-xs text-muted-foreground" dir="ltr">※ {section.focusKo}</p>}
 
-            {section.id === "A" && (
+            {step === 0 && (
               <p className="text-sm">
-                {t("٨ أسئلة بس في القسم ده. عدّيه ونكمّل، وإلا الاختبار بيقف هنا ويقولك مستواك.",
-                   "Eight questions in this section. Clear it and we continue; otherwise the test stops here and tells you your level.")}
+                {t("جاوب اللي تقدر عليه. مفيش قسم بيوقف الاختبار — ومن القسم التالت وانت اللي تقرر تكمّل ولا تقف.",
+                   "Answer what you can. No section stops the test — and from the third section onward it is you who decides whether to carry on.")}
               </p>
             )}
 
-            <div className="space-y-4">{questionsBySection[section.id].map(renderQuestion)}</div>
+            <div className="space-y-4">{sectionQuestions.map(renderQuestion)}</div>
 
             {section.id === "A" && (
               <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
@@ -864,7 +983,7 @@ const KoreanPlacementPage = () => {
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-between gap-2" dir={isAr ? "rtl" : "ltr"}>
+        <div className="flex flex-wrap items-center justify-between gap-2" dir={isAr ? "rtl" : "ltr"}>
           <Button
             variant="outline"
             onClick={() => { if (step > 0) setStep(step - 1); }}
@@ -873,10 +992,20 @@ const KoreanPlacementPage = () => {
             <ArrowLeft className={cn("h-4 w-4 me-1.5", isAr && "rotate-180")} />
             {t("السابق", "Back")}
           </Button>
-          <Button onClick={nextSection}>
-            {step === totalSteps - 1 ? t("إنهاء الاختبار", "Finish") : t("التالي", "Next")}
-            <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* Ghost and muted, sitting next to the primary rather than against
+                it: finishing early is a real choice but it is not the one the
+                page is asking her to make. */}
+            {section.mayStopAfter && (
+              <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => stopHere(section.id)}>
+                {t("مش قادر أكمل أكتر من كده — وريني مستواي", "That's as far as I can go — show me my level")}
+              </Button>
+            )}
+            <Button onClick={nextSection}>
+              {step === totalSteps - 1 ? t("إنهاء الاختبار", "Finish") : t("التالي", "Next")}
+              <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />

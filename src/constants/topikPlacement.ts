@@ -2,29 +2,41 @@ import {
   TOPIK1_SECTIONS,
   TOPIK1_QUESTIONS,
   TOPIK1_MAX,
-  computeTopik1Placement,
   type Topik1SectionId,
 } from "@/constants/topik1Reading";
 
 /**
- * Grading for the Klovers placement test.
+ * The grades the placement test can award, and what each one says to a student.
  *
- * One stage, three sections, TOPIK I only. The student is placed at the FIRST
- * section they fail — the section whose material they still need:
+ * WHAT CHANGED, 9 SEP 2026
  *
- *   fail A  → 한글 기초   (not yet at 1급)
- *   fail B  → 1급         (inside level 1)
- *   fail C  → 2급         (level 1 done, working through level 2)
- *   pass C  → past TOPIK I
+ * This module used to own the grading as well as the copy, and the grading was
+ * a gate: the student was placed at the FIRST section she failed, and the test
+ * ended there. Two problems with that, one product and one pedagogical.
  *
- * The ceiling is deliberate. TOPIK I covers 1급 and 2급 and nothing above, so
- * this bank holds no evidence about 3급. Clearing every section is reported as
- * "past TOPIK I" and routed to a teacher rather than turned into a number the
- * test cannot justify — a placement that overstates a level costs a real
- * student a term in a class they cannot follow.
+ * The product one: ending an exam three questions in and showing a result
+ * reads as being thrown out. Owner feedback, verbatim — "this is so confusing
+ * in the middle of an exam".
+ *
+ * The pedagogical one: it is not how TOPIK works, and TOPIK is the scale these
+ * students already know.
+ *
+ * Grading therefore moved to `topikPapers.ts`. That module briefly held two
+ * separate papers, which turned out to have the same flaw in a politer form —
+ * it asked the student to choose between a TOPIK I and a TOPIK II paper, which
+ * is asking her to place herself before the placement test will place her. It
+ * is now one test of fifty-two items, easiest first, that she may finish
+ * herself once the questions are past her.
+ *
+ * `above` means past 4급 and points at `l5`. There is no grade for "wrong
+ * paper" any more, because there is only one paper.
+ *
+ * Every note says "prepares you toward" and never "you are". A 24-hour Klovers
+ * level is not a TOPIK certificate and must not read like one — `validateLevels`
+ * in levels.ts throws on any description that equates the two.
  */
 
-export type TopikGrade = "pre1" | "g1" | "g2" | "above";
+export type TopikGrade = "pre1" | "g1" | "g2" | "g3" | "g4" | "above";
 
 export interface TopikGradeInfo {
   grade: TopikGrade;
@@ -71,53 +83,39 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
     noteEn: "Level 1 is behind you and you read short texts. Level 2 is your work now.",
     levelKey: "l2",
   },
+  g3: {
+    grade: "g3",
+    labelKo: "3급",
+    labelAr: "المستوى الثالث (3급)",
+    labelEn: "TOPIK level 3 (3급)",
+    noteAr: "بتقرا نصوص يومية كاملة وبتمسك المعنى من غير ترجمة. المستوى الثالث هو مكانك.",
+    noteEn: "You read whole everyday texts and hold the meaning without translating. Level 3 is where you belong.",
+    levelKey: "l3",
+  },
+  g4: {
+    grade: "g4",
+    labelKo: "4급",
+    labelAr: "المستوى الرابع (4급)",
+    labelEn: "TOPIK level 4 (4급)",
+    noteAr: "بتتعامل مع مقالات وعناوين أخبار وموضوعات مجرّدة. شغلك دلوقتي في المستوى الرابع.",
+    noteEn: "You handle articles, headlines and abstract topics. Level 4 is your work now.",
+    levelKey: "l4",
+  },
   above: {
     grade: "above",
-    labelKo: "TOPIK I 이상",
-    labelAr: "فوق TOPIK I",
-    labelEn: "Past TOPIK I",
+    labelKo: "4급 이상",
+    labelAr: "فوق المستوى الرابع",
+    labelEn: "Past 4급",
     noteAr:
-      "عدّيت كل أقسام TOPIK I. الاختبار ده بيقيس المستوى الأول والتاني بس، فمش هيدّيك رقم فوق كده — كلّمنا وهنعملك تقييم TOPIK II قصير.",
+      "وصلت لآخر الاختبار. الاختبار ده بيقيس لحد المستوى الرابع، فمش هيدّيك رقم فوق كده — كلّمنا وهنعملك تقييم قصير للمستوى الخامس والسادس.",
     noteEn:
-      "You cleared every TOPIK I section. This test only measures levels 1 and 2, so it will not put a number above that — talk to us and we will run a short TOPIK II assessment.",
-    levelKey: "l3",
+      "You reached the end of the test. It measures up to level 4, so it will not put a number above that — talk to us and we will run a short assessment for levels 5 and 6.",
+    levelKey: "l5",
   },
 };
 
-export interface TopikPlacementResult {
-  info: TopikGradeInfo;
-  /** Per-section correct answers (A–C) */
-  sectionScores: Record<Topik1SectionId, number>;
-  /** The section that decided the placement, null when all were passed */
-  failedSection: Topik1SectionId | null;
-  totalScore: number;
-  totalMax: number;
-}
+/** The grades that name an actual Klovers level, in ladder order. */
+export const GRADE_ORDER: TopikGrade[] = ["pre1", "g1", "g2", "g3", "g4", "above"];
 
-export const PLACEMENT_MAX = TOPIK1_MAX;
-
-const GRADE_FOR_FAILED_SECTION: Record<Topik1SectionId, TopikGrade> = {
-  A: "pre1",
-  B: "g1",
-  C: "g2",
-};
-
-export function computeTopikPlacement(
-  answers: Record<string, number>,
-): TopikPlacementResult {
-  const r = computeTopik1Placement(answers);
-  const grade: TopikGrade =
-    r.failedSection === null ? "above" : GRADE_FOR_FAILED_SECTION[r.failedSection];
-
-  return {
-    info: TOPIK_GRADES[grade],
-    sectionScores: r.sectionScores,
-    failedSection: r.failedSection,
-    totalScore: r.score,
-    totalMax: TOPIK1_MAX,
-  };
-}
-
-/** Re-exported so the page imports one module, not two. */
 export { TOPIK1_SECTIONS, TOPIK1_QUESTIONS, TOPIK1_MAX };
 export type { Topik1SectionId };
