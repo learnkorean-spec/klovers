@@ -33,7 +33,15 @@
  * DIFFICULTY. Section D sits at 3급: everyday topics, one or two clauses per
  * sentence, vocabulary a student meets in a textbook. Section E sits at 4급:
  * social and workplace topics, longer sentences, abstract nouns, and the
- * connectives (-더라도, -는 반면에, -기 마련이다) that separate 4급 from 3급.
+ * connectives (-는 반면에, -기 마련이다, -고서는) that separate 4급 from 3급.
+ *
+ * HINTS NAME THE TASK, NEVER THE MEANING. An Arabic hint that explains what
+ * the target grammar means turns a Korean item into an Arabic one: a student
+ * who reads "the sentence adds a second good thing" can eliminate 대신에,
+ * 반면에 and 탓에 without reading a word of Korean. Five hints did exactly that
+ * and were removed on 9 Sep. D10 keeps its hint because it teaches a reading
+ * strategy — start from the sentence that needs no sentence before it — which
+ * is true of every ordering item and gives this one away.
  *
  * BLANKS are three U+3000 IDEOGRAPHIC SPACEs — `(　　　)` — not ASCII spaces.
  * HTML collapses a run of ASCII spaces to one, which turns every blank into
@@ -109,7 +117,6 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     section: "D",
     group: "※ [D1~D3] ( )에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: `날씨가 갑자기 추워져서 두꺼운 옷을 ${BLANK} 밖에 나갔다.`,
-    hintAr: "الفعل الناقص لازم يوصف حاجة عملتها قبل ما تخرج.",
     options: ["입고", "입어서", "입으려고", "입는데"],
     answerIndex: 0,
   },
@@ -117,7 +124,6 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     id: "D2",
     section: "D",
     stem: `아무리 바쁘${BLANK} 아침은 꼭 먹는 것이 좋습니다.`,
-    hintAr: "الجملة بتقول: مهما كنت مشغول.",
     options: ["니까", "더라도", "면서", "기 때문에"],
     answerIndex: 1,
   },
@@ -125,7 +131,6 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     id: "D3",
     section: "D",
     stem: `이 식당은 값이 싼 ${BLANK} 음식도 맛있어서 늘 사람이 많다.`,
-    hintAr: "الجملة بتضيف حاجة كويسة تانية فوق الأولى.",
     options: ["대신에", "데다가", "탓에", "척하고"],
     answerIndex: 1,
   },
@@ -136,7 +141,6 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     section: "D",
     group: "※ [D4~D5] 「 」 안의 표현과 의미가 가장 비슷한 것을 고르십시오.",
     stem: "약속 시간에 「늦을까 봐」 택시를 탔습니다.",
-    hintAr: "«늦을까 봐» معناها إني خفت من حاجة ممكن تحصل.",
     options: [
       "늦으면 좋겠어서",
       "늦을 것 같아서 걱정이 되어",
@@ -149,7 +153,6 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     id: "D5",
     section: "D",
     stem: "그 문제는 혼자 해결하기 「어려울 뿐만 아니라」 시간도 많이 걸린다.",
-    hintAr: "دوّر على تعبير يضيف حاجة تانية لنفس الجملة.",
     options: ["어려운 대신에", "어려운 반면에", "어려울뿐더러", "어려운 김에"],
     answerIndex: 2,
   },
@@ -159,7 +162,7 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     id: "D6",
     section: "D",
     group: "※ [D6~D7] 다음은 무엇에 대한 글인지 고르십시오.",
-    passage: "물을 넣고 3분만 기다리세요.\n뜨거운 물이면 더 좋습니다.\n한 봉지에 두 그릇.",
+    passage: "끓는 물을 붓고 3분만 기다리세요.\n불 없이도 만들 수 있습니다.\n한 봉지에 두 그릇.",
     stem: "무엇에 대한 글입니까?",
     options: ["라면", "우산", "비누", "달력"],
     answerIndex: 0,
@@ -180,7 +183,7 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     group: "※ [D8~D9] 다음 글의 내용과 같은 것을 고르십시오.",
     passage:
       "〈한국어 말하기 대회 안내〉\n" +
-      "· 일시: 11월 15일(토) 오후 2시\n" +
+      "· 일시: 11월 14일(토) 오후 2시\n" +
       "· 장소: 시민회관 3층 대강당\n" +
       "· 대상: 한국어를 배운 지 2년이 안 된 외국인\n" +
       "· 신청: 11월 1일까지 홈페이지에서만 접수\n" +
@@ -240,7 +243,7 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     stem: "이 글의 중심 생각을 고르십시오.",
     options: [
       "단어는 하루에 많이 외울수록 좋다.",
-      "단어는 문장과 함께 익히는 것이 좋다.",
+      "단어는 쓰이는 자리와 함께 알아야 한다.",
       "문법을 먼저 공부해야 한다.",
       "외국어는 어릴 때 배워야 한다.",
     ],
@@ -275,7 +278,11 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
       `그러나 회의가 짧아졌다고 해서 일이 빨리 끝나는 것은 아니다. ` +
       `결정할 사람이 그 자리에 없으면 회의는 ${BLANK} 다시 열리기 마련이다.`,
     stem: "( )에 들어갈 가장 알맞은 것을 고르십시오.",
-    options: ["짧아진 대신에", "아무리 짧아도", "짧아지자마자", "짧아지는 동안"],
+    // "짧아진 대신에" sat here until 9 Sep and was a second correct answer: the
+    // trade-off it names — shorter meetings bought at the price of more of them
+    // — is the passage's own argument, so a student reading for the argument
+    // rather than for the collocation was marked wrong for understanding it.
+    options: ["짧아지는 김에", "아무리 짧아도", "짧아지자마자", "짧아지는 동안"],
     answerIndex: 1,
   },
   {
@@ -300,7 +307,7 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     passage:
       "한 가지 일을 오래 한 사람은 자기 분야를 잘 안다. " +
       `그런데 그 익숙함이 오히려 새로운 방법을 보지 못하게 만들기도 한다. ` +
-      `경험이 많다는 것은 강점인 ${BLANK} 약점이 되기도 하는 셈이다.`,
+      `경험이 많다는 것은 강점인 ${BLANK} 약점이 되기도 한다.`,
     stem: "( )에 들어갈 가장 알맞은 것을 고르십시오.",
     options: ["덕분에", "반면에", "김에", "탓으로"],
     answerIndex: 1,
@@ -311,12 +318,12 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
     id: "E4",
     section: "E",
     group: "※ [E4~E5] 다음 신문 기사의 제목을 가장 잘 설명한 것을 고르십시오.",
-    passage: "장마 끝나자 채소값 '껑충', 식탁 부담 커져",
+    passage: "장마 끝나자 채솟값 '껑충', 식탁 부담 커져",
     stem: "이 제목을 가장 잘 설명한 것을 고르십시오.",
     options: [
       "장마가 끝난 뒤 채소 가격이 크게 올라 가정의 부담이 커졌다.",
       "장마 때문에 채소를 심지 못해 농민들이 힘들어한다.",
-      "채소값이 내려서 사람들이 채소를 많이 사고 있다.",
+      "채솟값이 내려서 사람들이 채소를 많이 사고 있다.",
       "장마가 길어져 채소가 잘 자라지 못하고 있다.",
     ],
     answerIndex: 0,
@@ -405,12 +412,12 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
       "먼저 끝까지 말해 보고, 발음은 그 뒤에 다듬어도 늦지 않다.",
     stem: "이 글의 내용과 같은 것을 고르십시오.",
     options: [
-      "발음이 어색하면 말을 하지 않는 것이 좋다.",
-      "발음을 다듬는 일은 나중에 해도 된다.",
-      "상대가 못 알아듣는 이유는 대부분 발음 때문이다.",
-      "말의 순서는 대화에서 큰 문제가 되지 않는다.",
+      "많은 사람들이 발음을 고치는 데 오랜 시간을 쓴다.",
+      "발음이 완벽해야 뜻이 전해진다.",
+      "글쓴이는 발음 연습을 하지 말라고 했다.",
+      "말이 끊기는 것은 대화에서 문제가 되지 않는다.",
     ],
-    answerIndex: 1,
+    answerIndex: 0,
   },
 
   // 긴 지문 + 심정/태도 + 내용 일치
@@ -426,7 +433,6 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
       "그날 나는 한 마디도 하지 못한 채 집으로 돌아왔다. " +
       "그런데 이상하게도, 다음 주 같은 요일이 되자 나는 또 그 문 앞에 서 있었다.",
     stem: "이 글에 나타난 '나'의 심정으로 가장 알맞은 것을 고르십시오.",
-    hintAr: "الجملة الأخيرة بتقول إنه رجع تاني رغم كل ده.",
     options: [
       "교실에 처음 들어설 때 몹시 긴장하고 위축되었다.",
       "학생들이 어려서 실망하고 화가 났다.",
