@@ -563,7 +563,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
     subject: "Please confirm your attendance for your Klovers trial class ✅",
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name}! 🎉</h1>
-      <p>Your trial class is confirmed! Please confirm your attendance so we can reserve your seat and prepare for you.</p>
+      <p>You have been waiting a long time, and we are sorry for the silence. Trial dates are open again, and we have held a seat for you at the time below. Confirm it if it works, or choose "I can't make it" and we will arrange another.</p>
       ${brandTable([
         ["📅 Date", ct.dateLabel],
         ["⏰ Time", ct.timeLine],
@@ -707,7 +707,7 @@ export function buildTrialPrepEmail(p: EmailPayload) {
         <ul style="color: ${BRAND_TEXT}; padding-right: 20px; line-height: 1.8;">
           <li>🎧 جهّز سماعات وجرّب الكاميرا قبل الحصة</li>
           <li>📝 اكتب 2–3 أسباب ليه بتتعلم كوري (هيساعد المعلم)</li>
-          <li>☕ خذ حاجة تشربها — الحصة 45 دقيقة</li>
+          <li>☕ خذ حاجة تشربها — الحصة 30 دقيقة</li>
         </ul>
         <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">في أي سؤال؟ رد على الإيميل ده أو راسلنا واتساب.</p>
         ${unsubscribeFooter(p.unsubscribe_token, true)}
@@ -730,7 +730,7 @@ export function buildTrialPrepEmail(p: EmailPayload) {
       <ul style="color: ${BRAND_TEXT}; padding-left: 20px; line-height: 1.8;">
         <li>🎧 Test your headphones + camera beforehand</li>
         <li>📝 Jot down 2–3 reasons you're learning Korean (helps your teacher)</li>
-        <li>☕ Grab a drink — it's a 45-minute session</li>
+        <li>☕ Grab a drink — it's a 30-minute session</li>
       </ul>
       <p style="color: ${BRAND_MUTED}; font-size: 13px; margin-top: 20px;">Any questions? Reply to this email or message us on WhatsApp.</p>
       ${unsubscribeFooter(p.unsubscribe_token, false)}
