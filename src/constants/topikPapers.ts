@@ -143,7 +143,15 @@ export const PAPER_II: Paper = {
   max: TOPIK2_QUESTIONS.length,
   // Stricter than the real 40/50, because this paper is reading only. See the
   // file header — this is the deliberate divergence, not an oversight.
+  //
+  // The top band exists so `above` is reachable. Without it the highest result
+  // this test could ever give was 4급, and a 5급 reader would have been handed
+  // a number one and a half levels below herself with nothing on screen saying
+  // the paper had run out of room. 85% of an intermediate paper is not proof of
+  // 5급 — which is why `above` awards no number and asks for a real
+  // conversation instead.
   bands: [
+    { minRatio: 0.85, grade: "above" },
     { minRatio: 0.6, grade: "g4" },
     { minRatio: 0.45, grade: "g3" },
   ],
