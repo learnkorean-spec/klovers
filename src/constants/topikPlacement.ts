@@ -67,7 +67,7 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
     labelKo: "2급",
     labelAr: "المستوى الثاني (2급)",
     labelEn: "TOPIK level 2 (2급)",
-    noteAr: "خلّصت المستوى الأول وبتقرا نصوص قصيرة. شغلك دلوقتي في المستوى التاني.",
+    noteAr: "خلّصت المستوى الأول وبتقرا نصوص قصيرة. شغلك دلوقتي في المستوى الثاني.",
     noteEn: "Level 1 is behind you and you read short texts. Level 2 is your work now.",
     levelKey: "l2",
   },
