@@ -861,8 +861,22 @@ const KoreanPlacementPage = () => {
                 </div>
               )}
 
+              {/* The result screen used to end at a generic /free-trial link that
+                  carried nothing the test had just worked out. A logged-in
+                  student has a level on her profile by this point -- finish()
+                  writes course_level_key a few lines up -- and /dashboard/schedule
+                  filters the group packages by exactly that column, so she can be
+                  sent straight to the times for her own level instead of being
+                  told what it is and left there. A logged-out visitor has no
+                  profile to filter by, so for her the trial stays the first ask. */}
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" onClick={() => navigate("/free-trial")}
+                {userId && (
+                  <Button size="sm" onClick={() => navigate("/dashboard/schedule")}
+                    className="flex-1 min-w-[9rem] font-semibold">
+                    {t("اختار ميعاد مجموعتك", "Pick your group time")}
+                  </Button>
+                )}
+                <Button size="sm" variant={userId ? "outline" : "default"} onClick={() => navigate("/free-trial")}
                   className="flex-1 min-w-[9rem] font-semibold">
                   {t("احجز تجربتي المجانية", "Book My Free Trial")}
                 </Button>
