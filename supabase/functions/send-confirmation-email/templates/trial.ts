@@ -358,7 +358,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
         ${slotCards}
         ${localTimeNote}
         <p>كل ميعاد بيتشرح بلغة واحدة بس — لو اخترتي ميعاد <strong>إنجليزي</strong> الحصة هتبقى كلها بالإنجليزي، ولو <strong>عربي</strong> هتبقى كلها بالعربي.</p>
-        <p>الأماكن محدودة بـ <strong>١٠ طالبات لكل حصة</strong>، فاحجزي بدري.</p>
+        <p>الأماكن محدودة والمجموعة <strong>صغيرة</strong>، فاحجزي بدري.</p>
         ${chooseBtn}
         ${meetLinkSection}
         <p>ولو الحصة كملت قبل ما تحجزي، هنبعتلك المواعيد اللي بعدها — <strong>مكانك محفوظ</strong> ومش محتاجة تعملي حاجة.</p>
@@ -377,7 +377,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
       ${slotCards}
       ${localTimeNote}
       <p>Each slot is taught in one language only — pick an <strong>English</strong> slot and the class runs in English, an <strong>Arabic</strong> slot and it runs in Arabic.</p>
-      <p>Places are limited to <strong>10 students per class</strong>, so pick your date early.</p>
+      <p>Places are limited — these are <strong>small groups</strong>, so pick your date early.</p>
       ${chooseBtn}
       ${meetLinkSection}
       <p>If a class fills up before you get there, we'll send you the next set of dates — <strong>your place on the list is kept</strong> and there's nothing you need to do.</p>
