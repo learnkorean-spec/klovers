@@ -34,6 +34,13 @@
  * its key sentence outright — and all three were removed on 9 Sep. There is no
  * hintAr in this bank now, which is why the field's comment is true again.
  *
+ * IDS ARE NEVER REUSED. Item ids are written into unit_placement_tests.answers,
+ * so a dropped id must stay dropped: reusing it would quietly mean two
+ * different questions in one column across time, and every row written before
+ * the change would be read as an answer to a question nobody was asked. That is
+ * why section A runs A9, A10, A11, A12, A1, A4, A6, A7 rather than A1 to A8 —
+ * the numbering is a history, not an order.
+ *
  * THE BLANK is three U+3000 IDEOGRAPHIC SPACEs, not ASCII spaces. HTML
  * collapses a run of ASCII spaces to one, which rendered every gap-fill
  * question as an empty "( )"; U+3000 is not collapsed, so the gap keeps its
@@ -86,15 +93,40 @@ export interface Topik1Section {
 }
 
 export const TOPIK1_SECTIONS: Topik1Section[] = [
+  /**
+   * Section A is the 한글 기초 / 1급 boundary. It is the section that decides
+   * whether a student belongs in the four-class alphabet course or in level 1,
+   * and that is the only judgement it is asked to make.
+   *
+   * Until 9 Sep it made that judgement without ever asking anyone to read 한글.
+   * It held three vocabulary items in the TOPIK I 무엇에 대한 이야기 format and
+   * five particle items, and every one of the eight was 1급 material. Nothing in
+   * it asked a student to find a vowel inside a syllable, to see a batchim, or
+   * to put two letters in 가나다 order. So a student who read the alphabet
+   * fluently but had met no grammar scored at chance here and was
+   * indistinguishable from a student who could not read a letter — and the two
+   * belong in different courses.
+   *
+   * What was actually drawing the line was the "I can't read Hangul yet" button
+   * on the intro screen: a self-declaration, offered before the first question,
+   * from someone who has no way to know where the boundary sits. The button
+   * stays, because a student who knows she cannot read should not have to prove
+   * it four times, but it is a courtesy now rather than the measurement.
+   *
+   * THE COUNT IS HELD AT EIGHT ON PURPOSE. EXAM_BANDS in topikPapers.ts is
+   * derived from the section sizes — 8 is all of A, 18 is A+B, 28 is A+B+C — so
+   * a ninth item here moves where every student in the test lands. Four
+   * decoding items went in and four of the old eight came out.
+   */
   {
     id: "A",
     gradeKo: "한글 기초",
     titleAr: "القسم الأول — قراءة أساسية",
     titleEn: "Section 1 — Basic reading",
-    titleKo: "읽기 기초 · 조사와 기본 문장",
-    instrAr: "اقرأ واختر الإجابة الصحيحة. القسم ده بيقيس قراءة الهانغول والجُمل الأساسية وحروف الجر.",
-    instrEn: "Read and choose the correct answer. This section covers reading Hangul, basic sentences and particles.",
-    focusKo: "은/는 · 이/가 · 을/를 · 에 · 에서 · 이에요/예요",
+    titleKo: "읽기 기초 · 자모와 받침, 가나다 순서",
+    instrAr: "اقرأ واختر الإجابة الصحيحة. القسم ده بيقيس قراءة الهانغول نفسه — الحروف وأصواتها، والباتشيم، وترتيب 가나다 — وبعد كده شوية قراءة جُمل بسيطة.",
+    instrEn: "Read and choose the correct answer. This section is about reading Hangul itself — letters and their sounds, batchim, and 가나다 order — and then a little basic sentence reading.",
+    focusKo: "모음과 자음 · 받침 · 글자의 짜임 · 가나다 순서 · 기본 문장 읽기",
     max: 8, pass: 5,
   },
   {
@@ -122,42 +154,69 @@ export const TOPIK1_SECTIONS: Topik1Section[] = [
 ];
 
 export const TOPIK1_QUESTIONS: Topik1Question[] = [
-  // ---- A — 기초 (8) ------------------------------------------------------
+  // ---- A — 한글 기초 (8) --------------------------------------------------
+  // Decoding first, and nothing in these four needs a word of Korean: the
+  // options are syllables and letters, not vocabulary. A student who has done
+  // one week of the alphabet course can answer all four; a student who has not
+  // can answer none of them, which is the whole point of the section.
+  {
+    id: "A9", section: "A",
+    group: "※ [A9~A12] 다음 물음에 답하십시오.",
+    stem: "다음 중 [ㅏ] 소리가 들어 있는 글자를 고르십시오.",
+    options: ["그", "기", "가", "구"],
+    answerIndex: 2,
+  },
+  {
+    id: "A10", section: "A",
+    stem: "다음 중 받침이 있는 글자를 고르십시오.",
+    options: ["나", "무", "산", "도"],
+    answerIndex: 2,
+  },
+  {
+    id: "A11", section: "A",
+    // 글자 is the syllable block in A9 and A10, so this question cannot also use
+    // it for the letters inside one. 자음과 모음 is what a student meets in the
+    // first week of the alphabet course and is what the options actually show.
+    stem: "'학'은 어떤 자음과 모음으로 이루어져 있습니까?",
+    options: ["ㅎ + ㅓ + ㄱ", "ㅎ + ㅏ + ㄱ", "ㅎ + ㅏ + ㅋ", "ㅊ + ㅏ + ㄱ"],
+    answerIndex: 1,
+  },
+  {
+    id: "A12", section: "A",
+    // The letters here are 마 바 사 아, not 가 나 다 라. With 가나다 in the
+    // instruction and 가 - 나 - 다 - 라 among the options, the key was a literal
+    // substring of the question: a student who cannot read at all could match
+    // the shapes 가나다 to the only option that opens with them. An item that
+    // can be answered by copying its own stem cannot tell a reader from a
+    // non-reader, which is the one thing this section is for. ㅁ ㅂ ㅅ ㅇ sit in
+    // the same order and are named nowhere in the instruction.
+    stem: "다음을 가나다 순서대로 바르게 나열한 것을 고르십시오.\n\n사   마   아   바",
+    options: ["마 - 바 - 사 - 아", "마 - 사 - 바 - 아", "바 - 마 - 사 - 아", "마 - 바 - 아 - 사"],
+    answerIndex: 0,
+  },
+  // The four survivors. A2 and A3 were two more instances of A1's format, and
+  // A5 and A8 were two more instances of 에, so the duplicates went and the
+  // distinct skills stayed: one sentence-level comprehension item, the object
+  // marker, the place-of-action marker, and the copula.
   {
     id: "A1", section: "A",
-    group: "※ [A1~A3] 무엇에 대한 이야기입니까? <보기>와 같이 알맞은 것을 고르십시오.",
+    group: "※ [A1] 무엇에 대한 이야기입니까? <보기>와 같이 알맞은 것을 고르십시오.",
     bogi: { stem: "사과가 있습니다. 그리고 우유도 있습니다.", options: ["시간", "음식", "가족", "계절"], answerIndex: 1 },
     stem: "저는 스무 살입니다. 동생은 열일곱 살입니다.",
     options: ["이름", "나이", "나라", "직업"], answerIndex: 1,
   },
   {
-    id: "A2", section: "A",
-    stem: "오늘은 월요일입니다. 내일은 화요일입니다.",
-    options: ["날씨", "장소", "요일", "가족"], answerIndex: 2,
-  },
-  {
-    id: "A3", section: "A",
-    stem: "아버지는 의사입니다. 어머니는 선생님입니다.",
-    options: ["나이", "취미", "음식", "직업"], answerIndex: 3,
-  },
-  {
     id: "A4", section: "A",
-    group: "※ [A4~A8] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
+    group: "※ [A4, A6, A7] 다음 (　　　)에 들어갈 가장 알맞은 것을 고르십시오.",
     stem: "물(　　　) 마셔요.",
     options: ["을", "이", "에", "에서"], answerIndex: 0,
   },
-  // A5 and A6 asked 에 against 에서 and printed the answer in the 가 line one
-  // line above the blank — 어디에 가요? then 도서관(　)가요, 어디에서 공부해요?
-  // then 집(　)공부해요. A student who has met neither particle could copy the
-  // string. The dialogue is gone rather than reworded: a flat statement cannot
-  // leak a particle it does not contain.
-  {
-    id: "A5", section: "A",
-    stem: "도서관(　　　) 갑니다.",
-    options: ["에서", "에", "이", "의"], answerIndex: 1,
-  },
   {
     id: "A6", section: "A",
+    // A6 asked 어디에서 공부해요? and then 집(　)공부해요, printing the answer one
+    // line above the blank; the dialogue is gone because a flat statement cannot
+    // leak a particle it does not contain. A5 tested 에 and was dropped with A8,
+    // which tested 에 as well — 에서 is the locative this section still needs.
     stem: "집(　　　) 공부합니다.",
     options: ["에서", "에", "을", "도"], answerIndex: 0,
   },
@@ -165,11 +224,6 @@ export const TOPIK1_QUESTIONS: Topik1Question[] = [
     id: "A7", section: "A",
     stem: "가: 이름이 뭐예요?\n     나: 제 이름은 하나(　　　).",
     options: ["이에요", "에요", "예요", "이요"], answerIndex: 2,
-  },
-  {
-    id: "A8", section: "A",
-    stem: "책상 위(　　　) 책이 있어요.",
-    options: ["와", "에", "에서", "을"], answerIndex: 1,
   },
 
   // ---- B — 1급 (10) ------------------------------------------------------
@@ -417,7 +471,12 @@ export function computeTopik1Placement(
 if (import.meta.env.DEV) {
   // A bad answerIndex or a section whose declared max drifts from the number of
   // questions in it would silently misplace students, so fail loudly at import.
+  const seen = new Set<string>();
   for (const q of TOPIK1_QUESTIONS) {
+    if (seen.has(q.id)) {
+      throw new Error(`topik1Reading: duplicate question id ${q.id}`);
+    }
+    seen.add(q.id);
     if (q.options.length !== 4) {
       throw new Error(`topik1Reading: ${q.id} has ${q.options.length} options, expected 4`);
     }
