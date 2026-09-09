@@ -975,7 +975,7 @@ const TrialClassesManager = () => {
     const label = `${cairo.weekday.slice(0, 3)} ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${cairo.timeFormatted}`;
     const impliedPeriod = deriveSessionPeriod(cairo.hour24);
     const asiaLabel = s.class_language === "english"
-      ? convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, "Asia/Kuala_Lumpur").timeFormatted
+      ? convertDateTimeToTimezone(s.trial_date, s.start_time, s.timezone, getAdminTimezone()).timeFormatted
       : null;
     return {
       label,
@@ -1063,7 +1063,7 @@ const TrialClassesManager = () => {
                                 )}
                                 {cairo.asiaLabel && (
                                   <div className="text-muted-foreground/70 text-[10px] font-mono">
-                                    ≈ {cairo.asiaLabel} Kuala Lumpur
+                                    ≈ {cairo.asiaLabel} {getAdminTimezone().split("/").pop()!.replace(/_/g, " ")}
                                   </div>
                                 )}
                               </>
