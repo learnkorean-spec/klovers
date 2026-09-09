@@ -83,6 +83,34 @@ const SHOW_RESULT_SHARING = false;
 const CIRCLED = ["①", "②", "③", "④"];
 const FILLED = ["❶", "❷", "❸", "❹"];
 
+/**
+ * The id of one attempt, minted before the row is written.
+ *
+ * finish() and saveExtras() are different handlers minutes apart, and the
+ * second has to reach the row the first wrote rather than open a second
+ * attempt — so the id is made once and kept in state.
+ *
+ * unit_placement_tests.id is a uuid column. `crypto.randomUUID` is absent on
+ * older Safari and on any non-secure origin, and the fallback that used to sit
+ * inline in saveExtras() produced a timestamp-and-random string, which Postgres
+ * would have rejected outright. The fallback below builds a real v4.
+ */
+const newAttemptId = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  const b = new Uint8Array(16);
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    crypto.getRandomValues(b);
+  } else {
+    for (let i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
+  }
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+};
+
 const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
   pre1: { emoji: "🌱", tagline: "Hangul Foundation" },
   g1: { emoji: "📗", tagline: "TOPIK Level 1" },
@@ -142,6 +170,8 @@ const KoreanPlacementPage = () => {
   const [result, setResult] = useState<ExamResult | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(() => Date.now());
+  /** The row finish() wrote, so the optional extras can update it. */
+  const [attemptId, setAttemptId] = useState<string | null>(null);
 
   // Optional teacher-marked extras, logged-in students only
   const [writing, setWriting] = useState<Record<string, string>>({});
@@ -318,17 +348,48 @@ const KoreanPlacementPage = () => {
     logLeadEvent({ source_type: "placement", cta_label: "recommendation_shown", metadata: { level: info.levelKey, score: res.score } });
 
     if (userId) {
+      // `max_score` is what she was actually asked, which is not always 52: a
+      // student who finishes early is scored out of the sections she saw. It is
+      // stored because the admin table cannot otherwise tell a 23 out of 52
+      // from a 23 out of 30 on the old bank, and printed both as "/30".
       const { error } = await supabase.from("placement_tests").insert({
-        user_id: userId, score: res.score, level: info.levelKey,
-      });
+        user_id: userId, score: res.score, level: info.levelKey, max_score: res.attempted,
+      } as any);
       if (!error) {
         // course_level_key is the canonical, machine-set column. profiles.level
         // is the learner's own free-form self-assessment and stays untouched.
+        // A trigger normalises the value on the way in, so `l2` is stored as
+        // `level_2`; both are the same row of course_levels.
         const { error: profileError } = await supabase.from("profiles").update({ course_level_key: info.levelKey } as any).eq("user_id", userId);
         // The placement row is already written, so a failed profile update
         // costs the student nothing they can see; the next attempt corrects it.
-        if (profileError) return;
+        if (profileError) { /* nothing the student can act on */ }
       }
+
+      // The attempt itself: which item she answered and how, section by
+      // section. This used to be written only if she went on to add writing and
+      // voice — three deliberate clicks, never once taken — so every attempt
+      // before today survives as a bare score with no way to see what she
+      // missed, and the draft is deleted a few lines above. It is written here
+      // now, for every logged-in student, and saveExtras() updates this row.
+      const id = newAttemptId();
+      const { error: attemptError } = await (supabase as any).from("unit_placement_tests").insert({
+        id,
+        user_id: userId,
+        book: EXAM_BOOK_KEY,
+        section_scores: res.sectionScores,
+        mcq_score: res.score,
+        start_unit: res.grade,
+        // No section can fail on its own any more, so there is nothing to name
+        // here; the column stays for the rows written before today.
+        failed_section: null,
+        suggested_level_key: info.levelKey,
+        answers: finalAnswers,
+        writing: [],
+        speaking_audio: [],
+        duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+      });
+      if (!attemptError) setAttemptId(id);
     }
   };
 
@@ -361,6 +422,7 @@ const KoreanPlacementPage = () => {
     setStep(0);
     setSectionsSeen([SECTION_IDS[0]]);
     setStartedAt(Date.now());
+    setAttemptId(null);
     setPhase("test");
   };
 
@@ -399,6 +461,9 @@ const KoreanPlacementPage = () => {
     setWriting({}); setAudio({}); setExtrasSaved(false);
     setLeadSaved(false); setLeadName(""); setLeadEmail("");
     setStartedAt(Date.now());
+    // A retake is a new attempt, and must not write its extras over the row the
+    // previous one left behind.
+    setAttemptId(null);
     setPhase("test");
   };
 
@@ -483,15 +548,18 @@ const KoreanPlacementPage = () => {
   const saveExtras = async () => {
     if (!userId || !result) return;
     setSavingExtras(true);
-    const attemptId = typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    // finish() already opened the attempt and kept its id. The extras are an
+    // update to that row, not a second attempt — the self-UPDATE policy on
+    // unit_placement_tests allows it until a teacher has marked it. The insert
+    // below is the fallback for the case where finish()'s own insert failed:
+    // better a row holding only the extras than no row at all.
+    const id = attemptId ?? newAttemptId();
 
     const speaking: { id: string; prompt: string; path: string }[] = [];
     for (const p of SEJONG1_SPEAKING) {
       const blob = audio[p.id];
       if (!blob) continue;
-      const path = `${userId}/${attemptId}/${p.id}.webm`;
+      const path = `${userId}/${id}/${p.id}.webm`;
       const { error } = await supabase.storage.from(AUDIO_BUCKET)
         .upload(path, blob, { contentType: blob.type || "audio/webm", upsert: true });
       if (error) continue; // one failed clip must not cost the whole attempt
@@ -502,28 +570,30 @@ const KoreanPlacementPage = () => {
       .filter((p) => (writing[p.id] || "").trim().length > 0)
       .map((p) => ({ id: p.id, prompt: p.ko, text: writing[p.id].trim() }));
 
-    const { error } = await (supabase as any).from("unit_placement_tests").insert({
-      id: attemptId,
-      user_id: userId,
-      book: EXAM_BOOK_KEY,
-      section_scores: result.sectionScores,
-      mcq_score: result.score,
-      start_unit: result.grade,
-      // No section can fail on its own any more, so there is nothing to name
-      // here; the column stays for the rows written before today.
-      failed_section: null,
-      suggested_level_key: TOPIK_GRADES[result.grade].levelKey,
-      answers,
-      writing: writingRows,
-      speaking_audio: speaking,
-      duration_seconds: Math.round((Date.now() - startedAt) / 1000),
-    });
+    const extras = { writing: writingRows, speaking_audio: speaking };
+
+    const { error } = attemptId
+      ? await (supabase as any).from("unit_placement_tests").update(extras).eq("id", attemptId)
+      : await (supabase as any).from("unit_placement_tests").insert({
+          id,
+          user_id: userId,
+          book: EXAM_BOOK_KEY,
+          section_scores: result.sectionScores,
+          mcq_score: result.score,
+          start_unit: result.grade,
+          failed_section: null,
+          suggested_level_key: TOPIK_GRADES[result.grade].levelKey,
+          answers,
+          ...extras,
+          duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+        });
 
     setSavingExtras(false);
     if (error) {
       toast({ variant: "destructive", title: isAr ? "لم يتم الحفظ" : "Could not save", description: isAr ? "جرّب مرة أخرى." : "Please try again." });
       return;
     }
+    if (!attemptId) setAttemptId(id);
     setExtrasSaved(true);
   };
 

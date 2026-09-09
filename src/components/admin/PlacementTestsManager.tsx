@@ -12,11 +12,28 @@ import { Search, Download } from "lucide-react";
 import { getLevelByKey } from "@/constants/levels";
 import { exportCSV as exportCSVUtil } from "@/lib/admin-utils";
 
+/**
+ * The denominator a row is read against.
+ *
+ * This cell printed "/30" as a literal for as long as the bank was thirty
+ * questions long. The bank is fifty-two now, and a student who finishes early
+ * is scored out of what she was actually asked, so the number belongs to the
+ * attempt: `placement_tests.max_score`, written by the placement page.
+ *
+ * A NULL means a row from before that column existed, and every one of those
+ * was sat on the thirty-item bank -- so 30 is the honest fallback rather than
+ * a guess. Zero is different: it is the student who said up front that she
+ * cannot read Hangul and was shown no question at all, and "0/0" would read as
+ * a fail rather than as what it is.
+ */
+const LEGACY_MAX = 30;
+
 interface PlacementTestRow {
   id: string;
   user_id: string;
   score: number;
   level: string;
+  max_score?: number | null;
   created_at: string;
   profile_name?: string;
   profile_email?: string;
@@ -70,9 +87,12 @@ const PlacementTestsManager = () => {
   }, [tests, search]);
 
   const exportCSV = () => {
-    const headers = ["Name", "Email", "Score", "Level", "Date"];
+    // "Out of" is its own column rather than a "23/52" string: a spreadsheet can
+    // sort and average two numbers, and cannot do either with a fraction.
+    const headers = ["Name", "Email", "Score", "Out of", "Level", "Date"];
     const rows = filtered.map((t) => [
       t.profile_name, t.profile_email, t.score,
+      t.max_score ?? LEGACY_MAX,
       getLevelByKey(t.level)?.shortLabel || t.level,
       new Date(t.created_at).toLocaleDateString(),
     ]);
@@ -125,7 +145,15 @@ const PlacementTestsManager = () => {
                     <TableRow key={t.id}>
                       <TableCell className="font-medium">{t.profile_name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{t.profile_email || "—"}</TableCell>
-                      <TableCell className="text-center font-semibold">{t.score}/30</TableCell>
+                      <TableCell className="text-center font-semibold">
+                        {t.max_score === 0 ? (
+                          <span className="font-normal text-muted-foreground" title="Said up front she cannot read Hangul yet — no question was shown">
+                            not attempted
+                          </span>
+                        ) : (
+                          <>{t.score}/{t.max_score ?? LEGACY_MAX}</>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">{levelObj?.shortLabel || t.level}</Badge>
                       </TableCell>

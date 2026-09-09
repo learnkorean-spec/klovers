@@ -83,8 +83,17 @@ const MySchedulePage = () => {
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
 
-      const { data: profile } = await supabase.from("profiles").select("level, country").eq("user_id", session.user.id).maybeSingle();
-      const level = (profile as any)?.level || "";
+      // Which level this page filters the packages by.
+      //
+      // `course_level_key` is the machine-set column: the placement test writes
+      // it, and it is the only one of the two that has been measured.
+      // `profiles.level` is the learner's own guess at signup and is kept only
+      // as a fallback for a student who never sat the test -- reading it first,
+      // as this page did, showed a placed student the packages for a level she
+      // guessed at before she knew. checklistEngine.ts already reads them in
+      // this order; so does this page now.
+      const { data: profile } = await supabase.from("profiles").select("course_level_key, level, country").eq("user_id", session.user.id).maybeSingle();
+      const level = (profile as any)?.course_level_key || (profile as any)?.level || "";
       setUserLevel(level);
 
       const { data: enr } = await supabase.from("enrollments").select("timezone").eq("user_id", session.user.id).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }).limit(1).maybeSingle();
