@@ -36,7 +36,11 @@ const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const EnrollPage = lazy(() => import("./pages/EnrollPage"));
 const EnrollNowPage = lazy(() => import("./pages/EnrollNowPage"));
-const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+// /dashboard is not one page: Klovers teaches Korean and English, and the
+// Korean dashboard is the wrong product for an English student. The router
+// reads profiles.track and mounts one of the two, so only one chunk loads.
+const DashboardRouter = lazy(() => import("./pages/DashboardRouter"));
+const MyLessonsPage = lazy(() => import("./pages/MyLessonsPage"));
 const EgyptPaymentPage = lazy(() => import("./pages/EgyptPaymentPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -178,7 +182,11 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/enroll" element={<EnrollPage />} />
                 <Route path="/enroll-now" element={<EnrollNowPage />} />
-                <Route path="/dashboard" element={<AuthProtectedRoute><StudentDashboard /></AuthProtectedRoute>} />
+                <Route path="/dashboard" element={<AuthProtectedRoute><DashboardRouter /></AuthProtectedRoute>} />
+                {/* The private-lesson view on its own URL, so it can be linked
+                    to directly — a Korean private student reaches it from here
+                    without her /dashboard changing. */}
+                <Route path="/my-lessons" element={<AuthProtectedRoute><MyLessonsPage /></AuthProtectedRoute>} />
                 <Route path="/pay/:enrollmentId" element={<AuthProtectedRoute><EgyptPaymentPage /></AuthProtectedRoute>} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
