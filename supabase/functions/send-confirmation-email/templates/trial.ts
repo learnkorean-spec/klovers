@@ -461,7 +461,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         <p style="color: ${BRAND_MUTED}; font-size: 14px; margin: 0 0 14px;">أي رد بيساعدنا: «أكّد حضوري» بيحجزلك مقعدك، و«مش هقدر أحضر» بيفضّيه لطالب تاني ونرتبلك ميعاد جديد.</p>
         <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ أكّد حضوري</a>
         <div style="margin-top: 12px;">
-          <a href="${declineUrl}" style="display: inline-block; background-color: #ffffff !important; color: ${BRAND_MUTED} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: 1px solid #d4d4d4;">مش هقدر أحضر</a>
+          <a href="${declineUrl}" style="display: inline-block; background-color: #ffffff !important; color: ${BRAND_MUTED} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: 1px solid #d4d4d4;">مش هقدر أحضر</a></div><div style="margin-top: 18px;"><a href="${SITE_URL}/trial-guide-ar.pdf" style="color: ${BRAND_MUTED} !important; font-size: 13px; text-decoration: underline;">مش فاكر حجزت إيه؟ اتفرج على البرنامج ←</a>
         </div>
       </div>`
     : `<p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: right;">مش عارفين نعمل لينك التأكيد دلوقتي. رد على الإيميل ده وقولنا هتحضر ولا لأ. 📩</p>`;
