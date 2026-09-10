@@ -14,6 +14,7 @@ import { normalizeLevel } from "@/constants/levels";
 import type { Enrollment, Lead } from "@/types/admin";
 import { ADMIN_PAGE_SIZE as PAGE_SIZE } from "@/lib/admin-utils";
 import { EnrollmentCard } from "@/components/admin/EnrollmentCard";
+import OngoingStudentsStrip from "@/components/admin/OngoingStudentsStrip";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Props {
@@ -68,6 +69,13 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
 
   return (
     <>
+      {/* The people Re actually teaches every week. They are not enrollments —
+          the table requires an auth account and most of them have never made
+          one — so they sit above the list rather than inside it. Without this
+          the tab reports the size of the signup pipeline as if it were the
+          size of the business. */}
+      <OngoingStudentsStrip setAdminTab={setAdminTab} />
+
       <Card className="rounded-2xl">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
