@@ -669,6 +669,7 @@ interface EnrichedGroup {
   name: string;
   capacity: number;
   is_active: boolean;
+  meeting_url: string | null;
   // From parent package
   level: string;
   course_type: string;
@@ -703,6 +704,8 @@ const GroupsManager = () => {
   // Inline editing
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState("");
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [editLinkValue, setEditLinkValue] = useState("");
 
   // Add group dialog
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -775,6 +778,7 @@ const GroupsManager = () => {
           name: g.name,
           capacity: g.capacity,
           is_active: g.is_active,
+          meeting_url: g.meeting_url ?? null,
           level: pkg?.level || "unknown",
           course_type: pkg?.course_type || "group",
           day_of_week: pkg?.day_of_week ?? 0,
@@ -834,6 +838,30 @@ const GroupsManager = () => {
   };
 
   const cancelEditName = () => setEditingNameId(null);
+
+  // Inline class link edit
+  const startEditLink = (g: EnrichedGroup) => {
+    setEditingLinkId(g.id);
+    setEditLinkValue(g.meeting_url || "");
+  };
+
+  // Saving a link here is what sends it. A database trigger emails every seated
+  // member who has not been sent this link yet, so an empty group can be filled
+  // first and told afterwards, and changing the link re-sends it to everyone.
+  const saveEditLink = async (groupId: string) => {
+    const nextUrl = editLinkValue.trim() || null;
+    const { error } = await supabase.from("pkg_groups").update({ meeting_url: nextUrl }).eq("id", groupId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, meeting_url: nextUrl } : g));
+      toast({ title: nextUrl ? "Class link saved" : "Class link cleared" });
+      fetchAll();
+    }
+    setEditingLinkId(null);
+  };
+
+  const cancelEditLink = () => setEditingLinkId(null);
 
   // Toggle expand
   const toggleExpand = (groupId: string) => {
@@ -981,11 +1009,13 @@ const GroupsManager = () => {
     const group = groups.find((g) => g.id === addStudentGroupId);
     if (!group) return;
 
-    // Use unified RPC to assign student to group via package
-    const { data: assignResult, error } = await supabase
-      .rpc("assign_student_to_group", {
-        _package_id: group.package_id,
+    // Confirming, not matching. This seats her before the money arrives -- an
+    // APPROVED / PENDING_PAYMENT enrollment -- so she stays in the Today
+    // dashboard's PAYMENTS count while already being in the class.
+    const { data: confirmResult, error } = await supabase
+      .rpc("admin_confirm_student_into_group", {
         _user_id: result.user_id,
+        _package_id: group.package_id,
       });
 
     if (error) {
@@ -993,14 +1023,13 @@ const GroupsManager = () => {
       return;
     }
 
-    const r = assignResult as Record<string, unknown> | null;
-    if (r?.status === "assigned" || r?.status === "already_assigned") {
-      toast({ title: "Student added", description: `${result.name} assigned to "${r.group_name}".` });
-    } else if (r?.status === "waitlisted") {
-      toast({ title: "Waitlisted", description: `${result.name} waitlisted — all groups full.`, variant: "destructive" });
-    } else {
-      toast({ title: "Error", description: `Unexpected result: ${r?.status}`, variant: "destructive" });
-    }
+    const r = confirmResult as Record<string, unknown> | null;
+    const seatsLeft = Number(r?.seats_left ?? 0);
+    const noLinkNote = r?.has_link ? "" : " No link sent — this group has no meeting link yet.";
+    toast({
+      title: "Student confirmed",
+      description: `${result.name} is in "${r?.group_name}" — ${seatsLeft} seat(s) left.${noLinkNote}`,
+    });
 
     setSearchResults((prev) => prev.map((r) => r.id === result.id ? { ...r, already_in_group: true } : r));
     fetchAll();
@@ -1099,6 +1128,42 @@ const GroupsManager = () => {
                       const cls = pct >= 75 ? "bg-green-100 text-green-700 border-green-300" : pct >= 40 ? "bg-amber-100 text-amber-700 border-amber-300" : "bg-red-100 text-red-700 border-red-300";
                       return <Badge variant="outline" className={`text-xs ${cls}`}>{pct}% full</Badge>;
                     })()}
+                  </div>
+
+                  {/* Class link — pasting one here is what sends it to everyone seated */}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {editingLinkId === g.id ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          value={editLinkValue}
+                          onChange={(e) => setEditLinkValue(e.target.value)}
+                          placeholder="https://meet.google.com/..."
+                          className="h-7 text-xs w-64"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveEditLink(g.id);
+                            if (e.key === "Escape") cancelEditLink();
+                          }}
+                        />
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditLink(g.id)}>
+                          <Check className="h-3.5 w-3.5 text-green-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditLink}>
+                          <X className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        {g.meeting_url ? (
+                          <span className="text-xs text-muted-foreground truncate max-w-xs" title={g.meeting_url}>{g.meeting_url}</span>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">no link yet</Badge>
+                        )}
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => startEditLink(g)} title="Edit class link">
+                          <Pencil className="h-3 w-3 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
 
