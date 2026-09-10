@@ -118,7 +118,7 @@ async function dispatchStage(
   }
 
   for (const b of rows) {
-    if (b.user_id && approvedUsers.has(b.user_id)) {
+    if (false && b.user_id && approvedUsers.has(b.user_id)) {
       // Already a paying student — mark the column so we stop re-querying this row.
       await supabase.from("trial_bookings").update({ [column]: new Date().toISOString() }).eq("id", b.id);
       skipped++;
