@@ -23,6 +23,11 @@ import { formatMoney } from "@/types/students";
  * single row about her own lessons — true for the Korean students too, not just
  * the English one.
  *
+ * Every read here is error-checked rather than defaulted, and the reason is
+ * specific to this page: an ignored failure renders as "no bundle recorded" and
+ * "nothing booked", which is indistinguishable from a student who genuinely has
+ * neither. A broken page must not be able to impersonate an empty one.
+ *
  * A student with no roster row is not an error: she is an ordinary site
  * student who reached this URL. She is told so and sent back.
  */
@@ -127,16 +132,18 @@ const MyLessonsPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const session = sessionData.session;
         if (!session) { navigate("/login"); return; }
 
         // RLS returns this student's own row and no other.
-        const { data: ts, error: tsErr } = await supabase
+        const { data: ts, error: tsError } = await supabase
           .from("teacher_students")
           .select("id, full_name, subject, meeting_url")
           .eq("user_id", session.user.id)
           .maybeSingle();
-        if (tsErr) throw tsErr;
+        if (tsError) throw tsError;
 
         if (!ts) { setLoading(false); return; }
         const row = ts as unknown as RosterRow;
@@ -169,6 +176,11 @@ const MyLessonsPage = () => {
             .limit(1)
             .maybeSingle(),
         ]);
+
+        // One rejected read here would otherwise render as an empty section,
+        // which reads exactly like a student who has no bundle and no lessons.
+        const failed = [cls.error, bal.error, ses.error, enr.error].find(Boolean);
+        if (failed) throw failed;
 
         setClasses((cls.data ?? []) as unknown as ClassRow[]);
         // The function is not SECURITY DEFINER, so RLS has already narrowed

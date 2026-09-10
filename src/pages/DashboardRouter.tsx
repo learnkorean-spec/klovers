@@ -29,19 +29,26 @@ const DashboardRouter = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const session = sessionData.session;
         if (!session) { if (!cancelled) setTrack("korean"); return; }
-        const { data } = await supabase
+
+        const { data, error } = await supabase
           .from("profiles")
           .select("track")
           .eq("user_id", session.user.id)
           .maybeSingle();
+        if (error) throw error;
         if (cancelled) return;
         setTrack((data as { track?: string } | null)?.track === "english" ? "english" : "korean");
-      } catch {
+      } catch (err) {
         // A failed lookup must not leave a student on a spinner. The Korean
         // dashboard is the one every current student wants, so it is the
-        // fallback rather than an error screen.
+        // fallback — but the reason is logged rather than swallowed, because
+        // "everyone silently became Korean" is exactly the kind of failure that
+        // otherwise goes unnoticed for months.
+        console.error("[DashboardRouter] could not read profiles.track:", err);
         if (!cancelled) setTrack("korean");
       }
     };
