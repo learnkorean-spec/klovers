@@ -94,7 +94,7 @@ async function dispatchStage(
     .select(`id, name, email, trial_date, user_id, level, class_language, followup_prep_sent_at, followup_day1_sent_at, followup_day3_sent_at, followup_day7_sent_at`)
     .eq("trial_date", targetDate)
     .is(column, null)
-    .not("is_tba", "is", true)
+                .not("is_tba", "is", true).neq("status", "cancelled").neq("status", "cancelled").neq("status", "cancelled")
     .not("email", "is", null)
     .limit(200);
 
