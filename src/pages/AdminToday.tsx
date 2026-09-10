@@ -57,7 +57,12 @@ type Counts = {
   waitingEnglish: number;
   unlevelled: number;
   awaitingPayment: number;
+  /** Every notification ever written. Kept for the sidebar badge and the empty state. */
   notifications: number;
+  /** Arrived since local midnight — the number a daily check is actually asking for. */
+  notificationsToday: number;
+  /** The newest few messages from today, so the card says what happened. */
+  notificationsRecent: string[];
   oldestSignup: string | null;
 };
 
@@ -76,6 +81,20 @@ function formatSlotDate(iso: string | null): string {
 function formatSignup(iso: string | null): string | null {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+}
+
+/**
+ * Local midnight as an ISO instant.
+ *
+ * created_at is a timestamptz, so "today" has to be anchored to the admin's own
+ * midnight rather than to a sliced UTC string — in Cairo the two differ by
+ * three hours, which is three hours of this morning's notifications reported as
+ * yesterday's.
+ */
+function startOfTodayISO(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
 }
 
 const AdminToday = () => {
@@ -104,6 +123,7 @@ const AdminToday = () => {
           unlevelled,
           payments,
           notifications,
+          notificationsToday,
           oldest,
           slotRows,
         ] = await Promise.all([
@@ -116,6 +136,14 @@ const AdminToday = () => {
             .select("*", { count: "exact", head: true })
             .ilike("approval_status", "pending%"),
           supabase.from("admin_notifications").select("*", { count: "exact", head: true }),
+          // One request answers both halves of the card: `count` is how many
+          // arrived today, the three rows are what they said.
+          supabase
+            .from("admin_notifications")
+            .select("message, created_at", { count: "exact" })
+            .gte("created_at", startOfTodayISO())
+            .order("created_at", { ascending: false })
+            .limit(3),
           supabase
             .from("trial_bookings")
             .select("created_at")
@@ -131,6 +159,8 @@ const AdminToday = () => {
             .eq("lifecycle", "active")
             .order("trial_date", { ascending: true }),
         ]);
+
+        if (notificationsToday.error) throw notificationsToday.error;
 
         if (cancelled) return;
 
@@ -194,6 +224,10 @@ const AdminToday = () => {
           unlevelled: unlevelled.count ?? 0,
           awaitingPayment: payments.count ?? 0,
           notifications: notifications.count ?? 0,
+          notificationsToday: notificationsToday.count ?? 0,
+          notificationsRecent: ((notificationsToday.data ?? []) as Array<{ message: string | null }>)
+            .map(n => (n.message ?? "").trim())
+            .filter(Boolean),
           oldestSignup: (oldest.data as { created_at?: string } | null)?.created_at ?? null,
         });
         setSlots(rows);
@@ -323,12 +357,30 @@ const AdminToday = () => {
                   cta="Placement tests"
                 />
 
+                {/* "188 total" only ever grows and never asks for anything. What a
+                    daily check wants is what arrived since this morning, and what
+                    it said. */}
                 <ActionCard
                   icon={<Bell className="h-4 w-4" />}
                   label="NOTIFICATIONS"
-                  value={counts.notifications}
-                  unit="total"
-                  body="Booking alerts, waitlist notices and system warnings."
+                  value={counts.notificationsToday}
+                  unit="new today"
+                  body={
+                    counts.notificationsToday === 0 ? (
+                      <>Nothing new today. {counts.notifications} older ones are all in one place.</>
+                    ) : (
+                      <span className="block">
+                        {counts.notificationsRecent.map((m, i) => (
+                          <span key={i} className="block truncate">· {m}</span>
+                        ))}
+                        {counts.notificationsToday > counts.notificationsRecent.length && (
+                          <span className="block">
+                            +{counts.notificationsToday - counts.notificationsRecent.length} more today
+                          </span>
+                        )}
+                      </span>
+                    )
+                  }
                   to="/admin?tab=notifications"
                   cta="Open"
                 />
@@ -464,7 +516,8 @@ const ActionCard = ({
   label: string;
   value: number;
   unit: string;
-  body: string;
+  /** Widened from string so a card can list what it is counting, not just describe it. */
+  body: React.ReactNode;
   to: string;
   cta: string;
   urgent?: boolean;
@@ -481,7 +534,7 @@ const ActionCard = ({
         <span className="text-3xl font-extrabold leading-none tracking-tight">{value}</span>
         <span className="text-sm text-muted-foreground">{unit}</span>
       </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+      <div className="text-sm leading-relaxed text-muted-foreground">{body}</div>
       <Button asChild variant={primary ? "default" : "outline"} className="mt-auto w-full">
         <Link to={to}>{cta}</Link>
       </Button>
