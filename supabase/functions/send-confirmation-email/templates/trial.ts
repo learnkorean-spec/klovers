@@ -471,7 +471,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         <p style="color: ${BRAND_MUTED}; font-size: 14px; margin: 0 0 14px;">Either answer helps us: yes holds your seat, and "I can't make it" frees it for someone else so we can find you another time.</p>
         <a href="${confirmUrl}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; border: 2px solid ${BRAND_BLACK};">✅ Confirm My Attendance</a>
         <div style="margin-top: 12px;">
-          <a href="${declineUrl}" style="display: inline-block; background-color: #ffffff !important; color: ${BRAND_MUTED} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: 1px solid #d4d4d4;">I can't make it</a>
+          <a href="${declineUrl}" style="display: inline-block; background-color: #ffffff !important; color: ${BRAND_MUTED} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: 1px solid #d4d4d4;">I can't make it</a></div><div style="margin-top: 18px;"><a href="${SITE_URL}/trial-guide-en.pdf" style="color: ${BRAND_MUTED} !important; font-size: 13px; text-decoration: underline;">Not sure what you booked? See the programme &rarr;</a>
         </div>
       </div>`
     : `<p style="color: ${BRAND_MUTED}; font-size: 13px; text-align: left;">We couldn't build your confirmation link this time. Just reply to this email and tell us whether you'll be there. 📩</p>`;
