@@ -19,6 +19,26 @@
 //    a booking button that leads to an empty list. The trigger raises an admin
 //    notification in the same breath, so the promise is one Re actually sees.
 //
+// THE TWO DAYS ARE A CHOICE, NOT A COMMITMENT
+// -------------------------------------------
+// This letter used to say "الأحد والأربع" — Sunday AND Wednesday. It is
+// Sunday OR Wednesday. A schedule_packages row is ONE weekly slot, and two rows
+// at the same level are two times to pick between: student_package_preferences
+// is upserted on user_id alone so a student holds exactly one; SchedulePicker
+// offers the other rows at the level as "alternatives" when one is full; each
+// row carries its own capacity of 8; and the student-facing copy is singular
+// throughout ("اختر موعد حصة").
+//
+// Nobody was booked into the wrong thing — the page only ever lets one slot be
+// chosen. But two evenings a week is a different proposition from one, and the
+// reader who quietly decides they have not got the time does not write in to
+// say so.
+//
+// The times come per-slot for the same reason. min(start_time) was right only
+// because all four levels currently run both their slots at the same hour; a
+// level at Monday 15:00 and Thursday 18:00 would have been given one wrong hour
+// with nothing to catch it.
+//
 // THE SCORE, AND WHY IT IS NOT A FRACTION
 // ---------------------------------------
 // "You scored 9 out of 52" reads as a failure. It is not one: 9 is past the
@@ -45,18 +65,20 @@ import {
 import { levelLabel, type EmailLanguage } from "../../_shared/levelLabel.ts";
 
 /**
- * The three fields this template needs that no other template does.
+ * The four fields this template needs that no other template does.
  *
  * They are declared here rather than added to `EmailPayload` in common.ts on
  * purpose: common.ts is 18 KB and is the single import of all 25 existing
  * templates, and the assistant's only write path is a whole-file rewrite. A
- * transcription slip in that file breaks every letter Klovers sends. Three
+ * transcription slip in that file breaks every letter Klovers sends. Four
  * optional fields in the one file that reads them costs nothing and risks
  * nothing. All are optional, so a plain `EmailPayload` still satisfies this.
  */
 export type PlacementResultPayload = EmailPayload & {
-  /** schedule_packages.day_of_week for the group at this level. 0 = Sunday. */
+  /** schedule_packages.day_of_week per slot, ascending. 0 = Sunday. */
   group_days_dow?: number[];
+  /** "HH:MM" per slot, in the SAME order as group_days_dow. */
+  group_times?: string[];
   /** Phone, country or timezone still missing from the profile. */
   needs_profile?: boolean;
   /** placement_tests.score — raw marks out of 52. */
@@ -96,14 +118,24 @@ function num(n: number, isAr: boolean): string {
   return isAr ? toArabicDigits(String(n)) : String(n);
 }
 
-function dayList(dows: number[], isAr: boolean): string {
+function dayName(d: number, isAr: boolean): string {
+  return (isAr ? DAY_AR : DAY_EN)[d] ?? "";
+}
+
+/**
+ * "الاتنين أو الخميس" / "Monday or Thursday".
+ *
+ * OR, not AND. See the note at the top of this file: the days are alternatives
+ * and the student attends one of them.
+ */
+function dayOptions(dows: number[], isAr: boolean): string {
   const names = dows
     .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
-    .map((d) => (isAr ? DAY_AR : DAY_EN)[d]);
+    .map((d) => dayName(d, isAr));
   if (names.length === 0) return "";
   if (names.length === 1) return names[0];
   const last = names.pop()!;
-  return isAr ? `${names.join("، ")} و${last}` : `${names.join(", ")} & ${last}`;
+  return isAr ? `${names.join("، ")} أو ${last}` : `${names.join(", ")} or ${last}`;
 }
 
 /**
@@ -184,9 +216,14 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
   const ladder = ladderPosition(payload.score, rawKey);
 
   const dows = Array.isArray(payload.group_days_dow) ? payload.group_days_dow : [];
-  const hasGroup = dows.length > 0 && !!payload.group_time;
-  const days = dayList([...dows], isAr);
-  const time = timeLabel(payload.group_time || "", isAr);
+  const times = Array.isArray(payload.group_times) ? payload.group_times : [];
+  const fallbackTime = payload.group_time || "";
+  const hasGroup = dows.length > 0 && (times.length > 0 || !!fallbackTime);
+  // One time row when every slot runs at the same hour, which is true of every
+  // level today; a day-by-day list the moment it stops being true.
+  const sameTime = times.length === 0 || times.every((t) => t === times[0]);
+  const oneTime = times[0] || fallbackTime;
+
   const cityAr = !payload.group_timezone || payload.group_timezone === "Africa/Cairo"
     ? "القاهرة"
     : payload.group_timezone.split("/").pop()!.replace(/_/g, " ");
@@ -210,29 +247,28 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
 
   const row = (label: string, value: string, last = false) => `
       <tr>
-        <td style="padding:11px 14px;${last ? "" : "border-bottom:1px solid #f0f0f0;"}color:${BRAND_MUTED};font-size:13px;width:52%;">${label}</td>
+        <td style="padding:11px 14px;${last ? "" : "border-bottom:1px solid #f0f0f0;"}color:${BRAND_MUTED};font-size:13px;width:44%;">${label}</td>
         <td style="padding:11px 14px;${last ? "" : "border-bottom:1px solid #f0f0f0;"}font-weight:bold;color:${BRAND_DARK};font-size:14px;">${value}</td>
       </tr>`;
 
-  const scoreBlock = !ladder ? "" : (isAr
-    ? `
-    <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">ليه المستوى ده بالذات؟</h2>
-    <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">الاختبار ٢٥ سؤال مرتّبين من الأسهل للأصعب، وكل مستوى ليه خط ثابت لازم يتعدّى.</p>
-    <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-      ${row("الدرجة", num(payload.score as number, true))}
-      ${row(`خط ${levelLabel(ladder.passed.key, lang)}`, `${num(ladder.passed.min, true)} — اتعدّى ✅`, !ladder.next)}
-      ${ladder.next ? row(`خط ${levelLabel(ladder.next.key, lang)}`, `${num(ladder.next.min, true)} — فاضل ${num(ladder.remaining, true)}`, true) : ""}
-    </table>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">يعني الرقم مش نسبة نجاح أو رسوب — هو مكان البداية على السلم.</p>`
-    : `
-    <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">Why this level?</h2>
-    <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">The test is 52 questions, easiest first, and every level has a fixed line to clear.</p>
-    <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-      ${row("Your score", num(payload.score as number, false))}
-      ${row(`${levelLabel(ladder.passed.key, lang)} line`, `${ladder.passed.min} — passed ✅`, !ladder.next)}
-      ${ladder.next ? row(`${levelLabel(ladder.next.key, lang)} line`, `${ladder.next.min} — ${ladder.remaining} away`, true) : ""}
-    </table>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">So the number is not a pass or a fail — it is a starting point on the ladder.</p>`);
+  /** The slot rows, in whichever of the two shapes the data calls for. */
+  const slotRows = (ar: boolean): string => {
+    const city = ar ? cityAr : cityEn;
+    if (sameTime) {
+      return (
+        row(ar ? "الأيام المتاحة" : "Days available", dayOptions([...dows], ar)) +
+        row(ar ? "الميعاد" : "Time",
+          ar ? `${timeLabel(oneTime, true)} — بتوقيت ${city}` : `${timeLabel(oneTime, false)} — ${city} time`)
+      );
+    }
+    const pairs = dows
+      .map((d, i) => `${dayName(d, ar)} ${timeLabel(times[i] || fallbackTime, ar)}`)
+      .join(ar ? " · " : " · ");
+    return row(
+      ar ? "المواعيد المتاحة" : "Times available",
+      ar ? `${pairs} — بتوقيت ${city}` : `${pairs} — ${city} time`,
+    );
+  };
 
   let body: string;
 
@@ -240,6 +276,16 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     const opener = isHangul
       ? `<p style="margin:0 0 18px;">يعني <strong>البداية من الأساس</strong> — من الحروف الكورية نفسها، وفيه مجموعة تأسيس جاهزة.</p>`
       : `<p style="margin:0 0 18px;">يعني <strong>البداية مش من الصفر</strong> — الأساس موجود، وفيه مجموعة في نفس المستوى جاهزة.</p>`;
+
+    const scoreBlock = !ladder ? "" : `
+    <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">ليه المستوى ده بالذات؟</h2>
+    <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">الاختبار ٢٥ سؤال مرتّبين من الأسهل للأصعب، وكل مستوى ليه خط ثابت لازم يتعدّى.</p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+      ${row("الدرجة", num(payload.score as number, true))}
+      ${row(`خط ${levelLabel(ladder.passed.key, lang)}`, `${num(ladder.passed.min, true)} — اتعدّى ✅`, !ladder.next)}
+      ${ladder.next ? row(`خط ${levelLabel(ladder.next.key, lang)}`, `${num(ladder.next.min, true)} — فاضل ${num(ladder.remaining, true)}`, true) : ""}
+    </table>
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">يعني الرقم مش نسبة نجاح أو رسوب — هو مكان البداية على السلم.</p>`;
 
     // The door marked "not sure". After the evidence, before the times.
     const levelCheck = `
@@ -251,33 +297,23 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
 
     const groupBlock = hasGroup
       ? `
-    <h2 style="color:${BRAND_DARK};font-size:16px;margin:26px 0 12px;">مواعيد المجموعة</h2>
+    <h2 style="color:${BRAND_DARK};font-size:16px;margin:26px 0 12px;">مواعيد المستوى</h2>
     <table style="width:100%;border-collapse:collapse;margin:0 0 8px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-      <tr>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;color:${BRAND_MUTED};font-size:13px;width:38%;">الأيام</td>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;font-weight:bold;color:${BRAND_DARK};font-size:14px;">${days}</td>
-      </tr>
-      <tr>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;color:${BRAND_MUTED};font-size:13px;">الميعاد</td>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;font-weight:bold;color:${BRAND_DARK};font-size:14px;">${time} — بتوقيت ${cityAr}</td>
-      </tr>
-      <tr>
-        <td style="padding:11px 14px;color:${BRAND_MUTED};font-size:13px;">المجموعة</td>
-        <td style="padding:11px 14px;font-weight:bold;color:${BRAND_DARK};font-size:14px;">ساعة للحصة · ٨ طلاب بالكتير</td>
-      </tr>
+      ${slotRows(true)}
+      ${row("المجموعة", "ساعة للحصة · ٨ طلاب بالكتير", true)}
     </table>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">المجموعة صغيرة عن قصد — عشان يبقى فيه وقت لكل حد يتكلم.</p>
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;"><strong>حصة واحدة في الأسبوع</strong> — المواعيد دي بدائل، واختيار واحد منهم بيتم من الحساب. والمجموعة صغيرة عن قصد — عشان يبقى فيه وقت لكل حد يتكلم.</p>
 
     <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_YELLOW};border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">فاضل خطوة واحدة</p>
-      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">تأكيد الميعاد من الحساب، عشان المكان يتحجز في المجموعة.</p>
+      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">اختيار الميعاد من الحساب، عشان المكان يتحجز في المجموعة.</p>
     </div>
 
     <div style="text-align:center;margin:24px 0 10px;">
-      <a href="${scheduleUrl}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;border:2px solid ${BRAND_BLACK};">📅 تأكيد الميعاد</a>
+      <a href="${scheduleUrl}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;border:2px solid ${BRAND_BLACK};">📅 اختيار الميعاد</a>
     </div>
     <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;text-align:center;">الدخول بنفس الإيميل ده — والمواعيد المتاحة للمستوى هتكون جاهزة.</p>
-    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">ولو الميعاد ده مش مناسب — الرد على الإيميل ده كفاية، وهنرتّب ميعاد تاني.</p>`
+    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">ولو مافيش فيهم ميعاد مناسب — الرد على الإيميل ده كفاية، وهنرتّب ميعاد تاني.</p>`
       : `
     <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_YELLOW};border-radius:0 8px 8px 0;padding:16px 18px;margin:26px 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">المستوى ده مالوش مجموعة شغالة دلوقتي</p>
@@ -304,6 +340,16 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
       ? `<p style="margin:0 0 18px;">That means <strong>starting from the alphabet itself</strong> — and there is a foundation group ready to join.</p>`
       : `<p style="margin:0 0 18px;">That means <strong>not starting from zero</strong> — the base is there, and a group at this level is already running.</p>`;
 
+    const scoreBlock = !ladder ? "" : `
+    <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">Why this level?</h2>
+    <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">The test is 52 questions, easiest first, and every level has a fixed line to clear.</p>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+      ${row("Your score", num(payload.score as number, false))}
+      ${row(`${levelLabel(ladder.passed.key, lang)} line`, `${ladder.passed.min} — passed ✅`, !ladder.next)}
+      ${ladder.next ? row(`${levelLabel(ladder.next.key, lang)} line`, `${ladder.next.min} — ${ladder.remaining} away`, true) : ""}
+    </table>
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">So the number is not a pass or a fail — it is a starting point on the ladder.</p>`;
+
     const levelCheck = `
     <div style="background-color:${BRAND_GRAY};border-left:4px solid ${BRAND_BLACK};border-radius:8px 0 0 8px;padding:16px 18px;margin:0 0 22px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">Not convinced by this level?</p>
@@ -313,33 +359,23 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
 
     const groupBlock = hasGroup
       ? `
-    <h2 style="color:${BRAND_DARK};font-size:16px;margin:26px 0 12px;">Group times</h2>
+    <h2 style="color:${BRAND_DARK};font-size:16px;margin:26px 0 12px;">Times at this level</h2>
     <table style="width:100%;border-collapse:collapse;margin:0 0 8px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-      <tr>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;color:${BRAND_MUTED};font-size:13px;width:38%;">Days</td>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;font-weight:bold;color:${BRAND_DARK};font-size:14px;">${days}</td>
-      </tr>
-      <tr>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;color:${BRAND_MUTED};font-size:13px;">Time</td>
-        <td style="padding:11px 14px;border-bottom:1px solid #f0f0f0;font-weight:bold;color:${BRAND_DARK};font-size:14px;">${time} — ${cityEn} time</td>
-      </tr>
-      <tr>
-        <td style="padding:11px 14px;color:${BRAND_MUTED};font-size:13px;">Group</td>
-        <td style="padding:11px 14px;font-weight:bold;color:${BRAND_DARK};font-size:14px;">1 hour per class · 8 students max</td>
-      </tr>
+      ${slotRows(false)}
+      ${row("Group", "1 hour per class · 8 students max", true)}
     </table>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">The group is small on purpose — so there is room for everyone to speak.</p>
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;"><strong>One class a week</strong> — these are alternatives, and one of them is chosen from the account. The group is small on purpose, so there is room for everyone to speak.</p>
 
     <div style="background-color:${BRAND_GRAY};border-left:4px solid ${BRAND_YELLOW};border-radius:8px 0 0 8px;padding:16px 18px;margin:0 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">One step left</p>
-      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">Confirming the time from the account is what holds the seat in the group.</p>
+      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">Choosing the time from the account is what holds the seat in the group.</p>
     </div>
 
     <div style="text-align:center;margin:24px 0 10px;">
-      <a href="${scheduleUrl}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;border:2px solid ${BRAND_BLACK};">📅 Confirm the time</a>
+      <a href="${scheduleUrl}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;border:2px solid ${BRAND_BLACK};">📅 Choose the time</a>
     </div>
     <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;text-align:center;">Signing in with this same email brings up the times for this level.</p>
-    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">If this time does not work — a reply to this email is enough, and another one will be arranged.</p>`
+    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">If none of them works — a reply to this email is enough, and another one will be arranged.</p>`
       : `
     <div style="background-color:${BRAND_GRAY};border-left:4px solid ${BRAND_YELLOW};border-radius:8px 0 0 8px;padding:16px 18px;margin:26px 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">There is no group running at this level yet</p>
