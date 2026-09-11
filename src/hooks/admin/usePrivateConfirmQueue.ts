@@ -21,6 +21,14 @@
  *
  * Two callers is not two fetches: every query underneath is keyed through
  * react-query, so the second caller reads the first one's cache.
+ *
+ * UNFINISHED, and the only thing left: MyStudentsManager.tsx still carries an
+ * identical inline copy of this derivation (`since`, `expectedByStudent`,
+ * `toConfirm`, `usedByBundle`, `confirmOne`) and its own copy of the strip.
+ * It is byte-identical to this one today. The follow-up is to delete it and
+ * have that file call this hook and render PrivateClassesToConfirm with
+ * onFixStartDate, which is exactly what /admin/today does minus the dialog.
+ * Until that lands, a change to these rules has to be made in BOTH places.
  */
 import { useMemo } from "react";
 import { toast } from "@/hooks/use-toast";

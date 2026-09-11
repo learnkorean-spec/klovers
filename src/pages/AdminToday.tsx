@@ -23,6 +23,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminShell from "@/components/admin/AdminShell";
+import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm";
+import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
 
 type SlotRow = {
@@ -101,6 +103,11 @@ const AdminToday = () => {
   const [counts, setCounts] = useState<Counts | null>(null);
   const [slots, setSlots] = useState<SlotRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Private lessons the weekly schedule says have happened and nobody has
+  // answered for. Read here only to decide whether the section exists at all;
+  // the strip below owns the rows and the buttons. Both calls share one
+  // react-query cache, so this is not a second fetch.
+  const { toConfirm: privateToConfirm } = usePrivateConfirmQueue();
 
   useEffect(() => {
     let cancelled = false;
@@ -388,6 +395,45 @@ const AdminToday = () => {
               </div>
             ) : null}
           </section>
+
+          {/* PRIVATE CLASSES TO CONFIRM
+              Money, not admin: until Re answers, the lesson is not counted
+              against the student's bundle and the balance she quotes is wrong.
+              It sat on My Students, a screen she has no reason to open on a day
+              with no scheduling to do — so a taught lesson could go unanswered
+              for a week without anything saying so. The strip is the same
+              component, and its buttons work here. */}
+          {privateToConfirm.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                  PRIVATE CLASSES TO CONFIRM
+                </h2>
+                <Link
+                  to="/admin?tab=my-students"
+                  className="text-xs text-muted-foreground underline underline-offset-2"
+                >
+                  My students
+                </Link>
+              </div>
+              {/* Five, not eight: Today is a queue of decisions, not the place
+                  to work through a backlog. Anything past that is a Catch up. */}
+              <PrivateClassesToConfirm
+                limit={5}
+                overflow={hidden => (
+                  <p className="text-xs text-muted-foreground pt-1">
+                    …and {hidden} more —{" "}
+                    <Link
+                      to="/admin?tab=my-students"
+                      className="font-semibold text-foreground underline underline-offset-2"
+                    >
+                      do them together in My students
+                    </Link>
+                  </p>
+                )}
+              />
+            </section>
+          )}
 
           {/* TRIAL WEEK */}
           <section className="space-y-3">
