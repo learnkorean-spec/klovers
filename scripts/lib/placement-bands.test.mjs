@@ -28,7 +28,9 @@ import { join } from "path";
  * building it, and the thing under test is four integers and their order.
  */
 
-const root = join(import.meta.dirname, "..", "..");
+// vitest runs from the repository root, which is how the other tests in this
+// directory resolve their fixtures.
+const root = process.cwd();
 
 const PAPERS = join(root, "src", "constants", "topikPapers.ts");
 const TEMPLATE = join(

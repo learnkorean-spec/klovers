@@ -42,7 +42,7 @@ import {
   SITE_URL, WHATSAPP_URL, brandWrapper, unsubscribeFooter,
   type EmailPayload,
 } from "./common.ts";
-import { levelLabel } from "../../_shared/levelLabel.ts";
+import { levelLabel, type EmailLanguage } from "../../_shared/levelLabel.ts";
 
 /**
  * The three fields this template needs that no other template does.
@@ -142,7 +142,7 @@ function canonicalLevelKey(raw: string): string {
  * Where this score sits on the ladder.
  *
  * Returns null — and the letter then says nothing about the score at all — in
- * three cases, each deliberate:
+ * these cases, each deliberate:
  *
  *  - no score, or a score below the first line. Someone placed at the alphabet
  *    has no threshold to have passed, and "your score: 2" under that headline
@@ -174,7 +174,7 @@ function ladderPosition(score: number | undefined, levelKey: string) {
 
 export function buildPlacementResultEmail(payload: PlacementResultPayload): { subject: string; html: string } {
   const isAr = payload.language === "ar";
-  const lang = isAr ? "ar" : "en";
+  const lang: EmailLanguage = isAr ? "ar" : "en";
   // index.ts has already turned `level` into a label a student can read.
   // `slot_level` still holds the raw key, which is what tells us whether this
   // is the from-the-alphabet group rather than a continuing one.
@@ -220,8 +220,8 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">الاختبار ٢٥ سؤال مرتّبين من الأسهل للأصعب، وكل مستوى ليه خط ثابت لازم يتعدّى.</p>
     <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       ${row("الدرجة", num(payload.score as number, true))}
-      ${row(`خط ${levelLabel(ladder.passed.key, "ar")}`, `${num(ladder.passed.min, true)} — اتعدّى ✅`, !ladder.next)}
-      ${ladder.next ? row(`خط ${levelLabel(ladder.next.key, "ar")}`, `${num(ladder.next.min, true)} — فاضل ${num(ladder.remaining, true)}`, true) : ""}
+      ${row(`خط ${levelLabel(ladder.passed.key, lang)}`, `${num(ladder.passed.min, true)} — اتعدّى ✅`, !ladder.next)}
+      ${ladder.next ? row(`خط ${levelLabel(ladder.next.key, lang)}`, `${num(ladder.next.min, true)} — فاضل ${num(ladder.remaining, true)}`, true) : ""}
     </table>
     <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">يعني الرقم مش نسبة نجاح أو رسوب — هو مكان البداية على السلم.</p>`
     : `
@@ -229,8 +229,8 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">The test is 52 questions, easiest first, and every level has a fixed line to clear.</p>
     <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       ${row("Your score", num(payload.score as number, false))}
-      ${row(`${levelLabel(ladder.passed.key, "en")} line`, `${ladder.passed.min} — passed ✅`, !ladder.next)}
-      ${ladder.next ? row(`${levelLabel(ladder.next.key, "en")} line`, `${ladder.next.min} — ${ladder.remaining} away`, true) : ""}
+      ${row(`${levelLabel(ladder.passed.key, lang)} line`, `${ladder.passed.min} — passed ✅`, !ladder.next)}
+      ${ladder.next ? row(`${levelLabel(ladder.next.key, lang)} line`, `${ladder.next.min} — ${ladder.remaining} away`, true) : ""}
     </table>
     <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">So the number is not a pass or a fail — it is a starting point on the ladder.</p>`);
 
