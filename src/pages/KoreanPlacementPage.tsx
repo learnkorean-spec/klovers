@@ -63,6 +63,26 @@ import { SEJONG1_WRITING, SEJONG1_SPEAKING } from "@/constants/sejong1Placement"
  */
 
 const STORAGE_KEY = "klovers_placement_draft_v6"; // v6: one test, sectionsSeen stored
+/**
+ * A finished attempt that has nowhere to go yet, because the visitor was not
+ * signed in when she finished it.
+ *
+ * This route is public on purpose — the lead funnel lives on it — but the save
+ * has always been gated on `userId`, so a signed-out visitor answered every
+ * question, was shown her level, and left no row behind. Between 22 Apr and
+ * 10 Sep 2026 that discarded 16 finished attempts, roughly one in three, and
+ * the opt-in email form on the result screen caught exactly one of them.
+ *
+ * The attempt is parked here instead and written the moment a session appears.
+ * That is what makes the sign-in ask on the result screen worth pressing: it
+ * saves work she has already done rather than asking her to repeat it.
+ *
+ * Raw answers are stored, not the graded result, so the replay grades through
+ * the same `gradeExam` as everything else and there is one grader, not two.
+ */
+const PENDING_KEY = "klovers_placement_pending_v1";
+/** A parked attempt older than this is dropped; retaking is cheap. */
+const PENDING_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const AUDIO_BUCKET = "placement-audio";
 
 /**
@@ -150,6 +170,14 @@ interface Draft {
   sectionsSeen: string[];
 }
 
+/** A finished attempt parked for a visitor who was not signed in. */
+interface PendingAttempt {
+  answers: Record<string, number>;
+  sectionsSeen: string[];
+  startedAt: number;
+  finishedAt: number;
+}
+
 const KoreanPlacementPage = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -233,6 +261,14 @@ const KoreanPlacementPage = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setUserId(session.user.id);
     });
+    // A visitor who signs in from the result screen returns to this page with
+    // the session arriving as an event — getSession() above has already run and
+    // will not run again. Without this subscription a parked attempt would sit
+    // unwritten until she happened to reload.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session ? session.user.id : null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   // ---- draft --------------------------------------------------------------
@@ -329,6 +365,120 @@ const KoreanPlacementPage = () => {
     void el.play();
   };
 
+  // ---- persistence --------------------------------------------------------
+  /**
+   * Write a finished attempt: the placement row, the level on the profile, and
+   * the per-item attempt.
+   *
+   * Split out of finish() because it now has two callers — finish() itself for
+   * a student who was already signed in, and the effect below, which flushes an
+   * attempt parked while she was not.
+   */
+  const persistAttempt = async (
+    uid: string,
+    res: ExamResult,
+    finalAnswers: Record<string, number>,
+    durationSeconds: number,
+  ) => {
+    const info = TOPIK_GRADES[res.grade];
+
+    // `max_score` is what she was actually asked, which is not always 52: a
+    // student who finishes early is scored out of the sections she saw. It is
+    // stored because the admin table cannot otherwise tell a 23 out of 52
+    // from a 23 out of 30 on the old bank, and printed both as "/30".
+    const { error } = await supabase.from("placement_tests").insert({
+      user_id: uid, score: res.score, level: info.levelKey, max_score: res.attempted,
+    } as any);
+    if (!error) {
+      // course_level_key is the canonical, machine-set column. profiles.level
+      // is the learner's own free-form self-assessment and stays untouched.
+      // A trigger normalises the value on the way in, so `l2` is stored as
+      // `level_2`; both are the same row of course_levels.
+      const { error: profileError } = await supabase.from("profiles").update({ course_level_key: info.levelKey } as any).eq("user_id", uid);
+      // The placement row is already written, so a failed profile update
+      // costs the student nothing they can see; the next attempt corrects it.
+      if (profileError) { /* nothing the student can act on */ }
+    }
+
+    // The attempt itself: which item she answered and how, section by
+    // section. This used to be written only if she went on to add writing and
+    // voice — three deliberate clicks, never once taken — so every attempt
+    // before 9 Sep survives as a bare score with no way to see what she
+    // missed. saveExtras() updates this row rather than opening a second one.
+    const id = newAttemptId();
+    const { error: attemptError } = await (supabase as any).from("unit_placement_tests").insert({
+      id,
+      user_id: uid,
+      book: EXAM_BOOK_KEY,
+      section_scores: res.sectionScores,
+      mcq_score: res.score,
+      start_unit: res.grade,
+      // No section can fail on its own any more, so there is nothing to name
+      // here; the column stays for the rows written before today.
+      failed_section: null,
+      suggested_level_key: info.levelKey,
+      answers: finalAnswers,
+      writing: [],
+      speaking_audio: [],
+      duration_seconds: durationSeconds,
+    });
+    if (!attemptError) setAttemptId(id);
+  };
+
+  /**
+   * The moment a session appears, write anything parked — then show it, because
+   * a student who signed in to save her result expects to land back on it.
+   *
+   * The blob is cleared before the write rather than after it. A stale or
+   * unreadable one must not be retried on every mount, and a successful write
+   * must not be repeated if this effect runs twice; the cost of clearing first
+   * is that a write failing mid-flight loses the attempt, which is exactly
+   * where it stood before this existed.
+   */
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void (async () => {
+      let parked: PendingAttempt | null = null;
+      try {
+        const raw = localStorage.getItem(PENDING_KEY);
+        if (raw) parked = JSON.parse(raw) as PendingAttempt;
+      } catch { /* an unreadable blob is a discarded one */ }
+      if (!parked) return;
+
+      // An empty `sectionsSeen` is legitimate here and must stay allowed: it is
+      // the student who said up front she cannot read Hangul and was shown no
+      // questions at all.
+      const usable =
+        typeof parked.finishedAt === "number"
+        && Date.now() - parked.finishedAt < PENDING_MAX_AGE_MS
+        && !!parked.answers && typeof parked.answers === "object"
+        && Array.isArray(parked.sectionsSeen)
+        && parked.sectionsSeen.every((id) => SECTION_IDS.includes(id));
+
+      try { localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+      if (!usable || cancelled) return;
+
+      const res = gradeExam(parked.answers, parked.sectionsSeen);
+      await persistAttempt(
+        userId, res, parked.answers,
+        Math.max(0, Math.round((parked.finishedAt - parked.startedAt) / 1000)),
+      );
+      if (cancelled) return;
+      setResult(res);
+      setSectionsSeen(parked.sectionsSeen);
+      setPhase("result");
+      toast({
+        title: isAr ? "اتحفظت نتيجتك" : "Your result is saved",
+        description: isAr
+          ? "دي نتيجة الاختبار اللي عملتيه، واتسجّلت على حسابك."
+          : "This is the test you just took, now on your account.",
+      });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   // ---- flow ---------------------------------------------------------------
   /**
    * `seen` is passed in rather than read from state because both callers know
@@ -348,48 +498,16 @@ const KoreanPlacementPage = () => {
     logLeadEvent({ source_type: "placement", cta_label: "recommendation_shown", metadata: { level: info.levelKey, score: res.score } });
 
     if (userId) {
-      // `max_score` is what she was actually asked, which is not always 52: a
-      // student who finishes early is scored out of the sections she saw. It is
-      // stored because the admin table cannot otherwise tell a 23 out of 52
-      // from a 23 out of 30 on the old bank, and printed both as "/30".
-      const { error } = await supabase.from("placement_tests").insert({
-        user_id: userId, score: res.score, level: info.levelKey, max_score: res.attempted,
-      } as any);
-      if (!error) {
-        // course_level_key is the canonical, machine-set column. profiles.level
-        // is the learner's own free-form self-assessment and stays untouched.
-        // A trigger normalises the value on the way in, so `l2` is stored as
-        // `level_2`; both are the same row of course_levels.
-        const { error: profileError } = await supabase.from("profiles").update({ course_level_key: info.levelKey } as any).eq("user_id", userId);
-        // The placement row is already written, so a failed profile update
-        // costs the student nothing they can see; the next attempt corrects it.
-        if (profileError) { /* nothing the student can act on */ }
-      }
-
-      // The attempt itself: which item she answered and how, section by
-      // section. This used to be written only if she went on to add writing and
-      // voice — three deliberate clicks, never once taken — so every attempt
-      // before today survives as a bare score with no way to see what she
-      // missed, and the draft is deleted a few lines above. It is written here
-      // now, for every logged-in student, and saveExtras() updates this row.
-      const id = newAttemptId();
-      const { error: attemptError } = await (supabase as any).from("unit_placement_tests").insert({
-        id,
-        user_id: userId,
-        book: EXAM_BOOK_KEY,
-        section_scores: res.sectionScores,
-        mcq_score: res.score,
-        start_unit: res.grade,
-        // No section can fail on its own any more, so there is nothing to name
-        // here; the column stays for the rows written before today.
-        failed_section: null,
-        suggested_level_key: info.levelKey,
-        answers: finalAnswers,
-        writing: [],
-        speaking_audio: [],
-        duration_seconds: Math.round((Date.now() - startedAt) / 1000),
-      });
-      if (!attemptError) setAttemptId(id);
+      await persistAttempt(userId, res, finalAnswers, Math.round((Date.now() - startedAt) / 1000));
+    } else {
+      // Park it. She has answered everything; the only thing missing is an
+      // account to hang it on, and the effect above writes it the moment she
+      // signs in — from the result screen, or days later in another tab.
+      try {
+        localStorage.setItem(PENDING_KEY, JSON.stringify({
+          answers: finalAnswers, sectionsSeen: seen, startedAt, finishedAt: Date.now(),
+        } satisfies PendingAttempt));
+      } catch { /* a browser refusing storage costs her the save, not the result */ }
     }
   };
 
@@ -741,6 +859,28 @@ const KoreanPlacementPage = () => {
                   ))}
                 </div>
 
+                {/* Said before the test rather than after it. A visitor who
+                    signs in now is never asked again on the result screen, and
+                    her attempt is written the instant she finishes instead of
+                    being parked. It is a link, not a wall: the test below still
+                    starts without an account. */}
+                {!userId && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/login?redirect=${encodeURIComponent("/placement-test")}`)}
+                    className="w-full text-start rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 hover:border-primary/60 transition-colors"
+                  >
+                    <span className="block text-sm font-bold leading-snug">
+                      {t("سجّل دخولك الأول عشان نتيجتك تتحفظ",
+                         "Sign in first so your result is saved")}
+                    </span>
+                    <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
+                      {t("تقدر تبدأ من غير تسجيل، وهنسألك تاني في الآخر.",
+                         "You can start without it — we'll ask again at the end.")}
+                    </span>
+                  </button>
+                )}
+
                 {/* One button, because there is now one test. The second choice
                     below it is not a variant of the test — it is the answer for
                     the student the first question would already be too hard for,
@@ -828,8 +968,34 @@ const KoreanPlacementPage = () => {
                 </div>
               )}
 
-              {/* Email capture, inline and above the CTAs rather than behind a
-                  small button. Only for visitors we do not already have. */}
+              {/* The first ask for a visitor who is not signed in, and the only
+                  one that saves anything. Her answers are already parked in
+                  localStorage by finish(); signing in writes them, sets the
+                  level on her profile, and turns on the group-times button
+                  below. The email form under it stays as the lighter
+                  alternative — it captured one lead in three months, so it is no
+                  longer the only thing offered here. */}
+              {!userId && (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div>
+                    <p className="font-semibold text-sm flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      {t("احفظ نتيجتك", "Save your result")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t("سجّل دخولك والإجابات اللي جاوبتها دلوقتي هتتحفظ على حسابك على طول، وتقدر تختار ميعاد مجموعتك. من غير كده النتيجة دي مش بتتسجّل عندنا.",
+                         "Sign in and the answers you just gave are saved to your account, so you can pick your group time. Without it, this result is not recorded.")}
+                    </p>
+                  </div>
+                  <Button className="w-full" size="sm"
+                    onClick={() => navigate(`/login?redirect=${encodeURIComponent("/placement-test")}`)}>
+                    {t("سجّل دخولك واحفظ النتيجة", "Sign in and save my result")}
+                  </Button>
+                </div>
+              )}
+
+              {/* Email capture, for the visitor who will not make an account.
+                  It saves a lead, not the attempt — the copy now says so. */}
               {!userId && (
                 <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
                   {leadSaved ? (
@@ -841,12 +1007,12 @@ const KoreanPlacementPage = () => {
                     <>
                       <div>
                         <p className="font-semibold text-sm">
-                          {t("عايز خطة دراسية لمستواك؟", "Want a study plan for your level?")}
+                          {t("مش عايز تعمل حساب دلوقتي؟", "Not ready to make an account?")}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {isAr
-                            ? `اكتب اسمك وبريدك وهنبعتلك خطة مخصصة لمستوى ${info.labelAr}.`
-                            : `Leave your name and email and we'll send a plan built for ${info.labelEn}.`}
+                            ? `سيب اسمك وبريدك وهنبعتلك خطة مخصصة لمستوى ${info.labelAr}. (الإجابات نفسها مش هتتحفظ.)`
+                            : `Leave your name and email and we'll send a plan built for ${info.labelEn}. (Your answers themselves are not saved.)`}
                         </p>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-2">
