@@ -21,6 +21,7 @@ import {
 // buildTrialRebookEmail that nothing imports - delete it there next time that
 // file is opened.
 import { buildTrialRebookEmail } from "./templates/trialRebook.ts";
+import { buildPlacementResultEmail } from "./templates/placementResult.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -181,7 +182,19 @@ serve(async (req) => {
     let html: string;
     let emailAttachments: Array<{ filename: string; content: string; content_type?: string }> | undefined;
 
-    switch (template) {
+    // `placement_result` is dispatched AHEAD of the switch rather than as a
+    // case inside it, because its key is deliberately absent from the template
+    // union in common.ts. That file is 18 KB and is the single import of all
+    // 25 existing templates, and the only write path available here is a
+    // whole-file rewrite: a transcription slip in it breaks every letter
+    // Klovers sends. The only caller of this template is a database trigger,
+    // which is not type-checked against that union in any case. If common.ts
+    // is ever opened for another reason, move this into the switch.
+    if ((template as string) === "placement_result") {
+      const placementResult = buildPlacementResultEmail(payload!);
+      subject = placementResult.subject;
+      html = placementResult.html;
+    } else switch (template) {
       case "welcome":
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
         break;
