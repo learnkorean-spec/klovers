@@ -1,13 +1,13 @@
 // The letter a student gets the moment the placement test is finished.
 //
 // Until now the placement test sent NOTHING. Someone answered every question,
-// saw a level on the screen, and that was the end of it — no letter, no times,
+// saw a level on a screen, and that was the end of it — no letter, no times,
 // no way back in. The whole point of the test is to end with a seat, so this
 // letter carries the three things that turn a result into one: the level, the
 // times of the group at that level, and one link that books the place.
 //
-// TWO THINGS THIS TEMPLATE DOES NOT DO
-// ------------------------------------
+// THREE THINGS THIS TEMPLATE DOES NOT DO
+// --------------------------------------
 // 1. It never addresses the reader as male or female. Klovers does not record
 //    anyone's gender and must not guess it from a name, so every sentence that
 //    wanted a verb aimed at the reader uses a VERBAL NOUN (مصدر) instead —
@@ -17,9 +17,28 @@
 //    version of that is to say so and promise a personal message — not to show
 //    a booking button that leads to an empty list. The trigger raises an admin
 //    notification in the same breath, so the promise is one Re actually sees.
+// 3. It never shows the score. The obvious way to make a level convincing is to
+//    show the number behind it. The data says no: the levels that currently
+//    place are 0/52 -> Hangul, 9/52 -> Level 1, 23/52 -> Level 2. "You scored 9
+//    out of 52" reads as a failure, not a placement, and would do the opposite
+//    of what this letter is for. On top of that, max_score is NULL on 30 of the
+//    31 rows taken so far, so most readers would get a numerator with no
+//    denominator. The score stays out until the test reports a figure that
+//    means what a student will think it means.
+//
+// THE DOOR MARKED "NOT SURE"
+// --------------------------
+// A letter that hands down a level and offers exactly one action — book the
+// seat — leaves a reader who disagrees with nowhere to go, and that reader does
+// not write in. They just do not book. So the level is followed immediately by
+// the three facts that make it safe to accept: the test is a first estimate,
+// the first class is what settles it, and moving group costs nothing. Anyone
+// who wants it settled BEFORE booking gets a WhatsApp link to Re, pre-filled
+// with their name and level. A text link, not a second button: it must never
+// compete with booking for the reader who is already convinced.
 import {
   BRAND_BLACK, BRAND_YELLOW, BRAND_DARK, BRAND_GRAY, BRAND_MUTED,
-  SITE_URL, brandWrapper, unsubscribeFooter,
+  SITE_URL, WHATSAPP_URL, brandWrapper, unsubscribeFooter,
   type EmailPayload,
 } from "./common.ts";
 
@@ -98,6 +117,13 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
 
   const scheduleUrl = `${SITE_URL}/dashboard/schedule`;
   const profileUrl = `${SITE_URL}/complete-profile?email=${encodeURIComponent(payload.email || "")}`;
+  // Pre-filled so the reader does not have to explain themselves from scratch,
+  // and so Re opens a message that already says who it is and what it is about.
+  const askUrl = `${WHATSAPP_URL}?text=${encodeURIComponent(
+    isAr
+      ? `أهلاً ريهام، أنا ${payload.name}. نتيجة اختبار تحديد المستوى طلعت ${levelLabel}، وعندي سؤال عن المستوى.`
+      : `Hi Reham, this is ${payload.name}. My placement result came out as ${levelLabel} — I have a question about the level.`,
+  )}`;
 
   const levelBox = `
     <div style="background-color:${BRAND_YELLOW};border:2px solid ${BRAND_BLACK};border-radius:10px;padding:22px;margin:0 0 20px;text-align:center;">
@@ -111,6 +137,15 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     const opener = isHangul
       ? `<p style="margin:0 0 18px;">يعني <strong>البداية من الأساس</strong> — من الحروف الكورية نفسها، وفيه مجموعة تأسيس جاهزة.</p>`
       : `<p style="margin:0 0 18px;">يعني <strong>البداية مش من الصفر</strong> — الأساس موجود، وفيه مجموعة في نفس المستوى جاهزة.</p>`;
+
+    // The door marked "not sure". Under the level, before the times, because
+    // that is the moment the doubt appears.
+    const levelCheck = `
+    <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_BLACK};border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 22px;">
+      <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">ولو المستوى ده مش مقنع؟</p>
+      <p style="margin:0 0 8px;color:${BRAND_MUTED};font-size:14px;">الاختبار تقدير مبدئي بس — اللي بيأكد المستوى فعلاً هي أول حصة. ولو طلع مش مناسب، <strong>النقل لمجموعة تانية متاح ومن غير أي تكلفة</strong>.</p>
+      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">ولو الأفضل التأكد قبل الحجز — <a href="${askUrl}" style="color:${BRAND_DARK};font-weight:bold;">كلمة سريعة مع ريهام على الواتساب</a>، والمستوى يتظبط سوا.</p>
+    </div>`;
 
     const groupBlock = hasGroup
       ? `
@@ -145,8 +180,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_YELLOW};border-radius:0 8px 8px 0;padding:16px 18px;margin:26px 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">المستوى ده مالوش مجموعة شغالة دلوقتي</p>
       <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">فالتواصل هيبقى شخصي — رسالة جاية على الإيميل ده بالمتاح للمستوى ده بالظبط، من غير أي خطوة مطلوبة دلوقتي.</p>
-    </div>
-    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">ولو فيه سؤال قبل كده — الرد على الإيميل ده كفاية.</p>`;
+    </div>`;
 
     const profileBlock = payload.needs_profile
       ? `<p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:13px;">وفيه بيانات ناقصة في الحساب (التليفون والدولة والتوقيت) — <a href="${profileUrl}" style="color:${BRAND_DARK};font-weight:bold;">استكمالها من هنا</a> بيخلي المواعيد تظهر بتوقيتك الصح.</p>`
@@ -157,6 +191,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">دي نتيجة اختبار تحديد المستوى.</p>
     ${levelBox}
     ${opener}
+    ${levelCheck}
     ${groupBlock}
     ${profileBlock}
     <p style="margin:22px 0 0;color:#333333;">ريهام الشرقاوي</p>
@@ -165,6 +200,13 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     const opener = isHangul
       ? `<p style="margin:0 0 18px;">That means <strong>starting from the alphabet itself</strong> — and there is a foundation group ready to join.</p>`
       : `<p style="margin:0 0 18px;">That means <strong>not starting from zero</strong> — the base is there, and a group at this level is already running.</p>`;
+
+    const levelCheck = `
+    <div style="background-color:${BRAND_GRAY};border-left:4px solid ${BRAND_BLACK};border-radius:8px 0 0 8px;padding:16px 18px;margin:0 0 22px;">
+      <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">Not convinced by this level?</p>
+      <p style="margin:0 0 8px;color:${BRAND_MUTED};font-size:14px;">The test is a first estimate — the first class is what actually settles it. If the level turns out to be wrong, <strong>moving to another group is available at no cost</strong>.</p>
+      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">To settle it before booking instead — <a href="${askUrl}" style="color:${BRAND_DARK};font-weight:bold;">a quick word with Reham on WhatsApp</a>, and the level gets sorted together.</p>
+    </div>`;
 
     const groupBlock = hasGroup
       ? `
@@ -199,8 +241,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <div style="background-color:${BRAND_GRAY};border-left:4px solid ${BRAND_YELLOW};border-radius:8px 0 0 8px;padding:16px 18px;margin:26px 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">There is no group running at this level yet</p>
       <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">So this one is handled personally — a message is coming to this address with what is actually available at this level. Nothing to do right now.</p>
-    </div>
-    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">Any question before then — a reply to this email is enough.</p>`;
+    </div>`;
 
     const profileBlock = payload.needs_profile
       ? `<p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:13px;">A few details are still missing from the account (phone, country, timezone) — <a href="${profileUrl}" style="color:${BRAND_DARK};font-weight:bold;">filling those in</a> makes the times show in the right zone.</p>`
@@ -211,6 +252,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">Here is the placement test result.</p>
     ${levelBox}
     ${opener}
+    ${levelCheck}
     ${groupBlock}
     ${profileBlock}
     <p style="margin:22px 0 0;color:#333333;">Reham Elshrkawy</p>
