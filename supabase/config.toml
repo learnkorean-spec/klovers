@@ -127,3 +127,29 @@ verify_jwt = false
 
 [functions.funnel-digest]
 verify_jwt = false
+
+# --- Disabled orphan CV/AI edge functions (reversible: remove this block to re-enable) ---
+
+[functions.analyze-cv]
+enabled = false
+
+[functions.generate-cv-questions]
+enabled = false
+
+[functions.generate-interview-questions]
+enabled = false
+
+[functions.score-interview-answer]
+enabled = false
+
+[functions.career-advisor]
+enabled = false
+
+[functions.improve-cv]
+enabled = false
+
+[functions.tailor-cv]
+enabled = false
+
+[functions.extract-pdf-text]
+enabled = false

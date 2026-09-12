@@ -66,7 +66,7 @@ jobs:
           node-version: 22
 
       - name: Install Supabase CLI
-        run: npx supabase@latest --version
+        run: npx supabase@2.117.0 --version
 
       - name: Self-test the migration-list parser
         run: |
@@ -74,12 +74,12 @@ jobs:
           python3 scripts/test-migration-parser.py
 
       - name: Link project
-        run: npx supabase@latest link --project-ref $SUPABASE_PROJECT_REF
+        run: npx supabase@2.117.0 link --project-ref $SUPABASE_PROJECT_REF
 
       - name: Assert no migrations are pending
         run: |
           set -euo pipefail
-          npx supabase@latest migration list | tee migration-list.txt
+          npx supabase@2.117.0 migration list | tee migration-list.txt
 
           # Every local migration file must appear in the list, so the parser is
           # told how many to expect: a short parse means the output format moved
@@ -135,7 +135,7 @@ jobs:
           node-version: 22
 
       - name: Install Supabase CLI
-        run: npx supabase@latest --version
+        run: npx supabase@2.117.0 --version
 
       - name: Deploy all edge functions
-        run: npx supabase@latest functions deploy --project-ref $SUPABASE_PROJECT_REF
+        run: npx supabase@2.117.0 functions deploy --project-ref $SUPABASE_PROJECT_REF
