@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminShell from "@/components/admin/AdminShell";
 import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm";
+import ClassRooms from "@/components/admin/ClassRooms";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
 
@@ -434,6 +435,28 @@ const AdminToday = () => {
               />
             </section>
           )}
+
+          {/* CLASS ROOMS
+              The joining link lived on one column of one table and appeared on
+              no screen at all. On 14 Sep six of the eight group classes had
+              none - including the one holding the only paying student - and
+              nothing anywhere said so. A class with no room looks exactly like
+              a class that is ready, right up until the hour it is supposed to
+              start.
+
+              Here because Today is the screen she opens, and because a missing
+              link is a decision waiting on her, which is what this page is for.
+              Rooms with no link sort first; the working ones are just a place
+              to copy from. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                CLASS ROOMS
+              </h2>
+              <p className="text-xs text-muted-foreground">the link students are sent</p>
+            </div>
+            <ClassRooms />
+          </section>
 
           {/* TRIAL WEEK */}
           <section className="space-y-3">
