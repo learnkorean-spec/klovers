@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,13 +9,13 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
 
 // Resend batch API — sends up to 100 emails per call (well within our 59-user list)
 async function sendBatch(emails: { to: string; subject: string; html: string; text: string; unsubscribeUrl: string }[]) {
   const payload = emails.map((e) => ({
     from: FROM_EMAIL,
+    reply_to: REPLY_TO_EMAIL,
     to: [e.to],
     subject: e.subject,
     html: e.html,
@@ -224,7 +225,7 @@ serve(async (req) => {
   try {
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
-    // ── Admin auth guard ──────────────────────────────────────────────────────
+    // ── Admin auth guard ─────────────────────────────────────────────────────
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
     if (!token) return err("Unauthorized — admin JWT required", 401);
@@ -245,7 +246,7 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleRow) return err("Forbidden — admin role required", 403);
 
-    // ── Parse body ────────────────────────────────────────────────────────────
+    // ── Parse body ─────────────────────────────────────────────────────────
     const body = await req.json().catch(() => ({}));
     const dry_run: boolean = body.dry_run !== false;
     // broadcast_key defaults to today's date so the same admin can't fire twice in a day
@@ -254,7 +255,7 @@ serve(async (req) => {
     // E.g. body.level_filter = "beginner" targets only beginners.
     const level_filter: string | null = body.level_filter ?? null;
 
-    // ── Idempotency check ─────────────────────────────────────────────────────
+    // ── Idempotency check ──────────────────────────────────────────────────
     if (!dry_run) {
       const { data: existing } = await supabase
         .from("trial_broadcasts")
@@ -271,7 +272,7 @@ serve(async (req) => {
       }
     }
 
-    // ── Fetch profiles ────────────────────────────────────────────────────────
+    // ── Fetch profiles ───────────────────────────────────────────────────
     let profilesQuery = supabase
       .from("profiles")
       .select("user_id, name, email, email_unsubscribed, unsubscribe_token, level")
@@ -288,7 +289,7 @@ serve(async (req) => {
     if (profileErr) throw profileErr;
     if (!profiles?.length) return ok({ dry_run, sent: 0, skipped: 0, total: 0, level_filter });
 
-    // ── Dry run ───────────────────────────────────────────────────────────────
+    // ── Dry run ──────────────────────────────────────────────────────────
     if (dry_run) {
       return ok({
         dry_run: true,
@@ -347,7 +348,7 @@ serve(async (req) => {
       }
     }
 
-    // ── Record broadcast for idempotency ──────────────────────────────────────
+    // ── Record broadcast for idempotency ───────────────────────────────────────
     await supabase.from("trial_broadcasts").insert({
       broadcast_key,
       sent_count: totalSent,
