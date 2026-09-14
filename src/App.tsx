@@ -32,6 +32,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminEntry = lazy(() => import("./pages/AdminEntry"));
 const AdminToday = lazy(() => import("./pages/AdminToday"));
 const AdminWeek = lazy(() => import("./pages/AdminWeek"));
+const AdminEmail = lazy(() => import("./pages/AdminEmail"));
 const AdminActivity = lazy(() => import("./pages/AdminActivity"));
 const AdminMessage = lazy(() => import("./pages/AdminMessage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
@@ -235,6 +236,7 @@ const App = () => (
                     order is not load-bearing, but keeping the specific paths
                     above it matches how the rest of this block reads. */}
                 <Route path="/admin/week" element={<ProtectedRoute><AdminWeek /></ProtectedRoute>} />
+                <Route path="/admin/email" element={<ProtectedRoute><AdminEmail /></ProtectedRoute>} />
                 {/* The seven-day read: what happened, and who is new. Its own
                     route for the same reason Today and The week are — it is not
                     a screen inside AdminDashboard.tsx. */}
