@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { track } from "@/lib/tracking";
 import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
+import { countryFromTimezone } from "@/lib/stripePrices";
 
 const SignUpPage = () => {
   useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
@@ -103,6 +104,45 @@ const SignUpPage = () => {
         .from("profiles")
         .update({ level: persistedLevel })
         .eq("user_id", data.user.id);
+    }
+
+    // Store where this student is, on the same auto-confirm path the level
+    // write uses. The timezone is a fact the browser already knows, so it is
+    // always written; the country only when the timezone names one, because a
+    // stored country outranks the live timezone everywhere it is read.
+    //
+    // Fire-and-forget on purpose: profiles.country and profiles.timezone being
+    // empty is what this fixes, but a failed write must not cost her the
+    // signup, and nothing here is worth delaying the redirect for.
+    if (data.session && data.user) {
+      const userId = data.user.id;
+      const tz = (() => {
+        try {
+          return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        } catch {
+          return "";
+        }
+      })();
+      const derivedCountry = countryFromTimezone(tz);
+      const patch: Record<string, string> = {};
+      if (tz) patch.timezone = tz;
+      if (derivedCountry) patch.country = derivedCountry;
+
+      if (Object.keys(patch).length > 0) {
+        void (async () => {
+          try {
+            const { error: locationError } = await supabase
+              .from("profiles")
+              .update(patch)
+              .eq("user_id", userId);
+            if (locationError) {
+              console.error("signup: location write failed:", locationError.message);
+            }
+          } catch {
+            // Non-critical — don't block signup on the location write
+          }
+        })();
+      }
     }
 
     track.completeRegistration();

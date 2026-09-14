@@ -18,6 +18,7 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
+import { tierCountries } from "@/lib/stripePrices";
 
 /**
  * This page links from the "Complete your profile" reminder email, and it
@@ -42,11 +43,17 @@ import { useSEO } from "@/hooks/useSEO";
  * carries ?redirect=/complete-profile so they return to this form.
  */
 
+/**
+ * Taken from the pricing tiers rather than typed out here, so this page cannot
+ * save a country the pricing code has no tier for. The hand-written list
+ * offered Palestine and Other, both of which `getTierForCountry` returns null
+ * for - the `Other` sitting in production profiles.country came from here.
+ * "Other" stays on the end for anyone the list genuinely misses; it resolves
+ * to no tier, which is the honest answer rather than a wrong one.
+ */
 const COUNTRIES = [
-  "Egypt", "Saudi Arabia", "UAE", "Kuwait", "Qatar", "Bahrain", "Oman",
-  "Jordan", "Lebanon", "Syria", "Iraq", "Palestine", "Libya", "Tunisia",
-  "Algeria", "Morocco", "Sudan", "Yemen", "United States", "United Kingdom",
-  "Canada", "Australia", "Other",
+  ...Object.values(tierCountries).flat().sort((a, b) => a.localeCompare(b)),
+  "Other",
 ];
 
 /**

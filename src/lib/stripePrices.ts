@@ -290,6 +290,18 @@ const TIMEZONE_COUNTRIES: Record<string, string> = {
 };
 
 /**
+ * The country a timezone names, or null when it names none we trust.
+ *
+ * Deliberately narrow. A stored country outranks the live timezone everywhere
+ * it is read, so guessing one wrong is worse than leaving it blank -- blank
+ * still falls back to the browser at price time.
+ */
+export function countryFromTimezone(timezone?: string | null): string | null {
+  const tz = (timezone ?? "").trim().toLowerCase();
+  return TIMEZONE_COUNTRIES[tz] ?? null;
+}
+
+/**
  * The canonical country name for one student — "Egypt" for every spelling of
  * it, and the timezone's country when the column is blank or a placeholder.
  * Anything else is returned as given (trimmed), so an unrecognised country
@@ -302,8 +314,7 @@ export function normalizeCountry(country?: string | null, timezone?: string | nu
   if (EGYPT_ALIASES.includes(folded)) return "Egypt";
 
   if (PLACEHOLDER_COUNTRIES.includes(folded)) {
-    const tz = (timezone ?? "").trim().toLowerCase();
-    return TIMEZONE_COUNTRIES[tz] ?? raw;
+    return countryFromTimezone(timezone) ?? raw;
   }
 
   return raw;

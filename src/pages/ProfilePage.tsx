@@ -14,8 +14,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, Mail, Globe, GraduationCap, BookOpen, Gamepad2, CalendarDays, LayoutDashboard, LogOut, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getLevelByKey, getLevelSelectOptions, mapLegacyLevel } from "@/constants/levels";
+import { tierCountries } from "@/lib/stripePrices";
 
-const COUNTRIES = ["Egypt", "Saudi Arabia", "UAE", "Jordan", "Kuwait", "Bahrain", "Qatar", "Oman", "Libya", "Morocco", "Tunisia", "Algeria", "Other"];
+/**
+ * Taken from the pricing tiers rather than typed out here, so this page cannot
+ * save a country the pricing code has no tier for. "Other" stays on the end for
+ * anyone the list genuinely misses; it resolves to no tier, which is the honest
+ * answer rather than a wrong one.
+ */
+const COUNTRIES = [
+  ...Object.values(tierCountries).flat().sort((a, b) => a.localeCompare(b)),
+  "Other",
+];
 
 /**
  * This page used to carry its own ladder:
@@ -59,6 +69,7 @@ interface Profile {
   avatar_url: string;
   level: string;
   country: string;
+  timezone: string;
 }
 
 const ProfilePage = () => {
@@ -78,6 +89,7 @@ const ProfilePage = () => {
   const [name, setName] = useState("");
   const [level, setLevel] = useState("");
   const [country, setCountry] = useState("");
+  const [timezone, setTimezone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
@@ -89,7 +101,7 @@ const ProfilePage = () => {
 
       const { data } = await supabase
         .from("profiles")
-        .select("user_id, name, avatar_url, level, country")
+        .select("user_id, name, avatar_url, level, country, timezone")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
@@ -98,6 +110,7 @@ const ProfilePage = () => {
         setName(data.name || "");
         setLevel(toCanonicalLevel(data.level));
         setCountry(data.country || "");
+        setTimezone(data.timezone || "");
         setAvatarUrl(data.avatar_url || "");
       }
       setLoading(false);
@@ -239,6 +252,12 @@ const ProfilePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {timezone && (
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {isAr ? "المنطقة الزمنية: " : "Timezone: "}
+                    <span className="font-medium text-foreground">{timezone}</span>
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
