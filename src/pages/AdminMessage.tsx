@@ -112,6 +112,32 @@ function paragraphs(body: string): string[][] {
     .map(b => b.split("\n"));
 }
 
+/**
+ * Resend enforces 10 requests/second. On 14 Sep 2026 a 21-recipient batch
+ * sent through this screen's earlier bulk-send path fired every call at
+ * once; 8 of the 21 came back `429 rate_limit_exceeded` on the first try
+ * (all 8 recovered on a manual retry that time — see
+ * EmailDeliveryPanel.tsx / claude/EMAIL_SYSTEM_AUDIT_2026-09-14.md). Bulk
+ * sending was later removed from this screen in favour of Campaigns, but a
+ * single send here can still land inside someone else's burst (another
+ * admin sending, a cron reminder firing), so a lone 429 still gets one
+ * automatic retry before it is ever shown to the admin as a failure.
+ */
+async function isRateLimitedError(error: unknown): Promise<boolean> {
+  if (!error) return false;
+  const err = error as { context?: Response; message?: string };
+  if (err.context && typeof err.context.json === "function") {
+    try {
+      const body = await err.context.clone().json();
+      if (typeof body?.error === "string" && /429|rate_limit_exceeded/i.test(body.error)) return true;
+    } catch {
+      // Not JSON, or the body was already consumed — fall through to the
+      // message check below.
+    }
+  }
+  return typeof err.message === "string" && /429|rate_limit_exceeded/i.test(err.message);
+}
+
 const AdminMessage = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [logs, setLogs] = useState<LogRow[]>([]);
@@ -260,17 +286,26 @@ const AdminMessage = () => {
     if (!selected || !ready) return;
     setSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-confirmation-email", {
-        body: {
-          email: selected.email,
-          name: selected.name || selected.email,
-          language: lang,
-          template: "admin_message",
-          subject: subject.trim(),
-          body,
-          unsubscribe_token: selected.unsubscribe_token ?? undefined,
-        },
+      const requestBody = {
+        email: selected.email,
+        name: selected.name || selected.email,
+        language: lang,
+        template: "admin_message",
+        subject: subject.trim(),
+        body,
+        unsubscribe_token: selected.unsubscribe_token ?? undefined,
+      };
+      let { data, error } = await supabase.functions.invoke("send-confirmation-email", {
+        body: requestBody,
       });
+      // See isRateLimitedError above: one automatic retry for a 429 before it
+      // reaches the admin as a failure — the fix for the 14 Sep incident.
+      if (error && (await isRateLimitedError(error))) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        ({ data, error } = await supabase.functions.invoke("send-confirmation-email", {
+          body: requestBody,
+        }));
+      }
       if (error) throw new Error(error.message);
       // A 200 with `success: false` has never happened on this function, but
       // reading only `error` is exactly how three past bugs stayed invisible.
@@ -502,7 +537,7 @@ const AdminMessage = () => {
                   ) : (
                     <>
                       <p className="text-sm">
-                        This will send <span className="font-semibold">“{subject.trim()}”</span> to{" "}
+                        This will send <span className="font-semibold">"{subject.trim()}"</span> to{" "}
                         <span className="font-semibold">{selected?.name || "—"}</span> at{" "}
                         <span className="font-mono text-xs">{selected?.email}</span>, in{" "}
                         {isAr ? "Arabic" : "English"}, from the Klovers address.
