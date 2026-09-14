@@ -22,7 +22,7 @@ import { fetchPrivateAvailability } from "@/lib/privateAvailability";
 import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
-import { type TierKey, type ClassType, type Duration, tierPrices, tierCountries, DURATION_CLASSES } from "@/lib/stripePrices";
+import { type TierKey, type ClassType, type Duration, tierCountries, DURATION_CLASSES, normalizeCountry, resolveCurrency, getPriceFor, formatMoney } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -40,10 +40,9 @@ const allCountries = (Object.keys(tierCountries) as TierKey[]).flatMap((tier) =>
 );
 allCountries.sort((a, b) => a.country.localeCompare(b.country));
 
-const egpPrices: Record<ClassType, Record<Duration, number>> = {
-  group: { 1: 1200, 3: 3300, 6: 6100 },
-  private: { 1: 2350, 3: 6600, 6: 11750 },
-};
+// The Egyptian prices used to be copied into this file. They now come from
+// stripePrices.ts, which the pricing page and /enroll read too — one table, so
+// the three cannot disagree about what a month costs.
 
 const durationClasses = DURATION_CLASSES;
 
@@ -100,7 +99,10 @@ const EnrollNowPage = () => {
   const [classType, setClassType] = useState<ClassType>(
     (searchParams.get("classType") as ClassType) || "group"
   );
-  const [selectedCountry, setSelectedCountry] = useState(searchParams.get("country") || "");
+  const [selectedCountry, setSelectedCountry] = useState(normalizeCountry(searchParams.get("country")));
+  // null until the profile has been looked at, so the seeding effect below can
+  // tell "not loaded yet" from "loaded, and the column was empty".
+  const [profileCountry, setProfileCountry] = useState<string | null>(null);
   const [duration, setDuration] = useState<Duration | null>(
     searchParams.get("duration") ? (Number(searchParams.get("duration")) as Duration) : null
   );
@@ -109,7 +111,6 @@ const EnrollNowPage = () => {
   const [loading, setLoading] = useState(false);
   const [egyptPaymentMethod, setEgyptPaymentMethod] = useState<string>("");
   const nav = useNavigate();
-  const isEgypt = selectedCountry === "Egypt";
 
   // Rehydrate from URL params first, then localStorage draft as fallback
   const getDraft = (): Record<string, string> => {
@@ -124,6 +125,19 @@ const EnrollNowPage = () => {
   // Schedule preferences — restore from URL if returning from signup
   const [timezone, setTimezone] = useState(() => p("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone);
   useEffect(() => { setUserTimezone(timezone); }, [timezone]);
+
+  // Country first, timezone second — a single rule, shared with /enroll, instead
+  // of a string compare that missed "egypt", "ismailia", "Other" and a blank.
+  const resolvedCountry = useMemo(() => normalizeCountry(selectedCountry, timezone), [selectedCountry, timezone]);
+  const isEgypt = resolvedCountry === "Egypt";
+
+  // ?country= wins, then profiles.country, then the timezone. The column is
+  // blank for most students, so in practice the timezone is what seeds this.
+  useEffect(() => {
+    if (selectedCountry || profileCountry === null) return;
+    const seeded = normalizeCountry(profileCountry, timezone);
+    if (seeded) setSelectedCountry(seeded);
+  }, [selectedCountry, profileCountry, timezone]);
   const [preferredDays, setPreferredDays] = useState<string[]>(() => {
     const d = p("days") || p("day");
     return d ? d.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
@@ -293,7 +307,7 @@ const EnrollNowPage = () => {
   useEffect(() => {
     const checkFirstTime = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) { setProfileCountry(""); return; }
       setUserId(session.user.id);
       setEmail(session.user.email || "");
 
@@ -301,9 +315,10 @@ const EnrollNowPage = () => {
       const metaName = session.user.user_metadata?.name || "";
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name")
+        .select("name, country")
         .eq("user_id", session.user.id)
         .maybeSingle();
+      setProfileCountry((profile as any)?.country || "");
       const profileName = (profile as any)?.name || "";
       const fallbackName = (session.user.email || "").split("@")[0];
       setName(profileName || metaName || fallbackName);
@@ -320,15 +335,22 @@ const EnrollNowPage = () => {
   }, []);
 
   const tier = useMemo(() => {
-    const match = allCountries.find((c) => c.country === selectedCountry);
+    const match = allCountries.find((c) => c.country === resolvedCountry);
     return match?.tier ?? null;
-  }, [selectedCountry]);
+  }, [resolvedCountry]);
 
-  const originalPrice = useMemo(() => {
-    if (!tier || !duration) return null;
-    if (isEgypt) return egpPrices[classType][duration];
-    return tierPrices[tier][classType][duration];
-  }, [tier, classType, duration, isEgypt]);
+  const priced = useMemo(
+    () => (duration ? getPriceFor(selectedCountry, timezone, classType, duration) : null),
+    [selectedCountry, timezone, classType, duration],
+  );
+  const originalPrice = priced?.amount ?? null;
+  const currency = priced?.currency ?? resolveCurrency(selectedCountry, timezone);
+
+  /** One duration button's price label, in the student's own currency. */
+  const priceLabelFor = (d: Duration) => {
+    const p = getPriceFor(selectedCountry, timezone, classType, d);
+    return p ? formatMoney(p.amount, p.currency) : "—";
+  };
 
   const discountAmount = isFirstTime && originalPrice && !isEgypt ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
   const promoDiscountAmount = useMemo(() => {
@@ -438,8 +460,8 @@ const EnrollNowPage = () => {
         return;
       }
       // Sync country to profile
-      if (selectedCountry && session.user.id) {
-        supabase.from("profiles").update({ country: selectedCountry }).eq("user_id", session.user.id).then(() => {});
+      if (resolvedCountry && session.user.id) {
+        supabase.from("profiles").update({ country: resolvedCountry }).eq("user_id", session.user.id).then(() => {});
       }
 
       const { data, error } = await supabase.rpc("create_egypt_order", {
@@ -470,7 +492,7 @@ const EnrollNowPage = () => {
         }
         // Level sync to profile is handled by DB trigger on enrollments.level
       }
-      track.initiateCheckout({ value: finalPrice ?? 0, currency: selectedCountry === "Egypt" ? "EGP" : "USD" });
+      track.initiateCheckout({ value: finalPrice ?? 0, currency });
       logLeadEvent({ source_type: "enroll", cta_label: "checkout", metadata: { value: finalPrice ?? 0, country: selectedCountry } });
       nav(`/pay/${enrollmentId}`);
     } catch (err: any) {
@@ -582,8 +604,8 @@ const EnrollNowPage = () => {
       submitLead();
 
       // Sync country to profile
-      if (selectedCountry && session.user.id) {
-        supabase.from("profiles").update({ country: selectedCountry }).eq("user_id", session.user.id).then(() => {});
+      if (resolvedCountry && session.user.id) {
+        supabase.from("profiles").update({ country: resolvedCountry }).eq("user_id", session.user.id).then(() => {});
       }
 
       const normalizedLevel = normalizeLevel(selectedLevel);
@@ -781,7 +803,7 @@ const EnrollNowPage = () => {
                         >
                           <p className="font-bold text-foreground">{d} {d === 1 ? t("enrollNow.month") : t("enrollNow.months")}</p>
                           <p className="text-xs text-muted-foreground">{durationClasses[d]} {t("enrollNow.classes")}</p>
-                          <p className="text-sm font-bold text-foreground mt-1">{isEgypt ? `${egpPrices[classType][d].toLocaleString()} EGP` : `$${tierPrices[tier][classType][d]}`}</p>
+                          <p className="text-sm font-bold text-foreground mt-1">{priceLabelFor(d)}</p>
                         </button>
                       ))}
                     </div>
@@ -1033,32 +1055,32 @@ const EnrollNowPage = () => {
                       {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {duration} {duration === 1 ? t("enrollNow.month") : t("enrollNow.months")} ({durationClasses[duration]} {t("enrollNow.classes")})
                     </span>
                     <span className={`font-bold text-foreground ${isFirstTime && !isEgypt ? "line-through text-muted-foreground" : ""}`}>
-                      {isEgypt ? `${originalPrice.toLocaleString()} EGP` : `$${originalPrice}`}
+                      {formatMoney(originalPrice, currency)}
                     </span>
                   </div>
 
                   {isFirstTime && discountAmount > 0 && (
                     <div className="flex justify-between text-sm text-primary">
                       <span>{t("enrollNow.firstTimeDiscount")}</span>
-                      <span className="font-bold">-${discountAmount.toFixed(2)}</span>
+                      <span className="font-bold">-{formatMoney(discountAmount, currency)}</span>
                     </div>
                   )}
 
                   {promoApplied && promoDiscountAmount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" /> {promoApplied.code}</span>
-                      <span className="font-bold">-{isEgypt ? `${promoDiscountAmount.toLocaleString()} EGP` : `$${promoDiscountAmount.toFixed(2)}`}</span>
+                      <span className="font-bold">-{formatMoney(promoDiscountAmount, currency)}</span>
                     </div>
                   )}
 
                   <div className="border-t border-border pt-2 flex justify-between">
                     <span className="font-semibold text-foreground">{t("enrollNow.total")}</span>
-                    <span className="font-bold text-lg text-foreground">{isEgypt ? `${finalPrice.toLocaleString()} EGP` : `$${finalPrice.toFixed(2)}`}</span>
+                    <span className="font-bold text-lg text-foreground">{formatMoney(finalPrice, currency)}</span>
                   </div>
 
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>{durationClasses[duration]} {t("enrollNow.classesIncluded")}</span>
-                    <span>{isEgypt ? `${Math.round(finalPrice / durationClasses[duration]).toLocaleString()} EGP${t("enrollNow.perClass")}` : `$${(finalPrice / durationClasses[duration]).toFixed(2)}${t("enrollNow.perClass")}`}</span>
+                    <span>{formatMoney(finalPrice / durationClasses[duration], currency)}{t("enrollNow.perClass")}</span>
                   </div>
                 </div>
               )}
@@ -1094,7 +1116,7 @@ const EnrollNowPage = () => {
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                       <span className="text-sm font-medium text-green-700 dark:text-green-400">
                         {promoApplied.code} applied!
-                        {promoApplied.discount_pct ? ` (${promoApplied.discount_pct}% off)` : promoApplied.discount_flat ? ` (${isEgypt ? `EGP ${promoApplied.discount_flat}` : `$${promoApplied.discount_flat}`} off)` : ""}
+                        {promoApplied.discount_pct ? ` (${promoApplied.discount_pct}% off)` : promoApplied.discount_flat ? ` (${formatMoney(promoApplied.discount_flat, currency)} off)` : ""}
                       </span>
                     </div>
                     <button
@@ -1157,12 +1179,12 @@ const EnrollNowPage = () => {
                 {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
                   <>
                     <ShieldCheck className="mr-2 h-4 w-4" />
-                    {t("enrollNow.confirmOrder")} ({finalPrice?.toLocaleString() ?? "—"} EGP)
+                    {t("enrollNow.confirmOrder")} ({finalPrice !== null ? formatMoney(finalPrice, currency) : "—"})
                   </>
                 ) : (
                   <>
                     <CreditCard className="mr-2 h-4 w-4" />
-                    {t("enrollNow.payNow")} ${finalPrice?.toFixed(2) ?? "—"} {t("enrollNow.now")}
+                    {t("enrollNow.payNow")} {finalPrice !== null ? formatMoney(finalPrice, currency) : "—"} {t("enrollNow.now")}
                   </>
                 )}
               </Button>
