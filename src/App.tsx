@@ -32,6 +32,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminEntry = lazy(() => import("./pages/AdminEntry"));
 const AdminToday = lazy(() => import("./pages/AdminToday"));
 const AdminWeek = lazy(() => import("./pages/AdminWeek"));
+const AdminActivity = lazy(() => import("./pages/AdminActivity"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const EnrollPage = lazy(() => import("./pages/EnrollPage"));
@@ -233,6 +234,10 @@ const App = () => (
                     order is not load-bearing, but keeping the specific paths
                     above it matches how the rest of this block reads. */}
                 <Route path="/admin/week" element={<ProtectedRoute><AdminWeek /></ProtectedRoute>} />
+                {/* The seven-day read: what happened, and who is new. Its own
+                    route for the same reason Today and The week are — it is not
+                    a screen inside AdminDashboard.tsx. */}
+                <Route path="/admin/activity" element={<ProtectedRoute><AdminActivity /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminEntry /></ProtectedRoute>} />
                 {/* Public and unguarded on purpose — requiring a login to opt
                     out is how a campaign gets reported as spam instead. */}
