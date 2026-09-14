@@ -75,7 +75,7 @@ export default function ClassRooms() {
             .eq("member_status", "active"),
           supabase
             .from("schedule_packages")
-            .select("id, level, day_of_week, start_time, is_active")
+            .select("id, level, day_of_week, start_time, is_active, class_language")
             .eq("is_active", true),
           supabase
             .from("trial_slots")
@@ -103,6 +103,7 @@ export default function ClassRooms() {
         const packages = new Map(
           ((slotsRes.data ?? []) as Array<{
             id: string; level: string | null; day_of_week: number | null; start_time: string | null;
+            class_language: string | null;
           }>).map(p => [p.id, p]),
         );
 
@@ -113,10 +114,15 @@ export default function ClassRooms() {
           const when = p && p.day_of_week != null
             ? `${DAY_NAMES[p.day_of_week]} ${hhmm(p.start_time)}`
             : "";
+          // The language is shown because it used to live only in the group's
+          // NAME, where nothing read it and one rename would have lost it. A
+          // fact worth keeping is a fact worth showing: if a line here is
+          // wrong, it is wrong on the screen Re opens every day.
+          const lang = p?.class_language === "english" ? "English" : "Arabic";
           return {
             key: `group:${g.id}`,
             title: g.name || when || "Group class",
-            kind: when ? `Group class · ${when} Cairo` : "Group class",
+            kind: when ? `Group class · ${when} Cairo · taught in ${lang}` : `Group class · taught in ${lang}`,
             meetingUrl: g.meeting_url,
             people: seated.get(g.id) ?? 0,
             fixHref: "/admin?tab=groups",
