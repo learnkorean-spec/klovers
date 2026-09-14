@@ -29,10 +29,34 @@ export const REFERRAL_MAX_BONUS_PCT = 15;
 
 // ── Time formatting ──────────────────────────────────────────────────────────
 
-/** Convert "HH:MM" (24h) to "H:MM AM/PM". Replaces 6+ identical formatTime copies. */
+/**
+ * Normalise a clock string to "H:MM", or null if it is not one.
+ *
+ * The reason this exists: `schedule_packages.start_time` and `trial_slots`
+ * are Postgres `time` columns, and PostgREST serialises those as **"15:00:00"**
+ * — with seconds. Every helper below used to guard on /^\d{1,2}:\d{2}$/, which
+ * that string fails. The guards then returned the input untouched, which looks
+ * like a harmless no-op and is not: `convertSlotToTimezone` fell back to the
+ * SOURCE weekday and the SOURCE time while the caller carried on labelling it
+ * with the student's own timezone.
+ *
+ * So the schedule picker showed a Riyadh student "Monday · 15:00:00" under
+ * "Asia/Riyadh" for a class that starts at 16:00 her time — the one number she
+ * needs, wrong, with no error anywhere. Seconds in, hours out.
+ *
+ * Accepting the seconds here, once, is the whole fix: every caller already
+ * routes through these three functions.
+ */
+function normaliseClock(t: string | null | undefined): string | null {
+  const m = /^(\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/.exec((t ?? "").trim());
+  return m ? `${m[1]}:${m[2]}` : null;
+}
+
+/** Convert "HH:MM" or "HH:MM:SS" (24h) to "H:MM AM/PM". Replaces 6+ identical formatTime copies. */
 export function formatTime(t: string): string {
-  if (!t || !/^\d{1,2}:\d{2}$/.test(t)) return t || "";
-  const [h, m] = t.split(":").map(Number);
+  const norm = normaliseClock(t);
+  if (!norm) return t || "";
+  const [h, m] = norm.split(":").map(Number);
   const ampm = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
   return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
@@ -55,6 +79,9 @@ function tzOffsetMs(date: Date, tz: string): number {
  * Convert a recurring weekly slot from source timezone to target timezone.
  * Returns the localized weekday + 12h time string. Handles DST correctly
  * by resolving against the next upcoming occurrence.
+ *
+ * Accepts "HH:MM" and "HH:MM:SS" — see normaliseClock above for why that
+ * distinction cost a student the right hour.
  */
 export function convertSlotToTimezone(
   dayOfWeek: number,
@@ -62,14 +89,15 @@ export function convertSlotToTimezone(
   sourceTz: string,
   targetTz: string,
 ): { weekday: string; dayIndex: number; timeFormatted: string } {
-  if (!timeHHMM || !/^\d{1,2}:\d{2}$/.test(timeHHMM) || !sourceTz || !targetTz) {
+  const norm = normaliseClock(timeHHMM);
+  if (!norm || !sourceTz || !targetTz) {
     return {
       weekday: WEEKDAY_LONG[dayOfWeek] || "",
       dayIndex: dayOfWeek,
       timeFormatted: formatTime(timeHHMM),
     };
   }
-  const [h, m] = timeHHMM.split(":").map(Number);
+  const [h, m] = norm.split(":").map(Number);
 
   // Find next date (in source tz) matching dayOfWeek
   const now = new Date();
@@ -114,7 +142,7 @@ export function deriveSessionPeriod(cairoHour: number): 'morning' | 'daytime' | 
 
 /**
  * Convert a specific calendar datetime from source tz to target tz.
- * Accepts `YYYY-MM-DD` + `HH:MM`. Returns localized date, time, weekday.
+ * Accepts `YYYY-MM-DD` + `HH:MM` or `HH:MM:SS`. Returns localized date, time, weekday.
  */
 export function convertDateTimeToTimezone(
   dateStr: string,
@@ -122,11 +150,12 @@ export function convertDateTimeToTimezone(
   sourceTz: string,
   targetTz: string,
 ): { dateStr: string; timeFormatted: string; weekday: string; hour24: number } {
-  if (!dateStr || !timeHHMM || !/^\d{1,2}:\d{2}$/.test(timeHHMM)) {
+  const norm = normaliseClock(timeHHMM);
+  if (!dateStr || !norm) {
     return { dateStr, timeFormatted: formatTime(timeHHMM), weekday: "", hour24: NaN };
   }
   const [y, mo, d] = dateStr.split("-").map(Number);
-  const [h, mi] = timeHHMM.split(":").map(Number);
+  const [h, mi] = norm.split(":").map(Number);
   const guess = Date.UTC(y, mo - 1, d, h, mi);
   const offset = tzOffsetMs(new Date(guess), sourceTz);
   const instant = new Date(guess - offset);
