@@ -1,4 +1,5 @@
-// Resend delivery webhook — updates email_logs with real delivery status.
+// Resend delivery webhook — stamps real delivery status onto whichever table
+// recorded the send: email_logs (transactional) or email_sends (campaigns).
 // Configure in Resend dashboard → Webhooks → add this function URL.
 // Events: email.delivered, email.bounced, email.complained
 
@@ -91,20 +92,50 @@ serve(async (req) => {
     "email.complained": "complained_at",
   };
 
-  const { data: row } = await supabase
+  // ── email_logs: everything transactional ────────────────────────────────
+  const { data: logRow } = await supabase
     .from("email_logs")
     .select("id")
     .eq("resend_id", emailId)
     .maybeSingle();
 
-  if (!row) {
-    return new Response(JSON.stringify({ ok: true, ignored: "no matching log row" }));
+  if (logRow) {
+    await supabase
+      .from("email_logs")
+      .update({ status: statusMap[type], [stampMap[type]]: now })
+      .eq("id", logRow.id);
+
+    return new Response(JSON.stringify({ ok: true, type, table: "email_logs" }));
   }
 
-  await supabase
-    .from("email_logs")
-    .update({ status: statusMap[type], [stampMap[type]]: now })
-    .eq("id", row.id);
+  // ── email_sends: every bulk campaign ────────────────────────────────────
+  //
+  // This branch did not exist. The webhook searched email_logs alone, so every
+  // campaign event was answered "no matching log row" and thrown away — with
+  // ok:true, which is how it looked healthy while telling us nothing about the
+  // one class of mail that can produce a spam complaint.
+  //
+  // `status` is left alone here on purpose: it is the queue's column
+  // (queued/sent/failed/skipped), and a bounce must not put a letter back in
+  // line to be retried. The stamp is the whole record.
+  const { data: sendRow } = await supabase
+    .from("email_sends")
+    .select("id")
+    .eq("resend_id", emailId)
+    .maybeSingle();
 
-  return new Response(JSON.stringify({ ok: true, type }));
+  if (sendRow) {
+    await supabase
+      .from("email_sends")
+      .update({ [stampMap[type]]: now })
+      .eq("id", sendRow.id);
+
+    return new Response(JSON.stringify({ ok: true, type, table: "email_sends" }));
+  }
+
+  // Neither table knows this id. That is worth a line: it means either a send
+  // that was never recorded, or this endpoint receiving another project's
+  // events. Both are wrong in a way that silence would hide.
+  console.warn(`resend-email-webhook: ${type} for unknown email_id ${emailId}`);
+  return new Response(JSON.stringify({ ok: true, ignored: "no matching row", email_id: emailId }));
 });
