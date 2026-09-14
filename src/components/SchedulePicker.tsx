@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Clock, Users, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { fetchPrivateAvailability, type PrivateSlotOption } from "@/lib/privateAvailability";
+import { toast } from "@/hooks/use-toast";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -166,12 +167,22 @@ const SchedulePicker = ({
     selectPackage(pkg, false);
   };
 
+  /**
+   * Record the class time this student picked.
+   *
+   * Every call here used to be fire-and-forget: four writes in a row, not one
+   * of them reading `error`. A rejected request came back as `data === null`,
+   * nothing was shown, and the green box appeared regardless - so a failure and
+   * a success looked identical to the student and to the admin.
+   *
+   * The green box is also no longer shown until the writes have actually
+   * succeeded. It used to be set on the first line of this function, before any
+   * of them had run.
+   */
   const selectPackage = async (pkg: SchedulePackage, isAlternative: boolean) => {
-    setConfirmed(pkg);
     setShowAlternatives(false);
     const local = convertSlotToTimezone(pkg.day_of_week, pkg.start_time, pkg.timezone, userTimezone);
     const label = `${local.weekday} · ${local.timeFormatted} · ${pkg.duration_min}min · ${userTimezone}`;
-    onSelect(pkg.id, label);
 
     const scheduleFields = {
       level: pkg.level || "",
@@ -181,57 +192,98 @@ const SchedulePicker = ({
       timezone: pkg.timezone,
     };
 
-    // Persist preference and trigger group assignment
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      // Assign to group via unified RPC
-      await (supabase as any).rpc("assign_student_to_group", {
-        _package_id: pkg.id,
-        _user_id: session.user.id,
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      toast({
+        title: "Could not save your choice",
+        description: sessionError.message,
+        variant: "destructive",
       });
+      return;
+    }
+    const session = sessionData.session;
 
-      await (supabase as any)
-        .from("student_package_preferences")
-        .upsert({
-          user_id: session.user.id,
-          level: pkg.level || "",
-          package_id: pkg.id,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
-
-      // Also update the user's latest PENDING enrollment with schedule data
-      const { data: pendingEnrollments } = await (supabase as any)
-        .from("enrollments")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .in("status", ["PENDING", "PENDING_PAYMENT"])
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (pendingEnrollments && pendingEnrollments.length > 0) {
-        await (supabase as any)
-          .from("enrollments")
-          .update(scheduleFields)
-          .eq("id", pendingEnrollments[0].id);
-      }
-
-      if (isAlternative) {
-        const userName = session.user.user_metadata?.name || session.user.email || "A student";
-        await (supabase as any).from("admin_notifications").insert({
-          message: `${userName} chose alternative schedule package (${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)} ${pkg.timezone})`,
-          type: "alternative_slot",
-          related_user_id: session.user.id,
-        });
-      }
-    } else {
-      // Not logged in — persist to localStorage draft for post-login sync
+    if (!session) {
+      // Not logged in - persist to localStorage draft for post-login sync. There
+      // is nothing to fail here, so the choice is shown straight away.
       try {
         const raw = localStorage.getItem("enroll_draft");
         const draft = raw ? JSON.parse(raw) : {};
         Object.assign(draft, scheduleFields, { packageId: pkg.id, days: DAY_NAMES[pkg.day_of_week] });
         localStorage.setItem("enroll_draft", JSON.stringify(draft));
       } catch { /* ignore */ }
+      setConfirmed(pkg);
+      onSelect(pkg.id, label);
+      return;
     }
+
+    // Assign to group via unified RPC.
+    const { error: assignError } = await (supabase as any).rpc("assign_student_to_group", {
+      _package_id: pkg.id,
+      _user_id: session.user.id,
+    });
+    if (assignError) {
+      toast({
+        title: "Could not save this class time",
+        description: assignError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error: preferenceError } = await (supabase as any)
+      .from("student_package_preferences")
+      .upsert({
+        user_id: session.user.id,
+        level: pkg.level || "",
+        package_id: pkg.id,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    if (preferenceError) {
+      toast({
+        title: "Could not save this class time",
+        description: preferenceError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // The choice is saved from here on. The two writes below decorate an
+    // existing enrolment and notify the admin; neither is worth discarding a
+    // saved choice over, so they report and carry on rather than returning.
+    const { data: pendingEnrollments, error: pendingError } = await (supabase as any)
+      .from("enrollments")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .in("status", ["PENDING", "PENDING_PAYMENT"])
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (pendingError) {
+      console.error("schedule: could not read the pending enrolment:", pendingError.message);
+    } else if (pendingEnrollments && pendingEnrollments.length > 0) {
+      const { error: enrollmentError } = await (supabase as any)
+        .from("enrollments")
+        .update(scheduleFields)
+        .eq("id", pendingEnrollments[0].id);
+      if (enrollmentError) {
+        console.error("schedule: could not write the day and time onto the enrolment:", enrollmentError.message);
+      }
+    }
+
+    if (isAlternative) {
+      const userName = session.user.user_metadata?.name || session.user.email || "A student";
+      const { error: notifyError } = await (supabase as any).from("admin_notifications").insert({
+        message: `${userName} chose alternative schedule package (${DAY_NAMES[pkg.day_of_week]} ${formatTime(pkg.start_time)} ${pkg.timezone})`,
+        type: "alternative_slot",
+        related_user_id: session.user.id,
+      });
+      if (notifyError) {
+        console.error("schedule: could not raise the alternative-slot notification:", notifyError.message);
+      }
+    }
+
+    setConfirmed(pkg);
+    onSelect(pkg.id, label);
   };
 
   if (loading) {
@@ -274,7 +326,16 @@ const SchedulePicker = ({
           <p className="text-sm text-muted-foreground">
             {confirmed.duration_min} min · {userTimezone.replace(/_/g, " ")} <span className="opacity-70">({formatTime(confirmed.start_time)} {confirmed.timezone.replace(/_/g, " ")})</span>
           </p>
-          <p className="text-xs text-muted-foreground">Pending payment approval</p>
+          {/* This line used to read "Pending payment approval", which was not
+              true. Choosing a time here records a preference; it does not hold
+              a seat. A student who picked a slot and closed the dialog believed
+              she had a place and had none - which is exactly what the empty
+              seat behind a saved preference on 14 Sep turned out to be.
+              Holding is the next step: the "Hold my place" button on the
+              schedule page, or payment in the enrol flow. */}
+          <p className="text-xs text-muted-foreground">
+            Chosen — your place is not held until you finish the next step.
+          </p>
           <Button
             variant="ghost"
             size="sm"
