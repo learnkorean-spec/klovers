@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -88,7 +89,8 @@ async function sendCampaignEmail(opts: {
   );
 
   const payload: Record<string, unknown> = {
-    from: Deno.env.get("FROM_EMAIL") || "KLovers <noreply@kloversegy.com>",
+    from: FROM_EMAIL,
+    reply_to: REPLY_TO_EMAIL,
     to: [opts.to],
     subject: opts.subject,
     html,
