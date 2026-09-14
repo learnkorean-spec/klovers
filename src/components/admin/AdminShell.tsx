@@ -28,7 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
-  CalendarRange, History,
+  CalendarRange, History, Sun, Moon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { useUnreadAlerts } from "@/hooks/admin/useUnreadAlerts";
+import { useTheme } from "@/contexts/ThemeContext";
 import "./shell-dedupe.css";
 
 export type NavItem = {
@@ -186,6 +187,10 @@ const AdminShell = ({
   // jobs were not running. An alarm that has to be wired up by whoever mounts
   // it is not an alarm.
   const { data: alerts } = useUnreadAlerts();
+  // The admin had no theme control of its own. The only toggle lived in the
+  // public site header, so changing it from here meant leaving the admin,
+  // flipping it on a marketing page and navigating back.
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -285,6 +290,18 @@ const AdminShell = ({
               Ctrl K
             </kbd>
           </button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={toggleTheme}
+          >
+            {theme === "dark"
+              ? <Sun className="h-[18px] w-[18px]" />
+              : <Moon className="h-[18px] w-[18px]" />}
+          </Button>
 
           {/* The one action from the dashboard's own header that the shell did
               not already provide. Same behaviour: reload the document. */}
