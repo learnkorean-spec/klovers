@@ -16,11 +16,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { cairoDateKey, cairoHour, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 import { adminRecipients } from "../_shared/adminRecipients.ts";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const FROM_EMAIL = "KLovers Funnel <noreply@kloversegy.com>";
 
 /**
  * This used to be a bare `FUNNEL_DIGEST_TO ?? "learnkorean@kloversegy.com"`.
@@ -409,7 +409,7 @@ Deno.serve(async (req) => {
     const sent = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html, text }),
+      body: JSON.stringify({ from: FROM_EMAIL, reply_to: REPLY_TO_EMAIL, to, subject, html, text }),
     });
     if (!sent.ok) {
       const errText = await sent.text();

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +11,6 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FROM_EMAIL = "Klovers <noreply@kloversegy.com>";
 const DASHBOARD_URL = "https://kloversegy.com/dashboard";
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -20,7 +20,7 @@ async function sendEmail(to: string, subject: string, html: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
+    body: JSON.stringify({ from: FROM_EMAIL, reply_to: REPLY_TO_EMAIL, to: [to], subject, html }),
   });
   if (!res.ok) {
     const err = await res.text();

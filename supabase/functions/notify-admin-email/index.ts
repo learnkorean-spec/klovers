@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { adminRecipients } from "../_shared/adminRecipients.ts";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -156,7 +157,8 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "KLovers <noreply@kloversegy.com>",
+        from: FROM_EMAIL,
+        reply_to: REPLY_TO_EMAIL,
         to,
         subject: `[KLovers] ${rawType}: ${rawMessage.substring(0, 80)}`,
         html,

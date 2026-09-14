@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const FROM_EMAIL = "Klovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
 const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
 
@@ -101,7 +101,7 @@ async function sendEmail(to: string, subject: string, html: string) {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${RESEND_API_KEY}`,
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
+    body: JSON.stringify({ from: FROM_EMAIL, reply_to: REPLY_TO_EMAIL, to: [to], subject, html }),
   });
   return res.ok;
 }

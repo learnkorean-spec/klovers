@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { authorizationError, authorizeRequest } from "../_shared/authorize.ts";
 import { levelLabel, type EmailLanguage } from "../_shared/levelLabel.ts";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 // The templates live in ./templates/ since 2026-09-01. This file had grown to
 // ~128 KB, past what the GitHub contents API accepts in a single write, which
@@ -39,21 +40,6 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
-
-/**
- * Where a reply actually lands.
- *
- * Mail goes out from noreply@, and several templates — the trial invitation
- * among them — invite the reader to "reply to this email". Without this header
- * every one of those replies is dropped on the floor, and the people who reply
- * rather than click are usually the ones with a single question holding them
- * back. Mirrors CONTACT_EMAIL in src/lib/siteConfig.ts. Edge functions cannot
- * import from src/, so this is a deliberate duplicate rather than an import —
- * and scripts/lib/brand-identity.test.mjs now fails if the two disagree, so
- * the copy is checked rather than merely intended.
- */
-const REPLY_TO_EMAIL = "kloversegy@gmail.com";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";

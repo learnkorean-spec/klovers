@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { authorizationError, authorizeRequest } from "../_shared/authorize.ts";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +44,6 @@ serve(async (req) => {
 
   // Send emails in background
   const sendAll = async () => {
-    const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
     for (let i = 0; i < profiles.length; i++) {
       const p = profiles[i];
       try {
@@ -72,6 +72,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: FROM_EMAIL,
+            reply_to: REPLY_TO_EMAIL,
             to: [p.email],
             subject: "Welcome to KLovers! 🎉",
             html,

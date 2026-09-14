@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,13 +9,13 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
 
 // Resend batch API — sends up to 100 emails per call (well within our 59-user list)
 async function sendBatch(emails: { to: string; subject: string; html: string; text: string; unsubscribeUrl: string }[]) {
   const payload = emails.map((e) => ({
     from: FROM_EMAIL,
+    reply_to: REPLY_TO_EMAIL,
     to: [e.to],
     subject: e.subject,
     html: e.html,

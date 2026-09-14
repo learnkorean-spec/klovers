@@ -14,6 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +23,6 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "KLovers <noreply@kloversegy.com>";
 const SITE_URL = "https://kloversegy.com";
 
 // ── Email template ────────────────────────────────────────────────────────────
@@ -245,6 +245,7 @@ async function sendEmail(
     },
     body: JSON.stringify({
       from: FROM_EMAIL,
+      reply_to: REPLY_TO_EMAIL,
       to: [to],
       subject,
       html,

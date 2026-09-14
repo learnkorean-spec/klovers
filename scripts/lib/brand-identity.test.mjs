@@ -34,8 +34,8 @@ const repoRoot = process.cwd();
 const indexHtml = readFileSync(join(repoRoot, "index.html"), "utf-8");
 const prerenderSrc = readFileSync(join(repoRoot, "scripts/prerender-meta.mjs"), "utf-8");
 const siteConfigSrc = readFileSync(join(repoRoot, "src/lib/siteConfig.ts"), "utf-8");
-const replyToSrc = readFileSync(
-  join(repoRoot, "supabase/functions/send-confirmation-email/index.ts"),
+const senderSrc = readFileSync(
+  join(repoRoot, "supabase/functions/_shared/sender.ts"),
   "utf-8"
 );
 const indexPageSrc = readFileSync(join(repoRoot, "src/pages/Index.tsx"), "utf-8");
@@ -79,7 +79,7 @@ const typeOf = (o) => (Array.isArray(o["@type"]) ? o["@type"] : [o["@type"]]);
 const orgLd = jsonLdBlocks.find((o) => typeOf(o).includes("EducationalOrganization"));
 const siteLd = jsonLdBlocks.find((o) => typeOf(o).includes("WebSite"));
 
-const hasArabic = (s) => /[؀-ۿ]/.test(s);
+const hasArabic = (s) => /[\u0600-\u06ff]/.test(s);
 const hasLatin = (s) => /[A-Za-z]/.test(s);
 
 /** The `/` entry of MARKETING_ROUTES, as written. */
@@ -350,14 +350,27 @@ describe("the contact address has exactly one source of truth", () => {
     expect(orgLd.email).toBe(CONTACT_EMAIL);
   });
 
-  it("the transactional reply-to matches siteConfig", () => {
-    // supabase/functions/send-confirmation-email/index.ts. This one decides
-    // where a student's reply physically lands, and an edge function genuinely
-    // cannot import from src/ — so it is a deliberate duplicate, and this is
-    // the check that keeps the duplicate honest.
-    const m = replyToSrc.match(/const REPLY_TO_EMAIL = "([^"]+)"/);
-    expect(m).not.toBeNull();
-    expect(m[1]).toBe(CONTACT_EMAIL);
+  it("the transactional sender has one home, on the authenticated domain", () => {
+    // supabase/functions/_shared/sender.ts. This decides who mail comes from
+    // and where a student's reply physically lands. It used to be a copy of
+    // CONTACT_EMAIL pasted into send-confirmation-email, alongside a From of
+    // noreply@ — a letter that asked for a reply from an address that refused
+    // one, answered at a personal Gmail. The two have deliberately parted
+    // company now that kloversegy.com is authenticated (SPF, DKIM at both
+    // google._domainkey and Resend's root key, DMARC) and mail is answered at
+    // a real mailbox on the domain. An edge function genuinely cannot import
+    // from src/, so what keeps this honest is that the sender is declared
+    // once, here, and nowhere else.
+    const from = senderSrc.match(/FROM_EMAIL = Deno\.env\.get\("FROM_EMAIL"\) \|\| "([^"]+)"/);
+    const replyTo = senderSrc.match(/REPLY_TO_EMAIL = Deno\.env\.get\("REPLY_TO_EMAIL"\) \|\| "([^"]+)"/);
+    expect(from).not.toBeNull();
+    expect(replyTo).not.toBeNull();
+    expect(from[1]).toMatch(/^[^<]+<[^@\s]+@kloversegy\.com>$/);
+    expect(replyTo[1]).toMatch(/^[^@\s]+@kloversegy\.com$/);
+    // A From that tells the reader not to reply, on letters that ask for one,
+    // is the exact thing this file now exists to prevent coming back.
+    expect(from[1]).not.toMatch(/noreply@/i);
+    expect(replyTo[1]).not.toMatch(/noreply@/i);
   });
 
   it("no file under src/ hardcodes the address instead of importing it", () => {
