@@ -349,10 +349,18 @@ export function getPriceFor(
 }
 
 /**
- * "$25", "1,200 EGP" — the symbol in front for dollars, the code after the
+ * "$25.00", "1,200 EGP" — the symbol in front for dollars, the code after the
  * number for everything else, matching how PricingSection renders local prices.
  */
+// Two currencies, two conventions. A dollar price is a catalogue price with
+// cents; an EGP price is a whole number of pounds -- nobody quotes 137.5 EGP,
+// and the per-class figure is a division result, not a price anyone pays.
 export function formatMoney(amount: number, currency: string): string {
-  const n = amount.toLocaleString("en-US", { maximumFractionDigits: 2 });
-  return currency === "USD" ? `$${n}` : `${n} ${currency}`;
+  if (currency === "USD") {
+    return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  if (currency === "EGP") {
+    return `${Math.round(amount).toLocaleString("en-US", { maximumFractionDigits: 0 })} EGP`;
+  }
+  return `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${currency}`;
 }
