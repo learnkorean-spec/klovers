@@ -11,6 +11,17 @@ describe("formatTime", () => {
     expect(formatTime("")).toBe("");
     expect(formatTime("bogus")).toBe("bogus");
   });
+
+  // The shape the database actually sends. `schedule_packages.start_time` and
+  // `trial_slots.start_time` are Postgres `time` columns and PostgREST
+  // serialises them with seconds; every case above uses a shape no query has
+  // ever returned, which is how this went unnoticed.
+  it("accepts the seconds PostgREST sends for a `time` column", () => {
+    expect(formatTime("18:00:00")).toBe("6:00 PM");
+    expect(formatTime("15:00:00")).toBe("3:00 PM");
+    expect(formatTime("00:05:00")).toBe("12:05 AM");
+    expect(formatTime("09:30:45")).toBe("9:30 AM");
+  });
 });
 
 describe("convertSlotToTimezone (weekly)", () => {
@@ -50,6 +61,24 @@ describe("convertSlotToTimezone (weekly)", () => {
     expect(r.weekday).toBe("Sunday");
     expect(r.dayIndex).toBe(0);
   });
+
+  // The regression this file was edited for. Before the fix these returned the
+  // SOURCE weekday and the raw "15:00:00" — which the caller then printed under
+  // the student's own timezone, so the class looked like it started at the
+  // Cairo hour wherever she lived.
+  it("converts a `time` value with seconds, rather than silently passing it through", () => {
+    const r = convertSlotToTimezone(1, "15:00:00", "Africa/Cairo", "Asia/Bangkok");
+    // Cairo 15:00 is 19:00 or 20:00 in Bangkok depending on Cairo's DST.
+    expect(r.weekday).toBe("Monday");
+    expect(r.timeFormatted).toMatch(/^(7:00 PM|8:00 PM)$/);
+    expect(r.timeFormatted).not.toContain(":00:00");
+  });
+
+  it("gives the same answer with and without seconds", () => {
+    const withSec = convertSlotToTimezone(4, "16:00:00", "Africa/Cairo", "Asia/Riyadh");
+    const without = convertSlotToTimezone(4, "16:00", "Africa/Cairo", "Asia/Riyadh");
+    expect(withSec).toEqual(without);
+  });
 });
 
 describe("convertDateTimeToTimezone (specific date)", () => {
@@ -74,6 +103,13 @@ describe("convertDateTimeToTimezone (specific date)", () => {
   it("handles invalid input", () => {
     const r = convertDateTimeToTimezone("", "18:00", "Africa/Cairo", "Africa/Cairo");
     expect(r.dateStr).toBe("");
+  });
+
+  it("accepts seconds here too", () => {
+    const withSec = convertDateTimeToTimezone("2026-05-14", "18:00:00", "Africa/Cairo", "Asia/Singapore");
+    const without = convertDateTimeToTimezone("2026-05-14", "18:00", "Africa/Cairo", "Asia/Singapore");
+    expect(withSec).toEqual(without);
+    expect(Number.isNaN(withSec.hour24)).toBe(false);
   });
 
   it("gives hour24 as the real 24h hour, not derived from the 12h+AM/PM string", () => {
