@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-import { buildCountryLocalPrices, tierCountries } from "@/lib/stripePrices";
+import { buildCountryLocalPrices, normalizeCountry, tierCountries } from "@/lib/stripePrices";
+import { supabase } from "@/integrations/supabase/client";
 
 type TierKey = "local" | "regional" | "global";
 
@@ -80,18 +81,78 @@ allCountries.sort((a, b) => a.country.localeCompare(b.country));
 
 type ClassType = "group" | "private";
 
+const tierForCountry = (country: string): TierKey | null =>
+  allCountries.find((c) => c.country === country)?.tier ?? null;
+
+/** The visitor's timezone, or "" where the browser will not say. */
+const browserTimezone = (): string => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+};
+
+// The country the page prices in should be the visitor's, not the market we
+// happen to sell most in. The timezone is all we have on the first paint, and
+// a signed-in student's profiles.country replaces it when the profile lands.
+// Egypt stays the last resort only because the page must never render with no
+// country selected at all.
+const seedCountry = (country?: string | null): string =>
+  normalizeCountry(country ?? "", browserTimezone()) || "Egypt";
+
 const PricingSection = () => {
   const navigate = useNavigate();
-  const [selectedCountry, setSelectedCountry] = useState<string>("Egypt");
-  const [activeTier, setActiveTier] = useState<TierKey | null>("local");
+  const [selectedCountry, setSelectedCountry] = useState<string>(() => seedCountry());
+  const [activeTier, setActiveTier] = useState<TierKey | null>(() => tierForCountry(seedCountry()));
   const [classType, setClassType] = useState<ClassType>("group");
   const { t } = useLanguage();
+  // Once she has picked a country herself, a late-arriving profile must not
+  // yank the page out from under her.
+  const pickedByVisitor = useRef(false);
 
   const handleCountryChange = (country: string) => {
+    pickedByVisitor.current = true;
     setSelectedCountry(country);
-    const match = allCountries.find((c) => c.country === country);
-    setActiveTier(match?.tier ?? null);
+    setActiveTier(tierForCountry(country));
   };
+
+  // Seeded, not awaited: the page has already rendered on the timezone's
+  // country by the time this resolves.
+  //
+  // Both reads check `error`, and neither changes the page when one fails. A
+  // rejected request returns a null `data`, which the optional chain below
+  // would read as "no country on file" -- indistinguishable from a profile
+  // that really has none, and the page would silently keep pricing in whatever
+  // it had. The timezone seed is already on screen by this point and is the
+  // better answer than a wrong one.
+  useEffect(() => {
+    let cancelled = false;
+
+    const seedFromProfile = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) return;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("country")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("pricing: could not read profile country:", profileError.message);
+        return;
+      }
+
+      const country = seedCountry((profile as any)?.country);
+      if (cancelled || pickedByVisitor.current) return;
+      setSelectedCountry(country);
+      setActiveTier(tierForCountry(country));
+    };
+
+    seedFromProfile();
+    return () => { cancelled = true; };
+  }, []);
 
   // Anchors cost per month. Reframes "$70 for 3 months" as "$23/mo" which
   // reads closer to a streaming sub than an upfront fee.
@@ -242,7 +303,7 @@ const PricingSection = () => {
 
                   <div className="space-y-3 mb-6">
                     {classType === "group" ? (
-                      ((isActive ? countryLocalPrices[selectedCountry]?.group : undefined) ?? tierPrices[tierKey]).map((price: any) => {
+                      (countryLocalPrices[selectedCountry]?.group ?? tierPrices[tierKey]).map((price: any) => {
                         const isBestValue = price.duration === "3 Months";
                         return (
                         <div
@@ -280,7 +341,7 @@ const PricingSection = () => {
                         );
                       })
                     ) : (
-                      ((isActive ? countryLocalPrices[selectedCountry]?.private : undefined) ?? privatePrices[tierKey]).map((price: any) => {
+                      (countryLocalPrices[selectedCountry]?.private ?? privatePrices[tierKey]).map((price: any) => {
                         const isBestValue = price.duration === "3 Months";
                         return (
                         <div
