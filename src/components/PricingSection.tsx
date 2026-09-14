@@ -119,17 +119,31 @@ const PricingSection = () => {
 
   // Seeded, not awaited: the page has already rendered on the timezone's
   // country by the time this resolves.
+  //
+  // Both reads check `error`, and neither changes the page when one fails. A
+  // rejected request returns a null `data`, which the optional chain below
+  // would read as "no country on file" -- indistinguishable from a profile
+  // that really has none, and the page would silently keep pricing in whatever
+  // it had. The timezone seed is already on screen by this point and is the
+  // better answer than a wrong one.
   useEffect(() => {
     let cancelled = false;
 
     const seedFromProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data: profile } = await supabase
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) return;
+
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("country")
         .eq("user_id", session.user.id)
         .maybeSingle();
+
+      if (profileError) {
+        console.error("pricing: could not read profile country:", profileError.message);
+        return;
+      }
+
       const country = seedCountry((profile as any)?.country);
       if (cancelled || pickedByVisitor.current) return;
       setSelectedCountry(country);
