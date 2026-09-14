@@ -487,7 +487,11 @@ const PricingSection = () => {
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">⭐</span>
             <p className="text-sm font-semibold text-foreground">4.9 / 5.0 Rating</p>
-            <p className="text-xs text-muted-foreground">From 200+ verified student reviews</p>
+            {/* "Verified" came off on 14 Sep: the reviews are real, three years of
+                them from before this system existed, but nothing in the product
+                checks a review against the student who left it, and that is what
+                the word claims. The count stays. */}
+            <p className="text-xs text-muted-foreground">From 200+ student reviews</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🇰🇷</span>
