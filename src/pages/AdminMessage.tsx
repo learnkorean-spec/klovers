@@ -28,6 +28,20 @@
  * 3. No template picker. Everything else on this screen would then be a worse
  *    version of the screen that owns that template.
  *
+ * WHO IS IN THE LIST
+ * ------------------
+ * Everyone Klovers holds an email address for, from all three places it keeps
+ * one: `profiles` (107), `leads` (127) and `trial_bookings` (60), merged on the
+ * lowercased address. The first version read `profiles` alone, and 21 people
+ * — someone who asked about a trial and never made an account — were simply
+ * unreachable from this screen without anyone being told why. A row is tagged
+ * by where it was found, because "student" and "asked once in August" are
+ * different people to write to.
+ *
+ * Only `profiles` carries a language and an unsubscribe token, so a lead gets
+ * Arabic by default (one click to change) and the footer falls back to the
+ * public unsubscribe page, which is what that page is for.
+ *
  * THE CONFIRM STEP IS THE POINT
  * -----------------------------
  * Sending is the one action here and it cannot be taken back. So the button
@@ -47,14 +61,24 @@ import { toast } from "@/hooks/use-toast";
 import AdminShell from "@/components/admin/AdminShell";
 import { Mail, Send, Search, AlertTriangle, Check, X } from "lucide-react";
 
+type Source = "student" | "lead" | "trial";
+
 type Person = {
+  /** The lowercased email. It is what the three tables are merged on. */
   id: string;
   name: string | null;
-  email: string | null;
+  email: string;
   language: string | null;
   unsubscribe_token: string | null;
   email_unsubscribed: boolean | null;
   status: string | null;
+  source: Source;
+};
+
+const SOURCE_LABEL: Record<Source, string> = {
+  student: "student",
+  lead: "lead",
+  trial: "trial",
 };
 
 type LogRow = {
@@ -117,15 +141,81 @@ const AdminMessage = () => {
     let alive = true;
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id,name,email,language,unsubscribe_token,email_unsubscribed,status")
-          .not("email", "is", null)
-          .order("created_at", { ascending: false })
-          .limit(500);
-        if (error) throw new Error(error.message);
+        // Three reads, not one. Order matters only for the merge below.
+        const [profileRes, leadRes, trialRes] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("name,email,language,unsubscribe_token,email_unsubscribed,status,created_at")
+            .not("email", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1000),
+          supabase
+            .from("leads")
+            .select("name,email,status,created_at")
+            .not("email", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1000),
+          supabase
+            .from("trial_bookings")
+            .select("name,email,status,created_at")
+            .not("email", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1000),
+        ]);
+        if (profileRes.error) throw new Error(profileRes.error.message);
+        if (leadRes.error) throw new Error(leadRes.error.message);
+        if (trialRes.error) throw new Error(trialRes.error.message);
         if (!alive) return;
-        setPeople((data ?? []) as Person[]);
+
+        // A profile wins over a lead and a lead over a trial booking, because
+        // the profile is the only row that knows her language and carries her
+        // own unsubscribe token. Same person, best record.
+        const byEmail = new Map<string, Person>();
+        type Row = {
+          name?: string | null;
+          email?: string | null;
+          status?: string | null;
+          language?: string | null;
+          unsubscribe_token?: string | null;
+          email_unsubscribed?: boolean | null;
+        };
+        const add = (row: Row, source: Source, extra?: Partial<Person>) => {
+          const email = (row.email ?? "").trim();
+          const key = email.toLowerCase();
+          if (!key) return;
+          const existing = byEmail.get(key);
+          if (existing) {
+            // Keep the stronger record, but take a name from the weaker one
+            // when the stronger has none — a lead row is often the only place
+            // the name was ever typed.
+            if (!existing.name && row.name) existing.name = row.name;
+            return;
+          }
+          byEmail.set(key, {
+            id: key,
+            name: row.name ?? null,
+            email,
+            language: null,
+            unsubscribe_token: null,
+            email_unsubscribed: null,
+            status: row.status ?? null,
+            source,
+            ...extra,
+          });
+        };
+        ((profileRes.data ?? []) as Row[]).forEach(r =>
+          add(r, "student", {
+            language: r.language ?? null,
+            unsubscribe_token: r.unsubscribe_token ?? null,
+            email_unsubscribed: r.email_unsubscribed ?? null,
+          }));
+        ((leadRes.data ?? []) as Row[]).forEach(r => add(r, "lead"));
+        ((trialRes.data ?? []) as Row[]).forEach(r => add(r, "trial"));
+
+        setPeople(
+          [...byEmail.values()].sort((a, b) =>
+            (a.name || a.email).localeCompare(b.name || b.email, "en")),
+        );
         await loadLogs();
       } catch (e) {
         if (alive) setLoadError(e instanceof Error ? e.message : "Unknown error.");
@@ -136,17 +226,20 @@ const AdminMessage = () => {
     return () => { alive = false; };
   }, []);
 
-  // 107 profiles today, 500 at the cap — small enough that the whole list is
-  // already here and the filter is instant. A server-side search would add a
-  // round trip per keystroke to save nothing.
+  // ~128 people today — small enough that the whole list is already here and
+  // the filter is instant. A server-side search would add a round trip per
+  // keystroke to save nothing.
+  //
+  // The list shows with NO query typed, which is the point: the first version
+  // showed nothing until something was typed, so the only way to write to
+  // someone was to already know their name. A list you can scroll is also how
+  // you notice the person you meant was never in it.
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return people
-      .filter(p =>
-        (p.name ?? "").toLowerCase().includes(q) ||
-        (p.email ?? "").toLowerCase().includes(q))
-      .slice(0, 8);
+    if (!q) return people;
+    return people.filter(p =>
+      (p.name ?? "").toLowerCase().includes(q) ||
+      p.email.toLowerCase().includes(q));
   }, [query, people]);
 
   const pick = (p: Person) => {
@@ -156,13 +249,15 @@ const AdminMessage = () => {
     // Her own recorded language, not a guess. It was a column default nobody
     // ever wrote until 14 Sep, so it is now worth trusting — and still worth
     // being able to override in one click.
+    // A lead has no recorded language at all, so Arabic is the default and
+    // the toggle is one click away.
     setLang(p.language === "en" ? "en" : "ar");
   };
 
-  const ready = !!selected?.email && subject.trim().length > 0 && body.trim().length > 0;
+  const ready = !!selected && subject.trim().length > 0 && body.trim().length > 0;
 
   const send = async () => {
-    if (!selected?.email || !ready) return;
+    if (!selected || !ready) return;
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-confirmation-email", {
@@ -242,7 +337,8 @@ const AdminMessage = () => {
                         <p className="text-xs text-muted-foreground truncate">{selected.email}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {selected.status && <Badge variant="secondary">{selected.status}</Badge>}
+                        <Badge variant="secondary">{SOURCE_LABEL[selected.source]}</Badge>
+                        {selected.status && <Badge variant="outline">{selected.status}</Badge>}
                         {selected.email_unsubscribed && (
                           <Badge variant="outline" className="border-amber-500 text-amber-700">
                             <AlertTriangle className="mr-1 h-3 w-3" /> unsubscribed
@@ -265,31 +361,49 @@ const AdminMessage = () => {
                         <Input
                           value={query}
                           onChange={e => setQuery(e.target.value)}
-                          placeholder="Search by name or email…"
+                          placeholder="Filter by name or email…"
                           className="pl-9"
+                          // Chrome read this box as an address field and covered
+                          // the list with its own saved-email popup. It is not an
+                          // address field: nothing here is ever typed to be
+                          // submitted as the admin's own details.
+                          name="klovers-recipient-filter"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          data-lpignore="true"
+                          data-1p-ignore="true"
                         />
                       </div>
-                      {query.trim() && matches.length === 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          Nobody matches that. Only people with an account are listed here.
-                        </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {matches.length} of {people.length} — everyone Klovers has an email for,
+                        whether or not they ever made an account.
+                      </p>
+
+                      {matches.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nobody matches that.</p>
+                      ) : (
+                        <div className="max-h-80 space-y-1 overflow-y-auto rounded-lg border p-1">
+                          {matches.map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => pick(p)}
+                              className="flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">{p.name || "(no name)"}</span>
+                                <span className="block truncate text-xs text-muted-foreground">{p.email}</span>
+                              </span>
+                              <span className="flex shrink-0 items-center gap-1">
+                                <Badge variant="secondary">{SOURCE_LABEL[p.source]}</Badge>
+                                <Badge variant="outline">{p.language === "en" ? "EN" : "AR"}</Badge>
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       )}
-                      {matches.map(p => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => pick(p)}
-                          className="flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
-                        >
-                          <span className="min-w-0">
-                            <span className="block truncate font-medium">{p.name || "(no name)"}</span>
-                            <span className="block truncate text-xs text-muted-foreground">{p.email}</span>
-                          </span>
-                          <Badge variant="outline" className="shrink-0">
-                            {p.language === "en" ? "EN" : "AR"}
-                          </Badge>
-                        </button>
-                      ))}
                     </div>
                   )}
 
