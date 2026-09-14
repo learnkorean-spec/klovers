@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Language = "en" | "ar";
 
@@ -66,6 +67,37 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = language;
     localStorage.setItem("k-lovers-lang", language);
+  }, [language]);
+
+  // The language the website is displayed in IS the language this person reads
+  // Klovers in, so it is the language Klovers writes to them in. Nothing else
+  // decides it — not a name, not a country, not which language a class is
+  // taught in.
+  //
+  // Until 14 Sep nothing recorded it at all: profiles.language sat on its 'ar'
+  // default across all 107 rows while this provider was defaulting the display
+  // to English. The two were never the same fact, so every language-aware
+  // letter went out in Arabic. Signup now records the display language, and
+  // this keeps it true afterwards — a signed-in person who switches the site
+  // has changed the answer, and the next letter should follow them.
+  //
+  // Fire-and-forget, and nothing at all for a signed-out visitor: switching the
+  // site language must stay instant, and a failed write is not worth a toast.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const userId = data.user?.id;
+        if (!userId || cancelled) return;
+        await supabase.from("profiles").update({ language }).eq("user_id", userId);
+      } catch {
+        // Non-critical — the display language still changed for them.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [language]);
 
   const toggleLanguage = () => setLanguage((prev) => (prev === "en" ? "ar" : "en"));
