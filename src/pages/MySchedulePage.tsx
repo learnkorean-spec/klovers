@@ -17,6 +17,29 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const DAY_NAMES_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAY_NAMES_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
+// Copy for holding a seat, kept beside DAY_NAMES_AR/EN for the same reason they
+// are here: a handful of strings only this page says. group_full and
+// paid_elsewhere are spelled exactly as hold_my_seat raises them.
+const HOLD_COPY_EN = {
+  holdMyPlace: "Hold my place — pay later",
+  placeHeld: "Your place is held",
+  placeHeldDesc: "You have a seat in {group}. Pay for it whenever you're ready.",
+  placeHeldNoLinkDesc: "You have a seat in {group}. Pay for it whenever you're ready — the joining link will follow.",
+  couldNotHold: "Couldn't hold your place",
+  group_full: "This class time is full. Pick the other day for your level.",
+  paid_elsewhere: "You have already paid for a different class time. Message us and we will move you.",
+};
+
+const HOLD_COPY_AR = {
+  holdMyPlace: "احجز مكاني وادفع بعدين",
+  placeHeld: "مكانك محجوز",
+  placeHeldDesc: "مقعدك في {group}. ادفعي في أي وقت يناسبك.",
+  placeHeldNoLinkDesc: "مقعدك في {group}. ادفعي في أي وقت يناسبك — ورابط الدخول هيوصلك.",
+  couldNotHold: "تعذّر حجز مكانك",
+  group_full: "الميعاد ده اتملى. اختار اليوم التاني لمستواك.",
+  paid_elsewhere: "انتي دافعة لميعاد تاني بالفعل. كلّمينا وإحنا ننقلك.",
+};
+
 import { formatTime, convertSlotToTimezone } from "@/lib/admin-utils";
 import { getUserTimezone } from "@/lib/viewerTimezone";
 
@@ -50,6 +73,7 @@ interface AlternativePkg {
 const MySchedulePage = () => {
   const { t, language } = useLanguage();
   const DAY_NAMES = language === "ar" ? DAY_NAMES_AR : DAY_NAMES_EN;
+  const HOLD_COPY = language === "ar" ? HOLD_COPY_AR : HOLD_COPY_EN;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -196,36 +220,26 @@ const MySchedulePage = () => {
     if (!selectedPackageId || !userId) return;
     setAssigning(true);
 
-    // 1. Update package preference
-    await (supabase as any).from("student_package_preferences").upsert(
-      { user_id: userId, package_id: selectedPackageId, level: userLevel, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" }
-    );
+    // One call, because seating a student is four writes that must agree: the
+    // enrolment, the seat, the preference the picker reads back, and releasing
+    // whatever seat she held before -- a level's two days are alternatives, not
+    // both. Doing them from here is how a student ended up with a preference and
+    // no class.
+    const { data: held, error } = await (supabase as any).rpc("hold_my_seat", { _package_id: selectedPackageId });
 
-    // 2. Update the latest approved enrollment: set new package_id and clear matched_at so it appears in the Matcher
-    const { data: latestEnr } = await supabase
-      .from("enrollments")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("approval_status", "APPROVED")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (latestEnr) {
-      await supabase
-        .from("enrollments")
-        .update({ package_id: selectedPackageId, matched_at: null } as any)
-        .eq("id", (latestEnr as any).id);
+    if (error) {
+      const description =
+        error.message === "group_full"
+          ? HOLD_COPY.group_full
+          : error.message === "paid_elsewhere"
+            ? HOLD_COPY.paid_elsewhere
+            : error.message;
+      toast({ variant: "destructive", title: HOLD_COPY.couldNotHold, description });
+      setAssigning(false);
+      return;
     }
 
-    // 3. Remove student from current pkg_group so they can be re-assigned
-    await (supabase as any)
-      .from("pkg_group_members")
-      .delete()
-      .eq("user_id", userId);
-
-    // 4. Insert admin notification
+    // Re still needs to know someone booked.
     const { data: { session } } = await supabase.auth.getSession();
     const userName = session?.user?.user_metadata?.name || session?.user?.email || t("mySchedule.aStudent");
     await (supabase as any).from("admin_notifications").insert({
@@ -234,7 +248,14 @@ const MySchedulePage = () => {
       related_user_id: userId,
     });
 
-    toast({ title: t("mySchedule.scheduleUpdated"), description: t("mySchedule.scheduleUpdatedDesc") });
+    const groupName = (held as any)?.group_name || selectedPackageLabel;
+    toast({
+      title: HOLD_COPY.placeHeld,
+      description: ((held as any)?.has_link === false
+        ? HOLD_COPY.placeHeldNoLinkDesc
+        : HOLD_COPY.placeHeldDesc
+      ).replace("{group}", groupName),
+    });
     setShowPicker(false);
     setAssigning(false);
     window.location.reload();
@@ -477,7 +498,7 @@ const MySchedulePage = () => {
                 {selectedPackageId && (
                   <Button className="w-full" disabled={assigning} onClick={handleConfirmChange}>
                     {assigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    {t("mySchedule.confirmNewSchedule")}
+                    {HOLD_COPY.holdMyPlace}
                   </Button>
                 )}
               </>
