@@ -16,11 +16,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { cairoDateKey, cairoHour, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 import { adminRecipients } from "../_shared/adminRecipients.ts";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const FROM_EMAIL = "KLovers Funnel <noreply@kloversegy.com>";
 
 /**
  * This used to be a bare `FUNNEL_DIGEST_TO ?? "learnkorean@kloversegy.com"`.
@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
     const yLabel = shiftDateKey(todayCairo, -1);
     const tomorrowCairo = shiftDateKey(todayCairo, 1);
 
-    // ── Headline numbers ────────────────────────────────────────────────────
+    // ── Headline numbers ──────────────────────────────────────────────────────
     const { data: hdr } = await supabase.rpc("exec_funnel_digest_headline_v1", {}).select();
     void hdr; // best-effort RPC; fall back to inline counts below
 
@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
       }))
       .sort((a, b) => b.paid - a.paid || b.sessions - a.sessions);
 
-    // ── Trial funnel ────────────────────────────────────────────────────────
+    // ── Trial funnel ───────────────────────────────────────────────────────────
     const labelOrder: { key: string[]; label: string }[] = [
       { key: ["landing_viewed"], label: "1. Trial landing viewed" },
       { key: ["homepage_hero_free_trial", "free_trial_landing_primary"], label: "2. Trial CTA clicked" },
@@ -344,7 +344,7 @@ Deno.serve(async (req) => {
       trialFunnel.push({ label: step.label, sessions: uniq.size });
     }
 
-    // ── Booking failures ────────────────────────────────────────────────────
+    // ── Booking failures ──────────────────────────────────────────────────────
     const { data: failEvents } = await supabase
       .from("lead_events")
       .select("session_id, metadata")
@@ -360,7 +360,7 @@ Deno.serve(async (req) => {
     }
     const failures: Failure[] = [...failMap.entries()].map(([reason, s]) => ({ reason, sessions: s.size })).sort((a, b) => b.sessions - a.sessions);
 
-    // ── Cron health ─────────────────────────────────────────────────────────
+    // ── Cron health ────────────────────────────────────────────────────────────
     const { data: cronStats } = await supabase
       .from("trial_bookings")
       .select("followup_prep_sent_at, followup_day1_sent_at, followup_day3_sent_at, trial_date, is_tba");
@@ -373,7 +373,7 @@ Deno.serve(async (req) => {
       if (r.trial_date === tomorrowCairo && r.is_tba !== true) prepWindowTomorrow++;
     }
 
-    // ── Auto-flagged concerns ───────────────────────────────────────────────
+    // ── Auto-flagged concerns ──────────────────────────────────────────────────
     const flags: string[] = [];
     if (sessions > 0 && signups === 0) flags.push("Zero signups yesterday despite traffic");
     if (sessions >= 10 && (multiTouch / sessions) < 0.10) flags.push(`Multi-touch under 10% (${multiTouch}/${sessions})`);
@@ -409,7 +409,7 @@ Deno.serve(async (req) => {
     const sent = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html, text }),
+      body: JSON.stringify({ from: FROM_EMAIL, reply_to: REPLY_TO_EMAIL, to, subject, html, text }),
     });
     if (!sent.ok) {
       const errText = await sent.text();
