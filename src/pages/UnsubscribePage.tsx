@@ -22,6 +22,7 @@
  */
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 
 const FUNCTION_URL =
   `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/unsubscribe-email`;
@@ -59,8 +60,16 @@ const UnsubscribePage = () => {
               ? "لإلغاء الاشتراك، افتح الرابط الموجود في أسفل الرسالة التي وصلتك مباشرة — لا تنسخه يدويًا."
               : "To unsubscribe, open the link at the bottom of the email you received directly rather than retyping it."}
           </p>
+          {/*
+            WHATSAPP_BASE, not a literal. This page carried 201288319463 while
+            every other WhatsApp link in the app used 201010003084 — and this is
+            the worst page to get wrong, because the person reading it is
+            already trying to leave and the one button offered sent her to a
+            stranger. Importing it means the next number change cannot leave
+            this page behind again.
+          */}
           <a
-            href="https://wa.me/201288319463"
+            href={WHATSAPP_BASE}
             className="mt-5 inline-block rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
           >
             {isAr ? "تواصل معنا على واتساب" : "Contact us on WhatsApp"}
