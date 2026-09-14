@@ -11,7 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
-import { type TierKey, type ClassType, type Duration, tierPrices, getTierForCountry, DURATION_CLASSES } from "@/lib/stripePrices";
+import { type ClassType, type Duration, getTierForCountry, normalizeCountry, getPriceFor, formatMoney, DURATION_CLASSES } from "@/lib/stripePrices";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -26,6 +26,9 @@ const EnrollPage = () => {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userCountry, setUserCountry] = useState<string>("");
+  const [timezone, setTimezone] = useState<string>(() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { return ""; }
+  });
   const navigate = useNavigate();
 
   useEffect(() => { track.pageView(); }, []);
@@ -40,23 +43,32 @@ const EnrollPage = () => {
       setUserId(session.user.id);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("country")
+        .select("country, timezone")
         .eq("user_id", session.user.id)
         .single();
       if (profile?.country) setUserCountry(profile.country);
+      // The profile's timezone wins over the browser's when we have one.
+      if ((profile as any)?.timezone) setTimezone((profile as any).timezone);
     };
     load();
   }, [navigate]);
 
-  const tier = useMemo(() => getTierForCountry(userCountry), [userCountry]);
+  // Country first, timezone second. profiles.country is blank for most students --
+  // the signup form never asked -- so a rule that reads it alone prices a student
+  // in Cairo in dollars, or refuses to price her at all.
+  const resolvedCountry = useMemo(() => normalizeCountry(userCountry, timezone), [userCountry, timezone]);
+  const tier = useMemo(() => getTierForCountry(resolvedCountry), [resolvedCountry]);
 
-  const price = useMemo(() => {
-    if (!tier || !planType || !duration) return null;
-    return tierPrices[tier]?.[planType as ClassType]?.[Number(duration) as Duration] ?? null;
-  }, [tier, planType, duration]);
+  const priced = useMemo(() => {
+    if (!planType || !duration) return null;
+    return getPriceFor(userCountry, timezone, planType as ClassType, Number(duration) as Duration);
+  }, [userCountry, timezone, planType, duration]);
+
+  const price = priced?.amount ?? null;
+  const currency = priced?.currency ?? "USD";
 
   const classesIncluded = duration ? DURATION_CLASSES[Number(duration) as Duration] : 0;
-  const unitPrice = price && classesIncluded ? (price / classesIncluded).toFixed(2) : "0.00";
+  const unitPrice = price && classesIncluded ? formatMoney(price / classesIncluded, currency) : formatMoney(0, currency);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +86,7 @@ const EnrollPage = () => {
     }
 
     setLoading(true);
-    track.initiateCheckout({ value: price, currency: "USD" });
+    track.initiateCheckout({ value: price, currency });
 
     try {
       // 1. Create enrollment FIRST (so we have an ID before uploading)
@@ -85,6 +97,7 @@ const EnrollPage = () => {
         _tx_ref: txRef,
         _receipt_url: "",
         _payment_method: paymentMethod,
+        _currency: currency,
       } as any);
 
       if (insertError || !enrollmentId) {
@@ -158,9 +171,12 @@ const EnrollPage = () => {
               <CardTitle className="text-lg">{t("enrollForm.orderDetails")}</CardTitle>
             </CardHeader>
             <CardContent>
-              {!tier && userCountry && (
+              {/* Not gated on the country being set: a blank one is the common
+                  case, and gating it there left those students a disabled
+                  button and no explanation. */}
+              {!tier && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4 text-sm text-destructive">
-                  {t("enrollForm.countryUnknown").replace("{country}", userCountry)} <a href="/profile" className="underline font-medium">{t("enrollForm.updateProfile")}</a>.
+                  {t("enrollForm.countryUnknown").replace("{country}", resolvedCountry || "—")} <a href="/profile" className="underline font-medium">{t("enrollForm.updateProfile")}</a>.
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -185,11 +201,13 @@ const EnrollPage = () => {
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{t("enrollForm.classesIncluded").replace("{count}", String(classesIncluded))}</span>
-                      <span className="text-xs text-muted-foreground">{t("enrollForm.perClass").replace("{price}", unitPrice)}</span>
+                      {/* The English string is "${price}/class" — its dollar sign
+                          is part of the placeholder, not of the sentence. */}
+                      <span className="text-xs text-muted-foreground">{t("enrollForm.perClass").replace("${price}", unitPrice).replace("{price}", unitPrice)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-foreground">{t("enrollForm.total")}</span>
-                      <span className="font-bold text-2xl text-foreground">${price}</span>
+                      <span className="font-bold text-2xl text-foreground">{formatMoney(price, currency)}</span>
                     </div>
                   </div>
                 )}

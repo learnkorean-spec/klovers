@@ -263,3 +263,96 @@ export function currencyChoicesFor(
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Pricing one student: country first, timezone second.
+//
+// profiles.country is empty for 85 of 107 profiles — the signup form never
+// asked for it — so a rule that reads the column alone prices four students in
+// five in dollars, or refuses to price them at all. The timezone is the more
+// reliable signal, and both enrol pages already capture it, so it is the
+// fallback whenever the column is blank or holds a placeholder.
+//
+// The enrol pages import these instead of reaching for tierPrices themselves.
+// Nothing below adds a second copy of the local prices; Egypt's numbers come
+// from COUNTRY_LOCAL_PRICES, the same table the pricing page renders.
+// ---------------------------------------------------------------------------
+
+/** Country values that carry no information, whatever the student typed. */
+const PLACEHOLDER_COUNTRIES = ["", "unknown", "other", "n/a", "na", "none", "-"];
+
+/** Spellings of Egypt that occur in profiles.country, plus its cities. */
+const EGYPT_ALIASES = ["egypt", "eg", "egy", "cairo", "ismailia", "alexandria", "giza", "مصر", "القاهرة"];
+
+/** Timezones that name a country when the column does not. */
+const TIMEZONE_COUNTRIES: Record<string, string> = {
+  "africa/cairo": "Egypt",
+};
+
+/**
+ * The canonical country name for one student — "Egypt" for every spelling of
+ * it, and the timezone's country when the column is blank or a placeholder.
+ * Anything else is returned as given (trimmed), so an unrecognised country
+ * still reaches getTierForCountry and still fails visibly there.
+ */
+export function normalizeCountry(country?: string | null, timezone?: string | null): string {
+  const raw = (country ?? "").trim();
+  const folded = raw.toLowerCase();
+
+  if (EGYPT_ALIASES.includes(folded)) return "Egypt";
+
+  if (PLACEHOLDER_COUNTRIES.includes(folded)) {
+    const tz = (timezone ?? "").trim().toLowerCase();
+    return TIMEZONE_COUNTRIES[tz] ?? raw;
+  }
+
+  return raw;
+}
+
+/**
+ * The currency one student pays in. EGP for Egypt; otherwise the country's own
+ * currency where the table has one, and USD where it does not.
+ *
+ * Where an amount is involved, take the currency from getPriceFor instead: it
+ * returns the two together, and outside Egypt the enrol pages still charge the
+ * USD tier price.
+ */
+export function resolveCurrency(country?: string | null, timezone?: string | null): string {
+  const resolved = normalizeCountry(country, timezone);
+  if (resolved === "Egypt") return "EGP";
+  return getCurrencyForCountry(resolved) ?? "USD";
+}
+
+/**
+ * What one student is charged for one bundle, and in what currency — EGP from
+ * the published Egyptian prices, USD from the tier table everywhere else.
+ * Null when the country resolves to no tier at all, which is what leaves the
+ * enrol form unpriced and tells it to say so.
+ */
+export function getPriceFor(
+  country: string | null | undefined,
+  timezone: string | null | undefined,
+  classType: ClassType,
+  duration: Duration,
+): { amount: number; currency: string } | null {
+  const resolved = normalizeCountry(country, timezone);
+
+  if (resolved === "Egypt") {
+    const local = COUNTRY_LOCAL_PRICES["Egypt"];
+    const amount = local?.[classType]?.[DURATIONS.indexOf(duration)];
+    return typeof amount === "number" ? { amount, currency: local.currency } : null;
+  }
+
+  const tier = getTierForCountry(resolved);
+  const amount = tier ? tierPrices[tier]?.[classType]?.[duration] : undefined;
+  return typeof amount === "number" ? { amount, currency: "USD" } : null;
+}
+
+/**
+ * "$25", "1,200 EGP" — the symbol in front for dollars, the code after the
+ * number for everything else, matching how PricingSection renders local prices.
+ */
+export function formatMoney(amount: number, currency: string): string {
+  const n = amount.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return currency === "USD" ? `$${n}` : `${n} ${currency}`;
+}
