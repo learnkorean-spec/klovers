@@ -744,22 +744,56 @@ const AdminDashboard = () => {
       recipients.push({ email, name, language: lang });
     }
 
+    // Resend enforces 10 requests/second. On 14 Sep 2026 a 21-recipient admin
+    // send fired every call at once and 8/21 came back `429 rate_limit_exceeded`
+    // on the first try (all 8 recovered on a manual retry that time — see
+    // EmailDeliveryPanel.tsx). "Send to whole group" here can hit the same
+    // wall with nobody watching to retry it by hand, so this sends in small
+    // batches with a short pause between them, and retries a single 429'd
+    // call once before counting it as a real failure.
+    const isRateLimited = async (error: unknown): Promise<boolean> => {
+      if (!error) return false;
+      const err = error as { context?: Response; message?: string };
+      if (err.context && typeof err.context.json === "function") {
+        try {
+          const body = await err.context.clone().json();
+          if (typeof body?.error === "string" && /429|rate_limit_exceeded/i.test(body.error)) return true;
+        } catch {
+          // Not JSON, or the body was already consumed — fall through.
+        }
+      }
+      return typeof err.message === "string" && /429|rate_limit_exceeded/i.test(err.message);
+    };
+
+    const sendClassLinkTo = async (r: { email: string; name: string; language?: string }) => {
+      const body = {
+        template: "class_link",
+        email: r.email,
+        name: r.name,
+        language: r.language,
+        class_link_url: classLinkUrl.trim(),
+        slot_day: classLinkSlotDay.trim() || undefined,
+        slot_time: classLinkSlotTime.trim() || undefined,
+        slot_timezone: classLinkSlotTimezone || undefined,
+      };
+      let { error } = await supabase.functions.invoke("send-confirmation-email", { body });
+      if (error && (await isRateLimited(error))) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        ({ error } = await supabase.functions.invoke("send-confirmation-email", { body }));
+      }
+      return error;
+    };
+
     let sent = 0;
     let failed = 0;
-    for (const r of recipients) {
-      const { error } = await supabase.functions.invoke("send-confirmation-email", {
-        body: {
-          template: "class_link",
-          email: r.email,
-          name: r.name,
-          language: r.language,
-          class_link_url: classLinkUrl.trim(),
-          slot_day: classLinkSlotDay.trim() || undefined,
-          slot_time: classLinkSlotTime.trim() || undefined,
-          slot_timezone: classLinkSlotTimezone || undefined,
-        },
-      });
-      if (error) failed++; else sent++;
+    const CLASS_LINK_BATCH_SIZE = 5;
+    for (let i = 0; i < recipients.length; i += CLASS_LINK_BATCH_SIZE) {
+      const batch = recipients.slice(i, i + CLASS_LINK_BATCH_SIZE);
+      const results = await Promise.all(batch.map(sendClassLinkTo));
+      for (const error of results) { if (error) failed++; else sent++; }
+      if (i + CLASS_LINK_BATCH_SIZE < recipients.length) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
     }
 
     setIsSendingClassLink(false);
@@ -1136,6 +1170,7 @@ const AdminDashboard = () => {
               </button>
             </div>
           )}
+
           <AdminKpiStrip
             overviewRows={overviewRows}
             actionableEnrollments={actionableEnrollments}
