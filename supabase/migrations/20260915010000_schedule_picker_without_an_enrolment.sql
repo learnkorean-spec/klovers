@@ -43,7 +43,9 @@
 --
 -- Everything else in the function -- the authorisation guard from
 -- 20260902210000, idempotency, group creation, capacity, the waitlist and its
--- admin notification -- is unchanged.
+-- admin notification -- is unchanged. The grants are unchanged too:
+-- CREATE OR REPLACE preserves the ACL, which is already
+-- {postgres, service_role, authenticated} with nothing granted to PUBLIC.
 --
 -- REHEARSED ON PRODUCTION before this file was written: the whole function was
 -- replaced inside a `DO` block, called as a real signed-in student with no
@@ -198,12 +200,6 @@ BEGIN
   END IF;
 END;
 $function$;
-
--- The picker is a student-facing path; it must stay callable by a signed-in
--- student and by nobody else. (The function's own guard is what enforces
--- self-or-admin; this only restores the grants a CREATE OR REPLACE keeps.)
-revoke all on function public.assign_student_to_group(uuid, uuid, uuid) from public;
-grant execute on function public.assign_student_to_group(uuid, uuid, uuid) to authenticated;
 
 do $$
 begin
