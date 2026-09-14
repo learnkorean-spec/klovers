@@ -289,7 +289,7 @@ serve(async (req) => {
     if (profileErr) throw profileErr;
     if (!profiles?.length) return ok({ dry_run, sent: 0, skipped: 0, total: 0, level_filter });
 
-    // ── Dry run ────────────────────────────────────────────────────────────────
+    // ── Dry run ───────────────────────────────────────────────────────────────
     if (dry_run) {
       return ok({
         dry_run: true,
