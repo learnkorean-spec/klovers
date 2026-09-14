@@ -55,7 +55,7 @@
 // Klovers wrapper, the signature line, and the unsubscribe footer every
 // Klovers letter carries.
 import {
-  BRAND_DARK, BRAND_MUTED,
+  BRAND_BLACK, BRAND_DARK, BRAND_MUTED, BRAND_YELLOW,
   brandWrapper, unsubscribeFooter,
   type EmailPayload,
 } from "./common.ts";
@@ -165,29 +165,50 @@ function highlightBlock(highlight: string | undefined, align: string): string {
   if (!text) return "";
   const lines = escapeHtml(text.replace(/\r\n/g, "\n").replace(/\r/g, "\n"))
     .replace(/\n/g, "<br />");
+  // !important on every colour, exactly as brandButton in common.ts already
+  // does. Gmail and Outlook rewrite declared colours in dark mode: a pale
+  // background is darkened and dark text is lightened, independently, which is
+  // how a black-on-cream box becomes grey-on-grey. The box exists to make one
+  // thing impossible to miss, so it is the last place that can be allowed to
+  // happen.
   return `
-    <div style="background:#fffbe6;border:2px solid #FFFF00;border-radius:10px;padding:16px 18px;margin:4px 0 20px;">
-      <p style="margin:0;color:${BRAND_DARK};font-size:16px;line-height:2;text-align:${align};font-weight:bold;">${lines}</p>
+    <div style="background-color:#FFFBE6 !important;border:2px solid ${BRAND_YELLOW} !important;border-radius:10px;padding:16px 18px;margin:4px 0 20px;">
+      <p style="margin:0;color:#111111 !important;font-size:16px;line-height:2;text-align:${align};font-weight:bold;">${lines}</p>
     </div>`;
 }
 
-/** The button. Returns "" unless the URL survived validation. */
+/**
+ * The button. Returns "" unless the URL survived validation.
+ *
+ * `!important` and `background-color` (not the `background` shorthand) are
+ * both load-bearing, and both are copied from brandButton in common.ts rather
+ * than invented here: Gmail's dark mode overrides a plain declaration, and
+ * Outlook ignores the shorthand outright — either way the button loses its
+ * yellow and becomes a black-bordered box of nothing. The colour itself comes
+ * from BRAND_YELLOW rather than a literal, so this button can never drift away
+ * from the yellow edge and header that frame it in the same letter.
+ */
 function ctaBlock(url: string | null, label: string | undefined, isAr: boolean): string {
   if (!url) return "";
   const text = escapeHtml((label || "").trim() || (isAr ? "احجزي مكانك" : "Book your place"));
   return `
     <div style="text-align:center;margin:8px 0 24px;">
-      <a href="${escapeHtml(url)}" style="display:inline-block;background:#FFFF00;color:#000000;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;border:2px solid #000000;">${text}</a>
+      <a href="${escapeHtml(url)}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;border:2px solid ${BRAND_BLACK} !important;">${text}</a>
     </div>`;
 }
 
-/** The quiet line under the button. Returns "" unless the URL survived validation. */
+/**
+ * The quiet line under the button. Returns "" unless the URL survived
+ * validation. #128C3E rather than the brighter WhatsApp green: this sits on
+ * white, and the lighter green fails contrast at 14px — and in dark mode a
+ * light green link is exactly what gets rewritten into something unreadable.
+ */
 function secondaryBlock(url: string | null, label: string | undefined, isAr: boolean): string {
   if (!url) return "";
   const text = escapeHtml((label || "").trim() || (isAr ? "أو كلّمنا على واتساب" : "Or message us on WhatsApp"));
   return `
     <p style="text-align:center;margin:0 0 24px;font-size:14px;">
-      <a href="${escapeHtml(url)}" style="color:#1a9e4f;text-decoration:underline;font-weight:bold;">${text}</a>
+      <a href="${escapeHtml(url)}" style="color:#128C3E !important;text-decoration:underline;font-weight:bold;">${text}</a>
     </p>`;
 }
 
