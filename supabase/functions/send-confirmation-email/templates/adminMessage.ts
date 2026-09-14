@@ -28,8 +28,8 @@
 // paragraphs and single newlines become line breaks, which is the entirety of
 // the formatting available in `body`.
 //
-// TWO PIECES OF STRUCTURE, ADDED 14 SEP 2026
-// ------------------------------------------
+// STRUCTURE, ADDED 14 SEP 2026
+// ----------------------------
 // The first real use of this template was an invitation to a free trial class
 // offering two dates. Written as plain paragraphs it had two defects, and both
 // mattered:
@@ -39,13 +39,13 @@
 //   2. The booking URL rendered as escaped TEXT, not a link. In the one letter
 //      whose entire purpose is to be clicked, there was nothing to click.
 //
-// So `highlight` and `cta_url`/`cta_label` were added. They are deliberately
-// NOT a way to pass HTML: `highlight` is escaped exactly like `body`, and
-// `cta_url` is accepted only if it is an https:// URL — a `javascript:` or
-// `data:` href in a letter carrying the school's name is precisely the thing
-// the escaping above exists to prevent. Anything else is dropped silently
-// rather than rendered as a dead button, because a button that does nothing is
-// worse than no button.
+// So `highlight`, `cta_url`/`cta_label` and `secondary_url`/`secondary_label`
+// were added. They are deliberately NOT a way to pass HTML: `highlight` is
+// escaped exactly like `body`, and both URLs are accepted only if they are
+// https:// — a `javascript:` or `data:` href in a letter carrying the school's
+// name is precisely the thing the escaping above exists to prevent. Anything
+// else is dropped silently rather than rendered as a dead button, because a
+// button that does nothing is worse than no button.
 //
 // NO FABRICATED SIGN-OFF, NO INVENTED SUBJECT
 // -------------------------------------------
@@ -86,6 +86,18 @@ export type AdminMessagePayload = EmailPayload & {
   cta_label?: string;
   /** Button destination. https:// only — anything else is dropped. */
   cta_url?: string;
+  /**
+   * A second way out, under the button: WhatsApp, usually.
+   *
+   * Not a second button. A letter with two equal buttons asks the reader to
+   * decide how to answer before she has decided whether to answer, and the
+   * cheaper route wins by looking easier. This renders as a quiet line of text
+   * so the primary action stays primary — but it is a real link, because for
+   * a good share of these students WhatsApp is the only channel they will
+   * actually use. https:// only, same as `cta_url`.
+   */
+  secondary_label?: string;
+  secondary_url?: string;
   /**
    * Whatever comes AFTER the box and the button — the closing line, the "reply
    * if neither suits you". Without this, `highlight` and the button can only
@@ -169,6 +181,16 @@ function ctaBlock(url: string | null, label: string | undefined, isAr: boolean):
     </div>`;
 }
 
+/** The quiet line under the button. Returns "" unless the URL survived validation. */
+function secondaryBlock(url: string | null, label: string | undefined, isAr: boolean): string {
+  if (!url) return "";
+  const text = escapeHtml((label || "").trim() || (isAr ? "أو كلّمنا على واتساب" : "Or message us on WhatsApp"));
+  return `
+    <p style="text-align:center;margin:0 0 24px;font-size:14px;">
+      <a href="${escapeHtml(url)}" style="color:#1a9e4f;text-decoration:underline;font-weight:bold;">${text}</a>
+    </p>`;
+}
+
 export function buildAdminMessageEmail(payload: AdminMessagePayload): { subject: string; html: string } {
   const isAr = payload.language === "ar";
   const align = isAr ? "right" : "left";
@@ -176,6 +198,7 @@ export function buildAdminMessageEmail(payload: AdminMessagePayload): { subject:
   const paragraphs = textToParagraphs(payload.body || "", align);
   const highlight = highlightBlock(payload.highlight, align);
   const cta = ctaBlock(safeHttpsUrl(payload.cta_url), payload.cta_label, isAr);
+  const secondary = secondaryBlock(safeHttpsUrl(payload.secondary_url), payload.secondary_label, isAr);
   const after = textToParagraphs(payload.body_after || "", align);
 
   const greeting = isAr ? `أهلاً ${payload.name} 👋` : `Hi ${payload.name} 👋`;
@@ -183,7 +206,7 @@ export function buildAdminMessageEmail(payload: AdminMessagePayload): { subject:
 
   const html = `
     <h1 style="color:${BRAND_DARK};font-size:20px;margin:0 0 18px;text-align:${align};">${escapeHtml(greeting)}</h1>
-    ${paragraphs}${highlight}${cta}
+    ${paragraphs}${highlight}${cta}${secondary}
     ${after}
     <p style="margin:24px 0 0;color:${BRAND_MUTED};font-size:14px;text-align:${align};">${escapeHtml(signature)}</p>
     ${unsubscribeFooter(payload.unsubscribe_token, isAr)}`;
