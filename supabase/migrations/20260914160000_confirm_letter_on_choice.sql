@@ -130,10 +130,13 @@ create trigger trg_email_student_on_trial_choice
 -- anon, authenticated and service_role, and `revoke from public` does not
 -- remove those. This one sends mail; it must not be reachable over PostgREST.
 -- See claude/REVOKE_FROM_PUBLIC_IS_NOT_ENOUGH_2026-09-14.md.
+--
+-- service_role is deliberately left alone: it is the same revoke set as
+-- 20260914150000, which applied cleanly today, and narrowing it further on a
+-- table students are writing to right now is not a change to make blind.
 revoke all on function public.email_student_on_trial_choice() from public;
 revoke all on function public.email_student_on_trial_choice() from anon;
 revoke all on function public.email_student_on_trial_choice() from authenticated;
-revoke all on function public.email_student_on_trial_choice() from service_role;
 
 do $$
 declare
