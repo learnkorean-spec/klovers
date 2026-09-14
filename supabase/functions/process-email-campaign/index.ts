@@ -71,6 +71,12 @@ function buildEmail(
  * the email an admin inspected before approving a campaign was not the email
  * recipients received. A test that differs from production is worse than no
  * test: it manufactures confidence in the exact thing being checked.
+ *
+ * Returns the Resend message id. It used to return nothing and discard the
+ * response body — and that id is the ONLY key the delivery webhook can match a
+ * campaign letter by, so throwing it away is what made every campaign send
+ * permanently unanswerable: sent, and then silence, for exactly the class of
+ * mail that can earn a spam complaint.
  */
 async function sendCampaignEmail(opts: {
   apiKey: string;
@@ -80,7 +86,7 @@ async function sendCampaignEmail(opts: {
   recipientName: string | null;
   unsubscribeToken: string | null;
   language: string | null;
-}): Promise<void> {
+}): Promise<string | null> {
   const html = buildEmail(
     opts.htmlBody,
     opts.recipientName,
@@ -123,6 +129,11 @@ async function sendCampaignEmail(opts: {
   if (!res.ok) {
     throw new Error(await res.text());
   }
+
+  // A malformed success body must not turn a delivered letter into a failed
+  // row: the send happened either way, so the id is best-effort.
+  const body = await res.json().catch(() => null);
+  return (body && typeof body.id === "string") ? body.id : null;
 }
 
 Deno.serve(async (req) => {
@@ -267,7 +278,7 @@ Deno.serve(async (req) => {
           }
 
           try {
-            await sendCampaignEmail({
+            const resendId = await sendCampaignEmail({
               apiKey: RESEND_API_KEY,
               to: send.email,
               subject: campaign.subject,
@@ -277,6 +288,8 @@ Deno.serve(async (req) => {
               language: profile?.language || null,
             });
 
+            // resend_id is what the delivery webhook matches on. Without it the
+            // row can record that we handed the letter over and nothing after.
             await adminClient
               .from("email_sends")
               .update({
@@ -284,6 +297,7 @@ Deno.serve(async (req) => {
                 sent_at: new Date().toISOString(),
                 attempts: send.attempts + 1,
                 error: null,
+                resend_id: resendId,
               })
               .eq("id", send.id);
           } catch (err: any) {
