@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "noreply@kloversegy.com";
-const FROM_NAME = "Klovers";
 
 const YELLOW = "#ffff00";
 const BLACK = "#0a0a0a";
@@ -176,7 +175,8 @@ serve(async (req) => {
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: FROM_EMAIL,
+      reply_to: REPLY_TO_EMAIL,
       to: [emailAddress],
       subject,
       html,
