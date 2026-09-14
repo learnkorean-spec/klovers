@@ -72,6 +72,7 @@ export const ADMIN_NAV: {
     { id: "my-students", label: "My students", to: "/admin?tab=my-students", icon: LayoutDashboard },
     { id: "placement-tests", label: "Placement tests", to: "/admin?tab=placement-tests", icon: ClipboardCheck },
     { id: "availability", label: "Availability", to: "/admin?tab=availability", icon: Clock },
+    { id: "email", label: "Email delivery", to: "/admin/email", icon: Mail },
   ],
   folded: [
     {
