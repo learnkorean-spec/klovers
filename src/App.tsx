@@ -33,6 +33,7 @@ const AdminEntry = lazy(() => import("./pages/AdminEntry"));
 const AdminToday = lazy(() => import("./pages/AdminToday"));
 const AdminWeek = lazy(() => import("./pages/AdminWeek"));
 const AdminActivity = lazy(() => import("./pages/AdminActivity"));
+const AdminMessage = lazy(() => import("./pages/AdminMessage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const EnrollPage = lazy(() => import("./pages/EnrollPage"));
@@ -238,6 +239,9 @@ const App = () => (
                     route for the same reason Today and The week are — it is not
                     a screen inside AdminDashboard.tsx. */}
                 <Route path="/admin/activity" element={<ProtectedRoute><AdminActivity /></ProtectedRoute>} />
+                {/* Free text to one student, from the Klovers address. A route
+                    of its own for the same reason as the three above. */}
+                <Route path="/admin/message" element={<ProtectedRoute><AdminMessage /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminEntry /></ProtectedRoute>} />
                 {/* Public and unguarded on purpose — requiring a login to opt
                     out is how a campaign gets reported as spam instead. */}
