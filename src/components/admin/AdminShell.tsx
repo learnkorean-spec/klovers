@@ -28,7 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
-  CalendarRange, History, Sun, Moon,
+  CalendarRange, History, Sun, Moon, Mail,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,11 @@ export const ADMIN_NAV: {
     // timetable is not a screen inside AdminDashboard.tsx. It reads the four
     // scheduling tables live; see WeekTimetable.tsx.
     { id: "week", label: "The week", to: "/admin/week", icon: CalendarRange },{ id: "guide", label: "دليل الإرسال", to: "/admin/guide", icon: CalendarRange },
+    // One free-text letter to one student, from the Klovers address. Listed
+    // here rather than folded because the whole point of building it was that
+    // there was no way to send such a letter without an engineer — a screen
+    // nobody can find would not have fixed that.
+    { id: "message", label: "Write a letter", to: "/admin/message", icon: Mail },
     { id: "my-students", label: "My students", to: "/admin?tab=my-students", icon: LayoutDashboard },
     { id: "placement-tests", label: "Placement tests", to: "/admin?tab=placement-tests", icon: ClipboardCheck },
     { id: "availability", label: "Availability", to: "/admin?tab=availability", icon: Clock },
