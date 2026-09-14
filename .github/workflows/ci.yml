@@ -46,8 +46,42 @@ jobs:
           set -euo pipefail
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
+
+          # Only a `.sql` file is a migration. `find supabase/migrations -name
+          # "${version}_*.sql"` is how Apply Migrations resolves a version, so
+          # 20260830900000_drop_xp_leaderboard_view.sql.PENDING is invisible to
+          # it and must be invisible here too - counting it would fail the
+          # build over a collision that cannot happen.
+          all_versions() {
+            git ls-tree "$1" -- supabase/migrations/ --name-only \
+              | xargs -r -n1 basename 2>/dev/null \
+              | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p'
+          }
+
           if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
-            echo "Not a pull_request event with base/head SHAs - nothing to compare, skipping."
+            # Push to main, or a manual dispatch. There is no PR diff to take,
+            # but the whole directory can still be checked - and it MUST be.
+            #
+            # On 14 Sep 2026 two files on main both claimed 20260914190000
+            # (confirm_letter_on_choice and schedule_packages_class_language).
+            # Each had come from its own PR and each was green at the time;
+            # the collision was created by main moving underneath them, and no
+            # pull_request event ever fired to look at the result. This branch
+            # used to `exit 0` here, so the one event that WAS in a position to
+            # see it - the push to main - deliberately looked away. The next
+            # Apply Migrations run would have applied one file, recorded the
+            # version as done, and left the other unrunnable forever.
+            echo "Not a pull_request event - checking the whole migrations directory instead."
+            dups=$(all_versions HEAD | sort | uniq -d)
+            if [ -n "$dups" ]; then
+              for v in $dups; do
+                files=$(git ls-tree HEAD -- supabase/migrations/ --name-only \
+                  | grep -E "/${v}_.*\.sql$" | tr '\n' ' ')
+                echo "::error::Migration version $v is used by more than one file: ${files}. Apply Migrations takes only the first and records the version as applied, so the rest would never run. Rename all but one."
+              done
+              exit 1
+            fi
+            echo "No duplicate migration version numbers on this ref."
             exit 0
           fi
 
@@ -72,10 +106,7 @@ jobs:
           #    the same number while this one was open," which is exactly
           #    what happened on 27 Aug.
           git fetch origin main -q
-          main_versions=$(git ls-tree origin/main -- supabase/migrations/ --name-only \
-            | xargs -r -n1 basename 2>/dev/null \
-            | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p' \
-            | sort -u)
+          main_versions=$(all_versions origin/main | sort -u)
 
           collision=0
           for v in $mine; do
@@ -92,9 +123,7 @@ jobs:
             --jq '.[] | select(.headRefName != "${{ github.head_ref }}") | .headRefName' || true)
           for branch in $other_branches; do
             git fetch origin "$branch" -q 2>/dev/null || continue
-            other_versions=$(git ls-tree "origin/$branch" -- supabase/migrations/ --name-only 2>/dev/null \
-              | xargs -r -n1 basename 2>/dev/null \
-              | sed -nE 's/^([0-9]{14})_.*\.sql$/\1/p')
+            other_versions=$(all_versions "origin/$branch" 2>/dev/null)
             for v in $mine; do
               if echo "$other_versions" | grep -qx "$v"; then
                 echo "::error::Migration version $v is also used on branch '$branch' (another open PR). Whichever merges second will silently never run under that number - coordinate, or rename to a new timestamp now."
