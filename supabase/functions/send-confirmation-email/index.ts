@@ -23,6 +23,7 @@ import {
 // file is opened.
 import { buildTrialRebookEmail } from "./templates/trialRebook.ts";
 import { buildPlacementResultEmail } from "./templates/placementResult.ts";
+import { buildAdminMessageEmail } from "./templates/adminMessage.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -163,6 +164,19 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // The free-text sender carries no words of its own, so an empty subject or
+    // body is not a letter with a gap in it - it is a blank page going out
+    // under the school's name. Rejected here rather than rendered.
+    if ((template as string) === "admin_message") {
+      const adminSubject = ((payload! as { subject?: string }).subject || "").trim();
+      const adminBody = ((payload! as { body?: string }).body || "").trim();
+      if (!adminSubject || !adminBody) {
+        return new Response(JSON.stringify({ error: "subject and body are both required for the admin_message template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     let subject: string;
     let html: string;
@@ -176,7 +190,13 @@ serve(async (req) => {
     // Klovers sends. The only caller of this template is a database trigger,
     // which is not type-checked against that union in any case. If common.ts
     // is ever opened for another reason, move this into the switch.
-    if ((template as string) === "placement_result") {
+    // `admin_message` is here for exactly the reason given above, and is the
+    // second key deliberately absent from that union.
+    if ((template as string) === "admin_message") {
+      const adminMessage = buildAdminMessageEmail(payload!);
+      subject = adminMessage.subject;
+      html = adminMessage.html;
+    } else if ((template as string) === "placement_result") {
       const placementResult = buildPlacementResultEmail(payload!);
       subject = placementResult.subject;
       html = placementResult.html;
