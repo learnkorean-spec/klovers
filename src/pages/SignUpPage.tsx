@@ -72,6 +72,12 @@ const SignUpPage = () => {
           // Stored in user_metadata so it survives email-confirmation flows
           // where there's no immediate session to update profiles directly.
           ...(persistedLevel ? { level: persistedLevel } : {}),
+          // Which language they are reading Klovers in, right now, on this page.
+          // Until this line existed nothing ever wrote profiles.language and all
+          // 107 rows sat on the 'ar' default, so every language-aware letter went
+          // out in Arabic — including to students on the English track.
+          // handle_new_user accepts 'ar' and 'en' only.
+          language,
         },
         emailRedirectTo: redirectTo
           ? `${window.location.origin}${redirectTo}`
