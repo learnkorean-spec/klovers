@@ -28,7 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
-  CalendarRange,
+  CalendarRange, History,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -200,12 +200,19 @@ const AdminShell = ({
 
   const all: NavItem[] = [
     { id: "today", label: "Today", to: "/admin/today" },
+    { id: "activity", label: "Last 7 days", to: "/admin/activity" },
     ...ADMIN_NAV.primary,
     ...ADMIN_NAV.secondary,
     ...ADMIN_NAV.folded.flatMap(g => g.items),
   ];
 
-  const current = activeId ?? (location.pathname === "/admin/today" ? "today" : undefined);
+  const current =
+    activeId ??
+    (location.pathname === "/admin/today"
+      ? "today"
+      : location.pathname === "/admin/activity"
+        ? "activity"
+        : undefined);
 
   // An explicit prop still wins, so anything that sets it deliberately keeps
   // working. Otherwise: unread total on the badge, red only when at least one
@@ -225,7 +232,13 @@ const AdminShell = ({
         </div>
 
         <nav className="flex flex-col gap-5 overflow-y-auto p-3">
-          <NavRow item={{ id: "today", label: "Today", to: "/admin/today", icon: LayoutDashboard }} active={current === "today"} />
+          {/* Today answers "what needs me now"; Last 7 days answers "what
+              happened while I was not looking". Same pair, so they sit
+              together above the grouped lists rather than inside one. */}
+          <div className="flex flex-col gap-0.5">
+            <NavRow item={{ id: "today", label: "Today", to: "/admin/today", icon: LayoutDashboard }} active={current === "today"} />
+            <NavRow item={{ id: "activity", label: "Last 7 days", to: "/admin/activity", icon: History }} active={current === "activity"} />
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <p className="px-3 text-[11px] font-bold tracking-[0.08em] text-muted-foreground">DAILY</p>
@@ -329,7 +342,11 @@ const AdminShell = ({
 
         {/* Below lg the sidebar is gone; the daily screens stay one tap away. */}
         <div className="flex gap-2 overflow-x-auto border-b px-4 py-2 lg:hidden">
-          {[{ id: "today", label: "Today", to: "/admin/today" }, ...ADMIN_NAV.primary].map(i => (
+          {[
+            { id: "today", label: "Today", to: "/admin/today" },
+            { id: "activity", label: "Last 7 days", to: "/admin/activity" },
+            ...ADMIN_NAV.primary,
+          ].map(i => (
             <Link
               key={i.id}
               to={i.to}
