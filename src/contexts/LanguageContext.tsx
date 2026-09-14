@@ -87,10 +87,22 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     let cancelled = false;
     void (async () => {
       try {
-        const { data } = await supabase.auth.getUser();
+        const { data, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          // Signed out is not an error here, but a real auth failure is worth
+          // seeing rather than silently reading as "nobody is logged in".
+          console.error("language: could not read the session:", userError.message);
+          return;
+        }
         const userId = data.user?.id;
         if (!userId || cancelled) return;
-        await supabase.from("profiles").update({ language }).eq("user_id", userId);
+        const { error: writeError } = await supabase
+          .from("profiles")
+          .update({ language })
+          .eq("user_id", userId);
+        if (writeError) {
+          console.error("language: profile write failed:", writeError.message);
+        }
       } catch {
         // Non-critical — the display language still changed for them.
       }
