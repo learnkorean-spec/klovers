@@ -1170,7 +1170,6 @@ const AdminDashboard = () => {
               </button>
             </div>
           )}
-
           <AdminKpiStrip
             overviewRows={overviewRows}
             actionableEnrollments={actionableEnrollments}
