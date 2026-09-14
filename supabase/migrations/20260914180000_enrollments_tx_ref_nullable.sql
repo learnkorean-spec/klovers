@@ -1,4 +1,4 @@
--- A held seat has no transaction reference — 14 Sep 2026
+-- A held seat has no transaction reference, and no receipt — 14 Sep 2026
 --
 -- Reproduced in production the first time anyone pressed the button:
 --
@@ -23,6 +23,14 @@
 -- column that holds neither some of the time. The NOT NULL is the leftover, and
 -- this drops it.
 --
+-- `receipt_url` GOES WITH IT. tx_ref is the first NOT NULL the insert meets,
+-- not the only one. Running that exact insert against production returns the
+-- failing row, and it reads `..., tx_ref null, receipt_url null, PENDING, ...`
+-- — receipt_url is NOT NULL with no default too, so fixing tx_ref alone moves
+-- the same error one column to the right and the rehearsal below would have
+-- failed on it. A student who has not paid has not uploaded a receipt either;
+-- it is the same fact about the same moment, and it gets the same answer.
+--
 -- WHY NOT A PLACEHOLDER. The alternative was to have `hold_my_seat` write ''
 -- or a generated string. Both put a value in a field that means "this is the
 -- reference for the money that arrived" when no money arrived — the same
@@ -38,16 +46,22 @@
 alter table public.enrollments
   alter column tx_ref drop not null;
 
+alter table public.enrollments
+  alter column receipt_url drop not null;
+
 comment on column public.enrollments.tx_ref is
   'Payment transaction reference. NULL until a payment exists — a seat held before paying has none. Unique among non-empty values only (enrollments_tx_ref_nonempty_unique).';
+
+comment on column public.enrollments.receipt_url is
+  'Where the uploaded receipt lives. NULL until one is uploaded — a seat held before paying has none.';
 
 -- ---------------------------------------------------------------------------
 -- Prove the hole is closed, without leaving a row behind.
 --
--- The insert is the exact shape hold_my_seat() uses; it is rolled back
--- immediately. If NOT NULL were still in place this raises and the migration
--- fails, which is the intended behaviour — a green run means a student can now
--- hold a seat.
+-- The insert is the exact shape hold_my_seat() uses; it is deleted
+-- immediately. If either NOT NULL were still in place this raises and the
+-- migration fails, which is the intended behaviour — a green run means a
+-- student can now hold a seat.
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -71,5 +85,5 @@ begin
 
   delete from public.enrollments where id = _id;
 
-  raise notice 'tx_ref-less enrolment insert succeeded and was rolled back';
+  raise notice 'enrolment insert with no payment artefacts succeeded and was removed';
 end $$;

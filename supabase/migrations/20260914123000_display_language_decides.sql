@@ -78,9 +78,9 @@ BEGIN
      AND sp.is_active
      AND COALESCE(sp.course_type, 'group') = 'group';
 
-  -- The display language, and nothing else. trial_bookings.class_language is
-  -- deliberately NOT consulted here: it says which language a class is taught
-  -- in, not which language this person reads. Do not reintroduce it.
+  -- The display language, and nothing else. The language a CLASS is taught in
+  -- is deliberately not consulted here: it says how the lesson is delivered,
+  -- not which language this person reads. Do not reintroduce it.
   _lang := CASE WHEN _profile.language = 'en' THEN 'en' ELSE 'ar' END;
 
   _needs := _profile.phone IS NULL OR _profile.phone = ''
@@ -130,26 +130,43 @@ COMMENT ON COLUMN public.profiles.language IS
   'The language this person is shown Klovers in, and therefore the language '
   'Klovers writes to them in: ''ar'' or ''en''. Written at signup from the UI '
   'language and rewritten whenever a signed-in person switches the site. Seeded '
-  'on 2026-09-14 from trial_bookings.class_language for accounts that predate '
-  'the recording. Nothing infers it from a name or a country.';
+  'on 2026-09-14 from the trial booking for accounts that predate the '
+  'recording. Nothing infers it from a name or a country.';
 
 -- ---------------------------------------------------------------------------
 -- Verify, rather than assume
+--
+-- The first version of this block searched pg_get_functiondef() for the name of
+-- the column that must no longer be read - and failed, because that function
+-- returns the source INCLUDING comments, and the comment above _lang names the
+-- column in the course of saying not to use it. The guard matched the sentence
+-- explaining the guard.
+--
+-- Comments are stripped before the check, so it reads the code and not the
+-- prose. The column name is assembled rather than written literally, so this
+-- block cannot match itself either.
 -- ---------------------------------------------------------------------------
 DO $$
 DECLARE
-  _def text;
-  _bad integer;
+  _def  text;
+  _code text;
+  _col  text := 'class' || '_language';
+  _bad  integer;
 BEGIN
   SELECT pg_get_functiondef(p.oid) INTO _def
     FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
    WHERE n.nspname = 'public' AND p.proname = 'email_student_on_placement_result';
 
-  -- The whole point of this migration is that the booking no longer decides.
-  IF _def LIKE '%class_language%' THEN
-    RAISE EXCEPTION 'the placement trigger still reads class_language';
+  IF _def IS NULL THEN
+    RAISE EXCEPTION 'email_student_on_placement_result does not exist';
   END IF;
-  IF _def NOT LIKE '%_profile.language%' THEN
+
+  _code := regexp_replace(_def, '--[^' || chr(10) || ']*', '', 'g');
+
+  IF position(_col IN _code) > 0 THEN
+    RAISE EXCEPTION 'the placement trigger still reads the class language column';
+  END IF;
+  IF position('_profile.language' IN _code) = 0 THEN
     RAISE EXCEPTION 'the placement trigger no longer reads profiles.language';
   END IF;
 
