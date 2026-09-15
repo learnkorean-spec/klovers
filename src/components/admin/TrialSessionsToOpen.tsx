@@ -201,9 +201,9 @@ export default function TrialSessionsToOpen() {
     );
   }
 
-  const closed = sessions.filter(s => !s.isOpen && s.lifecycle === "active");
+  const openable = sessions.filter(s => s.lifecycle === "active");
+  const closed = openable.filter(s => !s.isOpen);
   const archived = sessions.filter(s => s.lifecycle !== "active");
-  const live = sessions.filter(s => s.isOpen || s.lifecycle !== "active");
 
   return (
     <div className="space-y-3">
@@ -219,7 +219,7 @@ export default function TrialSessionsToOpen() {
       )}
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {sessions.filter(s => s.lifecycle === "active").map(s => {
+        {openable.map(s => {
           const confirming = confirmId === s.id;
           return (
             <Card key={s.id} className={s.isOpen ? undefined : "border-destructive"}>
@@ -251,10 +251,10 @@ export default function TrialSessionsToOpen() {
                     disabled={busyId === s.id}
                     onClick={() => {
                       // Opening is safe and reversible, so it happens on the
-                      // first click. Closing one that people have booked is
-                      // not: it takes the session off the site under them.
-                      if (!s.isOpen || (s.booked === 0 && !confirming)) { void toggle(s); return; }
-                      if (confirming) { void toggle(s); return; }
+                      // first click. Closing one people have booked is not: it
+                      // takes the session off the site under them, so that one
+                      // asks first.
+                      if (!s.isOpen || s.booked === 0 || confirming) { void toggle(s); return; }
                       setConfirmId(s.id);
                     }}
                   >
