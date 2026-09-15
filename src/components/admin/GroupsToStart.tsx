@@ -37,7 +37,7 @@ import { CalendarClock, CheckCircle2 } from "lucide-react";
 type GroupRow = {
   id: string;
   title: string;
-  /** "Monday 15:00 Cairo", or "" when the package has no weekday. */
+  /** "Monday 15:00 Cairo" — empty when the NAME already says it. */
   when: string;
   language: string;
   dayOfWeek: number | null;
@@ -149,12 +149,20 @@ export default function GroupsToStart() {
       }>).map(g => {
         const p = g.package_id ? packages.get(g.package_id) : undefined;
         const count = members.get(g.id) ?? { members: 0, seated: 0 };
+        const title = g.name || "Group";
+        // Every group is already named for its slot — "Level 1 · Monday 15:00
+        // Cairo" — so repeating the schedule underneath said the same words
+        // twice. Kept only for a group whose name does not carry the day.
+        const dow = p?.day_of_week ?? null;
+        const when = dow != null && !title.includes(DAY_NAMES[dow])
+          ? `${DAY_NAMES[dow]} ${hhmm(p?.start_time)} Cairo`
+          : "";
         return {
           id: g.id,
-          title: g.name || "Group",
-          when: p && p.day_of_week != null ? `${DAY_NAMES[p.day_of_week]} ${hhmm(p.start_time)} Cairo` : "",
+          title,
+          when,
           language: p?.class_language === "english" ? "English" : "Arabic",
-          dayOfWeek: p?.day_of_week ?? null,
+          dayOfWeek: dow,
           startDate: g.start_date,
           members: count.members,
           seated: count.seated,
@@ -280,7 +288,7 @@ export default function GroupsToStart() {
                 </div>
 
                 <p className="text-[11px] text-muted-foreground">
-                  {g.when || "no weekday on the package"} ·{" "}
+                  {g.when && <span>{g.when} · </span>}
                   {g.seated > 0
                     ? `${g.seated} of ${g.members} member${g.members === 1 ? "" : "s"} linked to an enrolment`
                     : `${g.members} member${g.members === 1 ? "" : "s"}, none linked to an enrolment`}
