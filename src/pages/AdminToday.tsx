@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import AdminShell from "@/components/admin/AdminShell";
 import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm";
 import GroupsToStart from "@/components/admin/GroupsToStart";
+import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
@@ -480,13 +481,31 @@ const AdminToday = () => {
             <ClassRooms />
           </section>
 
+          {/* TRIAL SESSIONS — CAN THEY BE BOOKED
+              The grid below answers "are the booked ones coming". It could
+              never answer "can anyone book this", because it only ever listed
+              sessions with is_active = true — the same filter every other
+              trial view uses. On 15 Sep two future sessions, 20 and 26
+              September, were dated, had a room link, and were closed. They
+              appeared on no screen in the app, which is indistinguishable from
+              not existing. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                TRIAL SESSIONS — OPEN OR CLOSED
+              </h2>
+              <p className="text-xs text-muted-foreground">whether a student can book it at all</p>
+            </div>
+            <TrialSessionsToOpen />
+          </section>
+
           {/* TRIAL WEEK */}
           <section className="space-y-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
                 NEXT TRIAL SESSIONS
               </h2>
-              <p className="text-xs text-muted-foreground">times as configured on each slot</p>
+              <p className="text-xs text-muted-foreground">who has said they are coming</p>
             </div>
 
             {!slots && !error ? (
