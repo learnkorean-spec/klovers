@@ -1,8 +1,9 @@
 import { useMemo, memo } from "react";
-import { Users, TrendingUp, AlertTriangle, DollarSign } from "lucide-react";
+import { Users, TrendingUp, AlertTriangle, DollarSign, Wallet } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, Tooltip as RechartsTooltip } from "recharts";
 import { AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
 import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
+import { usePrivateBudgets } from "@/hooks/admin/usePrivateBudgets";
 import type { OverviewRow } from "@/types/admin";
 
 interface Props {
@@ -22,6 +23,10 @@ interface KpiCard {
   sparkData?: { v: number }[];
   sparkColor?: string;
 }
+
+/** Tiles that run their own query and so keep their own skeleton. */
+const GROUP_REVENUE_LABEL = "Group Revenue";
+const PRIVATE_BUDGETS_LABEL = "Private Budgets";
 
 /** Build a 7-day enrollment count sparkline from overviewRows */
 function buildEnrollmentSparkline(rows: OverviewRow[]): { v: number }[] {
@@ -50,6 +55,7 @@ function formatMoney(n: number): string {
 
 export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actionableEnrollments, isLoading }: Props) {
   const { data: revenue, isLoading: revenueLoading } = useCollectedRevenue();
+  const { data: privateBudgets, isLoading: privateLoading } = usePrivateBudgets();
 
   const kpis = useMemo<KpiCard[]>(() => {
     const activeRows = overviewRows.filter(r => r.derived_status === "ACTIVE");
@@ -62,6 +68,17 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
     const locked = overviewRows.filter(r => r.derived_status === "LOCKED");
 
     const enrollSparkline = buildEnrollmentSparkline(overviewRows);
+
+    // Private students pay in their own currency and their bundles are entered
+    // by hand, so there is no rate to convert with. The largest currency leads
+    // the tile and the others sit underneath it, each still exact.
+    const [leadCurrency, ...otherCurrencies] = privateBudgets?.byCurrency ?? [];
+    const privateSublabel = privateBudgets
+      ? [
+          ...otherCurrencies.map(c => `${formatMoney(c.total)} ${c.currency}`),
+          `${privateBudgets.students} student${privateBudgets.students === 1 ? "" : "s"}`,
+        ].join(" · ")
+      : "entered by hand";
 
     return [
       {
@@ -79,10 +96,21 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         iconBg: "bg-green-100 dark:bg-green-900/30",
         iconColor: "text-green-600 dark:text-green-400",
         // Money received: PAID + APPROVED enrollments, all of them, not just
-        // each student's most recent. See useCollectedRevenue.
+        // each student's most recent. See useCollectedRevenue. Named "Group"
+        // because that is all it has ever counted — private students go through
+        // no checkout and have no enrollment row, so they are in the tile next
+        // to this one, not in this total.
         value: revenue ? `${formatMoney(revenue.total)} ${revenue.currency}` : "—",
-        label: "Total Revenue",
+        label: GROUP_REVENUE_LABEL,
         sublabel: revenue ? `paid · ${revenue.count} enrollments` : "paid enrollments",
+      },
+      {
+        icon: Wallet,
+        iconBg: "bg-violet-100 dark:bg-violet-900/30",
+        iconColor: "text-violet-600 dark:text-violet-400",
+        value: leadCurrency ? `${formatMoney(leadCurrency.total)} ${leadCurrency.currency}` : "—",
+        label: PRIVATE_BUDGETS_LABEL,
+        sublabel: privateSublabel,
       },
       {
         icon: AlertTriangle,
@@ -103,20 +131,23 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         alert: actionableEnrollments > 0 || locked.length > 0,
       },
     ];
-  }, [overviewRows, actionableEnrollments, revenue]);
+  }, [overviewRows, actionableEnrollments, revenue, privateBudgets]);
 
   return (
     <div
-      className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3"
       role="region"
       aria-label="Key performance indicators"
       aria-busy={isLoading}
     >
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
-        // The revenue tile has its own query, so it keeps its skeleton until
-        // that resolves rather than following the shared overview spinner.
-        const cardLoading = isLoading || (kpi.label === "Total Revenue" && revenueLoading);
+        // The two money tiles have their own queries, so each keeps its skeleton
+        // until that resolves rather than following the shared overview spinner.
+        const cardLoading =
+          isLoading ||
+          (kpi.label === GROUP_REVENUE_LABEL && revenueLoading) ||
+          (kpi.label === PRIVATE_BUDGETS_LABEL && privateLoading);
         return (
           <div
             key={kpi.label}
