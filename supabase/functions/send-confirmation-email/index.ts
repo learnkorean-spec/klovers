@@ -19,7 +19,7 @@ import type {
 import {
   buildTrialConfirmedEmail,
   buildTrialAttendanceConfirmationEmail, buildTrialGroupFullEmail,
-  buildTrialRolloverEmail, buildTrialPrepEmail, buildTrialFollowupDay1Email,
+  buildTrialRolloverEmail, buildTrialPrepEmail,
   buildTrialFollowupDay3Email, buildTrialFollowupDay7Email,
 } from "./templates/trial.ts";
 // The invitation lives on its own since 2026-09-02, so its copy can be edited
@@ -35,6 +35,10 @@ import { buildAdminMessageEmail } from "./templates/adminMessage.ts";
 import {
   buildPaymentMethodReminderEmail, buildReceiptNudgeEmail,
 } from "./templates/payment.ts";
+// The post-trial letter, likewise, since 2026-09-15. It keeps the
+// `trial_followup_day1` slug and is now sent two hours after the class ends
+// rather than two days later. trial.ts still exports the stale copy.
+import { buildTrialFollowupDay1Email } from "./templates/postTrial.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
