@@ -26,15 +26,30 @@
  * spot (what-happens box), who is teaching (teacher box), then the ask, then
  * what comes after, then an exit for anyone none of the dates suit.
  *
+ * WHAT DOES NOT GO IN THIS LETTER — set by Re, 15 September 2026
+ * --------------------------------------------------------------
+ * **The seat count.** Capacity is an internal operating number. The reader has
+ * no decision to make with it and no way to check it, so stating it only
+ * creates something that can be wrong — and it was, three times over. The
+ * constant said 8 while `trial_slots` said 15; it said 15 while they said 25.
+ * Every one of the 31 letters sent on 15 September quoted a number that
+ * matched no class the reader could book.
+ *
+ * The fix is not to wire the number to the database. It is to not print it.
+ * A number that is never stated cannot go stale. If capacity ever becomes
+ * something a reader needs — a genuinely contended class — say it as a fact
+ * about that class in that letter, not as a constant in this file.
+ *
  * TONE RULES — set by Re, 15 September 2026
  * -----------------------------------------
  * See `claude/CUSTOMER_MESSAGE_TONE_RULE.md`. Three of the five rules bite in
  * this file and each one removed something that used to be here:
  *
  *  • **Rule 3, neutral tone.** Every emoji is gone — subject line included —
- *    along with the exclamation marks and the scarcity nudge. The seat count
- *    stays because 15 is a fact the reader needs; "so it is worth booking
- *    early" was us pushing, and it went. State the offer; let them decide.
+ *    along with the exclamation marks and the scarcity nudge ("so it is worth
+ *    booking early"). The seat count went too, for the reason above: a count
+ *    next to a deadline reads as pressure whatever the words around it say.
+ *    State the offer; let them decide.
  *
  *  • **Rule 5, every outreach is a new enrolment.** The letter never refers to
  *    a previous booking, a missed class, or time elapsed — not even softly.
@@ -51,7 +66,7 @@
  *
  * WHAT THE TRIAL IS
  * -----------------
- * An introduction, not a lesson. Thirty minutes, shared with up to fifteen
+ * An introduction, not a lesson. Thirty minutes, shared with a room of other
  * people: how the course works, which level the reader belongs in, and who is
  * teaching. The letter used to describe it as a first Korean class and promise
  * a learning outcome from it — see the whatHappens comment below for why that
@@ -64,8 +79,8 @@
  * "١٠ طالبات". Most Klovers students are women, but a letter grammatically
  * addressed to women tells every man who gets it that the class is not his.
  * Arabic has no true neuter, so: impersonal constructions wherever a verb can
- * be avoided ("صفحة الحجز بتعرض…", "المقاعد ١٥ لكل حصة"), unmarked forms where
- * one cannot. No sentence marks the reader's gender.
+ * be avoided ("صفحة الحجز بتعرض…", "الحجز بياخد أقل من دقيقة"), unmarked forms
+ * where one cannot. No sentence marks the reader's gender.
  */
 
 import type { EmailPayload } from "./common.ts";
@@ -75,28 +90,13 @@ import {
 } from "./common.ts";
 
 /**
- * Seats per trial class.
- *
- * Matches `trial_slots.capacity`, which migration 20260906120000 raised from
- * 8 to 15. This number was left at 8 by that migration and the letter then
- * told every reader there were 8 places when there were 15 — understating a
- * free class is not a safe error, it is a reason to not bother replying.
- *
- * It is NOT the cohort capacity. The paid Hangul cohorts in
- * `schedule_packages` are deliberately still 8, and that migration asserts it:
- * a trial is a room you sit in once, a cohort is a room you learn in for
- * weeks, and they do not want the same number of people. Do not "fix" the two
- * back into one constant.
- *
- * Hardcoded because `available_slots` carries no capacity field. If
- * `trial_slots.capacity` moves again, move it here in the same commit.
- */
-const TRIAL_CAPACITY = 15;
-
-/**
  * Minutes in a trial class. The trial is 30; the Hangul course that follows is
  * 60 per class. Two different numbers for two different things — keep them
  * apart. Overridden by the payload where the caller knows better.
+ *
+ * This is the only capacity-or-duration number left in the file, and it is
+ * here because the reader genuinely needs it: half an hour is a different
+ * commitment from two hours. Compare the removed seat count — see the header.
  */
 const TRIAL_MINUTES = 30;
 
@@ -199,11 +199,11 @@ export function buildTrialRebookEmail(p: EmailPayload) {
    * This box used to promise "by the end you'll write your own name in
    * Korean". That is a LESSON, and the trial is not one. Reham's words: the
    * trial exists so a person can hear how the course works, find out which
-   * level they belong in, and meet the teacher — in thirty minutes, shared
-   * with up to fifteen other people. Teaching Hangul to fifteen strangers in
-   * half an hour is not something that happens, so the letter was selling an
-   * outcome the session cannot deliver, and every attendee would have
-   * discovered that during it.
+   * level they belong in, and meet the teacher — in thirty minutes, in a room
+   * with other people. Teaching Hangul to a room of strangers in half an hour
+   * is not something that happens, so the letter was selling an outcome the
+   * session cannot deliver, and every attendee would have discovered that
+   * during it.
    *
    * A promise a free session breaks costs more than the session earns: the
    * first thing the reader learns about Klovers is that its emails overstate.
@@ -332,8 +332,6 @@ export function buildTrialRebookEmail(p: EmailPayload) {
     ? `<p style="margin: 0 0 16px;">لو مفيش ميعاد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة بناءً على الردود دي.</p>`
     : `<p style="margin: 0 0 16px;">If none of these work, <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">message us on WhatsApp</a> and tell us which day suits you — new slots get opened on exactly these replies.</p>`;
 
-  const seats = isAr ? toArabicDigits(TRIAL_CAPACITY) : String(TRIAL_CAPACITY);
-
   /**
    * The closing contact block — a green WhatsApp button.
    *
@@ -375,7 +373,6 @@ export function buildTrialRebookEmail(p: EmailPayload) {
         ${localTimeNote}
         ${deadlineNote}
         <p style="margin: 0 0 14px;">كل ميعاد بلغة واحدة: الميعاد <strong>الإنجليزي</strong> حصته بالإنجليزي بالكامل، و<strong>العربي</strong> بالعربي بالكامل.</p>
-        <p style="margin: 0 0 6px;">عدد المقاعد <strong>${seats} لكل حصة</strong>.</p>
         ${whatHappens}
         ${teacherBox}
         ${chooseBtn}
@@ -397,7 +394,6 @@ export function buildTrialRebookEmail(p: EmailPayload) {
       ${localTimeNote}
       ${deadlineNote}
       <p style="margin: 0 0 14px;">Each slot is taught in one language only: an <strong>English</strong> slot runs entirely in English, an <strong>Arabic</strong> slot entirely in Arabic.</p>
-      <p style="margin: 0 0 6px;">There are <strong>${seats} places per class</strong>.</p>
       ${whatHappens}
       ${teacherBox}
       ${chooseBtn}
