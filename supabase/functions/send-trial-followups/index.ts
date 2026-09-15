@@ -3,10 +3,11 @@
 // trial_booking tracks which stages have been sent, so re-running the
 // same hour is a no-op.
 //
-// Three stages:
-//   prep  — trial is tomorrow (Cairo)        → placement test + prep tips
-//   day1  — trial was yesterday (Cairo)      → pricing CTA
-//   day3  — trial was 3 days ago (Cairo)     → WhatsApp final nudge
+// Four stages:
+//   prep       — trial is tomorrow (Cairo)      → placement test + prep tips
+//   postclass  — 2 h after the class ENDS       → enrolment CTA
+//   day3       — trial was 3 days ago (Cairo)   → WhatsApp final nudge
+//   day7       — trial was 7 days ago (Cairo)   → check-in + share link
 //
 // Users who already have an APPROVED enrollment are skipped (they converted).
 //
@@ -27,13 +28,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
-type Stage = "prep" | "day1" | "day3" | "day7";
+type Stage = "prep" | "postclass" | "day3" | "day7";
 
 interface Booking {
   id: string;
   name: string | null;
   email: string | null;
   trial_date: string;
+  starts_at: string | null;
+  duration_min: number | null;
   user_id: string | null;
   level: string | null;
   class_language: string | null;
@@ -48,78 +51,142 @@ function pickLanguage(classLanguage: string | null): "ar" | "en" {
   return "en";
 }
 
+// `postclass` keeps the `trial_followup_day1` slug and the
+// `followup_day1_sent_at` column. Registering a new slug would mean editing
+// the 61 KB trial.ts and the template union in common.ts; the letter's COPY
+// moved to templates/postTrial.ts instead, which is the part that needed to
+// change. The name in this file is the honest one: it fires off the clock,
+// not off a calendar day.
 const STAGE_TEMPLATE: Record<Stage, "trial_prep" | "trial_followup_day1" | "trial_followup_day3" | "trial_followup_day7"> = {
   prep: "trial_prep",
-  day1: "trial_followup_day1",
+  postclass: "trial_followup_day1",
   day3: "trial_followup_day3",
   day7: "trial_followup_day7",
 };
 
 const STAGE_COLUMN: Record<Stage, "followup_prep_sent_at" | "followup_day1_sent_at" | "followup_day3_sent_at" | "followup_day7_sent_at"> = {
   prep: "followup_prep_sent_at",
-  day1: "followup_day1_sent_at",
+  postclass: "followup_day1_sent_at",
   day3: "followup_day3_sent_at",
   day7: "followup_day7_sent_at",
 };
 
-// Offset in days from today (Cairo) to the trial_date we want to target.
-// prep  → trial is tomorrow  (+1)
-// day1  → 2 days after trial (-2) — softer cadence, not next morning
-// day3  → 3 days after trial (-3) — WhatsApp nudge
-// day7  → 7 days after trial (-7) — qualitative check-in + share link
+// Offset in days from today (Cairo) to the trial_date we want to target, for
+// the stages that are aimed at a calendar day.
+//   prep  → trial is tomorrow  (+1)
+//   day3  → 3 days after trial (-3)
+//   day7  → 7 days after trial (-7)
 //
-// Because each stage matches an EXACT date, turning this endpoint back on does
-// not replay a backlog: bookings whose trial has already passed by more than
-// the offset are never selected again.
-const STAGE_DAY_OFFSET: Record<Stage, number> = {
+// Because each of these matches an EXACT date, turning this endpoint back on
+// does not replay a backlog: bookings whose trial has already passed by more
+// than the offset are never selected again.
+const STAGE_DAY_OFFSET: Record<"prep" | "day3" | "day7", number> = {
   prep: 1,
-  day1: -2,
   day3: -3,
   day7: -7,
 };
+
+const SELECT_COLUMNS =
+  "id, name, email, trial_date, starts_at, duration_min, user_id, level, class_language, " +
+  "followup_prep_sent_at, followup_day1_sent_at, followup_day3_sent_at, followup_day7_sent_at";
+
+/** Two hours after the class ends, and for the 24 h after that. */
+const POSTCLASS_DELAY_MS = 2 * 60 * 60 * 1000;
+/**
+ * How long the window stays open. The cron runs hourly, so one skipped or
+ * failed hour would silently lose everyone in a 60-minute slice if the window
+ * were exact. A day of slack means a missed hour is caught on the next run,
+ * and the `followup_day1_sent_at` stamp still guarantees exactly one letter.
+ */
+const POSTCLASS_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Fallback when duration_min is null. Every live booking today is 30. */
+const DEFAULT_DURATION_MIN = 30;
 
 async function dispatchStage(
   supabase: ReturnType<typeof createClient>,
   stage: Stage,
 ): Promise<{ stage: Stage; attempted: number; sent: number; skipped: number; errors: string[] }> {
   const column = STAGE_COLUMN[stage];
-  const offset = STAGE_DAY_OFFSET[stage];
 
-  const targetDate = shiftDateKey(cairoDateKey(), offset);
+  let rows: Booking[] = [];
 
-  // Query bookings whose trial_date matches the target and whose stage column is null.
-  // Exclude TBA placeholders and anyone with an APPROVED enrollment.
-  const { data: bookings, error } = await supabase
-    .from("trial_bookings")
-    .select(`id, name, email, trial_date, user_id, level, class_language, followup_prep_sent_at, followup_day1_sent_at, followup_day3_sent_at, followup_day7_sent_at`)
-    .eq("trial_date", targetDate)
-    .is(column, null)
-                .not("is_tba", "is", true).neq("status", "cancelled").neq("status", "cancelled").neq("status", "cancelled")
-    .not("email", "is", null)
-    .limit(200);
+  if (stage === "postclass") {
+    // Off the clock, not off the calendar. NOTHING in the database records
+    // that a trial happened — no attended mark, no completed status — so a
+    // follow-up can never be aimed at the people who actually came. The time
+    // can be aimed precisely, though: starts_at + duration + 2 h is knowable
+    // without any attendance data. Everyone who booked is written to,
+    // no-shows included, which Re decided is the right trade.
+    const now = Date.now();
+    // Widened by an hour at each end of what the precise filter below needs,
+    // so the row arrives here and the exact decision is made in code, per
+    // booking, using that booking's own duration.
+    const earliest = new Date(now - POSTCLASS_WINDOW_MS - POSTCLASS_DELAY_MS - 4 * 60 * 60 * 1000).toISOString();
+    const latest = new Date(now - POSTCLASS_DELAY_MS).toISOString();
 
-  if (error) throw new Error(`query ${stage}: ${error.message}`);
+    const { data, error } = await supabase
+      .from("trial_bookings")
+      .select(SELECT_COLUMNS)
+      .gte("starts_at", earliest)
+      .lte("starts_at", latest)
+      .is(column, null)
+      .not("is_tba", "is", true)
+      .neq("status", "cancelled")
+      .not("email", "is", null)
+      .limit(200);
 
-  const rows = (bookings ?? []) as Booking[];
+    if (error) throw new Error(`query ${stage}: ${error.message}`);
+
+    rows = ((data ?? []) as Booking[]).filter(b => {
+      if (!b.starts_at) return false;
+      const endsAt = new Date(b.starts_at).getTime() + (b.duration_min ?? DEFAULT_DURATION_MIN) * 60_000;
+      const due = endsAt + POSTCLASS_DELAY_MS;
+      return now >= due && now < due + POSTCLASS_WINDOW_MS;
+    });
+  } else {
+    const targetDate = shiftDateKey(cairoDateKey(), STAGE_DAY_OFFSET[stage]);
+
+    const { data, error } = await supabase
+      .from("trial_bookings")
+      .select(SELECT_COLUMNS)
+      .eq("trial_date", targetDate)
+      .is(column, null)
+      .not("is_tba", "is", true)
+      .neq("status", "cancelled")
+      .not("email", "is", null)
+      .limit(200);
+
+    if (error) throw new Error(`query ${stage}: ${error.message}`);
+    rows = (data ?? []) as Booking[];
+  }
+
   let sent = 0;
   let skipped = 0;
   const errors: string[] = [];
 
   // Collect user_ids to check enrollment status in one round trip.
+  //
+  // `approval_status`, not `status`. Both columns exist on enrollments and
+  // they disagree: rows sit at status=APPROVED / approval_status=REJECTED.
+  // approval_status is the one the rest of the app reads, and the one that
+  // means "this person enrolled".
   const userIds = rows.map(r => r.user_id).filter((u): u is string => Boolean(u));
   let approvedUsers = new Set<string>();
   if (userIds.length > 0) {
     const { data: enrolls } = await supabase
       .from("enrollments")
       .select("user_id")
-      .eq("status", "APPROVED")
+      .eq("approval_status", "APPROVED")
       .in("user_id", userIds);
     approvedUsers = new Set((enrolls ?? []).map(e => e.user_id as string));
   }
 
   for (const b of rows) {
-    if (false && b.user_id && approvedUsers.has(b.user_id)) {
-      // Already a paying student — mark the column so we stop re-querying this row.
+    // This check used to be written `if (false && ...)`, so it has never once
+    // run: a student who had already enrolled still received the whole
+    // follow-up sequence asking her to enrol.
+    if (b.user_id && approvedUsers.has(b.user_id)) {
+      // Already a student — mark the column so we stop re-querying this row.
       await supabase.from("trial_bookings").update({ [column]: new Date().toISOString() }).eq("id", b.id);
       skipped++;
       continue;
@@ -185,7 +252,7 @@ Deno.serve(async (req) => {
 
     // Run each stage independently so one failure doesn't block others
     const results = await Promise.allSettled(
-      (["prep", "day1", "day3", "day7"] as Stage[]).map(s => dispatchStage(supabase, s)),
+      (["prep", "postclass", "day3", "day7"] as Stage[]).map(s => dispatchStage(supabase, s)),
     );
     const settled = results.map(r =>
       r.status === "fulfilled" ? r.value : { stage: "unknown", error: r.reason?.message ?? String(r.reason) }
