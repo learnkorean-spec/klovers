@@ -17,7 +17,7 @@
 // 401 and not one follow-up email has ever been sent.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { cairoDateKey, shiftDateKey } from "../_shared/cairoTime.ts";
+import { cairoDateKey, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -35,7 +35,7 @@ interface Booking {
   name: string | null;
   email: string | null;
   trial_date: string;
-  starts_at: string | null;
+  start_time: string | null;
   duration_min: number | null;
   user_id: string | null;
   level: string | null;
@@ -87,7 +87,7 @@ const STAGE_DAY_OFFSET: Record<"prep" | "day3" | "day7", number> = {
 };
 
 const SELECT_COLUMNS =
-  "id, name, email, trial_date, starts_at, duration_min, user_id, level, class_language, " +
+  "id, name, email, trial_date, start_time, duration_min, user_id, level, class_language, " +
   "followup_prep_sent_at, followup_day1_sent_at, followup_day3_sent_at, followup_day7_sent_at";
 
 /** Two hours after the class ends, and for the 24 h after that. */
@@ -99,8 +99,40 @@ const POSTCLASS_DELAY_MS = 2 * 60 * 60 * 1000;
  * and the `followup_day1_sent_at` stamp still guarantees exactly one letter.
  */
 const POSTCLASS_WINDOW_MS = 24 * 60 * 60 * 1000;
+/**
+ * How far back the postclass query looks. The window closes 26 h after a class
+ * ends, so two days of trial_date covers every row that could still be due,
+ * with a day to spare for a late class and a skipped run.
+ */
+const POSTCLASS_LOOKBACK_DAYS = 2;
 /** Fallback when duration_min is null. Every live booking today is 30. */
 const DEFAULT_DURATION_MIN = 30;
+
+/**
+ * When this booking's class ends, as an epoch millisecond count.
+ *
+ * Built from `trial_date` + `start_time` — the Cairo wall-clock pair that every
+ * other trial view in the app reads, and the pair `trial_slots` is keyed on —
+ * rather than from the `starts_at` instant.
+ *
+ * WHY NOT starts_at
+ * On 15 September eight of the eighteen bookings for Friday 18 September
+ * carried a starts_at a full week later than their trial_date. The invitation,
+ * the attendance question and every screen read trial_date, so those eight had
+ * been told Friday, and one of them had already answered that she was coming.
+ * A dispatcher reading starts_at would have written to ten people on the night
+ * and reached the other eight seven days after their class. When two columns
+ * disagree, the letter has to follow the one the student was told.
+ */
+function classEndMs(b: Booking): number | null {
+  if (!b.trial_date || !b.start_time) return null;
+  const [h, m, s] = b.start_time.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  const startMs =
+    zonedMidnightUtc(b.trial_date).getTime() +
+    ((h * 60 + m) * 60 + (Number.isFinite(s) ? s : 0)) * 1000;
+  return startMs + (b.duration_min ?? DEFAULT_DURATION_MIN) * 60_000;
+}
 
 async function dispatchStage(
   supabase: ReturnType<typeof createClient>,
@@ -114,21 +146,21 @@ async function dispatchStage(
     // Off the clock, not off the calendar. NOTHING in the database records
     // that a trial happened — no attended mark, no completed status — so a
     // follow-up can never be aimed at the people who actually came. The time
-    // can be aimed precisely, though: starts_at + duration + 2 h is knowable
-    // without any attendance data. Everyone who booked is written to,
-    // no-shows included, which Re decided is the right trade.
+    // can be aimed precisely, though: the class's own start plus its duration
+    // plus 2 h is knowable without any attendance data. Everyone who booked is
+    // written to, no-shows included, which Re decided is the right trade.
+    //
+    // The query is a coarse date range; the exact decision is made below, per
+    // booking, from that booking's own start time and duration. See classEndMs
+    // for why the wall-clock pair is the source and starts_at is not.
     const now = Date.now();
-    // Widened by an hour at each end of what the precise filter below needs,
-    // so the row arrives here and the exact decision is made in code, per
-    // booking, using that booking's own duration.
-    const earliest = new Date(now - POSTCLASS_WINDOW_MS - POSTCLASS_DELAY_MS - 4 * 60 * 60 * 1000).toISOString();
-    const latest = new Date(now - POSTCLASS_DELAY_MS).toISOString();
+    const today = cairoDateKey();
 
     const { data, error } = await supabase
       .from("trial_bookings")
       .select(SELECT_COLUMNS)
-      .gte("starts_at", earliest)
-      .lte("starts_at", latest)
+      .gte("trial_date", shiftDateKey(today, -POSTCLASS_LOOKBACK_DAYS))
+      .lte("trial_date", today)
       .is(column, null)
       .not("is_tba", "is", true)
       .neq("status", "cancelled")
@@ -138,8 +170,8 @@ async function dispatchStage(
     if (error) throw new Error(`query ${stage}: ${error.message}`);
 
     rows = ((data ?? []) as Booking[]).filter(b => {
-      if (!b.starts_at) return false;
-      const endsAt = new Date(b.starts_at).getTime() + (b.duration_min ?? DEFAULT_DURATION_MIN) * 60_000;
+      const endsAt = classEndMs(b);
+      if (endsAt === null) return false;
       const due = endsAt + POSTCLASS_DELAY_MS;
       return now >= due && now < due + POSTCLASS_WINDOW_MS;
     });
