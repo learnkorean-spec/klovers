@@ -39,6 +39,12 @@ import {
 // `trial_followup_day1` slug and is now sent two hours after the class ends
 // rather than two days later. trial.ts still exports the stale copy.
 import { buildTrialFollowupDay1Email } from "./templates/postTrial.ts";
+// The trial book letter, since 2026-09-15. Sent by send-trial-guide the day
+// before (and on the day of) each trial, and only to bookings whose
+// `attendance_response` is 'yes'. Its slug is the third one deliberately
+// absent from the template union in common.ts, so it is dispatched ahead of
+// the switch below rather than as a case inside it.
+import { buildTrialGuideEmail } from "./templates/trialGuide.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -179,6 +185,18 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // The book letter is nothing but a link to the book. Without the URL its
+    // one button would go nowhere, so it is refused here rather than sent as a
+    // letter with a dead button in it.
+    if ((template as string) === "trial_guide") {
+      const guideUrl = ((payload! as { guide_url?: string }).guide_url || "").trim();
+      if (!guideUrl) {
+        return new Response(JSON.stringify({ error: "guide_url is required for the trial_guide template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     // The free-text sender carries no words of its own, so an empty subject or
     // body is not a letter with a gap in it - it is a blank page going out
     // under the school's name. Rejected here rather than rendered.
@@ -206,7 +224,8 @@ serve(async (req) => {
     // which is not type-checked against that union in any case. If common.ts
     // is ever opened for another reason, move this into the switch.
     // `admin_message` is here for exactly the reason given above, and is the
-    // second key deliberately absent from that union.
+    // second key deliberately absent from that union. `trial_guide` is the
+    // third, and its only caller is the send-trial-guide cron.
     if ((template as string) === "admin_message") {
       const adminMessage = buildAdminMessageEmail(payload!);
       subject = adminMessage.subject;
@@ -215,6 +234,10 @@ serve(async (req) => {
       const placementResult = buildPlacementResultEmail(payload!);
       subject = placementResult.subject;
       html = placementResult.html;
+    } else if ((template as string) === "trial_guide") {
+      const trialGuide = buildTrialGuideEmail(payload!);
+      subject = trialGuide.subject;
+      html = trialGuide.html;
     } else switch (template) {
       case "welcome":
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
