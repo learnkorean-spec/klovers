@@ -142,13 +142,6 @@ verify_jwt = false
 [functions.send-trial-reask]
 verify_jwt = false
 
-# One-off, retired the evening it was written (410 stub): it emailed the two
-# trial books to Re as attachments so she could open the PDFs from her inbox.
-# Left listed so a redeploy cannot quietly turn the gateway check back on for
-# it while the stub is still live.
-[functions.send-book-test-oneoff]
-verify_jwt = false
-
 # --- Disabled orphan CV/AI edge functions (reversible: remove this block to re-enable) ---
 
 [functions.analyze-cv]
