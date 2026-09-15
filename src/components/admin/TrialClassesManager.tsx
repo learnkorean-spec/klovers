@@ -131,7 +131,14 @@ interface TrialSlot {
 }
 
 type TimeFilter = "all" | "upcoming" | "past";
-type StatusFilter = "all" | "pending" | "confirmed" | "no_show" | "cancelled";
+type StatusFilter =
+  | "all"
+  | "pending"
+  | "confirmed"
+  | "awaiting_attendance"
+  | "confirmed_attendance"
+  | "no_show"
+  | "cancelled";
 type LanguageFilter = "all" | "arabic" | "english";
 type BookedSort = "asc" | "desc";
 
@@ -1142,6 +1149,8 @@ const TrialClassesManager = () => {
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="pending">Pending only</SelectItem>
               <SelectItem value="confirmed">Confirmed only</SelectItem>
+              <SelectItem value="confirmed_attendance">Confirmed attendance</SelectItem>
+              <SelectItem value="awaiting_attendance">Awaiting attendance</SelectItem>
               <SelectItem value="no_show">No-show only</SelectItem>
               <SelectItem value="cancelled">Cancelled only</SelectItem>
             </SelectContent>
@@ -1190,7 +1199,12 @@ const TrialClassesManager = () => {
       ) : (
         sessions.map((session) => {
           const active = session.items.filter((i) => i.status !== "cancelled" && i.status !== "no_show").length;
-          const confirmed = session.items.filter((i) => i.status === "confirmed").length;
+          // A student who answered the attendance question is confirmed too.
+          // Counting only "confirmed" hid every confirmed_attendance booking
+          // from the header, so a full session could read as an empty one.
+          const confirmed = session.items.filter(
+            (i) => i.status === "confirmed" || i.status === "confirmed_attendance",
+          ).length;
           const past = isPastSession(session.date);
           const isTbaSession = session.isTba;
           const slotMatch = !session.isTba && session.date && session.time
