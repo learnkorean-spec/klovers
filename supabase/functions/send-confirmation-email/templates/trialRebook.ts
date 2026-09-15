@@ -1,5 +1,5 @@
 /**
- * The trial invitation — "your free trial is ready to book".
+ * The trial invitation — "enrolment is open for the free trial class".
  *
  * WHY THIS IS ITS OWN FILE
  * ------------------------
@@ -26,6 +26,28 @@
  * spot (what-happens box), who is teaching (teacher box), then the ask, then
  * what comes after, then an exit for anyone none of the dates suit.
  *
+ * TONE RULES — set by Re, 15 September 2026
+ * -----------------------------------------
+ * See `claude/CUSTOMER_MESSAGE_TONE_RULE.md`. Three of the five rules bite in
+ * this file and each one removed something that used to be here:
+ *
+ *  • **Rule 3, neutral tone.** Every emoji is gone — subject line included —
+ *    along with the exclamation marks and the scarcity nudge. The seat count
+ *    stays because 15 is a fact the reader needs; "so it is worth booking
+ *    early" was us pushing, and it went. State the offer; let them decide.
+ *
+ *  • **Rule 5, every outreach is a new enrolment.** The letter never refers to
+ *    a previous booking, a missed class, or time elapsed — not even softly.
+ *    Most readers of this letter booked months ago and heard nothing back;
+ *    the temptation to acknowledge that is exactly what the rule forbids. The
+ *    old row is how we know who to write to, and that is all it is.
+ *
+ *  • **Rule 2/4, WhatsApp and chrome.** WhatsApp is a plain underlined
+ *    hyperlink in the body, not a green button: the button was a second brand
+ *    colour competing with the yellow CTA, and a reader is meant to leave this
+ *    letter by ONE door. The header and footer come from `brandWrapper` and
+ *    are never overridden here.
+ *
  * WHAT THE TRIAL IS
  * -----------------
  * An introduction, not a lesson. Thirty minutes, shared with up to fifteen
@@ -41,7 +63,7 @@
  * "١٠ طالبات". Most Klovers students are women, but a letter grammatically
  * addressed to women tells every man who gets it that the class is not his.
  * Arabic has no true neuter, so: impersonal constructions wherever a verb can
- * be avoided ("صفحة الحجز بتعرض…", "ننصح بالحجز مبكرًا"), unmarked forms where
+ * be avoided ("صفحة الحجز بتعرض…", "المقاعد ١٥ لكل حصة"), unmarked forms where
  * one cannot. No sentence marks the reader's gender.
  */
 
@@ -151,17 +173,20 @@ export function buildTrialRebookEmail(p: EmailPayload) {
     : "";
 
   const localTimeNote = isAr
-    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">🌍 صفحة الحجز بتعرض كل ميعاد بتوقيت بلدك تلقائيًا.</p>`
-    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">🌍 The booking page shows every time in your own local time, automatically.</p>`;
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">صفحة الحجز بتعرض كل ميعاد بتوقيت بلدك تلقائيًا.</p>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">The booking page shows every time in your own local time, automatically.</p>`;
 
   // A real deadline, derived from the dates in the letter rather than typed —
   // it cannot contradict the slot cards above it or go stale on a re-send.
-  // "I'll book later" is the most common way a free offer dies.
+  //
+  // Rule 3 note: a plain date is neutral and belongs here. What is NOT allowed
+  // is dressing it as pressure — "hurry", "last chance", a countdown. The
+  // reader is told when the dates run out and decides for themselves.
   const lastDate = slots.map((s) => s.date).filter(Boolean).sort().pop();
   const deadlineNote = lastDate
     ? (isAr
-        ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🗓️ المواعيد دي كلها في نفس الأسبوع، وآخرها <strong>${fmtDate(lastDate as string)}</strong>.</p>`
-        : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">🗓️ These dates are all in the same week — the last is <strong>${fmtDate(lastDate as string)}</strong>.</p>`)
+        ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">المواعيد دي كلها في نفس الأسبوع، وآخرها <strong>${fmtDate(lastDate as string)}</strong>.</p>`
+        : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">These dates are all in the same week — the last is <strong>${fmtDate(lastDate as string)}</strong>.</p>`)
     : "";
 
   const minutes = p.trial_duration_min || TRIAL_MINUTES;
@@ -242,12 +267,12 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const meetLinkSection = p.class_link_url
     ? (isAr
         ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
-            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 رابط Google Meet — يُفضَّل حفظه ليوم الحصة</p>
+            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">رابط Google Meet — يُفضَّل حفظه ليوم الحصة</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">الدخول للكلاس</a>
             <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">الرابط ده شخصي — من فضلك ما تشاركهوش مع حد.</p>
           </div>`
         : `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
-            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">🎓 Your Google Meet link — save it for class day</p>
+            <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">Your Google Meet link — save it for class day</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Join the Class</a>
             <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">This link is personal — please don't share it.</p>
           </div>`)
@@ -261,6 +286,9 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   // composite rgba on a border and falls back to nothing, which left the
   // yellow bar edgeless there — and yellow needs its edge, which is the same
   // reason the site carries a `.text-outlined` utility for this colour.
+  //
+  // The line under it states two facts — a minute, no card — rather than
+  // urging. Under Rule 3 that is the difference between informing and pushing.
   const chooseBtn = `<div style="margin: 28px 0 10px; text-align: center;">
     <a href="${url}" style="display: block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 17px 24px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 17px; letter-spacing: 0.2px; border: 2px solid ${BRAND_BLACK}; text-align: center;">
       ${isAr ? "احجز موعدك" : "Choose My Date"}
@@ -297,47 +325,58 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   // the email. This turns a silent no into the data that decides which day
   // opens next.
   const noneSuit = isAr
-    ? `<p style="margin: 0 0 16px;">لو مفيش ميعاد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">كلّمنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة بناءً على الردود دي.</p>`
-    : `<p style="margin: 0 0 16px;">If none of these work, <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: bold;">message us on WhatsApp</a> and tell us which day suits you — new slots get opened on exactly these replies.</p>`;
+    ? `<p style="margin: 0 0 16px;">لو مفيش ميعاد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة بناءً على الردود دي.</p>`
+    : `<p style="margin: 0 0 16px;">If none of these work, <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">message us on WhatsApp</a> and tell us which day suits you — new slots get opened on exactly these replies.</p>`;
 
   const seats = isAr ? toArabicDigits(TRIAL_CAPACITY) : String(TRIAL_CAPACITY);
 
+  /**
+   * The closing contact line.
+   *
+   * This was a green WhatsApp button. Two problems, both fixed by making it a
+   * hyperlink: it introduced a THIRD colour into a two-colour brand, directly
+   * under the yellow CTA, so the letter ended with two competing buttons and
+   * the reader had to choose which was the point; and Re asked for WhatsApp as
+   * a hyperlink. The link still opens the chat in one tap on a phone, which is
+   * the only thing the button did better than text.
+   */
+  const contactLine = isAr
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 13.5px; margin: 22px 0 0;">أي استفسار؟ رد على الإيميل ده، أو <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a>.</p>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13.5px; margin: 22px 0 0;">Any questions? Reply to this email, or <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">message us on WhatsApp</a>.</p>`;
+
   if (isAr) {
     return {
-      subject: "KLovers — حصتك التجريبية المجانية جاهزة للحجز 🎉",
+      subject: "KLovers — التسجيل مفتوح في الحصة التجريبية المجانية",
       html: brandWrapper(`
-        <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">أهلاً ${p.name}! 👋</h1>
-        <p style="margin: 0 0 16px;">حصتك التجريبية المجانية <strong>جاهزة للحجز</strong> — دي المواعيد المتاحة:</p>
+        <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">أهلاً ${p.name}،</h1>
+        <p style="margin: 0 0 16px;">التسجيل مفتوح في حصة تجريبية مجانية للغة الكورية — دي المواعيد المتاحة:</p>
         ${slotCards}
         ${localTimeNote}
         ${deadlineNote}
         <p style="margin: 0 0 14px;">كل ميعاد بلغة واحدة: الميعاد <strong>الإنجليزي</strong> حصته بالإنجليزي بالكامل، و<strong>العربي</strong> بالعربي بالكامل.</p>
-        <p style="margin: 0 0 6px;">عدد المقاعد <strong>${seats} لكل حصة</strong>، فننصح بالحجز مبكرًا.</p>
+        <p style="margin: 0 0 6px;">عدد المقاعد <strong>${seats} لكل حصة</strong>.</p>
         ${whatHappens}
         ${teacherBox}
         ${chooseBtn}
         ${meetLinkSection}
         ${nextStep}
         ${noneSuit}
-        <p style="margin: 0 0 16px;">ولو الحصة اكتملت قبل ما تحجز، هنبعتلك المواعيد التالية تلقائيًا — <strong>مكانك في القائمة محفوظ</strong>.</p>
-        <p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 22px 0 10px;">أي استفسار؟ رد على الإيميل ده، أو كلّمنا على واتساب:</p>
-        <div style="margin: 0 0 4px; text-align: center;">
-          <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 واتساب</a>
-        </div>
+        <p style="margin: 0 0 16px;">ولو الحصة اكتملت قبل الحجز، هنبعت المواعيد التالية تلقائيًا — <strong>مكانك في القائمة محفوظ</strong>.</p>
+        ${contactLine}
       `, true),
     };
   }
 
   return {
-    subject: "KLovers — your free trial is ready to book 🎉",
+    subject: "KLovers — enrolment is open for the free trial class",
     html: brandWrapper(`
-      <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">Hi ${p.name}! 👋</h1>
-      <p style="margin: 0 0 16px;">Your free Korean trial class is <strong>ready to book</strong> — here are the available dates:</p>
+      <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">Hi ${p.name},</h1>
+      <p style="margin: 0 0 16px;">Enrolment is open for a free Korean trial class — here are the available dates:</p>
       ${slotCards}
       ${localTimeNote}
       ${deadlineNote}
       <p style="margin: 0 0 14px;">Each slot is taught in one language only: an <strong>English</strong> slot runs entirely in English, an <strong>Arabic</strong> slot entirely in Arabic.</p>
-      <p style="margin: 0 0 6px;">There are <strong>${seats} places per class</strong>, so it is worth booking early.</p>
+      <p style="margin: 0 0 6px;">There are <strong>${seats} places per class</strong>.</p>
       ${whatHappens}
       ${teacherBox}
       ${chooseBtn}
@@ -345,10 +384,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
       ${nextStep}
       ${noneSuit}
       <p style="margin: 0 0 16px;">If a class fills up before you book, we'll send the next set of dates automatically — <strong>your place on the list is kept</strong>.</p>
-      <p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 22px 0 10px;">Any questions? Reply to this email, or message us on WhatsApp:</p>
-      <div style="margin: 0 0 4px; text-align: center;">
-        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
-      </div>
+      ${contactLine}
     `),
   };
 }
