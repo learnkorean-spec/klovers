@@ -128,6 +128,15 @@ verify_jwt = false
 [functions.funnel-digest]
 verify_jwt = false
 
+# Same trap, caught on its first day: send-trial-guide shipped without an
+# entry here, deployed with verify_jwt = true, and the gateway answered
+# 401 UNAUTHORIZED_INVALID_JWT_FORMAT to trigger_trial_guide() - before a
+# single line of the function ran. The function does its own authorisation
+# (isCronOrAdmin: cron secret verified against Vault, or an admin JWT), which
+# is exactly why the gateway must not second-guess it.
+[functions.send-trial-guide]
+verify_jwt = false
+
 # --- Disabled orphan CV/AI edge functions (reversible: remove this block to re-enable) ---
 
 [functions.analyze-cv]
