@@ -14,10 +14,11 @@
 -- (it ships in the same PR, and Deploy Supabase runs on merge). Applied
 -- before that, the still-public URLs in the old code would 400 instead of
 -- serving the file.
+--
+-- Do not add a COMMENT on storage.objects here: that table is owned by
+-- supabase_storage_admin, so commenting on it raises 42501 and fails the
+-- whole migration over a note.
 
 update storage.buckets
    set public = false
  where id = 'student-materials';
-
-comment on table storage.objects is
-  'Storage objects. Note: the student-materials bucket is PRIVATE by design - the trial book is delivered as a 7-day signed URL minted per letter by send-trial-guide. Making it public again would hand the book to anyone a link is forwarded to.';
