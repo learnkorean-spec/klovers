@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminShell from "@/components/admin/AdminShell";
 import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm";
+import GroupsToStart from "@/components/admin/GroupsToStart";
 import ClassRooms from "@/components/admin/ClassRooms";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
@@ -395,6 +396,27 @@ const AdminToday = () => {
 
               </div>
             ) : null}
+          </section>
+
+          {/* GROUPS TO START
+              The only action that makes a group real. `activate_pkg_group()`
+              has been live since 15 Sep and no screen called it, so no group
+              had a start_date, no student had a first_class_date, and both
+              payment letters — written, deployed and switched on the same day
+              — could not reach a single person. Eight active groups, none
+              started.
+
+              Above the rooms and the trial week because it is upstream of
+              both: a group that has not started has no first class to put a
+              room link on. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                GROUPS TO START
+              </h2>
+              <p className="text-xs text-muted-foreground">sets the first class date and the payment deadline</p>
+            </div>
+            <GroupsToStart />
           </section>
 
           {/* PRIVATE CLASSES TO CONFIRM
