@@ -53,14 +53,14 @@ COMMENT ON COLUMN public.pkg_groups.start_date IS
 CREATE OR REPLACE FUNCTION public.next_weekday_date(_dow integer, _tz text DEFAULT 'Africa/Cairo')
 RETURNS date
 LANGUAGE sql
-IMMUTABLE
+STABLE
 AS $$
   SELECT (d + ((_dow - EXTRACT(DOW FROM d)::int + 7) % 7))::date
   FROM (SELECT (now() AT TIME ZONE _tz)::date AS d) t;
 $$;
 
 COMMENT ON FUNCTION public.next_weekday_date(integer, text) IS
-  'The next date falling on _dow (0=Sunday), in _tz. Returns today when today already is that weekday.';
+  'The next date falling on _dow (0=Sunday), in _tz. Returns today when today already is that weekday. STABLE, not IMMUTABLE: it reads the clock.';
 
 -- ── 3. Activating a group ────────────────────────────────────────────────────
 --
@@ -357,8 +357,24 @@ COMMENT ON FUNCTION public.send_payment_final_alert() IS
 -- ── 7. Schedules ─────────────────────────────────────────────────────────────
 --
 -- The old chaser goes. The two new jobs are created INACTIVE — see the header.
+--
+-- ⚠ PAUSE THROUGH cron.alter_job, NEVER `UPDATE cron.job`.
+-- This is what made the first attempt at this migration fail with exit code 3:
+--
+--   select tableowner from pg_tables where schemaname='cron' and tablename='job';
+--   -- supabase_admin
+--   select has_table_privilege('postgres','cron.job','UPDATE');
+--   -- false
+--
+-- Migrations run as `postgres`, which may READ cron.job — so every EXISTS
+-- check here is fine — but may not write to it. `cron.alter_job` is the
+-- supported path and `postgres` may execute it. cron.schedule returns the new
+-- job's id, so it is captured and handed straight over: no second lookup by
+-- name, and no race with anything else rescheduling that name.
 
 DO $$
+DECLARE
+  _id bigint;
 BEGIN
   IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'send-receipt-nudge-emails') THEN
     PERFORM cron.unschedule('send-receipt-nudge-emails');
@@ -367,17 +383,17 @@ BEGIN
   IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'payment-ask-hourly') THEN
     PERFORM cron.unschedule('payment-ask-hourly');
   END IF;
-  PERFORM cron.schedule('payment-ask-hourly', '20 * * * *',
-                        'SELECT public.send_payment_ask_emails()');
+  SELECT cron.schedule('payment-ask-hourly', '20 * * * *',
+                       'SELECT public.send_payment_ask_emails()')
+    INTO _id;
+  PERFORM cron.alter_job(_id, active := false);
 
   IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'payment-final-alert-hourly') THEN
     PERFORM cron.unschedule('payment-final-alert-hourly');
   END IF;
-  PERFORM cron.schedule('payment-final-alert-hourly', '5 * * * *',
-                        'SELECT public.send_payment_final_alert()');
-
-  UPDATE cron.job
-     SET active = false
-   WHERE jobname IN ('payment-ask-hourly', 'payment-final-alert-hourly');
+  SELECT cron.schedule('payment-final-alert-hourly', '5 * * * *',
+                       'SELECT public.send_payment_final_alert()')
+    INTO _id;
+  PERFORM cron.alter_job(_id, active := false);
 END;
 $$;
