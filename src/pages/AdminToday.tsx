@@ -27,6 +27,7 @@ import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm"
 import GroupsToStart from "@/components/admin/GroupsToStart";
 import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
+import MoneyIn from "@/components/admin/MoneyIn";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
 
@@ -409,6 +410,27 @@ const AdminToday = () => {
 
               </div>
             ) : null}
+          </section>
+
+          {/* MONEY IN
+              What has actually been collected, group and private side by side.
+              It lived only in the KPI strip above AdminDashboard's tabs, and
+              bare /admin redirects here — so the screen opened every morning
+              showed no money at all and the figures could only be reached by
+              first picking some unrelated tab.
+
+              A readout rather than a decision, so it sits below NEEDS YOU and
+              above the queues. Private budgets are never converted: each
+              student pays in their own currency and the system holds no rate.
+              See MoneyIn.tsx. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                MONEY IN
+              </h2>
+              <p className="text-xs text-muted-foreground">what has been collected so far</p>
+            </div>
+            <MoneyIn />
           </section>
 
           {/* GROUPS TO START
