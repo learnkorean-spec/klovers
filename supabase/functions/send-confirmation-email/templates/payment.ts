@@ -36,16 +36,21 @@ function payUrlFor(enrollmentId?: string): string {
     : "https://kloversegy.com/dashboard";
 }
 
-// first_class_date arrives as a date column ("2026-09-18") and occasionally as
-// a full timestamp. Built from its own parts and formatted in UTC, so the day
-// printed is the day stored - never shifted by the runtime's local zone.
+// first_class_date arrives as a timestamptz. Built from its own parts and
+// formatted in UTC, so the day printed is the day stored - never shifted by
+// the runtime's local zone. activate_pkg_group() writes it from a date, so
+// today the stored instant is midnight UTC and the Cairo day is the same day.
 function formatClassDate(raw: unknown, isAr: boolean): string {
   if (!raw) return "";
   const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return String(raw);
   const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
   try {
-    return new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-GB", {
+    // `ar-EG` alone formats the day and year in Arabic-Indic digits (٢١), while
+    // the amount a few lines below is Western (2,400 EGP). One letter, two
+    // numeral systems. `-u-nu-latn` keeps the Arabic month name and puts the
+    // digits back in the form every other number in the letter uses.
+    return new Intl.DateTimeFormat(isAr ? "ar-EG-u-nu-latn" : "en-GB", {
       weekday: "long",
       day: "numeric",
       month: "long",
