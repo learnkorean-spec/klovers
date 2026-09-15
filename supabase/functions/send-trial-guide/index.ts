@@ -26,13 +26,15 @@ import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-// The book itself. Public objects in the `student-materials` bucket, which is
-// public and PDF-only. Overridable by environment variable so the file can
-// move (to kloversegy.com, say) without a redeploy of this function.
+// The book itself — public objects at the root of the `student-materials`
+// bucket, which is public and PDF-only. These are the paths the files really
+// sit at (verified live: the Arabic object returns 206 with content-type
+// application/pdf on a public range request). Overridable by environment
+// variable so the book can move (to kloversegy.com, say) without a redeploy.
 const GUIDE_URL_AR = Deno.env.get("TRIAL_GUIDE_URL_AR") ??
-  "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/student-materials/trial-guide/klovers-trial-guide-ar.pdf";
+  "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/student-materials/klovers-trial-guide-ar.pdf";
 const GUIDE_URL_EN = Deno.env.get("TRIAL_GUIDE_URL_EN") ??
-  "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/student-materials/trial-guide/klovers-trial-guide-en.pdf";
+  "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/student-materials/klovers-trial-guide-en.pdf";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
