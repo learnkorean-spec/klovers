@@ -8,7 +8,7 @@
 --
 -- It can be approximated by matching email addresses, and that approximation
 -- says: 37 people have a live trial booking, 5 people have an enrolment, and
--- **2** of those 5 also sat a trial. The other 3 enrolled without one.
+-- 2 of those 5 also sat a trial. The other 3 enrolled without one.
 --
 -- But an email match is a guess dressed as a fact. It breaks the moment
 -- somebody books with one address and signs up with another, it cannot say
@@ -41,12 +41,20 @@ CREATE INDEX IF NOT EXISTS idx_enrollments_trial_booking_id
   WHERE trial_booking_id IS NOT NULL;
 
 -- ── Fill it in for everything that already exists ──
+--
+-- A CORRELATED SCALAR SUBQUERY, not UPDATE ... FROM ... LATERAL.
+--
+-- The first attempt was written as
+--     UPDATE enrollments e SET ... FROM profiles p, LATERAL (... e.created_at ...)
+-- which fails: the UPDATE target is not an entry in its own FROM clause, so a
+-- LATERAL item there cannot reference `e`. psql stopped on it and the apply
+-- run ended with exit code 3. A correlated subquery in the SET expression CAN
+-- see the row being updated, which is exactly what this needs.
 UPDATE public.enrollments e
-   SET trial_booking_id = b.id
-  FROM public.profiles p,
-       LATERAL (
+   SET trial_booking_id = (
          SELECT tb.id
            FROM public.trial_bookings tb
+           LEFT JOIN public.profiles p ON p.user_id = e.user_id
           WHERE (tb.user_id = e.user_id
                  OR (p.email IS NOT NULL
                      AND lower(btrim(tb.email)) = lower(btrim(p.email))))
@@ -54,9 +62,9 @@ UPDATE public.enrollments e
             AND tb.created_at <= e.created_at
           ORDER BY tb.created_at DESC
           LIMIT 1
-       ) b
- WHERE p.user_id = e.user_id
-   AND e.trial_booking_id IS NULL;
+       )
+ WHERE e.trial_booking_id IS NULL
+   AND e.user_id IS NOT NULL;
 
 -- ── And from now on, automatically ──
 CREATE OR REPLACE FUNCTION public.tg_enrollments_link_trial()
@@ -66,7 +74,7 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
-  _email text;
+  _email   text;
   _booking uuid;
 BEGIN
   -- An explicitly supplied link wins: if a caller ever knows better than this
