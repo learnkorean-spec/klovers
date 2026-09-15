@@ -8,22 +8,24 @@
 --
 -- It can be approximated by matching email addresses, and that approximation
 -- says: 37 people have a live trial booking, 5 people have an enrolment, and
--- **2** of those 5 also sat a trial. The other 3 enrolled without one.
+-- 2 of those 5 also sat a trial. The other 3 enrolled without one. The stored
+-- link is stricter and finds 1, because it only counts a booking made BEFORE
+-- the enrolment: one of those two booked her trial afterwards, so that trial
+-- cannot have caused that enrolment.
 --
--- But an email match is a guess dressed as a fact. It breaks the moment
--- somebody books with one address and signs up with another, it cannot say
--- WHICH booking led to the enrolment when there are several, and it silently
--- drops the 11 guest bookings that carry no user_id. A conversion rate nobody
--- can defend is worse than no conversion rate, because it gets used.
+-- An email match is a guess dressed as a fact. It breaks the moment somebody
+-- books with one address and signs up with another, it cannot say WHICH
+-- booking led to the enrolment when there are several, and it silently drops
+-- the 11 guest bookings that carry no user_id. A conversion rate nobody can
+-- defend is worse than no conversion rate, because it gets used.
 --
 -- So the link is stored, once, at the moment it is knowable.
 --
--- HOW THE MATCH IS MADE, and why it is a "most recent before" rather than
--- anything cleverer: the enrolment is attributed to the last trial the person
--- booked BEFORE enrolling. A booking made afterwards did not cause it. Where a
--- person has no earlier booking the column stays NULL, which is the honest
--- answer — they enrolled without a trial, and that is a real and interesting
--- category, not a gap to be filled with the nearest row.
+-- HOW THE MATCH IS MADE: the enrolment is attributed to the last trial the
+-- person booked BEFORE enrolling. Where there is no earlier booking the column
+-- stays NULL, which is the honest answer — they enrolled without a trial, and
+-- that is a real and interesting category, not a gap to be filled with the
+-- nearest row.
 --
 -- Matching is on user_id first and the profile's email second, because a guest
 -- booking has no user_id and an account created later has no way back to it
@@ -41,12 +43,24 @@ CREATE INDEX IF NOT EXISTS idx_enrollments_trial_booking_id
   WHERE trial_booking_id IS NOT NULL;
 
 -- ── Fill it in for everything that already exists ──
+--
+-- A CORRELATED SCALAR SUBQUERY, not UPDATE ... FROM ... LATERAL.
+--
+-- The first version of this file was written as
+--     UPDATE enrollments e SET ... FROM profiles p, LATERAL (... e.created_at ...)
+-- which cannot work: the UPDATE target is not an entry in its own FROM clause,
+-- so a LATERAL item there cannot reference `e`. psql stopped on it and the
+-- apply run ended with exit code 3 — twice, because the correction was pushed
+-- to the pull request branch after that pull request had already been merged,
+-- leaving main with the broken copy.
+--
+-- A correlated subquery in the SET expression CAN see the row being updated,
+-- which is exactly what this needs.
 UPDATE public.enrollments e
-   SET trial_booking_id = b.id
-  FROM public.profiles p,
-       LATERAL (
+   SET trial_booking_id = (
          SELECT tb.id
            FROM public.trial_bookings tb
+           LEFT JOIN public.profiles p ON p.user_id = e.user_id
           WHERE (tb.user_id = e.user_id
                  OR (p.email IS NOT NULL
                      AND lower(btrim(tb.email)) = lower(btrim(p.email))))
@@ -54,9 +68,9 @@ UPDATE public.enrollments e
             AND tb.created_at <= e.created_at
           ORDER BY tb.created_at DESC
           LIMIT 1
-       ) b
- WHERE p.user_id = e.user_id
-   AND e.trial_booking_id IS NULL;
+       )
+ WHERE e.trial_booking_id IS NULL
+   AND e.user_id IS NOT NULL;
 
 -- ── And from now on, automatically ──
 CREATE OR REPLACE FUNCTION public.tg_enrollments_link_trial()
@@ -66,7 +80,7 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
-  _email text;
+  _email   text;
   _booking uuid;
 BEGIN
   -- An explicitly supplied link wins: if a caller ever knows better than this
