@@ -45,6 +45,11 @@ import { buildTrialFollowupDay1Email } from "./templates/postTrial.ts";
 // absent from the template union in common.ts, so it is dispatched ahead of
 // the switch below rather than as a case inside it.
 import { buildTrialGuideEmail } from "./templates/trialGuide.ts";
+// The second ask, since 2026-09-15. Sent by send-trial-reask to bookings that
+// were asked whether they are coming and never answered. Written as a new
+// opening, not a chase, and deliberately without the book link - the book is
+// for the students who confirm. Fourth slug absent from that union.
+import { buildTrialReaskEmail } from "./templates/trialReask.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -197,6 +202,18 @@ serve(async (req) => {
         });
       }
     }
+    // Both links in the second ask are the confirmation page carrying this
+    // booking's own token. Without it the letter asks the reader to confirm
+    // and then cannot tell who confirmed.
+    if ((template as string) === "trial_reask") {
+      const token = (payload!.confirmation_token || "").trim();
+      if (!token) {
+        return new Response(JSON.stringify({ error: "confirmation_token is required for the trial_reask template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     // The free-text sender carries no words of its own, so an empty subject or
     // body is not a letter with a gap in it - it is a blank page going out
     // under the school's name. Rejected here rather than rendered.
@@ -225,7 +242,8 @@ serve(async (req) => {
     // is ever opened for another reason, move this into the switch.
     // `admin_message` is here for exactly the reason given above, and is the
     // second key deliberately absent from that union. `trial_guide` is the
-    // third, and its only caller is the send-trial-guide cron.
+    // third and `trial_reask` the fourth; their only callers are the
+    // send-trial-guide cron and the send-trial-reask endpoint.
     if ((template as string) === "admin_message") {
       const adminMessage = buildAdminMessageEmail(payload!);
       subject = adminMessage.subject;
@@ -238,6 +256,10 @@ serve(async (req) => {
       const trialGuide = buildTrialGuideEmail(payload!);
       subject = trialGuide.subject;
       html = trialGuide.html;
+    } else if ((template as string) === "trial_reask") {
+      const trialReask = buildTrialReaskEmail(payload!);
+      subject = trialReask.subject;
+      html = trialReask.html;
     } else switch (template) {
       case "welcome":
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
