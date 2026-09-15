@@ -8,6 +8,11 @@ import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 // made it impossible to edit through the assistant's only write path. The
 // split is a pure move - all 25 templates were rendered before and after, in
 // both languages, and the output matched byte for byte.
+//
+// Since that split this file is ~13 KB and is editable again. The handoff of
+// 2026-09-15 still carried the old warning and it cost a session: the payment
+// letter was designed around a signature that could not be changed, when in
+// fact it could. Trust the directory listing over the note.
 import type {
   EmailPayload,
 } from "./templates/common.ts";
@@ -24,11 +29,17 @@ import {
 import { buildTrialRebookEmail } from "./templates/trialRebook.ts";
 import { buildPlacementResultEmail } from "./templates/placementResult.ts";
 import { buildAdminMessageEmail } from "./templates/adminMessage.ts";
+// The two payment letters live on their own since 2026-09-15, for the same
+// reason. lifecycle.ts still exports the stale copies - delete them there next
+// time that file is opened.
+import {
+  buildPaymentMethodReminderEmail, buildReceiptNudgeEmail,
+} from "./templates/payment.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
-  buildRejectionEmail, buildPaymentMethodReminderEmail,
-  buildPaymentConfirmedEmail, buildGroupFormingEmail, buildReceiptNudgeEmail,
+  buildRejectionEmail,
+  buildPaymentConfirmedEmail, buildGroupFormingEmail,
   buildClassLinkEmail, buildGroupFormingEscalationEmail,
   buildRejectionFollowupEmail, buildPreClassReminderEmail,
   buildClassFeedbackEmail,
@@ -226,8 +237,12 @@ serve(async (req) => {
         if (classLinkResult.icsAttachment) emailAttachments = [classLinkResult.icsAttachment];
         break;
       }
+      // Takes the whole payload since 2026-09-15. It used to be called with
+      // (name, enrollment_id, language), which is why the letter could not
+      // print a price - the amount was in the payload the whole time and the
+      // template was never handed it.
       case "payment_method_reminder":
-        ({ subject, html } = buildPaymentMethodReminderEmail(name, payload!.enrollment_id!, language || "en"));
+        ({ subject, html } = buildPaymentMethodReminderEmail(payload!));
         break;
       case "rejection":
         ({ subject, html } = buildRejectionEmail(payload!));
