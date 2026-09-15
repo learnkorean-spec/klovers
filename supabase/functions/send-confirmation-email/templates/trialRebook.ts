@@ -42,11 +42,12 @@
  *    the temptation to acknowledge that is exactly what the rule forbids. The
  *    old row is how we know who to write to, and that is all it is.
  *
- *  • **Rule 2/4, WhatsApp and chrome.** WhatsApp is a plain underlined
- *    hyperlink in the body, not a green button: the button was a second brand
- *    colour competing with the yellow CTA, and a reader is meant to leave this
- *    letter by ONE door. The header and footer come from `brandWrapper` and
- *    are never overridden here.
+ *  • **Rule 2/4, WhatsApp and chrome.** WhatsApp appears twice: as an inline
+ *    hyperlink where it sits inside a sentence, and as the green button that
+ *    closes the letter — Re compared both in her own inbox and kept the
+ *    button, because for this audience a green pill reads as WhatsApp before a
+ *    word of it does. See the contactLine comment below. The header and footer
+ *    come from `brandWrapper` and are never overridden here.
  *
  * WHAT THE TRIAL IS
  * -----------------
@@ -324,6 +325,9 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   // Anyone none of the four dates suit used to have nothing to do but close
   // the email. This turns a silent no into the data that decides which day
   // opens next.
+  //
+  // WhatsApp is a hyperlink HERE and a button below, on purpose: this one sits
+  // mid-sentence, where a button cannot go without breaking the line.
   const noneSuit = isAr
     ? `<p style="margin: 0 0 16px;">لو مفيش ميعاد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة بناءً على الردود دي.</p>`
     : `<p style="margin: 0 0 16px;">If none of these work, <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">message us on WhatsApp</a> and tell us which day suits you — new slots get opened on exactly these replies.</p>`;
@@ -331,18 +335,35 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const seats = isAr ? toArabicDigits(TRIAL_CAPACITY) : String(TRIAL_CAPACITY);
 
   /**
-   * The closing contact line.
+   * The closing contact block — a green WhatsApp button.
    *
-   * This was a green WhatsApp button. Two problems, both fixed by making it a
-   * hyperlink: it introduced a THIRD colour into a two-colour brand, directly
-   * under the yellow CTA, so the letter ended with two competing buttons and
-   * the reader had to choose which was the point; and Re asked for WhatsApp as
-   * a hyperlink. The link still opens the chat in one tap on a phone, which is
-   * the only thing the button did better than text.
+   * It was briefly made an underlined hyperlink, on the argument that #25D366
+   * is a third colour in a two-colour brand and competes with the yellow CTA
+   * above it. Re looked at both in her inbox and chose the button, so the
+   * button is what ships. Her reasoning holds up: for this audience WhatsApp
+   * IS the reply channel, and a green pill is recognised as WhatsApp before a
+   * word of it is read — a line of underlined text is not. The competition
+   * with the yellow CTA is also less real than it looked, because the two are
+   * separated by several blocks and ask for different things: book a date, or
+   * ask a question.
+   *
+   * Rule 3 still applies inside it. The button used to read "💬 واتساب" — the
+   * emoji is gone, the button is not. Neutral tone governs the words and the
+   * decoration, not whether a link may be a button.
+   *
+   * Keep the green to WhatsApp alone. It is the one place in any Klovers email
+   * where a third colour is allowed, because it is not ours — it is the mark
+   * of the channel it opens.
    */
   const contactLine = isAr
-    ? `<p style="color: ${BRAND_MUTED}; font-size: 13.5px; margin: 22px 0 0;">أي استفسار؟ رد على الإيميل ده، أو <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a>.</p>`
-    : `<p style="color: ${BRAND_MUTED}; font-size: 13.5px; margin: 22px 0 0;">Any questions? Reply to this email, or <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">message us on WhatsApp</a>.</p>`;
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 22px 0 10px;">أي استفسار؟ رد على الإيميل ده، أو تواصل معنا على واتساب:</p>
+      <div style="margin: 0 0 4px; text-align: center;">
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">واتساب</a>
+      </div>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 22px 0 10px;">Any questions? Reply to this email, or message us on WhatsApp:</p>
+      <div style="margin: 0 0 4px; text-align: center;">
+        <a href="${waUrl}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">WhatsApp</a>
+      </div>`;
 
   if (isAr) {
     return {
