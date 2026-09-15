@@ -62,7 +62,12 @@ type Counts = {
   waitingEnglish: number;
   unlevelled: number;
   awaitingPayment: number;
-  /** Every notification ever written. Kept for the sidebar badge and the empty state. */
+  /**
+   * Unread business updates — the sidebar badge, and the number the empty
+   * state quotes. It used to be every notification ever written, read or not,
+   * system or not, which is why the bell said "99+" for months and would have
+   * gone on saying it whatever she did.
+   */
   notifications: number;
   /** Arrived since local midnight — the number a daily check is actually asking for. */
   notificationsToday: number;
@@ -145,7 +150,14 @@ const AdminToday = () => {
             .from("enrollments")
             .select("*", { count: "exact", head: true })
             .ilike("approval_status", "pending%"),
-          supabase.from("admin_notifications").select("*", { count: "exact", head: true }),
+          // Unread business updates only. Without the two filters this counted
+          // every row the table had ever held — a number that only grows — and
+          // the bell beside it was stuck on "99+" no matter how much she read.
+          supabase
+            .from("admin_notifications")
+            .select("*", { count: "exact", head: true })
+            .eq("read", false)
+            .eq("category", "update"),
           // One request answers both halves of the card: `count` is how many
           // arrived today, the three rows are what they said.
           supabase
@@ -377,7 +389,7 @@ const AdminToday = () => {
                   unit="new today"
                   body={
                     counts.notificationsToday === 0 ? (
-                      <>Nothing new today. {counts.notifications} older ones are all in one place.</>
+                      <>Nothing new today. {counts.notifications} unread update{counts.notifications === 1 ? "" : "s"} are all in one place.</>
                     ) : (
                       <span className="block">
                         {counts.notificationsRecent.map((m, i) => (
