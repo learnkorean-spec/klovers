@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
 
 export interface TrialStats {
   pending: number;
@@ -22,8 +23,12 @@ export function useTrialStats() {
       const [pendingRes, upcomingRes, weekRes, totalRes] = await Promise.all([
         // Only count future non-TBA pending bookings (exclude legacy sentinel rows)
         supabase.from("trial_bookings").select("id", { count: "exact", head: true }).eq("status", "pending").eq("is_tba", false).gte("trial_date", todayIso).neq("trial_date", "2099-12-31").neq("start_time", "TBA"),
-        supabase.from("trial_bookings").select("id", { count: "exact", head: true }).gte("trial_date", todayIso).in("status", ["pending", "confirmed"]),
-        supabase.from("trial_bookings").select("id", { count: "exact", head: true }).gte("trial_date", todayIso).lt("trial_date", weekIso).in("status", ["pending", "confirmed"]),
+        // ACTIVE_TRIAL_STATUS_LIST, not ["pending","confirmed"]: the short list
+        // omits awaiting_attendance and confirmed_attendance, which between them
+        // are every booking the current flow writes — so these two counts read
+        // as zero however many seats are held.
+        supabase.from("trial_bookings").select("id", { count: "exact", head: true }).gte("trial_date", todayIso).in("status", ACTIVE_TRIAL_STATUS_LIST),
+        supabase.from("trial_bookings").select("id", { count: "exact", head: true }).gte("trial_date", todayIso).lt("trial_date", weekIso).in("status", ACTIVE_TRIAL_STATUS_LIST),
         supabase.from("trial_bookings").select("id", { count: "exact", head: true }),
       ]);
 

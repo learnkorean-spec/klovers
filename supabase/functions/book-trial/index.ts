@@ -543,13 +543,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3. Notify admin
-    try {
-      await supabase.from("admin_notifications").insert({
-        message: `New trial booking: ${finalName} (${normalizedEmail}) — ${dayName} ${formatTime12h(start_time)}, Level: ${level || "Unknown"}`,
-        type: "trial",
-      });
-    } catch { /* non-critical */ }
+    // 3. The admin notification for a new trial booking is written by the
+    //    `trg_notify_new_trial_booking` trigger on trial_bookings (migration
+    //    20260915234500), so every booking path notifies and not just this
+    //    one. Inserting it here as well would duplicate that row.
 
     // 3b. Check whether this booking filled the slot, and if so alert the
     // teacher and this student. Best effort: never blocks or affects the

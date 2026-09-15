@@ -1,16 +1,46 @@
 import { useState, useEffect, useCallback, memo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, Check, Filter, Users, Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Bell,
+  Check,
+  Filter,
+  Users,
+  Plus,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  UserPlus,
+  CreditCard,
+  BarChart3,
+  CalendarDays,
+  Wrench,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+
+/**
+ * Which drawer a notification belongs in.
+ *
+ * Re, 15 Sep 2026: "no need to system msgs in the notification center, i want
+ * updates for website numbers". Updates is what opens by default — signups,
+ * trial bookings, payments, the daily numbers. System keeps the technical rows
+ * (cron health, self verification) for whoever is looking for them, which is
+ * not her.
+ *
+ * The column is written by the database (migration 20260915234500), so a
+ * notification lands in the right drawer whatever wrote it.
+ */
+type Category = "update" | "system";
 
 interface Notification {
   id: string;
   message: string;
   type: string;
+  category: string;
   read: boolean;
   created_at: string;
   related_user_id: string | null;
@@ -28,6 +58,48 @@ interface SlotFullPanelProps {
   notification: Notification;
   onGroupCreated: (notifId: string, groupName: string) => void;
 }
+
+/**
+ * Friendly label, badge colour and icon for a notification type.
+ *
+ * Unknown types fall back rather than rendering `undefined` into the variant
+ * (which silently loses the badge styling) — new types arrive from the
+ * database, not from this file, so there will always be some it has not met.
+ */
+const TYPE_META: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  new_registration: { label: "New signup", variant: "default" },
+  payment_received: { label: "Payment", variant: "default" },
+  daily_summary: { label: "Daily numbers", variant: "secondary" },
+  trial: { label: "Trial booking", variant: "secondary" },
+  slot_full: { label: "Slot full", variant: "destructive" },
+  slot_confirmed: { label: "Slot confirmed", variant: "default" },
+  waitlist: { label: "Waitlist", variant: "secondary" },
+  alternative_slot: { label: "Alternative slot", variant: "outline" },
+};
+
+const typeLabel = (type: string) =>
+  TYPE_META[type]?.label ?? type.replace(/_/g, " ");
+
+const typeVariant = (type: string) => TYPE_META[type]?.variant ?? "outline";
+
+const TypeIcon = ({ type }: { type: string }) => {
+  const className = "h-3.5 w-3.5 shrink-0 text-muted-foreground";
+  switch (type) {
+    case "new_registration":
+      return <UserPlus className={className} aria-hidden="true" />;
+    case "payment_received":
+      return <CreditCard className={className} aria-hidden="true" />;
+    case "daily_summary":
+      return <BarChart3 className={className} aria-hidden="true" />;
+    case "trial":
+      return <CalendarDays className={className} aria-hidden="true" />;
+    case "slot_full":
+    case "slot_confirmed":
+      return <Users className={className} aria-hidden="true" />;
+    default:
+      return <Wrench className={className} aria-hidden="true" />;
+  }
+};
 
 // Extract slot info from notification message like: Slot "Friday 11:00 (Beginner 1)" is now FULL.
 function parseSlotFullMessage(message: string): { day: string; time: string; level: string } | null {
@@ -236,18 +308,43 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
 };
 
 const AdminNotifications = () => {
+  const queryClient = useQueryClient();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("unread");
+  const [category, setCategory] = useState<Category>("update");
+  const [tabUnread, setTabUnread] = useState<Record<Category, number>>({ update: 0, system: 0 });
   const [createdGroups, setCreatedGroups] = useState<Record<string, string>>({});
+
+  /** The bell reads the same rows from its own query — keep the two in step. */
+  const refreshBell = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin", "unread-alerts"] });
+  }, [queryClient]);
+
+  const fetchUnreadCounts = useCallback(async () => {
+    const [update, system] = await Promise.all([
+      supabase
+        .from("admin_notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("read", false)
+        .eq("category", "update"),
+      supabase
+        .from("admin_notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("read", false)
+        .eq("category", "system"),
+    ]);
+    setTabUnread({ update: update.count ?? 0, system: system.count ?? 0 });
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     let query = supabase
       .from("admin_notifications")
       .select("*")
+      .eq("category", category)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(200);
 
     if (filter === "unread") {
       query = query.eq("read", false);
@@ -259,11 +356,15 @@ const AdminNotifications = () => {
     }
     setNotifications((data as Notification[]) || []);
     setLoading(false);
-  }, [filter]);
+  }, [filter, category]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  useEffect(() => {
+    fetchUnreadCounts();
+  }, [fetchUnreadCounts]);
 
   const markRead = async (id: string) => {
     await supabase
@@ -271,34 +372,51 @@ const AdminNotifications = () => {
       .update({ read: true })
       .eq("id", id);
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    fetchUnreadCounts();
+    refreshBell();
   };
 
   const markAllRead = async () => {
-    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
-    if (unreadIds.length === 0) return;
-    await supabase
+    // Every unread row in this category, not only the ones on screen. The
+    // update was scoped to the loaded ids, so "mark all read" left whatever
+    // the page had not fetched unread — and the bell went on counting it.
+    const { error } = await supabase
       .from("admin_notifications")
       .update({ read: true })
-      .in("id", unreadIds);
+      .eq("read", false)
+      .eq("category", category);
+    if (error) {
+      toast({ title: "Could not mark them read", description: error.message, variant: "destructive" });
+      return;
+    }
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    fetchUnreadCounts();
+    refreshBell();
   };
 
   const handleGroupCreated = (notifId: string, groupName: string) => {
     setCreatedGroups((prev) => ({ ...prev, [notifId]: groupName }));
     setNotifications((prev) => prev.map((n) => n.id === notifId ? { ...n, read: true } : n));
+    fetchUnreadCounts();
+    refreshBell();
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = tabUnread[category];
 
-  const typeColor = (type: string) => {
-    switch (type) {
-      case "slot_full": return "destructive";
-      case "slot_confirmed": return "default";
-      case "waitlist": return "secondary";
-      case "alternative_slot": return "outline";
-      default: return "outline";
-    }
-  };
+  const TabButton = ({ value, label }: { value: Category; label: string }) => (
+    <Button
+      variant={category === value ? "default" : "ghost"}
+      size="sm"
+      className="rounded-md"
+      aria-pressed={category === value}
+      onClick={() => setCategory(value)}
+    >
+      {label}
+      {tabUnread[value] > 0 && (
+        <span className="ml-1.5 text-xs opacity-80">{tabUnread[value]}</span>
+      )}
+    </Button>
+  );
 
   return (
     <div className="space-y-4">
@@ -327,11 +445,24 @@ const AdminNotifications = () => {
         </div>
       </div>
 
+      {/* Updates first, and open by default: the numbers from the site are what
+          this screen is for. System is the technical drawer. */}
+      <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-1">
+        <TabButton value="update" label="Updates" />
+        <TabButton value="system" label="System" />
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground text-center py-8">Loading...</p>
       ) : notifications.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
-          {filter === "unread" ? "No unread notifications." : "No notifications yet."}
+          {filter === "unread"
+            ? category === "update"
+              ? "No unread updates."
+              : "No unread system messages."
+            : category === "update"
+              ? "No updates yet."
+              : "No system messages yet."}
         </p>
       ) : (
         <div className="space-y-2">
@@ -341,7 +472,8 @@ const AdminNotifications = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1 flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Badge variant={typeColor(n.type)} className="text-xs">{n.type}</Badge>
+                      <TypeIcon type={n.type} />
+                      <Badge variant={typeVariant(n.type)} className="text-xs">{typeLabel(n.type)}</Badge>
                       {!n.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0" />}
                     </div>
                     <p className="text-sm text-foreground">{n.message}</p>

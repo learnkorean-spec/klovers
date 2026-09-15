@@ -20,6 +20,16 @@
  *
  * So the count comes from here, and the shell fetches it itself rather than
  * waiting for a caller to remember.
+ *
+ * WHAT THE BELL COUNTS
+ *
+ * Re, 15 Sep 2026: "no need to system msgs in the notification center, i want
+ * updates for website numbers". So `total` — the number the bell shows —
+ * counts only unread rows in the `update` category: signups, trial bookings,
+ * payments, the daily numbers. The technical rows (cron health, self
+ * verification, pg_net failures, calendar drift) are still written and still
+ * counted, as `system`, for the System tab of the notification centre;
+ * `problems` is the subset of those that mean something is broken.
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,10 +47,12 @@ export const ALERT_TYPES = [
 ] as const;
 
 export interface UnreadAlerts {
-  /** Unread rows whose type means something is broken. */
+  /** Unread system rows whose type means something is broken. */
   problems: number;
-  /** Every unread row, including ordinary activity. */
+  /** Unread business updates — the number on the bell. */
   total: number;
+  /** Every unread system/technical row. */
+  system: number;
 }
 
 export function useUnreadAlerts() {
@@ -48,24 +60,33 @@ export function useUnreadAlerts() {
     queryKey: ["admin", "unread-alerts"],
     queryFn: async () => {
       // head:true — Postgres returns the count and no rows cross the wire.
-      const [problems, total] = await Promise.all([
+      const [problems, total, system] = await Promise.all([
         supabase
           .from("admin_notifications")
           .select("*", { count: "exact", head: true })
           .eq("read", false)
+          .eq("category", "system")
           .in("type", ALERT_TYPES as unknown as string[]),
         supabase
           .from("admin_notifications")
           .select("*", { count: "exact", head: true })
-          .eq("read", false),
+          .eq("read", false)
+          .eq("category", "update"),
+        supabase
+          .from("admin_notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("read", false)
+          .eq("category", "system"),
       ]);
 
       if (problems.error) throw problems.error;
       if (total.error) throw total.error;
+      if (system.error) throw system.error;
 
       return {
         problems: problems.count ?? 0,
         total: total.count ?? 0,
+        system: system.count ?? 0,
       };
     },
     // A badge, not a payment. Cheap enough to keep current, slow enough to be
