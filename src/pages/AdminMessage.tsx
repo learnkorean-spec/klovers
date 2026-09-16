@@ -38,9 +38,13 @@
  * by where it was found, because "student" and "asked once in August" are
  * different people to write to.
  *
- * Only `profiles` carries a language and an unsubscribe token, so a lead gets
- * Arabic by default (one click to change) and the footer falls back to the
- * public unsubscribe page, which is what that page is for.
+ * Only `profiles` carries a language, so a lead gets Arabic by default (one
+ * click to change). Since migration 20260916113000 a LEAD also carries its own
+ * `unsubscribe_token` and `email_unsubscribed`, and both are read here — until
+ * then a lead who had opted out looked identical to one who never had, on the
+ * one screen where a person decides whether to write to her. A trial booking
+ * still has neither, so its footer falls back to the public unsubscribe page,
+ * which is what that page is for.
  *
  * THE CONFIRM STEP IS THE POINT
  * -----------------------------
@@ -177,7 +181,7 @@ const AdminMessage = () => {
             .limit(1000),
           supabase
             .from("leads")
-            .select("name,email,status,created_at")
+            .select("name,email,status,created_at,unsubscribe_token,email_unsubscribed")
             .not("email", "is", null)
             .order("created_at", { ascending: false })
             .limit(1000),
@@ -194,8 +198,9 @@ const AdminMessage = () => {
         if (!alive) return;
 
         // A profile wins over a lead and a lead over a trial booking, because
-        // the profile is the only row that knows her language and carries her
-        // own unsubscribe token. Same person, best record.
+        // the profile is the only row that knows her language. Same person,
+        // best record. Both of the first two carry an unsubscribe token and an
+        // opt-out flag of their own.
         const byEmail = new Map<string, Person>();
         type Row = {
           name?: string | null;
@@ -215,6 +220,12 @@ const AdminMessage = () => {
             // when the stronger has none — a lead row is often the only place
             // the name was ever typed.
             if (!existing.name && row.name) existing.name = row.name;
+            // An opt-out anywhere is an opt-out. If the same address said no
+            // as a lead and the profile row has not been flagged, the honest
+            // reading is still "she asked us to stop".
+            if (!existing.email_unsubscribed && row.email_unsubscribed) {
+              existing.email_unsubscribed = true;
+            }
             return;
           }
           byEmail.set(key, {
@@ -235,7 +246,11 @@ const AdminMessage = () => {
             unsubscribe_token: r.unsubscribe_token ?? null,
             email_unsubscribed: r.email_unsubscribed ?? null,
           }));
-        ((leadRes.data ?? []) as Row[]).forEach(r => add(r, "lead"));
+        ((leadRes.data ?? []) as Row[]).forEach(r =>
+          add(r, "lead", {
+            unsubscribe_token: r.unsubscribe_token ?? null,
+            email_unsubscribed: r.email_unsubscribed ?? null,
+          }));
         ((trialRes.data ?? []) as Row[]).forEach(r => add(r, "trial"));
 
         setPeople(
@@ -432,6 +447,11 @@ const AdminMessage = () => {
                                 <span className="block truncate text-xs text-muted-foreground">{p.email}</span>
                               </span>
                               <span className="flex shrink-0 items-center gap-1">
+                                {p.email_unsubscribed && (
+                                  <Badge variant="outline" className="border-amber-500 text-amber-700">
+                                    unsub
+                                  </Badge>
+                                )}
                                 <Badge variant="secondary">{SOURCE_LABEL[p.source]}</Badge>
                                 <Badge variant="outline">{p.language === "en" ? "EN" : "AR"}</Badge>
                               </span>
@@ -542,6 +562,11 @@ const AdminMessage = () => {
                         <span className="font-mono text-xs">{selected?.email}</span>, in{" "}
                         {isAr ? "Arabic" : "English"}, from the Klovers address.
                       </p>
+                      {selected?.email_unsubscribed && (
+                        <p className="text-sm font-semibold text-amber-700">
+                          She has unsubscribed. Send this only if it is about her own class.
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         Email cannot be recalled once it is sent.
                       </p>
