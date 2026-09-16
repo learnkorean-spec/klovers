@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import LevelConfirmBanner from "@/components/LevelConfirmBanner";
 
 const StudentDashboard = lazy(() => import("./StudentDashboard"));
 const MyLessonsPage = lazy(() => import("./MyLessonsPage"));
@@ -21,6 +22,12 @@ const MyLessonsPage = lazy(() => import("./MyLessonsPage"));
  * The read is deliberately narrow — one column, one row. Whatever it returns,
  * only one of the two chunks is ever fetched, so an English student never
  * downloads the Korean dashboard's bundle.
+ *
+ * `LevelConfirmBanner` is mounted here rather than inside StudentDashboard
+ * because that file is 63 KB and the contents API takes whole files — the same
+ * reason the language getter lives in levels.ts. It renders above the dashboard
+ * and decides for itself whether it has anything to ask; on the English track
+ * it is not rendered at all, because the level it confirms is a Korean one.
  */
 const DashboardRouter = () => {
   const [track, setTrack] = useState<"korean" | "english" | null>(null);
@@ -65,10 +72,21 @@ const DashboardRouter = () => {
 
   if (track === null) return spinner;
 
+  if (track === "english") {
+    return (
+      <Suspense fallback={spinner}>
+        <MyLessonsPage />
+      </Suspense>
+    );
+  }
+
   return (
-    <Suspense fallback={spinner}>
-      {track === "english" ? <MyLessonsPage /> : <StudentDashboard />}
-    </Suspense>
+    <>
+      <LevelConfirmBanner />
+      <Suspense fallback={spinner}>
+        <StudentDashboard />
+      </Suspense>
+    </>
   );
 };
 
