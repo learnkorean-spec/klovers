@@ -51,6 +51,14 @@ const GUIDE_URL_OVERRIDE_EN = Deno.env.get("TRIAL_GUIDE_URL_EN") ?? "";
 
 const DEFAULT_SLOT_TZ = "Africa/Cairo";
 
+// Arabic month and weekday, LATIN digits. Plain "ar-EG" renders the day number
+// in Arabic-Indic digits (١٨) while the time beside it is the slot's literal
+// start_time in Latin ones - two numeral systems in one line. Every other
+// number a Klovers letter prints (prices, level numbers, 30 minutes) is Latin,
+// so the date follows them.
+const AR_LOCALE = "ar-EG-u-nu-latn";
+const EN_LOCALE = "en-GB";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
@@ -83,15 +91,15 @@ function pickLanguage(classLanguage: string | null): "ar" | "en" {
 }
 
 /**
- * "الجمعة 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
+ * "الجمعة، 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
  *
  * Built from `trial_date` and the slot's own `start_time`, NOT from
- * `starts_at`. Eight bookings for Friday 18 September carry a `starts_at` of
+ * `starts_at`. Eight bookings for Friday 18 September carried a `starts_at` of
  * 25 September - `trial_date` is the column every student-facing message
  * reads, so it is the one the student was told and the only one that can be
- * printed back to her. One of those eight has confirmed she is coming.
- * See claude/FRIDAY_18_SEP_DATE_MISMATCH_2026-09-15.md and PR #426, which
- * made the same correction in the post-class letter.
+ * printed back to her. One of those eight had confirmed she is coming.
+ * See claude/BOOK_LETTER_DATE_FIX_2026-09-16.md and PR #426, which made the
+ * same correction in the post-class letter.
  */
 function classTimeLabel(
   trialDate: string,
@@ -99,7 +107,7 @@ function classTimeLabel(
   startsAt: string | null,
   lang: "ar" | "en",
 ): string {
-  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+  const locale = lang === "ar" ? AR_LOCALE : EN_LOCALE;
   const tz = slot?.timezone || DEFAULT_SLOT_TZ;
   const time = (slot?.start_time ?? "").slice(0, 5);
 
