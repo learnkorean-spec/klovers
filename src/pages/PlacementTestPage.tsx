@@ -18,6 +18,7 @@ import { useSpeech } from "@/hooks/useSpeech";
 import { drawPlacementCard, drawPlacementCertificate } from "@/lib/canvasRenderer";
 import { SITE_URL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
+import { getAttribution } from "@/lib/leadSession";
 import { track } from "@/lib/tracking";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin, Volume2, Square, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -534,12 +535,22 @@ const PlacementTestPage = () => {
       toast({ title: isAr ? "يرجى إدخال اسمك وبريدك الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
     }
     setLeadSaving(true);
+    // First-touch campaign attribution captured on landing (see
+    // leadSession.ts). This insert bypasses submit-lead entirely, so without
+    // this the placement test — a major top-of-funnel entry point — would
+    // never carry a utm_source at all.
+    const attribution = getAttribution();
     await supabase.from("leads").insert({
       name: leadName.trim(),
       email: leadEmail.trim(),
       level: result?.levelKey ?? "",
       source: "placement_test",
       status: "new",
+      utm_source: attribution.utm_source || null,
+      utm_medium: attribution.utm_medium || null,
+      utm_campaign: attribution.campaign || null,
+      utm_content: attribution.utm_content || null,
+      gclid: attribution.gclid || null,
     });
     setLeadSaving(false);
     setLeadSaved(true);

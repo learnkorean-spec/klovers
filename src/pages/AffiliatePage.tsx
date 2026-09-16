@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { DollarSign, Users, Link as LinkIcon, TrendingUp, CheckCircle } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getAttribution } from "@/lib/leadSession";
 
 const COMMISSION_RATE = 20; // %
 
@@ -39,6 +40,7 @@ export default function AffiliatePage() {
     }
     setLoading(true);
     try {
+      const attribution = getAttribution();
       const { error } = await supabase.functions.invoke("submit-lead", {
         body: {
           name: form.name,
@@ -52,6 +54,11 @@ export default function AffiliatePage() {
           ].filter(Boolean).join(" | "),
           country: "",
           level: "affiliate",
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.campaign,
+          utm_content: attribution.utm_content,
+          gclid: attribution.gclid,
         },
       });
       if (error) throw error;
