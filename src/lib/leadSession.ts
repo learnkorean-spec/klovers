@@ -10,6 +10,7 @@ export interface LeadAttribution {
   utm_medium?: string;
   utm_content?: string;
   referrer?: string;
+  gclid?: string;
 }
 
 const isBrowser = () => typeof window !== "undefined" && typeof localStorage !== "undefined";
@@ -46,10 +47,23 @@ export function captureUtmFromUrl(): void {
     const source = params.get("utm_source");
     const medium = params.get("utm_medium");
     const content = params.get("utm_content");
+    // gclid is what Google Ads appends when the account has "auto-tagging" on
+    // — most Google Ads accounts do, and plenty never add utm_ params on top
+    // of it. Without reading this, a paid Google click and an organic Google
+    // click are both just referrer=google.com with nothing to tell them apart.
+    const gclid = params.get("gclid");
     if (campaign) incoming.campaign = campaign;
     if (source) incoming.utm_source = source;
     if (medium) incoming.utm_medium = medium;
     if (content) incoming.utm_content = content;
+    if (gclid) {
+      incoming.gclid = gclid;
+      // A gclid with no explicit utm_source means the click came through
+      // Google Ads auto-tagging alone — still Google/cpc, just not spelled
+      // out in the URL. Fill it in so this doesn't fall back to "no source".
+      if (!incoming.utm_source) incoming.utm_source = "google";
+      if (!incoming.utm_medium) incoming.utm_medium = "cpc";
+    }
 
     const existingRaw = localStorage.getItem(ATTRIBUTION_KEY);
     const existing: LeadAttribution = existingRaw ? JSON.parse(existingRaw) : {};
