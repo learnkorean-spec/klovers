@@ -1,89 +1,56 @@
+// Account emails sent by Supabase Auth: confirm email, password reset, login link.
+//
+// 16 Sep 2026 (claude/CUSTOMER_MESSAGE_TONE_RULE.md): these now wear the same
+// header and footer as every other Klovers email - `brandWrapper` from
+// send-confirmation-email's templates/common.ts - with a WhatsApp block above
+// the signature. The Korean flag emoji in the old header is gone
+// (claude/NO_KOREAN_FLAG_EMOJI.md), as are the celebration emoji (neutral
+// tone). `redirect_to` is now URL-encoded; it was pasted raw into the query
+// string, so a redirect carrying its own `&` would have been cut short.
+//
+// Wording and links are otherwise unchanged. Copy stays English: Auth does not
+// tell this hook which language the reader uses.
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
+import {
+  BRAND_DARK, BRAND_MUTED, WHATSAPP_URL, brandWrapper, brandButton,
+} from "../send-confirmation-email/templates/common.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const VERIFY_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify";
 
-const YELLOW = "#ffff00";
-const BLACK = "#0a0a0a";
-const DARK_GRAY = "#1a1a1a";
-const MID_GRAY = "#555555";
-const LIGHT_GRAY = "#f5f5f5";
-const BORDER = "#e5e5e5";
-
-function emailWrapper(content: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Klovers</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f0f0;padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-
-          <!-- Header -->
-          <tr>
-            <td align="center" style="padding-bottom:24px;">
-              <table cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="background:${BLACK};border-radius:12px;padding:12px 24px;">
-                    <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;">
-                      <span style="color:${YELLOW};">K</span>lovers
-                    </span>
-                    <span style="font-size:18px;margin-left:4px;">🇰🇷</span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Card -->
-          <tr>
-            <td style="background:#ffffff;border-radius:16px;border:1px solid ${BORDER};overflow:hidden;">
-
-              <!-- Yellow top bar -->
-              <div style="background:${YELLOW};height:5px;"></div>
-
-              <!-- Body -->
-              <div style="padding:40px 40px 32px 40px;">
-                ${content}
-              </div>
-
-              <!-- Footer -->
-              <div style="background:${LIGHT_GRAY};border-top:1px solid ${BORDER};padding:24px 40px;text-align:center;">
-                <p style="margin:0 0 4px 0;font-size:12px;color:${MID_GRAY};">
-                  You received this email because an action was taken on your Klovers account.
-                </p>
-                <p style="margin:0;font-size:12px;color:#999999;">
-                  © ${new Date().getFullYear()} Klovers · <a href="https://kloversegy.com" style="color:${MID_GRAY};text-decoration:none;">kloversegy.com</a>
-                </p>
-              </div>
-
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+function whatsappBlock(): string {
+  return `
+    <p style="color: ${BRAND_MUTED}; font-size: 13px;">Need help with your account? Message us on WhatsApp.</p>
+    <div style="margin: 20px 0; text-align: center;">
+      <a href="${WHATSAPP_URL}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 WhatsApp</a>
+    </div>`;
 }
 
-function ctaButton(url: string, label: string): string {
-  return `<table cellpadding="0" cellspacing="0" style="margin:28px 0;">
-    <tr>
-      <td style="border-radius:10px;background:${YELLOW};">
-        <a href="${url}"
-           style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:${BLACK};text-decoration:none;border-radius:10px;letter-spacing:0.2px;">
-          ${label}
-        </a>
-      </td>
-    </tr>
-  </table>`;
+function accountLetter(opts: {
+  title: string;
+  intro: string;
+  button: string;
+  url: string;
+  note: string;
+}): string {
+  return brandWrapper(`
+    <h1 style="color: ${BRAND_DARK}; font-size: 22px;">${opts.title}</h1>
+    <p>${opts.intro}</p>
+    <div style="margin: 24px 0; text-align: center;">
+      ${brandButton(opts.button, opts.url)}
+    </div>
+    <p style="color: ${BRAND_MUTED}; font-size: 13px;">
+      If the button doesn't work, copy and paste this link into your browser:<br/>
+      <a href="${opts.url}" style="color: ${BRAND_MUTED}; word-break: break-all;">${opts.url}</a>
+    </p>
+    <p style="color: ${BRAND_MUTED}; font-size: 12px;">${opts.note}</p>
+    ${whatsappBlock()}
+    <p style="color: #999999; font-size: 11px; text-align: center; margin-top: 24px;">
+      You received this email because an action was taken on your Klovers account.
+    </p>
+  `, false);
 }
 
 serve(async (req) => {
@@ -92,7 +59,7 @@ serve(async (req) => {
 
   const emailAddress = user?.email;
   const tokenHash = email_data?.token_hash;
-  const redirectTo = email_data?.redirect_to || "https://kloversegy.com";
+  const redirectTo = encodeURIComponent(email_data?.redirect_to || "https://kloversegy.com");
   const emailAction = email_data?.email_action_type;
 
   let subject = "";
@@ -100,67 +67,35 @@ serve(async (req) => {
   let actionUrl = "";
 
   if (emailAction === "signup" || emailAction === "email_change") {
-    actionUrl = `https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify?token=${tokenHash}&type=email&redirect_to=${redirectTo}`;
+    actionUrl = `${VERIFY_BASE}?token=${tokenHash}&type=email&redirect_to=${redirectTo}`;
     subject = "Confirm your email – Klovers";
-    html = emailWrapper(`
-      <h1 style="margin:0 0 8px 0;font-size:26px;font-weight:800;color:${DARK_GRAY};letter-spacing:-0.5px;">
-        Welcome to Klovers! 🎉
-      </h1>
-      <p style="margin:0 0 4px 0;font-size:15px;color:${MID_GRAY};line-height:1.6;">
-        You're one step away from starting your Korean journey.
-        Confirm your email address to activate your account.
-      </p>
-      ${ctaButton(actionUrl, "Confirm Email Address")}
-      <p style="margin:0;font-size:13px;color:#999999;line-height:1.5;">
-        If the button doesn't work, copy and paste this link into your browser:<br/>
-        <a href="${actionUrl}" style="color:${MID_GRAY};word-break:break-all;">${actionUrl}</a>
-      </p>
-      <hr style="border:none;border-top:1px solid ${BORDER};margin:24px 0;" />
-      <p style="margin:0;font-size:12px;color:#bbbbbb;">
-        If you didn't create a Klovers account, you can safely ignore this email.
-      </p>
-    `);
+    html = accountLetter({
+      title: "Welcome to Klovers",
+      intro: "Confirm your email address to activate your account and start learning Korean.",
+      button: "Confirm Email Address",
+      url: actionUrl,
+      note: "If you didn't create a Klovers account, you can safely ignore this email.",
+    });
   } else if (emailAction === "recovery") {
-    actionUrl = `https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify?token=${tokenHash}&type=recovery&redirect_to=${redirectTo}`;
+    actionUrl = `${VERIFY_BASE}?token=${tokenHash}&type=recovery&redirect_to=${redirectTo}`;
     subject = "Reset your password – Klovers";
-    html = emailWrapper(`
-      <h1 style="margin:0 0 8px 0;font-size:26px;font-weight:800;color:${DARK_GRAY};letter-spacing:-0.5px;">
-        Reset your password
-      </h1>
-      <p style="margin:0 0 4px 0;font-size:15px;color:${MID_GRAY};line-height:1.6;">
-        We received a request to reset the password for your Klovers account.
-        Click the button below to choose a new password.
-      </p>
-      ${ctaButton(actionUrl, "Reset Password")}
-      <p style="margin:0;font-size:13px;color:#999999;line-height:1.5;">
-        If the button doesn't work, copy and paste this link into your browser:<br/>
-        <a href="${actionUrl}" style="color:${MID_GRAY};word-break:break-all;">${actionUrl}</a>
-      </p>
-      <hr style="border:none;border-top:1px solid ${BORDER};margin:24px 0;" />
-      <p style="margin:0;font-size:12px;color:#bbbbbb;">
-        ⏱ This link expires in 1 hour. &nbsp;|&nbsp; If you didn't request this, ignore this email — your password won't change.
-      </p>
-    `);
+    html = accountLetter({
+      title: "Reset your password",
+      intro: "We received a request to reset the password for your Klovers account. Use the button below to choose a new password.",
+      button: "Reset Password",
+      url: actionUrl,
+      note: "This link expires in 1 hour. If you didn't request this, ignore this email — your password won't change.",
+    });
   } else if (emailAction === "magic_link") {
-    actionUrl = `https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify?token=${tokenHash}&type=magiclink&redirect_to=${redirectTo}`;
+    actionUrl = `${VERIFY_BASE}?token=${tokenHash}&type=magiclink&redirect_to=${redirectTo}`;
     subject = "Your login link – Klovers";
-    html = emailWrapper(`
-      <h1 style="margin:0 0 8px 0;font-size:26px;font-weight:800;color:${DARK_GRAY};letter-spacing:-0.5px;">
-        Your magic login link ✨
-      </h1>
-      <p style="margin:0 0 4px 0;font-size:15px;color:${MID_GRAY};line-height:1.6;">
-        Click the button below to sign in to your Klovers account instantly — no password needed.
-      </p>
-      ${ctaButton(actionUrl, "Sign In to Klovers")}
-      <p style="margin:0;font-size:13px;color:#999999;line-height:1.5;">
-        If the button doesn't work, copy and paste this link into your browser:<br/>
-        <a href="${actionUrl}" style="color:${MID_GRAY};word-break:break-all;">${actionUrl}</a>
-      </p>
-      <hr style="border:none;border-top:1px solid ${BORDER};margin:24px 0;" />
-      <p style="margin:0;font-size:12px;color:#bbbbbb;">
-        ⏱ This link expires in 1 hour. &nbsp;|&nbsp; If you didn't request this, ignore this email.
-      </p>
-    `);
+    html = accountLetter({
+      title: "Your login link",
+      intro: "Use the button below to sign in to your Klovers account — no password needed.",
+      button: "Sign In to Klovers",
+      url: actionUrl,
+      note: "This link expires in 1 hour. If you didn't request this, ignore this email.",
+    });
   } else {
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
