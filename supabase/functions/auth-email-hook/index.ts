@@ -5,11 +5,11 @@
 // send-confirmation-email's templates/common.ts - with a WhatsApp block above
 // the signature. The Korean flag emoji in the old header is gone
 // (claude/NO_KOREAN_FLAG_EMOJI.md), as are the celebration emoji (neutral
-// tone). `redirect_to` is now URL-encoded; it was pasted raw into the query
-// string, so a redirect carrying its own `&` would have been cut short.
+// tone).
 //
-// Wording and links are otherwise unchanged. Copy stays English: Auth does not
-// tell this hook which language the reader uses.
+// The action links are built exactly as before - a design change must not
+// touch sign-in. Copy stays English: Auth does not tell this hook which
+// language the reader uses.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
@@ -18,7 +18,6 @@ import {
 } from "../send-confirmation-email/templates/common.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const VERIFY_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify";
 
 function whatsappBlock(): string {
   return `
@@ -59,7 +58,7 @@ serve(async (req) => {
 
   const emailAddress = user?.email;
   const tokenHash = email_data?.token_hash;
-  const redirectTo = encodeURIComponent(email_data?.redirect_to || "https://kloversegy.com");
+  const redirectTo = email_data?.redirect_to || "https://kloversegy.com";
   const emailAction = email_data?.email_action_type;
 
   let subject = "";
@@ -67,7 +66,7 @@ serve(async (req) => {
   let actionUrl = "";
 
   if (emailAction === "signup" || emailAction === "email_change") {
-    actionUrl = `${VERIFY_BASE}?token=${tokenHash}&type=email&redirect_to=${redirectTo}`;
+    actionUrl = `https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify?token=${tokenHash}&type=email&redirect_to=${redirectTo}`;
     subject = "Confirm your email – Klovers";
     html = accountLetter({
       title: "Welcome to Klovers",
@@ -77,7 +76,7 @@ serve(async (req) => {
       note: "If you didn't create a Klovers account, you can safely ignore this email.",
     });
   } else if (emailAction === "recovery") {
-    actionUrl = `${VERIFY_BASE}?token=${tokenHash}&type=recovery&redirect_to=${redirectTo}`;
+    actionUrl = `https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify?token=${tokenHash}&type=recovery&redirect_to=${redirectTo}`;
     subject = "Reset your password – Klovers";
     html = accountLetter({
       title: "Reset your password",
@@ -87,7 +86,7 @@ serve(async (req) => {
       note: "This link expires in 1 hour. If you didn't request this, ignore this email — your password won't change.",
     });
   } else if (emailAction === "magic_link") {
-    actionUrl = `${VERIFY_BASE}?token=${tokenHash}&type=magiclink&redirect_to=${redirectTo}`;
+    actionUrl = `https://ewtdgpbybkceokfohhyg.supabase.co/auth/v1/verify?token=${tokenHash}&type=magiclink&redirect_to=${redirectTo}`;
     subject = "Your login link – Klovers";
     html = accountLetter({
       title: "Your login link",
