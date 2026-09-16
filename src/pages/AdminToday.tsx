@@ -77,7 +77,41 @@ type Counts = {
   oldestSignup: string | null;
 };
 
+interface GroupClassRow {
+  id: string;
+  level: string;
+  day_of_week: number;
+  start_time: string | null;
+  duration_min: number | null;
+  capacity: number | null;
+  timezone: string | null;
+  groups: number;
+}
+
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * The two numbered levels that have group classes on the calendar. Level 3 has
+ * packages too, but only one student is placed there, so the dashboard would be
+ * reporting a class nobody is waiting for.
+ */
+const GROUP_CLASS_LEVELS = ["level_1", "level_2"];
+
+const LEVEL_LABEL: Record<string, string> = {
+  hangul: "Hangul",
+  level_1: "Level 1",
+  level_2: "Level 2",
+  level_3: "Level 3",
+  level_4: "Level 4",
+  level_5: "Level 5",
+  level_6: "Level 6",
+};
+
+/** "16:00:00" -> "16:00". The column is a plain wall time, already in the package's own zone. */
+function shortTime(t: string | null): string {
+  if (!t) return "TBA";
+  return t.slice(0, 5);
+}
 
 /** "2026-09-11" -> "Fri 11 Sep". Parsed as a plain date, never shifted by a timezone. */
 function formatSlotDate(iso: string | null): string {
@@ -111,6 +145,7 @@ function startOfTodayISO(): string {
 const AdminToday = () => {
   const [counts, setCounts] = useState<Counts | null>(null);
   const [slots, setSlots] = useState<SlotRow[] | null>(null);
+  const [groupClasses, setGroupClasses] = useState<GroupClassRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Private lessons the weekly schedule says have happened and nobody has
   // answered for. Read here only to decide whether the section exists at all;
@@ -142,6 +177,8 @@ const AdminToday = () => {
           notificationsToday,
           oldest,
           slotRows,
+          packagesRes,
+          pkgGroupsRes,
         ] = await Promise.all([
           waitingBase(),
           waitingBase().eq("class_language", "arabic"),
@@ -181,6 +218,15 @@ const AdminToday = () => {
             .eq("is_active", true)
             .eq("lifecycle", "active")
             .order("trial_date", { ascending: true }),
+          supabase
+            .from("schedule_packages")
+            .select("id, level, day_of_week, start_time, duration_min, capacity, timezone")
+            .eq("is_active", true)
+            .eq("course_type", "group")
+            .in("level", GROUP_CLASS_LEVELS)
+            .order("level", { ascending: true })
+            .order("day_of_week", { ascending: true }),
+          supabase.from("pkg_groups").select("id, package_id"),
         ]);
 
         if (notificationsToday.error) throw notificationsToday.error;
@@ -238,6 +284,19 @@ const AdminToday = () => {
           }),
         }));
 
+        // Same shape one level up: the package is the bookable time, the group
+        // is the seat, and they are separate rows. Counted in memory from one
+        // pkg_groups read rather than a query per package.
+        const groupCount = new Map<string, number>();
+        for (const g of pkgGroupsRes.data ?? []) {
+          const pid = (g as any).package_id;
+          if (pid) groupCount.set(pid, (groupCount.get(pid) ?? 0) + 1);
+        }
+        const groupRows: GroupClassRow[] = (packagesRes.data ?? []).map((p: any) => ({
+          ...p,
+          groups: groupCount.get(p.id) ?? 0,
+        }));
+
         if (cancelled) return;
 
         setCounts({
@@ -254,6 +313,7 @@ const AdminToday = () => {
           oldestSignup: (oldest.data as { created_at?: string } | null)?.created_at ?? null,
         });
         setSlots(rows);
+        setGroupClasses(groupRows);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Could not load today's summary.");
       }
@@ -603,6 +663,56 @@ const AdminToday = () => {
               <Card>
                 <CardContent className="p-5 text-sm text-muted-foreground">
                   No active trial sessions are scheduled.
+                </CardContent>
+              </Card>
+            ) : null}
+          </section>
+
+          {/* GROUP CLASSES */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                SUGGESTED GROUP CLASSES
+              </h2>
+              <p className="text-xs text-muted-foreground">Cairo time · what a placed student is offered</p>
+            </div>
+
+            {!groupClasses && !error ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
+              </div>
+            ) : groupClasses && groupClasses.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {groupClasses.map(p => (
+                  <Card key={p.id}>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold">
+                          {DAY_NAMES[p.day_of_week] ?? "Day TBA"} · {shortTime(p.start_time)}
+                        </span>
+                        <Badge variant="secondary">{LEVEL_LABEL[p.level] ?? p.level}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {p.duration_min ?? 60} min · up to {p.capacity ?? 0} students
+                      </p>
+                      {/* The package is the time a student can pick. The group is the
+                          thing she is actually seated in, and it is a separate row --
+                          so a package with no group reads as bookable on her side and
+                          goes nowhere on yours. Worth saying on the dashboard rather
+                          than discovering it when someone books. */}
+                      <p className="text-xs text-muted-foreground">
+                        {p.groups > 0
+                          ? `${p.groups} group${p.groups > 1 ? "s" : ""} running`
+                          : "No group created yet — she can pick this time, but cannot be seated"}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : groupClasses ? (
+              <Card>
+                <CardContent className="p-5 text-sm text-muted-foreground">
+                  No Level 1 or Level 2 group classes are active.
                 </CardContent>
               </Card>
             ) : null}
