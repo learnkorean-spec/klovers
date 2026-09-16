@@ -8,10 +8,20 @@
 //
 // Only the single currently-eligible stage is sent per run. Earlier stages are
 // NOT backfilled: if a lead is first evaluated at 30h, stage 1 is skipped.
+//
+// 16 Sep 2026 (Re's message rules, claude/CUSTOMER_MESSAGE_TONE_RULE.md):
+//   * the shared header/footer - `brandWrapper` from send-confirmation-email's
+//     templates/common.ts - instead of a private copy with a remote logo;
+//   * a WhatsApp block above the signature in every stage;
+//   * Arabic for leads from Arabic-speaking countries (it was English only);
+//   * neutral copy: no "last chance", no "many students reserve quickly".
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
+import {
+  BRAND_DARK, BRAND_MUTED, WHATSAPP_URL, brandWrapper, brandButton,
+} from "../send-confirmation-email/templates/common.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,94 +36,89 @@ const SITE_URL = "https://kloversegy.com";
 const CHECKOUT_URL = `${SITE_URL}/enroll-now`;
 const UNSUBSCRIBE_BASE = `${SUPABASE_URL}/functions/v1/checkout-recovery-unsubscribe`;
 
-// ── Brand constants (match send-confirmation-email) ──
-const BRAND_BLACK  = "#000000";
-const BRAND_YELLOW = "#FFFF00";
-const BRAND_DARK   = "#1a1a1a";
-const BRAND_TEXT   = "#333333";
-const BRAND_MUTED  = "#666666";
-const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
+// ── Arabic-speaking countries (same list as send-name-collection-email) ──
+const ARABIC_COUNTRIES = [
+  "egypt", "مصر", "saudi", "السعودية", "uae", "الإمارات",
+  "iraq", "العراق", "jordan", "الأردن", "morocco", "المغرب",
+  "algeria", "الجزائر", "tunisia", "تونس", "libya", "ليبيا",
+  "sudan", "السودان", "yemen", "اليمن", "syria", "سوريا",
+  "lebanon", "لبنان", "palestine", "فلسطين", "bahrain", "البحرين",
+  "qatar", "قطر", "oman", "عمان", "kuwait", "الكويت",
+];
 
-function brandWrapper(content: string) {
+function isArabicCountry(country: string | null): boolean {
+  const c = (country || "").toLowerCase().trim();
+  return !c || ARABIC_COUNTRIES.some((k) => c.includes(k));
+}
+
+function whatsappBlock(isAr: boolean): string {
   return `
-  <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
-    <div style="background: ${BRAND_BLACK}; padding: 24px; text-align: center;">
-      <img src="${LOGO_URL}" alt="Klovers" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid ${BRAND_YELLOW};" />
-      <h2 translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; margin: 12px 0 0; font-size: 22px; letter-spacing: 1px;">Klovers</h2>
-      <p style="color: #cccccc; margin: 4px 0 0; font-size: 12px;">Korean Language Academy</p>
-    </div>
-    <div style="padding: 28px 24px; color: ${BRAND_TEXT};">${content}</div>
-    <div style="background: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
-      <p style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;"><span translate="no" class="notranslate">— The Klovers Team</span></p>
-      <a href="${SITE_URL}" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
-    </div>
-  </div>`;
+    <p style="color: ${BRAND_MUTED}; font-size: 13px;">${isAr ? "أي سؤال عن المستوى أو المواعيد؟ راسلينا على واتساب." : "Questions about the level or the times? Message us on WhatsApp."}</p>
+    <div style="margin: 20px 0; text-align: center;">
+      <a href="${WHATSAPP_URL}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 ${isAr ? "واتساب" : "WhatsApp"}</a>
+    </div>`;
 }
 
-function brandButton(text: string, href: string) {
-  return `<a href="${href}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK};">${text}</a>`;
-}
-
-function unsubFooter(token: string) {
+function unsubFooter(token: string, isAr: boolean) {
   const url = `${UNSUBSCRIBE_BASE}?token=${encodeURIComponent(token)}`;
-  return `<p style="color: ${BRAND_MUTED}; font-size: 11px; margin-top: 24px; text-align: center;">
-    Don't want to receive these reminders?
-    <a href="${url}" style="color: ${BRAND_MUTED}; text-decoration: underline;">Unsubscribe</a>.
-  </p>`;
+  return isAr
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 11px; margin-top: 24px; text-align: center;">لا تريد استلام هذه الرسائل؟ <a href="${url}" style="color: ${BRAND_MUTED}; text-decoration: underline;">إلغاء الاشتراك</a></p>`
+    : `<p style="color: ${BRAND_MUTED}; font-size: 11px; margin-top: 24px; text-align: center;">Don't want to receive these emails? <a href="${url}" style="color: ${BRAND_MUTED}; text-decoration: underline;">Unsubscribe</a>.</p>`;
 }
 
 interface StageEmail { subject: string; html: string; }
+interface StageArgs { name: string; checkout: string; token: string; isAr: boolean; }
 
-function stage1({ name, checkout, token }: { name: string; checkout: string; token: string; }): StageEmail {
-  const first = (name || "there").split(" ")[0];
+function greeting(name: string, isAr: boolean): string {
+  const first = (name || "").trim().split(" ")[0];
+  if (isAr) return `مرحباً${first ? ` ${first}` : ""}،`;
+  return `Hi ${first || "there"},`;
+}
+
+function letter(a: StageArgs, subject: string, lines: string[], button: string): StageEmail {
   return {
-    subject: "Did something interrupt your enrollment?",
+    subject,
     html: brandWrapper(`
-      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${first},</h1>
-      <p>It looks like you started registering for a Korean course but didn't finish the checkout.</p>
-      <p><strong>Your place is still available.</strong><br/>
-      You can complete your enrollment in less than a minute here:</p>
-      <div style="margin: 24px 0; text-align: center;">${brandButton("Complete my enrollment", checkout)}</div>
-      <p>If you have any questions, feel free to reply to this email.</p>
-      <p>– Klovers Team</p>
-      ${unsubFooter(token)}
-    `),
+      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">${greeting(a.name, a.isAr)}</h1>
+      ${lines.map((l) => `<p>${l}</p>`).join("")}
+      <div style="margin: 24px 0; text-align: center;">${brandButton(button, a.checkout)}</div>
+      ${whatsappBlock(a.isAr)}
+      ${unsubFooter(a.token, a.isAr)}
+    `, a.isAr),
   };
 }
 
-function stage2({ name, checkout, token }: { name: string; checkout: string; token: string; }): StageEmail {
-  const first = (name || "there").split(" ")[0];
-  return {
-    subject: "Your Korean class spot is still available",
-    html: brandWrapper(`
-      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${first},</h1>
-      <p>Just a quick reminder that your Korean course registration is still waiting to be completed.</p>
-      <p>Many students reserve their spots quickly, so if you still want to join the class, you can finish your enrollment here:</p>
-      <div style="margin: 24px 0; text-align: center;">${brandButton("Finish enrollment", checkout)}</div>
-      <p>We'd love to see you in the next class.</p>
-      <p>– Klovers Team</p>
-      ${unsubFooter(token)}
-    `),
-  };
+function stage1(a: StageArgs): StageEmail {
+  return a.isAr
+    ? letter(a, "KLovers — تسجيلك جاهز للإكمال",
+        ["بدأتِ التسجيل في كورس الكوري، والتسجيل متاح لإكماله الآن.", "إكمال التسجيل يستغرق أقل من دقيقة."],
+        "أكملي التسجيل")
+    : letter(a, "KLovers — your enrolment is ready to complete",
+        ["You started enrolling in a Korean course, and it is ready to complete now.", "Finishing takes less than a minute."],
+        "Complete my enrolment");
 }
 
-function stage3({ name, checkout, token }: { name: string; checkout: string; token: string; }): StageEmail {
-  const first = (name || "there").split(" ")[0];
-  return {
-    subject: "Last chance to complete your enrollment",
-    html: brandWrapper(`
-      <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${first},</h1>
-      <p>We noticed you started signing up for a Korean course but didn't finish the process.</p>
-      <p>If you still want to join, you can complete your enrollment here:</p>
-      <div style="margin: 24px 0; text-align: center;">${brandButton("Complete enrollment", checkout)}</div>
-      <p>If you changed your mind, no problem — and if you need help choosing the right level, we're happy to help.</p>
-      <p>– Klovers Team</p>
-      ${unsubFooter(token)}
-    `),
-  };
+function stage2(a: StageArgs): StageEmail {
+  return a.isAr
+    ? letter(a, "KLovers — التسجيل مفتوح لمستواكِ",
+        ["التسجيل في مجموعات الكوري مفتوح الآن، ومكانك متاح.", "يمكنكِ اختيار الموعد المناسب وإكمال التسجيل من هنا."],
+        "إكمال التسجيل")
+    : letter(a, "KLovers — enrolment is open for your level",
+        ["Enrolment in the Korean groups is open, and your place is available.", "You can pick the time that suits you and finish here."],
+        "Finish enrolment");
 }
 
-function buildStage(n: 1 | 2 | 3, args: { name: string; checkout: string; token: string; }) {
+function stage3(a: StageArgs): StageEmail {
+  return a.isAr
+    ? letter(a, "KLovers — مجموعات جديدة متاحة",
+        ["مجموعات الكوري الجديدة متاحة للتسجيل.", "لو محتاجة مساعدة في اختيار المستوى المناسب، نسعد بمساعدتك."],
+        "عرض المجموعات")
+    : letter(a, "KLovers — new groups are available",
+        ["New Korean groups are open for enrolment.", "If you would like help choosing the right level, we are happy to help."],
+        "See the groups");
+}
+
+function buildStage(n: 1 | 2 | 3, args: StageArgs) {
   return n === 1 ? stage1(args) : n === 2 ? stage2(args) : stage3(args);
 }
 
@@ -151,7 +156,7 @@ serve(async (req) => {
     const cutoff = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
     const { data: leads, error: leadsErr } = await supabase
       .from("leads")
-      .select("id, name, email, plan_type, user_id, status, created_at")
+      .select("id, name, email, plan_type, user_id, status, created_at, country")
       .not("plan_type", "is", null)
       .not("user_id",   "is", null)
       .neq("status", "enrolled")
@@ -229,6 +234,7 @@ serve(async (req) => {
         name: lead.name ?? "",
         checkout: CHECKOUT_URL,
         token,
+        isAr: isArabicCountry((lead as { country?: string | null }).country ?? null),
       });
 
       try {
