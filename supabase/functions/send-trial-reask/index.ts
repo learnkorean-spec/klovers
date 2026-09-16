@@ -28,6 +28,11 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const DEFAULT_SLOT_TZ = "Africa/Cairo";
 const DEFAULT_DURATION_MIN = 30;
 
+// Arabic month and weekday, LATIN digits — see the same constant in
+// send-trial-guide. Plain "ar-EG" would print ١٨ next to a Latin 16:30.
+const AR_LOCALE = "ar-EG-u-nu-latn";
+const EN_LOCALE = "en-GB";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
@@ -60,7 +65,7 @@ function pickLanguage(classLanguage: string | null): "ar" | "en" {
 }
 
 /**
- * "الجمعة 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
+ * "الجمعة، 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
  *
  * From `trial_date` and the slot's own `start_time`, never from `starts_at`.
  * Eight bookings on Friday 18 September carried a `starts_at` of 25 September,
@@ -75,7 +80,7 @@ function classTimeLabel(
   startsAt: string | null,
   lang: "ar" | "en",
 ): string {
-  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+  const locale = lang === "ar" ? AR_LOCALE : EN_LOCALE;
   const tz = slot?.timezone || DEFAULT_SLOT_TZ;
   const time = (slot?.start_time ?? "").slice(0, 5);
 
