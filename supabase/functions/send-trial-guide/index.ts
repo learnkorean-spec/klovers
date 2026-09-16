@@ -15,6 +15,12 @@
 // her own class, still gets the book in time. The stamp keeps it to one
 // letter either way.
 //
+// What hour: only between SEND_FROM_HOUR and SEND_UNTIL_HOUR, Cairo. The
+// window above opens at Cairo midnight, so without this the first books went
+// out at 00:40. Outside those hours a live run lists who is due and sends
+// nothing; the first daytime run (09:40) sends them. Every class today starts
+// in the afternoon, so a letter held overnight still arrives hours before it.
+//
 // Safety: `dry_run` defaults to TRUE, exactly like send-attendance-confirmations.
 // Nothing is sent unless the caller passes `dry_run: false`, which the cron
 // does. A bare manual call lists the recipients and sends nothing.
@@ -24,11 +30,15 @@
 // call before a line of this file runs — measured on 15 Sep 2026.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { cairoDateKey, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
+import { cairoDateKey, cairoHour, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+// Cairo hours in which a letter may be sent: from 09:00 up to, not including, 22:00.
+const SEND_FROM_HOUR = 9;
+const SEND_UNTIL_HOUR = 22;
 
 // The book, as objects in the PRIVATE `student-materials` bucket. Each letter
 // carries its own signed URL, minted here and valid for seven days.
@@ -157,6 +167,12 @@ Deno.serve(async (req) => {
     try { body = await req.json(); } catch { /* empty body = dry run */ }
     const dryRun = body?.dry_run !== false;
 
+    // A live run outside the sending hours behaves like a dry run: it lists
+    // who is due and leaves every booking unstamped for the morning.
+    const hourNow = cairoHour();
+    const outsideHours = hourNow < SEND_FROM_HOUR || hourNow >= SEND_UNTIL_HOUR;
+    const holdSend = dryRun || outsideHours;
+
     /** A fresh signed link for one reader. Null means do not send. */
     async function guideUrlFor(lang: "ar" | "en"): Promise<string | null> {
       const override = lang === "ar" ? GUIDE_URL_OVERRIDE_AR : GUIDE_URL_OVERRIDE_EN;
@@ -235,7 +251,7 @@ Deno.serve(async (req) => {
       }
 
       recipients.push({ id: b.id, email: b.email, trial_date: b.trial_date, language: lang, when });
-      if (dryRun) continue;
+      if (holdSend) continue;
 
       // Signed per letter, and the letter is abandoned if signing fails. A
       // dead button would be stamped as sent and never retried, which is
@@ -271,6 +287,7 @@ Deno.serve(async (req) => {
 
     const result = {
       ok: true, dry_run: dryRun, dates: [today, tomorrow],
+      cairo_hour: hourNow, held_outside_hours: !dryRun && outsideHours,
       matched: rows.length, sent, skipped, recipients, errors,
     };
     console.log("trial-guide:", JSON.stringify(result));
