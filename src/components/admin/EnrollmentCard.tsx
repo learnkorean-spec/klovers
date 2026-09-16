@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,8 +81,32 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
     ? Math.max(0, Math.floor((Date.now() - new Date(e.negative_since).getTime()) / 86400000))
     : 0;
 
+  // The group this enrolment is actually seated in. A student seated through
+  // the schedule picker / hold_my_seat() has no preferred_day on the
+  // enrolment -- the seat is the schedule, so read it.
+  const [seatGroup, setSeatGroup] = useState<string | null>(null);
+  const [seatChecked, setSeatChecked] = useState(e.plan_type !== "group");
+  useEffect(() => {
+    if (e.plan_type !== "group") return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("pkg_group_members")
+        .select("group_id, pkg_groups(name)")
+        .eq("enrollment_id", e.id)
+        .limit(1);
+      if (cancelled) return;
+      const row = (data as { pkg_groups: { name: string } | null }[] | null)?.[0];
+      setSeatGroup(row?.pkg_groups?.name ?? null);
+      setSeatChecked(true);
+    })();
+    return () => { cancelled = true; };
+  }, [e.id, e.plan_type]);
+
   const preferredDay = e.preferred_day || (e.preferred_days && e.preferred_days.length > 0 ? e.preferred_days[0] : null);
-  const missingSchedule = !e.level || (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0));
+  const hasChosenDay = !!e.preferred_day || (!!e.preferred_days && e.preferred_days.length > 0);
+  const missingSchedule = seatChecked && (!e.level || (!hasChosenDay && !seatGroup));
+  const isUnpaidApproved = e.approval_status === "APPROVED" && e.payment_status !== "PAID";
   const isActionableStatus =
     e.approval_status === "PENDING" ||
     e.approval_status === "UNDER_REVIEW" ||
@@ -217,7 +241,7 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
                     onChange={(ev) => onChangeEditPrice(e.id, ev.target.value)}
                   />
                 ) : (
-                  <span className="text-sm font-medium text-foreground">${Math.round(e.unit_price)}</span>
+                  <span className="text-sm font-medium text-foreground">{formatMoney(e.unit_price, e.currency)}</span>
                 )}
               </div>
 
@@ -232,14 +256,16 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
                     )}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm text-muted-foreground shrink-0">Day:</span>
+                    <span className="text-sm text-muted-foreground shrink-0">{seatGroup && !preferredDay ? "Group:" : "Day:"}</span>
                     {preferredDay ? (
                       <Badge variant="secondary" className="text-xs">{preferredDay}</Badge>
-                    ) : (
+                    ) : seatGroup ? (
+                      <Badge variant="secondary" className="text-xs">{seatGroup}</Badge>
+                    ) : seatChecked ? (
                       <span className="text-xs text-muted-foreground italic">Not set</span>
-                    )}
+                    ) : null}
                     {e.preferred_time && <span className="text-xs text-muted-foreground">· {e.preferred_time}</span>}
-                    {e.timezone && <span className="text-xs text-muted-foreground">· {e.timezone.replace(/_/g, " ")}</span>}
+                    {e.timezone && !seatGroup && <span className="text-xs text-muted-foreground">· {e.timezone.replace(/_/g, " ")}</span>}
                   </div>
                   {missingSchedule && (
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -273,6 +299,15 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
               <Badge variant={e.approval_status === "APPROVED" ? "default" : e.approval_status === "REJECTED" ? "destructive" : "secondary"}>
                 {e.approval_status}
               </Badge>
+              {isUnpaidApproved && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-400 text-amber-700 bg-amber-50 dark:text-amber-400 dark:border-amber-600 dark:bg-amber-950/20"
+                  title={`Payment status: ${e.payment_status}`}
+                >
+                  UNPAID
+                </Badge>
+              )}
               <Button
                 variant="outline"
                 size="sm"
