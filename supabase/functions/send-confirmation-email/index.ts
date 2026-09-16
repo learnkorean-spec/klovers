@@ -50,6 +50,10 @@ import { buildTrialGuideEmail } from "./templates/trialGuide.ts";
 // opening, not a chase, and deliberately without the book link - the book is
 // for the students who confirm. Fourth slug absent from that union.
 import { buildTrialReaskEmail } from "./templates/trialReask.ts";
+// The day-before group class reminder, since 2026-09-16. Sent by
+// send-class-reminders to seated students of started groups, with the
+// group's own room. Fifth slug absent from that union.
+import { buildClassReminderEmail } from "./templates/classReminder.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -202,6 +206,15 @@ serve(async (req) => {
         });
       }
     }
+    // A class reminder without the room is a reminder to stand outside a door.
+    if ((template as string) === "class_reminder") {
+      if (!payload!.class_link_url || payload!.class_link_url.trim() === "") {
+        return new Response(JSON.stringify({ error: "class_link_url is required for the class_reminder template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     // Both links in the second ask are the confirmation page carrying this
     // booking's own token. Without it the letter asks the reader to confirm
     // and then cannot tell who confirmed.
@@ -242,8 +255,9 @@ serve(async (req) => {
     // is ever opened for another reason, move this into the switch.
     // `admin_message` is here for exactly the reason given above, and is the
     // second key deliberately absent from that union. `trial_guide` is the
-    // third and `trial_reask` the fourth; their only callers are the
-    // send-trial-guide cron and the send-trial-reask endpoint.
+    // third, `trial_reask` the fourth and `class_reminder` the fifth; their
+    // only callers are the send-trial-guide cron, the send-trial-reask
+    // endpoint and the send-class-reminders cron.
     if ((template as string) === "admin_message") {
       const adminMessage = buildAdminMessageEmail(payload!);
       subject = adminMessage.subject;
@@ -260,6 +274,10 @@ serve(async (req) => {
       const trialReask = buildTrialReaskEmail(payload!);
       subject = trialReask.subject;
       html = trialReask.html;
+    } else if ((template as string) === "class_reminder") {
+      const classReminder = buildClassReminderEmail(payload!);
+      subject = classReminder.subject;
+      html = classReminder.html;
     } else switch (template) {
       case "welcome":
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
