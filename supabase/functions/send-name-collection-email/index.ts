@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
+// The shared header/footer (Re's rule 4: one chrome everywhere). Imported
+// rather than copied, so a design change made in common.ts reaches this
+// letter too.
+import {
+  BRAND_DARK, BRAND_GRAY, BRAND_MUTED, BRAND_TEXT, BRAND_YELLOW, WHATSAPP_URL,
+  brandWrapper, brandButton,
+} from "../send-confirmation-email/templates/common.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,12 +45,6 @@ const MAX_REMINDERS = 3;
 /** The template name this function records under in email_logs. */
 const TEMPLATE = "name_reminder";
 
-// ── Brand constants (copied from send-confirmation-email) ──
-const BRAND_BLACK = "#000000";
-const BRAND_YELLOW = "#FFFF00";
-const BRAND_DARK = "#1a1a1a";
-const BRAND_TEXT = "#333333";
-
 /**
  * RFC 8058 one-click unsubscribe, plus the visible footer link.
  *
@@ -62,47 +63,12 @@ function unsubscribeUrl(token: string | undefined, isAr: boolean) {
     : `${SITE_URL}/unsubscribe`;
 }
 
-/**
- * The header was an <img> of klovers-logo.jpg — 41,004 bytes, byte for byte
- * the size of favicon.ico, i.e. the favicon doing duty as a logo. Outlook
- * blocks remote images by default and Gmail's promotions tab often does, so
- * for those readers the brand was a broken-image icon.
- *
- * Now the drawn lockup from templates/common.ts (#275): nothing to load,
- * sharp at any density. Repeated rather than imported because this is a
- * separate edge function with its own bundle — if the shared header changes,
- * change it here too.
- */
-function brandWrapper(content: string, isRtl: boolean, unsubLine: string) {
-  const dir = isRtl ? "direction: rtl; text-align: right;" : "";
+function whatsappBlock(isAr: boolean): string {
   return `
-  <div translate="no" class="notranslate" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
-    <div style="height: 5px; background: ${BRAND_YELLOW}; font-size: 0; line-height: 0;">&nbsp;</div>
-    <div style="background: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
-        <tr>
-          <td width="42" height="42" align="center" valign="middle" style="width: 42px; height: 42px; background: ${BRAND_YELLOW}; border-radius: 50%; font-family: Arial, Helvetica, sans-serif; font-size: 25px; font-weight: bold; line-height: 42px; color: ${BRAND_BLACK}; text-align: center;">K</td>
-          <td width="12" style="width: 12px; font-size: 0; line-height: 0;">&nbsp;</td>
-          <td align="left" valign="middle" style="text-align: left;">
-            <div translate="no" class="notranslate" style="color: ${BRAND_YELLOW}; font-size: 23px; font-weight: 700; letter-spacing: 2.5px; line-height: 1.1;">KLOVERS</div>
-            <div style="color: #9a9a9a; font-size: 9px; letter-spacing: 2.4px; text-transform: uppercase; padding-top: 4px;">Korean Language Academy</div>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div style="padding: 28px 24px; ${dir} color: ${BRAND_TEXT};">
-      ${content}
-      ${unsubLine}
-    </div>
-    <div style="background: ${BRAND_BLACK}; padding: 20px 24px; text-align: center;">
-      <p style="color: ${BRAND_YELLOW}; font-size: 13px; margin: 0 0 8px;"><span translate="no" class="notranslate">— The KLovers Team</span></p>
-      <a href="https://kloversegy.com" style="color: #cccccc; font-size: 11px; text-decoration: none;">kloversegy.com</a>
-    </div>
-  </div>`;
-}
-
-function brandButton(text: string, href: string) {
-  return `<a href="${href}" style="display: inline-block; background: ${BRAND_YELLOW}; color: ${BRAND_BLACK}; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; border: 2px solid ${BRAND_BLACK};">${text}</a>`;
+    <p style="color: ${BRAND_MUTED}; font-size: 13px;">${isAr ? "أي سؤال؟ راسلنا على واتساب." : "Any questions? Message us on WhatsApp."}</p>
+    <div style="margin: 20px 0; text-align: center;">
+      <a href="${WHATSAPP_URL}" style="display: inline-block; background-color: #25D366 !important; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">💬 ${isAr ? "واتساب" : "WhatsApp"}</a>
+    </div>`;
 }
 
 // ── Arabic-speaking countries ──
@@ -130,52 +96,36 @@ function buildEmail(profileEmail: string, lang: "ar" | "en", unsubUrl: string) {
     : `<p style="text-align:center;margin-top:20px;font-size:11px;color:#999">Don't want these emails? <a href="${unsubUrl}" style="color:#999">Unsubscribe</a></p>`;
 
   const arContent = `
-    <h2 style="color:${BRAND_DARK};font-size:20px;margin:0 0 16px;">
-      مرحباً! 👋
-    </h2>
-    <p style="font-size:15px;line-height:1.8;margin:0 0 16px;">
-      لاحظنا أن <strong>اسمك</strong> غير مكتمل في ملفك الشخصي على KLovers.
-    </p>
-    <p style="font-size:15px;line-height:1.8;margin:0 0 20px;">
-      نحتاج إلى اسمك لنتمكن من مخاطبتك بشكل صحيح وإعداد مكانك في الفصل الدراسي.
-    </p>
-    <div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:14px 18px;margin:0 0 28px;">
-      <p style="color:#92400e;font-weight:bold;margin:0;font-size:14px;">
-        ⚠️ الاسم الكامل مطلوب لاستكمال تسجيلك
-      </p>
+    <h1 style="color:${BRAND_DARK};font-size:22px;">مرحباً،</h1>
+    <p>خانة <strong>الاسم</strong> في حسابك على KLovers ما زالت فارغة.</p>
+    <p>نستخدم الاسم في رسائلك وفي تجهيز مكانك في المجموعة.</p>
+    <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_YELLOW};border-radius:4px;padding:14px 18px;margin:16px 0;">
+      <p style="margin:0;color:${BRAND_TEXT};font-size:14px;">إضافة الاسم تستغرق أقل من دقيقة.</p>
     </div>
-    <div style="text-align:center;margin:0 0 28px;">
-      ${brandButton("أكمل ملفك الشخصي الآن ←", ctaUrl)}
+    <div style="text-align:center;margin:24px 0;">
+      ${brandButton("أضيفي اسمك", ctaUrl)}
     </div>
-    <p style="color:#999;font-size:12px;margin:0;">
-      إذا كنت قد أضفت اسمك بالفعل، يمكنك تجاهل هذا البريد الإلكتروني.
-    </p>`;
+    <p style="color:${BRAND_MUTED};font-size:13px;">إذا كنتِ أضفتِ اسمك بالفعل، لا حاجة لأي خطوة.</p>
+    ${whatsappBlock(true)}
+    ${unsubLine}`;
 
   const enContent = `
-    <h2 style="color:${BRAND_DARK};font-size:20px;margin:0 0 16px;">
-      Hi there! 👋
-    </h2>
-    <p style="font-size:15px;line-height:1.8;margin:0 0 16px;">
-      We noticed your <strong>name</strong> is missing from your KLovers profile.
-    </p>
-    <p style="font-size:15px;line-height:1.8;margin:0 0 20px;">
-      We need your name to address you properly and prepare your class spot.
-    </p>
-    <div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:14px 18px;margin:0 0 28px;">
-      <p style="color:#92400e;font-weight:bold;margin:0;font-size:14px;">
-        ⚠️ Your full name is required to complete registration
-      </p>
+    <h1 style="color:${BRAND_DARK};font-size:22px;">Hi,</h1>
+    <p>The <strong>name</strong> field on your KLovers account is still empty.</p>
+    <p>We use it in your emails and to prepare your place in a group.</p>
+    <div style="background-color:${BRAND_GRAY};border-left:4px solid ${BRAND_YELLOW};border-radius:4px;padding:14px 18px;margin:16px 0;">
+      <p style="margin:0;color:${BRAND_TEXT};font-size:14px;">Adding it takes less than a minute.</p>
     </div>
-    <div style="text-align:center;margin:0 0 28px;">
-      ${brandButton("Complete My Profile →", ctaUrl)}
+    <div style="text-align:center;margin:24px 0;">
+      ${brandButton("Add your name", ctaUrl)}
     </div>
-    <p style="color:#999;font-size:12px;margin:0;">
-      If you've already added your name, you can ignore this email.
-    </p>`;
+    <p style="color:${BRAND_MUTED};font-size:13px;">If you have already added it, there is nothing else to do.</p>
+    ${whatsappBlock(false)}
+    ${unsubLine}`;
 
   return {
-    subject: "أكمل ملفك الشخصي / Complete Your Profile — KLovers",
-    html: brandWrapper(isAr ? arContent : enContent, isAr, unsubLine),
+    subject: isAr ? "KLovers — أضيفي اسمك إلى حسابك" : "KLovers — add your name to your account",
+    html: brandWrapper(isAr ? arContent : enContent, isAr),
   };
 }
 
@@ -288,14 +238,11 @@ serve(async (req) => {
         }
 
         sent++;
-        // Was `Sent name request to ${profile.email}` — a student's address in
-        // the log stream. The user id identifies the row without it.
         console.log(`Sent name request to user ${profile.user_id} (${lang})`);
 
         // 1s delay to stay within Resend rate limits
         await new Promise((r) => setTimeout(r, 1000));
       } catch (emailErr) {
-        // Was `Failed to send to ${profile.email}`. Same reason.
         console.error(
           `name_reminder failed for user ${profile.user_id}:`,
           emailErr instanceof Error ? emailErr.message : String(emailErr),
