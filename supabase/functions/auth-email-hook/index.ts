@@ -10,14 +10,41 @@
 // The action links are built exactly as before - a design change must not
 // touch sign-in. Copy stays English: Auth does not tell this hook which
 // language the reader uses.
+//
+// SIGNATURE CHECK (16 Sep 2026)
+// -----------------------------
+// This endpoint is public (verify_jwt = false, as Auth hooks require). Before
+// this change anyone could POST a made-up payload and have Klovers send a real
+// "reset your password" email, from the real domain, to any address, with a
+// link of their choosing in it.
+//
+// Supabase Auth signs every hook call (Standard Webhooks). When the secret is
+// present in SEND_EMAIL_HOOK_SECRET (Dashboard -> Authentication -> Hooks ->
+// Send Email -> secret, value "v1,whsec_..."), an unsigned or wrongly signed
+// request is refused with 401.
+//
+// When the secret is NOT set, the function behaves exactly as before and logs
+// a warning. That is deliberate: a deploy must never be able to break sign-up.
+// Setting the secret is the switch that turns the check on.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 import {
   BRAND_DARK, BRAND_MUTED, WHATSAPP_URL, brandWrapper, brandButton,
 } from "../send-confirmation-email/templates/common.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const HOOK_SECRET_RAW = (Deno.env.get("SEND_EMAIL_HOOK_SECRET") ?? "").trim();
+// The dashboard shows "v1,whsec_<base64>"; the library wants the base64 part.
+const HOOK_SECRET = HOOK_SECRET_RAW.replace(/^v1,/, "").replace(/^whsec_/, "");
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
 function whatsappBlock(): string {
   return `
@@ -53,8 +80,29 @@ function accountLetter(opts: {
 }
 
 serve(async (req) => {
-  const payload = await req.json();
-  const { user, email_data } = payload;
+  const raw = await req.text();
+
+  // deno-lint-ignore no-explicit-any
+  let payload: any;
+  if (HOOK_SECRET) {
+    try {
+      const headers = Object.fromEntries(req.headers);
+      payload = new Webhook(HOOK_SECRET).verify(raw, headers);
+    } catch (e) {
+      console.warn("auth-email-hook: rejected unsigned or badly signed request:",
+        e instanceof Error ? e.message : String(e));
+      return json({ error: { http_code: 401, message: "invalid signature" } }, 401);
+    }
+  } else {
+    console.warn("auth-email-hook: SEND_EMAIL_HOOK_SECRET is not set - signature NOT checked");
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      return json({ error: { http_code: 400, message: "invalid JSON" } }, 400);
+    }
+  }
+
+  const { user, email_data } = payload ?? {};
 
   const emailAddress = user?.email;
   const tokenHash = email_data?.token_hash;
@@ -96,10 +144,7 @@ serve(async (req) => {
       note: "This link expires in 1 hour. If you didn't request this, ignore this email.",
     });
   } else {
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ success: true });
   }
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -119,14 +164,8 @@ serve(async (req) => {
 
   if (!res.ok) {
     const err = await res.text();
-    return new Response(JSON.stringify({ error: err }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: err }, 500);
   }
 
-  return new Response(JSON.stringify({ success: true }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json({ success: true });
 });
