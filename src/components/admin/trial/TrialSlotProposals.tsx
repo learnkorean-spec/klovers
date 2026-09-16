@@ -3,8 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -77,8 +75,8 @@ function explainError(raw: string): Bilingual {
   }
   if (raw.includes('meeting_url_required')) {
     return {
-      en: 'Add the Google Meet link before opening the session. A session with no link is never emailed to anyone.',
-      ar: 'حطي لينك الجوجل ميت الأول قبل ما تفتحي الحصة. الحصة اللي من غير لينك مش بيتبعتلها إيميل لحد خالص.',
+      en: 'There is no permanent trial room for this day and language. Nothing was opened. Add one to trial_rooms first.',
+      ar: 'مفيش غرفة ثابتة لليوم واللغة دول. مفيش حصة اتفتحت. لازم تتضاف غرفة في trial_rooms الأول.',
     };
   }
   if (raw.includes('proposal_already_decided')) {
@@ -132,11 +130,13 @@ const formatStart = (t: string) => formatTime((t ?? '').slice(0, 5));
  * a real trial session, which is the whole point — the email is a notification
  * and not a button, so a forwarded message or a link scanner cannot open a
  * class on her behalf.
+ *
+ * The Meet link is no longer typed here: the database gives every session the
+ * permanent room for its weekday and language (public.trial_rooms).
  */
 export default function TrialSlotProposals() {
   const qc = useQueryClient();
   const [approving, setApproving] = useState<Proposal | null>(null);
-  const [meetingUrl, setMeetingUrl] = useState('');
   const [dialogError, setDialogError] = useState<Bilingual | null>(null);
   const [listError, setListError] = useState<Bilingual | null>(null);
 
@@ -165,20 +165,19 @@ export default function TrialSlotProposals() {
   };
 
   const approve = useMutation({
-    mutationFn: async ({ id, url }: { id: string; url: string }) => {
+    mutationFn: async ({ id }: { id: string }) => {
       const { error } = await (supabase as any).rpc('fn_approve_trial_slot_proposal', {
         p_id: id,
-        p_meeting_url: url,
+        p_meeting_url: null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast({
         title: 'Trial session opened · اتفتحت الحصة التجريبية',
-        description: 'It is on the public booking page now.',
+        description: 'It is on the public booking page now, in its permanent room.',
       });
       setApproving(null);
-      setMeetingUrl('');
       setDialogError(null);
       refreshTrialViews();
     },
@@ -250,7 +249,6 @@ export default function TrialSlotProposals() {
                   size="sm"
                   onClick={() => {
                     setApproving(p);
-                    setMeetingUrl('');
                     setDialogError(null);
                   }}
                 >
@@ -303,22 +301,12 @@ export default function TrialSlotProposals() {
                 <p className="text-xs text-muted-foreground">{approving.reason}</p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="proposal-meeting-url">Google Meet link</Label>
-                <Input
-                  id="proposal-meeting-url"
-                  type="url"
-                  value={meetingUrl}
-                  onChange={(e) => setMeetingUrl(e.target.value)}
-                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                />
-                <BilingualText
-                  text={{
-                    en: 'Required: the attendance email skips any session with no link, so a session opened without one is a class nobody can be invited to.',
-                    ar: 'مطلوب: إيميل تأكيد الحضور بيتخطى أي حصة من غير لينك، يعني الحصة اللي تتفتح من غيره حصة محدش هيتدعى ليها.',
-                  }}
-                />
-              </div>
+              <BilingualText
+                text={{
+                  en: 'The Google Meet link is added for you: the permanent trial room for this day and language.',
+                  ar: 'لينك الجوجل ميت بيتحط لوحده: الغرفة الثابتة لليوم واللغة دول.',
+                }}
+              />
 
               {dialogError && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">
@@ -342,8 +330,8 @@ export default function TrialSlotProposals() {
             </Button>
             <Button
               type="button"
-              disabled={!meetingUrl.trim() || approve.isPending || !approving}
-              onClick={() => approving && approve.mutate({ id: approving.id, url: meetingUrl.trim() })}
+              disabled={approve.isPending || !approving}
+              onClick={() => approving && approve.mutate({ id: approving.id })}
               className="gap-1.5"
             >
               {approve.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
