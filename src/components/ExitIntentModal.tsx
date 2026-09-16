@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent } from "@/lib/leadTracking";
+import { getAttribution } from "@/lib/leadSession";
 import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "exit_modal_shown";
@@ -111,8 +112,18 @@ const ExitIntentModal = () => {
         cta_label: "exit_intent_hangul_sheet",
         metadata: { email },
       });
+      const attribution = getAttribution();
       supabase.functions.invoke("submit-lead", {
-        body: { email, source: "exit_intent_hangul_sheet", name: "Hangul Sheet Request" },
+        body: {
+          email,
+          source: "exit_intent_hangul_sheet",
+          name: "Hangul Sheet Request",
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.campaign,
+          utm_content: attribution.utm_content,
+          gclid: attribution.gclid,
+        },
       }).catch(() => {});
     } catch {}
     setSubmitted(true);

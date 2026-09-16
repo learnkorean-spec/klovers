@@ -22,6 +22,7 @@ import { fetchPrivateAvailability } from "@/lib/privateAvailability";
 import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
+import { getAttribution } from "@/lib/leadSession";
 import { type TierKey, type ClassType, type Duration, tierCountries, DURATION_CLASSES, normalizeCountry, resolveCurrency, getPriceFor, formatMoney } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -506,6 +507,7 @@ const EnrollNowPage = () => {
 
   const submitLead = async () => {
     try {
+      const attribution = getAttribution();
       const { error } = await supabase.functions.invoke("submit-lead", {
         body: {
           name: name.trim(),
@@ -519,6 +521,11 @@ const EnrollNowPage = () => {
           timezone: timezone,
           source: isEgypt ? "egypt" : "stripe",
           user_id: userId || undefined,
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.campaign,
+          utm_content: attribution.utm_content,
+          gclid: attribution.gclid,
         },
       });
       if (error) {
