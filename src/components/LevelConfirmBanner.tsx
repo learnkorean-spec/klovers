@@ -27,8 +27,12 @@ import { GraduationCap, Check, Loader2 } from "lucide-react";
  * banner retires itself the moment she takes a seat, which is the same moment
  * the answer stops being editable in practice.
  *
- * Failure is silent. A dashboard that renders nothing because a level lookup
- * threw is worse than a dashboard with no banner.
+ * Failure is silent — a dashboard that renders nothing because a level lookup
+ * threw is worse than a dashboard with no banner. But note what silence cost
+ * the first version of this file: it counted `id` on pkg_group_members, a table
+ * with no such column, and the catch hid the error so completely that the
+ * banner never appeared at all. Both counts below select `user_id`, which both
+ * tables have and which is the column already being filtered on.
  */
 
 const uiLanguage = (): UiLanguage => {
@@ -50,6 +54,7 @@ const LevelConfirmBanner = () => {
   const [chosen, setChosen] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,15 +70,23 @@ const LevelConfirmBanner = () => {
           supabase.from("profiles")
             .select("course_level_key, level").eq("user_id", uid).maybeSingle(),
           supabase.from("trial_bookings")
-            .select("id", { count: "exact", head: true }).eq("user_id", uid),
+            .select("user_id", { count: "exact", head: true }).eq("user_id", uid),
           supabase.from("pkg_group_members")
-            .select("id", { count: "exact", head: true })
+            .select("user_id", { count: "exact", head: true })
             .eq("user_id", uid).eq("member_status", "active"),
           supabase.from("schedule_packages")
             .select("level").eq("is_active", true).not("level", "is", null),
         ]);
 
         if (cancelled) return;
+
+        // An error is not "no rows" — it is "we do not know". The safe answer to
+        // not knowing whether she is already seated is to stay hidden.
+        const failure = trialRes.error || seatRes.error || pkgRes.error;
+        if (failure) {
+          console.error("[LevelConfirmBanner] lookup failed:", failure);
+          return;
+        }
 
         // 1. post-trial only  2. not seated yet
         if ((trialRes.count ?? 0) === 0) return;
@@ -106,10 +119,11 @@ const LevelConfirmBanner = () => {
   const confirm = async () => {
     if (!chosen || saving) return;
     setSaving(true);
+    setSaveFailed(false);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const uid = sessionData.session?.user.id;
-      if (!uid) return;
+      if (!uid) throw new Error("no session");
 
       // Both columns. `course_level_key` is what hold_my_seat reads; `level` is
       // what assign_student_to_pkg_group still reads. They have disagreed on
@@ -123,7 +137,10 @@ const LevelConfirmBanner = () => {
 
       setConfirmed(true);
     } catch (err) {
+      // A save that failed must not look like one that worked: she would go on
+      // to book a seat at the level she was trying to correct.
       console.error("[LevelConfirmBanner] could not save:", err);
+      setSaveFailed(true);
     } finally {
       setSaving(false);
     }
@@ -183,6 +200,14 @@ const LevelConfirmBanner = () => {
                     {isAr ? "تأكيد" : "Confirm"}
                   </Button>
                 </div>
+
+                {saveFailed && (
+                  <p className="text-sm text-destructive mt-2" role="alert">
+                    {isAr
+                      ? "لم يُحفظ المستوى. حاولي مرة أخرى، أو راسلينا على واتساب."
+                      : "That did not save. Try again, or message us on WhatsApp."}
+                  </p>
+                )}
               </div>
             )}
           </div>
