@@ -71,17 +71,31 @@ const VALID_CLASS_TYPES: ClassType[] = ["group", "private"];
 const VALID_DURATIONS: Duration[] = [1, 3, 6];
 
 // ---------------------------------------------------------------------------
-// Tier resolution.
+// What decides the tier.
 //
-// The tier decides the price, so it cannot come from the browser. It used to:
-// the request body carried it and the only check was that it named one of the
-// three tiers. The pricing page's country picker was therefore a price picker —
-// a student in Dubai selecting "Egypt" paid $130 for the six-month group course
-// instead of $300, and $250 instead of $580 for the private one.
+// The tier is a statement about where a student LIVES — that is what the three
+// price bands are for. It is not a statement about where the request came from,
+// and the two part company constantly: a student who lives in Cairo pays while
+// visiting Riyadh, an expatriate in Jeddah pays with an Egyptian card, anyone
+// at all is behind a VPN.
 //
-// These three tables mirror tierCountries in src/lib/stripePrices.ts. They are
-// duplicated rather than imported because an edge function cannot import from
-// the client bundle; if a country moves tier, both files change together.
+// So only a country that someone has actually stated prices anything:
+//
+//   1. profiles.country                      — stored, deliberate, correctable
+//   2. residence_country in the request      — the enrol page's own country
+//                                              question; written to the profile
+//                                              so it becomes (1) next time
+//   3. neither                               — the submitted tier, as before
+//
+// The IP country and the browser timezone are recorded in the Stripe session
+// metadata and price NOTHING. They exist so a mismatch is visible and can be
+// reviewed, which is the honest thing a guess can do here: guessing upward
+// overcharges a real student and loses the sale, and that is a worse failure
+// than the discount it would prevent.
+//
+// tierCountries is duplicated from src/lib/stripePrices.ts because an edge
+// function cannot import from the client bundle. If a country moves tier, both
+// files change together.
 // ---------------------------------------------------------------------------
 
 const tierCountries: Record<TierKey, string[]> = {
@@ -98,7 +112,7 @@ function getTierForCountry(country: string | null): TierKey | null {
   return null;
 }
 
-/** ISO 3166-1 alpha-2 → the country name tierCountries uses. */
+/** ISO 3166-1 alpha-2 → the country name tierCountries uses. Review flag only. */
 const ISO_TO_COUNTRY: Record<string, string> = {
   EG: "Egypt", MA: "Morocco", TN: "Tunisia", DZ: "Algeria", LY: "Libya",
   JO: "Jordan", LB: "Lebanon", IQ: "Iraq", SY: "Syria", SD: "Sudan", YE: "Yemen",
@@ -110,72 +124,14 @@ const ISO_TO_COUNTRY: Record<string, string> = {
   CA: "Canada", AU: "Australia", JP: "Japan", KR: "South Korea", CN: "China",
 };
 
-/**
- * IANA timezone → country, for the countries that have a tier.
- *
- * The enrol page already sends the browser timezone in schedule.timezone, and
- * profiles.country is empty for most profiles, so this is the signal that
- * actually resolves most students. Only zones that name exactly one priced
- * country are listed; a wrong guess here is a wrong price.
- */
-const TIMEZONE_TO_COUNTRY: Record<string, string> = {
-  "africa/cairo": "Egypt",
-  "africa/casablanca": "Morocco",
-  "africa/el_aaiun": "Morocco",
-  "africa/tunis": "Tunisia",
-  "africa/algiers": "Algeria",
-  "africa/tripoli": "Libya",
-  "africa/khartoum": "Sudan",
-  "asia/amman": "Jordan",
-  "asia/beirut": "Lebanon",
-  "asia/baghdad": "Iraq",
-  "asia/damascus": "Syria",
-  "asia/aden": "Yemen",
-  "asia/kuala_lumpur": "Malaysia",
-  "asia/kuching": "Malaysia",
-  "asia/jakarta": "Indonesia",
-  "asia/pontianak": "Indonesia",
-  "asia/makassar": "Indonesia",
-  "asia/jayapura": "Indonesia",
-  "asia/bangkok": "Thailand",
-  "asia/ho_chi_minh": "Vietnam",
-  "asia/saigon": "Vietnam",
-  "asia/manila": "Philippines",
-  "asia/kolkata": "India",
-  "asia/calcutta": "India",
-  "asia/karachi": "Pakistan",
-  "america/sao_paulo": "Brazil",
-  "america/bahia": "Brazil",
-  "america/fortaleza": "Brazil",
-  "america/recife": "Brazil",
-  "america/mexico_city": "Mexico",
-  "america/monterrey": "Mexico",
-  "america/bogota": "Colombia",
-  "america/argentina/buenos_aires": "Argentina",
-  "europe/istanbul": "Turkey",
-  "asia/istanbul": "Turkey",
-  "asia/dubai": "UAE",
-  "asia/riyadh": "Saudi Arabia",
-  "asia/qatar": "Qatar",
-  "asia/bahrain": "Bahrain",
-  "asia/muscat": "Oman",
-  "asia/kuwait": "Kuwait",
-  "europe/london": "United Kingdom",
-  "europe/berlin": "Germany",
-  "europe/paris": "France",
-  "asia/tokyo": "Japan",
-  "asia/seoul": "South Korea",
-  "asia/shanghai": "China",
-  "asia/hong_kong": "China",
-};
-
 /** Country values that carry no information, whatever the student typed. */
 const PLACEHOLDER_COUNTRIES = ["", "unknown", "other", "n/a", "na", "none", "-"];
 
 /** Spellings of Egypt that occur in profiles.country, plus its cities. */
 const EGYPT_ALIASES = ["egypt", "eg", "egy", "cairo", "ismailia", "alexandria", "giza", "مصر", "القاهرة"];
 
-function normalizeStoredCountry(country?: string | null): string | null {
+/** A stated country, canonicalised, or null when it states nothing. */
+function normalizeCountry(country?: string | null): string | null {
   const raw = (country ?? "").trim();
   const folded = raw.toLowerCase();
   if (PLACEHOLDER_COUNTRIES.includes(folded)) return null;
@@ -183,22 +139,16 @@ function normalizeStoredCountry(country?: string | null): string | null {
   return raw || null;
 }
 
-function countryFromIsoHeader(req: Request): string | null {
-  // Supabase Edge Functions sit behind Cloudflare; the other headers are here
-  // so the function keeps working if it is ever fronted by something else.
+/** Where the request came from, as far as the edge can tell. A flag, not a price. */
+function geoCountry(req: Request): string | null {
   const iso =
     req.headers.get("cf-ipcountry") ||
     req.headers.get("x-vercel-ip-country") ||
     req.headers.get("x-country-code") ||
     "";
   const code = iso.trim().toUpperCase();
-  if (!code || code === "XX" || code === "T1") return null; // Cloudflare's unknown/Tor
-  return ISO_TO_COUNTRY[code] ?? null;
-}
-
-function countryFromTimezone(timezone?: string | null): string | null {
-  const tz = (timezone ?? "").trim().toLowerCase();
-  return TIMEZONE_TO_COUNTRY[tz] ?? null;
+  if (!code || code === "XX" || code === "T1") return null; // Cloudflare unknown / Tor
+  return ISO_TO_COUNTRY[code] ?? code;
 }
 
 const rateLimitMap = new Map<string, number[]>();
@@ -220,8 +170,8 @@ function isRateLimited(ip: string): boolean {
  * The auth user with this email, looked at every page.
  *
  * listUsers() returns one page — 50 rows by default — and was called without
- * one. With 107 profiles, every user past the first page failed to match: they
- * were treated as first-time and handed the 10% discount a second time, and
+ * one. With over a hundred profiles, every user past the first page failed to
+ * match: they were treated as first-time and handed the 10% discount again, and
  * their referral bonus was skipped because the counts it needs key off the id
  * this lookup never found.
  */
@@ -259,7 +209,17 @@ serve(async (req) => {
       );
     }
 
-    const { tier, classType, duration, name, email, schedule, level, package_id } = await req.json();
+    const {
+      tier,
+      classType,
+      duration,
+      name,
+      email,
+      schedule,
+      level,
+      package_id,
+      residence_country,
+    } = await req.json();
 
     // Validate inputs
     if (!email || typeof email !== "string") throw new Error("Missing email");
@@ -286,38 +246,45 @@ serve(async (req) => {
 
     const matchedUser = await findUserByEmail(supabaseAdmin, email);
 
-    // --- Tier: decided here, not by the caller --------------------------------
+    // --- The country, then the tier ------------------------------------------
     //
-    // Stored country first (the student or an admin set it deliberately), then
-    // the CDN's view of where the request came from, then the timezone the
-    // enrol page sends. The submitted tier is honoured only when all three are
-    // silent, so a student the server cannot place is priced exactly as before
-    // rather than being refused or overcharged.
+    // profiles is keyed by its own `id`; the auth user is `user_id`. They are
+    // never equal — `id = user_id` holds for 0 of 103 rows — and reading by the
+    // wrong one was why #444 never saw a stored country at all.
 
     let storedCountry: string | null = null;
     if (matchedUser) {
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("country")
-        .eq("id", matchedUser.id)
+        .eq("user_id", matchedUser.id)
         .maybeSingle();
-      storedCountry = normalizeStoredCountry(profile?.country);
+      storedCountry = normalizeCountry(profile?.country);
     }
 
-    const resolvedCountry =
-      storedCountry ??
-      countryFromIsoHeader(req) ??
-      countryFromTimezone(schedule?.timezone);
+    const statedCountry = normalizeCountry(
+      typeof residence_country === "string" ? residence_country.slice(0, 60) : null,
+    );
 
-    const serverTier = getTierForCountry(resolvedCountry);
-    const effectiveTier: TierKey = serverTier ?? (tier as TierKey);
-    const tierSource = storedCountry
-      ? "profile"
-      : countryFromIsoHeader(req)
-        ? "geo"
-        : countryFromTimezone(schedule?.timezone)
-          ? "timezone"
-          : "client";
+    // The enrol page asks where the student lives; keep the answer, so the next
+    // checkout reads it from the profile instead of taking it on trust again.
+    if (!storedCountry && statedCountry && matchedUser) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ country: statedCountry })
+        .eq("user_id", matchedUser.id);
+    }
+
+    const pricingCountry = storedCountry ?? statedCountry;
+    const countrySource = storedCountry ? "profile" : statedCountry ? "stated" : "none";
+
+    const countryTier = getTierForCountry(pricingCountry);
+    const effectiveTier: TierKey = countryTier ?? (tier as TierKey);
+
+    // Recorded, never priced from.
+    const ipCountry = geoCountry(req);
+    const browserTimezone = (schedule?.timezone || "").slice(0, 60);
+    const geoDisagrees = !!(ipCountry && pricingCountry && ipCountry !== pricingCountry);
 
     const priceEntry = priceMap[effectiveTier]?.[classType as ClassType]?.[Number(duration) as Duration];
     if (!priceEntry) throw new Error("No price found for selection");
@@ -400,8 +367,11 @@ serve(async (req) => {
         email: email.slice(0, 254),
         tier: effectiveTier,
         requested_tier: String(tier),
-        tier_source: tierSource,
-        resolved_country: (resolvedCountry || "").slice(0, 60),
+        pricing_country: (pricingCountry || "").slice(0, 60),
+        country_source: countrySource,
+        // Flags for review. Neither of these changed the price.
+        ip_country: (ipCountry || "").slice(0, 60),
+        geo_disagrees: geoDisagrees ? "true" : "false",
         class_type: classType,
         duration: String(duration),
         level: (level || "").slice(0, 50),
@@ -409,7 +379,7 @@ serve(async (req) => {
         preferred_days: (schedule?.preferred_days ?? []).slice(0, 3).join(",").slice(0, 100),
         preferred_time: (schedule?.preferred_time || "").slice(0, 50),
         preferred_start: (schedule?.preferred_start || "").slice(0, 50),
-        timezone: (schedule?.timezone || "").slice(0, 60),
+        timezone: browserTimezone,
         first_time_discount: applyDiscount ? "true" : "false",
         referral_bonus_percent: String(referralExtra),
       },
