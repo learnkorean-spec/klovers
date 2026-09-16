@@ -1,168 +1,157 @@
+// The day-before reminder for paid group classes.
+//
+// Rewritten 16 Sep 2026. The previous version had no cron job (it never ran),
+// no authorisation, wrote English only, and put one global link
+// (app_settings.zoom_meeting_url) in every letter instead of the group's room.
+//
+// Now:
+//   * Invoked hourly by pg_cron (trigger_class_reminders, :50).
+//   * Who: fn_class_reminders_due() - seated students of STARTED groups with a
+//     session tomorrow (Cairo), not yet reminded for that session.
+//   * What: the `class_reminder` letter via send-confirmation-email, in the
+//     class language, with the group's own meeting_url and WhatsApp.
+//   * Once: each send is recorded in class_reminder_sends.
+//   * When: live runs send only 09:00-21:59 Cairo; outside that they list who
+//     is due and send nothing.
+//   * Safety: `dry_run` defaults to TRUE. The cron passes `dry_run: false`.
+//
+// verify_jwt is false in supabase/config.toml; the function authorises itself
+// (cron secret via Vault, or an admin JWT).
+
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
+import { cairoHour, zonedMidnightUtc } from "../_shared/cairoTime.ts";
+import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const SITE_URL = "https://kloversegy.com";
-const LOGO_URL = "https://kloversegy.com/klovers-logo.jpg";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-function reminderEmail(name: string, sessionDate: string, startTime: string, durationMin: number, groupName: string, level: string, zoomUrl: string | null, reminderType: "24h" | "1h") {
-  const firstName = name?.split(" ")[0] || "there";
-  const formattedDate = new Date(sessionDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  const [h, m] = startTime.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const formattedTime = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ampm}`;
-  const endH = Math.floor((h * 60 + m + durationMin) / 60);
-  const endM = (h * 60 + m + durationMin) % 60;
-  const endAmpm = endH >= 12 ? "PM" : "AM";
-  const formattedEnd = `${endH % 12 || 12}:${String(endM).padStart(2, "0")} ${endAmpm}`;
+const SEND_FROM_HOUR = 9;
+const SEND_UNTIL_HOUR = 22;
 
-  const isUrgent = reminderType === "1h";
-  const headerColor = isUrgent ? "#FFFF00" : "#000000";
-  const headerTextColor = isUrgent ? "#000000" : "#FFFF00";
-  const badgeText = isUrgent ? "⏰ Class in 1 Hour!" : "📅 Class Tomorrow";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
+};
 
-  const joinButton = zoomUrl
-    ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding: 8px 0 24px;">
-        <a href="${zoomUrl}" style="background:#000000;color:#FFFF00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;display:inline-block;">
-          📹 Join Class →
-        </a>
-      </td></tr></table>`
-    : "";
-
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-  <!-- Header -->
-  <tr><td style="background:${headerColor};padding:28px 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="Klovers" style="width:52px;height:52px;border-radius:50%;border:3px solid ${headerTextColor};" />
-    <h2 style="color:${headerTextColor};margin:10px 0 4px;font-size:20px;font-weight:700;">${badgeText}</h2>
-    <p style="color:${headerTextColor};opacity:0.8;margin:0;font-size:13px;">Korean Language Academy</p>
-  </td></tr>
-  <!-- Body -->
-  <tr><td style="padding:32px 40px;color:#333333;">
-    <p style="font-size:16px;margin:0 0 20px;">Hi <strong>${firstName}</strong>,</p>
-    <p style="font-size:16px;margin:0 0 24px;line-height:1.6;">
-      ${isUrgent
-        ? "Your Korean class starts in about <strong>1 hour</strong>. Get ready!"
-        : "Don't forget — your Korean class is <strong>tomorrow</strong>. See you there!"}
-    </p>
-
-    <!-- Session Details -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:10px;margin-bottom:24px;">
-      <tr><td style="padding:20px 24px;">
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="padding:6px 0;font-size:13px;color:#666;width:40%;">📅 Date</td>
-            <td style="padding:6px 0;font-size:14px;font-weight:600;color:#111;">${formattedDate}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;font-size:13px;color:#666;">⏰ Time</td>
-            <td style="padding:6px 0;font-size:14px;font-weight:600;color:#111;">${formattedTime} – ${formattedEnd} (Cairo)</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;font-size:13px;color:#666;">👥 Group</td>
-            <td style="padding:6px 0;font-size:14px;font-weight:600;color:#111;">${groupName}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;font-size:13px;color:#666;">🎓 Level</td>
-            <td style="padding:6px 0;font-size:14px;font-weight:600;color:#111;">${level}</td>
-          </tr>
-        </table>
-      </td></tr>
-    </table>
-
-    ${joinButton}
-
-    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:24px;">
-      <a href="${SITE_URL}/dashboard" style="background:#f3f4f6;color:#111;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;display:inline-block;border:1px solid #e5e7eb;">
-        View My Dashboard
-      </a>
-    </td></tr></table>
-
-    <hr style="border:none;border-top:1px solid #E5E7EB;margin:8px 0 20px;" />
-    <p style="color:#9ca3af;font-size:13px;margin:0;line-height:1.6;">
-      Keep practicing between sessions — even 10 minutes a day makes a huge difference! 화이팅! 💪<br /><br />
-      <em>Reham · Klovers Academy</em>
-    </p>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>`;
+interface DueRow {
+  session_id: string;
+  user_id: string;
+  session_date: string;
+  group_name: string | null;
+  start_time: string | null;
+  duration_min: number | null;
+  timezone: string | null;
+  level: string | null;
+  meeting_url: string;
+  name: string | null;
+  email: string;
+  language: string;
+  unsubscribe_token: string | null;
+  email_unsubscribed: boolean;
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, reply_to: REPLY_TO_EMAIL, to: [to], subject, html }),
-  });
-  return res.ok;
+const CITY_AR: Record<string, string> = { "Africa/Cairo": "القاهرة" };
+
+/** "الخميس 17 سبتمبر · 15:00 بتوقيت القاهرة" / "Thursday 17 September · 15:00 Cairo" */
+function whenLabel(date: string, time: string | null, tz: string, isAr: boolean): string {
+  const noon = new Date(zonedMidnightUtc(date, tz).getTime() + 12 * 60 * 60_000);
+  const day = new Intl.DateTimeFormat(isAr ? "ar-EG-u-nu-latn" : "en-GB", {
+    weekday: "long", day: "numeric", month: "long", timeZone: tz,
+  }).format(noon);
+  const hhmm = (time ?? "").slice(0, 5);
+  const city = tz.split("/").pop()!.replace(/_/g, " ");
+  if (!hhmm) return day;
+  return isAr
+    ? `${day} · ${hhmm} بتوقيت ${CITY_AR[tz] ?? city}`
+    : `${day} · ${hhmm} ${city}`;
 }
 
 Deno.serve(async (req) => {
-  // Allow cron trigger (no auth) or manual trigger (with auth)
-  const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-  const reminderType: "24h" | "1h" | "both" = body.type ?? "both";
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  if (!RESEND_API_KEY) {
-    return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500 });
-  }
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
-  // Fetch Zoom URL from app_settings
-  const { data: zoomSetting } = await supabase
-    .from("app_settings")
-    .select("value")
-    .eq("key", "zoom_meeting_url")
-    .maybeSingle();
-  const zoomUrl = (zoomSetting as any)?.value || null;
-
-  const results: string[] = [];
-
-  // ── 24-hour reminder ───────────────────────────────────────────────
-  if (reminderType === "24h" || reminderType === "both") {
-    // Sessions happening tomorrow in Cairo — the actual comparison happens
-    // inside get_sessions_for_reminder_24h(), via `AT TIME ZONE 'Africa/Cairo'`
-    // (a real IANA conversion, correct across the DST boundary), not here.
-    const { data: sessions24h } = await supabase.rpc("get_sessions_for_reminder_24h") as any;
-
-    for (const s of sessions24h ?? []) {
-      const ok = await sendEmail(
-        s.email,
-        "📅 Your Korean class is tomorrow! – Klovers",
-        reminderEmail(s.name, s.session_date, s.start_time, s.duration_min, s.group_name, s.level, zoomUrl, "24h")
-      );
-      results.push(`24h → ${s.email}: ${ok ? "✓" : "✗"}`);
+  try {
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+      throw new Error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set");
     }
-  }
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-  // ── 1-hour reminder ────────────────────────────────────────────────
-  if (reminderType === "1h" || reminderType === "both") {
-    const { data: sessions1h } = await supabase.rpc("get_sessions_for_reminder_1h") as any;
-
-    for (const s of sessions1h ?? []) {
-      const ok = await sendEmail(
-        s.email,
-        "⏰ Your Korean class starts in 1 hour! – Klovers",
-        reminderEmail(s.name, s.session_date, s.start_time, s.duration_min, s.group_name, s.level, zoomUrl, "1h")
-      );
-      results.push(`1h  → ${s.email}: ${ok ? "✓" : "✗"}`);
+    if (!(await isCronOrAdmin(req, supabase))) {
+      return json({ ok: false, error: "Unauthorized" }, 401);
     }
-  }
 
-  return new Response(JSON.stringify({ sent: results.length, results }), {
-    headers: { "Content-Type": "application/json" },
-  });
+    let body: { dry_run?: boolean } = {};
+    try { body = await req.json(); } catch { /* empty body = dry run */ }
+    const dryRun = body?.dry_run !== false;
+
+    const hourNow = cairoHour();
+    const outsideHours = hourNow < SEND_FROM_HOUR || hourNow >= SEND_UNTIL_HOUR;
+    const holdSend = dryRun || outsideHours;
+
+    const { data, error } = await supabase.rpc("fn_class_reminders_due");
+    if (error) throw new Error(`fn_class_reminders_due: ${error.message}`);
+    const rows = (data ?? []) as DueRow[];
+
+    const recipients: Array<{ session_id: string; email: string; group: string | null; language: string; when: string }> = [];
+    let sent = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const r of rows) {
+      const isAr = r.language === "ar";
+      const tz = r.timezone || "Africa/Cairo";
+      const when = whenLabel(r.session_date, r.start_time, tz, isAr);
+
+      if (r.email_unsubscribed) {
+        if (!holdSend) {
+          await supabase.from("class_reminder_sends")
+            .insert({ session_id: r.session_id, user_id: r.user_id });
+        }
+        skipped++;
+        continue;
+      }
+
+      recipients.push({ session_id: r.session_id, email: r.email, group: r.group_name, language: r.language, when });
+      if (holdSend) continue;
+
+      try {
+        const { error: sendErr } = await supabase.functions.invoke("send-confirmation-email", {
+          body: {
+            email: r.email,
+            name: (r.name || "").trim() || (isAr ? "طالبتنا العزيزة" : "there"),
+            language: isAr ? "ar" : "en",
+            template: "class_reminder",
+            level: r.level,
+            group_name: r.group_name,
+            class_link_url: r.meeting_url,
+            class_time_label: when,
+            ...(r.unsubscribe_token ? { unsubscribe_token: r.unsubscribe_token } : {}),
+          },
+        });
+        if (sendErr) throw new Error(sendErr.message);
+        const { error: stampErr } = await supabase.from("class_reminder_sends")
+          .insert({ session_id: r.session_id, user_id: r.user_id });
+        if (stampErr) errors.push(`${r.session_id}/${r.user_id}: sent but not recorded - ${stampErr.message}`);
+        sent++;
+      } catch (e) {
+        errors.push(`${r.session_id}/${r.user_id}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+
+    const result = {
+      ok: true, dry_run: dryRun, cairo_hour: hourNow,
+      held_outside_hours: !dryRun && outsideHours,
+      matched: rows.length, sent, skipped, recipients, errors,
+    };
+    console.log("class-reminders:", JSON.stringify(result));
+    return json(result);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("class-reminders error:", msg);
+    return json({ ok: false, error: msg }, 500);
+  }
 });
