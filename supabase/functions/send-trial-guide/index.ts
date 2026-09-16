@@ -24,7 +24,7 @@
 // call before a line of this file runs — measured on 15 Sep 2026.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { cairoDateKey, shiftDateKey } from "../_shared/cairoTime.ts";
+import { cairoDateKey, shiftDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -49,6 +49,8 @@ const SIGNED_URL_TTL_SECONDS = 7 * 24 * 60 * 60;
 const GUIDE_URL_OVERRIDE_AR = Deno.env.get("TRIAL_GUIDE_URL_AR") ?? "";
 const GUIDE_URL_OVERRIDE_EN = Deno.env.get("TRIAL_GUIDE_URL_EN") ?? "";
 
+const DEFAULT_SLOT_TZ = "Africa/Cairo";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
@@ -60,6 +62,7 @@ interface Booking {
   email: string | null;
   trial_date: string;
   starts_at: string | null;
+  slot_id: string | null;
   user_id: string | null;
   level: string | null;
   class_language: string | null;
@@ -67,27 +70,64 @@ interface Booking {
   guide_sent_at: string | null;
 }
 
+interface SlotTime {
+  start_time: string | null;
+  timezone: string | null;
+}
+
 const SELECT_COLUMNS =
-  "id, name, email, trial_date, starts_at, user_id, level, class_language, meeting_url, guide_sent_at";
+  "id, name, email, trial_date, starts_at, slot_id, user_id, level, class_language, meeting_url, guide_sent_at";
 
 function pickLanguage(classLanguage: string | null): "ar" | "en" {
   return classLanguage === "arabic" ? "ar" : "en";
 }
 
-/** "الجمعة 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo" */
-function classTimeLabel(startsAt: string | null, lang: "ar" | "en"): string {
+/**
+ * "الجمعة 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
+ *
+ * Built from `trial_date` and the slot's own `start_time`, NOT from
+ * `starts_at`. Eight bookings for Friday 18 September carry a `starts_at` of
+ * 25 September - `trial_date` is the column every student-facing message
+ * reads, so it is the one the student was told and the only one that can be
+ * printed back to her. One of those eight has confirmed she is coming.
+ * See claude/FRIDAY_18_SEP_DATE_MISMATCH_2026-09-15.md and PR #426, which
+ * made the same correction in the post-class letter.
+ */
+function classTimeLabel(
+  trialDate: string,
+  slot: SlotTime | undefined,
+  startsAt: string | null,
+  lang: "ar" | "en",
+): string {
+  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+  const tz = slot?.timezone || DEFAULT_SLOT_TZ;
+  const time = (slot?.start_time ?? "").slice(0, 5);
+
+  // The wall-clock pair the slot is keyed on: a date, and a time in that
+  // date's own zone. Midday keeps the weekday right either side of a DST
+  // change; the printed time is the slot's literal start_time, unconverted.
+  if (trialDate && time) {
+    const noon = new Date(zonedMidnightUtc(trialDate, tz).getTime() + 12 * 60 * 60_000);
+    const day = new Intl.DateTimeFormat(locale, {
+      weekday: "long", day: "numeric", month: "long", timeZone: tz,
+    }).format(noon);
+    return lang === "ar"
+      ? `${day} · ${time} بتوقيت القاهرة`
+      : `${day} · ${time} Cairo`;
+  }
+
+  // No slot row: fall back to the instant, which is all there is.
   if (!startsAt) return "";
   const d = new Date(startsAt);
-  const locale = lang === "ar" ? "ar-EG" : "en-GB";
   const day = new Intl.DateTimeFormat(locale, {
-    weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Cairo",
+    weekday: "long", day: "numeric", month: "long", timeZone: DEFAULT_SLOT_TZ,
   }).format(d);
-  const time = new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Africa/Cairo",
+  const fallbackTime = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit", minute: "2-digit", hour12: false, timeZone: DEFAULT_SLOT_TZ,
   }).format(d);
   return lang === "ar"
-    ? `${day} · ${time} بتوقيت القاهرة`
-    : `${day} · ${time} Cairo`;
+    ? `${day} · ${fallbackTime} بتوقيت القاهرة`
+    : `${day} · ${fallbackTime} Cairo`;
 }
 
 Deno.serve(async (req) => {
@@ -141,7 +181,24 @@ Deno.serve(async (req) => {
     if (error) throw new Error(`query: ${error.message}`);
     const rows = (data ?? []) as Booking[];
 
-    const recipients: Array<{ id: string; email: string; trial_date: string; language: string }> = [];
+    // One round trip for the slot wall-clocks, keyed by slot id.
+    const slotIds = [...new Set(rows.map(r => r.slot_id).filter((s): s is string => Boolean(s)))];
+    const slots = new Map<string, SlotTime>();
+    if (slotIds.length > 0) {
+      const { data: slotRows, error: slotErr } = await supabase
+        .from("trial_slots")
+        .select("id, start_time, timezone")
+        .in("id", slotIds);
+      if (slotErr) console.error("slot times:", slotErr.message);
+      for (const s of slotRows ?? []) {
+        slots.set(s.id as string, {
+          start_time: (s.start_time as string) ?? null,
+          timezone: (s.timezone as string) ?? null,
+        });
+      }
+    }
+
+    const recipients: Array<{ id: string; email: string; trial_date: string; language: string; when: string }> = [];
     let sent = 0;
     let skipped = 0;
     const errors: string[] = [];
@@ -149,6 +206,7 @@ Deno.serve(async (req) => {
     for (const b of rows) {
       if (!b.email) { skipped++; continue; }
       const lang = pickLanguage(b.class_language);
+      const when = classTimeLabel(b.trial_date, b.slot_id ? slots.get(b.slot_id) : undefined, b.starts_at, lang);
 
       let unsubscribeToken: string | undefined;
       if (b.user_id) {
@@ -168,7 +226,7 @@ Deno.serve(async (req) => {
         unsubscribeToken = profile?.unsubscribe_token ?? undefined;
       }
 
-      recipients.push({ id: b.id, email: b.email, trial_date: b.trial_date, language: lang });
+      recipients.push({ id: b.id, email: b.email, trial_date: b.trial_date, language: lang, when });
       if (dryRun) continue;
 
       // Signed per letter, and the letter is abandoned if signing fails. A
@@ -189,7 +247,7 @@ Deno.serve(async (req) => {
             template: "trial_guide",
             level: b.level,
             guide_url: guideUrl,
-            class_time_label: classTimeLabel(b.starts_at, lang),
+            class_time_label: when,
             ...(b.meeting_url ? { meeting_url: b.meeting_url } : {}),
             ...(unsubscribeToken ? { unsubscribe_token: unsubscribeToken } : {}),
           },
