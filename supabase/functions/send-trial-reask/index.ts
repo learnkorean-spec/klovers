@@ -19,11 +19,14 @@
 // 15 Sep 2026.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { cairoDateKey } from "../_shared/cairoTime.ts";
+import { cairoDateKey, zonedMidnightUtc } from "../_shared/cairoTime.ts";
 import { isCronOrAdmin } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+const DEFAULT_SLOT_TZ = "Africa/Cairo";
+const DEFAULT_DURATION_MIN = 30;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,6 +39,7 @@ interface Booking {
   email: string | null;
   trial_date: string;
   starts_at: string | null;
+  slot_id: string | null;
   duration_min: number | null;
   user_id: string | null;
   level: string | null;
@@ -43,28 +47,62 @@ interface Booking {
   confirmation_token: string | null;
 }
 
-const SELECT_COLUMNS =
-  "id, name, email, trial_date, starts_at, duration_min, user_id, level, class_language, confirmation_token";
+interface SlotTime {
+  start_time: string | null;
+  timezone: string | null;
+}
 
-const DEFAULT_DURATION_MIN = 30;
+const SELECT_COLUMNS =
+  "id, name, email, trial_date, starts_at, slot_id, duration_min, user_id, level, class_language, confirmation_token";
 
 function pickLanguage(classLanguage: string | null): "ar" | "en" {
   return classLanguage === "arabic" ? "ar" : "en";
 }
 
-/** "الجمعة 18 سبتمبر · 4:30 م بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo" */
-function classTimeLabel(startsAt: string | null, lang: "ar" | "en"): string {
+/**
+ * "الجمعة 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
+ *
+ * From `trial_date` and the slot's own `start_time`, never from `starts_at`.
+ * Eight bookings on Friday 18 September carried a `starts_at` of 25 September,
+ * seven of them silent and therefore exactly the readers of this letter - it
+ * would have offered them next Friday. `trial_date` is the date each of them
+ * was told. Same correction as PR #426 (post-class letter) and #434 (book
+ * letter); this was the last student-facing reader of `starts_at`.
+ */
+function classTimeLabel(
+  trialDate: string,
+  slot: SlotTime | undefined,
+  startsAt: string | null,
+  lang: "ar" | "en",
+): string {
+  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+  const tz = slot?.timezone || DEFAULT_SLOT_TZ;
+  const time = (slot?.start_time ?? "").slice(0, 5);
+
+  if (trialDate && time) {
+    // Midday on that date, in the slot's own zone: the weekday stays right
+    // either side of a DST change, and the printed time is the slot's literal
+    // start_time, unconverted.
+    const noon = new Date(zonedMidnightUtc(trialDate, tz).getTime() + 12 * 60 * 60_000);
+    const day = new Intl.DateTimeFormat(locale, {
+      weekday: "long", day: "numeric", month: "long", timeZone: tz,
+    }).format(noon);
+    return lang === "ar"
+      ? `${day} · ${time} بتوقيت القاهرة`
+      : `${day} · ${time} Cairo`;
+  }
+
   if (!startsAt) return "";
   const d = new Date(startsAt);
-  const day = new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-GB", {
-    weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Cairo",
+  const day = new Intl.DateTimeFormat(locale, {
+    weekday: "long", day: "numeric", month: "long", timeZone: DEFAULT_SLOT_TZ,
   }).format(d);
-  const time = new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-GB", {
-    hour: "numeric", minute: "2-digit", hour12: lang === "ar", timeZone: "Africa/Cairo",
+  const fallbackTime = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit", minute: "2-digit", hour12: false, timeZone: DEFAULT_SLOT_TZ,
   }).format(d);
   return lang === "ar"
-    ? `${day} · ${time} بتوقيت القاهرة`
-    : `${day} · ${time} Cairo`;
+    ? `${day} · ${fallbackTime} بتوقيت القاهرة`
+    : `${day} · ${fallbackTime} Cairo`;
 }
 
 function durationLabel(minutes: number, lang: "ar" | "en"): string {
@@ -135,7 +173,24 @@ Deno.serve(async (req) => {
     if (error) throw new Error(`query: ${error.message}`);
     const rows = (data ?? []) as Booking[];
 
-    const recipients: Array<{ id: string; name: string | null; email: string; language: string }> = [];
+    // One round trip for the slot wall-clocks, keyed by slot id.
+    const slotIds = [...new Set(rows.map(r => r.slot_id).filter((s): s is string => Boolean(s)))];
+    const slots = new Map<string, SlotTime>();
+    if (slotIds.length > 0) {
+      const { data: slotRows, error: slotErr } = await supabase
+        .from("trial_slots")
+        .select("id, start_time, timezone")
+        .in("id", slotIds);
+      if (slotErr) console.error("slot times:", slotErr.message);
+      for (const s of slotRows ?? []) {
+        slots.set(s.id as string, {
+          start_time: (s.start_time as string) ?? null,
+          timezone: (s.timezone as string) ?? null,
+        });
+      }
+    }
+
+    const recipients: Array<{ id: string; name: string | null; email: string; language: string; when: string }> = [];
     let sent = 0;
     let skipped = 0;
     const errors: string[] = [];
@@ -143,6 +198,7 @@ Deno.serve(async (req) => {
     for (const b of rows) {
       if (!b.email || !b.confirmation_token) { skipped++; continue; }
       const lang = pickLanguage(b.class_language);
+      const when = classTimeLabel(b.trial_date, b.slot_id ? slots.get(b.slot_id) : undefined, b.starts_at, lang);
 
       let unsubscribeToken: string | undefined;
       if (b.user_id) {
@@ -163,7 +219,7 @@ Deno.serve(async (req) => {
         unsubscribeToken = profile?.unsubscribe_token ?? undefined;
       }
 
-      recipients.push({ id: b.id, name: b.name, email: b.email, language: lang });
+      recipients.push({ id: b.id, name: b.name, email: b.email, language: lang, when });
       if (dryRun) continue;
 
       try {
@@ -175,7 +231,7 @@ Deno.serve(async (req) => {
             template: "trial_reask",
             level: b.level,
             confirmation_token: b.confirmation_token,
-            class_time_label: classTimeLabel(b.starts_at, lang),
+            class_time_label: when,
             duration_label: durationLabel(b.duration_min ?? DEFAULT_DURATION_MIN, lang),
             ...(unsubscribeToken ? { unsubscribe_token: unsubscribeToken } : {}),
           },
