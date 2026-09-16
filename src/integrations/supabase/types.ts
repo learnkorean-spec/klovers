@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -163,8 +163,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_error_log: {
+        Row: {
+          component_stack: string | null
+          created_at: string
+          id: number
+          message: string
+          stack: string | null
+          tab: string
+          url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          component_stack?: string | null
+          created_at?: string
+          id?: number
+          message: string
+          stack?: string | null
+          tab: string
+          url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          component_stack?: string | null
+          created_at?: string
+          id?: number
+          message?: string
+          stack?: string | null
+          tab?: string
+          url?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
+          category: string
           created_at: string
           id: string
           message: string
@@ -174,6 +208,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          category?: string
           created_at?: string
           id?: string
           message: string
@@ -183,6 +218,7 @@ export type Database = {
           type?: string
         }
         Update: {
+          category?: string
           created_at?: string
           id?: string
           message?: string
@@ -742,6 +778,30 @@ export type Database = {
           },
         ]
       }
+      cron_health: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: number
+          job_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: number
+          job_name: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: number
+          job_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       egp_prices: {
         Row: {
           amount_egp: number
@@ -857,33 +917,48 @@ export type Database = {
       email_sends: {
         Row: {
           attempts: number
+          bounced_at: string | null
           campaign_id: string
+          claimed_at: string | null
+          complained_at: string | null
           created_at: string
+          delivered_at: string | null
           email: string
           error: string | null
           id: string
+          resend_id: string | null
           sent_at: string | null
           status: string
           user_id: string
         }
         Insert: {
           attempts?: number
+          bounced_at?: string | null
           campaign_id: string
+          claimed_at?: string | null
+          complained_at?: string | null
           created_at?: string
+          delivered_at?: string | null
           email: string
           error?: string | null
           id?: string
+          resend_id?: string | null
           sent_at?: string | null
           status?: string
           user_id: string
         }
         Update: {
           attempts?: number
+          bounced_at?: string | null
           campaign_id?: string
+          claimed_at?: string | null
+          complained_at?: string | null
           created_at?: string
+          delivered_at?: string | null
           email?: string
           error?: string | null
           id?: string
+          resend_id?: string | null
           sent_at?: string | null
           status?: string
           user_id?: string
@@ -895,6 +970,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "email_campaigns"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "v_campaign_delivery"
+            referencedColumns: ["campaign_id"]
           },
         ]
       }
@@ -941,7 +1023,7 @@ export type Database = {
           preferred_start: string | null
           preferred_time: string | null
           receipt_nudge_sent_at: string | null
-          receipt_url: string
+          receipt_url: string | null
           rejection_followup_sent_at: string | null
           reminder_count: number
           reviewed_at: string | null
@@ -954,7 +1036,8 @@ export type Database = {
           status: string
           stripe_payment_intent_id: string | null
           timezone: string | null
-          tx_ref: string
+          trial_booking_id: string | null
+          tx_ref: string | null
           unit_price: number
           user_id: string
         }
@@ -1000,7 +1083,7 @@ export type Database = {
           preferred_start?: string | null
           preferred_time?: string | null
           receipt_nudge_sent_at?: string | null
-          receipt_url: string
+          receipt_url?: string | null
           rejection_followup_sent_at?: string | null
           reminder_count?: number
           reviewed_at?: string | null
@@ -1013,7 +1096,8 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           timezone?: string | null
-          tx_ref: string
+          trial_booking_id?: string | null
+          tx_ref?: string | null
           unit_price: number
           user_id: string
         }
@@ -1059,7 +1143,7 @@ export type Database = {
           preferred_start?: string | null
           preferred_time?: string | null
           receipt_nudge_sent_at?: string | null
-          receipt_url?: string
+          receipt_url?: string | null
           rejection_followup_sent_at?: string | null
           reminder_count?: number
           reviewed_at?: string | null
@@ -1072,7 +1156,8 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           timezone?: string | null
-          tx_ref?: string
+          trial_booking_id?: string | null
+          tx_ref?: string | null
           unit_price?: number
           user_id?: string
         }
@@ -1092,6 +1177,20 @@ export type Database = {
             referencedColumns: ["key"]
           },
           {
+            foreignKeyName: "enrollments_trial_booking_id_fkey"
+            columns: ["trial_booking_id"]
+            isOneToOne: false
+            referencedRelation: "trial_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_trial_booking_id_fkey"
+            columns: ["trial_booking_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_bookings_admin"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_enrollments_matched_batch"
             columns: ["matched_batch_id"]
             isOneToOne: false
@@ -1099,6 +1198,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      game_xp_rules: {
+        Row: {
+          game_id: string
+          is_active: boolean
+          max_rounds: number
+          xp_per_round: number
+        }
+        Insert: {
+          game_id: string
+          is_active?: boolean
+          max_rounds: number
+          xp_per_round: number
+        }
+        Update: {
+          game_id?: string
+          is_active?: boolean
+          max_rounds?: number
+          xp_per_round?: number
+        }
+        Relationships: []
       }
       group_attendance: {
         Row: {
@@ -1269,6 +1389,7 @@ export type Database = {
           created_at: string
           duration: string | null
           email: string
+          gclid: string | null
           goal: string | null
           id: string
           level: string | null
@@ -1279,12 +1400,17 @@ export type Database = {
           status: string
           timezone: string | null
           user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
         }
         Insert: {
           country?: string | null
           created_at?: string
           duration?: string | null
           email: string
+          gclid?: string | null
           goal?: string | null
           id?: string
           level?: string | null
@@ -1295,12 +1421,17 @@ export type Database = {
           status?: string
           timezone?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Update: {
           country?: string | null
           created_at?: string
           duration?: string | null
           email?: string
+          gclid?: string | null
           goal?: string | null
           id?: string
           level?: string | null
@@ -1311,6 +1442,10 @@ export type Database = {
           status?: string
           timezone?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: [
           {
@@ -1797,6 +1932,7 @@ export type Database = {
       }
       pkg_group_members: {
         Row: {
+          class_link_sent_at: string | null
           enrollment_id: string | null
           group_id: string
           joined_at: string
@@ -1804,6 +1940,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          class_link_sent_at?: string | null
           enrollment_id?: string | null
           group_id: string
           joined_at?: string
@@ -1811,6 +1948,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          class_link_sent_at?: string | null
           enrollment_id?: string | null
           group_id?: string
           joined_at?: string
@@ -1862,24 +2000,30 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          meeting_url: string | null
           name: string
           package_id: string
+          start_date: string | null
         }
         Insert: {
           capacity?: number
           created_at?: string
           id?: string
           is_active?: boolean
+          meeting_url?: string | null
           name: string
           package_id: string
+          start_date?: string | null
         }
         Update: {
           capacity?: number
           created_at?: string
           id?: string
           is_active?: boolean
+          meeting_url?: string | null
           name?: string
           package_id?: string
+          start_date?: string | null
         }
         Relationships: [
           {
@@ -1896,6 +2040,8 @@ export type Database = {
           created_at: string
           id: string
           level: string
+          max_score: number | null
+          result_email_sent_at: string | null
           score: number
           user_id: string
         }
@@ -1903,6 +2049,8 @@ export type Database = {
           created_at?: string
           id?: string
           level: string
+          max_score?: number | null
+          result_email_sent_at?: string | null
           score: number
           user_id: string
         }
@@ -1910,6 +2058,8 @@ export type Database = {
           created_at?: string
           id?: string
           level?: string
+          max_score?: number | null
+          result_email_sent_at?: string | null
           score?: number
           user_id?: string
         }
@@ -1944,9 +2094,11 @@ export type Database = {
           level: string | null
           name: string
           name_reminder_sent_at: string | null
+          phone: string | null
           reset_version: string | null
           status: string
           timezone: string | null
+          track: string
           unsubscribe_token: string | null
           user_id: string
         }
@@ -1963,9 +2115,11 @@ export type Database = {
           level?: string | null
           name: string
           name_reminder_sent_at?: string | null
+          phone?: string | null
           reset_version?: string | null
           status?: string
           timezone?: string | null
+          track?: string
           unsubscribe_token?: string | null
           user_id: string
         }
@@ -1982,9 +2136,11 @@ export type Database = {
           level?: string | null
           name?: string
           name_reminder_sent_at?: string | null
+          phone?: string | null
           reset_version?: string | null
           status?: string
           timezone?: string | null
+          track?: string
           unsubscribe_token?: string | null
           user_id?: string
         }
@@ -2136,6 +2292,7 @@ export type Database = {
       schedule_packages: {
         Row: {
           capacity: number
+          class_language: string
           course_type: string
           created_at: string
           day_of_week: number
@@ -2148,6 +2305,7 @@ export type Database = {
         }
         Insert: {
           capacity?: number
+          class_language?: string
           course_type?: string
           created_at?: string
           day_of_week: number
@@ -2160,6 +2318,7 @@ export type Database = {
         }
         Update: {
           capacity?: number
+          class_language?: string
           course_type?: string
           created_at?: string
           day_of_week?: number
@@ -2325,6 +2484,24 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          created_at: string
+          id: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          type?: string | null
+        }
+        Relationships: []
+      }
       student_badges: {
         Row: {
           badge_key: string
@@ -2345,6 +2522,185 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      student_bundle_edits: {
+        Row: {
+          bundle_id: string
+          changes: Json
+          edited_at: string
+          edited_by: string
+          id: string
+        }
+        Insert: {
+          bundle_id: string
+          changes: Json
+          edited_at?: string
+          edited_by: string
+          id?: string
+        }
+        Update: {
+          bundle_id?: string
+          changes?: Json
+          edited_at?: string
+          edited_by?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_bundle_edits_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "student_bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_bundles: {
+        Row: {
+          catalog_key: string | null
+          coverage_start: string
+          coverage_start_confirmed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          label: string
+          note: string | null
+          paid_note: string | null
+          paid_on: string | null
+          payment_confirmation_sent_at: string | null
+          purchased_on: string
+          source: string
+          status: string
+          student_id: string
+          total_classes: number
+          total_price: number
+          updated_at: string
+          voided_at: string | null
+          voided_reason: string | null
+        }
+        Insert: {
+          catalog_key?: string | null
+          coverage_start: string
+          coverage_start_confirmed_at?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          label: string
+          note?: string | null
+          paid_note?: string | null
+          paid_on?: string | null
+          payment_confirmation_sent_at?: string | null
+          purchased_on?: string
+          source?: string
+          status?: string
+          student_id: string
+          total_classes: number
+          total_price: number
+          updated_at?: string
+          voided_at?: string | null
+          voided_reason?: string | null
+        }
+        Update: {
+          catalog_key?: string | null
+          coverage_start?: string
+          coverage_start_confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          label?: string
+          note?: string | null
+          paid_note?: string | null
+          paid_on?: string | null
+          payment_confirmation_sent_at?: string | null
+          purchased_on?: string
+          source?: string
+          status?: string
+          student_id?: string
+          total_classes?: number
+          total_price?: number
+          updated_at?: string
+          voided_at?: string | null
+          voided_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_bundles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_class_sessions: {
+        Row: {
+          bundle_id: string
+          class_id: string | null
+          confirmed_at: string | null
+          counted: boolean
+          created_at: string
+          entry_source: string
+          id: string
+          note: string | null
+          outcome: string
+          session_date: string
+          start_time: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          bundle_id: string
+          class_id?: string | null
+          confirmed_at?: string | null
+          counted?: boolean
+          created_at?: string
+          entry_source?: string
+          id?: string
+          note?: string | null
+          outcome?: string
+          session_date: string
+          start_time: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          bundle_id?: string
+          class_id?: string | null
+          confirmed_at?: string | null
+          counted?: boolean
+          created_at?: string
+          entry_source?: string
+          id?: string
+          note?: string | null
+          outcome?: string
+          session_date?: string
+          start_time?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_class_sessions_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "student_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_class_sessions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_student_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_class_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_groups: {
         Row: {
@@ -2910,6 +3266,247 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_availability_exceptions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          exception_date: string
+          id: string
+          kind: string
+          reason: string | null
+          start_time: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_time: string
+          exception_date: string
+          id?: string
+          kind: string
+          reason?: string | null
+          start_time: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_time?: string
+          exception_date?: string
+          id?: string
+          kind?: string
+          reason?: string | null
+          start_time?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teacher_availability_rules: {
+        Row: {
+          class_language: string | null
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          end_time: string
+          id: string
+          kind: string
+          note: string | null
+          start_time: string
+          student_class_id: string | null
+          timezone: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          class_language?: string | null
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          end_time: string
+          id?: string
+          kind: string
+          note?: string | null
+          start_time: string
+          student_class_id?: string | null
+          timezone?: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          class_language?: string | null
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          end_time?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          start_time?: string
+          student_class_id?: string | null
+          timezone?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_availability_rules_student_class_id_fkey"
+            columns: ["student_class_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_student_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_schedule_slots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          id: string
+          label: string | null
+          notes: string | null
+          slot_date: string
+          source: string
+          start_time: string
+          status: string
+          student_id: string | null
+          teacher_id: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_time: string
+          id?: string
+          label?: string | null
+          notes?: string | null
+          slot_date: string
+          source?: string
+          start_time: string
+          status?: string
+          student_id?: string | null
+          teacher_id: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_time?: string
+          id?: string
+          label?: string | null
+          notes?: string | null
+          slot_date?: string
+          source?: string
+          start_time?: string
+          status?: string
+          student_id?: string | null
+          teacher_id?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teacher_student_classes: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          effective_from: string
+          effective_to: string | null
+          id: string
+          note: string | null
+          start_time: string
+          student_id: string
+          timezone: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          note?: string | null
+          start_time: string
+          student_id: string
+          timezone?: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          note?: string | null
+          start_time?: string
+          student_id?: string
+          timezone?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_student_classes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_students: {
+        Row: {
+          country: string | null
+          created_at: string
+          currency: string | null
+          email: string | null
+          full_name: string
+          id: string
+          meeting_url: string | null
+          note: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          meeting_url?: string | null
+          note?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          meeting_url?: string | null
+          note?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       textbook_lessons: {
         Row: {
           book: string
@@ -2982,12 +3579,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_booking_status_transitions: {
+        Row: {
+          from_status: string
+          note: string | null
+          to_status: string
+        }
+        Insert: {
+          from_status: string
+          note?: string | null
+          to_status: string
+        }
+        Update: {
+          from_status?: string
+          note?: string | null
+          to_status?: string
+        }
+        Relationships: []
+      }
       trial_bookings: {
         Row: {
           attendance_confirmed_at: string | null
+          attendance_email_sent_at: string | null
+          attendance_followup_manual_at: string | null
           attendance_responded_at: string | null
           attendance_response: string | null
           calendar_url: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          changed_at: string | null
+          choice_confirmation_sent_at: string | null
           class_language: string
           confirmation_email_failed_at: string | null
           confirmation_token: string | null
@@ -2998,14 +3619,18 @@ export type Database = {
           email: string
           email_opened_at: string | null
           email_sent_at: string | null
+          email_verified_at: string | null
           followup_day1_sent_at: string | null
           followup_day3_sent_at: string | null
           followup_day7_sent_at: string | null
           followup_prep_sent_at: string | null
           goal: string | null
+          guide_sent_at: string | null
           id: string
           is_tba: boolean
           level: string | null
+          link_update_sent_at: string | null
+          meeting_url: string | null
           name: string
           next_trial_month: string | null
           phone: string | null
@@ -3013,17 +3638,28 @@ export type Database = {
           rollover_notified_at: string | null
           rollover_status: string | null
           slot_chosen_at: string | null
+          slot_id: string | null
+          slot_range: unknown
           start_time: string | null
+          starts_at: string | null
           status: string | null
+          student_timezone: string | null
           timezone: string | null
           trial_date: string | null
+          trial_days: number | null
           user_id: string | null
         }
         Insert: {
           attendance_confirmed_at?: string | null
+          attendance_email_sent_at?: string | null
+          attendance_followup_manual_at?: string | null
           attendance_responded_at?: string | null
           attendance_response?: string | null
           calendar_url?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          changed_at?: string | null
+          choice_confirmation_sent_at?: string | null
           class_language?: string
           confirmation_email_failed_at?: string | null
           confirmation_token?: string | null
@@ -3034,14 +3670,18 @@ export type Database = {
           email: string
           email_opened_at?: string | null
           email_sent_at?: string | null
+          email_verified_at?: string | null
           followup_day1_sent_at?: string | null
           followup_day3_sent_at?: string | null
           followup_day7_sent_at?: string | null
           followup_prep_sent_at?: string | null
           goal?: string | null
+          guide_sent_at?: string | null
           id?: string
           is_tba?: boolean
           level?: string | null
+          link_update_sent_at?: string | null
+          meeting_url?: string | null
           name: string
           next_trial_month?: string | null
           phone?: string | null
@@ -3049,17 +3689,28 @@ export type Database = {
           rollover_notified_at?: string | null
           rollover_status?: string | null
           slot_chosen_at?: string | null
+          slot_id?: string | null
+          slot_range?: unknown
           start_time?: string | null
+          starts_at?: string | null
           status?: string | null
+          student_timezone?: string | null
           timezone?: string | null
           trial_date?: string | null
+          trial_days?: number | null
           user_id?: string | null
         }
         Update: {
           attendance_confirmed_at?: string | null
+          attendance_email_sent_at?: string | null
+          attendance_followup_manual_at?: string | null
           attendance_responded_at?: string | null
           attendance_response?: string | null
           calendar_url?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          changed_at?: string | null
+          choice_confirmation_sent_at?: string | null
           class_language?: string
           confirmation_email_failed_at?: string | null
           confirmation_token?: string | null
@@ -3070,14 +3721,18 @@ export type Database = {
           email?: string
           email_opened_at?: string | null
           email_sent_at?: string | null
+          email_verified_at?: string | null
           followup_day1_sent_at?: string | null
           followup_day3_sent_at?: string | null
           followup_day7_sent_at?: string | null
           followup_prep_sent_at?: string | null
           goal?: string | null
+          guide_sent_at?: string | null
           id?: string
           is_tba?: boolean
           level?: string | null
+          link_update_sent_at?: string | null
+          meeting_url?: string | null
           name?: string
           next_trial_month?: string | null
           phone?: string | null
@@ -3085,10 +3740,15 @@ export type Database = {
           rollover_notified_at?: string | null
           rollover_status?: string | null
           slot_chosen_at?: string | null
+          slot_id?: string | null
+          slot_range?: unknown
           start_time?: string | null
+          starts_at?: string | null
           status?: string | null
+          student_timezone?: string | null
           timezone?: string | null
           trial_date?: string | null
+          trial_days?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -3105,6 +3765,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "course_levels"
             referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "trial_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "trial_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_bookings_admin"
+            referencedColumns: ["slot_id"]
+          },
+          {
+            foreignKeyName: "trial_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_slots_admin"
+            referencedColumns: ["slot_id"]
           },
         ]
       }
@@ -3198,12 +3879,58 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_rebook_resend_log: {
+        Row: {
+          batch: string
+          booking_id: string
+          cleared_at: string
+          id: number
+          previous_sent_at: string
+        }
+        Insert: {
+          batch: string
+          booking_id: string
+          cleared_at?: string
+          id?: number
+          previous_sent_at: string
+        }
+        Update: {
+          batch?: string
+          booking_id?: string
+          cleared_at?: string
+          id?: number
+          previous_sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_rebook_resend_log_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "trial_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_rebook_resend_log_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_bookings_admin"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trial_settings: {
         Row: {
+          booking_lead_minutes: number
+          buffer_minutes: number
           default_duration_min: number
           id: number
+          max_horizon_days: number
           min_group_size: number
           program_start_date: string | null
+          rejoin_cooldown_days: number
+          rollover_interval_days: number
+          rollover_lead_hours: number
+          slot_minutes: number
           suggestion_weeks: number
           trial_block_days: number
           trial_block_start_dow: number
@@ -3212,10 +3939,17 @@ export type Database = {
           window_start_day: number | null
         }
         Insert: {
+          booking_lead_minutes?: number
+          buffer_minutes?: number
           default_duration_min?: number
           id?: number
+          max_horizon_days?: number
           min_group_size?: number
           program_start_date?: string | null
+          rejoin_cooldown_days?: number
+          rollover_interval_days?: number
+          rollover_lead_hours?: number
+          slot_minutes?: number
           suggestion_weeks?: number
           trial_block_days?: number
           trial_block_start_dow?: number
@@ -3224,10 +3958,17 @@ export type Database = {
           window_start_day?: number | null
         }
         Update: {
+          booking_lead_minutes?: number
+          buffer_minutes?: number
           default_duration_min?: number
           id?: number
+          max_horizon_days?: number
           min_group_size?: number
           program_start_date?: string | null
+          rejoin_cooldown_days?: number
+          rollover_interval_days?: number
+          rollover_lead_hours?: number
+          slot_minutes?: number
           suggestion_weeks?: number
           trial_block_days?: number
           trial_block_start_dow?: number
@@ -3236,6 +3977,82 @@ export type Database = {
           window_start_day?: number | null
         }
         Relationships: []
+      }
+      trial_slot_proposals: {
+        Row: {
+          capacity: number
+          class_language: string
+          created_at: string
+          created_slot_id: string | null
+          day_of_week: number
+          decided_at: string | null
+          decided_by: string | null
+          duration_min: number
+          id: string
+          min_to_run: number | null
+          reason: string
+          start_time: string
+          status: string
+          timezone: string
+          trial_date: string
+        }
+        Insert: {
+          capacity: number
+          class_language: string
+          created_at?: string
+          created_slot_id?: string | null
+          day_of_week: number
+          decided_at?: string | null
+          decided_by?: string | null
+          duration_min: number
+          id?: string
+          min_to_run?: number | null
+          reason: string
+          start_time: string
+          status?: string
+          timezone: string
+          trial_date: string
+        }
+        Update: {
+          capacity?: number
+          class_language?: string
+          created_at?: string
+          created_slot_id?: string | null
+          day_of_week?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          duration_min?: number
+          id?: string
+          min_to_run?: number | null
+          reason?: string
+          start_time?: string
+          status?: string
+          timezone?: string
+          trial_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_slot_proposals_created_slot_id_fkey"
+            columns: ["created_slot_id"]
+            isOneToOne: false
+            referencedRelation: "trial_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_slot_proposals_created_slot_id_fkey"
+            columns: ["created_slot_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_bookings_admin"
+            referencedColumns: ["slot_id"]
+          },
+          {
+            foreignKeyName: "trial_slot_proposals_created_slot_id_fkey"
+            columns: ["created_slot_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_slots_admin"
+            referencedColumns: ["slot_id"]
+          },
+        ]
       }
       trial_slot_skips: {
         Row: {
@@ -3299,6 +4116,8 @@ export type Database = {
           min_run_checked_at: string | null
           min_to_run: number | null
           notes: string | null
+          rollover_skip_reason: string | null
+          rollover_skipped_at: string | null
           session_period: string | null
           start_time: string
           timezone: string
@@ -3320,6 +4139,8 @@ export type Database = {
           min_run_checked_at?: string | null
           min_to_run?: number | null
           notes?: string | null
+          rollover_skip_reason?: string | null
+          rollover_skipped_at?: string | null
           session_period?: string | null
           start_time: string
           timezone?: string
@@ -3341,11 +4162,76 @@ export type Database = {
           min_run_checked_at?: string | null
           min_to_run?: number | null
           notes?: string | null
+          rollover_skip_reason?: string | null
+          rollover_skipped_at?: string | null
           session_period?: string | null
           start_time?: string
           timezone?: string
           trial_date?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      unit_placement_tests: {
+        Row: {
+          answers: Json
+          book: string
+          created_at: string
+          duration_seconds: number | null
+          failed_section: string | null
+          id: string
+          mcq_score: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          section_scores: Json
+          speaking_audio: Json
+          speaking_score: number | null
+          start_unit: string
+          suggested_level_key: string | null
+          teacher_notes: string | null
+          user_id: string
+          writing: Json
+          writing_score: number | null
+        }
+        Insert: {
+          answers?: Json
+          book?: string
+          created_at?: string
+          duration_seconds?: number | null
+          failed_section?: string | null
+          id?: string
+          mcq_score: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          section_scores?: Json
+          speaking_audio?: Json
+          speaking_score?: number | null
+          start_unit: string
+          suggested_level_key?: string | null
+          teacher_notes?: string | null
+          user_id: string
+          writing?: Json
+          writing_score?: number | null
+        }
+        Update: {
+          answers?: Json
+          book?: string
+          created_at?: string
+          duration_seconds?: number | null
+          failed_section?: string | null
+          id?: string
+          mcq_score?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          section_scores?: Json
+          speaking_audio?: Json
+          speaking_score?: number | null
+          start_unit?: string
+          suggested_level_key?: string | null
+          teacher_notes?: string | null
+          user_id?: string
+          writing?: Json
+          writing_score?: number | null
         }
         Relationships: []
       }
@@ -3654,6 +4540,50 @@ export type Database = {
         }
         Relationships: []
       }
+      v_campaign_delivery: {
+        Row: {
+          bounced: number | null
+          campaign_id: string | null
+          complained: number | null
+          created_at: string | null
+          delivered: number | null
+          failed: number | null
+          handed_over: number | null
+          name: string | null
+          recipients: number | null
+          skipped: number | null
+          subject: string | null
+          untrackable: number | null
+        }
+        Relationships: []
+      }
+      v_teacher_schedule_admin: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          day_name: string | null
+          day_of_week: number | null
+          duration_minutes: number | null
+          end_time: string | null
+          ends_at: string | null
+          id: string | null
+          is_past: boolean | null
+          label: string | null
+          notes: string | null
+          slot_date: string | null
+          source: string | null
+          start_time: string | null
+          starts_at: string | null
+          status: string | null
+          student_email: string | null
+          student_id: string | null
+          student_name: string | null
+          teacher_id: string | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       v_trial_bookings_admin: {
         Row: {
           attendance_responded_at: string | null
@@ -3752,6 +4682,10 @@ export type Database = {
     }
     Functions: {
       _trial_time_to_minutes: { Args: { t: string }; Returns: number }
+      activate_pkg_group: {
+        Args: { _group_id: string; _start_date?: string }
+        Returns: Json
+      }
       add_credits: {
         Args: { _amount: number; _user_id: string }
         Returns: number
@@ -3763,6 +4697,10 @@ export type Database = {
           p_session_date: string
         }
         Returns: number
+      }
+      admin_confirm_student_into_group: {
+        Args: { _package_id: string; _user_id: string }
+        Returns: Json
       }
       admin_manual_enroll: {
         Args: {
@@ -3781,7 +4719,14 @@ export type Database = {
         Args: { p_enrollment_id: string; p_session_date: string }
         Returns: number
       }
-      advance_trial_slots: { Args: never; Returns: undefined }
+      advance_trial_slots: {
+        Args: never
+        Returns: {
+          advanced_count: number
+          details: Json
+          skipped_count: number
+        }[]
+      }
       approve_attendance_request: {
         Args: { _request_id: string }
         Returns: number
@@ -3816,6 +4761,13 @@ export type Database = {
       }
       auto_match_student: { Args: { _preference_id: string }; Returns: string }
       auto_send_profile_reminders: { Args: never; Returns: undefined }
+      award_game_xp: {
+        Args: { p_game_id: string; p_score: number }
+        Returns: {
+          awarded: number
+          total_today: number
+        }[]
+      }
       backfill_missing_enrollments: { Args: never; Returns: Json }
       book_trial_with_capacity_check: {
         Args: {
@@ -3832,11 +4784,42 @@ export type Database = {
         }
         Returns: string
       }
+      can_manage_teacher_schedule: {
+        Args: { p_teacher_id: string }
+        Returns: boolean
+      }
       cancel_enrollment: {
         Args: { _enrollment_id: string }
         Returns: undefined
       }
+      check_cron_health: { Args: never; Returns: Json }
+      check_email_send_claims: { Args: never; Returns: number }
       check_trial_cron_health: { Args: never; Returns: undefined }
+      claim_email_sends: {
+        Args: { p_campaign_id: string; p_limit: number }
+        Returns: {
+          attempts: number
+          bounced_at: string | null
+          campaign_id: string
+          claimed_at: string | null
+          complained_at: string | null
+          created_at: string
+          delivered_at: string | null
+          email: string
+          error: string | null
+          id: string
+          resend_id: string | null
+          sent_at: string | null
+          status: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "email_sends"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_trial_capacity_alert: {
         Args: { p_start_time: string; p_trial_date: string }
         Returns: {
@@ -3878,6 +4861,71 @@ export type Database = {
       deduct_credit: { Args: { _user_id: string }; Returns: number }
       ensure_pkg_groups_for_packages: { Args: never; Returns: number }
       factory_reset_data: { Args: never; Returns: string }
+      fn_add_teacher_slot: {
+        Args: {
+          p_duration_minutes?: number
+          p_end_time?: string
+          p_label?: string
+          p_notes?: string
+          p_slot_date: string
+          p_start_time: string
+          p_status?: string
+          p_student_id?: string
+          p_teacher_id?: string
+          p_timezone?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          id: string
+          label: string | null
+          notes: string | null
+          slot_date: string
+          source: string
+          start_time: string
+          status: string
+          student_id: string | null
+          teacher_id: string
+          timezone: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_schedule_slots"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_add_teacher_slots_bulk: {
+        Args: {
+          p_duration_minutes?: number
+          p_from: string
+          p_label?: string
+          p_skip_conflicts?: boolean
+          p_start_times: string[]
+          p_status?: string
+          p_teacher_id?: string
+          p_timezone?: string
+          p_to: string
+          p_weekdays: number[]
+        }
+        Returns: Json
+      }
+      fn_alert_unconfirmed_sessions: { Args: never; Returns: number }
+      fn_approve_trial_slot_proposal: {
+        Args: { p_id: string; p_meeting_url: string }
+        Returns: string
+      }
+      fn_clear_teacher_slots: {
+        Args: {
+          p_from: string
+          p_status?: string
+          p_teacher_id?: string
+          p_to: string
+        }
+        Returns: number
+      }
       fn_create_trial_slot: {
         Args: {
           p_capacity?: number
@@ -3901,6 +4949,8 @@ export type Database = {
           min_run_checked_at: string | null
           min_to_run: number | null
           notes: string | null
+          rollover_skip_reason: string | null
+          rollover_skipped_at: string | null
           session_period: string | null
           start_time: string
           timezone: string
@@ -3914,7 +4964,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_decline_trial_slot_proposal: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      fn_delete_teacher_slot: { Args: { p_slot_id: string }; Returns: boolean }
       fn_first_trial_block_date: { Args: { p_month: string }; Returns: string }
+      fn_generate_scheduled_sessions: {
+        Args: { p_horizon_days?: number }
+        Returns: number
+      }
+      fn_propose_trial_slot: { Args: { p_language: string }; Returns: string }
+      fn_propose_trial_slots: { Args: never; Returns: number }
       fn_retire_trial_slot: {
         Args: { p_new_lifecycle?: string; p_slot_id: string }
         Returns: {
@@ -3932,6 +4993,8 @@ export type Database = {
           min_run_checked_at: string | null
           min_to_run: number | null
           notes: string | null
+          rollover_skip_reason: string | null
+          rollover_skipped_at: string | null
           session_period: string | null
           start_time: string
           timezone: string
@@ -3945,13 +5008,55 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_send_group_class_link: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      fn_set_teacher_slot_status: {
+        Args: {
+          p_label?: string
+          p_notes?: string
+          p_slot_id: string
+          p_status: string
+          p_student_id?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          id: string
+          label: string | null
+          notes: string | null
+          slot_date: string
+          source: string
+          start_time: string
+          status: string
+          student_id: string | null
+          teacher_id: string
+          timezone: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_schedule_slots"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       fn_set_trial_program_start_date: {
         Args: { p_date: string }
         Returns: {
+          booking_lead_minutes: number
+          buffer_minutes: number
           default_duration_min: number
           id: number
+          max_horizon_days: number
           min_group_size: number
           program_start_date: string | null
+          rejoin_cooldown_days: number
+          rollover_interval_days: number
+          rollover_lead_hours: number
+          slot_minutes: number
           suggestion_weeks: number
           trial_block_days: number
           trial_block_start_dow: number
@@ -3965,6 +5070,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fn_student_class_conflicts: {
+        Args: {
+          p_duration_minutes: number
+          p_effective_from?: string
+          p_effective_to?: string
+          p_start_time: string
+          p_weekday: number
+        }
+        Returns: {
+          booked_email: string
+          booked_name: string
+          booking_id: string
+          starts_at: string
+        }[]
       }
       fn_suggest_trial_slots: {
         Args: never
@@ -3982,6 +5102,27 @@ export type Database = {
           would_replace_full_slot: boolean
         }[]
       }
+      fn_teacher_timezone: { Args: never; Returns: string }
+      fn_trial_booking_public_view: {
+        Args: { p_id: string }
+        Returns: {
+          attendance_response: string
+          booking_id: string
+          calendar_url: string
+          class_language: string
+          duration_min: number
+          first_name: string
+          is_tba: boolean
+          start_time: string
+          status: string
+          timezone: string
+          trial_date: string
+        }[]
+      }
+      fn_trial_language_is_full: {
+        Args: { p_language: string }
+        Returns: boolean
+      }
       fn_trial_slot_conflicts: {
         Args: {
           p_day_of_week: number
@@ -3992,6 +5133,38 @@ export type Database = {
           detail: string
           source: string
         }[]
+      }
+      fn_trial_slot_seats_left: { Args: { p_slot_id: string }; Returns: number }
+      fn_update_teacher_slot: {
+        Args: {
+          p_end_time?: string
+          p_slot_date?: string
+          p_slot_id: string
+          p_start_time?: string
+          p_timezone?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          id: string
+          label: string | null
+          notes: string | null
+          slot_date: string
+          source: string
+          start_time: string
+          status: string
+          student_id: string | null
+          teacher_id: string
+          timezone: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_schedule_slots"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       fn_update_trial_slot: {
         Args: {
@@ -4024,6 +5197,8 @@ export type Database = {
           min_run_checked_at: string | null
           min_to_run: number | null
           notes: string | null
+          rollover_skip_reason: string | null
+          rollover_skipped_at: string | null
           session_period: string | null
           start_time: string
           timezone: string
@@ -4076,6 +5251,22 @@ export type Database = {
           total_members: number
         }[]
       }
+      get_my_streak_rank: {
+        Args: never
+        Returns: {
+          current_streak: number
+          out_of: number
+          rank: number
+        }[]
+      }
+      get_my_xp_rank: {
+        Args: never
+        Returns: {
+          out_of: number
+          rank: number
+          total_xp: number
+        }[]
+      }
       get_near_capacity_trial_slots: {
         Args: never
         Returns: {
@@ -4125,6 +5316,32 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_streak_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          current_streak: number
+          display_name: string
+          is_me: boolean
+          rank: number
+        }[]
+      }
+      get_student_bundle_balances: {
+        Args: never
+        Returns: {
+          bundle_id: string
+          catalog_key: string
+          currency: string
+          label: string
+          purchased_on: string
+          remaining_classes: number
+          source: string
+          student_id: string
+          total_classes: number
+          total_price: number
+          used_classes: number
+        }[]
+      }
       get_student_preference_trends: {
         Args: { days_back?: number }
         Returns: {
@@ -4149,6 +5366,48 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_teacher_open_slots: {
+        Args: { p_from?: string; p_teacher_id?: string; p_to?: string }
+        Returns: {
+          day_of_week: number
+          end_time: string
+          id: string
+          slot_date: string
+          start_time: string
+          starts_at: string
+          teacher_id: string
+          timezone: string
+        }[]
+      }
+      get_teacher_schedule: {
+        Args: {
+          p_from?: string
+          p_status?: string
+          p_teacher_id?: string
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          day_of_week: number
+          duration_minutes: number
+          end_time: string
+          ends_at: string
+          id: string
+          is_past: boolean
+          label: string
+          notes: string
+          slot_date: string
+          source: string
+          start_time: string
+          starts_at: string
+          status: string
+          student_id: string
+          student_name: string
+          teacher_id: string
+          timezone: string
+          updated_at: string
+        }[]
+      }
       get_trial_availability: {
         Args: { p_language?: string }
         Returns: {
@@ -4163,6 +5422,54 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_trial_booking_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          attendance_response: string
+          booking_id: string
+          calendar_url: string
+          class_language: string
+          duration_min: number
+          first_name: string
+          is_tba: boolean
+          start_time: string
+          status: string
+          timezone: string
+          trial_date: string
+        }[]
+      }
+      get_trial_slot_options: {
+        Args: { p_token: string }
+        Returns: {
+          duration_min: number
+          is_current: boolean
+          seats_left: number
+          slot_id: string
+          start_time: string
+          timezone: string
+          trial_date: string
+        }[]
+      }
+      get_weekly_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          is_me: boolean
+          rank: number
+          week_xp: number
+        }[]
+      }
+      get_xp_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          is_me: boolean
+          rank: number
+          total_xp: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4170,7 +5477,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      hold_my_seat: { Args: { _package_id: string }; Returns: Json }
       increment_blog_view: { Args: { post_slug: string }; Returns: undefined }
+      is_own_teacher_student: {
+        Args: { _student_id: string }
+        Returns: boolean
+      }
       log_pgnet_email_failures: { Args: never; Returns: undefined }
       mark_student_attendance: {
         Args: { _notes?: string; _student_id: string }
@@ -4180,7 +5492,14 @@ export type Database = {
         Args: { _enrollment_id: string }
         Returns: string
       }
+      next_weekday_date: {
+        Args: { _dow: number; _tz?: string }
+        Returns: string
+      }
       normalize_level: { Args: { raw: string }; Returns: string }
+      notification_category: { Args: { _type: string }; Returns: string }
+      public_display_name: { Args: { p_name: string }; Returns: string }
+      purge_cron_health: { Args: never; Returns: undefined }
       reassign_student_slot: {
         Args: { _enrollment_id: string; _new_slot_id: string }
         Returns: undefined
@@ -4188,6 +5507,15 @@ export type Database = {
       reject_attendance_request: {
         Args: { _request_id: string }
         Returns: undefined
+      }
+      reschedule_trial_slot: {
+        Args: { p_new_start_time: string; p_slot_id: string }
+        Returns: {
+          bookings_moved: number
+          new_start_time: string
+          old_start_time: string
+          slot_id: string
+        }[]
       }
       reset_platform_data: {
         Args: { _reset_password: string }
@@ -4197,6 +5525,39 @@ export type Database = {
         Args: { p_country?: string; p_email: string }
         Returns: string
       }
+      respond_trial_attendance:
+        | {
+            Args: { p_response: string; p_token: string }
+            Returns: {
+              attendance_response: string
+              booking_id: string
+              calendar_url: string
+              class_language: string
+              duration_min: number
+              first_name: string
+              is_tba: boolean
+              start_time: string
+              status: string
+              timezone: string
+              trial_date: string
+            }[]
+          }
+        | {
+            Args: { p_response: string; p_slot_id: string; p_token: string }
+            Returns: {
+              attendance_response: string
+              booking_id: string
+              calendar_url: string
+              class_language: string
+              duration_min: number
+              first_name: string
+              is_tba: boolean
+              start_time: string
+              status: string
+              timezone: string
+              trial_date: string
+            }[]
+          }
       revert_attendance_request: {
         Args: { _request_id: string }
         Returns: undefined
@@ -4205,6 +5566,7 @@ export type Database = {
         Args: { _enrollment_id: string }
         Returns: undefined
       }
+      run_self_verification: { Args: never; Returns: Json }
       run_trial_min_group_checks: { Args: never; Returns: undefined }
       save_session_attendance: {
         Args: { p_records: Json; p_session_id: string }
@@ -4220,11 +5582,22 @@ export type Database = {
         Returns: boolean
       }
       send_class_feedback_emails: { Args: never; Returns: undefined }
+      send_daily_numbers_digest: { Args: never; Returns: undefined }
       send_forming_escalation_emails: { Args: never; Returns: undefined }
       send_forming_group_emails: { Args: never; Returns: undefined }
+      send_payment_ask_emails: { Args: never; Returns: undefined }
+      send_payment_final_alert: { Args: never; Returns: undefined }
       send_pre_class_reminders: { Args: never; Returns: undefined }
       send_receipt_nudge_emails: { Args: never; Returns: undefined }
       send_rejection_followup_emails: { Args: never; Returns: undefined }
+      student_submit_attendance: {
+        Args: { p_enrollment_id: string; p_session_date?: string }
+        Returns: {
+          request_id: string
+          sessions_remaining: number
+          status: string
+        }[]
+      }
       submit_egypt_payment: {
         Args: {
           _enrollment_id: string
@@ -4251,33 +5624,26 @@ export type Database = {
         }
         Returns: Json
       }
-      submit_manual_enrollment:
-        | {
-            Args: {
-              _amount: number
-              _duration: number
-              _plan_type: string
-              _receipt_url: string
-              _tx_ref: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _amount: number
-              _duration: number
-              _payment_method?: string
-              _plan_type: string
-              _receipt_url: string
-              _tx_ref: string
-            }
-            Returns: string
-          }
+      submit_manual_enrollment: {
+        Args: {
+          _amount: number
+          _currency?: string
+          _duration: number
+          _payment_method?: string
+          _plan_type: string
+          _receipt_url: string
+          _tx_ref: string
+        }
+        Returns: string
+      }
       trigger_abandoned_checkout_recovery: { Args: never; Returns: undefined }
       trigger_class_reminder_1h: { Args: never; Returns: undefined }
       trigger_class_reminder_24h: { Args: never; Returns: undefined }
       trigger_funnel_digest: { Args: never; Returns: undefined }
+      trigger_send_attendance_confirmations: { Args: never; Returns: undefined }
       trigger_trial_followups: { Args: never; Returns: undefined }
+      trigger_trial_guide: { Args: never; Returns: undefined }
+      trigger_trial_rollover_notifications: { Args: never; Returns: undefined }
       unmatch_student_slot: {
         Args: { _enrollment_id: string }
         Returns: undefined
@@ -4328,6 +5694,24 @@ export type Database = {
           user_id: string
         }[]
       }
+      verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
+      verify_internal_secret: { Args: { p_secret: string }; Returns: boolean }
+      verify_trial_booking: {
+        Args: { p_token: string }
+        Returns: {
+          attendance_response: string
+          booking_id: string
+          calendar_url: string
+          class_language: string
+          duration_min: number
+          first_name: string
+          is_tba: boolean
+          start_time: string
+          status: string
+          timezone: string
+          trial_date: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
@@ -4346,12 +5730,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4375,11 +5759,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4400,11 +5784,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4425,11 +5809,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4442,11 +5826,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

@@ -183,18 +183,25 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     }
 
     setSubmitting(true);
-    const { error } = await supabase
-      .from("attendance_requests")
-      .insert({
-        user_id: userId,
-        enrollment_id: enrollment.id,
-        request_date: dateStr,
-      } as any);
+    // Auto-confirms immediately when this date/time falls inside the
+    // student's real scheduled class window; otherwise it lands PENDING
+    // for admin review, same as before.
+    const { data, error } = await supabase.rpc("student_submit_attendance", {
+      p_enrollment_id: enrollment.id,
+      p_session_date: dateStr,
+    } as any);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Attendance submitted!", description: `${format(date, "MMM d, yyyy")} added.` });
+      const result = Array.isArray(data) ? data[0] : data;
+      const approved = result?.status === "APPROVED";
+      toast({
+        title: approved ? "Attendance confirmed!" : "Attendance submitted!",
+        description: approved
+          ? `${format(date, "MMM d, yyyy")} confirmed automatically — ${result.sessions_remaining} session(s) left.`
+          : `${format(date, "MMM d, yyyy")} sent for review.`,
+      });
       loadData();
     }
     setSubmitting(false);
