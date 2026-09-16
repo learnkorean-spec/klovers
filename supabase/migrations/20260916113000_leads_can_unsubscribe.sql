@@ -24,6 +24,11 @@
 -- sequence stop immediately - that function already filters on it, so it needs
 -- no change to respect the new flag.
 --
+-- The profile branch reports `id`, not `user_id`: user_id is nullable, and a
+-- null there would make a real profile look unmatched and fall through to the
+-- leads branch. id is the key, is never null, and is the column the endpoint
+-- read before this moved into the database.
+--
 -- SAFETY OF THE TOKEN COLUMN
 -- `leads` has no anon SELECT policy (checked against production: anon may only
 -- INSERT placement leads), so adding a token does not expose one to the
@@ -59,7 +64,7 @@ begin
   update public.profiles
      set email_unsubscribed = true
    where unsubscribe_token = p_token
-  returning user_id into v_profile_id;
+  returning id into v_profile_id;
 
   if v_profile_id is not null then
     return 'profile';
