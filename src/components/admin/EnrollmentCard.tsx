@@ -90,11 +90,12 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
     if (e.plan_type !== "group") return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+            const { data, error } = await supabase
         .from("pkg_group_members")
         .select("group_id, pkg_groups(name)")
         .eq("enrollment_id", e.id)
         .limit(1);
+      if (error) console.error("Failed to load seat group for enrollment", e.id, error);
       if (cancelled) return;
       const row = (data as { pkg_groups: { name: string } | null }[] | null)?.[0];
       setSeatGroup(row?.pkg_groups?.name ?? null);
@@ -150,12 +151,13 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
       setLogsLoading(true);
       const email = e.profiles?.email;
       if (email) {
-        const { data } = await supabase
+                const { data, error } = await supabase
           .from("email_logs")
           .select("id, template, status, created_at, error")
           .eq("to_email", email)
           .order("created_at", { ascending: false })
           .limit(20);
+        if (error) console.error("Failed to load email history for", email, error);
         setLogs((data as EmailLog[]) ?? []);
       }
       setLogsLoading(false);
