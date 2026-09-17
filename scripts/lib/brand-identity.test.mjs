@@ -82,9 +82,12 @@ const siteLd = jsonLdBlocks.find((o) => typeOf(o).includes("WebSite"));
 const hasArabic = (s) => /[\u0600-\u06ff]/.test(s);
 const hasLatin = (s) => /[A-Za-z]/.test(s);
 
-/** The `/` entry of MARKETING_ROUTES, as written. */
+/**
+ * The `/` entry of MARKETING_ROUTES, as written. `\r?\n` so a Windows checkout
+ * with CRLF line endings parses the same as CI.
+ */
 function parseHomeRoute(src) {
-  const m = src.match(/path: "\/",\n\s*title: "([^"]+)",\n\s*description:\n\s*"([^"]+)",/);
+  const m = src.match(/path: "\/",\r?\n\s*title: "([^"]+)",\r?\n\s*description:\r?\n\s*"([^"]+)",/);
   if (!m) throw new Error("could not find the `/` route in MARKETING_ROUTES");
   return { title: m[1], description: m[2] };
 }
