@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
-import { logLeadEvent } from "@/lib/leadTracking";
+import { logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -43,6 +43,8 @@ const CommunityBand = () => {
             </div>
           </div>
           <div className="flex gap-3">
+            {/* These two stay on logLeadEvent: clicking through to the community
+                is something a person chose to do, which is what a Lead is. */}
             <a
               href="https://t.me/+Fu5T7d4wLMsxNDY9"
               target="_blank"
@@ -169,6 +171,14 @@ const Index = () => {
   }, []);
 
   // ── Scroll depth + section visibility analytics ────────────────
+  //
+  // logEngagementEvent, NOT logLeadEvent. Both of these effects fire without
+  // the visitor choosing anything, and logLeadEvent mirrors every call to the
+  // Meta Pixel as a `Lead` and to GA4 as `generate_lead`. Between them they
+  // raise up to nine events per visit — 4 scroll milestones and 5 sections —
+  // so routing them through logLeadEvent meant one person scrolling to the
+  // bottom of this page counted as nine conversions. Measured in GA4 Realtime
+  // on 18 Sep 2026: 11 generate_lead against 6 page_view, nothing clicked.
   useEffect(() => {
     const milestones = new Set<number>();
     const onScroll = () => {
@@ -176,7 +186,7 @@ const Index = () => {
       [25, 50, 75, 90].forEach((m) => {
         if (pct >= m && !milestones.has(m)) {
           milestones.add(m);
-          try { logLeadEvent({ source_type: "homepage", cta_label: `scroll_depth_${m}` }); } catch {}
+          try { logEngagementEvent({ source_type: "homepage", cta_label: `scroll_depth_${m}` }); } catch {}
         }
       });
     };
@@ -198,7 +208,7 @@ const Index = () => {
       if (!el) return;
       const obs = new IntersectionObserver(([entry]) => {
         if (entry.isIntersecting) {
-          try { logLeadEvent({ source_type: "homepage", cta_label: label }); } catch {}
+          try { logEngagementEvent({ source_type: "homepage", cta_label: label }); } catch {}
           obs.disconnect();
         }
       }, { threshold: 0.3 });
