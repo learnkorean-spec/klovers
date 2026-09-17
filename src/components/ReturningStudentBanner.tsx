@@ -2,16 +2,23 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const STORAGE_KEY = "klovers-returning-banner-dismissed";
 
 const ReturningStudentBanner = () => {
   const { t } = useLanguage();
+  const { user, loading } = useAuth();
   const [dismissed, setDismissed] = useState(() =>
     Boolean(localStorage.getItem(STORAGE_KEY))
   );
 
-  if (dismissed) return null;
+  // This banner says "Welcome Back, Klovers!" — it was rendering for every
+  // visitor, first-time included, gated only by whether it had been
+  // dismissed before. A brand-new visitor landed on a hero built to hook
+  // them, then immediately saw a message that doesn't apply to them. Signed
+  // out (the overwhelming majority of homepage traffic) is not "returning."
+  if (dismissed || loading || !user) return null;
 
   const handleDismiss = () => {
     localStorage.setItem(STORAGE_KEY, "1");

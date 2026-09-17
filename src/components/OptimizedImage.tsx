@@ -59,7 +59,16 @@ const OptimizedImage = ({
   const effectiveSizes =
     sizes || (isCard ? DEFAULT_SIZES_CARD : effectiveIsHero ? DEFAULT_SIZES_HERO : DEFAULT_SIZES_HERO);
 
-  const isValidUrl = src && (src.startsWith("http://") || src.startsWith("https://"));
+  // Root-relative paths ("/assets/blog/x.jpg") are legitimate same-origin
+  // images, not just http(s) URLs — this check excluded them, so every post
+  // whose hero_image is a local file (confirmed live for 36+ published
+  // blog_posts rows via Supabase, e.g. hanbok-fashion.jpg, hangul-science.jpg,
+  // seollal-new-year.jpg) silently rendered the 📖 fallback instead of the
+  // real photo, on the blog list, the post page, and the homepage blog
+  // teaser. srcSet degrades gracefully for these — optimizedUrl() already
+  // returns non-http(s) sources unchanged, so it's a same URL repeated per
+  // width descriptor rather than a crash.
+  const isValidUrl = !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/"));
   const showFallback = !isValidUrl || imgError;
 
   // One persistent box, reused unchanged across loading / loaded / error.

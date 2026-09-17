@@ -172,15 +172,15 @@ const HeroSection = () => {
               <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 KLOVERS</span>
             </div>
             <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
+              {/* Static dot — the pulsing "live" signal lives on the next-class
+                  chip below. Two identical ping animations within 40px of each
+                  other read as one urgency claim shown twice, not two facts. */}
+              <span className="relative flex h-2 w-2 shrink-0 rounded-full bg-primary" />
               <span className="text-white text-xs font-semibold tracking-[0.12em] uppercase">Enrolling Now</span>
             </div>
           </div>
 
-          {/* Next-class urgency chip */}
+          {/* Next-class urgency chip — the one pulsing signal in the hero */}
           <div className="inline-flex items-center gap-2 bg-black/40 border border-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-white/90">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
@@ -211,13 +211,13 @@ const HeroSection = () => {
             </span>
           </h1>
 
-          {/* Subtitle.
-              ⚠ This string still says "500+" and lives in
-              src/i18n/translations.ts (`hero.subtitle`), which is 231 KB and
-              cannot be edited through the API path available here - the only
-              write is a whole-file replace. Same for `ctaSubtitle` and the
-              `highlights` array ("500+ / Students Taught", "4.9 / 5"). They
-              need a real checkout; see the note in the stats strip below. */}
+          {/* Subtitle — fixed 2026-09-18: used to read "Join 500+ K-drama fans",
+              the same inflated figure the honest stats strip below was
+              rewritten to move away from. Lives in src/i18n/translations.ts
+              (`hero.subtitle`, both `en` and `ar`).
+              ⚠ Still open, same pattern, different component: `teacher.bio1`
+              and `teacher.highlights` in translations.ts ("500+ Students
+              Taught") — MeetTeacher.tsx wasn't in scope for this pass. */}
           <p
             className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
@@ -245,7 +245,13 @@ const HeroSection = () => {
             <Button
               size="lg"
               asChild
-              className="gap-2.5 text-base font-bold px-8 bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0"
+              variant="outline"
+              // Secondary by design: the free-trial button above is the one
+              // primary action. This used to be solid WhatsApp-green at the
+              // same size and weight, which visually out-competed the button
+              // meant to be primary — a border reads as "also available,"
+              // a solid fill reads as "do this."
+              className="gap-2.5 text-base font-semibold px-8 bg-transparent hover:bg-white/10 text-white border-2 border-white/40 hover:border-white/60"
             >
               <a
                 href={WHATSAPP_BASE}
@@ -253,18 +259,19 @@ const HeroSection = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <MessageCircle className="h-5 w-5" />
+                <MessageCircle className="h-5 w-5 text-[#25D366]" />
                 {isAr ? "واتساب" : "WhatsApp Us"}
               </a>
             </Button>
           </div>
 
-          {/* Micro trust line.
-              ⚠ "98% satisfaction" is a third unverified figure. Left alone
-              because Re has not ruled on it, but it belongs in the same sweep
-              as the strings above. */}
+          {/* Micro trust line — fixed 2026-09-18: "98% satisfaction" was a
+              third unverified figure (no source anywhere in the codebase).
+              Replaced with a claim that's actually true and checkable —
+              TOPIK certification is real (see MeetTeacher/teacher.bio1) —
+              rather than inventing a different number to replace it with. */}
           <p className="text-white/60 text-xs" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}>
-            {isAr ? "✓ بدون بطاقة بنكية · ✓ ٩٨٪ راضون · ✓ رد خلال دقائق" : "✓ No credit card · ✓ 98% satisfaction · ✓ Reply in minutes"}
+            {isAr ? "✓ بدون بطاقة بنكية · ✓ معلمة معتمدة TOPIK · ✓ رد خلال دقائق" : "✓ No credit card · ✓ TOPIK-certified teacher · ✓ Reply in minutes"}
           </p>
 
           {/* Upcoming class sessions — live from trial_slots, shown in the

@@ -13,6 +13,7 @@ import InterviewBannerChip from "@/components/InterviewBannerChip";
 import HomeExitNudge from "@/components/HomeExitNudge";
 
 // Lazy-load below-fold sections for faster initial paint
+const CultureHeritageSection = lazy(() => import("@/components/CultureHeritageSection"));
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
@@ -240,6 +241,11 @@ const Index = () => {
         </div>
         {/* Community social proof band */}
         <CommunityBand />
+        {/* Interest — the culture/history hook, real published content,
+            placed right before WhyLearnKorean's "K-Culture" reason card */}
+        <Suspense fallback={<SectionFallback />}>
+          <CultureHeritageSection />
+        </Suspense>
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
         {/* Desire — humanize the brand, build connection */}
