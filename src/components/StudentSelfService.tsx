@@ -90,12 +90,18 @@ const StudentSelfService = ({ userId }: Props) => {
   const [note, setNote] = useState("");
 
   const load = useCallback(async () => {
-    const { data: roster } = await supabase
+    const { data: roster, error: rosterError } = await supabase
       .from("teacher_students")
       .select("id")
       .eq("user_id", userId)
       .maybeSingle();
 
+    if (rosterError) {
+            console.error("[StudentSelfService] failed to load roster:", rosterError);
+            setLoading(false);
+            return;
+    }
+    
     if (!roster?.id) {
       setStudentId(null);
       setLoading(false);

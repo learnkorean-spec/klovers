@@ -49,7 +49,7 @@ interface EligibleEnrollment {
 }
 
 const fetchActiveEnrollment = async (userId: string): Promise<EligibleEnrollment | null> => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("enrollments")
     .select("id, approval_status, payment_status, sessions_remaining")
     .eq("user_id", userId)
@@ -58,7 +58,12 @@ const fetchActiveEnrollment = async (userId: string): Promise<EligibleEnrollment
     .order("created_at", { ascending: false })
     .limit(1);
 
-  return data && data.length > 0 ? data[0] : null;
+  if (error) {
+        console.error("[StudentAttendanceRequest] fetchActiveEnrollment failed:", error);
+        return null;
+  }
+
+    return data && data.length > 0 ? data[0] : null;
 };
 
 /**
@@ -68,13 +73,18 @@ const fetchActiveEnrollment = async (userId: string): Promise<EligibleEnrollment
  * can never find her. See StudentSelfService.
  */
 const fetchPrivateRoster = async (userId: string): Promise<boolean> => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("teacher_students")
     .select("id")
     .eq("user_id", userId)
     .maybeSingle();
-  return Boolean(data?.id);
-};
+  if (error) {
+        console.error("[StudentAttendanceRequest] fetchPrivateRoster failed:", error);
+        return false;
+  }
+
+    return Boolean(data?.id);    
+  };
 
 const NEGATIVE_LIMIT = -3;
 
