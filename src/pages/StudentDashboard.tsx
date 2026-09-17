@@ -1068,8 +1068,8 @@ const StudentDashboard = () => {
               </div>
             </>
           )}
-          <details className="rounded-2xl border bg-card p-4 sm:p-5">
-            <summary className="min-h-11 cursor-pointer content-center text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("dashboardPage.practiceExtras")}</summary>
+          <section aria-labelledby="practice-extras-heading" className="rounded-2xl border bg-card p-4 sm:p-5">
+            <h2 id="practice-extras-heading" className="text-base font-semibold text-foreground">{t("dashboardPage.practiceExtras")}</h2>
             <div className="mt-4 space-y-5">
           {/* ── Stats row + Weekly Goal side-by-side ── */}
           <div className="grid lg:grid-cols-5 gap-4">
@@ -1241,7 +1241,7 @@ const StudentDashboard = () => {
           })()}
 
             </div>
-          </details>
+          </section>
         </div>
       </main>
       <Footer />

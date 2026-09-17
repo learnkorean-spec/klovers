@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useLeaderboard, type LeaderboardEntry } from "@/hooks/useLeaderboard";
 import { Trophy, Flame, Crown, Medal, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -72,6 +72,19 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
   );
 }
 
+/** How many leaders each tab shows. The hook still fetches 50 for ranking. */
+const TOP_N = 5;
+
+/**
+ * Top N, plus the current student's own row when she ranks below them —
+ * a short board instead of a long list of other students' names.
+ */
+function visibleRows(entries: LeaderboardEntry[]): { top: LeaderboardEntry[]; me: LeaderboardEntry | null } {
+  const top = entries.slice(0, TOP_N);
+  const mine = entries.find((e) => e.isCurrentUser) ?? null;
+  return { top, me: mine && mine.rank > TOP_N ? mine : null };
+}
+
 export function LeaderboardCard() {
   const {
     xpLeaderboard,
@@ -120,18 +133,25 @@ export function LeaderboardCard() {
               </p>
             ) : (
               <div className="space-y-2">
-                {xpLeaderboard.map((entry) => (
-                  <EntryRow
-                    key={entry.user_id}
-                    rank={entry.rank}
-                    name={entry.name}
-                    avatarUrl={entry.avatar_url}
-                    value={entry.value}
-                    unit={tr("XP", "نقطة")}
-                    isCurrentUser={entry.isCurrentUser}
-                  />
-                ))}
-                {currentUserXpRank && currentUserXpRank > 10 && (
+                {(() => {
+                  const { top, me } = visibleRows(xpLeaderboard);
+                  return [...top, ...(me ? [me] : [])].map((entry, i) => (
+                    <div key={entry.user_id}>
+                      {me && i === top.length && (
+                        <p className="py-1 text-center text-xs text-muted-foreground" aria-hidden="true">⋯</p>
+                      )}
+                      <EntryRow
+                        rank={entry.rank}
+                        name={entry.name}
+                        avatarUrl={entry.avatar_url}
+                        value={entry.value}
+                        unit={tr("XP", "نقطة")}
+                        isCurrentUser={entry.isCurrentUser}
+                      />
+                    </div>
+                  ));
+                })()}
+                {currentUserXpRank && currentUserXpRank > TOP_N && !xpLeaderboard.some((e) => e.isCurrentUser) && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
                     {tr("Your rank", "ترتيبك")}: <span className="font-bold text-amber-700" dir="ltr">#{currentUserXpRank}</span>
                   </p>
@@ -154,18 +174,25 @@ export function LeaderboardCard() {
               </p>
             ) : (
               <div className="space-y-2">
-                {streakLeaderboard.map((entry) => (
-                  <EntryRow
-                    key={entry.user_id}
-                    rank={entry.rank}
-                    name={entry.name}
-                    avatarUrl={entry.avatar_url}
-                    value={entry.value}
-                    unit={tr("days", "يوم")}
-                    isCurrentUser={entry.isCurrentUser}
-                  />
-                ))}
-                {currentUserStreakRank && currentUserStreakRank > 10 && (
+                {(() => {
+                  const { top, me } = visibleRows(streakLeaderboard);
+                  return [...top, ...(me ? [me] : [])].map((entry, i) => (
+                    <div key={entry.user_id}>
+                      {me && i === top.length && (
+                        <p className="py-1 text-center text-xs text-muted-foreground" aria-hidden="true">⋯</p>
+                      )}
+                      <EntryRow
+                        rank={entry.rank}
+                        name={entry.name}
+                        avatarUrl={entry.avatar_url}
+                        value={entry.value}
+                        unit={tr("days", "يوم")}
+                        isCurrentUser={entry.isCurrentUser}
+                      />
+                    </div>
+                  ));
+                })()}
+                {currentUserStreakRank && currentUserStreakRank > TOP_N && !streakLeaderboard.some((e) => e.isCurrentUser) && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
                     {tr("Your streak rank", "ترتيبك في الاستمرار")}: <span className="font-bold text-amber-700" dir="ltr">#{currentUserStreakRank}</span>
                   </p>
@@ -187,17 +214,24 @@ export function LeaderboardCard() {
               </p>
             ) : (
               <div className="space-y-2">
-                {weeklyLeaderboard.map((entry) => (
-                  <EntryRow
-                    key={entry.user_id}
-                    rank={entry.rank}
-                    name={entry.name}
-                    avatarUrl={entry.avatar_url}
-                    value={entry.value}
-                    unit={tr("XP", "نقطة")}
-                    isCurrentUser={entry.isCurrentUser}
-                  />
-                ))}
+                {(() => {
+                  const { top, me } = visibleRows(weeklyLeaderboard);
+                  return [...top, ...(me ? [me] : [])].map((entry, i) => (
+                    <div key={entry.user_id}>
+                      {me && i === top.length && (
+                        <p className="py-1 text-center text-xs text-muted-foreground" aria-hidden="true">⋯</p>
+                      )}
+                      <EntryRow
+                        rank={entry.rank}
+                        name={entry.name}
+                        avatarUrl={entry.avatar_url}
+                        value={entry.value}
+                        unit={tr("XP", "نقطة")}
+                        isCurrentUser={entry.isCurrentUser}
+                      />
+                    </div>
+                  ));
+                })()}
               </div>
             )}
           </TabsContent>
