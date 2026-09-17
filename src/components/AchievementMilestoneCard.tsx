@@ -35,6 +35,18 @@ const GROUP_LABELS: Record<string, { en: string; ar: string }> = {
   streak_days: { en: "Streak days", ar: "أيام متتالية" },
 };
 
+/**
+ * A milestone's display name. The stored `milestone_name` is English only
+ * ("5 Lessons Completed", "7 Day Streak"), and every name is just its type plus
+ * its target, so the label is rebuilt from those two in the reader's language.
+ * An unknown type falls back to the stored name.
+ */
+function milestoneLabel(m: { milestone_type: string; milestone_name: string; target_value: number }, language: string): string {
+  if (language !== "ar") return m.milestone_name;
+  const group = GROUP_LABELS[m.milestone_type];
+  return group ? `${group.ar}: ${m.target_value.toLocaleString("en-US")}` : m.milestone_name;
+}
+
 export function AchievementMilestoneCard() {
   const { groupedMilestones, completionPercentage, newlyAchieved } = useMilestones();
   const { language } = useLanguage();
@@ -60,7 +72,7 @@ export function AchievementMilestoneCard() {
           <div className="animate-bounce text-center">
             <div className="text-6xl mb-4">🎉</div>
             <p className="text-2xl font-bold text-amber-700">
-              {newlyAchieved.milestone_name}
+              {milestoneLabel(newlyAchieved, language)}
             </p>
             <p className="text-sm text-muted-foreground">{tr("Milestone Achieved!", "إنجاز جديد!")}</p>
           </div>
@@ -127,7 +139,7 @@ export function AchievementMilestoneCard() {
                       </div>
 
                       <p className="text-xs font-medium text-foreground mb-1">
-                        {milestone.milestone_name}
+                        {milestoneLabel(milestone, language)}
                       </p>
 
                       {!milestone.is_achieved && (
