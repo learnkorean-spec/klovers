@@ -12,8 +12,12 @@ const AVATAR_COLORS = [
   "from-[#EFE6FF] to-[#D6E8FF]",
 ];
 
+// 200+, not 500+. The figure counts every student taught across 13 years,
+// not accounts on this platform - so the label carries the scope. Same
+// claim, same wording as the hero strip in HeroSection.tsx; if one of them
+// changes the other has to change with it.
 const STATS = [
-  { value: "500+", label: "Students Taught" },
+  { value: "200+", label: "Students in 13 years" },
   { value: "4.9 ★", label: "Average Rating" },
   { value: "4–8", label: "Students / Class" },
   { value: "98%", label: "Would Recommend" },
