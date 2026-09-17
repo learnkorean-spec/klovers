@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, Clock, Loader2, Wallet } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
   userId: string;
@@ -57,7 +58,12 @@ interface Claim {
   status: string;
 }
 
+// The value is what gets stored (Re reads it in MONEY IN); only the label is translated.
 const PAYMENT_METHODS = ["Vodafone Cash", "Fawry", "InstaPay", "Bank transfer", "Other"];
+const PAYMENT_METHOD_AR: Record<string, string> = {
+  "Bank transfer": "تحويل بنكي",
+  Other: "أخرى",
+};
 const PAY_NUMBER = "+20 101 000 3084";
 const WHATSAPP = "https://wa.me/201010003084";
 
@@ -66,14 +72,19 @@ function cairoToday(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, isAr = false): string {
   const [y, m, d] = iso.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", {
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(isAr ? "ar-EG-u-nu-latn" : "en-GB", {
     weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
   });
 }
 
 const StudentSelfService = ({ userId }: Props) => {
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+  const methodLabel = (m: string) => (isAr ? PAYMENT_METHOD_AR[m] ?? m : m);
+
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
@@ -159,12 +170,15 @@ const StudentSelfService = ({ userId }: Props) => {
     } as never);
     setBusy(null);
     if (error) {
-      toast({ title: "Could not send that", description: error.message, variant: "destructive" });
+      toast({ title: tr("Could not send that", "تعذّر الإرسال"), description: error.message, variant: "destructive" });
       return;
     }
     toast({
-      title: "Sent to your teacher",
-      description: "She confirms it, and then it comes off your balance.",
+      title: tr("Sent to your teacher", "تم الإرسال للمعلّمة"),
+      description: tr(
+        "She confirms it, and then it comes off your balance.",
+        "بعد تأكيدها تُخصم الحصة من رصيدك.",
+      ),
     });
     void load();
   }
@@ -172,7 +186,7 @@ const StudentSelfService = ({ userId }: Props) => {
   async function submitClaim() {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
-      toast({ title: "Enter the amount you paid", variant: "destructive" });
+      toast({ title: tr("Enter the amount you paid", "اكتب المبلغ الذي دفعته"), variant: "destructive" });
       return;
     }
     setBusy("claim");
@@ -187,10 +201,13 @@ const StudentSelfService = ({ userId }: Props) => {
     } as never);
     setBusy(null);
     if (error) {
-      toast({ title: "Could not send that", description: error.message, variant: "destructive" });
+      toast({ title: tr("Could not send that", "تعذّر الإرسال"), description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Thank you — sent", description: "Your teacher will confirm it shortly." });
+    toast({
+      title: tr("Thank you — sent", "شكرًا — تم الإرسال"),
+      description: tr("Your teacher will confirm it shortly.", "ستؤكّده المعلّمة قريبًا."),
+    });
     setShowForm(false);
     setAmount("");
     setNote("");
@@ -208,11 +225,14 @@ const StudentSelfService = ({ userId }: Props) => {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            My lessons
+            {tr("My lessons", "حصصي")}
           </CardTitle>
           {bundle && (
             <p className="text-sm text-muted-foreground">
-              {remaining} of {bundle.total_classes} left
+              {tr(
+                `${remaining} of ${bundle.total_classes} left`,
+                `المتبقي: ${remaining} من ${bundle.total_classes}`,
+              )}
               {bundle.label ? ` · ${bundle.label}` : ""}
             </p>
           )}
@@ -220,7 +240,10 @@ const StudentSelfService = ({ userId }: Props) => {
         <CardContent className="space-y-2">
           {toConfirm.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nothing waiting. After a lesson, it appears here to confirm.
+              {tr(
+                "Nothing waiting. After a lesson, it appears here to confirm.",
+                "لا يوجد شيء بانتظارك. بعد كل حصة تظهر هنا لتأكيدها.",
+              )}
             </p>
           ) : (
             toConfirm.map(s => (
@@ -229,18 +252,18 @@ const StudentSelfService = ({ userId }: Props) => {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{formatDate(s.session_date)}</p>
+                  <p className="text-sm font-medium">{formatDate(s.session_date, isAr)}</p>
                   <p className="text-xs text-muted-foreground">
                     {s.student_confirmed_at
-                      ? "Sent — waiting for your teacher"
-                      : "Did this lesson happen?"}
+                      ? tr("Sent — waiting for your teacher", "تم الإرسال — بانتظار المعلّمة")
+                      : tr("Did this lesson happen?", "هل حضرت هذه الحصة؟")}
                   </p>
                 </div>
                 {s.student_confirmed_at ? (
-                  <Badge variant="secondary">Waiting</Badge>
+                  <Badge variant="secondary">{tr("Waiting", "بانتظار التأكيد")}</Badge>
                 ) : (
                   <Button size="sm" disabled={busy === s.id} onClick={() => void confirmSession(s.id)}>
-                    {busy === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "I attended"}
+                    {busy === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("I attended", "حضرت")}
                   </Button>
                 )}
               </div>
@@ -249,8 +272,11 @@ const StudentSelfService = ({ userId }: Props) => {
 
           {sessions.some(s => s.counted) && (
             <p className="pt-1 text-xs text-muted-foreground">
-              <CheckCircle2 className="mr-1 inline h-3 w-3" />
-              {used} lesson{used === 1 ? "" : "s"} confirmed so far.
+              <CheckCircle2 className="me-1 inline h-3 w-3" />
+              {tr(
+                `${used} lesson${used === 1 ? "" : "s"} confirmed so far.`,
+                `الحصص المؤكَّدة حتى الآن: ${used}.`,
+              )}
             </p>
           )}
         </CardContent>
@@ -260,38 +286,42 @@ const StudentSelfService = ({ userId }: Props) => {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Wallet className="h-5 w-5" />
-            Payment
+            {tr("Payment", "الدفع")}
           </CardTitle>
           {bundle && (
             <p className="text-sm text-muted-foreground">
               {bundle.paid_on
-                ? `Received — thank you.`
-                : `${bundle.total_price} ${bundle.currency ?? ""} for this package.`}
+                ? tr("Received — thank you.", "تم الاستلام — شكرًا لك.")
+                : tr(
+                    `${bundle.total_price} ${bundle.currency ?? ""} for this package.`,
+                    `قيمة هذه الباقة: ${bundle.total_price} ${bundle.currency ?? ""}`,
+                  )}
             </p>
           )}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="rounded-lg border p-3 text-sm">
-            <p className="font-medium">How to pay</p>
+            <p className="font-medium">{tr("How to pay", "طريقة الدفع")}</p>
             <p className="text-muted-foreground">
-              Vodafone Cash or Fawry on <span className="font-semibold">{PAY_NUMBER}</span>.
-              For a bank transfer, ask on{" "}
+              {tr("Vodafone Cash or Fawry on", "فودافون كاش أو فوري على الرقم")}{" "}
+              <span className="inline-block whitespace-nowrap font-semibold" dir="ltr">{PAY_NUMBER}</span>.{" "}
+              {tr("For a bank transfer, ask on", "للتحويل البنكي، اسألنا على")}{" "}
               <a href={WHATSAPP} target="_blank" rel="noreferrer" className="font-semibold underline">
-                WhatsApp
+                {tr("WhatsApp", "واتساب")}
               </a>{" "}
-              and we will send the details.
+              {tr("and we will send the details.", "وسنرسل لك التفاصيل.")}
             </p>
           </div>
 
           {!showForm ? (
-            <Button variant="outline" className="w-full" onClick={() => setShowForm(true)}>
-              I have paid — tell my teacher
+            <Button variant="outline" className="h-auto min-h-10 w-full whitespace-normal" onClick={() => setShowForm(true)}>
+              {tr("I have paid — tell my teacher", "دفعت — أبلغ المعلّمة")}
             </Button>
           ) : (
             <div className="space-y-2 rounded-lg border p-3">
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="text-xs">
-                  Amount
+                  {tr("Amount", "المبلغ")}
                   <input
                     type="number"
                     inputMode="decimal"
@@ -301,7 +331,7 @@ const StudentSelfService = ({ userId }: Props) => {
                   />
                 </label>
                 <label className="text-xs">
-                  Currency
+                  {tr("Currency", "العملة")}
                   <input
                     value={currency}
                     onChange={e => setCurrency(e.target.value.toUpperCase())}
@@ -309,7 +339,7 @@ const StudentSelfService = ({ userId }: Props) => {
                   />
                 </label>
                 <label className="text-xs">
-                  Date paid
+                  {tr("Date paid", "تاريخ الدفع")}
                   <input
                     type="date"
                     max={cairoToday()}
@@ -319,18 +349,18 @@ const StudentSelfService = ({ userId }: Props) => {
                   />
                 </label>
                 <label className="text-xs">
-                  How you paid
+                  {tr("How you paid", "طريقة الدفع")}
                   <select
                     value={method}
                     onChange={e => setMethod(e.target.value)}
                     className="mt-1 w-full rounded-lg border bg-background px-2 py-1 text-sm"
                   >
-                    {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                    {PAYMENT_METHODS.map(m => <option key={m} value={m}>{methodLabel(m)}</option>)}
                   </select>
                 </label>
               </div>
               <label className="block text-xs">
-                Name or number it came from (optional)
+                {tr("Name or number it came from (optional)", "الاسم أو الرقم الذي تم التحويل منه (اختياري)")}
                 <input
                   value={senderName}
                   onChange={e => setSenderName(e.target.value)}
@@ -338,7 +368,7 @@ const StudentSelfService = ({ userId }: Props) => {
                 />
               </label>
               <label className="block text-xs">
-                Anything else (optional)
+                {tr("Anything else (optional)", "ملاحظات أخرى (اختياري)")}
                 <input
                   value={note}
                   onChange={e => setNote(e.target.value)}
@@ -347,10 +377,10 @@ const StudentSelfService = ({ userId }: Props) => {
               </label>
               <div className="flex gap-2 pt-1">
                 <Button size="sm" disabled={busy === "claim"} onClick={() => void submitClaim()}>
-                  {busy === "claim" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
+                  {busy === "claim" ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("Send", "إرسال")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>
-                  Cancel
+                  {tr("Cancel", "إلغاء")}
                 </Button>
               </div>
             </div>
@@ -361,10 +391,14 @@ const StudentSelfService = ({ userId }: Props) => {
               {claims.map(c => (
                 <div key={c.id} className="flex items-center justify-between gap-2 text-xs">
                   <span className="truncate text-muted-foreground">
-                    {c.amount} {c.currency} · {formatDate(c.paid_on)} · {c.method}
+                    {c.amount} {c.currency} · {formatDate(c.paid_on, isAr)} · {methodLabel(c.method)}
                   </span>
-                  <Badge variant={c.status === "approved" ? "default" : c.status === "rejected" ? "destructive" : "secondary"}>
-                    {c.status === "approved" ? "Confirmed" : c.status === "rejected" ? "Not found" : "Waiting"}
+                  <Badge variant={c.status === "approved" ? "default" : c.status === "rejected" ? "destructive" : "secondary"} className="shrink-0">
+                    {c.status === "approved"
+                      ? tr("Confirmed", "مؤكَّد")
+                      : c.status === "rejected"
+                        ? tr("Not found", "لم يُعثر عليه")
+                        : tr("Waiting", "بانتظار التأكيد")}
                   </Badge>
                 </div>
               ))}
