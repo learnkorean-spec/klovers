@@ -93,8 +93,8 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
         <div className="bg-gradient-to-br from-primary to-primary/80 px-6 pt-8 pb-6 text-center relative">
           <button
             onClick={handleClose}
-            className="absolute top-3 right-3 h-7 w-7 rounded-full bg-primary-foreground/15 flex items-center justify-center hover:bg-primary-foreground/25 transition-colors"
-            aria-label="Close"
+            className="absolute top-3 end-3 h-7 w-7 rounded-full bg-primary-foreground/15 flex items-center justify-center hover:bg-primary-foreground/25 transition-colors"
+            aria-label={isAr ? "إغلاق" : "Close"}
           >
             <X className="h-4 w-4 text-primary-foreground" />
           </button>
@@ -115,6 +115,8 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
               <button
                 key={i}
                 onClick={() => setStep(i)}
+                aria-label={isAr ? `الخطوة ${i + 1} من ${STEPS.length}` : `Step ${i + 1} of ${STEPS.length}`}
+                aria-current={i === step ? "step" : undefined}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   i === step ? "w-6 bg-primary-foreground" : "w-2 bg-primary-foreground/40"
                 }`}
@@ -146,7 +148,7 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
               className="flex-1 gap-1.5 h-10"
             >
               {isAr ? current.ctaAr : current.ctaEn}
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </Button>
             <Button variant="outline" onClick={handleNext} className="h-10 px-4 text-sm">
               {step < STEPS.length - 1

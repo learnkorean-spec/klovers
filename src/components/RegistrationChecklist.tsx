@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CheckCircle2, Circle, AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChecklistItem {
   key: string;
@@ -45,6 +46,7 @@ const TIMEZONES = [
 const LEVELS = LEVEL_SELECT_OPTIONS;
 
 const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, autoFocusField }: RegistrationChecklistProps) => {
+  const { t, tInterpolate } = useLanguage();
   const navigate = useNavigate();
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValue, setFieldValue] = useState("");
@@ -88,10 +90,10 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
       .eq("user_id", userId);
     setSaving(false);
     if (error) {
-      toast({ title: "Error", description: "Could not save. Please try again.", variant: "destructive" });
+      toast({ title: t("dashboardPage.rcError"), description: t("dashboardPage.rcSaveFailed"), variant: "destructive" });
       return;
     }
-    toast({ title: "Saved!" });
+    toast({ title: t("dashboardPage.rcSaved") });
     onItemCompleted(field === "name" ? "Full name" : field === "level" ? "Korean level" : "Country", value.trim());
     setEditingField(null);
     setFieldValue("");
@@ -106,10 +108,10 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
       .eq("id", enrollmentId);
     setSaving(false);
     if (error) {
-      toast({ title: "Error", description: "Could not save timezone.", variant: "destructive" });
+      toast({ title: t("dashboardPage.rcError"), description: t("dashboardPage.rcTimezoneSaveFailed"), variant: "destructive" });
       return;
     }
-    toast({ title: "Timezone saved!" });
+    toast({ title: t("dashboardPage.rcTimezoneSaved") });
     onItemCompleted("Timezone", value);
     setEditingField(null);
   };
@@ -123,7 +125,7 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
     if (key === "Preferred class days") {
       return (
         <Button size="sm" variant="default" onClick={() => navigate("/dashboard/schedule")}>
-          Go to My Schedule <ArrowRight className="h-3.5 w-3.5 ml-1" />
+          {t("dashboardPage.goToSchedule")} <ArrowRight className="h-3.5 w-3.5 ms-1 rtl:rotate-180" />
         </Button>
       );
     }
@@ -135,7 +137,7 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
           <div className="flex items-center gap-2">
             <Select onValueChange={(v) => handleSaveProfile("level", v)} disabled={saving}>
               <SelectTrigger className="w-[140px] h-8 text-sm">
-                <SelectValue placeholder="Select level" />
+                <SelectValue placeholder={t("dashboardPage.selectLevel")} />
               </SelectTrigger>
               <SelectContent>
                 {LEVELS.map((l) => (
@@ -153,7 +155,7 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
           <div className="flex items-center gap-2">
             <Select onValueChange={handleSaveTimezone} disabled={saving}>
               <SelectTrigger className="w-[180px] h-8 text-sm">
-                <SelectValue placeholder="Select timezone" />
+                <SelectValue placeholder={t("dashboardPage.selectTimezone")} />
               </SelectTrigger>
               <SelectContent>
                 {TIMEZONES.map((tz) => (
@@ -172,14 +174,14 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
         <div className="flex items-center gap-2">
           <Input
             className="h-8 w-[160px] text-sm"
-            placeholder={key}
+            placeholder={item.label}
             value={fieldValue}
             onChange={(e) => setFieldValue(e.target.value)}
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleSaveProfile(dbField, fieldValue)}
           />
           <Button size="sm" variant="default" disabled={saving || !fieldValue.trim()} onClick={() => handleSaveProfile(dbField, fieldValue)}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("dashboardPage.save")}
           </Button>
         </div>
       );
@@ -188,7 +190,7 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
     // Default: "Fix" button to open inline editor
     return (
       <Button size="sm" variant="outline" onClick={() => { setEditingField(key); setFieldValue(""); }}>
-        Fill in
+        {t("dashboardPage.fillIn")}
       </Button>
     );
   };
@@ -198,16 +200,16 @@ const RegistrationChecklist = ({ userId, enrollmentId, items, onItemCompleted, a
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2 text-amber-800 dark:text-amber-300">
           <AlertTriangle className="h-4 w-4" />
-          Complete your registration
+          {t("dashboardPage.completeRegistration")}
         </CardTitle>
         <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-          {completed} of {total} steps complete — fill these to finalize your enrollment.
+          {tInterpolate(t("dashboardPage.stepsComplete"), { done: completed, total })}
         </p>
         <Progress value={progress} className="h-2 mt-2 bg-amber-200 dark:bg-amber-900 [&>div]:bg-amber-500" />
       </CardHeader>
       <CardContent className="space-y-3">
         {items.map((item) => (
-          <div key={item.key} className="flex items-center justify-between gap-3 py-1.5">
+          <div key={item.key} className="flex items-center justify-between gap-3 py-1.5 flex-wrap">
             <div className="flex items-center gap-2.5 min-w-0">
               {item.completed ? (
                 <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />

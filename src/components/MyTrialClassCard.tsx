@@ -6,6 +6,9 @@ import { CalendarDays, CalendarPlus, Clock, Loader2, Clock3 } from "lucide-react
 import { buildGoogleCalendarUrl, formatTime12h } from "@/lib/calendarUrl";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 import { getUserTimezone } from "@/lib/viewerTimezone";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { studentCalendarDaysUntil } from "@/lib/studentDashboardDate";
+import { localizeClock } from "@/lib/dashboardLocale";
 
 interface TrialBookingRow {
   id: string;
@@ -20,21 +23,22 @@ interface TrialBookingRow {
 
 const TRIAL_DURATION_MIN = 45;
 
-function formatDate(d: string) {
+function formatDate(d: string, language: "en" | "ar", t: (k: string) => string) {
   const date = new Date(d + "T12:00:00");
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  if (date.toDateString() === today.toDateString()) return "Today";
-  if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
-  return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const days = daysUntil(d);
+  if (days === 0) return t("dashboardPage.todayPlain");
+  if (days === 1) return t("dashboardPage.tomorrowPlain");
+  const locale = language === "ar" ? "ar-EG-u-nu-latn" : "en-US";
+  return date.toLocaleDateString(locale, { weekday: "long", month: "short", day: "numeric" });
 }
 
+/** Same calendar-day rule as the Next Class card, in the timezone the class is shown in. */
 function daysUntil(d: string) {
-  return Math.ceil((new Date(d + "T12:00:00").getTime() - Date.now()) / 86400000);
+  return studentCalendarDaysUntil(d, getUserTimezone());
 }
 
 const MyTrialClassCard = () => {
+  const { t, tPlural, language } = useLanguage();
   const [booking, setBooking] = useState<TrialBookingRow | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,27 +82,27 @@ const MyTrialClassCard = () => {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-amber-500" />
-            My Trial Class
+            {t("dashboardPage.myTrialClass")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground text-base leading-tight">Your trial was postponed</p>
+                <p className="font-bold text-foreground text-base leading-tight">{t("dashboardPage.trialPostponedTitle")}</p>
                 <p className="text-sm text-amber-700 dark:text-amber-400 mt-1 leading-relaxed">
                   {booking.rollover_status === "notified"
-                    ? "Your group didn't reach enough students, but your spot is still yours — pick a new date below."
-                    : "Your group didn't reach enough students to run. We'll email you as soon as new dates open up, or you can pick one now."}
+                    ? t("dashboardPage.trialPostponedNotified")
+                    : t("dashboardPage.trialPostponedPending")}
                 </p>
                 <a
                   href="/trial-booking"
                   className="mt-3 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 py-2 rounded-lg shadow transition-all text-sm"
                 >
-                  Book a new trial date
+                  {t("dashboardPage.bookNewTrial")}
                 </a>
               </div>
-              <Badge className="bg-amber-500 flex-shrink-0">Postponed</Badge>
+              <Badge className="bg-amber-500 flex-shrink-0">{t("dashboardPage.postponed")}</Badge>
             </div>
           </div>
         </CardContent>
@@ -113,19 +117,19 @@ const MyTrialClassCard = () => {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-amber-500" />
-            My Trial Class
+            {t("dashboardPage.myTrialClass")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground text-base leading-tight">You're on the waitlist!</p>
+                <p className="font-bold text-foreground text-base leading-tight">{t("dashboardPage.waitlistTitle")}</p>
                 <p className="text-sm text-amber-700 dark:text-amber-400 mt-1 leading-relaxed">
-                  We're assigning you to the next available session. You'll receive an email with your confirmed date and class link within 24 hours.
+                  {t("dashboardPage.waitlistBody")}
                 </p>
               </div>
-              <Badge className="bg-amber-500 flex-shrink-0">Waitlist</Badge>
+              <Badge className="bg-amber-500 flex-shrink-0">{t("dashboardPage.waitlist")}</Badge>
             </div>
           </div>
         </CardContent>
@@ -153,41 +157,41 @@ const MyTrialClassCard = () => {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-primary" />
-          My Trial Class
+          {t("dashboardPage.myTrialClass")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-foreground text-lg">{formatDate(local.dateStr)}</p>
-              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                <Clock className="h-3.5 w-3.5" />
-                {local.timeFormatted} · {TRIAL_DURATION_MIN} min · {userTz.replace(/_/g, " ")}
+          <div className="flex flex-wrap-reverse items-end justify-between gap-3 sm:flex-nowrap sm:items-start">
+            <div className="flex-1 min-w-[12rem]">
+              <p className="font-bold text-foreground text-lg">{formatDate(local.dateStr, language, t)}</p>
+              <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-1 mt-1 break-words">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                <span dir="ltr">{localizeClock(local.timeFormatted, language)}</span> · {TRIAL_DURATION_MIN} {t("dashboardPage.minutesShort")} · <span dir="ltr">{userTz.replace(/_/g, " ")}</span>
               </p>
-              <p className="text-[11px] text-muted-foreground/70">({formatDate(booking.trial_date)} {formatTime12h(booking.start_time)} {timezone.replace(/_/g, " ")})</p>
+              <p className="text-[11px] text-muted-foreground/70 break-words">({formatDate(booking.trial_date, language, t)} <span dir="ltr">{localizeClock(formatTime12h(booking.start_time), language)}</span> <span dir="ltr">{timezone.replace(/_/g, " ")}</span>)</p>
 
               {isConfirmed ? (
                 <a
                   href={calendarUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 py-2 rounded-lg shadow transition-all text-sm"
-                  aria-label="Add trial class to Google Calendar"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 whitespace-nowrap bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 py-2 rounded-lg shadow transition-all text-sm"
+                  aria-label={t("dashboardPage.addToCalendarAria")}
                 >
-                  <CalendarPlus className="h-4 w-4" />
-                  Add to Google Calendar
+                  <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+                  {t("dashboardPage.addToCalendar")}
                 </a>
               ) : (
                 <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
-                  Waiting for teacher confirmation. You'll get an email with a calendar link once it's approved.
+                  {t("dashboardPage.waitingConfirmation")}
                 </p>
               )}
             </div>
-            <Badge className={isConfirmed ? "bg-green-500" : "bg-amber-500"}>
+            <Badge className={`shrink-0 ${isConfirmed ? "bg-green-500" : "bg-amber-500"}`}>
               {isConfirmed
-                ? (days === 0 ? "Today!" : days === 1 ? "Tomorrow" : `In ${days}d`)
-                : "Pending"}
+                ? (days === 0 ? t("dashboardPage.todayBadge") : days === 1 ? t("dashboardPage.tomorrowBadge") : tPlural("dashboardPage.inDaysShortPlural", days))
+                : t("dashboardPage.pendingLabel")}
             </Badge>
           </div>
         </div>
