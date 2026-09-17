@@ -604,8 +604,6 @@ const GamesPage = () => {
       </main>
       <Footer />
 
-      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
-
       {/* Exactly one of these renders at a time — see the CelebrationStep
           comment above for why. */}
       {activeCelebration?.type === "perfect" && (
@@ -625,6 +623,16 @@ const GamesPage = () => {
           onClose={advanceCelebration}
         />
       )}
+
+      {/* Rendered after the celebration block on purpose. A perfect score sets
+          xpFloat and enqueues the "perfect" step in the same handleGameComplete
+          call, so both are truthy together for the celebration's full 1.5s —
+          and both are `fixed inset-0 z-50`. With this mounted first (as it used
+          to be), the celebration's near-opaque backdrop painted over it and the
+          floating "+XP" was never seen on exactly the run where it mattered
+          most. Painting it last (still pointer-events-none, so it never blocks
+          the celebration's own Continue button) puts it on top instead. */}
+      {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
 
       {/* Signup nudge modal — guests only, once per session (see NUDGE_SEEN_KEY). */}
       {showSignupNudge && (
