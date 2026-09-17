@@ -5,6 +5,15 @@ import { getSessionId, getAttribution } from "@/lib/leadSession";
 import { track } from "@/lib/tracking";
 import type { Json } from "@/integrations/supabase/types";
 
+/**
+ * Something the visitor DID, deliberately, that a salesperson would call a
+ * lead. Every one of these mirrors to the Meta Pixel as a `Lead` conversion
+ * and to GA4 as `generate_lead`.
+ *
+ * The test for adding a value here is not "is this interesting?" but "did a
+ * human choose to do this?". Scrolling is not a choice. Seeing a section is
+ * not a choice. Those go to `logEngagementEvent`.
+ */
 export type LeadSource =
   | "whatsapp"
   | "free_trial"
@@ -12,7 +21,8 @@ export type LeadSource =
   | "pricing"
   | "enroll"
   | "contact"
-  | "email";
+  | "email"
+  | "community";
 
 /**
  * Game telemetry event kinds (G0c).
@@ -33,6 +43,24 @@ export type GameEventType =
   | "game_opened"
   | "game_started"
   | "game_completed";
+
+/**
+ * Automatic engagement signals — things that happen TO a visitor rather than
+ * things they choose to do. Scroll depth, a section entering the viewport, a
+ * modal appearing.
+ *
+ * These were going through `logLeadEvent`, which is the same mistake the
+ * GameEventType note above exists to prevent, and it was live on the busiest
+ * page on the site: Index.tsx raised 4 scroll-depth milestones and 5
+ * section-visibility markers, so one visitor scrolling to the bottom of the
+ * homepage generated up to NINE `Lead` conversions having clicked nothing.
+ * Measured in GA4 Realtime on 18 Sep 2026: 11 `generate_lead` against 6
+ * `page_view`, from one session that clicked nothing at all.
+ *
+ * The rows are still written to lead_events — the signal is genuinely useful
+ * for funnel analysis. What they are not is conversions.
+ */
+export type EngagementEventType = "homepage";
 
 interface EventOpts<T extends string> {
   source_type: T;
@@ -88,6 +116,19 @@ export async function logLeadEvent(opts: LogOpts): Promise<void> {
  * `leadTracking.pixel.test.ts`.
  */
 export async function logGameEvent(opts: EventOpts<GameEventType>): Promise<void> {
+  try {
+    await insertEventRow(opts);
+  } catch {
+    /* swallow — never block UI */
+  }
+}
+
+/**
+ * Automatic engagement signals. Writes to lead_events and fires NO pixel —
+ * same guarantee as logGameEvent, for the same reason. See
+ * EngagementEventType above.
+ */
+export async function logEngagementEvent(opts: EventOpts<EngagementEventType>): Promise<void> {
   try {
     await insertEventRow(opts);
   } catch {
