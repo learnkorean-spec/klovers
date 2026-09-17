@@ -1,0 +1,81 @@
+import { useEffect, useState } from "react";
+
+/**
+ * One bottom-anchored overlay at a time.
+ *
+ * Three components used to pin themselves to the bottom of the viewport with
+ * no knowledge of each other: HomeExitNudge (fixed bottom-0, z-50),
+ * StickyEnrollBar (fixed bottom-0, z-40 - directly underneath it) and
+ * InterviewBannerChip (fixed bottom-32). On the homepage all three could be
+ * up simultaneously, and the nudge painted straight over the enrol bar with
+ * half its text showing. A visitor reading three competing asks generally
+ * answers none of them.
+ *
+ * The WhatsApp bubble is deliberately NOT in here. It sits on the right edge
+ * rather than across the bottom, it is support rather than a pitch, and it is
+ * the one thing that should always be reachable. Two floating elements is the
+ * intended maximum: WhatsApp, plus whichever of these wins.
+ *
+ * Priority is the array below, highest first:
+ *   1. exitNudge     - the visitor is leaving; this is the last ask.
+ *   2. stickyBar     - the standing ask while they read.
+ *   3. interviewChip - a feature promo, and the one to sacrifice.
+ *
+ * In practice the chip now appears only once the enrol bar has been
+ * dismissed. That is the intended trade, not an oversight: if the chip should
+ * outrank the bar instead, swap the two entries here and nothing else
+ * changes.
+ *
+ * Module-level state rather than a React context on purpose - this is a
+ * single global layer, the components are mounted in three different places
+ * in the tree, and wrapping the app in a provider to coordinate three
+ * booleans would be the heavier change.
+ */
+export type BottomSlot = "exitNudge" | "stickyBar" | "interviewChip";
+
+const PRIORITY: BottomSlot[] = ["exitNudge", "stickyBar", "interviewChip"];
+
+const claimed = new Set<BottomSlot>();
+const listeners = new Set<() => void>();
+
+const winner = (): BottomSlot | null => PRIORITY.find((s) => claimed.has(s)) ?? null;
+
+const notify = () => listeners.forEach((l) => l());
+
+/**
+ * Declare that this slot wants the bottom of the screen. Returns true only
+ * when it both wants it and outranks everything else currently asking.
+ *
+ * Call it unconditionally, like any hook, and gate the render on the result:
+ *
+ *   const allowed = useBottomSlot("stickyBar", visible && !dismissed);
+ *   if (!allowed) return null;
+ */
+export const useBottomSlot = (slot: BottomSlot, wantsToShow: boolean): boolean => {
+  const [active, setActive] = useState<BottomSlot | null>(winner);
+
+  useEffect(() => {
+    const listener = () => setActive(winner());
+    listeners.add(listener);
+    // The winner may already have changed between this component's first
+    // render and this effect running - re-read rather than trusting state.
+    listener();
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (wantsToShow) claimed.add(slot);
+    else claimed.delete(slot);
+    notify();
+    // Releasing on unmount matters: a component that leaves the tree while
+    // holding the slot would otherwise block everything below it forever.
+    return () => {
+      claimed.delete(slot);
+      notify();
+    };
+  }, [slot, wantsToShow]);
+
+  return wantsToShow && active === slot;
+};

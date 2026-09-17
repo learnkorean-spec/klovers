@@ -3,11 +3,16 @@ import { Link } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBottomSlot } from "@/lib/bottomLayer";
 
 /**
  * StickyEnrollBar — appears after the user scrolls past the hero CTA buttons.
  * Shows a slim bottom bar: "Still thinking? → Enroll Now" + Free Trial link.
  * Dismissed by clicking X (stored in sessionStorage so it doesn't re-appear on the same visit).
+ *
+ * Yields to HomeExitNudge, which occupies the same bottom-0 strip at a higher
+ * z-index — see src/lib/bottomLayer.ts. Hiding is the point: being painted
+ * over is what produced the half-cut bar under the nudge card.
  */
 const StickyEnrollBar = () => {
   const { t } = useLanguage();
@@ -27,12 +32,14 @@ const StickyEnrollBar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const allowed = useBottomSlot("stickyBar", visible && !dismissed);
+
   const dismiss = () => {
     setDismissed(true);
     sessionStorage.setItem("enroll_bar_dismissed", "1");
   };
 
-  if (dismissed || !visible) return null;
+  if (!allowed) return null;
 
   return (
     <div

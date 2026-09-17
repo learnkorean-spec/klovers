@@ -3,6 +3,11 @@
 // most traffic actually lands and bounces, so this is the bigger funnel
 // catch. Routes to the placement test (5-min level discovery) rather
 // than the trial form, because placement-test takers convert ~5x.
+//
+// Highest priority in the bottom layer (see src/lib/bottomLayer.ts): while
+// this is up, the sticky enrol bar and the interview chip stand down. It
+// used to simply paint over the enrol bar at a higher z-index, which left
+// half a bar sticking out from under this card.
 
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -10,6 +15,7 @@ import { X, ArrowRight } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBottomSlot } from "@/lib/bottomLayer";
 
 const STORAGE_KEY = "klovers_home_exit_nudge_shown_at";
 // Only show again after 24h to avoid hammering returning visitors.
@@ -72,12 +78,14 @@ const HomeExitNudge = () => {
     };
   }, []);
 
+  const allowed = useBottomSlot("exitNudge", visible);
+
   const handleClick = () => {
     track.custom("home_exit_intent_clicked", { cta: "placement_test" });
     logLeadEvent({ source_type: "homepage", cta_label: "exit_intent_placement" });
   };
 
-  if (!visible) return null;
+  if (!allowed) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 pointer-events-none animate-in slide-in-from-bottom-2 duration-300">
