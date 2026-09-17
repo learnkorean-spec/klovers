@@ -54,6 +54,10 @@ import { buildTrialReaskEmail } from "./templates/trialReask.ts";
 // send-class-reminders to seated students of started groups, with the
 // group's own room. Fifth slug absent from that union.
 import { buildClassReminderEmail } from "./templates/classReminder.ts";
+// The trial-day reminder, since 2026-09-17. Sent by send-trial-reminder about
+// two hours before each trial, to every live booking on that day - confirmed
+// or silent, unlike the book. Sixth slug absent from that union.
+import { buildTrialReminderEmail } from "./templates/trialReminder.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -215,6 +219,19 @@ serve(async (req) => {
         });
       }
     }
+    // Same rule for the trial-day reminder, whose room arrives as
+    // `meeting_url` (the column the booking carries) rather than
+    // `class_link_url`. Its book link is optional on purpose: the letter is a
+    // reminder, so a missing book costs it a second link, not its send.
+    if ((template as string) === "trial_reminder") {
+      const room = ((payload! as { meeting_url?: string }).meeting_url || "").trim();
+      if (!room) {
+        return new Response(JSON.stringify({ error: "meeting_url is required for the trial_reminder template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     // Both links in the second ask are the confirmation page carrying this
     // booking's own token. Without it the letter asks the reader to confirm
     // and then cannot tell who confirmed.
@@ -255,9 +272,10 @@ serve(async (req) => {
     // is ever opened for another reason, move this into the switch.
     // `admin_message` is here for exactly the reason given above, and is the
     // second key deliberately absent from that union. `trial_guide` is the
-    // third, `trial_reask` the fourth and `class_reminder` the fifth; their
-    // only callers are the send-trial-guide cron, the send-trial-reask
-    // endpoint and the send-class-reminders cron.
+    // third, `trial_reask` the fourth, `class_reminder` the fifth and
+    // `trial_reminder` the sixth; their only callers are the send-trial-guide
+    // cron, the send-trial-reask endpoint, the send-class-reminders cron and
+    // the send-trial-reminder cron.
     if ((template as string) === "admin_message") {
       const adminMessage = buildAdminMessageEmail(payload!);
       subject = adminMessage.subject;
@@ -278,6 +296,10 @@ serve(async (req) => {
       const classReminder = buildClassReminderEmail(payload!);
       subject = classReminder.subject;
       html = classReminder.html;
+    } else if ((template as string) === "trial_reminder") {
+      const trialReminder = buildTrialReminderEmail(payload!);
+      subject = trialReminder.subject;
+      html = trialReminder.html;
     } else switch (template) {
       case "welcome":
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
