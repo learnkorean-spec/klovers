@@ -1,0 +1,23 @@
+# Keep LF line endings on every OS (Windows included).
+# Node scripts start with a #!/usr/bin/env node shebang and some tests parse
+# source with \n-based regexes; CRLF checkouts break both.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.lockb binary
