@@ -186,11 +186,14 @@ const SignUpPage = () => {
       <Header />
       <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
 
-        {/* Social proof strip */}
+        {/* Social proof strip — 200+, not 500+. Same figure as the hero strip
+            (HeroSection.tsx) and the testimonials stats: every student taught
+            across 13 years, which is the only student number on this site that
+            anything supports. */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5 font-medium text-foreground">{isAr ? "⭐ تقييم 4.9" : "⭐ 4.9 rated"}</span>
           <span className="text-border">·</span>
-          <span>{isAr ? "👥 +500 طالب" : "👥 500+ students"}</span>
+          <span>{isAr ? "👥 +200 طالب" : "👥 200+ students"}</span>
           <span className="text-border">·</span>
           <span>{isAr ? "🌍 +15 دولة" : "🌍 15+ countries"}</span>
           <span className="text-border">·</span>
