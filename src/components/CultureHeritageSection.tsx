@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Landmark, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { logLeadEvent } from "@/lib/leadTracking";
+import { logContentEvent } from "@/lib/leadTracking";
 import OptimizedImage from "@/components/OptimizedImage";
 
 /**
@@ -197,7 +197,10 @@ const CultureHeritageSection = () => {
                 key={tile.slugEn}
                 to={`/blog/${slug}`}
                 className="group relative rounded-2xl overflow-hidden shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]"
-                onClick={() => { try { logLeadEvent({ source_type: "culture_section", cta_label: `culture_${tile.slugEn}` }); } catch {} }}
+                // logContentEvent, not logLeadEvent — see the type's comment
+                // in leadTracking.ts. A culture-tile click is real interest
+                // signal worth recording, but not a Meta/GA4 "Lead" conversion.
+                onClick={() => { try { logContentEvent({ source_type: "culture_section", cta_label: `culture_${tile.slugEn}` }); } catch {} }}
               >
                 <div className="relative w-full aspect-[3/4] overflow-hidden">
                   <OptimizedImage

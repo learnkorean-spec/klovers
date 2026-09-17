@@ -96,6 +96,30 @@ export async function logGameEvent(opts: EventOpts<GameEventType>): Promise<void
 }
 
 /**
+ * Content/discovery telemetry — same reasoning as GameEventType above, and
+ * added for the same reason: CultureHeritageSection.tsx (2026-09-18) was
+ * originally written calling `logLeadEvent({ source_type: "culture_section" })`,
+ * which does not satisfy the `LeadSource` union and would fail `tsc --noEmit`
+ * — caught only because Vite doesn't typecheck at build time (see CLAUDE.md
+ * "Known debt"), so it shipped anyway. The real problem isn't the type error,
+ * it's what `logLeadEvent` actually does: it mirrors every call to Meta Pixel
+ * / GA4 as a `Lead` conversion. A homepage visitor idly clicking a culture
+ * tile is not the same purchase-intent signal as booking a trial, and at
+ * blog-tile click frequency it would have quietly diluted real ad-optimization
+ * data with a high volume of low-intent "leads" — the exact failure mode this
+ * file's `GameEventType` split exists to prevent for game telemetry.
+ */
+export type ContentEventType = "culture_section";
+
+export async function logContentEvent(opts: EventOpts<ContentEventType>): Promise<void> {
+  try {
+    await insertEventRow(opts);
+  } catch {
+    /* swallow — never block UI */
+  }
+}
+
+/**
  * Log a WhatsApp click then open the URL.
  * Races the insert against a 600ms timeout so the redirect never feels laggy.
  */
