@@ -1,6 +1,6 @@
 /**
- * MONEY IN — what has actually been collected, group and private side by side,
- * and what is still owed.
+ * MONEY IN — what has been collected, what is still owed, and what a student
+ * says she has paid.
  *
  * WHY IT IS ON TODAY
  * The KPI strip that carries these figures is drawn by AdminDashboard, above
@@ -17,17 +17,18 @@
  * WHY THE UNPAID LIST IS HERE AND NOT BURIED
  * A bundle with no `paid_on` is a student being taught on credit. Mariam had
  * two classes taught against an unpaid bundle and nothing anywhere said so — it
- * was being counted as income instead. It belongs on the screen that lists what
- * needs a decision, with the one control that resolves it.
+ * was being counted as income instead.
  *
- * No new queries: both hooks are the ones the KPI strip already uses, and
- * react-query serves them from the same cache.
+ * CLAIMS ARE NOT MONEY
+ * A student pressing "I have paid" writes a row in `student_payment_claims` and
+ * nothing else. Approving it here is what writes `paid_on`. That ordering is the
+ * whole point: the balance is Re's, not the student's.
  */
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, Wallet } from "lucide-react";
+import { GraduationCap, Wallet, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
 import { usePrivateBudgets } from "@/hooks/admin/usePrivateBudgets";
@@ -41,6 +42,18 @@ function todayInCairo(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
 }
 
+interface Claim {
+  id: string;
+  amount: number;
+  currency: string;
+  paid_on: string;
+  method: string;
+  sender_name: string | null;
+  note: string | null;
+  bundle_id: string | null;
+  teacher_students: { full_name: string | null } | null;
+}
+
 const MoneyIn = () => {
   const queryClient = useQueryClient();
   const { data: revenue, isLoading: revenueLoading } = useCollectedRevenue();
@@ -49,6 +62,19 @@ const MoneyIn = () => {
   const [dates, setDates] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [claims, setClaims] = useState<Claim[]>([]);
+
+  const loadClaims = useCallback(async () => {
+    const { data, error: claimError } = await supabase
+      .from("student_payment_claims")
+      .select("id, amount, currency, paid_on, method, sender_name, note, bundle_id, teacher_students(full_name)")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+    if (claimError) return;
+    setClaims((data ?? []) as unknown as Claim[]);
+  }, []);
+
+  useEffect(() => { void loadClaims(); }, [loadClaims]);
 
   async function markPaid(id: string, fallback: string | null) {
     const when = dates[id] ?? fallback ?? todayInCairo();
@@ -64,6 +90,24 @@ const MoneyIn = () => {
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["admin", "private-budgets"] });
+  }
+
+  async function reviewClaim(id: string, approve: boolean) {
+    setBusy(id);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc("admin_review_payment_claim", {
+      p_claim_id: id,
+      p_approve: approve,
+    } as never);
+    setBusy(null);
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    await Promise.all([
+      loadClaims(),
+      queryClient.invalidateQueries({ queryKey: ["admin", "private-budgets"] }),
+    ]);
   }
 
   if (revenueLoading || privateLoading) {
@@ -138,6 +182,64 @@ const MoneyIn = () => {
           </CardContent>
         </Card>
       </div>
+
+      {claims.length > 0 && (
+        <Card className="border-foreground">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="flex items-center gap-2 text-xs font-bold tracking-[0.04em] text-muted-foreground">
+                <Inbox className="h-4 w-4" />
+                STUDENTS SAY THEY PAID — {claims.length}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                approving is what marks the bundle paid
+              </span>
+            </div>
+
+            <ul className="space-y-2">
+              {claims.map(c => (
+                <li key={c.id} className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="min-w-0 flex-1">
+                    <span className="font-semibold">
+                      {c.teacher_students?.full_name ?? "A student"}
+                    </span>
+                    {" · "}
+                    <span className="tabular-nums">{formatMoney(Number(c.amount))}</span>{" "}
+                    {c.currency}
+                    {" · "}
+                    {c.paid_on}
+                    {" · "}
+                    {c.method}
+                    {c.sender_name ? ` · from ${c.sender_name}` : ""}
+                    {c.note ? ` · ${c.note}` : ""}
+                    {!c.bundle_id && (
+                      <span className="text-muted-foreground"> · no bundle — records only</span>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void reviewClaim(c.id, true)}
+                    disabled={busy === c.id}
+                    className="rounded-lg border bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                  >
+                    {busy === c.id ? "Saving…" : "Money received"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void reviewClaim(c.id, false)}
+                    disabled={busy === c.id}
+                    className="rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60"
+                  >
+                    Not found
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </CardContent>
+        </Card>
+      )}
 
       {unpaid.length > 0 && (
         <Card className="border-foreground">
