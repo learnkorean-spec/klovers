@@ -4,6 +4,8 @@ import { LEAGUES, getLeague, getLeagueProgress, BADGES } from "@/constants/gamif
 import { cn } from "@/lib/utils";
 import { Flame, Trophy, Star, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { leagueName, badgeText } from "@/lib/dashboardLocale";
 
 // --- XP Badge (small inline) ---
 export function XpBadge({ xp, className }: { xp: number; className?: string }) {
@@ -26,6 +28,7 @@ export function XpEarnedToast({ xp }: { xp: number }) {
 
 // --- League Progress Bar ---
 export function LeagueProgressBar({ totalXp }: { totalXp: number }) {
+  const { t, tInterpolate, language } = useLanguage();
   const league = getLeague(totalXp);
   const pct = getLeagueProgress(totalXp);
   const nextLeague = LEAGUES[league.index + 1];
@@ -38,20 +41,20 @@ export function LeagueProgressBar({ totalXp }: { totalXp: number }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{league.emoji}</span>
-          <div>
-            <p className="text-sm font-bold text-foreground">{league.name}</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-2xl shrink-0">{league.emoji}</span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-foreground break-words leading-tight">{leagueName(league, language)}</p>
             <p className="text-xs text-muted-foreground">
-              {totalXp.toLocaleString()} XP · League {league.index + 1} of {LEAGUES.length}
+              {totalXp.toLocaleString()} XP · {tInterpolate(t("dashboardPage.leagueOf"), { index: league.index + 1, total: LEAGUES.length })}
             </p>
           </div>
         </div>
         {nextLeague && (
-          <p className="text-xs text-muted-foreground text-right">
-            {(nextLeague.minXp - totalXp).toLocaleString()} XP to<br />
-            <span className="font-medium">{nextLeague.emoji} {nextLeague.name}</span>
+          <p className="text-xs text-muted-foreground text-end shrink-0 max-w-[45%]">
+            {tInterpolate(t("dashboardPage.xpTo"), { count: (nextLeague.minXp - totalXp).toLocaleString() })}<br />
+            <span className="font-medium">{nextLeague.emoji} {leagueName(nextLeague, language)}</span>
           </p>
         )}
       </div>
@@ -139,6 +142,7 @@ export function StreakDisplay({
 
 // --- Badge Grid ---
 export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: string[]; loading?: boolean }) {
+  const { language } = useLanguage();
   if (loading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -157,6 +161,7 @@ export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: str
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {BADGES.map((b) => {
         const earned = earnedBadges.includes(b.key);
+        const text = badgeText(b, language);
         return (
           <div
             key={b.key}
@@ -166,8 +171,8 @@ export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: str
             )}
           >
             <span className="text-2xl block mb-1">{b.emoji}</span>
-            <p className="text-xs font-bold text-foreground">{b.name}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{b.description}</p>
+            <p className="text-xs font-bold text-foreground break-words">{text.name}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 break-words">{text.description}</p>
             {earned && <Star className="h-3 w-3 text-amber-500 mx-auto mt-1" />}
           </div>
         );
@@ -204,7 +209,7 @@ export function LessonProgressDots({ progress }: {
           {s.label}
         </span>
       ))}
-      {progress.chapter_completed && <span className="text-xs ml-1">⭐</span>}
+      {progress.chapter_completed && <span className="text-xs ms-1">⭐</span>}
     </div>
   );
 }
