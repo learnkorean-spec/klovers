@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBottomSlot } from "@/lib/bottomLayer";
 
 const SESSION_KEY = "interview_banner_dismissed";
 
@@ -24,12 +25,17 @@ const InterviewBannerChip = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Lowest of the three bottom-anchored overlays - see src/lib/bottomLayer.ts.
+  // A feature promo is the right thing to drop when the exit nudge or the
+  // enrol bar wants the same corner of the screen.
+  const allowed = useBottomSlot("interviewChip", scrolledPastHero && !dismissed);
+
   const dismiss = () => {
     sessionStorage.setItem(SESSION_KEY, "1");
     setDismissed(true);
   };
 
-  if (dismissed || !scrolledPastHero) return null;
+  if (!allowed) return null;
 
   return (
     <div
