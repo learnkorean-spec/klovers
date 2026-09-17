@@ -169,7 +169,7 @@ const HeroSection = () => {
           {/* Live badge — split pill design */}
           <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-black/30 backdrop-blur-md">
             <div className="bg-primary px-4 py-2 flex items-center gap-2">
-              <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 KLOVERS</span>
+              <span className="text-black text-xs font-black tracking-[0.15em] uppercase">KLOVERS</span>
             </div>
             <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
               {/* Static dot — the pulsing "live" signal lives on the next-class

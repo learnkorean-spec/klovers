@@ -9,7 +9,6 @@ import WhyLearnKorean from "@/components/WhyLearnKorean";
 import Footer from "@/components/Footer";
 import StickyEnrollBar from "@/components/StickyEnrollBar";
 import ReturningStudentBanner from "@/components/ReturningStudentBanner";
-import InterviewBannerChip from "@/components/InterviewBannerChip";
 import HomeExitNudge from "@/components/HomeExitNudge";
 
 // Lazy-load below-fold sections for faster initial paint
@@ -217,8 +216,6 @@ const Index = () => {
 
         {/* Returning students promotional banner */}
         <ReturningStudentBanner />
-        {/* Interview training chip — non-intrusive floating, dismissible */}
-        <InterviewBannerChip />
 
         {/* Interest — immediately answer "how does this work?" */}
         <div id="how-it-works" style={{ minHeight: 480 }}>
