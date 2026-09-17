@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
+import { arEG } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock, AlertTriangle, Trash2 } from "lucide-react";
 import StudentSelfService from "@/components/StudentSelfService";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -35,10 +37,17 @@ interface StudentAttendanceRequestProps {
   userId: string;
 }
 
-const statusConfig: Record<string, { label: string; icon: React.ElementType; variant: "default" | "secondary" | "destructive" | "outline"; color: string }> = {
-  PENDING: { label: "Pending", icon: Clock, variant: "secondary", color: "text-muted-foreground" },
-  APPROVED: { label: "Approved", icon: CheckCircle2, variant: "default", color: "text-primary" },
-  REJECTED: { label: "Rejected", icon: XCircle, variant: "destructive", color: "text-destructive" },
+const statusConfig: Record<string, { label: string; labelAr: string; icon: React.ElementType; variant: "default" | "secondary" | "destructive" | "outline"; color: string }> = {
+  PENDING: { label: "Pending", labelAr: "قيد المراجعة", icon: Clock, variant: "secondary", color: "text-muted-foreground" },
+  APPROVED: { label: "Approved", labelAr: "مؤكَّد", icon: CheckCircle2, variant: "default", color: "text-primary" },
+  REJECTED: { label: "Rejected", labelAr: "مرفوض", icon: XCircle, variant: "destructive", color: "text-destructive" },
+};
+
+/** Arabic when the site is in Arabic; the English stays the source of truth. */
+const useTr = () => {
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  return { isAr, tr: (en: string, ar: string) => (isAr ? ar : en) };
 };
 
 interface EligibleEnrollment {
@@ -90,25 +99,28 @@ const NEGATIVE_LIMIT = -3;
 
 const LockedCard = ({ reason }: { reason?: "unpaid" | "limit" }) => {
   const navigate = useNavigate();
+  const { tr } = useTr();
   const isLimit = reason === "limit";
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Lock className="h-5 w-5 text-muted-foreground" />
-          {isLimit ? "Reached limit (−3). Renew required." : "Attendance is available after payment"}
+          {isLimit
+            ? tr("Reached limit (−3). Renew required.", "وصلت للحد (−3). يلزم تجديد الباقة.")
+            : tr("Attendance is available after payment", "تسجيل الحضور متاح بعد الدفع")}
         </CardTitle>
         <CardDescription>
           {isLimit
-            ? "You've used 3 extra classes beyond your package. Please renew to continue."
-            : "Complete enrollment and payment to unlock attendance tracking."}
+            ? tr("You've used 3 extra classes beyond your package. Please renew to continue.", "استخدمت 3 حصص إضافية بعد انتهاء باقتك. جدّد الباقة لتكمل.")
+            : tr("Complete enrollment and payment to unlock attendance tracking.", "أكمل التسجيل والدفع لتفعيل متابعة الحضور.")}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex gap-3">
+      <CardContent className="flex flex-wrap gap-3">
         <Button onClick={() => navigate(isLimit ? "/courses" : "/enroll-now")}>
-          {isLimit ? "Renew Package" : "Enroll Now"}
+          {isLimit ? tr("Renew Package", "جدّد الباقة") : tr("Enroll Now", "سجّل الآن")}
         </Button>
-        <Button variant="outline" onClick={() => navigate("/student")}>View My Enrollments</Button>
+        <Button variant="outline" onClick={() => navigate("/student")}>{tr("View My Enrollments", "عرض تسجيلاتي")}</Button>
       </CardContent>
     </Card>
   );
@@ -117,16 +129,20 @@ const LockedCard = ({ reason }: { reason?: "unpaid" | "limit" }) => {
 const NegativeBalanceBanner = ({ remaining }: { remaining: number }) => {
   const navigate = useNavigate();
   const overCount = Math.abs(remaining);
+  const { tr } = useTr();
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg border border-destructive/50 bg-destructive/10 mb-4">
       <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
       <div className="flex-1 space-y-1">
-        <p className="text-sm font-medium text-foreground">Balance negative ({remaining})</p>
+        <p className="text-sm font-medium text-foreground">{tr("Balance negative", "الرصيد بالسالب")} (<span dir="ltr">{remaining}</span>)</p>
         <p className="text-xs text-muted-foreground">
-          You've exceeded your package by {overCount} {overCount === 1 ? "class" : "classes"}. Allowed until −3. A reminder will be sent.
+          {tr(
+            `You've exceeded your package by ${overCount} ${overCount === 1 ? "class" : "classes"}. Allowed until −3. A reminder will be sent.`,
+            `تجاوزت باقتك — الحصص الإضافية: ${overCount}. المسموح حتى −3، وسيصلك تذكير.`,
+          )}
         </p>
         <Button size="sm" variant="destructive" className="mt-2" onClick={() => navigate("/enroll-now")}>
-          Renew Package
+          {tr("Renew Package", "جدّد الباقة")}
         </Button>
       </div>
     </div>
@@ -154,6 +170,8 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const { isAr, tr } = useTr();
+  const dateFnsLocale = isAr ? arEG : undefined;
 
   const loadData = useCallback(async () => {
     const [eligible, privateStudent] = await Promise.all([
@@ -203,14 +221,14 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     if (!eligible) {
       setUnlocked(false);
       setEnrollment(null);
-      toast({ title: "You need an active paid enrollment", description: "Please enroll and complete payment first.", variant: "destructive" });
+      toast({ title: tr("You need an active paid enrollment", "تحتاج إلى تسجيل نشط ومدفوع"), description: tr("Please enroll and complete payment first.", "سجّل وأكمل الدفع أولًا."), variant: "destructive" });
       return;
     }
 
     const dateStr = format(date, "yyyy-MM-dd");
     const exists = requests.find(r => r.request_date === dateStr && r.status !== "REJECTED");
     if (exists) {
-      toast({ title: "Already requested", description: "You already have a request for this date.", variant: "destructive" });
+      toast({ title: tr("Already requested", "تم الطلب من قبل"), description: tr("You already have a request for this date.", "لديك طلب بالفعل لهذا التاريخ."), variant: "destructive" });
       return;
     }
 
@@ -224,15 +242,21 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     } as any);
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: tr("Error", "خطأ"), description: error.message, variant: "destructive" });
     } else {
       const result = Array.isArray(data) ? data[0] : data;
       const approved = result?.status === "APPROVED";
       toast({
-        title: approved ? "Attendance confirmed!" : "Attendance submitted!",
+        title: approved ? tr("Attendance confirmed!", "تم تأكيد الحضور!") : tr("Attendance submitted!", "تم إرسال الحضور!"),
         description: approved
-          ? `${format(date, "MMM d, yyyy")} confirmed automatically — ${result.sessions_remaining} session(s) left.`
-          : `${format(date, "MMM d, yyyy")} sent for review.`,
+          ? tr(
+              `${format(date, "MMM d, yyyy")} confirmed automatically — ${result.sessions_remaining} session(s) left.`,
+              `${format(date, "d MMMM yyyy", { locale: dateFnsLocale })} تم تأكيده تلقائيًا — الحصص المتبقية: ${result.sessions_remaining}.`,
+            )
+          : tr(
+              `${format(date, "MMM d, yyyy")} sent for review.`,
+              `${format(date, "d MMMM yyyy", { locale: dateFnsLocale })} أُرسل للمراجعة.`,
+            ),
       });
       loadData();
     }
@@ -246,9 +270,9 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
       .delete()
       .eq("id", requestId);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: tr("Error", "خطأ"), description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Request cancelled", description: "Your pending attendance request has been removed." });
+      toast({ title: tr("Request cancelled", "تم إلغاء الطلب"), description: tr("Your pending attendance request has been removed.", "تم حذف طلب الحضور المعلّق.") });
       loadData();
     }
     setDeleting(null);
@@ -281,7 +305,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    return d.toLocaleDateString(isAr ? "ar-EG-u-nu-latn" : "en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
   };
 
   if (loading) return <LoadingSkeleton />;
@@ -305,21 +329,21 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarIcon className="h-5 w-5" />
-            My Class Dates
+            {tr("My Class Dates", "مواعيد حصصي")}
           </CardTitle>
-          <p className="text-xs text-muted-foreground">Tap a date to mark your attendance</p>
+          <p className="text-xs text-muted-foreground">{tr("Tap a date to mark your attendance", "اضغط على التاريخ لتسجيل حضورك")}</p>
           <div className="flex gap-3 flex-wrap mt-1">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-primary border border-foreground/30" />
-              <span className="text-xs text-muted-foreground">Attended</span>
+              <span className="text-xs text-muted-foreground">{tr("Attended", "حضرت")}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-secondary border border-foreground/20" />
-              <span className="text-xs text-muted-foreground">Pending</span>
+              <span className="text-xs text-muted-foreground">{tr("Pending", "قيد المراجعة")}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-destructive border border-destructive/50" />
-              <span className="text-xs text-muted-foreground">Rejected</span>
+              <span className="text-xs text-muted-foreground">{tr("Rejected", "مرفوض")}</span>
             </div>
           </div>
         </CardHeader>
@@ -327,7 +351,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
           {isNegative && <NegativeBalanceBanner remaining={remaining} />}
           {submitting && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Loader2 className="h-4 w-4 animate-spin" /> Submitting…
+              <Loader2 className="h-4 w-4 animate-spin" /> {tr("Submitting…", "جارٍ الإرسال…")}
             </div>
           )}
           <Calendar
@@ -338,6 +362,10 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
             modifiersStyles={modifiersStyles}
             disabled={(date) => date > new Date() || date < new Date("2024-01-01")}
             className={cn("p-3 pointer-events-auto w-full")}
+            locale={dateFnsLocale}
+            dir={isAr ? "rtl" : "ltr"}
+            labels={isAr ? { labelPrevious: () => "الشهر السابق", labelNext: () => "الشهر التالي" } : undefined}
+            classNames={isAr ? { nav_button_previous: "absolute right-1", nav_button_next: "absolute left-1" } : undefined}
           />
         </CardContent>
       </Card>
@@ -346,8 +374,13 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
       {(adminDates.length > 0 || requests.length > 0) && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Session History</CardTitle>
-            <p className="text-xs text-muted-foreground">{adminDates.length + requests.filter(r => r.status === "APPROVED").length} attended sessions</p>
+            <CardTitle className="text-lg">{tr("Session History", "سجل الحضور")}</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {tr(
+                `${adminDates.length + requests.filter(r => r.status === "APPROVED").length} attended sessions`,
+                `الحصص التي حضرتها: ${adminDates.length + requests.filter(r => r.status === "APPROVED").length}`,
+              )}
+            </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -360,10 +393,10 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">{formatDate(a.session_date)}</p>
-                      <p className="text-xs text-muted-foreground">Logged by teacher</p>
+                      <p className="text-xs text-muted-foreground">{tr("Logged by teacher", "سجّله المعلّم")}</p>
                     </div>
                   </div>
-                  <Badge variant="default">Attended</Badge>
+                  <Badge variant="default" className="shrink-0">{tr("Attended", "حضرت")}</Badge>
                 </div>
               ))}
 
@@ -379,11 +412,11 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground">{formatDate(r.request_date)}</p>
-                        <p className="text-xs text-muted-foreground">Self-reported</p>
+                        <p className="text-xs text-muted-foreground">{tr("Self-reported", "سجّلته بنفسك")}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge variant={cfg.variant} className="shrink-0 whitespace-nowrap">{isAr ? cfg.labelAr : cfg.label}</Badge>
                       {r.status === "PENDING" && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -392,6 +425,7 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                               size="icon"
                               className="h-8 w-8"
                               disabled={deleting === r.id}
+                              aria-label={tr(`Cancel request for ${formatDate(r.request_date)}`, `إلغاء طلب ${formatDate(r.request_date)}`)}
                             >
                               {deleting === r.id ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -402,15 +436,18 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+                              <AlertDialogTitle>{tr("Cancel this request?", "إلغاء هذا الطلب؟")}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This will remove your pending attendance request for {formatDate(r.request_date)}.
+                                {tr(
+                                  `This will remove your pending attendance request for ${formatDate(r.request_date)}.`,
+                                  `سيتم حذف طلب الحضور المعلّق بتاريخ ${formatDate(r.request_date)}.`,
+                                )}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Keep</AlertDialogCancel>
+                              <AlertDialogCancel>{tr("Keep", "إبقاء")}</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleCancelRequest(r.id)}>
-                                Cancel Request
+                                {tr("Cancel Request", "إلغاء الطلب")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
