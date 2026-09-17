@@ -1,5 +1,12 @@
 -- A placement result fills an empty profile level.
 --
+-- Renamed from 20260916113000 to 20260916113001 on 2026-09-17: it shared its
+-- original timestamp with 20260916113000_leads_can_unsubscribe.sql, which made
+-- the migration-state checker treat one of the two as permanently pending (only
+-- the first file at a given version is ever recorded as applied). The two are
+-- unrelated (this touches placement_tests/profiles, the other touches leads)
+-- and neither depends on the other's ordering, so the rename is safe.
+--
 -- placement_tests.level is written as hangul / l1 / l2 / l3 (level_1 /
 -- level_2 in April rows). profiles.level and profiles.course_level_key use
 -- hangul / level_1 / level_2 / level_3. Nothing carried a result across, so
