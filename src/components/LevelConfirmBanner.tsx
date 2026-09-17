@@ -61,7 +61,11 @@ const LevelConfirmBanner = () => {
 
     const load = async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error("[LevelConfirmBanner] session lookup failed:", sessionError);
+          return;
+        }
         const session = sessionData.session;
         if (!session) return;
         const uid = session.user.id;
@@ -121,10 +125,11 @@ const LevelConfirmBanner = () => {
     setSaving(true);
     setSaveFailed(false);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user.id;
-      if (!uid) throw new Error("no session");
-
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const uid = sessionData.session?.user.id;
+        if (!uid) throw new Error("no session");
+      
       // Both columns. `course_level_key` is what hold_my_seat reads; `level` is
       // what assign_student_to_pkg_group still reads. They have disagreed on
       // real rows before, and a student who has just told us her level should
