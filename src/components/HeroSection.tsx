@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo, type Ref } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -14,6 +14,11 @@ const useCountUp = (target: number, duration = 1800) => {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Reduced motion gets the answer, not the animation.
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setCount(target);
+      return;
+    }
     const obs = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return;
       obs.disconnect();
@@ -79,10 +84,15 @@ const HeroSection = () => {
    * The rating is 4.9 and stays 4.9 - it is the count that was missing. 16
    * reviews with the source named reads as true; an unattributed 4.9 next to
    * "500+" read as marketing.
+   *
+   * 2026-09-18: the rating no longer counts up. A count-up renders every
+   * intermediate value as a finished claim, and "0.6 ★ / From 16 reviews" is
+   * a worse sentence than any marketing copy this block was written to
+   * remove. Student count still animates - "17+ students" on the way to 200
+   * is wrong for a moment too, but it is a quantity, and a quantity ticking
+   * upward reads as a counter. A star rating does not.
    */
   const { count: studentCount, ref: studentRef } = useCountUp(200);
-  const { count: ratingCount, ref: ratingRef } = useCountUp(49, 1200);
-  const { count: countryCount, ref: countryRef } = useCountUp(15);
 
   useEffect(() => {
     const conn = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string } }).connection;
@@ -100,6 +110,21 @@ const HeroSection = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const stats: { icon: typeof Users; ref?: Ref<HTMLSpanElement>; display: string; label: string }[] = [
+    // The label is part of the claim here, not a caption under it.
+    // "200+ / Students in 13 years" is true; "200+ / Students Taught"
+    // beside a platform with 102 accounts is not.
+    { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
+    { icon: Star, display: "4.9 ★", label: isAr ? "من ١٦ مراجعة" : "From 16 reviews" },
+    // "6 Months to Conversational" was a timeline claim with no
+    // data behind it, the same pattern as the "500+" figures this
+    // hero was already rewritten to move away from (see the block
+    // comment above studentCount). A1–C2 is the one thing here
+    // that's just true - it's the actual level range taught, same
+    // claim already used on AboutPage.tsx and PlacementTestPage.tsx.
+    { icon: Globe, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
+  ];
 
   return (
     <section
@@ -304,20 +329,7 @@ const HeroSection = () => {
         <div className="max-w-3xl mx-auto">
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-6" />
           <div className="grid grid-cols-3 gap-4 md:gap-8">
-            {[
-              // The label is part of the claim here, not a caption under it.
-              // "200+ / Students in 13 years" is true; "200+ / Students Taught"
-              // beside a platform with 102 accounts is not.
-              { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
-              { icon: Star,  ref: ratingRef,  display: `${(ratingCount / 10).toFixed(1)} ★`, label: isAr ? "من ١٦ مراجعة" : "From 16 reviews" },
-              // "6 Months to Conversational" was a timeline claim with no
-              // data behind it, the same pattern as the "500+" figures this
-              // hero was already rewritten to move away from (see the block
-              // comment above studentCount). A1–C2 is the one thing here
-              // that's just true - it's the actual level range taught, same
-              // claim already used on AboutPage.tsx and PlacementTestPage.tsx.
-              { icon: Globe, ref: countryRef, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
-            ].map(({ icon: Icon, ref: itemRef, display, label }) => (
+            {stats.map(({ icon: Icon, ref: itemRef, display, label }) => (
               <div key={label} className="flex flex-col items-center gap-1 text-center group">
                 <div className="flex items-center gap-1.5">
                   <Icon className="h-4 w-4 text-primary hidden sm:block" />
