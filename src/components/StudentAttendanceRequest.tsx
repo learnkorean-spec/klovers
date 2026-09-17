@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, CheckCircle2, Clock, XCircle, Loader2, Lock, AlertTriangle, Trash2 } from "lucide-react";
+import StudentSelfService from "@/components/StudentSelfService";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -58,6 +59,21 @@ const fetchActiveEnrollment = async (userId: string): Promise<EligibleEnrollment
     .limit(1);
 
   return data && data.length > 0 ? data[0] : null;
+};
+
+/**
+ * A private student's world is `teacher_students` + bundles, not `enrollments`.
+ * Without this check she fell through to "Attendance is available after payment"
+ * — a locked card telling a paying student to enrol — because the query above
+ * can never find her. See StudentSelfService.
+ */
+const fetchPrivateRoster = async (userId: string): Promise<boolean> => {
+  const { data } = await supabase
+    .from("teacher_students")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return Boolean(data?.id);
 };
 
 const NEGATIVE_LIMIT = -3;
@@ -124,12 +140,18 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   const [adminDates, setAdminDates] = useState<AdminAttendanceEntry[]>([]);
   const [enrollment, setEnrollment] = useState<EligibleEnrollment | null>(null);
   const [unlocked, setUnlocked] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    const eligible = await fetchActiveEnrollment(userId);
+    const [eligible, privateStudent] = await Promise.all([
+      fetchActiveEnrollment(userId),
+      fetchPrivateRoster(userId),
+    ]);
+
+    setIsPrivate(privateStudent);
 
     if (!eligible) {
       setUnlocked(false);
@@ -253,6 +275,12 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
   };
 
   if (loading) return <LoadingSkeleton />;
+
+  // A private student has her own card, her own bundle and her own lessons. The
+  // group calendar below is built on an enrolment she does not have, so showing
+  // it to her — locked or otherwise — would only be wrong in a new way.
+  if (isPrivate) return <StudentSelfService userId={userId} />;
+
   if (!unlocked) return <LockedCard reason="unpaid" />;
 
   const remaining = enrollment?.sessions_remaining ?? 0;
