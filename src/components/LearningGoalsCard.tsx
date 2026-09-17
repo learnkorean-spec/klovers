@@ -21,6 +21,7 @@ import {
 import { useLearningGoals } from "@/hooks/useLearningGoals";
 import { Target, Plus, Trash2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function LearningGoalsCard() {
   const {
@@ -30,6 +31,8 @@ export function LearningGoalsCard() {
     getCompletionPercentage,
     getDaysRemaining,
   } = useLearningGoals();
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
 
   const [isOpen, setIsOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({
@@ -78,26 +81,26 @@ export function LearningGoalsCard() {
         <CardContent className="pt-6">
           <div className="text-center space-y-3">
             <Target className="h-8 w-8 mx-auto text-blue-600" />
-            <p className="font-medium text-foreground">No Learning Goals Yet</p>
+            <p className="font-medium text-foreground">{tr("No Learning Goals Yet", "لا توجد أهداف تعلّم بعد")}</p>
             <p className="text-sm text-muted-foreground">
-              Create a goal to stay motivated and track progress
+              {tr("Create a goal to stay motivated and track progress", "أنشئ هدفًا لتبقى متحفزًا وتتابع تقدّمك")}
             </p>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="mt-2">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Goal
+                  <Plus className="h-4 w-4 me-2" />
+                  {tr("Create Your First Goal", "أنشئ أول هدف لك")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create a Learning Goal</DialogTitle>
+                  <DialogTitle>{tr("Create a Learning Goal", "إنشاء هدف تعلّم")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
-                    <label className="text-sm font-medium">Goal Name</label>
+                    <label className="text-sm font-medium">{tr("Goal Name", "اسم الهدف")}</label>
                     <Input
-                      placeholder="e.g., Learn 50 new words"
+                      placeholder={tr("e.g., Learn 50 new words", "مثال: تعلّم 50 كلمة جديدة")}
                       value={newGoal.name}
                       onChange={(e) =>
                         setNewGoal({ ...newGoal, name: e.target.value })
@@ -105,7 +108,7 @@ export function LearningGoalsCard() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Goal Type</label>
+                    <label className="text-sm font-medium">{tr("Goal Type", "نوع الهدف")}</label>
                     <Select value={newGoal.type} onValueChange={(value) =>
                       setNewGoal({ ...newGoal, type: value })
                     }>
@@ -113,18 +116,18 @@ export function LearningGoalsCard() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="daily_vocab">Daily Vocabulary</SelectItem>
-                        <SelectItem value="weekly_lessons">Weekly Lessons</SelectItem>
-                        <SelectItem value="monthly_xp">Monthly XP</SelectItem>
-                        <SelectItem value="streak_days">Streak Days</SelectItem>
+                        <SelectItem value="daily_vocab">{tr("Daily Vocabulary", "مفردات يومية")}</SelectItem>
+                        <SelectItem value="weekly_lessons">{tr("Weekly Lessons", "دروس أسبوعية")}</SelectItem>
+                        <SelectItem value="monthly_xp">{tr("Monthly XP", "نقاط شهرية")}</SelectItem>
+                        <SelectItem value="streak_days">{tr("Streak Days", "أيام متتالية")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Target Value</label>
+                    <label className="text-sm font-medium">{tr("Target Value", "القيمة المستهدفة")}</label>
                     <Input
                       type="number"
-                      placeholder="e.g., 50"
+                      placeholder={tr("e.g., 50", "مثال: 50")}
                       value={newGoal.value}
                       onChange={(e) =>
                         setNewGoal({ ...newGoal, value: e.target.value })
@@ -132,7 +135,7 @@ export function LearningGoalsCard() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Time Period</label>
+                    <label className="text-sm font-medium">{tr("Time Period", "المدة")}</label>
                     <Select value={newGoal.period} onValueChange={(value) =>
                       setNewGoal({ ...newGoal, period: value })
                     }>
@@ -140,14 +143,14 @@ export function LearningGoalsCard() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="daily">{tr("Daily", "يومي")}</SelectItem>
+                        <SelectItem value="weekly">{tr("Weekly", "أسبوعي")}</SelectItem>
+                        <SelectItem value="monthly">{tr("Monthly", "شهري")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <Button onClick={handleCreateGoal} className="w-full">
-                    Create Goal
+                    {tr("Create Goal", "إنشاء الهدف")}
                   </Button>
                 </div>
               </DialogContent>
@@ -163,23 +166,23 @@ export function LearningGoalsCard() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5 text-blue-600" />
-          Learning Goals
+          {tr("Learning Goals", "أهداف التعلّم")}
         </CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" variant="outline">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" variant="outline" aria-label={tr("Add goal", "إضافة هدف")}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create a Learning Goal</DialogTitle>
+              <DialogTitle>{tr("Create a Learning Goal", "إنشاء هدف تعلّم")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <label className="text-sm font-medium">Goal Name</label>
+                <label className="text-sm font-medium">{tr("Goal Name", "اسم الهدف")}</label>
                 <Input
-                  placeholder="e.g., Learn 50 new words"
+                  placeholder={tr("e.g., Learn 50 new words", "مثال: تعلّم 50 كلمة جديدة")}
                   value={newGoal.name}
                   onChange={(e) =>
                     setNewGoal({ ...newGoal, name: e.target.value })
@@ -187,7 +190,7 @@ export function LearningGoalsCard() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Goal Type</label>
+                <label className="text-sm font-medium">{tr("Goal Type", "نوع الهدف")}</label>
                 <Select value={newGoal.type} onValueChange={(value) =>
                   setNewGoal({ ...newGoal, type: value })
                 }>
@@ -195,18 +198,18 @@ export function LearningGoalsCard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="daily_vocab">Daily Vocabulary</SelectItem>
-                    <SelectItem value="weekly_lessons">Weekly Lessons</SelectItem>
-                    <SelectItem value="monthly_xp">Monthly XP</SelectItem>
-                    <SelectItem value="streak_days">Streak Days</SelectItem>
+                    <SelectItem value="daily_vocab">{tr("Daily Vocabulary", "مفردات يومية")}</SelectItem>
+                    <SelectItem value="weekly_lessons">{tr("Weekly Lessons", "دروس أسبوعية")}</SelectItem>
+                    <SelectItem value="monthly_xp">{tr("Monthly XP", "نقاط شهرية")}</SelectItem>
+                    <SelectItem value="streak_days">{tr("Streak Days", "أيام متتالية")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Target Value</label>
+                <label className="text-sm font-medium">{tr("Target Value", "القيمة المستهدفة")}</label>
                 <Input
                   type="number"
-                  placeholder="e.g., 50"
+                  placeholder={tr("e.g., 50", "مثال: 50")}
                   value={newGoal.value}
                   onChange={(e) =>
                     setNewGoal({ ...newGoal, value: e.target.value })
@@ -214,7 +217,7 @@ export function LearningGoalsCard() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Time Period</label>
+                <label className="text-sm font-medium">{tr("Time Period", "المدة")}</label>
                 <Select value={newGoal.period} onValueChange={(value) =>
                   setNewGoal({ ...newGoal, period: value })
                 }>
@@ -222,14 +225,14 @@ export function LearningGoalsCard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="daily">{tr("Daily", "يومي")}</SelectItem>
+                    <SelectItem value="weekly">{tr("Weekly", "أسبوعي")}</SelectItem>
+                    <SelectItem value="monthly">{tr("Monthly", "شهري")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <Button onClick={handleCreateGoal} className="w-full">
-                Create Goal
+                {tr("Create Goal", "إنشاء الهدف")}
               </Button>
             </div>
           </DialogContent>
@@ -246,12 +249,12 @@ export function LearningGoalsCard() {
               className="p-3 rounded-lg border border-border bg-card space-y-2"
             >
               <div className="flex items-start justify-between">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">{getGoalEmoji(goal.goal_type)}</span>
-                    <p className="font-medium text-foreground">{goal.goal_name}</p>
+                    <p className="font-medium text-foreground break-words">{goal.goal_name}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground" dir="ltr">
                     {goal.current_progress} / {goal.target_value}
                   </p>
                 </div>
@@ -260,6 +263,7 @@ export function LearningGoalsCard() {
                   size="sm"
                   onClick={() => handleDeleteGoal(goal.id)}
                   className="h-6 w-6 p-0"
+                  aria-label={tr("Delete goal", "حذف الهدف")}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -268,10 +272,10 @@ export function LearningGoalsCard() {
               <Progress value={percentage} className="h-2" />
 
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">{percentage}% Complete</span>
+                <span className="text-muted-foreground">{tr(`${percentage}% Complete`, `مكتمل ${percentage}%`)}</span>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="h-3 w-3" />
-                  {daysRemaining} days left
+                  {tr(`${daysRemaining} days left`, `الأيام المتبقية: ${daysRemaining}`)}
                 </div>
               </div>
             </div>
