@@ -211,7 +211,7 @@ const TextbookProgressPage = () => {
             <p className="text-sm text-muted-foreground mb-4">
               {progress.badges.length} / {14} {isAr ? "شارة مكتسبة" : "badges earned"}
             </p>
-            <BadgeGrid earnedBadges={progress.badges} />
+            <BadgeGrid earnedBadges={progress.badges} detailed />
           </TabsContent>
 
           {/* LEADERBOARD */}

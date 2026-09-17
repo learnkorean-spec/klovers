@@ -141,10 +141,15 @@ export function StreakDisplay({
 }
 
 // --- Badge Grid ---
-export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: string[]; loading?: boolean }) {
+/**
+ * Badges. Compact by default (dashboard): earned badges as small chips, locked
+ * ones as a row of faded icons with the name + how to earn it on hover/focus.
+ * `detailed` keeps the full card grid for the dedicated progress page.
+ */
+export function BadgeGrid({ earnedBadges, loading = false, detailed = false }: { earnedBadges: string[]; loading?: boolean; detailed?: boolean }) {
   const { language } = useLanguage();
   if (loading) {
-    return (
+    return detailed ? (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="rounded-xl border border-border/50 p-3 space-y-2 animate-pulse">
@@ -154,29 +159,85 @@ export function BadgeGrid({ earnedBadges, loading = false }: { earnedBadges: str
           </div>
         ))}
       </div>
+    ) : (
+      <div className="flex flex-wrap gap-1.5">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-8 rounded-full" />
+        ))}
+      </div>
     );
   }
 
+  if (detailed) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {BADGES.map((b) => {
+          const earned = earnedBadges.includes(b.key);
+          const text = badgeText(b, language);
+          return (
+            <div
+              key={b.key}
+              className={cn(
+                "rounded-xl border p-3 text-center transition-all",
+                earned ? "border-amber-300 bg-amber-50 animate-badge-burst ring-1 ring-black/10" : "border-border/50 bg-muted/30 opacity-50"
+              )}
+            >
+              <span className="text-2xl block mb-1">{b.emoji}</span>
+              <p className="text-xs font-bold text-foreground break-words">{text.name}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 break-words">{text.description}</p>
+              {earned && <Star className="h-3 w-3 text-amber-500 mx-auto mt-1" />}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const earned = BADGES.filter((b) => earnedBadges.includes(b.key));
+  const locked = BADGES.filter((b) => !earnedBadges.includes(b.key));
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-      {BADGES.map((b) => {
-        const earned = earnedBadges.includes(b.key);
-        const text = badgeText(b, language);
-        return (
-          <div
-            key={b.key}
-            className={cn(
-              "rounded-xl border p-3 text-center transition-all",
-              earned ? "border-amber-300 bg-amber-50 animate-badge-burst ring-1 ring-black/10" : "border-border/50 bg-muted/30 opacity-50"
-            )}
-          >
-            <span className="text-2xl block mb-1">{b.emoji}</span>
-            <p className="text-xs font-bold text-foreground break-words">{text.name}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 break-words">{text.description}</p>
-            {earned && <Star className="h-3 w-3 text-amber-500 mx-auto mt-1" />}
-          </div>
-        );
-      })}
+    <div className="space-y-2.5">
+      {earned.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5">
+          {earned.map((b) => {
+            const text = badgeText(b, language);
+            return (
+              <li
+                key={b.key}
+                title={text.description}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-amber-950/30"
+              >
+                <span aria-hidden="true">{b.emoji}</span>
+                <span className="truncate">{text.name}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {locked.length > 0 && (
+        <div>
+          <p className="mb-1 text-[11px] text-muted-foreground">
+            {language === "ar" ? `لم تُفتح بعد (${locked.length})` : `Locked (${locked.length})`}
+          </p>
+          <ul className="flex flex-wrap gap-1">
+            {locked.map((b) => {
+              const text = badgeText(b, language);
+              const label = `${text.name} — ${text.description}`;
+              return (
+                <li
+                  key={b.key}
+                  title={label}
+                  aria-label={label}
+                  tabIndex={0}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-base opacity-50 grayscale focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span aria-hidden="true">{b.emoji}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
