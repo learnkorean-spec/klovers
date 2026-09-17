@@ -61,6 +61,23 @@
 
     <!-- Fonts: system font stack used globally; marketing fonts loaded on-demand by Creator Hub -->
 
+    <!--
+      Analytics run on the real site only.
+
+      Until 18 Sep 2026 both tags below loaded everywhere, so every Vercel
+      preview deployment and every localhost dev server reported into the
+      production GA4 property and the production Meta Pixel. It showed up in
+      GA4 Realtime as an acquisition source named after a preview branch
+      URL - our own testing, recorded as traffic, with no way to separate it
+      afterwards.
+
+      A preview is not traffic. Anything that is not kloversegy.com (or a
+      subdomain of it) now loads neither tag.
+    -->
+    <script>
+      window.__klIsProdHost = /(^|\.)kloversegy\.com$/.test(window.location.hostname);
+    </script>
+
     <!-- Google Analytics (GA4) — deferred to avoid blocking render -->
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -73,8 +90,10 @@
         gtag('js', new Date());
         gtag('config', 'G-L4JG9ZP7HL');
       };
-      if ('requestIdleCallback' in window) { requestIdleCallback(_loadGA); }
-      else { setTimeout(_loadGA, 2000); }
+      if (window.__klIsProdHost) {
+        if ('requestIdleCallback' in window) { requestIdleCallback(_loadGA); }
+        else { setTimeout(_loadGA, 2000); }
+      }
     </script>
 
     <!-- Meta Pixel — deferred; replace PIXEL_ID in .env: VITE_META_PIXEL_ID=your_id -->
@@ -91,8 +110,10 @@
           fbq('track', 'PageView');
         }
       };
-      if ('requestIdleCallback' in window) { requestIdleCallback(_loadPixel); }
-      else { setTimeout(_loadPixel, 2500); }
+      if (window.__klIsProdHost) {
+        if ('requestIdleCallback' in window) { requestIdleCallback(_loadPixel); }
+        else { setTimeout(_loadPixel, 2500); }
+      }
     </script>
     <!-- Meta Pixel noscript moved to body — <img> inside <head><noscript> is invalid HTML -->
 
