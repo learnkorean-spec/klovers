@@ -50,6 +50,19 @@ const LEAD_MINUTES = 120;
 const SEND_FROM_HOUR = 7;
 const SEND_UNTIL_HOUR = 22;
 
+// Resend allows 10 requests per second and answers the eleventh with a 429.
+// On 17 September a batch of twelve letters lost two that way. This loop is
+// sequential, so it can only reach that ceiling on a fast day - but a trial
+// with twenty-five seats is exactly the day it would, and a reminder that
+// does not arrive is the one failure this function exists to prevent. So the
+// sends are spaced, and a 429 is retried once after a full second rather than
+// left for the next quarter-hour run.
+const SEND_GAP_MS = 150;
+const RATE_LIMIT_WAIT_MS = 1200;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const isRateLimit = (msg: string) => /rate.?limit|\b429\b|too many requests/i.test(msg);
+
 // The book, in the PRIVATE `student-materials` bucket, signed per letter. Same
 // objects send-trial-guide uses. Optional here: this is a reminder, so if
 // signing fails the letter still goes with the room link and simply carries no
@@ -251,27 +264,46 @@ Deno.serve(async (req) => {
       // its second link, not its send.
       const guideUrl = await guideUrlFor(lang);
 
-      try {
+      const payload = {
+        email: b.email,
+        name: b.name || "there",
+        language: lang,
+        template: "trial_reminder",
+        level: b.level,
+        class_time_label: when,
+        meeting_url: room,
+        ...(guideUrl ? { guide_url: guideUrl } : {}),
+        ...(unsubscribeToken ? { unsubscribe_token: unsubscribeToken } : {}),
+      };
+
+      const sendOnce = async () => {
         const { error: sendErr } = await supabase.functions.invoke("send-confirmation-email", {
-          body: {
-            email: b.email,
-            name: b.name || "there",
-            language: lang,
-            template: "trial_reminder",
-            level: b.level,
-            class_time_label: when,
-            meeting_url: room,
-            ...(guideUrl ? { guide_url: guideUrl } : {}),
-            ...(unsubscribeToken ? { unsubscribe_token: unsubscribeToken } : {}),
-          },
+          body: payload,
         });
         if (sendErr) throw new Error(sendErr.message);
+      };
+
+      try {
+        try {
+          await sendOnce();
+        } catch (first) {
+          const msg = first instanceof Error ? first.message : String(first);
+          if (!isRateLimit(msg)) throw first;
+          // One second is the whole window: waiting it out costs this run a
+          // second and saves the student a letter that would otherwise arrive
+          // fifteen minutes later, or - if the class has started by then -
+          // never.
+          await sleep(RATE_LIMIT_WAIT_MS);
+          await sendOnce();
+        }
         await supabase.from("trial_bookings")
           .update({ reminder_sent_at: new Date().toISOString() }).eq("id", b.id);
         sent++;
       } catch (e) {
         errors.push(`${b.id}: ${e instanceof Error ? e.message : String(e)}`);
       }
+
+      await sleep(SEND_GAP_MS);
     }
 
     const result = {
