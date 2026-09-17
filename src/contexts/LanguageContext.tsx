@@ -65,6 +65,38 @@ const translations = {
   ar: { ...baseTranslations.ar, dashboardPage: { ...baseTranslations.ar.dashboardPage, ...dashboardPageExtra.ar } },
 };
 
+/**
+ * The last `userId:language` this browser successfully wrote to profiles.
+ *
+ * The effect below runs on mount as well as on change, so without this every
+ * page load by a signed-in visitor issued a PATCH writing the value that was
+ * already there - a write on a read-only visit to the homepage.
+ *
+ * Keyed by user id so a second account on the same browser is not mistaken
+ * for the first. Only written after a successful UPDATE, so a failure retries
+ * on the next load.
+ */
+const LANG_SYNCED_KEY = "k-lovers-lang-synced";
+
+const alreadySynced = (stamp: string): boolean => {
+  try {
+    return localStorage.getItem(LANG_SYNCED_KEY) === stamp;
+  } catch {
+    // Privacy mode throws rather than returning null. Falling back to "not
+    // synced" keeps the old always-write behaviour, which is the safe side:
+    // a redundant write costs a request, a skipped one costs correctness.
+    return false;
+  }
+};
+
+const rememberSynced = (stamp: string): void => {
+  try {
+    localStorage.setItem(LANG_SYNCED_KEY, stamp);
+  } catch {
+    /* privacy mode — reverts to writing on every load */
+  }
+};
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem("k-lovers-lang");
@@ -91,6 +123,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   //
   // Fire-and-forget, and nothing at all for a signed-out visitor: switching the
   // site language must stay instant, and a failed write is not worth a toast.
+  //
+  // 2026-09-18: and nothing at all when the value has not changed either. This
+  // effect runs on mount too, so it was issuing a PATCH on every page load to
+  // write what was already stored. See LANG_SYNCED_KEY above.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -104,13 +140,19 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         }
         const userId = data.user?.id;
         if (!userId || cancelled) return;
+
+        const stamp = `${userId}:${language}`;
+        if (alreadySynced(stamp)) return;
+
         const { error: writeError } = await supabase
           .from("profiles")
           .update({ language })
           .eq("user_id", userId);
         if (writeError) {
           console.error("language: profile write failed:", writeError.message);
+          return;
         }
+        rememberSynced(stamp);
       } catch {
         // Non-critical — the display language still changed for them.
       }
