@@ -533,13 +533,17 @@ const BlogPostPage = () => {
             </ReactMarkdown>
           </div>
 
-          {/* CTA block — custom if set, default otherwise */}
+          {/* CTA block — custom if set, default otherwise.
+              200+, not 500+: this fallback renders on every article that has no
+              cta_text of its own, so it is the widest-reach copy of the student
+              figure on the site. Same claim as the hero strip in
+              HeroSection.tsx - every student taught across 13 years. */}
           <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
             <p className="text-sm font-bold text-foreground uppercase tracking-widest">
               {post.cta_text ? (isAr ? "مستعد للبدء؟" : "Ready to start?") : (isAr ? "ابدأ تعلّم الكورية اليوم" : "Start learning Korean today")}
             </p>
             <h3 className="text-xl font-bold text-foreground">
-              {post.cta_text || (isAr ? "اكتشف مستواك مع اختبار تحديد المستوى المجاني وانضم لأكثر من 500 طالب." : "Find your level with our free placement test and join 500+ students.")}
+              {post.cta_text || (isAr ? "اكتشف مستواك مع اختبار تحديد المستوى المجاني وانضم لأكثر من 200 طالب." : "Find your level with our free placement test and join 200+ students.")}
             </h3>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
               <Button asChild size="lg" className="gap-2">
