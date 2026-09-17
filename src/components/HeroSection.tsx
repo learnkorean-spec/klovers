@@ -45,9 +45,20 @@ const HeroSection = () => {
   // showing "Next class: soon" above an empty row of pills.
   const { slots } = useUpcomingTrialSlots();
 
+  /**
+   * The weekday of the next class, or null when there isn't one to name.
+   *
+   * Null covers two cases on purpose - still loading, and genuinely nothing
+   * upcoming - because the honest rendering is the same for both: say
+   * nothing. This used to fall back to "soon"/"قريباً", and since the slots
+   * resolve a moment after first paint, "Next class: soon - spots filling
+   * fast" above an empty pill row was the first thing every visitor read, on
+   * every load. The vaguest sentence in the hero was also the most reliably
+   * seen one.
+   */
   const nextDay = useMemo(() => {
     const next = slots[0];
-    if (!next) return { en: "soon", ar: "قريباً" };
+    if (!next) return null;
     const tz = viewerTimezone();
     return {
       en: next.startsAt.toLocaleDateString("en-US", { weekday: "long", timeZone: tz }),
@@ -205,16 +216,20 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Next-class urgency chip — the one pulsing signal in the hero */}
-          <div className="inline-flex items-center gap-2 bg-black/40 border border-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-white/90">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
-            </span>
-            {isAr
-              ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
-              : `Next class: ${nextDay.en} — spots filling fast`}
-          </div>
+          {/* Next-class urgency chip — the one pulsing signal in the hero.
+              Rendered only when there is a real next class to name; see the
+              nextDay comment above for why there is no "soon" fallback. */}
+          {nextDay && (
+            <div className="inline-flex items-center gap-2 bg-black/40 border border-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-white/90">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
+              </span>
+              {isAr
+                ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
+                : `Next class: ${nextDay.en} — spots filling fast`}
+            </div>
+          )}
 
           {/* Main headline */}
           <h1
