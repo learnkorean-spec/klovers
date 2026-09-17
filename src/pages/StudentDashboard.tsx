@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
-import StudentGroupAttendance from "@/components/StudentGroupAttendance";
 import UpcomingSessionsCard from "@/components/UpcomingSessionsCard";
 import MyTrialClassCard from "@/components/MyTrialClassCard";
 import DashboardLearningCard from "@/components/DashboardLearningCard";
@@ -949,10 +948,8 @@ const StudentDashboard = () => {
               {/* ── Priority 6: schedule zone — next classes + group up near the top ── */}
               <MyTrialClassCard />
               <UpcomingSessionsCard sessions={upcomingSessions} zoomUrl={zoomUrl} showJoinAction={false} />
-              <StudentGroupAttendance />
-
-              <details className="rounded-2xl border bg-card p-4 sm:p-5">
-                <summary className="min-h-11 cursor-pointer content-center text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("dashboardPage.learningInsights")}</summary>
+              <section aria-labelledby="learning-insights-heading" className="rounded-2xl border bg-card p-4 sm:p-5">
+                <h2 id="learning-insights-heading" className="text-base font-semibold text-foreground">{t("dashboardPage.learningInsights")}</h2>
                 <Suspense fallback={<Skeleton className="mt-4 h-24 rounded-xl" />}>
                 <div className="mt-4 space-y-4">
               {/* ── League & XP ── */}
@@ -997,7 +994,7 @@ const StudentDashboard = () => {
 
                 </div>
                 </Suspense>
-              </details>
+              </section>
               {/* ── Attendance & Admin (bottom section) ── */}
               <StudentAttendanceRequest userId={userId} />
 

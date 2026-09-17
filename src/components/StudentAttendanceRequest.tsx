@@ -295,6 +295,11 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
     [requests]
   );
 
+  const openRequests = useMemo(
+    () => requests.filter(r => r.status !== "APPROVED"),
+    [requests]
+  );
+
   const modifiers = { adminLogged: adminLoggedDates, approved: approvedDates, pending: pendingDates, rejected: rejectedDates };
   const modifiersStyles = {
     adminLogged: { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: "9999px" },
@@ -370,38 +375,20 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
         </CardContent>
       </Card>
 
-      {/* Session History — combines admin-logged and student requests */}
-      {(adminDates.length > 0 || requests.length > 0) && (
+      {/* Open requests only. Attended classes (teacher-logged, group and approved
+          self-reports) are listed once, in the dashboard's attendance history
+          card — showing them here too put the same dates on the page twice. */}
+      {openRequests.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">{tr("Session History", "سجل الحضور")}</CardTitle>
+            <CardTitle className="text-lg">{tr("My attendance requests", "طلبات الحضور")}</CardTitle>
             <p className="text-xs text-muted-foreground">
-              {tr(
-                `${adminDates.length + requests.filter(r => r.status === "APPROVED").length} attended sessions`,
-                `الحصص التي حضرتها: ${adminDates.length + requests.filter(r => r.status === "APPROVED").length}`,
-              )}
+              {tr("Waiting for review or not accepted", "قيد المراجعة أو غير مقبولة")}
             </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {/* Admin-logged sessions */}
-              {adminDates.map((a) => (
-                <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-muted text-primary">
-                      <CheckCircle2 className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{formatDate(a.session_date)}</p>
-                      <p className="text-xs text-muted-foreground">{tr("Logged by teacher", "سجّله المعلّم")}</p>
-                    </div>
-                  </div>
-                  <Badge variant="default" className="shrink-0">{tr("Attended", "حضرت")}</Badge>
-                </div>
-              ))}
-
-              {/* Student-initiated requests */}
-              {requests.map((r) => {
+              {openRequests.map((r) => {
                 const cfg = statusConfig[r.status] || statusConfig.PENDING;
                 const Icon = cfg.icon;
                 return (

@@ -144,42 +144,44 @@ const Header = () => {
                         <UserCircle className="h-5 w-5 text-muted-foreground" />
                       </div>
                     )}
-                    <span className="text-sm font-medium text-foreground max-w-[100px] truncate">
+                    {/* dir="auto": a Latin name inside the RTL page keeps LTR order, so
+                        truncation drops the END of the name, not its first letters. */}
+                    <span dir="auto" className="text-sm font-medium text-foreground max-w-[100px] truncate">
                       {profile?.name || user.email?.split("@")[0]}
                     </span>
                     <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{user.email}</div>
+                  <div dir="ltr" className="px-2 py-1.5 text-xs text-muted-foreground truncate text-start">{user.email}</div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    <LayoutDashboard className="h-4 w-4 me-2" />
                     {isAr ? "لوحة التحكم" : "My Dashboard"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/trial-booking")}>
-                    <Gift className="h-4 w-4 mr-2" />
+                    <Gift className="h-4 w-4 me-2" />
                     {isAr ? "احجز حصة مجانية" : "Book Free Trial"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    <Settings className="h-4 w-4 mr-2" />
+                    <Settings className="h-4 w-4 me-2" />
                     {isAr ? "ملفي الشخصي" : "My Profile"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/dashboard/schedule")}>
-                    <CalendarDays className="h-4 w-4 mr-2" />
+                    <CalendarDays className="h-4 w-4 me-2" />
                     {isAr ? "جدولي" : "My Schedule"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/daily-quiz")}>
-                    <Zap className="h-4 w-4 mr-2" />
+                    <Zap className="h-4 w-4 me-2" />
                     {isAr ? "اختبار يومي" : "Daily Quiz"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/review")}>
-                    <Brain className="h-4 w-4 mr-2" />
+                    <Brain className="h-4 w-4 me-2" />
                     {isAr ? "مراجعة المفردات" : "Vocab Review"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-                    <LogOut className="h-4 w-4 mr-2" />
+                    <LogOut className="h-4 w-4 me-2" />
                     {isAr ? "تسجيل الخروج" : "Logout"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -239,21 +241,21 @@ const Header = () => {
               {user ? (
                 <>
                   <Button variant="outline" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/dashboard"><LayoutDashboard className="h-4 w-4 mr-2" />{isAr ? "لوحة التحكم" : "My Dashboard"}</Link>
+                    <Link to="/dashboard"><LayoutDashboard className="h-4 w-4 me-2" />{isAr ? "لوحة التحكم" : "My Dashboard"}</Link>
                   </Button>
                   <div className="grid grid-cols-3 gap-2">
                     <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                      <Link to="/dashboard/schedule"><CalendarDays className="h-4 w-4 mr-1" />{isAr ? "جدول" : "Schedule"}</Link>
+                      <Link to="/dashboard/schedule"><CalendarDays className="h-4 w-4 me-1" />{isAr ? "جدول" : "Schedule"}</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                      <Link to="/daily-quiz"><Zap className="h-4 w-4 mr-1" />{isAr ? "اختبار" : "Quiz"}</Link>
+                      <Link to="/daily-quiz"><Zap className="h-4 w-4 me-1" />{isAr ? "اختبار" : "Quiz"}</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
-                      <Link to="/review"><Brain className="h-4 w-4 mr-1" />{isAr ? "مراجعة" : "Review"}</Link>
+                      <Link to="/review"><Brain className="h-4 w-4 me-1" />{isAr ? "مراجعة" : "Review"}</Link>
                     </Button>
                   </div>
                   <Button variant="ghost" className="w-full justify-start text-destructive" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
-                    <LogOut className="h-4 w-4 mr-2" />{isAr ? "تسجيل الخروج" : "Logout"}
+                    <LogOut className="h-4 w-4 me-2" />{isAr ? "تسجيل الخروج" : "Logout"}
                   </Button>
                 </>
               ) : (
