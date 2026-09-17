@@ -1,25 +1,36 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 
 /**
  * games-free-set.test.mjs — guards the guest game gate and every published
  * count that has to agree with it.
  *
- * WHY THIS TEST READS SOURCE TEXT INSTEAD OF IMPORTING
+ * WHY THIS TEST PARTLY READS SOURCE TEXT INSTEAD OF IMPORTING
  *
- * The gate lives in `src/pages/GamesPage.tsx`, which is TSX, imports through
+ * The play gate itself (`src/pages/GamesPage.tsx`) is TSX, imports through
  * the "@/" alias, and pulls in React, lucide-react and the i18n context at
  * module load. None of that is importable from a plain node/vitest run without
  * a jsdom environment and an alias resolver, and the brief was explicit: say so
  * rather than restructure GamesPage.tsx to make it testable.
  *
- * So this parses the source as text. That is a real limitation and worth
- * naming: it checks the literals as written, not the values React evaluates. It
- * cannot catch a bug that only appears at runtime. What it does catch is the
- * whole class of drift that actually bit this page — a count in one file
- * disagreeing with a list in another, which is exactly how "30 games" survived
- * in four places while the array held 20.
+ * `src/constants/gamesList.ts` is different: it only imports icon components
+ * from lucide-react and exports plain data, so — verified directly — it
+ * imports cleanly under this project's vitest config (jsdom + the "@/" alias
+ * are already configured). GAMES_CATALOG and FREE_GAME_IDS are therefore
+ * imported for real below rather than regexed out of the source, which checks
+ * the actual values React sees instead of a text pattern standing in for them.
+ *
+ * GamesPage.tsx itself still can't be imported, so this parses its source as
+ * text for everything that only lives there — the switch that decides what
+ * can render, the derived isFree/isLocked gate, the nudge and character
+ * checks. That is a real limitation and worth naming: it checks those
+ * literals as written, not the values React evaluates, so it cannot catch a
+ * bug that only appears at runtime. What it does catch is the whole class of
+ * drift that actually bit this page — a count in one file disagreeing with a
+ * list in another, which is exactly how "30 games" survived in four places
+ * while the array held 20.
  *
  * RAW SOURCE OR STRIPPED SOURCE — GET THIS RIGHT
  *
@@ -52,20 +63,6 @@ const repoRoot = process.cwd();
 const gamesPageSrc = readFileSync(join(repoRoot, "src/pages/GamesPage.tsx"), "utf-8");
 const prerenderSrc = readFileSync(join(repoRoot, "scripts/prerender-meta.mjs"), "utf-8");
 
-/** The ids in the FREE_GAME_IDS array literal. */
-function parseFreeGameIds(src) {
-  const m = src.match(/const FREE_GAME_IDS = \[([\s\S]*?)\];/);
-  if (!m) throw new Error("FREE_GAME_IDS array literal not found in GamesPage.tsx");
-  return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
-}
-
-/** The ids in the `games` array literal, in order. */
-function parseGameIds(src) {
-  const m = src.match(/const games = \[([\s\S]*?)\n  \];/);
-  if (!m) throw new Error("games array literal not found in GamesPage.tsx");
-  return [...m[1].matchAll(/\{ id: "([^"]+)"/g)].map((x) => x[1]);
-}
-
 /** The `case "id":` labels in renderGame's switch — what can actually render. */
 function parseRenderableIds(src) {
   return [...src.matchAll(/case "([a-z]+)": return </g)].map((x) => x[1]);
@@ -86,8 +83,7 @@ function stripComments(src) {
     .join("\n");
 }
 
-const FREE_GAME_IDS = parseFreeGameIds(gamesPageSrc);
-const GAME_IDS = parseGameIds(gamesPageSrc);
+const GAME_IDS = GAMES_CATALOG.map((g) => g.id);
 const RENDERABLE_IDS = parseRenderableIds(gamesPageSrc);
 const gamesPageCopy = stripComments(gamesPageSrc);
 
