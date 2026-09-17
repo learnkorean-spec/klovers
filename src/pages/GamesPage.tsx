@@ -350,7 +350,13 @@ const GamesPage = () => {
               <a href="/login">{isAr ? "تسجيل الدخول" : "Log In"}</a>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">{isAr ? "بدون بطاقة ائتمان · انضم أكثر من 500 طالب" : "No credit card needed · 500+ students already joined"}</p>
+          {/* 200+, not 500+ — Re's figure, matching the hero strip and the rest
+              of the site. Worth a second look regardless of the number: this
+              line says "already joined", which scopes it to accounts on this
+              platform, and the leaderboard comment further down this same file
+              records that real platform activity is ~102 accounts. 200+ counts
+              every student taught across 13 years. */}
+          <p className="text-xs text-muted-foreground">{isAr ? "بدون بطاقة ائتمان · انضم أكثر من 200 طالب" : "No credit card needed · 200+ students already joined"}</p>
         </div>
       );
     }
