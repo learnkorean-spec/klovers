@@ -6,17 +6,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift, Zap, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Streak milestones and their bonus XP
 const STREAK_BONUSES = [
-  { days: 3,  bonus: 15,  label: "3-Day Streak" },
-  { days: 7,  bonus: 30,  label: "7-Day Streak" },
-  { days: 14, bonus: 50,  label: "14-Day Streak" },
-  { days: 30, bonus: 100, label: "30-Day Streak" },
+  { days: 3,  bonus: 15,  label: "3-Day Streak",  labelAr: "3 أيام متتالية" },
+  { days: 7,  bonus: 30,  label: "7-Day Streak",  labelAr: "7 أيام متتالية" },
+  { days: 14, bonus: 50,  label: "14-Day Streak", labelAr: "14 يومًا متتاليًا" },
+  { days: 30, bonus: 100, label: "30-Day Streak", labelAr: "30 يومًا متتاليًا" },
 ];
 
 export function DailyBonusCard() {
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
   const [claimed, setClaimed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
@@ -65,7 +68,7 @@ export function DailyBonusCard() {
     for (const tier of STREAK_BONUSES) {
       if (streak >= tier.days) {
         bonus = tier.bonus;
-        bonusLabel = tier.label;
+        bonusLabel = language === "ar" ? tier.labelAr : tier.label;
       }
     }
     setStreakBonus(bonus);
@@ -106,8 +109,8 @@ export function DailyBonusCard() {
         : "border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 ring-1 ring-black/10"
     )}>
       <CardContent className="pt-4 pb-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className={cn(
               "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0",
               claimed ? "bg-green-100 dark:bg-green-900/30" : "bg-amber-100 border border-black/10"
@@ -119,15 +122,15 @@ export function DailyBonusCard() {
             </div>
             <div>
               <p className="font-semibold text-foreground text-sm">
-                {claimed ? "Daily Bonus Claimed!" : "Daily Login Bonus"}
+                {claimed ? tr("Daily Bonus Claimed!", "تم استلام المكافأة اليومية!") : tr("Daily Login Bonus", "مكافأة الدخول اليومية")}
               </p>
               <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                 <Badge variant="outline" className="text-xs gap-1 text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-600 ring-1 ring-black/10">
-                  <Zap className="h-3 w-3" /> +{bonusXp} XP base
+                  <Zap className="h-3 w-3" /> {tr(`+${bonusXp} XP base`, `+${bonusXp} نقطة أساسية`)}
                 </Badge>
                 {streakBonus > 0 && (
                   <Badge variant="outline" className="text-xs gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 ring-1 ring-black/10">
-                    🔥 +{streakBonus} XP ({streakBonusLabel})
+                    🔥 {tr(`+${streakBonus} XP`, `+${streakBonus} نقطة`)} ({streakBonusLabel})
                   </Badge>
                 )}
               </div>
@@ -141,11 +144,11 @@ export function DailyBonusCard() {
               disabled={claiming}
               className="flex-shrink-0"
             >
-              {claiming ? "Claiming..." : `Claim +${totalBonus} XP`}
+              {claiming ? tr("Claiming...", "جارٍ الاستلام...") : tr(`Claim +${totalBonus} XP`, `استلم +${totalBonus} نقطة`)}
             </Button>
           ) : (
             <Badge className="bg-green-600 dark:bg-green-500 flex-shrink-0">
-              +{totalBonus} XP earned
+              {tr(`+${totalBonus} XP earned`, `+${totalBonus} نقطة مكتسبة`)}
             </Badge>
           )}
         </div>

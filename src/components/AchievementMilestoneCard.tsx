@@ -5,6 +5,7 @@ import { useMilestones } from "@/hooks/useMilestones";
 import { Crown, Trophy, Target, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MILESTONE_ICONS: Record<string, React.ReactNode> = {
   lessons_completed: <Trophy className="h-5 w-5 text-amber-500" />,
@@ -20,23 +21,32 @@ const TIER_COLORS: Record<number, string> = {
   4: "border-purple-300 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/40",
 };
 
-const TIER_BADGES: Record<number, string> = {
-  1: "BRONZE",
-  2: "SILVER",
-  3: "GOLD",
-  4: "PLATINUM",
+const TIER_BADGES: Record<number, { en: string; ar: string }> = {
+  1: { en: "BRONZE", ar: "برونزي" },
+  2: { en: "SILVER", ar: "فضي" },
+  3: { en: "GOLD", ar: "ذهبي" },
+  4: { en: "PLATINUM", ar: "بلاتيني" },
+};
+
+const GROUP_LABELS: Record<string, { en: string; ar: string }> = {
+  lessons_completed: { en: "Lessons completed", ar: "الدروس المكتملة" },
+  vocabulary_mastered: { en: "Vocabulary mastered", ar: "المفردات المتقنة" },
+  xp_earned: { en: "XP earned", ar: "نقاط الخبرة المكتسبة" },
+  streak_days: { en: "Streak days", ar: "أيام متتالية" },
 };
 
 export function AchievementMilestoneCard() {
   const { groupedMilestones, completionPercentage, newlyAchieved } = useMilestones();
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
 
   if (groupedMilestones.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="pt-6 pb-6 text-center space-y-2">
           <Trophy className="h-9 w-9 mx-auto text-muted-foreground/30" />
-          <p className="font-semibold text-sm text-foreground">No milestones yet</p>
-          <p className="text-xs text-muted-foreground">Complete lessons and earn XP to unlock milestone rewards.</p>
+          <p className="font-semibold text-sm text-foreground">{tr("No milestones yet", "لا توجد إنجازات بعد")}</p>
+          <p className="text-xs text-muted-foreground">{tr("Complete lessons and earn XP to unlock milestone rewards.", "أكمل الدروس واكسب نقاط الخبرة لفتح مكافآت الإنجازات.")}</p>
         </CardContent>
       </Card>
     );
@@ -52,7 +62,7 @@ export function AchievementMilestoneCard() {
             <p className="text-2xl font-bold text-amber-700">
               {newlyAchieved.milestone_name}
             </p>
-            <p className="text-sm text-muted-foreground">Milestone Achieved!</p>
+            <p className="text-sm text-muted-foreground">{tr("Milestone Achieved!", "إنجاز جديد!")}</p>
           </div>
         </div>
       )}
@@ -62,7 +72,7 @@ export function AchievementMilestoneCard() {
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-600" />
-              Milestone Progress
+              {tr("Milestone Progress", "تقدّم الإنجازات")}
             </span>
             <Badge variant="outline">{completionPercentage}%</Badge>
           </CardTitle>
@@ -72,9 +82,9 @@ export function AchievementMilestoneCard() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-foreground">
-                Overall Achievement
+                {tr("Overall Achievement", "الإنجاز الكلي")}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground" dir="ltr">
                 {groupedMilestones.reduce(
                   (sum, group) => sum + group.tiers.filter((m) => m.is_achieved).length,
                   0
@@ -90,13 +100,9 @@ export function AchievementMilestoneCard() {
               <div key={group.type} className="space-y-2">
                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   {MILESTONE_ICONS[group.type]}
-                  {group.type
-                    .replace(/_/g, " ")
-                    .charAt(0)
-                    .toUpperCase() +
-                    group.type
-                      .replace(/_/g, " ")
-                      .slice(1)}
+                  {GROUP_LABELS[group.type]
+                    ? GROUP_LABELS[group.type][language === "ar" ? "ar" : "en"]
+                    : group.type.replace(/_/g, " ").charAt(0).toUpperCase() + group.type.replace(/_/g, " ").slice(1)}
                 </h4>
 
                 {/* Tier Progress */}
@@ -113,10 +119,10 @@ export function AchievementMilestoneCard() {
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <span className="text-xs font-bold text-foreground">
-                          {TIER_BADGES[milestone.milestone_tier]}
+                          {TIER_BADGES[milestone.milestone_tier]?.[language === "ar" ? "ar" : "en"]}
                         </span>
                         {milestone.is_achieved && (
-                          <span className="text-lg">✓</span>
+                          <span className="text-lg" aria-label={tr("Achieved", "تم الإنجاز")}>✓</span>
                         )}
                       </div>
 
@@ -127,7 +133,7 @@ export function AchievementMilestoneCard() {
                       {!milestone.is_achieved && (
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
+                            <span dir="ltr">
                               {milestone.progress_value}/{milestone.target_value}
                             </span>
                           </div>
@@ -142,7 +148,7 @@ export function AchievementMilestoneCard() {
 
                       {milestone.is_achieved && milestone.achieved_at && (
                         <p className="text-xs text-muted-foreground">
-                          {new Date(milestone.achieved_at).toLocaleDateString()}
+                          {new Date(milestone.achieved_at).toLocaleDateString(language === "ar" ? "ar-EG-u-nu-latn" : "en-GB")}
                         </p>
                       )}
                     </div>
@@ -156,8 +162,8 @@ export function AchievementMilestoneCard() {
           <div className="p-3 rounded-lg bg-muted/50 border border-border text-center">
             <p className="text-xs text-muted-foreground">
               {completionPercentage === 100
-                ? "🌟 Amazing! You've achieved all milestones!"
-                : `${100 - completionPercentage}% to go! Keep learning and unlock more achievements.`}
+                ? tr("🌟 Amazing! You've achieved all milestones!", "🌟 رائع! حققت كل الإنجازات!")
+                : tr(`${100 - completionPercentage}% to go! Keep learning and unlock more achievements.`, `باقي ${100 - completionPercentage}%! واصل التعلّم لفتح إنجازات أكثر.`)}
             </p>
           </div>
         </CardContent>
