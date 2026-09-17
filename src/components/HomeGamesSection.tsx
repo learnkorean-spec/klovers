@@ -2,37 +2,42 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, ArrowRight, Zap, Trophy, Star } from "lucide-react";
+import { Gamepad2, ArrowRight, Zap, Trophy, Unlock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 
-const GAMES = [
-  { emoji: "🃏", title: "Memory Match",     desc: "Match Korean words to meanings",   color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]",  hot: true  },
-  { emoji: "⚡", title: "Hangul Quiz",      desc: "Master Korean alphabet fast",       color: "from-[#D6E8FF]/40 to-[#D6E8FF]/10",   border: "hover:border-[#D6E8FF]",    hot: false },
-  { emoji: "🎬", title: "K-Drama Quiz",     desc: "Learn through K-Drama phrases",     color: "from-[#FFD9E6]/40 to-[#FFD9E6]/10",   border: "hover:border-[#FFD9E6]",    hot: true  },
-  { emoji: "🧩", title: "Sentence Builder", desc: "Arrange words into sentences",      color: "from-[#E8D9FF]/40 to-[#E8D9FF]/10", border: "hover:border-[#E8D9FF]", hot: false },
-  { emoji: "🔢", title: "Numbers Game",     desc: "Korean numbers & counting",         color: "from-[#CFF7D3]/40 to-[#CFF7D3]/10", border: "hover:border-[#CFF7D3]",   hot: false },
-  { emoji: "🎨", title: "Color Match",      desc: "Colors in Korean",                  color: "from-[#FFD9E6]/40 to-[#FFD9E6]/10",     border: "hover:border-[#FFD9E6]",     hot: false },
-  { emoji: "📝", title: "Verb Conjugation", desc: "Conjugate verbs correctly",         color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]", hot: false },
-  { emoji: "👋", title: "Greeting Master",  desc: "Greetings & polite expressions",    color: "from-[#D7F7F7]/40 to-[#D7F7F7]/10",   border: "hover:border-[#D7F7F7]",    hot: false },
-  { emoji: "↔️", title: "Opposites",        desc: "Learn antonyms in Korean",          color: "from-[#EFE6FF]/40 to-[#EFE6FF]/10", border: "hover:border-[#EFE6FF]", hot: false },
-  { emoji: "✏️", title: "Fill the Blank",   desc: "Complete the sentences",            color: "from-[#D7F7F7]/40 to-[#D7F7F7]/10",   border: "hover:border-[#D7F7F7]",    hot: false },
-  { emoji: "🔀", title: "Word Scramble",    desc: "Unscramble Korean words",           color: "from-[#DFFFE6]/40 to-[#DFFFE6]/10",   border: "hover:border-[#DFFFE6]",    hot: false },
-  { emoji: "🔢", title: "Counter Words",    desc: "Korean counting classifiers",       color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]",   hot: false },
-  { emoji: "⏰", title: "Time Teller",      desc: "Tell time in Korean",               color: "from-[#EFE6FF]/40 to-[#EFE6FF]/10", border: "hover:border-[#EFE6FF]", hot: false },
+/**
+ * The six games teased on the homepage. Picked by id, not "first N of the
+ * catalog" — GAMES_CATALOG is ordered by curriculum progression, and this
+ * row is a marketing highlight reel, so it keeps its own curated order.
+ * Titles/descriptions/free-status still come from the shared catalog, so
+ * they can never drift from what /games actually shows.
+ */
+const HOMEPAGE_GAME_IDS = ["match", "hangul", "kdrama", "sentence", "numbers", "colors"];
+const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
+  .map((id) => GAMES_CATALOG.find((g) => g.id === id))
+  .filter((g): g is NonNullable<typeof g> => Boolean(g));
+
+/** Purely decorative gradient per card, cycled by position so adding a game
+ *  to HOMEPAGE_GAME_IDS never requires hand-picking a new color. */
+const CARD_STYLES = [
+  { color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]" },
+  { color: "from-[#D6E8FF]/40 to-[#D6E8FF]/10", border: "hover:border-[#D6E8FF]" },
+  { color: "from-[#FFD9E6]/40 to-[#FFD9E6]/10", border: "hover:border-[#FFD9E6]" },
+  { color: "from-[#E8D9FF]/40 to-[#E8D9FF]/10", border: "hover:border-[#E8D9FF]" },
+  { color: "from-[#CFF7D3]/40 to-[#CFF7D3]/10", border: "hover:border-[#CFF7D3]" },
+  { color: "from-[#D7F7F7]/40 to-[#D7F7F7]/10", border: "hover:border-[#D7F7F7]" },
 ];
 
-const STATS = [
-  { icon: Gamepad2, value: "13",   label: "Games"    },
-  { icon: Zap,      value: "+XP",  label: "Every Win" },
-  { icon: Trophy,   value: "Free", label: "Forever"   },
-  { icon: Star,     value: "4.9★", label: "Rated"     },
-];
-
-const HOMEPAGE_GAMES = GAMES.slice(0, 6);
+/** Small marketing accent — not part of the shared catalog on purpose,
+ *  since "hot" is a homepage presentation choice, not a fact about the game. */
+const HOT_GAME_IDS = new Set(["match", "kdrama"]);
 
 const HomeGamesSection = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -44,6 +49,18 @@ const HomeGamesSection = () => {
     if (sectionRef.current) obs.observe(sectionRef.current);
     return () => obs.disconnect();
   }, []);
+
+  const totalGames = GAMES_CATALOG.length;
+
+  // Derived from the same catalog GamesPage reads, so this row can never say
+  // something GamesPage itself would contradict (it used to say "13 Games"
+  // hardcoded, well after the page had grown to 20).
+  const STATS = [
+    { icon: Gamepad2, value: String(totalGames), label: tr("Games", "لعبة") },
+    { icon: Zap, value: "+XP", label: tr("Every Win", "كل فوز") },
+    { icon: Unlock, value: String(FREE_GAME_IDS.length), label: tr("No Signup Needed", "بدون تسجيل") },
+    { icon: Trophy, value: tr("Free", "مجاني"), label: tr("Forever", "للأبد") },
+  ];
 
   return (
     <section ref={sectionRef} className="py-20 md:py-28 px-4 relative overflow-hidden bg-muted/20">
@@ -92,25 +109,28 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          {HOMEPAGE_GAMES.map((game) => (
-            <button
-              key={game.title}
-              onClick={() => navigate("/games")}
-              className={`group relative rounded-2xl bg-gradient-to-br ${game.color} border border-border ${game.border} hover:shadow-lg transition-all duration-200 p-4 text-left cursor-pointer`}
-            >
-              {game.hot && (
-                <span className="absolute top-2 right-2 text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full">
-                  🔥
-                </span>
-              )}
-              <div className="text-3xl mb-2">{game.emoji}</div>
-              <h3 className="font-bold text-foreground text-sm leading-tight mb-1">{game.title}</h3>
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{game.desc}</p>
-              <div className="mt-2 flex items-center gap-1 text-[11px] text-amber-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                Play now <ArrowRight className="h-3 w-3" />
-              </div>
-            </button>
-          ))}
+          {HOMEPAGE_GAMES.map((game, i) => {
+            const style = CARD_STYLES[i % CARD_STYLES.length];
+            return (
+              <button
+                key={game.id}
+                onClick={() => navigate("/games")}
+                className={`group relative rounded-2xl bg-gradient-to-br ${style.color} border border-border ${style.border} hover:shadow-lg transition-all duration-200 p-4 text-left cursor-pointer`}
+              >
+                {HOT_GAME_IDS.has(game.id) && (
+                  <span className="absolute top-2 right-2 text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full">
+                    🔥
+                  </span>
+                )}
+                <div className="text-3xl mb-2">{game.emoji}</div>
+                <h3 className="font-bold text-foreground text-sm leading-tight mb-1">{t(game.titleKey)}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{t(game.descKey)}</p>
+                <div className="mt-2 flex items-center gap-1 text-[11px] text-amber-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                  {tr("Play now", "العب الآن")} <ArrowRight className="h-3 w-3" />
+                </div>
+              </button>
+            );
+          })}
 
           {/* "Play All" card */}
           <button
@@ -118,12 +138,12 @@ const HomeGamesSection = () => {
             className="group rounded-2xl bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 p-4 text-left cursor-pointer flex flex-col justify-between shadow-lg shadow-primary/20"
           >
             <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-[10px] w-fit mb-2">
-              All Free
+              {tr("All Free", "الكل مجاني")}
             </Badge>
             <div>
-              <p className="font-bold text-primary-foreground text-sm leading-tight">See All 13 Games</p>
+              <p className="font-bold text-primary-foreground text-sm leading-tight">{tr(`See All ${totalGames} Games`, `شاهد كل الألعاب الـ ${totalGames}`)}</p>
               <div className="flex items-center gap-1 mt-1.5">
-                <span className="text-xs text-primary-foreground/80">Start now</span>
+                <span className="text-xs text-primary-foreground/80">{tr("Start now", "ابدأ الآن")}</span>
                 <ArrowRight className="h-3 w-3 text-primary-foreground/80 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -137,11 +157,11 @@ const HomeGamesSection = () => {
           }`}
         >
           <div className="text-center sm:text-left">
-            <p className="font-bold text-foreground text-sm">🏆 Earn XP with every game you play</p>
-            <p className="text-xs text-muted-foreground">Climb the leaderboard · Unlock badges · Show off your streak</p>
+            <p className="font-bold text-foreground text-sm">{tr("🏆 Earn XP with every game you play", "🏆 اكسب نقاط خبرة مع كل لعبة تلعبها")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Climb the leaderboard · Unlock badges · Show off your streak", "تصدّر الترتيب · افتح الأوسمة · أظهر سلسلتك")}</p>
           </div>
           <div className="flex gap-2 text-xs shrink-0">
-            {["🥇 Top Learner", "🔥 On Fire", "📚 Scholar"].map((b) => (
+            {[tr("🥇 Top Learner", "🥇 الأفضل"), tr("🔥 On Fire", "🔥 مندفع"), tr("📚 Scholar", "📚 باحث")].map((b) => (
               <span key={b} className="bg-card border border-border rounded-full px-2.5 py-1 font-medium text-foreground">{b}</span>
             ))}
           </div>
@@ -151,9 +171,9 @@ const HomeGamesSection = () => {
         <div className={`text-center transition-all duration-700 delay-400 ${visible ? "opacity-100" : "opacity-0"}`}>
           <Button size="lg" onClick={() => navigate("/games")} className="text-base px-10 gap-2 h-12 shadow-lg shadow-primary/25">
             <Gamepad2 className="h-4 w-4" />
-            Play All 13 Games Free
+            {tr(`Play All ${totalGames} Games Free`, `العب كل الألعاب الـ ${totalGames} مجاناً`)}
           </Button>
-          <p className="text-xs text-muted-foreground mt-3">Login to track XP & appear on the leaderboard</p>
+          <p className="text-xs text-muted-foreground mt-3">{tr("Login to track XP & appear on the leaderboard", "سجّل الدخول لتتبع نقاطك والظهور في الترتيب")}</p>
         </div>
       </div>
     </section>

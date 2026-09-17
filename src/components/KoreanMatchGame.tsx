@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, RotateCcw, Trophy, Timer, Sparkles } from "lucide-react";
 import { useGameData, GameVocabItem } from "@/hooks/useGameData";
+import { MATCH_FALLBACK_VOCAB } from "@/constants/fallbackVocab";
 
 interface CardData {
   id: number;
@@ -16,20 +17,7 @@ interface CardData {
 
 interface Pair { korean: string; english: string; }
 
-const FALLBACK_PAIRS: Pair[] = [
-  { korean: "사랑", english: "Love" },
-  { korean: "친구", english: "Friend" },
-  { korean: "학교", english: "School" },
-  { korean: "음식", english: "Food" },
-  { korean: "행복", english: "Happy" },
-  { korean: "가족", english: "Family" },
-  { korean: "여행", english: "Travel" },
-  { korean: "음악", english: "Music" },
-  { korean: "바다", english: "Ocean" },
-  { korean: "꿈", english: "Dream" },
-  { korean: "별", english: "Star" },
-  { korean: "하늘", english: "Sky" },
-];
+const FALLBACK_PAIRS: Pair[] = MATCH_FALLBACK_VOCAB.map((v) => ({ korean: v.korean, english: v.meaning }));
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];

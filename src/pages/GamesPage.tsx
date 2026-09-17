@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { getLeagueProgress, BADGES } from "@/constants/gamification";
+import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Brain, Layers, Hash, Palette, BookOpen, MessageCircle, ArrowLeftRight, PenLine, Shuffle, Calculator, Tv, Clock, Trophy, Zap, Flame, Lock, X, Keyboard, Volume2, CreditCard, Zap as ZapIcon, MousePointerClick, BookOpenCheck, Headphones } from "lucide-react";
+import { Gamepad2, Trophy, Zap, Flame, Lock, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
@@ -42,37 +43,6 @@ const SpeedReadGame = lazy(() => import("@/components/games/SpeedReadGame"));
 const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGame"));
 const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
 const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
-
-/**
- * The games a signed-out visitor can play. THE ONLY SOURCE OF TRUTH for that.
- *
- * Raised from 2 to 10 deliberately: 102 profiles exist and 66 of them (65%)
- * have never earned a single XP point, against 70 game plays in five months.
- * With 2 of 20 games open, the signup wall stood in front of the thing people
- * came for, so "nobody plays" and "nobody can play without signing up" were
- * indistinguishable. Ten open games separates them.
- *
- * `match` must stay in this list. It is the initial `activeGame` (useState
- * below), so it renders on mount without selectGame ever running — dropping it
- * would show every signed-out visitor a locked wall as the page loads.
- *
- * The per-game `free:` flag that used to live in the `games` array is gone.
- * It never gated play — it only drove the padlock and the FREE badge — so the
- * two lists could disagree and ship a card that says FREE and then refuses to
- * open. `isFree` is derived from this array at the one place it is consumed.
- */
-const FREE_GAME_IDS = [
-  "match",
-  "hangul",
-  "numbers",
-  "colors",
-  "greetings",
-  "scramble",
-  "kdrama",
-  "time",
-  "flashcard",
-  "romanization",
-];
 
 /**
  * A guest who finishes a game is asked to sign up — once per browser session.
@@ -120,6 +90,31 @@ const GameFallback = () => (
   </div>
 );
 
+/**
+ * One full-screen celebration at a time.
+ *
+ * PerfectScoreOverlay, StreakCelebration and LeaguePromotionModal used to be
+ * three independent `{condition && <Modal />}` blocks. A single game
+ * completion can set all three (finish with a perfect score, on the day your
+ * streak crosses a milestone, which also happens to push you into a new
+ * league) and React would mount all three at once — same fixed inset-0 z-50,
+ * so only the last one in DOM order painted on top, and dismissing it
+ * revealed whatever was mounted underneath with no entrance animation,
+ * because it had been sitting there at full opacity the whole time. That
+ * reads as a glitch, not a celebration.
+ *
+ * This queues them instead: each becomes a step the moment its underlying
+ * state goes truthy, de-duplicated so a step is only ever queued once, and
+ * exactly one is ever rendered. Order is the order the three effects below
+ * are declared — perfect score first (immediate per-game feedback), then
+ * streak (a running habit), then league promotion last (the biggest, most
+ * infrequent event, so it lands as the capstone rather than being buried).
+ */
+type CelebrationStep =
+  | { type: "perfect"; score: number; total: number }
+  | { type: "streak"; streak: number }
+  | { type: "league"; from: string; to: string };
+
 const GamesPage = () => {
   useSEO({ title: "Korean Learning Games", description: "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: "https://kloversegy.com/games" });
   const [activeGame, setActiveGame] = useState<string>("match");
@@ -163,6 +158,52 @@ const GamesPage = () => {
     }
   }, [newBadges]);
 
+  // --- Celebration queue (see the comment on CelebrationStep above) ---
+  const [celebrationQueue, setCelebrationQueue] = useState<CelebrationStep[]>([]);
+
+  // Enqueues a step, or — if one of the same type is already waiting in the
+  // queue — refreshes it in place with the latest data instead of adding a
+  // second one. That covers two game completions landing close together
+  // (e.g. two league-ups before the first modal is dismissed): the student
+  // sees one modal per type, always reflecting the most current state,
+  // rather than a stale first promotion or a duplicate popup.
+  const enqueueCelebration = useCallback((step: CelebrationStep) => {
+    setCelebrationQueue(q => {
+      const idx = q.findIndex(s => s.type === step.type);
+      if (idx === -1) return [...q, step];
+      const next = [...q];
+      next[idx] = step;
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!showPerfectScore) return;
+    enqueueCelebration({ type: "perfect", score: showPerfectScore.score, total: showPerfectScore.total });
+  }, [showPerfectScore, enqueueCelebration]);
+
+  useEffect(() => {
+    if (streakCelebration === null) return;
+    enqueueCelebration({ type: "streak", streak: streakCelebration });
+  }, [streakCelebration, enqueueCelebration]);
+
+  useEffect(() => {
+    if (!leaguePromotion) return;
+    enqueueCelebration({ type: "league", from: leaguePromotion.fromLeague, to: leaguePromotion.toLeague });
+  }, [leaguePromotion, enqueueCelebration]);
+
+  const activeCelebration = celebrationQueue[0] ?? null;
+
+  const advanceCelebration = useCallback(() => {
+    if (!activeCelebration) return;
+    // Clear the source state for the step that just finished — otherwise its
+    // effect above would immediately re-queue it — then drop it off the front.
+    if (activeCelebration.type === "perfect") setShowPerfectScore(null);
+    if (activeCelebration.type === "streak") clearStreakCelebration();
+    if (activeCelebration.type === "league") clearLeaguePromotion();
+    setCelebrationQueue(q => q.slice(1));
+  }, [activeCelebration, clearStreakCelebration, clearLeaguePromotion]);
+
   // G0c: arrival at /games. Ref-guarded because React StrictMode mounts
   // twice in development, and a doubled denominator is worse than none.
   const pageViewLogged = useRef(false);
@@ -193,28 +234,18 @@ const GamesPage = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const games = [
-    { id: "match", title: t("games.matchTitle"), description: t("games.matchDesc"), icon: Layers, emoji: "🃏", difficulty: t("games.beginner") },
-    { id: "hangul", title: t("games.hangulTitle"), description: t("games.hangulDesc"), icon: Brain, emoji: "⚡", difficulty: t("games.beginner") },
-    { id: "sentence", title: t("games.sentenceTitle"), description: t("games.sentenceDesc"), icon: PenLine, emoji: "🧩", difficulty: t("games.beginner") },
-    { id: "numbers", title: t("games.numbersTitle"), description: t("games.numbersDesc"), icon: Hash, emoji: "🔢", difficulty: t("games.beginner") },
-    { id: "colors", title: t("games.colorsTitle"), description: t("games.colorsDesc"), icon: Palette, emoji: "🎨", difficulty: t("games.beginner") },
-    { id: "verbs", title: t("games.verbsTitle"), description: t("games.verbsDesc"), icon: BookOpen, emoji: "📝", difficulty: t("games.intermediate") },
-    { id: "greetings", title: t("games.greetingsTitle"), description: t("games.greetingsDesc"), icon: MessageCircle, emoji: "👋", difficulty: t("games.beginner") },
-    { id: "opposites", title: t("games.oppositesTitle"), description: t("games.oppositesDesc"), icon: ArrowLeftRight, emoji: "↔️", difficulty: t("games.intermediate") },
-    { id: "fillblank", title: t("games.fillblankTitle"), description: t("games.fillblankDesc"), icon: PenLine, emoji: "✏️", difficulty: t("games.intermediate") },
-    { id: "scramble", title: t("games.scrambleTitle"), description: t("games.scrambleDesc"), icon: Shuffle, emoji: "🔀", difficulty: t("games.beginner") },
-    { id: "counters", title: t("games.countersTitle"), description: t("games.countersDesc"), icon: Calculator, emoji: "🔢", difficulty: t("games.intermediate") },
-    { id: "kdrama", title: t("games.kdramaTitle"), description: t("games.kdramaDesc"), icon: Tv, emoji: "🎬", difficulty: t("games.beginner") },
-    { id: "time", title: t("games.timeTitle"), description: t("games.timeDesc"), icon: Clock, emoji: "⏰", difficulty: t("games.beginner") },
-    { id: "typekorean", title: t("games.typekoreanTitle"), description: t("games.typekoreanDesc"), icon: Keyboard, emoji: "⌨️", difficulty: t("games.intermediate") },
-    { id: "romanization", title: t("games.romanizationTitle"), description: t("games.romanizationDesc"), icon: Volume2, emoji: "🔤", difficulty: t("games.beginner") },
-    { id: "flashcard", title: t("games.flashcardTitle"), description: t("games.flashcardDesc"), icon: CreditCard, emoji: "🃏", difficulty: t("games.beginner") },
-    { id: "speedread", title: t("games.speedreadTitle"), description: t("games.speedreadDesc"), icon: ZapIcon, emoji: "⚡", difficulty: t("games.intermediate") },
-    { id: "readingchoice", title: t("games.readingchoiceTitle"), description: t("games.readingchoiceDesc"), icon: MousePointerClick, emoji: "👆", difficulty: t("games.beginner") },
-    { id: "sentenceread", title: t("games.sentencereadTitle"), description: t("games.sentencereadDesc"), icon: BookOpenCheck, emoji: "📖", difficulty: t("games.intermediate") },
-    { id: "phonics", title: t("games.phonicsTitle"), description: t("games.phonicsDesc"), icon: Headphones, emoji: "🎧", difficulty: t("games.beginner") },
-  ];
+  // Titles/descriptions/difficulty labels are localized here because they
+  // need `t()`; everything else (id, icon, emoji, free/gated status) comes
+  // from GAMES_CATALOG, the one place that data is defined. See
+  // src/constants/gamesList.ts.
+  const games = GAMES_CATALOG.map(g => ({
+    id: g.id,
+    title: t(g.titleKey),
+    description: t(g.descKey),
+    icon: g.icon,
+    emoji: g.emoji,
+    difficulty: g.difficulty === "intermediate" ? t("games.intermediate") : t("games.beginner"),
+  }));
 
   const handleGameComplete = useCallback(async (gameId: string, score: number, totalRounds: number) => {
     // Logged first and unconditionally: a score of 0, and a logged-out
@@ -574,21 +605,27 @@ const GamesPage = () => {
       <Footer />
 
       {xpFloat !== null && <XpFloatAnimation xp={xpFloat} onComplete={() => setXpFloat(null)} />}
-      {showPerfectScore && (
+
+      {/* Exactly one of these renders at a time — see the CelebrationStep
+          comment above for why. */}
+      {activeCelebration?.type === "perfect" && (
         <PerfectScoreOverlay
-          score={showPerfectScore.score}
-          total={showPerfectScore.total}
-          onContinue={() => setShowPerfectScore(null)}
+          score={activeCelebration.score}
+          total={activeCelebration.total}
+          onContinue={advanceCelebration}
         />
       )}
-      {streakCelebration !== null && <StreakCelebration currentStreak={streakCelebration} onContinue={clearStreakCelebration} />}
-      {leaguePromotion && (
+      {activeCelebration?.type === "streak" && (
+        <StreakCelebration currentStreak={activeCelebration.streak} onContinue={advanceCelebration} />
+      )}
+      {activeCelebration?.type === "league" && (
         <LeaguePromotionModal
-          fromLeague={leaguePromotion.fromLeague}
-          toLeague={leaguePromotion.toLeague}
-          onClose={clearLeaguePromotion}
+          fromLeague={activeCelebration.from}
+          toLeague={activeCelebration.to}
+          onClose={advanceCelebration}
         />
       )}
+
       {/* Signup nudge modal — guests only, once per session (see NUDGE_SEEN_KEY). */}
       {showSignupNudge && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

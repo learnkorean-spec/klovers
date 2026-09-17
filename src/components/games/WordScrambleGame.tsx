@@ -5,25 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { RotateCcw, Trophy, Sparkles, ArrowRight } from "lucide-react";
 import { useGameData, GameVocabItem } from "@/hooks/useGameData";
+import { SCRAMBLE_FALLBACK_VOCAB } from "@/constants/fallbackVocab";
 
 interface Question { scrambled: string; answer: string; english: string; }
-
-const WORDS: Question[] = [
-  { scrambled: "랑사", answer: "사랑", english: "Love" },
-  { scrambled: "구친", answer: "친구", english: "Friend" },
-  { scrambled: "교학", answer: "학교", english: "School" },
-  { scrambled: "생선", answer: "선생", english: "Teacher" },
-  { scrambled: "복행", answer: "행복", english: "Happiness" },
-  { scrambled: "족가", answer: "가족", english: "Family" },
-  { scrambled: "행여", answer: "여행", english: "Travel" },
-  { scrambled: "악음", answer: "음악", english: "Music" },
-  { scrambled: "화문", answer: "문화", english: "Culture" },
-  { scrambled: "사역", answer: "역사", english: "History" },
-  { scrambled: "계세", answer: "세계", english: "World" },
-  { scrambled: "연자", answer: "자연", english: "Nature" },
-  { scrambled: "간시", answer: "시간", english: "Time" },
-  { scrambled: "래미", answer: "미래", english: "Future" },
-];
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
@@ -40,13 +24,11 @@ function scrambleKorean(word: string): string {
   return chars.join("");
 }
 
+/** Scrambled fresh every call — for the fallback set as much as for lesson
+ *  vocab, so restarting doesn't show the same scramble twice in a row. */
 function buildQuestions(vocab: GameVocabItem[]): Question[] {
-  if (vocab.length >= 10) {
-    return shuffleArray(vocab)
-      .slice(0, 14)
-      .map(v => ({ scrambled: scrambleKorean(v.korean), answer: v.korean, english: v.meaning }));
-  }
-  return WORDS;
+  const source = vocab.length >= 10 ? shuffleArray(vocab).slice(0, 14) : SCRAMBLE_FALLBACK_VOCAB;
+  return source.map(v => ({ scrambled: scrambleKorean(v.korean), answer: v.korean, english: v.meaning }));
 }
 
 const WordScrambleGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
