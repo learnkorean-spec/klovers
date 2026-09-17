@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,11 +19,29 @@ export interface MilestoneGroup {
   tiers: Milestone[];
 }
 
+/**
+ * Milestone rows are seeded per-student by a DB trigger on profile creation
+ * (see supabase/migrations/20260918000000_seed_achievement_milestones.sql),
+ * and progress_value / is_achieved are kept current by triggers on
+ * student_xp, student_lesson_progress and student_streaks
+ * (20260918010000_milestone_progress_triggers.sql) — the same
+ * write-and-let-the-server-compute pattern already used for game XP (see
+ * lib/gameXpApi.ts). Nothing on the client computes or writes progress.
+ *
+ * There used to be an `updateMilestoneProgress` exported from this hook for
+ * the client to call after finishing a lesson or game. Nothing in the app
+ * ever called it — every seeded milestone row sat at 0/target forever. It's
+ * removed now that the server does this instead; this hook only reads.
+ */
 export function useMilestones() {
   const { user } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [newlyAchieved, setNewlyAchieved] = useState<Milestone | null>(null);
+  // Read inside the realtime callback without re-subscribing every time
+  // `milestones` changes.
+  const milestonesRef = useRef<Milestone[]>([]);
+  useEffect(() => { milestonesRef.current = milestones; }, [milestones]);
 
   useEffect(() => {
     if (!user) return;
@@ -47,45 +65,34 @@ export function useMilestones() {
     setLoading(false);
   };
 
-  const updateMilestoneProgress = useCallback(
-    async (
-      milestoneType: string,
-      currentProgress: number
-    ) => {
-      if (!user) return;
+  // Progress changes server-side (a trigger fires the moment new XP, a
+  // completed lesson, or a longer streak lands), so this listens for the
+  // resulting UPDATE rather than polling. Mirrors the leaderboard's realtime
+  // subscription in useLeaderboard.ts.
+  useEffect(() => {
+    if (!user) return;
 
-      const milestonesToUpdate = milestones.filter(
-        (m) => m.milestone_type === milestoneType && !m.is_achieved
-      );
-
-      for (const milestone of milestonesToUpdate) {
-        const newProgress = Math.min(
-          currentProgress,
-          milestone.target_value
-        );
-        const isAchieved = newProgress >= milestone.target_value;
-
-        const { error } = await (supabase as any)
-          .from("achievement_milestones")
-          .update({
-            progress_value: newProgress,
-            is_achieved: isAchieved,
-            achieved_at: isAchieved ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", milestone.id);
-
-        if (!error && isAchieved) {
-          setNewlyAchieved(milestone);
-          setTimeout(() => setNewlyAchieved(null), 5000);
+    const channel = supabase
+      .channel(`milestones-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "achievement_milestones", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const updated = payload.new as Milestone;
+          const prev = milestonesRef.current.find((m) => m.id === updated.id);
+          if (updated.is_achieved && !prev?.is_achieved) {
+            setNewlyAchieved(updated);
+            setTimeout(() => setNewlyAchieved(null), 5000);
+          }
+          setMilestones((curr) => curr.map((m) => (m.id === updated.id ? updated : m)));
         }
-      }
+      )
+      .subscribe();
 
-      // Refresh milestones
-      await fetchMilestones();
-    },
-    [user, milestones]
-  );
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const getGroupedMilestones = (): MilestoneGroup[] => {
     const grouped: Record<string, Milestone[]> = {};
@@ -114,7 +121,6 @@ export function useMilestones() {
     completionPercentage: getCompletionPercentage(),
     loading,
     newlyAchieved,
-    updateMilestoneProgress,
     refetch: fetchMilestones,
   };
 }

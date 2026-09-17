@@ -5,23 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { RotateCcw, Trophy, Sparkles, RotateCw, CheckCircle2, XCircle } from "lucide-react";
 import Korean from "@/components/Korean";
 import { useGameData, GameVocabItem } from "@/hooks/useGameData";
+import { FLASHCARD_FALLBACK_VOCAB, FallbackVocabItem } from "@/constants/fallbackVocab";
 
-interface FlashCard { korean: string; romanization: string; meaning: string; }
-
-const FALLBACK: FlashCard[] = [
-  { korean: "안녕하세요", romanization: "annyeonghaseyo", meaning: "Hello" },
-  { korean: "감사합니다", romanization: "gamsahamnida", meaning: "Thank you" },
-  { korean: "친구", romanization: "chingu", meaning: "Friend" },
-  { korean: "학교", romanization: "hakgyo", meaning: "School" },
-  { korean: "사랑", romanization: "sarang", meaning: "Love" },
-  { korean: "음식", romanization: "eumsik", meaning: "Food" },
-  { korean: "공부", romanization: "gongbu", meaning: "Study" },
-  { korean: "한국", romanization: "hanguk", meaning: "Korea" },
-  { korean: "물", romanization: "mul", meaning: "Water" },
-  { korean: "행복", romanization: "haengbok", meaning: "Happiness" },
-  { korean: "선생님", romanization: "seonsaengnim", meaning: "Teacher" },
-  { korean: "가족", romanization: "gajok", meaning: "Family" },
-];
+type FlashCard = FallbackVocabItem;
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a;
@@ -41,7 +27,7 @@ const FlashcardGame = ({ onGameComplete }: { onGameComplete?: (score: number, to
   const xpAwardedRef = useRef(false);
 
   const initCards = useCallback(() => {
-    const pool = vocabRef.current.length >= 8 ? shuffleArray(vocabRef.current).slice(0, 12) : FALLBACK;
+    const pool = vocabRef.current.length >= 8 ? shuffleArray(vocabRef.current).slice(0, 12) : FLASHCARD_FALLBACK_VOCAB;
     setUsingLesson(vocabRef.current.length >= 8);
     setCards(pool);
     setIndex(0); setFlipped(false); setKnew(0); setDone(false);
