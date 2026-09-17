@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, Clock, XCircle, AlertCircle, CalendarDays } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SessionRow {
   attendance_id: string;
@@ -15,14 +16,15 @@ interface SessionRow {
   admin_approved: boolean;
 }
 
-const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
-  present: { icon: CheckCircle2, label: "Present", color: "text-primary" },
-  absent: { icon: XCircle, label: "Absent", color: "text-destructive" },
-  late: { icon: Clock, label: "Late", color: "text-secondary-foreground" },
-  excused: { icon: AlertCircle, label: "Excused", color: "text-muted-foreground" },
+const statusConfig: Record<string, { icon: React.ElementType; labelKey: string; color: string }> = {
+  present: { icon: CheckCircle2, labelKey: "dashboardPage.statusPresent", color: "text-primary" },
+  absent: { icon: XCircle, labelKey: "dashboardPage.statusAbsent", color: "text-destructive" },
+  late: { icon: Clock, labelKey: "dashboardPage.statusLate", color: "text-secondary-foreground" },
+  excused: { icon: AlertCircle, labelKey: "dashboardPage.statusExcused", color: "text-muted-foreground" },
 };
 
 const StudentGroupAttendance = () => {
+  const { t, language } = useLanguage();
   const [rows, setRows] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,7 +109,8 @@ const StudentGroupAttendance = () => {
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const locale = language === "ar" ? "ar-EG-u-nu-latn" : "en-US";
+    return d.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" });
   };
 
   return (
@@ -115,7 +118,7 @@ const StudentGroupAttendance = () => {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <CalendarDays className="h-5 w-5" />
-          Session History
+          {t("dashboardPage.sessionHistory")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -143,7 +146,7 @@ const StudentGroupAttendance = () => {
                   : r.status === "excused" ? "outline"
                   : "destructive"
                 }>
-                  {cfg.label}
+                  {t(cfg.labelKey)}
                 </Badge>
               </div>
             );

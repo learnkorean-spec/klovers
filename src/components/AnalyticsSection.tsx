@@ -18,6 +18,7 @@ import {
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { TrendingUp, BookOpen, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#E8D9FF"];
 const MASTERY_COLORS = ["#FFE5CC", "#D6E8FF", "#CFF7D3"];
@@ -32,13 +33,15 @@ export function AnalyticsSection() {
     totalXp,
     loading,
   } = useAnalytics();
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
 
   if (loading) {
     return (
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center h-96">
-            <p className="text-muted-foreground">Loading analytics...</p>
+            <p className="text-muted-foreground">{tr("Loading analytics...", "جارٍ تحميل الإحصاءات...")}</p>
           </div>
         </CardContent>
       </Card>
@@ -47,15 +50,15 @@ export function AnalyticsSection() {
 
   return (
     <Tabs defaultValue="xp" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="xp" className="gap-2">
-          <TrendingUp className="h-4 w-4" /> XP Trend
+      <TabsList className="grid w-full grid-cols-3 h-auto">
+        <TabsTrigger value="xp" className="gap-1.5 min-w-0 h-auto whitespace-normal px-1 py-1.5 text-[11px] sm:text-sm">
+          <TrendingUp className="h-4 w-4 shrink-0" /> <span className="text-center leading-tight">{tr("XP Trend", "تطور النقاط")}</span>
         </TabsTrigger>
-        <TabsTrigger value="progress" className="gap-2">
-          <BookOpen className="h-4 w-4" /> Progress
+        <TabsTrigger value="progress" className="gap-1.5 min-w-0 h-auto whitespace-normal px-1 py-1.5 text-[11px] sm:text-sm">
+          <BookOpen className="h-4 w-4 shrink-0" /> <span className="text-center leading-tight">{tr("Progress", "التقدّم")}</span>
         </TabsTrigger>
-        <TabsTrigger value="mastery" className="gap-2">
-          <Award className="h-4 w-4" /> Mastery
+        <TabsTrigger value="mastery" className="gap-1.5 min-w-0 h-auto whitespace-normal px-1 py-1.5 text-[11px] sm:text-sm">
+          <Award className="h-4 w-4 shrink-0" /> <span className="text-center leading-tight">{tr("Mastery", "الإتقان")}</span>
         </TabsTrigger>
       </TabsList>
 
@@ -63,17 +66,17 @@ export function AnalyticsSection() {
       <TabsContent value="xp">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Weekly XP Trend</CardTitle>
+            <CardTitle className="text-lg">{tr("Weekly XP Trend", "تطور النقاط الأسبوعي")}</CardTitle>
           </CardHeader>
           <CardContent>
             {weeklyXp.length === 0 ? (
               <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>No XP data yet. Start learning to see your progress!</p>
+                <p>{tr("No XP data yet. Start learning to see your progress!", "لا توجد نقاط بعد. ابدأ التعلّم لترى تقدّمك!")}</p>
               </div>
             ) : (
               <>
                 <div className="mb-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-sm text-muted-foreground">Total XP (Last 8 weeks)</p>
+                  <p className="text-sm text-muted-foreground">{tr("Total XP (Last 8 weeks)", "مجموع النقاط (آخر 8 أسابيع)")}</p>
                   <p className="text-3xl font-bold text-primary">{totalXp}</p>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
@@ -98,7 +101,7 @@ export function AnalyticsSection() {
                         color: "hsl(var(--popover-foreground))",
                       }}
                       labelStyle={{ color: "hsl(var(--popover-foreground))" }}
-                      formatter={(value: any) => [value, "XP"]}
+                      formatter={(value: any) => [value, tr("XP", "نقطة")]}
                     />
                     <Line
                       type="monotone"
@@ -120,17 +123,17 @@ export function AnalyticsSection() {
       <TabsContent value="progress">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Section Completion Progress</CardTitle>
+            <CardTitle className="text-lg">{tr("Section Completion Progress", "تقدّم إكمال الأقسام")}</CardTitle>
           </CardHeader>
           <CardContent>
             {sectionProgress.length === 0 ? (
               <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>No progress data yet. Complete lessons to see your progress!</p>
+                <p>{tr("No progress data yet. Complete lessons to see your progress!", "لا يوجد تقدّم بعد. أكمل الدروس لترى تقدّمك!")}</p>
               </div>
             ) : (
               <>
                 <div className="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-muted-foreground">Lessons Completed</p>
+                  <p className="text-sm text-muted-foreground">{tr("Lessons Completed", "الدروس المكتملة")}</p>
                   <p className="text-3xl font-bold text-blue-600">{totalLessonsCompleted}</p>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
@@ -149,7 +152,7 @@ export function AnalyticsSection() {
                       stroke="hsl(var(--muted-foreground))"
                       style={{ fontSize: "12px" }}
                       tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      label={{ value: "Percentage", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }}
+                      label={{ value: tr("Percentage", "النسبة"), angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))" }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -174,32 +177,32 @@ export function AnalyticsSection() {
       <TabsContent value="mastery">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Vocabulary Mastery</CardTitle>
+            <CardTitle className="text-lg">{tr("Vocabulary Mastery", "إتقان المفردات")}</CardTitle>
           </CardHeader>
           <CardContent>
             {vocabMastery.learning === 0 &&
             vocabMastery.reviewing === 0 &&
             vocabMastery.mastered === 0 ? (
               <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>Start reviewing vocabulary to track mastery!</p>
+                <p>{tr("Start reviewing vocabulary to track mastery!", "ابدأ مراجعة المفردات لتتابع إتقانك!")}</p>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 text-center">
-                    <p className="text-xs text-muted-foreground">Learning</p>
+                    <p className="text-xs text-muted-foreground">{tr("Learning", "قيد التعلّم")}</p>
                     <p className="text-2xl font-bold text-yellow-600">
                       {vocabMastery.learning}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-center">
-                    <p className="text-xs text-muted-foreground">Reviewing</p>
+                    <p className="text-xs text-muted-foreground">{tr("Reviewing", "قيد المراجعة")}</p>
                     <p className="text-2xl font-bold text-blue-600">
                       {vocabMastery.reviewing}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-center">
-                    <p className="text-xs text-muted-foreground">Mastered</p>
+                    <p className="text-xs text-muted-foreground">{tr("Mastered", "متقنة")}</p>
                     <p className="text-2xl font-bold text-green-600">
                       {vocabMastery.mastered}
                     </p>
@@ -210,9 +213,9 @@ export function AnalyticsSection() {
                   <PieChart>
                     <Pie
                       data={[
-                        { name: "Learning", value: vocabMastery.learning },
-                        { name: "Reviewing", value: vocabMastery.reviewing },
-                        { name: "Mastered", value: vocabMastery.mastered },
+                        { name: tr("Learning", "قيد التعلّم"), value: vocabMastery.learning },
+                        { name: tr("Reviewing", "قيد المراجعة"), value: vocabMastery.reviewing },
+                        { name: tr("Mastered", "متقنة"), value: vocabMastery.mastered },
                       ]}
                       cx="50%"
                       cy="50%"

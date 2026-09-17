@@ -5,9 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS_AR = ["ح", "ن", "ث", "ر", "خ", "ج", "س"];
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS_AR = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
 function getLast12Weeks(): Date[][] {
   const weeks: Date[][] = [];
@@ -36,6 +39,8 @@ function getLast12Weeks(): Date[][] {
 
 export function StreakCalendar() {
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
   const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
@@ -90,7 +95,7 @@ export function StreakCalendar() {
   weeks.forEach((week, wi) => {
     const firstDay = week[0];
     if (firstDay.getMonth() !== lastMonth) {
-      monthLabels.push({ label: MONTHS[firstDay.getMonth()], colIdx: wi });
+      monthLabels.push({ label: (language === "ar" ? MONTHS_AR : MONTHS)[firstDay.getMonth()], colIdx: wi });
       lastMonth = firstDay.getMonth();
     }
   });
@@ -115,18 +120,18 @@ export function StreakCalendar() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500 dark:text-orange-400" />
-            Activity Calendar
+            {tr("Activity Calendar", "تقويم النشاط")}
           </span>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="gap-1 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600">
-              🔥 {currentStreak} day streak
+              🔥 {tr(`${currentStreak} day streak`, `الأيام المتتالية: ${currentStreak}`)}
             </Badge>
             {longestStreak > 0 && (
               <Badge variant="outline" className="text-xs text-muted-foreground">
-                Best: {longestStreak}
+                {tr("Best", "الأفضل")}: {longestStreak}
               </Badge>
             )}
           </div>
@@ -136,7 +141,7 @@ export function StreakCalendar() {
         <div className="overflow-x-auto">
           <div className="min-w-[400px]">
             {/* Month labels */}
-            <div className="flex mb-1 pl-8">
+            <div className="flex mb-1 ps-8">
               {weeks.map((week, wi) => {
                 const label = monthLabels.find(m => m.colIdx === wi);
                 return (
@@ -152,11 +157,11 @@ export function StreakCalendar() {
             {/* Calendar grid */}
             <div className="flex gap-1">
               {/* Day labels */}
-              <div className="flex flex-col gap-1 mr-1">
+              <div className="flex flex-col gap-1 me-1">
                 {DAYS.map((d, di) => (
                   <div key={d} className="h-3.5 flex items-center">
                     {di % 2 === 1 && (
-                      <span className="text-xs text-muted-foreground w-6">{d.slice(0,1)}</span>
+                      <span className="text-xs text-muted-foreground w-6">{language === "ar" ? DAYS_AR[di] : d.slice(0,1)}</span>
                     )}
                     {di % 2 !== 1 && <span className="w-6" />}
                   </div>
@@ -174,7 +179,7 @@ export function StreakCalendar() {
                     return (
                       <div
                         key={di}
-                        title={`${dateStr}${isActive ? " ✓ Active" : ""}`}
+                        title={`${dateStr}${isActive ? (language === "ar" ? " ✓ نشط" : " ✓ Active") : ""}`}
                         className={cn(
                           "h-3.5 rounded-sm transition-all animate-cell-pop",
                           getColor(dateStr),
@@ -191,11 +196,11 @@ export function StreakCalendar() {
 
             {/* Legend */}
             <div className="flex items-center gap-2 mt-2 justify-end">
-              <span className="text-xs text-muted-foreground">Less</span>
+              <span className="text-xs text-muted-foreground">{tr("Less", "أقل")}</span>
               <div className="h-3 w-3 rounded-sm bg-muted/50 border border-border/30" />
               <div className="h-3 w-3 rounded-sm bg-primary/40" />
               <div className="h-3 w-3 rounded-sm bg-primary" />
-              <span className="text-xs text-muted-foreground">More</span>
+              <span className="text-xs text-muted-foreground">{tr("More", "أكثر")}</span>
             </div>
           </div>
         </div>

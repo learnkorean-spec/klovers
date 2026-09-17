@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Camera, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AvatarUploadProps {
   userId: string;
@@ -14,6 +15,8 @@ interface AvatarUploadProps {
 
 const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +45,7 @@ const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProp
       .upload(path, file, { upsert: true });
 
     if (uploadErr) {
-      toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" });
+      toast({ title: tr("Upload failed", "تعذّر رفع الصورة"), description: uploadErr.message, variant: "destructive" });
       setUploading(false);
       return;
     }
@@ -57,17 +60,23 @@ const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProp
       .eq("user_id", userId);
 
     if (updateErr) {
-      toast({ title: "Error saving", description: updateErr.message, variant: "destructive" });
+      toast({ title: tr("Error saving", "تعذّر الحفظ"), description: updateErr.message, variant: "destructive" });
     } else {
-      toast({ title: "Photo updated!" });
+      toast({ title: tr("Photo updated!", "تم تحديث الصورة!") });
       onUploaded(publicUrl);
     }
     setUploading(false);
   };
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative group cursor-pointer" onClick={() => inputRef.current?.click()}>
+    <div className="flex min-w-0 items-center gap-4">
+      <button
+        type="button"
+        className="relative group shrink-0 cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        aria-label={tr("Upload a profile photo", "رفع صورة الملف الشخصي")}
+      >
         <Avatar className="h-16 w-16 border-2 border-primary/20">
           {currentUrl && <AvatarImage src={currentUrl} alt={name} />}
           <AvatarFallback className="bg-primary/20 text-foreground text-lg font-semibold">
@@ -81,7 +90,10 @@ const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProp
             <Camera className="h-5 w-5 text-background" />
           )}
         </div>
-      </div>
+        <span className="absolute -bottom-0.5 -end-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground sm:hidden" aria-hidden="true">
+          <Camera className="h-3 w-3" />
+        </span>
+      </button>
       <input
         ref={inputRef}
         type="file"
@@ -90,8 +102,8 @@ const AvatarUpload = ({ userId, currentUrl, name, onUploaded }: AvatarUploadProp
         onChange={handleUpload}
         disabled={uploading}
       />
-      <div>
-        <p className="text-sm text-muted-foreground">Click to upload a profile photo</p>
+      <div className="hidden min-w-0 sm:block">
+        <p className="text-sm text-muted-foreground">{tr("Click to upload a profile photo", "اضغط لرفع صورة الملف الشخصي")}</p>
       </div>
     </div>
   );

@@ -55,7 +55,15 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-import { translations } from "@/i18n/translations";
+import { translations as baseTranslations } from "@/i18n/translations";
+import { dashboardPageExtra } from "@/i18n/dashboardPageExtra";
+
+// The student-dashboard strings live in their own file; fold them into
+// `dashboardPage` once, at load, so every t("dashboardPage.…") sees them.
+const translations = {
+  en: { ...baseTranslations.en, dashboardPage: { ...baseTranslations.en.dashboardPage, ...dashboardPageExtra.en } },
+  ar: { ...baseTranslations.ar, dashboardPage: { ...baseTranslations.ar.dashboardPage, ...dashboardPageExtra.ar } },
+};
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {

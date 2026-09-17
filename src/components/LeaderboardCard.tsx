@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { Trophy, Flame, Crown, Medal, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const RANK_STYLES: Record<number, string> = {
   1: "bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700 ring-1 ring-black/10",
@@ -28,6 +29,8 @@ interface EntryRowProps {
 }
 
 function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRowProps) {
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
   return (
     <div
       className={cn(
@@ -39,7 +42,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
       {/* Rank */}
       <div className="w-8 flex items-center justify-center flex-shrink-0">
         {RANK_ICONS[rank] || (
-          <span className="text-sm font-bold text-muted-foreground">#{rank}</span>
+          <span className="text-sm font-bold text-muted-foreground" dir="ltr">#{rank}</span>
         )}
       </div>
 
@@ -56,7 +59,7 @@ function EntryRow({ rank, name, avatarUrl, value, unit, isCurrentUser }: EntryRo
         <p className={cn("text-sm font-medium truncate", isCurrentUser && "text-amber-700")}>
           {name}
           {isCurrentUser && (
-            <span className="ml-1 text-xs text-amber-700">(You)</span>
+            <span className="ms-1 text-xs text-amber-700">{tr("(You)", "(أنت)")}</span>
           )}
         </p>
       </div>
@@ -78,26 +81,28 @@ export function LeaderboardCard() {
     currentUserStreakRank,
     loading,
   } = useLeaderboard();
+  const { language } = useLanguage();
+  const tr = (en: string, ar: string) => (language === "ar" ? ar : en);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
-          Global Leaderboard
+          {tr("Global Leaderboard", "لوحة المتصدرين")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="xp">
-          <TabsList className="grid grid-cols-3 w-full mb-4">
-            <TabsTrigger value="xp" className="gap-1.5">
-              <Trophy className="h-3.5 w-3.5" /> XP Ranking
+          <TabsList className="grid grid-cols-3 w-full mb-4 h-auto">
+            <TabsTrigger value="xp" className="gap-1.5 min-w-0 h-auto whitespace-normal px-1 py-1.5 text-[11px] sm:text-sm">
+              <Trophy className="h-3.5 w-3.5 shrink-0" /> <span className="text-center leading-tight">{tr("XP Ranking", "ترتيب النقاط")}</span>
             </TabsTrigger>
-            <TabsTrigger value="streak" className="gap-1.5">
-              <Flame className="h-3.5 w-3.5" /> Streak Ranking
+            <TabsTrigger value="streak" className="gap-1.5 min-w-0 h-auto whitespace-normal px-1 py-1.5 text-[11px] sm:text-sm">
+              <Flame className="h-3.5 w-3.5 shrink-0" /> <span className="text-center leading-tight">{tr("Streak Ranking", "ترتيب الاستمرار")}</span>
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="gap-1.5">
-              <Zap className="h-3.5 w-3.5" /> This Week
+            <TabsTrigger value="weekly" className="gap-1.5 min-w-0 h-auto whitespace-normal px-1 py-1.5 text-[11px] sm:text-sm">
+              <Zap className="h-3.5 w-3.5 shrink-0" /> <span className="text-center leading-tight">{tr("This Week", "هذا الأسبوع")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -111,7 +116,7 @@ export function LeaderboardCard() {
               </div>
             ) : xpLeaderboard.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                No learners on the board yet. Be the first!
+                {tr("No learners on the board yet. Be the first!", "لا يوجد متعلمون في اللوحة بعد. كن الأول!")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -122,13 +127,13 @@ export function LeaderboardCard() {
                     name={entry.name}
                     avatarUrl={entry.avatar_url}
                     value={entry.value}
-                    unit="XP"
+                    unit={tr("XP", "نقطة")}
                     isCurrentUser={entry.isCurrentUser}
                   />
                 ))}
                 {currentUserXpRank && currentUserXpRank > 10 && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
-                    Your rank: <span className="font-bold text-amber-700">#{currentUserXpRank}</span>
+                    {tr("Your rank", "ترتيبك")}: <span className="font-bold text-amber-700" dir="ltr">#{currentUserXpRank}</span>
                   </p>
                 )}
               </div>
@@ -145,7 +150,7 @@ export function LeaderboardCard() {
               </div>
             ) : streakLeaderboard.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                No active streaks yet. Start learning daily!
+                {tr("No active streaks yet. Start learning daily!", "لا توجد أيام متتالية نشطة بعد. ابدأ التعلّم يوميًا!")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -156,13 +161,13 @@ export function LeaderboardCard() {
                     name={entry.name}
                     avatarUrl={entry.avatar_url}
                     value={entry.value}
-                    unit="days"
+                    unit={tr("days", "يوم")}
                     isCurrentUser={entry.isCurrentUser}
                   />
                 ))}
                 {currentUserStreakRank && currentUserStreakRank > 10 && (
                   <p className="text-xs text-center text-muted-foreground pt-2 border-t">
-                    Your streak rank: <span className="font-bold text-amber-700">#{currentUserStreakRank}</span>
+                    {tr("Your streak rank", "ترتيبك في الاستمرار")}: <span className="font-bold text-amber-700" dir="ltr">#{currentUserStreakRank}</span>
                   </p>
                 )}
               </div>
@@ -178,7 +183,7 @@ export function LeaderboardCard() {
               </div>
             ) : weeklyLeaderboard.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                No activity this week yet. Start learning!
+                {tr("No activity this week yet. Start learning!", "لا يوجد نشاط هذا الأسبوع بعد. ابدأ التعلّم!")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -189,7 +194,7 @@ export function LeaderboardCard() {
                     name={entry.name}
                     avatarUrl={entry.avatar_url}
                     value={entry.value}
-                    unit="XP"
+                    unit={tr("XP", "نقطة")}
                     isCurrentUser={entry.isCurrentUser}
                   />
                 ))}
