@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,13 +9,27 @@ const InterviewBannerChip = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(SESSION_KEY) === "1");
+  // Fixed at bottom-32 from mount used to sit directly over the hero's own
+  // "Free Hangul starter sheet" link on short mobile viewports - every
+  // visitor saw an overlap in their very first view of the page. Gating it
+  // behind the same scroll threshold HeroSection's stats strip clears keeps
+  // it off the hero entirely.
+  const [scrolledPastHero, setScrolledPastHero] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > 500) setScrolledPastHero(true);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const dismiss = () => {
     sessionStorage.setItem(SESSION_KEY, "1");
     setDismissed(true);
   };
 
-  if (dismissed) return null;
+  if (dismissed || !scrolledPastHero) return null;
 
   return (
     <div

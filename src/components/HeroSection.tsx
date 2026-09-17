@@ -310,7 +310,13 @@ const HeroSection = () => {
               // beside a platform with 102 accounts is not.
               { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
               { icon: Star,  ref: ratingRef,  display: `${(ratingCount / 10).toFixed(1)} ★`, label: isAr ? "من ١٦ مراجعة" : "From 16 reviews" },
-              { icon: Globe, ref: countryRef, display: isAr ? "٦ أشهر" : "6 Months", label: isAr ? "للمحادثة" : "To Conversational" },
+              // "6 Months to Conversational" was a timeline claim with no
+              // data behind it, the same pattern as the "500+" figures this
+              // hero was already rewritten to move away from (see the block
+              // comment above studentCount). A1–C2 is the one thing here
+              // that's just true - it's the actual level range taught, same
+              // claim already used on AboutPage.tsx and PlacementTestPage.tsx.
+              { icon: Globe, ref: countryRef, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
             ].map(({ icon: Icon, ref: itemRef, display, label }) => (
               <div key={label} className="flex flex-col items-center gap-1 text-center group">
                 <div className="flex items-center gap-1.5">
