@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import AdminShell from "@/components/admin/AdminShell";
 import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm";
 import RecordedClasses from "@/components/admin/RecordedClasses";
+import TrialAttendance from "@/components/admin/TrialAttendance";
 import GroupsToStart from "@/components/admin/GroupsToStart";
 import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
@@ -569,6 +570,29 @@ const AdminToday = () => {
               <p className="text-xs text-muted-foreground">open one to change the date or the answer</p>
             </div>
             <RecordedClasses limit={6} />
+          </section>
+
+          {/* TRIAL — WHO CAME
+              The same question as the two cards above, asked about the other
+              half of the school. Nothing in the database has ever recorded that
+              a trial HAPPENED for a given student: attendance_response is what
+              she predicted days beforehand, and status is about the booking,
+              not the room. So the letter that follows a trial is aimed by the
+              clock and written in neutral words, and no report can say what a
+              session's turnout really was.
+
+              Here, under the private strips, because it is the same decision
+              and the same habit — answer for yesterday's teaching before
+              looking at tomorrow's. Renders nothing once every recent session
+              has been marked. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                TRIAL — WHO CAME
+              </h2>
+              <p className="text-xs text-muted-foreground">undecided is not a no-show</p>
+            </div>
+            <TrialAttendance days={14} />
           </section>
 
           {/* CLASS ROOMS
