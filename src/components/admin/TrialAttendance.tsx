@@ -19,35 +19,31 @@
  * a roomful of no-shows the moment the page loaded, which is the same mistake —
  * guessing — in a nicer costume.
  *
- * SAVING. The drop list writes on change. There is no Save step, which is why
- * the button is only ever a SEND — a control reading "save and send" would
- * invent a pending state that does not exist and make a saved mark look
- * unsaved. The card says so in words, because a thing that saves silently is
- * indistinguishable from a thing that did not save.
+ * TWO STEPS, and they do different jobs.
  *
- * THE BUTTON names the next action rather than the feature:
+ *   1. Each drop list writes immediately. Nothing is ever lost to a closed tab,
+ *      and there is no unsaved state to hunt for.
+ *   2. CONFIRM ATTENDANCE closes the session. The drop lists lock, the header
+ *      says so, and only then does the letters button open.
  *
- *   Send 3 letters        somebody is marked Came and not yet written to
- *   Letters — 2 no-shows  only absences are waiting
- *   Mark who came first   nothing is marked yet — the 19 September case
- *   All letters sent      nothing left to do
+ * Step 2 is not persistence — step 1 already did that. It is the difference
+ * between a session nobody has opened and a session whose answers are final,
+ * which the card previously could not show at all: eighteen rows reading "Not
+ * decided yet" meant either "Re hasn't looked" or "Re looked and only three
+ * came", and nothing distinguished them.
  *
- * It used to read "Letters…" in every one of those states. On a session with
- * one unmarked student it was greyed out with no word about why, so the only
- * way to learn that a mark was missing was to guess.
+ * Reopen undoes it in one click. A confirmation that cannot be taken back is a
+ * wrong answer kept forever, and this record exists to be correct rather than
+ * tidy.
  *
- * CONFIRM. The button opens a DRY RUN of the real sender — every name, which
- * letter, in which language — and only the second press sends. The preview is
- * the sender itself rather than the same rules re-implemented here, so a
- * student missing from the list is missing because the sender skipped her
- * (unsubscribed), and the number on the button is the number that will be
- * written to.
+ * Confirming leaves the undecided undecided, and says how many. "I am done with
+ * this session" is not "everyone I skipped was absent" — that distinction is
+ * the whole reason the mark has three states, and the button must not quietly
+ * collapse it.
  *
- * WHO. Re's call on 19 September: the students who CAME, for now. So the button
- * counts and sends those. The no-shows are not silently dropped — the session
- * header says how many are waiting and the dialog carries a switch that pulls
- * them in, off unless pressed. An unsent no-show keeps a null stamp and stays
- * in the working set, so nothing is lost by waiting.
+ * WHO GETS A LETTER. Re's call on 19 September: the students who CAME, for now.
+ * The no-shows are not silently dropped — the header says how many are waiting
+ * and the dialog carries a switch that pulls them in, off unless pressed.
  *
  * ORDER. The students who said they were coming sit at the top, then the
  * silent ones, then the ones who said they couldn't. Alphabetical put the three
@@ -57,19 +53,14 @@
  * sorting on `attended` would make a row jump the instant it is answered and
  * the next click would land on somebody else's name.
  *
- * Writes the table directly rather than through an RPC. That matches
- * PrivateClassesToConfirm and TrialAttendanceRoster, and it is safe here
- * because "Admins can manage trial_bookings :: update" already restricts UPDATE
- * on this table to admins; the migration adds the columns and keeps anon from
- * writing them on insert.
+ * Writes the tables directly rather than through an RPC, matching
+ * PrivateClassesToConfirm and TrialAttendanceRoster; RLS is admin-only on both.
  *
- * Scope: dated, live bookings from the last 14 days. Far enough back to catch a
- * session nobody got to on the day, short enough that the card empties itself
- * and stops asking.
+ * Scope: dated, live bookings from the last 14 days.
  */
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { Check, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +88,12 @@ type Row = {
   attendance_response: string | null;
   attended: boolean | null;
   attended_letter_sent_at: string | null;
+};
+
+type Confirmation = {
+  trial_date: string;
+  start_time: string;
+  confirmed_at: string;
 };
 
 /** One line of the sender's dry run. */
@@ -170,6 +167,8 @@ const LETTER_LABEL: Record<PlannedRecipient["letter"], string> = {
 const responseRank = (r: Row): number =>
   r.attendance_response === "yes" ? 0 : r.attendance_response === "no" ? 2 : 1;
 
+const sessionKey = (date: string | null, time: string | null) => `${date ?? ""}|${time ?? ""}`;
+
 const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
   const qc = useQueryClient();
   /** Sessions the admin has opened in full. Collapsed is the default. */
@@ -203,6 +202,30 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
     },
   });
 
+  /** Which sessions have been finished with. Its own table — see the migration. */
+  const { data: confirmations } = useQuery({
+    queryKey: ["admin", "trial-attendance-confirmations"],
+    queryFn: async (): Promise<Confirmation[]> => {
+      const { data, error } = await (supabase as never as {
+        from: (t: string) => {
+          select: (c: string) => Promise<{ data: Confirmation[] | null; error: Error | null }>;
+        };
+      })
+        .from("trial_attendance_confirmations")
+        .select("trial_date, start_time, confirmed_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+    // A missing table before the migration lands must not blank the whole card.
+    retry: false,
+  });
+
+  const confirmedAt = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of confirmations ?? []) m.set(sessionKey(c.trial_date, c.start_time), c.confirmed_at);
+    return m;
+  }, [confirmations]);
+
   const setMark = useMutation({
     mutationFn: async ({ id, mark }: { id: string; mark: Mark }) => {
       const { data: auth } = await supabase.auth.getUser();
@@ -232,11 +255,46 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
       }),
   });
 
+  const confirmSession = useMutation({
+    mutationFn: async ({ date, time, reopen }: { date: string; time: string | null; reopen: boolean }) => {
+      const table = (supabase as never as {
+        from: (t: string) => {
+          insert: (v: unknown) => Promise<{ error: Error | null }>;
+          delete: () => {
+            eq: (c: string, v: unknown) => {
+              eq: (c: string, v: unknown) => Promise<{ error: Error | null }>;
+            };
+          };
+        };
+      }).from("trial_attendance_confirmations");
+
+      if (reopen) {
+        const { error } = await table.delete().eq("trial_date", date).eq("start_time", time ?? "");
+        if (error) throw error;
+        return;
+      }
+      const { data: auth } = await supabase.auth.getUser();
+      const { error } = await table.insert({
+        trial_date: date,
+        start_time: time ?? "",
+        confirmed_by: auth.user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "trial-attendance-confirmations"] }),
+    onError: (e: unknown) =>
+      toast({
+        title: "Could not update the session",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      }),
+  });
+
   /** One block per session — the pair (trial_date, start_time) is the session. */
   const sessions = useMemo(() => {
     const by = new Map<string, Row[]>();
     for (const r of data ?? []) {
-      const k = `${r.trial_date ?? ""}|${r.start_time ?? ""}`;
+      const k = sessionKey(r.trial_date, r.start_time);
       by.set(k, [...(by.get(k) ?? []), r]);
     }
     return [...by.entries()].map(([k, rows]) => ({
@@ -249,16 +307,17 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
       ),
       marked: rows.filter(r => r.attended !== null).length,
       came: rows.filter(r => r.attended === true).length,
-      confirmed: rows.filter(r => r.attendance_response === "yes").length,
-      /** Came, and not yet written to — what the button sends. */
+      confirmedResponse: rows.filter(r => r.attendance_response === "yes").length,
+      /** Came, and not yet written to — what the letters button sends. */
       camePending: rows.filter(r => r.attended === true && !r.attended_letter_sent_at).length,
       /** Marked absent and not written to. Named, never silently dropped. */
       missedPending: rows.filter(r => r.attended === false && !r.attended_letter_sent_at).length,
       lettersSent: rows.filter(r => r.attended_letter_sent_at).length,
-      /** Still undecided — the reason a session can have nothing to send. */
+      /** Still undecided — and they stay that way, even after the session closes. */
       unmarked: rows.filter(r => r.attended === null).length,
+      isConfirmed: confirmedAt.has(k),
     }));
-  }, [data]);
+  }, [data, confirmedAt]);
 
   /**
    * Ask the sender what it would do. Deliberately its dry run rather than the
@@ -345,7 +404,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         <p className="text-sm font-semibold">Who came</p>
         <p className="text-xs text-muted-foreground">
           Not available yet — run the Apply Migrations workflow for{" "}
-          <code className="text-[11px]">20260918200000_trial_attendance_letter</code>, then reload.
+          <code className="text-[11px]">20260919010000_trial_attendance_confirmation</code>, then reload.
         </p>
       </div>
     );
@@ -366,14 +425,12 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
       <div>
         <p className="text-sm font-semibold">Who came</p>
         <p className="text-xs text-muted-foreground">
-          The ones who said they were coming are at the top. Left as{" "}
-          <em>Not decided yet</em> until you say — nothing reads that as a no-show,
-          and nobody undecided is written to.
+          Mark at your own pace — each choice saves the moment you pick it. When the session
+          is done, <strong>Confirm attendance</strong> closes it and opens the letters.
         </p>
-        {/* Said out loud because a thing that saves silently is indistinguishable
-            from a thing that did not save. */}
         <p className="text-xs text-muted-foreground">
-          Your choice saves the moment you pick it. The button only sends.
+          <em>Not decided yet</em> stays undecided, before and after confirming. Nothing reads it
+          as a no-show and nobody undecided is written to.
         </p>
       </div>
 
@@ -382,10 +439,9 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         const shown = isOpen ? s.rows : s.rows.slice(0, limit);
         const hidden = s.rows.length - shown.length;
         const label = `${formatSlotDate(s.date)} · ${(s.time ?? "TBA").slice(0, 5)}`;
+        const locked = s.isConfirmed;
 
-        // The button names the next action. "Letters…" in all four states told
-        // her nothing, and on an unmarked session it was greyed out with no word
-        // about why — the missing mark was something she had to guess at.
+        // The letters button names the next action rather than the feature.
         const nothingToSend = s.camePending === 0 && s.missedPending === 0;
         const cta =
           s.camePending > 0
@@ -399,31 +455,69 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         return (
           <div key={s.key} className="space-y-0.5">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-0.5">
-              <span className="text-xs font-semibold">
+              <span className="flex items-center gap-2 text-xs font-semibold">
                 {label}
                 {s.language && (
-                  <Badge variant="secondary" className="ml-2 text-[10px] capitalize">
+                  <Badge variant="secondary" className="text-[10px] capitalize">
                     {s.language}
                   </Badge>
                 )}
+                {locked && (
+                  <Badge variant="outline" className="text-[10px]">confirmed</Badge>
+                )}
               </span>
-              <span className="flex items-center gap-2">
+
+              <span className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">
                   {s.marked === 0
-                    ? `${s.rows.length} booked · ${s.confirmed} said yes · none marked`
+                    ? `${s.rows.length} booked · ${s.confirmedResponse} said yes · none marked`
                     : `${s.came} came · ${s.marked} of ${s.rows.length} marked`}
                   {s.lettersSent > 0 && ` · ${s.lettersSent} written to`}
                   {s.missedPending > 0 && ` · ${s.missedPending} no-show${s.missedPending === 1 ? "" : "s"} not written to`}
                 </span>
+
+                {locked ? (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground underline underline-offset-2"
+                    disabled={confirmSession.isPending}
+                    onClick={() =>
+                      s.date && confirmSession.mutate({ date: s.date, time: s.time, reopen: true })
+                    }
+                  >
+                    Reopen
+                  </button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant={s.marked > 0 ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    disabled={s.marked === 0 || !s.date || confirmSession.isPending}
+                    onClick={() =>
+                      s.date && confirmSession.mutate({ date: s.date, time: s.time, reopen: false })
+                    }
+                  >
+                    <Check className="mr-1 h-3.5 w-3.5" />
+                    {s.marked === 0
+                      ? "Mark who came first"
+                      : s.unmarked > 0
+                        ? `Confirm — ${s.marked} marked, ${s.unmarked} undecided`
+                        : `Confirm attendance`}
+                  </Button>
+                )}
+
+                {/* Letters only after the session is closed. Writing to students
+                    off a half-finished list is how the wrong person gets the
+                    wrong letter. */}
                 <Button
                   size="sm"
-                  variant={s.camePending > 0 ? "default" : "outline"}
+                  variant={locked && s.camePending > 0 ? "default" : "outline"}
                   className="h-7 px-2 text-xs"
-                  disabled={nothingToSend || !s.date}
+                  disabled={!locked || nothingToSend || !s.date}
                   onClick={() => s.date && runPreview(s.date, s.time, label, "came")}
                 >
                   <Mail className="mr-1 h-3.5 w-3.5" />
-                  {cta}
+                  {locked ? cta : "Letters"}
                 </Button>
               </span>
             </div>
@@ -446,13 +540,14 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
                   )}
                 </span>
 
-                {/* Locked once her letter has gone. The two letters contradict
-                    each other, so changing the mark afterwards corrects the
-                    record — it must not chase the first letter with the second. */}
+                {/* Locked by the session being confirmed (Reopen to change), and
+                    permanently once her letter has gone — the two letters
+                    contradict each other, so a later correction fixes the record
+                    without chasing the first letter with the second. */}
                 <Select
                   value={markOf(r.attended)}
                   onValueChange={v => setMark.mutate({ id: r.id, mark: v as Mark })}
-                  disabled={setMark.isPending || !!r.attended_letter_sent_at}
+                  disabled={setMark.isPending || locked || !!r.attended_letter_sent_at}
                 >
                   <SelectTrigger className="h-7 w-[9.5rem] text-xs">
                     <SelectValue />
