@@ -1,4 +1,4 @@
-import { Star, Facebook, CheckCircle2, ThumbsUp } from "lucide-react";
+import { Facebook, CheckCircle2, ThumbsUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -10,13 +10,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * vocabulary the site no longer uses, so they now read in Klovers levels. No
  * outcome has been changed — A1 → A2 is Level 1 → Level 2, one for one.
  *
- * ⚠ KNOWN, NOT FIXED HERE: every card below renders a five-star row. These
- * reviews come from Facebook, which replaced star ratings with Recommendations
- * in 2018 — so a Facebook reviewer since then cannot leave a star rating at
- * all, and the rows are decoration presented as a score. The summary above the
- * cards was corrected on 2026-09-18 to quote Facebook's own metric (100%
- * recommend); the per-card rows are a design change, deliberately left for a
- * separate pass rather than folded into a numbers fix.
+ * 2026-09-18: the cards no longer show a five-star row. These reviews are
+ * dated 2021–2024 and come from Facebook, which replaced star ratings with
+ * Recommendations in 2018 — so not one of these reviewers was ever shown a
+ * five-point scale to rate anything on. Each card now carries what Facebook
+ * itself displays beside the name, "👍 Recommends", which is the endorsement
+ * they actually gave. The summary above the cards quotes Facebook's own
+ * metric for the same reason (100% recommend, from 20 reviews); the star
+ * rating on this site belongs to the Google Business Profile and is shown in
+ * the hero strip, where it is labelled as Google's.
  */
 const reviews = [
   {
@@ -133,15 +135,7 @@ const reviews = [
 const row1 = reviews.slice(0, 6);
 const row2 = reviews.slice(6);
 
-const StarRow = () => (
-  <div className="flex gap-0.5">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <Star key={i} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-    ))}
-  </div>
-);
-
-const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => {
+const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boolean }) => {
   const initials = review.name
     .split(" ")
     .map((w) => w[0])
@@ -164,13 +158,20 @@ const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => {
               <span className="font-semibold text-sm text-foreground truncate">{review.name}</span>
               <span className="text-base leading-none">{review.flag}</span>
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <StarRow />
-              <span className="text-xs text-muted-foreground">{review.date}</span>
+            {/* What Facebook shows beside the name. Not a rating — see the
+                block comment at the top of this file. */}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <ThumbsUp className="h-3.5 w-3.5 text-blue-600 shrink-0" aria-hidden="true" />
+              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                {isAr ? "توصية" : "Recommends"}
+              </span>
+              <span className="text-xs text-muted-foreground">· {review.date}</span>
             </div>
             <div className="flex items-center gap-1 mt-1 flex-wrap">
               <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
-              <span className="text-[10px] text-green-600 font-semibold">Verified Student</span>
+              <span className="text-[10px] text-green-600 font-semibold">
+                {isAr ? "طالبة موثّقة" : "Verified Student"}
+              </span>
               {review.duration && (
                 <span className="text-[10px] text-muted-foreground">· {review.duration} · {review.level}</span>
               )}
@@ -187,9 +188,11 @@ const ReviewCard = ({ review }: { review: (typeof reviews)[0] }) => {
 const ScrollRow = ({
   items,
   direction,
+  isAr,
 }: {
   items: (typeof reviews)[0][];
   direction: "left" | "right";
+  isAr: boolean;
 }) => {
   const doubled = [...items, ...items]; // duplicate for seamless loop
 
@@ -205,7 +208,7 @@ const ScrollRow = ({
         }`}
       >
         {doubled.map((r, i) => (
-          <ReviewCard key={i} review={r} />
+          <ReviewCard key={i} review={r} isAr={isAr} />
         ))}
       </div>
     </div>
@@ -271,8 +274,8 @@ const TestimonialsSection = () => {
 
       {/* Scrolling rows */}
       <div className="space-y-4">
-        <ScrollRow items={row1} direction="left" />
-        <ScrollRow items={row2} direction="right" />
+        <ScrollRow items={row1} direction="left" isAr={isAr} />
+        <ScrollRow items={row2} direction="right" isAr={isAr} />
       </div>
     </section>
   );
