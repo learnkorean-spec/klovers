@@ -1,5 +1,5 @@
 /**
- * Who actually came to the trial — and the two letters that follow.
+ * Who actually came to the trial — and the letter that follows.
  *
  * The gap this fills, in one sentence: nothing in the database has ever
  * recorded that a trial HAPPENED for a given student. `attendance_response` is
@@ -20,12 +20,17 @@
  * guessing — in a nicer costume.
  *
  * CONFIRM. Marking is only half of it: the button below each session opens a
- * DRY RUN of the real sender — every name, which of the two letters she would
- * get, in which language — and only the second press sends. The preview is the
- * sender itself rather than the same rules re-implemented in the UI, so a
- * student missing from the list is missing because the sender skipped her
- * (unsubscribed), and the number on the button is the number that will be
- * written to. Nobody still marked "not decided yet" is in it.
+ * DRY RUN of the real sender — every name, which letter, in which language —
+ * and only the second press sends. The preview is the sender itself rather than
+ * the same rules re-implemented here, so a student missing from the list is
+ * missing because the sender skipped her (unsubscribed), and the number on the
+ * button is the number that will be written to.
+ *
+ * WHO. Re's call on 19 September: the students who CAME, for now. So the button
+ * counts and sends those. The no-shows are not silently dropped — the session
+ * header says how many are waiting and the dialog carries a switch that pulls
+ * them in, off unless pressed. An unsent no-show keeps a null stamp and stays
+ * in the working set, so nothing is lost by waiting.
  *
  * ORDER. The students who said they were coming sit at the top, then the
  * silent ones, then the ones who said they couldn't. Alphabetical put the three
@@ -62,6 +67,9 @@ import { toast } from "@/hooks/use-toast";
 /** true / false / null — the three states, as one value the Select can hold. */
 type Mark = "yes" | "no" | "unknown";
 
+/** Which letters a call asks for. "came" is the default, here and in the sender. */
+type Selection = "came" | "both";
+
 type Row = {
   id: string;
   name: string | null;
@@ -86,6 +94,9 @@ type DryRun = {
   eligible: number;
   came: number;
   missed: number;
+  /** Marked and unsent, whether or not this call selected them. */
+  came_waiting: number;
+  missed_waiting: number;
   skipped_unsubscribed: number;
   without_unsubscribe_link: number;
   recipients: PlannedRecipient[];
@@ -149,6 +160,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
   /** The session whose letters are being previewed, and the sender's answer. */
   const [previewing, setPreviewing] = useState<{ date: string; time: string | null; label: string } | null>(null);
   const [preview, setPreview] = useState<DryRun | null>(null);
+  const [selection, setSelection] = useState<Selection>("came");
   const [busy, setBusy] = useState(false);
 
   const { data, error, isLoading } = useQuery({
@@ -221,8 +233,10 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
       marked: rows.filter(r => r.attended !== null).length,
       came: rows.filter(r => r.attended === true).length,
       confirmed: rows.filter(r => r.attendance_response === "yes").length,
-      /** Marked and not yet written to — what the sender would actually take. */
-      pending: rows.filter(r => r.attended !== null && !r.attended_letter_sent_at).length,
+      /** Came, and not yet written to — what the button sends. */
+      camePending: rows.filter(r => r.attended === true && !r.attended_letter_sent_at).length,
+      /** Marked absent and not written to. Named, never silently dropped. */
+      missedPending: rows.filter(r => r.attended === false && !r.attended_letter_sent_at).length,
       lettersSent: rows.filter(r => r.attended_letter_sent_at).length,
     }));
   }, [data]);
@@ -232,13 +246,16 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
    * same rules copied into this component: a preview that can disagree with the
    * sender is worse than no preview, because it is believed.
    */
-  const openPreview = async (date: string, time: string | null, label: string) => {
+  const runPreview = async (
+    date: string, time: string | null, label: string, letters: Selection,
+  ) => {
     setPreviewing({ date, time, label });
+    setSelection(letters);
     setPreview(null);
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-trial-attendance-letters", {
-        body: { trial_date: date, start_time: time, dry_run: true },
+        body: { trial_date: date, start_time: time, dry_run: true, letters },
       });
       if (error) throw error;
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
@@ -260,17 +277,27 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-trial-attendance-letters", {
-        body: { trial_date: previewing.date, start_time: previewing.time, dry_run: false },
+        body: {
+          trial_date: previewing.date,
+          start_time: previewing.time,
+          dry_run: false,
+          // The same selection the preview was built from. Sending a wider set
+          // than the one just shown would make the preview a lie.
+          letters: selection,
+        },
       });
       if (error) throw error;
-      const res = data as { sent?: number; came?: number; missed?: number; errors?: number };
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      const res = data as { sent?: number; came?: number; missed?: number; missed_waiting?: number };
       toast({
         title: `${res.sent ?? 0} letter${res.sent === 1 ? "" : "s"} sent`,
-        description: `${res.came ?? 0} to students who came · ${res.missed ?? 0} offering another trial.`,
+        description: res.missed_waiting
+          ? `${res.came ?? 0} to students who came. ${res.missed_waiting} no-show${res.missed_waiting === 1 ? "" : "s"} still unwritten to.`
+          : `${res.came ?? 0} to students who came.`,
       });
       setPreviewing(null);
       setPreview(null);
+      setSelection("came");
       qc.invalidateQueries({ queryKey: ["admin", "trial-attendance"] });
     } catch (e) {
       toast({
@@ -281,6 +308,12 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
     } finally {
       setBusy(false);
     }
+  };
+
+  const close = () => {
+    setPreviewing(null);
+    setPreview(null);
+    setSelection("came");
   };
 
   if (isLoading) return null;
@@ -343,16 +376,19 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
                     ? `${s.rows.length} booked · ${s.confirmed} said yes · none marked`
                     : `${s.came} came · ${s.marked} of ${s.rows.length} marked`}
                   {s.lettersSent > 0 && ` · ${s.lettersSent} written to`}
+                  {s.missedPending > 0 && ` · ${s.missedPending} no-show${s.missedPending === 1 ? "" : "s"} not written to`}
                 </span>
                 <Button
                   size="sm"
-                  variant={s.pending > 0 ? "default" : "outline"}
+                  variant={s.camePending > 0 ? "default" : "outline"}
                   className="h-7 px-2 text-xs"
-                  disabled={s.pending === 0 || !s.date}
-                  onClick={() => s.date && openPreview(s.date, s.time, label)}
+                  disabled={(s.camePending === 0 && s.missedPending === 0) || !s.date}
+                  onClick={() => s.date && runPreview(s.date, s.time, label, "came")}
                 >
                   <Mail className="mr-1 h-3.5 w-3.5" />
-                  {s.pending > 0 ? `Send ${s.pending} letter${s.pending === 1 ? "" : "s"}` : "All sent"}
+                  {s.camePending > 0
+                    ? `Send ${s.camePending} letter${s.camePending === 1 ? "" : "s"}`
+                    : "Letters…"}
                 </Button>
               </span>
             </div>
@@ -410,7 +446,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         );
       })}
 
-      <Dialog open={!!previewing} onOpenChange={o => { if (!o) { setPreviewing(null); setPreview(null); } }}>
+      <Dialog open={!!previewing} onOpenChange={o => { if (!o) close(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Send letters — {previewing?.label}</DialogTitle>
@@ -427,10 +463,55 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
               <p className="text-sm">
                 <strong>{preview.came}</strong> · <em>{LETTER_LABEL.came}</em> — enrolment is open,
                 here is your seat.
-                <br />
-                <strong>{preview.missed}</strong> · <em>{LETTER_LABEL.missed}</em> — the time may not
-                have suited you, here is another trial.
+                {selection === "both" && (
+                  <>
+                    <br />
+                    <strong>{preview.missed}</strong> · <em>{LETTER_LABEL.missed}</em> — the time may
+                    not have suited you, here is another trial.
+                  </>
+                )}
               </p>
+
+              {/* The no-shows are named whether or not they are included. A
+                  number that only appears once you go looking for it is a
+                  number nobody looks for. */}
+              {preview.missed_waiting > 0 && (
+                <div className="rounded-md border bg-background p-2 text-xs">
+                  {selection === "came" ? (
+                    <>
+                      <span className="text-muted-foreground">
+                        {preview.missed_waiting} marked <em>Didn't come</em> — not written to.
+                      </span>{" "}
+                      <button
+                        type="button"
+                        className="font-semibold underline underline-offset-2"
+                        onClick={() =>
+                          previewing &&
+                          runPreview(previewing.date, previewing.time, previewing.label, "both")
+                        }
+                      >
+                        Include them
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground">
+                        Including the {preview.missed_waiting} who didn't come.
+                      </span>{" "}
+                      <button
+                        type="button"
+                        className="font-semibold underline underline-offset-2"
+                        onClick={() =>
+                          previewing &&
+                          runPreview(previewing.date, previewing.time, previewing.label, "came")
+                        }
+                      >
+                        Leave them out
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
 
               {preview.skipped_unsubscribed > 0 && (
                 <p className="text-xs text-muted-foreground">
@@ -461,9 +542,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
           )}
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => { setPreviewing(null); setPreview(null); }}>
-              Cancel
-            </Button>
+            <Button variant="ghost" onClick={close}>Cancel</Button>
             <Button onClick={send} disabled={busy || !preview || preview.eligible === 0}>
               {busy ? "Sending…" : `Send ${preview?.eligible ?? 0}`}
             </Button>

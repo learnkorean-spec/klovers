@@ -19,6 +19,15 @@
  * gone — so pressing Confirm twice reaches nobody twice, and correcting a mark
  * afterwards corrects the RECORD without sending the contradicting letter.
  *
+ * WHICH LETTERS. `letters` selects: "came" (the default), "missed", or "both".
+ * Re's call on 19 September was to write only to the students who came, for
+ * now. The default is the narrow one deliberately: a caller that forgets the
+ * parameter writes to FEWER people, not more, and the ones it does write to are
+ * the ones who were in the room. Nobody is dropped by this — an unsent no-show
+ * keeps a null stamp and stays in the working set, so her letter can go later
+ * with one press. `missed_waiting` in the response is how many are waiting, so
+ * the number never goes quiet.
+ *
  * Unsubscribes are resolved from profiles OR leads, the pattern established in
  * #502/#505/#506/#510. 27 of the 39 live bookings have no account, so a
  * profiles-only lookup would mean no unsubscribe link for most of the people
@@ -39,6 +48,9 @@ const FUNCTION_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/functions/v1";
 const ENROL_URL = `${SITE_URL}/enroll-now`;
 const TRIAL_URL = `${SITE_URL}/trial-booking`;
 const WA_URL = "https://wa.me/201010003084";
+
+type LetterKind = "came" | "missed";
+type Selection = LetterKind | "both";
 
 /** Gmail POSTs this machine-to-machine (RFC 8058) — it must be a server route. */
 const headerUnsubscribeUrl = (token: string | null, isAr: boolean) =>
@@ -162,6 +174,8 @@ function cameLetter(name: string, isAr: boolean, unsubUrl: string) {
  * you", no reason requested, no note that the seat was held: a person who did
  * not turn up usually knows she did not, and the useful thing to hand her is
  * the next date rather than the feeling of having been counted absent.
+ *
+ * Not sent unless a caller asks for it by name — see `letters` above.
  */
 function missedLetter(name: string, isAr: boolean, unsubUrl: string) {
   const who = name?.trim() || (isAr ? "أهلاً" : "there");
@@ -223,6 +237,11 @@ serve(async (req) => {
     const dry_run: boolean = body.dry_run !== false;
     const trial_date: string | null = body.trial_date ?? null;
     const start_time: string | null = body.start_time ?? null;
+    // Anything other than an explicit "missed"/"both" means the students who
+    // came. The narrow reading of an unrecognised value is on purpose: a typo
+    // must not widen who gets written to.
+    const letters: Selection =
+      body.letters === "missed" ? "missed" : body.letters === "both" ? "both" : "came";
     if (!trial_date) return err("trial_date is required");
 
     // ── The working set ───────────────────────────────────────────────────────
@@ -244,7 +263,12 @@ serve(async (req) => {
 
     const bookings = (rows ?? []) as Booking[];
     if (!bookings.length) {
-      return ok({ dry_run, trial_date, start_time, eligible: 0, sent: 0, note: "Nobody is marked and unsent for this session." });
+      return ok({
+        dry_run, trial_date, start_time, letters,
+        eligible: 0, sent: 0,
+        came_waiting: 0, missed_waiting: 0,
+        note: "Nobody is marked and unsent for this session.",
+      });
     }
 
     // ── Unsubscribe state, from either identity table ─────────────────────────
@@ -274,7 +298,7 @@ serve(async (req) => {
     type Planned = {
       booking: Booking;
       isAr: boolean;
-      letter: "came" | "missed";
+      letter: LetterKind;
       token: string | null;
     };
     const planned: Planned[] = [];
@@ -298,20 +322,29 @@ serve(async (req) => {
       });
     }
 
-    const withoutUnsubscribeLink = planned.filter(p => !p.token).length;
-    const cameCount = planned.filter(p => p.letter === "came").length;
-    const missedCount = planned.filter(p => p.letter === "missed").length;
+    // Reported whether or not they are selected, so "4 no-shows are waiting" is
+    // visible rather than something the caller has to know to go looking for.
+    const cameWaiting = planned.filter(p => p.letter === "came").length;
+    const missedWaiting = planned.filter(p => p.letter === "missed").length;
+
+    const selected = planned.filter(p => letters === "both" || p.letter === letters);
+
+    const withoutUnsubscribeLink = selected.filter(p => !p.token).length;
+    const cameCount = selected.filter(p => p.letter === "came").length;
+    const missedCount = selected.filter(p => p.letter === "missed").length;
 
     if (dry_run) {
       return ok({
         dry_run: true,
-        trial_date, start_time,
-        eligible: planned.length,
+        trial_date, start_time, letters,
+        eligible: selected.length,
         came: cameCount,
         missed: missedCount,
+        came_waiting: cameWaiting,
+        missed_waiting: missedWaiting,
         skipped_unsubscribed: skippedUnsubscribed,
         without_unsubscribe_link: withoutUnsubscribeLink,
-        recipients: planned.map(p => ({
+        recipients: selected.map(p => ({
           name: p.booking.name,
           email: p.booking.email,
           letter: p.letter,
@@ -326,8 +359,8 @@ serve(async (req) => {
     let errors = 0;
     const errorLog: string[] = [];
 
-    for (let i = 0; i < planned.length; i += BATCH_SIZE) {
-      const chunk = planned.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < selected.length; i += BATCH_SIZE) {
+      const chunk = selected.slice(i, i + BATCH_SIZE);
       const payload = chunk.map(p => {
         const footer = footerUnsubscribeUrl(p.token);
         const built = p.letter === "came"
@@ -345,8 +378,9 @@ serve(async (req) => {
       try {
         await sendBatch(payload);
         sent += payload.length;
-        // Stamped only after the batch is accepted. Stamping first would lose a
-        // whole batch silently on a Resend failure — the rows would look done.
+        // Stamped only after the batch is accepted, and only for the rows in it.
+        // A no-show who was not selected keeps a null stamp and stays in the
+        // working set, so her letter can still go later with one press.
         const ids = chunk.map(p => p.booking.id);
         const { error: stampErr } = await supabase
           .from("trial_bookings")
@@ -367,16 +401,19 @@ serve(async (req) => {
     }
 
     console.log(
-      `[attendance-letters] ${trial_date} ${start_time ?? "(all times)"} sent=${sent} ` +
-      `came=${cameCount} missed=${missedCount} unsub_skipped=${skippedUnsubscribed} errors=${errors}`,
+      `[attendance-letters] ${trial_date} ${start_time ?? "(all times)"} letters=${letters} sent=${sent} ` +
+      `came=${cameCount} missed=${missedCount} missed_waiting=${missedWaiting} ` +
+      `unsub_skipped=${skippedUnsubscribed} errors=${errors}`,
     );
 
     return ok({
       dry_run: false,
-      trial_date, start_time,
+      trial_date, start_time, letters,
       sent, errors,
       came: cameCount,
       missed: missedCount,
+      came_waiting: cameWaiting,
+      missed_waiting: missedWaiting,
       skipped_unsubscribed: skippedUnsubscribed,
       without_unsubscribe_link: withoutUnsubscribeLink,
       errorLog,
