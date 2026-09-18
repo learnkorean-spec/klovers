@@ -58,6 +58,12 @@ import { buildClassReminderEmail } from "./templates/classReminder.ts";
 // two hours before each trial, to every live booking on that day - confirmed
 // or silent, unlike the book. Sixth slug absent from that union.
 import { buildTrialReminderEmail } from "./templates/trialReminder.ts";
+// The private-student payment letter, since 2026-09-18. Sent by
+// admin_send_bundle_payment_ask() when Re asks for a bundle to be paid. Every
+// other payment template here is built on `enrollments`, which a private
+// student does not have, so before this one nothing in the system could tell
+// her what she owed. Seventh slug absent from that union.
+import { buildPrivateBundlePaymentEmail } from "./templates/privateBundlePayment.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -240,6 +246,18 @@ serve(async (req) => {
         });
       }
     }
+    // A payment letter exists to state a figure. Without one it is a request
+    // for money with a blank where the amount belongs, which is worse than
+    // sending nothing at all.
+    if ((template as string) === "private_bundle_payment") {
+      const owed = Number((payload! as { amount?: number | string }).amount);
+      if (!Number.isFinite(owed) || owed <= 0) {
+        return new Response(JSON.stringify({ error: "a positive amount is required for the private_bundle_payment template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     // Both links in the second ask are the confirmation page carrying this
     // booking's own token. Without it the letter asks the reader to confirm
     // and then cannot tell who confirmed.
@@ -280,10 +298,11 @@ serve(async (req) => {
     // is ever opened for another reason, move this into the switch.
     // `admin_message` is here for exactly the reason given above, and is the
     // second key deliberately absent from that union. `trial_guide` is the
-    // third, `trial_reask` the fourth, `class_reminder` the fifth and
-    // `trial_reminder` the sixth; their only callers are the send-trial-guide
-    // cron, the send-trial-reask endpoint, the send-class-reminders cron and
-    // the send-trial-reminder cron.
+    // third, `trial_reask` the fourth, `class_reminder` the fifth,
+    // `trial_reminder` the sixth and `private_bundle_payment` the seventh;
+    // their only callers are the send-trial-guide cron, the send-trial-reask
+    // endpoint, the send-class-reminders cron, the send-trial-reminder cron
+    // and the admin_send_bundle_payment_ask database function.
     if ((template as string) === "admin_message") {
       const adminMessage = buildAdminMessageEmail(payload!);
       subject = adminMessage.subject;
@@ -308,6 +327,10 @@ serve(async (req) => {
       const trialReminder = buildTrialReminderEmail(payload!);
       subject = trialReminder.subject;
       html = trialReminder.html;
+    } else if ((template as string) === "private_bundle_payment") {
+      const bundlePayment = buildPrivateBundlePaymentEmail(payload!);
+      subject = bundlePayment.subject;
+      html = bundlePayment.html;
     } else switch (template) {
       case "welcome":
         ({ subject, html } = buildWelcomeEmail(name, language || "en"));
