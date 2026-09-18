@@ -32,18 +32,23 @@ const STORAGE_KEY = "klovers-returning-banner-dismissed";
  *     one bundle on production is completed with 4 of 4 sessions counted.
  *   - Marking a bundle complete is already part of the admin dashboard, so
  *     no new control and no migration were needed.
- *   - RLS policy "Students read their own bundles" scopes the table to the
- *     signed-in student, so the select below returns that person's rows and
- *     nobody else's. The gate is enforced by the database, not by this file.
  *
  * Returning = at least one completed bundle, and no active one. Someone
  * mid-course has an active bundle and is a student, not a returning one.
  *
- * TODAY THAT IS NOBODY: the one student with a completed bundle also has an
- * active bundle. That is the rule working, and it starts firing the day
- * someone finishes a course and does not renew. If it is still showing to
- * nobody in a few months, check `student_bundles.status` is being moved to
- * 'completed' before assuming this is broken.
+ * THE ROSTER ROW IS RESOLVED FIRST, ON PURPOSE. RLS does scope
+ * student_bundles for a student ("Students read their own bundles"), but the
+ * admin policy is ALL — an admin's unfiltered select returns EVERY student's
+ * bundles, and Re is the admin. Filtering by her own teacher_students id is
+ * correct for both, rather than correct for students and accidentally
+ * harmless for her.
+ *
+ * TODAY THIS SHOWS TO NOBODY: the one student with a completed bundle also
+ * has an active one, so she is studying, not returning. That is the rule
+ * working, and it starts firing the day someone finishes a course and does
+ * not renew. If it is still showing to nobody in a few months, check that
+ * `student_bundles.status` is being moved to 'completed' before assuming
+ * this is broken.
  *
  * Known gap: 2 of the 5 rows in `teacher_students` have a null `user_id`, so
  * those students cannot be matched to their account however much they study.
@@ -63,18 +68,28 @@ const ReturningStudentBanner = () => {
     let cancelled = false;
 
     void (async () => {
-      // No filter on student_id: RLS ("Students read their own bundles")
-      // already restricts this to the caller's own rows, and an admin gets
-      // everyone's — hence the explicit guard below rather than a bare
-      // `.length` check.
-      const { data, error } = await supabase
-        .from("student_bundles")
-        .select("status");
-      if (cancelled || error || !data) return;
+      try {
+        const { data: roster, error: rosterError } = await supabase
+          .from("teacher_students")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        // No roster row means this account has never been a student of
+        // record — the overwhelming majority of signups.
+        if (cancelled || rosterError || !roster) return;
 
-      const finished = data.some((b) => b.status === "completed");
-      const current = data.some((b) => b.status === "active");
-      setIsReturning(finished && !current);
+        const { data: bundles, error: bundleError } = await supabase
+          .from("student_bundles")
+          .select("status")
+          .eq("student_id", roster.id);
+        if (cancelled || bundleError || !bundles) return;
+
+        const finished = bundles.some((b) => b.status === "completed");
+        const current = bundles.some((b) => b.status === "active");
+        setIsReturning(finished && !current);
+      } catch {
+        /* swallow — a banner is never worth breaking the page for */
+      }
     })();
 
     return () => { cancelled = true; };
