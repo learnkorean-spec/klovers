@@ -84,8 +84,8 @@ const HeroSection = () => {
    * THE TWO LARGEST NUMBERS ON THE SITE. Both were unsupported.
    *
    * Measured on production, 2026-09-08: 102 rows in `profiles`, 76 trial
-   * bookings, 25 enrolments, and 16 Facebook reviews. "500+ Students Taught"
-   * was not a rounding of anything.
+   * bookings, 25 enrolments. "500+ Students Taught" was not a rounding of
+   * anything.
    *
    * Re's call: the 200+ figure is real, but it counts every student she has
    * taught across 13 years - not this platform. A number is only honest with
@@ -93,16 +93,23 @@ const HeroSection = () => {
    * part of the claim, not decoration. Do not shorten it back to "Students
    * Taught" without changing the number too.
    *
-   * The rating is 4.9 and stays 4.9 - it is the count that was missing. 16
-   * reviews with the source named reads as true; an unattributed 4.9 next to
-   * "500+" read as marketing.
-   *
    * 2026-09-18: the rating no longer counts up. A count-up renders every
-   * intermediate value as a finished claim, and "0.6 ★ / From 16 reviews" is
-   * a worse sentence than any marketing copy this block was written to
-   * remove. Student count still animates - "17+ students" on the way to 200
-   * is wrong for a moment too, but it is a quantity, and a quantity ticking
-   * upward reads as a counter. A star rating does not.
+   * intermediate value as a finished claim, and "0.6 ★" is a worse sentence
+   * than any marketing copy this block was written to remove. Student count
+   * still animates - "17+ students" on the way to 200 is wrong for a moment
+   * too, but it is a quantity, and a quantity ticking upward reads as a
+   * counter. A star rating does not.
+   *
+   * 2026-09-18, same day, second pass: the rating tile said "4.9 / From 16
+   * reviews". Both halves were wrong. 16 was the Facebook count on 8 Sep and
+   * is 20 today; and 4.9 was never Facebook's number, because Facebook
+   * replaced star ratings with Recommendations in 2018 and shows "100%
+   * recommend" instead. The stars belong to the GOOGLE Business Profile,
+   * which shows 5.0 from 7 reviews - checked signed-in as the owner. So this
+   * tile now names Google, and Facebook's metric sits in the testimonials
+   * summary, in the section that links to that page. Neither number is
+   * averaged against the other: a percentage and a five-point scale do not
+   * combine.
    */
   const { count: studentCount, ref: studentRef } = useCountUp(200);
 
@@ -128,7 +135,10 @@ const HeroSection = () => {
     // "200+ / Students in 13 years" is true; "200+ / Students Taught"
     // beside a platform with 102 accounts is not.
     { icon: Users, ref: studentRef, display: `${studentCount.toLocaleString('en-US')}+`, label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
-    { icon: Star, display: "4.9 ★", label: isAr ? "من ١٦ مراجعة" : "From 16 reviews" },
+    // The source is in the label on purpose. An unattributed "4.9" is a
+    // slogan; "5.0 / From 7 Google reviews" is a sentence someone can go and
+    // check, and it goes stale visibly rather than silently.
+    { icon: Star, display: "5.0 ★", label: isAr ? "من ٧ مراجعات جوجل" : "From 7 Google reviews" },
     // "6 Months to Conversational" was a timeline claim with no
     // data behind it, the same pattern as the "500+" figures this
     // hero was already rewritten to move away from (see the block

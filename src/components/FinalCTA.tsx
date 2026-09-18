@@ -22,29 +22,28 @@ import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
  *   of the claim. "Active Students" was worse than the number: production
  *   holds 5 rows in teacher_students and 7 bundles. Nothing supports
  *   "active" at any figure.
- * - 4.9 from 16 reviews. The rating was already right; it was the count that
- *   was missing. An unattributed "Average Rating" reads as marketing.
+ * - The rating and its count come from the GOOGLE Business Profile, checked
+ *   signed-in as the owner on 2026-09-18: 5.0 from 7 reviews. It used to say
+ *   "4.9 / Average Rating" with no source, and 4.9 was not a number either
+ *   platform showed. Facebook's own metric - 100% recommend, from 20 reviews
+ *   - lives in TestimonialsSection, the section that links to that page.
+ *   A percentage and a five-point scale are never averaged together.
  * - "98% Would Recommend" is gone rather than corrected. `student_nps` has
  *   ZERO rows — nothing in the product has ever asked the question, so there
  *   was no true number to replace it with. A1–C2 takes its place because it
  *   is simply the level range taught.
- *
- * A fourth line used to sit lower down: "Join 2,000+ Korean learners in our
- * Telegram & Facebook community". Removed 2026-09-18 — Re's figure is 200,
- * and at 200 it repeats the student count a few pixels above it with a
- * different meaning attached. Do not reinstate it without a checked number.
  *
  * Labels are now bilingual. All three were English-only on an Arabic-first
  * site, so an Arabic reader got "Active Students" under a Korean-course
  * heading in her own language.
  *
  * This mirrors HeroSection.tsx's stats array exactly. If one of them changes
- * the other has to change with it — same rule Testimonials.tsx, SignUpPage,
- * GamesPage and BlogPostPage already carry.
+ * the other has to change with it — same rule SignUpPage, GamesPage and
+ * BlogPostPage already carry.
  */
 const SOCIAL_PROOF = [
   { icon: Users, value: "200+", en: "Students in 13 years", ar: "طالب خلال ١٣ عاماً" },
-  { icon: Star, value: "4.9 ★", en: "From 16 reviews", ar: "من ١٦ مراجعة" },
+  { icon: Star, value: "5.0 ★", en: "From 7 Google reviews", ar: "من ٧ مراجعات جوجل" },
   { icon: Globe, value: "A1–C2", en: "All Levels", ar: "جميع المستويات" },
 ];
 
@@ -214,6 +213,21 @@ const FinalCTA = () => {
 
         <p className="text-primary-foreground/50 text-xs mb-6">
           {isAr ? "لا بطاقة ائتمان · ٣٠ دقيقة · معلمة حقيقية · نرد خلال دقائق" : "No credit card · 30 minutes · Real teacher · We reply in minutes"}
+        </p>
+
+        {/* Community proof — FOLLOWERS, not students, which is why it does not
+            contradict the 200+ tile above it.
+
+            Removed earlier on 2026-09-18 on the understanding that the real
+            figure was 200, then restored the same day after checking the
+            platforms: the Facebook page shows 2.4K followers and Google lists
+            it at 4K+, so 2,000+ across Telegram and Facebook is conservative.
+            If it is ever raised, raise it against a number someone has just
+            looked at. */}
+        <p className="text-primary-foreground/50 text-xs mb-4">
+          {isAr
+            ? "🌍 انضم لأكثر من ٢٠٠٠ متعلم في مجتمعنا على تيليجرام وفيسبوك"
+            : "🌍 Join 2,000+ Korean learners in our Telegram & Facebook community"}
         </p>
 
         {/* Guarantee badge */}
