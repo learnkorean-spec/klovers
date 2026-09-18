@@ -23,7 +23,7 @@ vi.mock("@/lib/leadSession", () => ({
   getAttribution: () => ({}),
 }));
 
-import { logGameEvent, logLeadEvent } from "@/lib/leadTracking";
+import { logGameEvent, logEngagementEvent, logLeadEvent } from "@/lib/leadTracking";
 
 describe("logGameEvent never fires a pixel", () => {
   beforeEach(() => {
@@ -94,5 +94,75 @@ describe("logGameEvent never fires a pixel", () => {
     expect(fbq()).toHaveBeenCalledWith("track", "Lead", { content_name: "whatsapp" });
     expect(gtag()).toHaveBeenCalledWith("event", "generate_lead");
     expect(insert).toHaveBeenCalledTimes(1);
+  });
+});
+
+// The same acceptance condition, for the signals that fire on every visit.
+//
+// Until 18 Sep 2026 these went through logLeadEvent. Index.tsx raised four
+// scroll-depth milestones and five section-visibility markers, and
+// HomeExitNudge raised one more when the modal merely rendered — so a single
+// visitor scrolling to the bottom of the homepage, clicking nothing, produced
+// up to TEN `Lead` conversions. Measured in GA4 Realtime that day: 11
+// generate_lead against 6 page_view, from a session that clicked nothing.
+//
+// That is worse than the game-event case this file was written for, because
+// it fires for every visitor rather than every player. After #484 the
+// property was held only by the type split; these tests hold it directly.
+describe("logEngagementEvent never fires a pixel", () => {
+  beforeEach(() => {
+    insert.mockClear();
+    (window as unknown as { fbq: unknown }).fbq = vi.fn();
+    (window as unknown as { gtag: unknown }).gtag = vi.fn();
+  });
+
+  const fbq = () => (window as unknown as { fbq: ReturnType<typeof vi.fn> }).fbq;
+  const gtag = () => (window as unknown as { gtag: ReturnType<typeof vi.fn> }).gtag;
+
+  it.each([
+    "scroll_depth_25",
+    "scroll_depth_90",
+    "section_how_it_works",
+    "section_final_cta",
+    "exit_intent_shown",
+  ])("%s calls neither fbq nor gtag", async (cta_label) => {
+    await logEngagementEvent({ source_type: "homepage", cta_label });
+
+    expect(fbq()).not.toHaveBeenCalled();
+    expect(gtag()).not.toHaveBeenCalled();
+    expect(insert).toHaveBeenCalledTimes(1);
+  });
+
+  it("a whole homepage scroll raises zero conversions", async () => {
+    // The exact sequence Index.tsx produces on one full scroll, plus the
+    // exit nudge. Ten events, and the count that matters is zero.
+    const labels = [
+      "scroll_depth_25", "scroll_depth_50", "scroll_depth_75", "scroll_depth_90",
+      "section_how_it_works", "section_placement_cta", "section_testimonials",
+      "section_meet_teacher", "section_final_cta", "exit_intent_shown",
+    ];
+    for (const cta_label of labels) {
+      await logEngagementEvent({ source_type: "homepage", cta_label });
+    }
+
+    expect(insert).toHaveBeenCalledTimes(10);
+    expect(fbq()).not.toHaveBeenCalled();
+    expect(gtag()).not.toHaveBeenCalled();
+  });
+
+  it("still writes the row — the signal is kept, only the conversion is not", async () => {
+    await logEngagementEvent({ source_type: "homepage", cta_label: "scroll_depth_50" });
+
+    const row = insert.mock.calls[0][0] as Record<string, unknown>;
+    expect(row.source_type).toBe("homepage");
+    expect(row.cta_label).toBe("scroll_depth_50");
+    expect(row.session_id).toBe("11111111-1111-4111-8111-111111111111");
+  });
+
+  it("never throws, even when the insert rejects", async () => {
+    insert.mockRejectedValueOnce(new Error("network down"));
+    await expect(
+      logEngagementEvent({ source_type: "homepage", cta_label: "scroll_depth_25" }),
+    ).resolves.toBeUndefined();
   });
 });
