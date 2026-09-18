@@ -23,12 +23,18 @@
  * A student pressing "I have paid" writes a row in `student_payment_claims` and
  * nothing else. Approving it here is what writes `paid_on`. That ordering is the
  * whole point: the balance is Re's, not the student's.
+ *
+ * AND THE RECEIPT IS WHY THAT ORDERING IS WORTH ANYTHING
+ * Until the claim could carry an image, approving one meant believing a typed
+ * number. The file sits in the private `receipts` bucket; the link below is
+ * minted on the click and expires, because a stored public URL to somebody's
+ * bank screenshot is not a thing this app should ever hold.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, Wallet, Inbox } from "lucide-react";
+import { GraduationCap, Wallet, Inbox, Paperclip } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
 import { usePrivateBudgets } from "@/hooks/admin/usePrivateBudgets";
@@ -42,6 +48,9 @@ function todayInCairo(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
 }
 
+/** Long enough to open and read the image, short enough not to be a link worth keeping. */
+const RECEIPT_URL_TTL_SECONDS = 300;
+
 interface Claim {
   id: string;
   amount: number;
@@ -51,6 +60,7 @@ interface Claim {
   sender_name: string | null;
   note: string | null;
   bundle_id: string | null;
+  receipt_path: string | null;
   teacher_students: { full_name: string | null } | null;
 }
 
@@ -67,7 +77,7 @@ const MoneyIn = () => {
   const loadClaims = useCallback(async () => {
     const { data, error: claimError } = await supabase
       .from("student_payment_claims")
-      .select("id, amount, currency, paid_on, method, sender_name, note, bundle_id, teacher_students(full_name)")
+      .select("id, amount, currency, paid_on, method, sender_name, note, bundle_id, receipt_path, teacher_students(full_name)")
       .eq("status", "pending")
       .order("created_at", { ascending: true });
     if (claimError) return;
@@ -75,6 +85,25 @@ const MoneyIn = () => {
   }, []);
 
   useEffect(() => { void loadClaims(); }, [loadClaims]);
+
+  /**
+   * Opens the receipt in a new tab. The URL is signed at this moment and dies
+   * five minutes later, so nothing durable links to a student's bank
+   * screenshot.
+   */
+  async function openReceipt(claimId: string, path: string) {
+    setBusy(claimId);
+    setError(null);
+    const { data, error: signError } = await supabase.storage
+      .from("receipts")
+      .createSignedUrl(path, RECEIPT_URL_TTL_SECONDS);
+    setBusy(null);
+    if (signError || !data?.signedUrl) {
+      setError(signError?.message ?? "Could not open that receipt.");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
 
   async function markPaid(id: string, fallback: string | null) {
     const when = dates[id] ?? fallback ?? todayInCairo();
@@ -216,6 +245,23 @@ const MoneyIn = () => {
                       <span className="text-muted-foreground"> · no bundle — records only</span>
                     )}
                   </span>
+
+                  {/* Said in words when there is nothing to open: a claim with no
+                      receipt must not be indistinguishable from one whose image
+                      failed to load. */}
+                  {c.receipt_path ? (
+                    <button
+                      type="button"
+                      onClick={() => void openReceipt(c.id, c.receipt_path!)}
+                      disabled={busy === c.id}
+                      className="flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60"
+                    >
+                      <Paperclip className="h-3 w-3" /> See receipt
+                    </button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">no receipt</span>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => void reviewClaim(c.id, true)}
