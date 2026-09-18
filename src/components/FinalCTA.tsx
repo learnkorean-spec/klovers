@@ -1,16 +1,50 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Users, Star, Zap, MessageCircle } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Star, Globe, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
 
+/**
+ * The same three facts as the hero strip, and for the same reason.
+ *
+ * This block used to read "500+ / Active Students", "4.9★ / Average Rating",
+ * "98% / Would Recommend" — on the same page whose hero says "200+ / Students
+ * in 13 years". A visitor who scrolls the homepage was handed two different
+ * student counts by the same business, which costs more credibility than
+ * either number buys.
+ *
+ * Each figure and why it reads the way it does:
+ *
+ * - 200+, not 500+. It counts every student Re has taught across 13 years,
+ *   not accounts on this platform, so the LABEL carries the scope and is part
+ *   of the claim. "Active Students" was worse than the number: production
+ *   holds 5 rows in teacher_students and 7 bundles. Nothing supports
+ *   "active" at any figure.
+ * - 4.9 from 16 reviews. The rating was already right; it was the count that
+ *   was missing. An unattributed "Average Rating" reads as marketing.
+ * - "98% Would Recommend" is gone rather than corrected. `student_nps` has
+ *   ZERO rows — nothing in the product has ever asked the question, so there
+ *   was no true number to replace it with. A1–C2 takes its place because it
+ *   is simply the level range taught.
+ *
+ * Labels are now bilingual. All three were English-only on an Arabic-first
+ * site, so an Arabic reader got "Active Students" under a Korean-course
+ * heading in her own language.
+ *
+ * This mirrors HeroSection.tsx's stats array exactly. If one of them changes
+ * the other has to change with it — same rule Testimonials.tsx, SignUpPage,
+ * GamesPage and BlogPostPage already carry.
+ */
 const SOCIAL_PROOF = [
-  { icon: Users, value: "500+", label: "Active Students" },
-  { icon: Star,  value: "4.9★",   label: "Average Rating" },
-  { icon: Zap,   value: "98%",    label: "Would Recommend" },
+  { icon: Users, value: "200+", en: "Students in 13 years", ar: "طالب خلال ١٣ عاماً" },
+  { icon: Star, value: "4.9 ★", en: "From 16 reviews", ar: "من ١٦ مراجعة" },
+  { icon: Globe, value: "A1–C2", en: "All Levels", ar: "جميع المستويات" },
 ];
+
+/** The count-up target, and the first tile's real value. Keep in step with SOCIAL_PROOF[0]. */
+const STUDENT_COUNT = 200;
 
 // Floating Korean characters for visual texture
 const KR_CHARS = ["안녕", "한국어", "공부", "화이팅", "수업", "최고"];
@@ -31,11 +65,13 @@ const FinalCTA = () => {
     return () => obs.disconnect();
   }, []);
 
-  // Animate student count 0 → 1000
+  // Animate the student count 0 → STUDENT_COUNT. Only the quantity animates:
+  // a ticking number reads as a counter, which is why the rating beside it is
+  // a static string here exactly as it is in the hero.
   useEffect(() => {
     if (!visible) return;
     let start = 0;
-    const target = 500;
+    const target = STUDENT_COUNT;
     const step = Math.ceil(target / 60);
     const id = setInterval(() => {
       start = Math.min(start + step, target);
@@ -109,17 +145,20 @@ const FinalCTA = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          {SOCIAL_PROOF.map(({ icon: Icon, value, label }, i) => (
-            <div key={label} className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/15 rounded-xl px-4 py-2.5">
-              <Icon className="h-5 w-5 text-primary-foreground/70" />
-              <div className="text-start">
-                <p className="font-bold text-primary-foreground text-sm leading-none">
-                  {i === 0 ? `${count.toLocaleString()}+` : value}
-                </p>
-                <p className="text-[11px] text-primary-foreground/60">{label}</p>
+          {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }, i) => {
+            const label = isAr ? ar : en;
+            return (
+              <div key={en} className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/15 rounded-xl px-4 py-2.5">
+                <Icon className="h-5 w-5 text-primary-foreground/70" />
+                <div className="text-start">
+                  <p className="font-bold text-primary-foreground text-sm leading-none">
+                    {i === 0 ? `${count.toLocaleString("en-US")}+` : value}
+                  </p>
+                  <p className="text-[11px] text-primary-foreground/60">{label}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA buttons */}
@@ -169,7 +208,11 @@ const FinalCTA = () => {
           {isAr ? "لا بطاقة ائتمان · ٣٠ دقيقة · معلمة حقيقية · نرد خلال دقائق" : "No credit card · 30 minutes · Real teacher · We reply in minutes"}
         </p>
 
-        {/* Community proof */}
+        {/* Community proof — followers across Telegram and Facebook, which is a
+            different claim from the student count above and is not contradicted
+            by it. Left as-is: unlike the figures above, nothing in this codebase
+            or database can confirm or refute it, so it is Re's to verify against
+            the two channels rather than mine to quietly change. */}
         <p className="text-primary-foreground/50 text-xs mb-4">
           {isAr
             ? "🌍 انضم لأكثر من ٢٠٠٠ متعلم في مجتمعنا على تيليجرام وفيسبوك"
