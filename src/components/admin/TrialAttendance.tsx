@@ -1,5 +1,5 @@
 /**
- * Who actually came to the trial.
+ * Who actually came to the trial — and the two letters that follow.
  *
  * The gap this fills, in one sentence: nothing in the database has ever
  * recorded that a trial HAPPENED for a given student. `attendance_response` is
@@ -18,6 +18,14 @@
  * opposite letters. A two-state control would turn every unopened session into
  * a roomful of no-shows the moment the page loaded, which is the same mistake —
  * guessing — in a nicer costume.
+ *
+ * CONFIRM. Marking is only half of it: the button below each session opens a
+ * DRY RUN of the real sender — every name, which of the two letters she would
+ * get, in which language — and only the second press sends. The preview is the
+ * sender itself rather than the same rules re-implemented in the UI, so a
+ * student missing from the list is missing because the sender skipped her
+ * (unsubscribed), and the number on the button is the number that will be
+ * written to. Nobody still marked "not decided yet" is in it.
  *
  * ORDER. The students who said they were coming sit at the top, then the
  * silent ones, then the ones who said they couldn't. Alphabetical put the three
@@ -39,8 +47,13 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -58,6 +71,24 @@ type Row = {
   class_language: string | null;
   attendance_response: string | null;
   attended: boolean | null;
+  attended_letter_sent_at: string | null;
+};
+
+/** One line of the sender's dry run. */
+type PlannedRecipient = {
+  name: string | null;
+  email: string | null;
+  letter: "came" | "missed";
+  language: "ar" | "en";
+};
+
+type DryRun = {
+  eligible: number;
+  came: number;
+  missed: number;
+  skipped_unsubscribed: number;
+  without_unsubscribe_link: number;
+  recipients: PlannedRecipient[];
 };
 
 interface TrialAttendanceProps {
@@ -95,6 +126,11 @@ const MARK_LABEL: Record<Mark, string> = {
   no: "Didn't come",
 };
 
+const LETTER_LABEL: Record<PlannedRecipient["letter"], string> = {
+  came: "Your place in the group",
+  missed: "Another trial time",
+};
+
 /**
  * Sort rank from what she SAID beforehand.
  *
@@ -110,16 +146,23 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
   const qc = useQueryClient();
   /** Sessions the admin has opened in full. Collapsed is the default. */
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  /** The session whose letters are being previewed, and the sender's answer. */
+  const [previewing, setPreviewing] = useState<{ date: string; time: string | null; label: string } | null>(null);
+  const [preview, setPreview] = useState<DryRun | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const { data, error, isLoading } = useQuery({
     queryKey: ["admin", "trial-attendance", days],
     queryFn: async (): Promise<Row[]> => {
       const { data, error } = await supabase
         .from("trial_bookings")
-        // `attended` does not exist until migration 20260918190000 is applied.
-        // The cast keeps the generated types quiet until they are regenerated;
-        // the error path below is what the admin actually sees if it is missing.
-        .select("id, name, email, trial_date, start_time, class_language, attendance_response, attended" as "*")
+        // These columns do not exist until migrations 20260918190000 and
+        // 20260918200000 are applied. The cast keeps the generated types quiet
+        // until they are regenerated; the error path below is what the admin
+        // actually sees if they are missing.
+        .select(
+          "id, name, email, trial_date, start_time, class_language, attendance_response, attended, attended_letter_sent_at" as "*",
+        )
         .neq("status", "cancelled")
         .not("trial_date", "is", null)
         .gte("trial_date", localISODate(-days))
@@ -178,8 +221,67 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
       marked: rows.filter(r => r.attended !== null).length,
       came: rows.filter(r => r.attended === true).length,
       confirmed: rows.filter(r => r.attendance_response === "yes").length,
+      /** Marked and not yet written to — what the sender would actually take. */
+      pending: rows.filter(r => r.attended !== null && !r.attended_letter_sent_at).length,
+      lettersSent: rows.filter(r => r.attended_letter_sent_at).length,
     }));
   }, [data]);
+
+  /**
+   * Ask the sender what it would do. Deliberately its dry run rather than the
+   * same rules copied into this component: a preview that can disagree with the
+   * sender is worse than no preview, because it is believed.
+   */
+  const openPreview = async (date: string, time: string | null, label: string) => {
+    setPreviewing({ date, time, label });
+    setPreview(null);
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-trial-attendance-letters", {
+        body: { trial_date: date, start_time: time, dry_run: true },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      setPreview(data as DryRun);
+    } catch (e) {
+      toast({
+        title: "Could not check",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+      setPreviewing(null);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const send = async () => {
+    if (!previewing) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-trial-attendance-letters", {
+        body: { trial_date: previewing.date, start_time: previewing.time, dry_run: false },
+      });
+      if (error) throw error;
+      const res = data as { sent?: number; came?: number; missed?: number; errors?: number };
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      toast({
+        title: `${res.sent ?? 0} letter${res.sent === 1 ? "" : "s"} sent`,
+        description: `${res.came ?? 0} to students who came · ${res.missed ?? 0} offering another trial.`,
+      });
+      setPreviewing(null);
+      setPreview(null);
+      qc.invalidateQueries({ queryKey: ["admin", "trial-attendance"] });
+    } catch (e) {
+      toast({
+        title: "Could not send",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (isLoading) return null;
 
@@ -191,7 +293,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         <p className="text-sm font-semibold">Who came</p>
         <p className="text-xs text-muted-foreground">
           Not available yet — run the Apply Migrations workflow for{" "}
-          <code className="text-[11px]">20260918190000_trial_attendance_mark</code>, then reload.
+          <code className="text-[11px]">20260918200000_trial_attendance_letter</code>, then reload.
         </p>
       </div>
     );
@@ -213,7 +315,8 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         <p className="text-sm font-semibold">Who came</p>
         <p className="text-xs text-muted-foreground">
           The ones who said they were coming are at the top. Left as{" "}
-          <em>Not decided yet</em> until you say — nothing reads that as a no-show.
+          <em>Not decided yet</em> until you say — nothing reads that as a no-show,
+          and nobody undecided is written to.
         </p>
       </div>
 
@@ -221,22 +324,36 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         const isOpen = expanded.has(s.key);
         const shown = isOpen ? s.rows : s.rows.slice(0, limit);
         const hidden = s.rows.length - shown.length;
+        const label = `${formatSlotDate(s.date)} · ${(s.time ?? "TBA").slice(0, 5)}`;
 
         return (
           <div key={s.key} className="space-y-0.5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2 pb-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-0.5">
               <span className="text-xs font-semibold">
-                {formatSlotDate(s.date)} · {(s.time ?? "TBA").slice(0, 5)}
+                {label}
                 {s.language && (
                   <Badge variant="secondary" className="ml-2 text-[10px] capitalize">
                     {s.language}
                   </Badge>
                 )}
               </span>
-              <span className="text-xs text-muted-foreground">
-                {s.marked === 0
-                  ? `${s.rows.length} booked · ${s.confirmed} said yes · none marked`
-                  : `${s.came} came · ${s.marked} of ${s.rows.length} marked`}
+              <span className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {s.marked === 0
+                    ? `${s.rows.length} booked · ${s.confirmed} said yes · none marked`
+                    : `${s.came} came · ${s.marked} of ${s.rows.length} marked`}
+                  {s.lettersSent > 0 && ` · ${s.lettersSent} written to`}
+                </span>
+                <Button
+                  size="sm"
+                  variant={s.pending > 0 ? "default" : "outline"}
+                  className="h-7 px-2 text-xs"
+                  disabled={s.pending === 0 || !s.date}
+                  onClick={() => s.date && openPreview(s.date, s.time, label)}
+                >
+                  <Mail className="mr-1 h-3.5 w-3.5" />
+                  {s.pending > 0 ? `Send ${s.pending} letter${s.pending === 1 ? "" : "s"}` : "All sent"}
+                </Button>
               </span>
             </div>
 
@@ -253,12 +370,18 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
                   {r.attendance_response === "no" && (
                     <span className="text-[11px] text-muted-foreground">said she couldn't</span>
                   )}
+                  {r.attended_letter_sent_at && (
+                    <Badge variant="outline" className="text-[10px]">letter sent</Badge>
+                  )}
                 </span>
 
+                {/* Locked once her letter has gone. The two letters contradict
+                    each other, so changing the mark afterwards corrects the
+                    record — it must not chase the first letter with the second. */}
                 <Select
                   value={markOf(r.attended)}
                   onValueChange={v => setMark.mutate({ id: r.id, mark: v as Mark })}
-                  disabled={setMark.isPending}
+                  disabled={setMark.isPending || !!r.attended_letter_sent_at}
                 >
                   <SelectTrigger className="h-7 w-[9.5rem] text-xs">
                     <SelectValue />
@@ -286,6 +409,67 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
           </div>
         );
       })}
+
+      <Dialog open={!!previewing} onOpenChange={o => { if (!o) { setPreviewing(null); setPreview(null); } }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Send letters — {previewing?.label}</DialogTitle>
+            <DialogDescription>
+              Nothing has been sent yet. This is the sender's own dry run: exactly who it would
+              write to, and which letter each one gets.
+            </DialogDescription>
+          </DialogHeader>
+
+          {busy && !preview && <p className="text-sm text-muted-foreground">Checking…</p>}
+
+          {preview && (
+            <div className="space-y-3">
+              <p className="text-sm">
+                <strong>{preview.came}</strong> · <em>{LETTER_LABEL.came}</em> — enrolment is open,
+                here is your seat.
+                <br />
+                <strong>{preview.missed}</strong> · <em>{LETTER_LABEL.missed}</em> — the time may not
+                have suited you, here is another trial.
+              </p>
+
+              {preview.skipped_unsubscribed > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {preview.skipped_unsubscribed} skipped — unsubscribed.
+                </p>
+              )}
+              {preview.without_unsubscribe_link > 0 && (
+                <p className="text-xs text-destructive">
+                  {preview.without_unsubscribe_link} would go out with no one-click unsubscribe link.
+                </p>
+              )}
+
+              <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
+                {preview.recipients.map(r => (
+                  <div key={r.email ?? r.name} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate">{r.name?.trim() || r.email}</span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {LETTER_LABEL[r.letter]} · {r.language}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Anyone still marked <em>Not decided yet</em> is not in this list and is not written to.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setPreviewing(null); setPreview(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={send} disabled={busy || !preview || preview.eligible === 0}>
+              {busy ? "Sending…" : `Send ${preview?.eligible ?? 0}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
