@@ -7,7 +7,7 @@ import { useBottomSlot } from "@/lib/bottomLayer";
 
 /**
  * StickyEnrollBar — appears after the user scrolls past the hero CTA buttons.
- * Shows a slim bottom bar: "Still thinking? → Enroll Now" + Free Trial link.
+ * Shows a slim bottom bar: Free Trial (primary) + "Still thinking? → Enroll Now" (secondary).
  * Dismissed by clicking X (stored in sessionStorage so it doesn't re-appear on the same visit).
  *
  * Yields to HomeExitNudge, which occupies the same bottom-0 strip at a higher
@@ -56,21 +56,27 @@ const StickyEnrollBar = () => {
           </p>
         </div>
 
-        {/* Right: CTAs + dismiss */}
+        {/* Right: CTAs + dismiss.
+
+            Free Trial carries the bold filled button here — it's the one
+            primary conversion action everywhere else on the site (header,
+            hero, FinalCTA), and #491 unified four competing "book a class"
+            wordings around it. Enroll Now is the lighter secondary link,
+            same as it would be on any other section of the page. */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link
-            to="/free-trial"
-            onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "sticky_bar_free_trial" }); } catch {} }}
-            className="text-xs font-semibold text-white/85 hover:text-white transition-colors hidden sm:block"
-          >
-            {t("stickyBar.freeTrial")}
-          </Link>
           <Link
             to="/enroll-now"
             onClick={() => { try { logLeadEvent({ source_type: "enroll", cta_label: "sticky_bar_enroll_now" }); } catch {} }}
+            className="text-xs font-semibold text-white/85 hover:text-white transition-colors hidden sm:block"
+          >
+            {t("stickyBar.enrollNow")}
+          </Link>
+          <Link
+            to="/free-trial"
+            onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "sticky_bar_free_trial" }); } catch {} }}
             className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-black/25"
           >
-            {t("stickyBar.enrollNow")} <ArrowRight className="h-3.5 w-3.5" />
+            {t("stickyBar.freeTrial")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
           <button
             onClick={dismiss}
