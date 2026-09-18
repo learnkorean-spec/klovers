@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import { X, Download } from "lucide-react";
 import { capture } from "@/lib/analytics";
+import { useBottomSlot } from "@/lib/bottomLayer";
 
 /**
  * PWA install prompt — shows a non-intrusive banner when the browser fires
  * the `beforeinstallprompt` event. Dismissed state is persisted so it never
  * shows again after the user explicitly dismisses it.
+ *
+ * Mounted app-wide in App.tsx, so on most routes it is the only thing asking
+ * for the bottom of the screen. On the homepage it is not: it sits at
+ * bottom-20 with z-[200], which put it on top of the exit nudge and the enrol
+ * bar rather than beside them. It now takes its turn through the shared
+ * bottom layer like the other three (see src/lib/bottomLayer.ts).
  *
  * Analytics: fires `pwa_installed` on successful install.
  */
@@ -37,6 +44,8 @@ export default function InstallPrompt() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
+  const allowed = useBottomSlot("installPrompt", visible && prompt !== null);
+
   const handleInstall = async () => {
     if (!prompt) return;
     await prompt.prompt();
@@ -53,7 +62,7 @@ export default function InstallPrompt() {
     localStorage.setItem("pwa_install_dismissed", "1");
   };
 
-  if (!visible || !prompt) return null;
+  if (!allowed) return null;
 
   return (
     <div
