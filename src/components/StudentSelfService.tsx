@@ -7,6 +7,10 @@
  * `student_payment_claims`, and Re's confirmation is the only thing that moves a
  * balance or writes `paid_on`. A student can never move her own numbers.
  *
+ * The receipt is part of that same asymmetry. She uploads the image; it settles
+ * nothing. It exists so the person who DOES settle it is looking at something
+ * other than a typed number.
+ *
  * WHY THIS EXISTS SEPARATELY FROM StudentAttendanceRequest
  * That card is built on `enrollments` and unlocks only for a group enrolment
  * that is APPROVED and PAID. Every private student — the only students who have
@@ -24,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle2, Clock, Loader2, Wallet } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Paperclip, Wallet } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
@@ -56,6 +60,7 @@ interface Claim {
   paid_on: string;
   method: string;
   status: string;
+  receipt_path: string | null;
 }
 
 // The value is what gets stored (Re reads it in MONEY IN); only the label is translated.
@@ -67,6 +72,9 @@ const PAYMENT_METHOD_AR: Record<string, string> = {
 const PAY_NUMBER = "+20 101 000 3084";
 const WHATSAPP = "https://wa.me/201010003084";
 
+/** A phone screenshot is the usual case; 8 MB covers one comfortably. */
+const MAX_RECEIPT_BYTES = 8 * 1024 * 1024;
+
 /** Today in Cairo as YYYY-MM-DD — the calendar the school runs on. */
 function cairoToday(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
@@ -77,6 +85,17 @@ function formatDate(iso: string, isAr = false): string {
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(isAr ? "ar-EG-u-nu-latn" : "en-GB", {
     weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
   });
+}
+
+/**
+ * Arabic filenames, spaces and "IMG_٢٠٢٦(1).jpg" all arrive here. The bucket
+ * key has to survive a URL, so only the extension is kept from what the phone
+ * called it and the rest is ours.
+ */
+function receiptKey(userId: string, file: File): string {
+  const dot = file.name.lastIndexOf(".");
+  const ext = dot > -1 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") : "jpg";
+  return `${userId}/receipt-${Date.now()}.${ext || "jpg"}`;
 }
 
 const StudentSelfService = ({ userId }: Props) => {
@@ -99,6 +118,7 @@ const StudentSelfService = ({ userId }: Props) => {
   const [method, setMethod] = useState(PAYMENT_METHODS[0]);
   const [senderName, setSenderName] = useState("");
   const [note, setNote] = useState("");
+  const [receipt, setReceipt] = useState<File | null>(null);
 
   const load = useCallback(async () => {
     const { data: roster, error: rosterError } = await supabase
@@ -137,7 +157,7 @@ const StudentSelfService = ({ userId }: Props) => {
         .limit(20),
       supabase
         .from("student_payment_claims")
-        .select("id, amount, currency, paid_on, method, status")
+        .select("id, amount, currency, paid_on, method, status, receipt_path")
         .order("created_at", { ascending: false })
         .limit(5),
     ]);
@@ -189,7 +209,37 @@ const StudentSelfService = ({ userId }: Props) => {
       toast({ title: tr("Enter the amount you paid", "اكتب المبلغ الذي دفعته"), variant: "destructive" });
       return;
     }
+    if (receipt && receipt.size > MAX_RECEIPT_BYTES) {
+      toast({
+        title: tr("That image is too large", "الصورة كبيرة جدًا"),
+        description: tr("Send one under 8 MB.", "ابعتي صورة أقل من 8 ميجا."),
+        variant: "destructive",
+      });
+      return;
+    }
     setBusy("claim");
+
+    // The upload goes first and its failure stops the claim: a claim that says
+    // "receipt attached" with no file behind it is worse than no claim at all,
+    // and the form is still on screen with everything she typed still in it.
+    let receiptPath: string | null = null;
+    if (receipt) {
+      const key = receiptKey(userId, receipt);
+      const { error: uploadError } = await supabase.storage
+        .from("receipts")
+        .upload(key, receipt, { upsert: false, contentType: receipt.type || undefined });
+      if (uploadError) {
+        setBusy(null);
+        toast({
+          title: tr("The image did not send", "الصورة ماتبعتتش"),
+          description: uploadError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      receiptPath = key;
+    }
+
     const { error } = await supabase.rpc("student_submit_payment_claim", {
       p_amount: value,
       p_currency: currency,
@@ -198,6 +248,7 @@ const StudentSelfService = ({ userId }: Props) => {
       p_sender_name: senderName || null,
       p_note: note || null,
       p_bundle_id: bundle?.id ?? null,
+      p_receipt_path: receiptPath,
     } as never);
     setBusy(null);
     if (error) {
@@ -212,6 +263,7 @@ const StudentSelfService = ({ userId }: Props) => {
     setAmount("");
     setNote("");
     setSenderName("");
+    setReceipt(null);
     void load();
   }
 
@@ -359,6 +411,26 @@ const StudentSelfService = ({ userId }: Props) => {
                   </select>
                 </label>
               </div>
+
+              {/* The one field here that is not somebody's memory. Optional on
+                  purpose: a student who paid at a kiosk and kept no screenshot
+                  must still be able to say so. */}
+              <label className="block text-xs">
+                {tr("Photo of the receipt (optional)", "صورة الإيصال (اختياري)")}
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={e => setReceipt(e.target.files?.[0] ?? null)}
+                  className="mt-1 w-full rounded-lg border bg-background px-2 py-1 text-sm file:me-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-0.5 file:text-xs"
+                />
+                {receipt && (
+                  <span className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <Paperclip className="h-3 w-3" />
+                    {receipt.name}
+                  </span>
+                )}
+              </label>
+
               <label className="block text-xs">
                 {tr("Name or number it came from (optional)", "الاسم أو الرقم الذي تم التحويل منه (اختياري)")}
                 <input
@@ -392,6 +464,9 @@ const StudentSelfService = ({ userId }: Props) => {
                 <div key={c.id} className="flex items-center justify-between gap-2 text-xs">
                   <span className="truncate text-muted-foreground">
                     {c.amount} {c.currency} · {formatDate(c.paid_on, isAr)} · {methodLabel(c.method)}
+                    {c.receipt_path && (
+                      <Paperclip className="ms-1 inline h-3 w-3" aria-hidden="true" />
+                    )}
                   </span>
                   <Badge variant={c.status === "approved" ? "default" : c.status === "rejected" ? "destructive" : "secondary"} className="shrink-0">
                     {c.status === "approved"
