@@ -19,12 +19,29 @@
  * a roomful of no-shows the moment the page loaded, which is the same mistake —
  * guessing — in a nicer costume.
  *
- * CONFIRM. Marking is only half of it: the button below each session opens a
- * DRY RUN of the real sender — every name, which letter, in which language —
- * and only the second press sends. The preview is the sender itself rather than
- * the same rules re-implemented here, so a student missing from the list is
- * missing because the sender skipped her (unsubscribed), and the number on the
- * button is the number that will be written to.
+ * SAVING. The drop list writes on change. There is no Save step, which is why
+ * the button is only ever a SEND — a control reading "save and send" would
+ * invent a pending state that does not exist and make a saved mark look
+ * unsaved. The card says so in words, because a thing that saves silently is
+ * indistinguishable from a thing that did not save.
+ *
+ * THE BUTTON names the next action rather than the feature:
+ *
+ *   Send 3 letters        somebody is marked Came and not yet written to
+ *   Letters — 2 no-shows  only absences are waiting
+ *   Mark who came first   nothing is marked yet — the 19 September case
+ *   All letters sent      nothing left to do
+ *
+ * It used to read "Letters…" in every one of those states. On a session with
+ * one unmarked student it was greyed out with no word about why, so the only
+ * way to learn that a mark was missing was to guess.
+ *
+ * CONFIRM. The button opens a DRY RUN of the real sender — every name, which
+ * letter, in which language — and only the second press sends. The preview is
+ * the sender itself rather than the same rules re-implemented here, so a
+ * student missing from the list is missing because the sender skipped her
+ * (unsubscribed), and the number on the button is the number that will be
+ * written to.
  *
  * WHO. Re's call on 19 September: the students who CAME, for now. So the button
  * counts and sends those. The no-shows are not silently dropped — the session
@@ -238,6 +255,8 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
       /** Marked absent and not written to. Named, never silently dropped. */
       missedPending: rows.filter(r => r.attended === false && !r.attended_letter_sent_at).length,
       lettersSent: rows.filter(r => r.attended_letter_sent_at).length,
+      /** Still undecided — the reason a session can have nothing to send. */
+      unmarked: rows.filter(r => r.attended === null).length,
     }));
   }, [data]);
 
@@ -351,6 +370,11 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
           <em>Not decided yet</em> until you say — nothing reads that as a no-show,
           and nobody undecided is written to.
         </p>
+        {/* Said out loud because a thing that saves silently is indistinguishable
+            from a thing that did not save. */}
+        <p className="text-xs text-muted-foreground">
+          Your choice saves the moment you pick it. The button only sends.
+        </p>
       </div>
 
       {sessions.map(s => {
@@ -358,6 +382,19 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         const shown = isOpen ? s.rows : s.rows.slice(0, limit);
         const hidden = s.rows.length - shown.length;
         const label = `${formatSlotDate(s.date)} · ${(s.time ?? "TBA").slice(0, 5)}`;
+
+        // The button names the next action. "Letters…" in all four states told
+        // her nothing, and on an unmarked session it was greyed out with no word
+        // about why — the missing mark was something she had to guess at.
+        const nothingToSend = s.camePending === 0 && s.missedPending === 0;
+        const cta =
+          s.camePending > 0
+            ? `Send ${s.camePending} letter${s.camePending === 1 ? "" : "s"}`
+            : s.missedPending > 0
+              ? `Letters — ${s.missedPending} no-show${s.missedPending === 1 ? "" : "s"}`
+              : s.unmarked > 0
+                ? "Mark who came first"
+                : "All letters sent";
 
         return (
           <div key={s.key} className="space-y-0.5">
@@ -382,13 +419,11 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
                   size="sm"
                   variant={s.camePending > 0 ? "default" : "outline"}
                   className="h-7 px-2 text-xs"
-                  disabled={(s.camePending === 0 && s.missedPending === 0) || !s.date}
+                  disabled={nothingToSend || !s.date}
                   onClick={() => s.date && runPreview(s.date, s.time, label, "came")}
                 >
                   <Mail className="mr-1 h-3.5 w-3.5" />
-                  {s.camePending > 0
-                    ? `Send ${s.camePending} letter${s.camePending === 1 ? "" : "s"}`
-                    : "Letters…"}
+                  {cta}
                 </Button>
               </span>
             </div>
