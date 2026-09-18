@@ -10,8 +10,37 @@ const corsHeaders = {
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SITE_URL = "https://kloversegy.com";
+const FUNCTION_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/functions/v1";
 
-// Resend batch API — sends up to 100 emails per call (well within our 59-user list)
+/**
+ * The address Gmail/Yahoo POST to for a one-click unsubscribe (RFC 8058).
+ *
+ * This must be a server route. It used to be `${SITE_URL}/unsubscribe?token=`,
+ * which is a client-side React route: the POST gets an empty HTML shell with a
+ * 200, nothing is written, and the provider records an unsubscribe we never
+ * honoured. The edge function below writes the row.
+ */
+function headerUnsubscribeUrl(token: string | null): string {
+  return token
+    ? `${FUNCTION_BASE}/unsubscribe-email?token=${token}&lang=ar`
+    : `${SITE_URL}/unsubscribe`;
+}
+
+/** The link a human clicks in the footer -- the page, not the endpoint. */
+function footerUnsubscribeUrl(token: string | null): string {
+  return token ? `${SITE_URL}/unsubscribe?token=${token}` : `${SITE_URL}/unsubscribe`;
+}
+
+type Recipient = {
+  email: string;
+  name: string | null;
+  unsubscribe_token: string | null;
+  user_id: string | null;
+  level: string | null;
+  origin: "profile" | "lead";
+};
+
+// Resend batch API -- sends up to 100 emails per call
 async function sendBatch(emails: { to: string; subject: string; html: string; text: string; unsubscribeUrl: string }[]) {
   const payload = emails.map((e) => ({
     from: FROM_EMAIL,
@@ -36,13 +65,11 @@ async function sendBatch(emails: { to: string; subject: string; html: string; te
 }
 
 function buildBroadcastEmail(
-  name: string,
+  name: string | null,
   unsubscribeToken: string | null,
 ): { subject: string; html: string; text: string } {
   const displayName = name?.trim() || "Student";
-  const unsubUrl = unsubscribeToken
-    ? `${SITE_URL}/unsubscribe?token=${unsubscribeToken}`
-    : `${SITE_URL}/unsubscribe`;
+  const unsubUrl = footerUnsubscribeUrl(unsubscribeToken);
 
   const subject = "Free Korean Class — احجز مجاناً 🎓";
 
@@ -251,9 +278,12 @@ serve(async (req) => {
     const dry_run: boolean = body.dry_run !== false;
     // broadcast_key defaults to today's date so the same admin can't fire twice in a day
     const broadcast_key: string = body.broadcast_key ?? `trial_broadcast_${new Date().toISOString().slice(0, 10)}`;
-    // Optional level segmentation: only send to profiles with this level value.
+    // Optional level segmentation: only send to people with this level value.
     // E.g. body.level_filter = "beginner" targets only beginners.
     const level_filter: string | null = body.level_filter ?? null;
+    // Leads without an account are included by default; pass false to go back to
+    // account holders only.
+    const include_leads: boolean = body.include_leads !== false;
 
     // ── Idempotency check ─────────────────────────────────────────────────────
     if (!dry_run) {
@@ -272,33 +302,105 @@ serve(async (req) => {
       }
     }
 
-    // ── Fetch profiles ────────────────────────────────────────────────────────
-    let profilesQuery = supabase
-      .from("profiles")
-      .select("user_id, name, email, email_unsubscribed, unsubscribe_token, level")
-      .not("email", "is", null)
-      .neq("email_unsubscribed", true);
-
-    // Apply level segmentation filter if provided
-    if (level_filter) {
-      profilesQuery = profilesQuery.eq("level", level_filter);
-    }
-
-    const { data: profiles, error: profileErr } = await profilesQuery;
+    // ── Fetch both identity tables ────────────────────────────────────────────
+    // Unfiltered on email_unsubscribed on purpose: the suppression set is built
+    // from every row in both tables before anyone is added to the audience, so a
+    // person who unsubscribed on one side is never reachable through the other.
+    const [{ data: profiles, error: profileErr }, { data: leads, error: leadErr }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("user_id, name, email, email_unsubscribed, unsubscribe_token, level")
+        .not("email", "is", null),
+      supabase
+        .from("leads")
+        .select("user_id, name, email, email_unsubscribed, unsubscribe_token, level, created_at")
+        .not("email", "is", null),
+    ]);
 
     if (profileErr) throw profileErr;
-    if (!profiles?.length) return ok({ dry_run, sent: 0, skipped: 0, total: 0, level_filter });
+    if (leadErr) throw leadErr;
+
+    const key = (e: string | null) => (e ?? "").trim().toLowerCase();
+
+    // Suppression: flagged on EITHER side means do not send. `true` is the only
+    // value that suppresses -- false and NULL both mean subscribed.
+    const suppressed = new Set<string>();
+    for (const row of [...(profiles ?? []), ...(leads ?? [])]) {
+      if (row.email_unsubscribed === true && key(row.email)) suppressed.add(key(row.email));
+    }
+
+    // Build the audience: profiles first, then leads that add a new address.
+    // The profile wins on a collision -- it carries the real account name and
+    // the token that the account's own unsubscribe page knows about.
+    const byEmail = new Map<string, Recipient>();
+
+    for (const p of profiles ?? []) {
+      const k = key(p.email);
+      if (!k || suppressed.has(k)) continue;
+      if (level_filter && p.level !== level_filter) continue;
+      byEmail.set(k, {
+        email: p.email as string,
+        name: p.name ?? null,
+        unsubscribe_token: p.unsubscribe_token ?? null,
+        user_id: p.user_id ?? null,
+        level: p.level ?? null,
+        origin: "profile",
+      });
+    }
+
+    if (include_leads) {
+      // Newest lead row first, so a person captured twice is greeted by the name
+      // she gave most recently.
+      const sortedLeads = [...(leads ?? [])].sort((a, b) =>
+        String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+      );
+      for (const l of sortedLeads) {
+        const k = key(l.email);
+        if (!k || suppressed.has(k) || byEmail.has(k)) continue;
+        if (level_filter && l.level !== level_filter) continue;
+        byEmail.set(k, {
+          email: l.email as string,
+          name: l.name ?? null,
+          unsubscribe_token: l.unsubscribe_token ?? null,
+          user_id: l.user_id ?? null,
+          level: l.level ?? null,
+          origin: "lead",
+        });
+      }
+    }
+
+    const recipients = [...byEmail.values()];
+    const from_profiles = recipients.filter((r) => r.origin === "profile").length;
+    const from_leads = recipients.filter((r) => r.origin === "lead").length;
+    const without_unsubscribe_link = recipients.filter((r) => !r.unsubscribe_token).length;
+
+    if (!recipients.length) {
+      return ok({
+        dry_run,
+        sent: 0,
+        skipped: 0,
+        total: 0,
+        level_filter,
+        include_leads,
+        suppressed: suppressed.size,
+      });
+    }
 
     // ── Dry run ───────────────────────────────────────────────────────────────
     if (dry_run) {
       return ok({
         dry_run: true,
         sent: 0,
-        skipped: profiles.length,
-        total: profiles.length,
+        skipped: recipients.length,
+        total: recipients.length,
+        from_profiles,
+        from_leads,
+        without_unsubscribe_link,
+        suppressed: suppressed.size,
         level_filter,
+        include_leads,
         preview_subject: buildBroadcastEmail("Student", null).subject,
-        recipients: profiles.map((p) => p.email),
+        recipients: recipients.map((r) => r.email),
       });
     }
 
@@ -308,35 +410,34 @@ serve(async (req) => {
     let totalErrors = 0;
     const errorLog: string[] = [];
 
-    for (let i = 0; i < profiles.length; i += BATCH_SIZE) {
-      const chunk = profiles.slice(i, i + BATCH_SIZE);
-      const emails = chunk
-        .filter((p) => p.email)
-        .map((p) => {
-          const unsubscribeUrl = p.unsubscribe_token
-            ? `${SITE_URL}/unsubscribe?token=${p.unsubscribe_token}`
-            : `${SITE_URL}/unsubscribe`;
-          const { subject, html, text } = buildBroadcastEmail(p.name, p.unsubscribe_token);
-          return { to: p.email as string, subject, html, text, unsubscribeUrl };
-        });
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const chunk = recipients.slice(i, i + BATCH_SIZE);
+      const emails = chunk.map((r) => {
+        const { subject, html, text } = buildBroadcastEmail(r.name, r.unsubscribe_token);
+        return {
+          to: r.email,
+          subject,
+          html,
+          text,
+          unsubscribeUrl: headerUnsubscribeUrl(r.unsubscribe_token),
+        };
+      });
 
       try {
         await sendBatch(emails);
         totalSent += emails.length;
 
         // Log lead_events for funnel tracking (non-blocking)
-        const events = chunk
-          .filter((p) => p.email)
-          .map((p) => ({
-            session_id: crypto.randomUUID(),
-            user_id: p.user_id ?? null,
-            source_type: "email",
-            source_page: "/email/trial-broadcast",
-            cta_label: "trial_broadcast_sent",
-            campaign: "trial_broadcast",
-            utm_source: "email",
-            utm_medium: "broadcast",
-          }));
+        const events = chunk.map((r) => ({
+          session_id: crypto.randomUUID(),
+          user_id: r.user_id ?? null,
+          source_type: "email",
+          source_page: "/email/trial-broadcast",
+          cta_label: "trial_broadcast_sent",
+          campaign: "trial_broadcast",
+          utm_source: "email",
+          utm_medium: "broadcast",
+        }));
         await supabase.from("lead_events").insert(events).catch((e: unknown) =>
           console.warn("lead_events insert failed:", e)
         );
@@ -356,9 +457,24 @@ serve(async (req) => {
       triggered_by: user.id,
     }).catch((e: unknown) => console.warn("trial_broadcasts insert failed:", e));
 
-    console.log(`[trial-broadcast] key=${broadcast_key} sent=${totalSent} errors=${totalErrors}`);
+    console.log(
+      `[trial-broadcast] key=${broadcast_key} sent=${totalSent} errors=${totalErrors} ` +
+      `profiles=${from_profiles} leads=${from_leads} suppressed=${suppressed.size}`
+    );
 
-    return ok({ dry_run: false, broadcast_key, sent: totalSent, errors: totalErrors, total: profiles.length, errorLog });
+    return ok({
+      dry_run: false,
+      broadcast_key,
+      sent: totalSent,
+      errors: totalErrors,
+      total: recipients.length,
+      from_profiles,
+      from_leads,
+      without_unsubscribe_link,
+      suppressed: suppressed.size,
+      include_leads,
+      errorLog,
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[trial-broadcast] Error:", msg);
