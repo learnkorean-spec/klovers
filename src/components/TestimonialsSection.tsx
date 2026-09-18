@@ -1,4 +1,4 @@
-import { Star, Facebook, CheckCircle2 } from "lucide-react";
+import { Star, Facebook, CheckCircle2, ThumbsUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -9,6 +9,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * that does not exist in CEFR at all. Those are the same journeys stated in a
  * vocabulary the site no longer uses, so they now read in Klovers levels. No
  * outcome has been changed — A1 → A2 is Level 1 → Level 2, one for one.
+ *
+ * ⚠ KNOWN, NOT FIXED HERE: every card below renders a five-star row. These
+ * reviews come from Facebook, which replaced star ratings with Recommendations
+ * in 2018 — so a Facebook reviewer since then cannot leave a star rating at
+ * all, and the rows are decoration presented as a score. The summary above the
+ * cards was corrected on 2026-09-18 to quote Facebook's own metric (100%
+ * recommend); the per-card rows are a design change, deliberately left for a
+ * separate pass rather than folded into a numbers fix.
  */
 const reviews = [
   {
@@ -205,7 +213,8 @@ const ScrollRow = ({
 };
 
 const TestimonialsSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   return (
     <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4 mb-10 text-center">
@@ -229,15 +238,34 @@ const TestimonialsSection = () => {
           {t("testimonialsSection.subtitle")}
         </p>
 
-        {/* Star summary */}
+        {/* Summary — Facebook's own words, because this is the Facebook section.
+
+            It read "★★★★★ 4.9 / 5.0 · 200+ students" (translations.ts,
+            `testimonialsSection.ratingSuffix`). Checked against the page on
+            2026-09-18: Facebook shows "100% recommend (20 reviews)". It does
+            not show 4.9, and it cannot - Facebook replaced star ratings with
+            Recommendations in 2018, so there is no five-point scale on that
+            page for a 4.9 to be an average of. The student count also has no
+            business here; it is the hero's claim, and repeating it under a
+            rating invited the reading that 200 students had reviewed.
+
+            The Google Business Profile is the one with stars - 5.0 from 7
+            reviews - and that one is quoted in the hero strip
+            (HeroSection.tsx). One number, one named source, each.
+
+            Written inline rather than through the dictionary because these
+            two strings are a measurement with a date attached, like the hero
+            stats beside them, and both need to change together the day either
+            platform's number moves. `ratingSuffix` is left in translations.ts,
+            unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          <div className="flex gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-            ))}
-          </div>
-          <span className="text-lg font-bold text-foreground">4.9</span>
-          <span className="text-muted-foreground text-sm">{t("testimonialsSection.ratingSuffix")}</span>
+          <ThumbsUp className="h-5 w-5 text-blue-600 shrink-0" aria-hidden="true" />
+          <span className="text-lg font-bold text-foreground">
+            {isAr ? "١٠٠٪ يوصون بها" : "100% recommend"}
+          </span>
+          <span className="text-muted-foreground text-sm">
+            {isAr ? "من ٢٠ مراجعة على فيسبوك" : "from 20 reviews on Facebook"}
+          </span>
         </div>
       </div>
 
