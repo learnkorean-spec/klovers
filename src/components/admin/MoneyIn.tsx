@@ -19,6 +19,14 @@
  * two classes taught against an unpaid bundle and nothing anywhere said so — it
  * was being counted as income instead.
  *
+ * AND WHY IT NOW HAS A BUTTON
+ * Seeing the debt was never the hard part. Every payment letter this system
+ * sends is built on `enrollments`, which a private student does not have, so
+ * the only thing that ever told one what she owed was Re writing it out by
+ * hand. "Ask for payment" sends the bundle's id and nothing else: the amount
+ * and the classes taught are read in the database, off the same bundle this
+ * row is drawn from, so the letter cannot state a figure the screen does not.
+ *
  * CLAIMS ARE NOT MONEY
  * A student pressing "I have paid" writes a row in `student_payment_claims` and
  * nothing else. Approving it here is what writes `paid_on`. That ordering is the
@@ -34,7 +42,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, Wallet, Inbox, Paperclip } from "lucide-react";
+import { GraduationCap, Wallet, Inbox, Paperclip, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
 import { usePrivateBudgets } from "@/hooks/admin/usePrivateBudgets";
@@ -73,6 +81,10 @@ const MoneyIn = () => {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);
+  // Which bundles have been asked in THIS sitting. The row does not carry
+  // payment_ask_sent_at, and the point of saying so is to stop the same letter
+  // going out three times in one morning — a question about now, not history.
+  const [asked, setAsked] = useState<Record<string, true>>({});
 
   const loadClaims = useCallback(async () => {
     const { data, error: claimError } = await supabase
@@ -103,6 +115,32 @@ const MoneyIn = () => {
       return;
     }
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
+  /**
+   * Sends the private-bundle payment letter. Only the id travels: the amount,
+   * the classes taught and the number left are read in the database from this
+   * bundle's own rows, so a stale figure on this screen cannot become a figure
+   * in a student's inbox.
+   */
+  async function askForPayment(bundleId: string) {
+    setBusy(bundleId);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc("admin_send_bundle_payment_ask", {
+      p_bundle_id: bundleId,
+    } as never);
+    setBusy(null);
+    if (rpcError) {
+      // These two come back as bare codes from the function and mean something
+      // a person can act on, so they are said in words rather than shown raw.
+      const known: Record<string, string> = {
+        student_has_no_email: "That student has no email address on file — message her on WhatsApp instead.",
+        bundle_already_paid: "That bundle is already marked as paid.",
+      };
+      setError(known[rpcError.message] ?? rpcError.message);
+      return;
+    }
+    setAsked(a => ({ ...a, [bundleId]: true }));
   }
 
   async function markPaid(id: string, fallback: string | null) {
@@ -309,6 +347,22 @@ const MoneyIn = () => {
                     {b.currency ?? ""}
                     {b.label ? ` · ${b.label}` : ""}
                   </span>
+
+                  {asked[b.id] ? (
+                    <span className="text-xs font-semibold text-muted-foreground">Letter sent</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void askForPayment(b.id)}
+                      disabled={busy === b.id}
+                      className="flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60"
+                      title="Emails her the amount, the classes taught, how to pay, and where to upload the receipt"
+                    >
+                      <Send className="h-3 w-3" />
+                      {busy === b.id ? "Sending…" : "Ask for payment"}
+                    </button>
+                  )}
+
                   <input
                     type="date"
                     aria-label={`Date ${b.student} paid`}
