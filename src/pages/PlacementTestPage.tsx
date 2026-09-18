@@ -1183,8 +1183,8 @@ const PlacementTestPage = () => {
               )}
               <p className="text-sm font-semibold text-foreground text-center">{isAr ? "مستعد لبدء التعلّم؟" : "Ready to start learning?"}</p>
               <div className="flex gap-2">
-                <Button size="lg" className="flex-1" onClick={() => navigate("/enroll")}>
-                  {isAr ? "📚 احجز حصة" : "📚 Book a Class"} <ArrowRight className="ml-2 h-4 w-4" />
+                <Button size="lg" className="flex-1" onClick={() => { track.custom("placement_recommendation_clicked", { level: result.levelKey, cta: "free_trial_bottom" }); logLeadEvent({ source_type: "placement", cta_label: "bottom_cta_free_trial", metadata: { level: result.levelKey } }); navigate("/free-trial"); }}>
+                  {isAr ? "🎁 احجز حصة مجانية" : "🎁 Book a Free Class"} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" className="flex-1 gap-2" onClick={() => handleWhatsAppEnroll(result)}>
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
