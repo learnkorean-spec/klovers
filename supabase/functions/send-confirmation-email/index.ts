@@ -79,6 +79,12 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+// Re asked (18 Sep 2026) to be copied on every trial-booking confirmation, so
+// she sees the same letter the student gets the moment a trial is booked —
+// not a summary of it, the actual email. Blind-copied, not CC'd: the student
+// should not see Re's personal inbox in the header of her own confirmation.
+const TRIAL_BCC_EMAIL = "reham.elshrkawy@gmail.com";
+
 async function logEmail(opts: {
   template: string;
   toEmail: string;
@@ -113,7 +119,8 @@ async function logEmail(opts: {
 
 async function sendEmail(
   to: string, subject: string, html: string,
-  attachments?: Array<{ filename: string; content: string; content_type?: string }>
+  attachments?: Array<{ filename: string; content: string; content_type?: string }>,
+  bcc?: string[]
 ) {
   const body: Record<string, unknown> = {
     from: FROM_EMAIL,
@@ -123,6 +130,7 @@ async function sendEmail(
     html,
   };
   if (attachments?.length) body.attachments = attachments;
+  if (bcc?.length) body.bcc = bcc;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -395,7 +403,13 @@ serve(async (req) => {
         break;
     }
 
-    const result = await sendEmail(email, subject, html, emailAttachments);
+    // Re is bcc'd on the trial-booking confirmation only — the one letter
+    // that tells a student (and, this way, Re) that a trial is actually on
+    // the calendar. Every other template (reminders, follow-ups, payment
+    // letters, etc.) is unaffected.
+    const bccList = (template as string) === "trial_confirmed" ? [TRIAL_BCC_EMAIL] : undefined;
+
+    const result = await sendEmail(email, subject, html, emailAttachments, bccList);
     console.log(`Email sent to ${email} (${template || "enrollment"}):`, result);
     await logEmail({ template: template || "enrollment", toEmail: email, toName: name, status: "sent", resendId: result.id });
 
