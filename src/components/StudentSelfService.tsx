@@ -11,6 +11,15 @@
  * nothing. It exists so the person who DOES settle it is looking at something
  * other than a typed number.
  *
+ * AND SHE HAS TO BE ABLE TO SEE THE NUMBERS SHE IS BEING ASKED ABOUT
+ * The payment letter names the classes she was taught, by date. This page used
+ * to answer the same question with a total — "3 lessons confirmed so far" —
+ * which is a number she can neither check nor argue with. A student asked for
+ * money on the strength of a count she cannot see the working of is being asked
+ * to take somebody's word for it. So the dates are here, read from the same
+ * rows the letter reads, and the amount owed is stated as owed rather than as
+ * what the package costs.
+ *
  * WHY THIS EXISTS SEPARATELY FROM StudentAttendanceRequest
  * That card is built on `enrollments` and unlocks only for a group enrolment
  * that is APPROVED and PAID. Every private student — the only students who have
@@ -172,8 +181,19 @@ const StudentSelfService = ({ userId }: Props) => {
 
   useEffect(() => { void load(); }, [load]);
 
-  const used = useMemo(() => sessions.filter(s => s.counted).length, [sessions]);
-  const remaining = bundle ? bundle.total_classes - used : 0;
+  /**
+   * The classes she was actually charged for, oldest first — the same rows,
+   * in the same order, as the list in the payment letter. Ordered here rather
+   * than in the query because the query is shared with the confirm strip
+   * above, which wants the newest lesson first.
+   */
+  const taught = useMemo(
+    () => sessions.filter(s => s.counted).sort((a, b) => a.session_date.localeCompare(b.session_date)),
+    [sessions],
+  );
+  const used = taught.length;
+  const remaining = bundle ? Math.max(0, bundle.total_classes - used) : 0;
+  const owes = !!bundle && !bundle.paid_on;
 
   // A lesson can be claimed once it is in the past and has not been settled yet.
   const toConfirm = useMemo(() => {
@@ -182,6 +202,12 @@ const StudentSelfService = ({ userId }: Props) => {
       s => s.session_date <= today && !s.counted && s.outcome === "scheduled"
     );
   }, [sessions]);
+
+  /** Opens the form on the figure she is being asked for — still editable, because a part payment is a real thing. */
+  function openClaimForm() {
+    if (!amount && bundle) setAmount(String(bundle.total_price));
+    setShowForm(true);
+  }
 
   async function confirmSession(id: string) {
     setBusy(id);
@@ -282,14 +308,14 @@ const StudentSelfService = ({ userId }: Props) => {
           {bundle && (
             <p className="text-sm text-muted-foreground">
               {tr(
-                `${remaining} of ${bundle.total_classes} left`,
-                `المتبقي: ${remaining} من ${bundle.total_classes}`,
+                `${used} of ${bundle.total_classes} taught · ${remaining} left`,
+                `اتعمل ${used} من ${bundle.total_classes} · الباقي ${remaining}`,
               )}
               {bundle.label ? ` · ${bundle.label}` : ""}
             </p>
           )}
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           {toConfirm.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {tr(
@@ -322,14 +348,33 @@ const StudentSelfService = ({ userId }: Props) => {
             ))
           )}
 
-          {sessions.some(s => s.counted) && (
-            <p className="pt-1 text-xs text-muted-foreground">
-              <CheckCircle2 className="me-1 inline h-3 w-3" />
-              {tr(
-                `${used} lesson${used === 1 ? "" : "s"} confirmed so far.`,
-                `الحصص المؤكَّدة حتى الآن: ${used}.`,
+          {/* The dates, not the count. This is the list the payment letter
+              quotes; a student asked for money should be able to read the same
+              rows the ask was built from. */}
+          {taught.length > 0 && (
+            <div className="rounded-lg border p-3">
+              <p className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
+                <CheckCircle2 className="h-4 w-4" />
+                {tr("Lessons counted", "الحصص المحسوبة")}
+              </p>
+              <ul className="space-y-0.5">
+                {taught.map(s => (
+                  <li key={s.id} className="text-sm text-muted-foreground">
+                    {formatDate(s.session_date, isAr)}
+                  </li>
+                ))}
+              </ul>
+              {bundle && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {remaining === 0
+                    ? tr("This package is fully used.", "الباقة اتستخدمت بالكامل.")
+                    : tr(
+                        `${remaining} lesson${remaining === 1 ? "" : "s"} left on this package.`,
+                        `الباقي في الباقة: ${remaining} ${remaining === 1 ? "حصة" : "حصص"}.`,
+                      )}
+                </p>
               )}
-            </p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -345,8 +390,8 @@ const StudentSelfService = ({ userId }: Props) => {
               {bundle.paid_on
                 ? tr("Received — thank you.", "تم الاستلام — شكرًا لك.")
                 : tr(
-                    `${bundle.total_price} ${bundle.currency ?? ""} for this package.`,
-                    `قيمة هذه الباقة: ${bundle.total_price} ${bundle.currency ?? ""}`,
+                    `${bundle.total_price} ${bundle.currency ?? ""} due for this package.`,
+                    `المستحق: ${bundle.total_price} ${bundle.currency ?? ""}`,
                   )}
             </p>
           )}
@@ -366,8 +411,12 @@ const StudentSelfService = ({ userId }: Props) => {
           </div>
 
           {!showForm ? (
-            <Button variant="outline" className="h-auto min-h-10 w-full whitespace-normal" onClick={() => setShowForm(true)}>
-              {tr("I have paid — tell my teacher", "دفعت — أبلغ المعلّمة")}
+            <Button
+              variant={owes ? "default" : "outline"}
+              className="h-auto min-h-10 w-full whitespace-normal"
+              onClick={openClaimForm}
+            >
+              {tr("I have paid — upload the receipt", "دفعت — ارفعي صورة الإيصال")}
             </Button>
           ) : (
             <div className="space-y-2 rounded-lg border p-3">
