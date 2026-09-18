@@ -4,12 +4,25 @@
 // every booking carries `reminder_sent_at`, so a re-run inside the same window
 // is a no-op and nobody is reminded twice.
 //
-// WHO: every LIVE booking on today's session — confirmed or silent. That is
-// the opposite of send-trial-guide, on purpose. The book is the reward for
-// confirming; this letter is the one that fills the room, and two hours before
-// the class the useful act for a silent booking is to hand her the link rather
-// than ask her again. Cancelled and TBA rows are excluded, as is anyone who
-// has unsubscribed.
+// WHO: every LIVE booking on today's session that has not said no — confirmed
+// or silent. Silent still gets the link, deliberately, and that is the
+// opposite of send-trial-guide: the book is the reward for confirming, while
+// this letter is the one that fills the room, and two hours before the class
+// the useful act for a booking that never answered is to hand her the link
+// rather than ask her again.
+//
+// A DECLINE IS DIFFERENT, and until 18 Sep 2026 it was not honoured here.
+// `respond_trial_attendance` records `attendance_response = 'no'` and
+// deliberately does not touch `status` — only a yes becomes
+// `confirmed_attendance` — so a declining booking stayed `pending` and stayed
+// in this working set. Souâd Rahmouni declined on 13 September for a trial on
+// 19 September; had her booking not been cancelled by hand she would have been
+// handed the room link two hours before a class she had already said she was
+// not attending. Re's call: a decline means no reminder.
+//
+// Cancelled and TBA rows are excluded, as is anyone who has unsubscribed —
+// checked in `profiles` AND in `leads`, because a booking made without signing
+// up has no profile at all.
 //
 // WHEN: from LEAD_MINUTES before the class start until the class starts. The
 // cron runs every 15 minutes, so the window is far wider than one tick: a
@@ -95,6 +108,7 @@ interface Booking {
   class_language: string | null;
   meeting_url: string | null;
   reminder_sent_at: string | null;
+  attendance_response: string | null;
 }
 
 interface SlotTime {
@@ -103,7 +117,72 @@ interface SlotTime {
 }
 
 const SELECT_COLUMNS =
-  "id, name, email, trial_date, start_time, slot_id, user_id, level, class_language, meeting_url, reminder_sent_at";
+  "id, name, email, trial_date, start_time, slot_id, user_id, level, class_language, meeting_url, reminder_sent_at, attendance_response";
+
+/**
+ * She clicked "I can't make it".
+ *
+ * Checked here in TypeScript and NOT as a PostgREST `.neq("attendance_response",
+ * "no")` on the query. `neq` is SQL `<>`, and `NULL <> 'no'` evaluates to NULL
+ * rather than true, so the filter would drop every booking that has not
+ * answered yet — which is most of the room, and exactly the population this
+ * letter exists for. Doing it in SQL would silence the reminder almost
+ * entirely and look like a tidier query. Same trap as PR #502; this is the
+ * third file it applies to.
+ */
+function hasDeclined(b: Booking): boolean {
+  return b.attendance_response === "no";
+}
+
+/**
+ * Are they unsubscribed, and which unsubscribe token belongs in their letter?
+ *
+ * Profiles first (an account is the stronger identity), then `leads` by
+ * lowercased email. The lead fallback matters: 12 of the 39 live bookings were
+ * made without signing up, so `user_id` is NULL and a profiles-only lookup
+ * found nothing — those letters went out with no unsubscribe link at all, and
+ * `leads.email_unsubscribed` was never consulted even for someone who had
+ * asked to be removed. Same fix as PR #502 (followups) and #505 (reask); this
+ * was the last sender still reading profiles alone.
+ *
+ * Nothing new was needed: `leads` has carried `unsubscribe_token` /
+ * `email_unsubscribed` since migration 20260916113000, and
+ * `public.unsubscribe_by_token(uuid)` already resolves profiles first and leads
+ * second, so a token from either side works on the one-click link.
+ */
+async function resolveContactPrefs(
+  supabase: ReturnType<typeof createClient>,
+  userId: string | null,
+  email: string,
+): Promise<{ unsubscribed: boolean; token?: string }> {
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("unsubscribe_token, email_unsubscribed")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profile) {
+      return {
+        unsubscribed: Boolean(profile.email_unsubscribed),
+        token: (profile.unsubscribe_token as string) ?? undefined,
+      };
+    }
+  }
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("unsubscribe_token, email_unsubscribed")
+    .eq("email", email.trim().toLowerCase())
+    .maybeSingle();
+  if (lead) {
+    return {
+      unsubscribed: Boolean(lead.email_unsubscribed),
+      token: (lead.unsubscribe_token as string) ?? undefined,
+    };
+  }
+
+  return { unsubscribed: false };
+}
 
 function pickLanguage(classLanguage: string | null): "ar" | "en" {
   return classLanguage === "arabic" ? "ar" : "en";
@@ -181,6 +260,7 @@ Deno.serve(async (req) => {
 
     const today = cairoDateKey();
 
+    // The decline is filtered in the loop, not here — see hasDeclined.
     const { data, error } = await supabase
       .from("trial_bookings")
       .select(SELECT_COLUMNS)
@@ -221,10 +301,26 @@ Deno.serve(async (req) => {
     const recipients: Array<{ id: string; email: string; language: string; when: string; has_room: boolean }> = [];
     let sent = 0;
     let skipped = 0;
+    let declined = 0;
+    let withoutUnsubscribeLink = 0;
     const errors: string[] = [];
 
     for (const b of due) {
       if (!b.email) { skipped++; continue; }
+
+      // She told us she is not coming. Stamp so the next quarter-hour run does
+      // not re-query her, count her separately from the other skips so the
+      // reason is visible in the log, and move on.
+      if (hasDeclined(b)) {
+        if (!dryRun) {
+          await supabase.from("trial_bookings")
+            .update({ reminder_sent_at: new Date().toISOString() }).eq("id", b.id);
+        }
+        declined++;
+        skipped++;
+        continue;
+      }
+
       const slot = b.slot_id ? slots.get(b.slot_id) : undefined;
       const lang = pickLanguage(b.class_language);
       const when = classTimeLabel(b, slot, lang);
@@ -239,23 +335,18 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      let unsubscribeToken: string | undefined;
-      if (b.user_id) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("unsubscribe_token, email_unsubscribed")
-          .eq("user_id", b.user_id)
-          .maybeSingle();
-        if (profile?.email_unsubscribed) {
-          if (!dryRun) {
-            await supabase.from("trial_bookings")
-              .update({ reminder_sent_at: new Date().toISOString() }).eq("id", b.id);
-          }
-          skipped++;
-          continue;
+      // Profiles, then leads — see resolveContactPrefs.
+      const prefs = await resolveContactPrefs(supabase, b.user_id, b.email);
+      if (prefs.unsubscribed) {
+        if (!dryRun) {
+          await supabase.from("trial_bookings")
+            .update({ reminder_sent_at: new Date().toISOString() }).eq("id", b.id);
         }
-        unsubscribeToken = profile?.unsubscribe_token ?? undefined;
+        skipped++;
+        continue;
       }
+      const unsubscribeToken = prefs.token;
+      if (!unsubscribeToken) withoutUnsubscribeLink++;
 
       recipients.push({ id: b.id, email: b.email, language: lang, when, has_room: true });
       if (holdSend) continue;
@@ -309,7 +400,8 @@ Deno.serve(async (req) => {
     const result = {
       ok: true, dry_run: dryRun, date: today, lead_minutes: LEAD_MINUTES,
       cairo_hour: hourNow, held_outside_hours: !dryRun && outsideHours,
-      today_unreminded: rows.length, due: due.length, sent, skipped, recipients, errors,
+      today_unreminded: rows.length, due: due.length, sent, skipped, declined,
+      without_unsubscribe_link: withoutUnsubscribeLink, recipients, errors,
     };
     console.log("trial-reminder:", JSON.stringify(result));
     return new Response(JSON.stringify(result), {
