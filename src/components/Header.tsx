@@ -27,12 +27,21 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const isAr = language === "ar";
 
-  // Load profile whenever the logged-in user changes
+  // Load profile whenever the logged-in user changes.
+  //
+  // Keyed on user?.id, not on `user`. Supabase fires more than one auth event
+  // while booting (INITIAL_SESSION, then SIGNED_IN) and hands back a new
+  // object each time, so depending on the object ran this same select twice
+  // on every page load — two identical GETs for
+  // profiles?select=name,avatar_url, visible in the network log of the live
+  // homepage. The id is the thing that actually changed, or didn't.
   useEffect(() => {
     if (!user) { setProfile(null); return; }
+    let cancelled = false;
     supabase.from("profiles").select("name, avatar_url").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => { if (data) setProfile(data); });
-  }, [user]);
+      .then(({ data }) => { if (data && !cancelled) setProfile(data); });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
