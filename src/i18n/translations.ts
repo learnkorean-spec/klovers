@@ -270,7 +270,7 @@ export const translations = {
       experience: {
         title: "Experience & Credentials",
         items: [
-          "13+ years of Korean language teaching experience (2012 – Present)",
+          "13+ years of Korean language teaching experience (2013 – Present)",
           "200+ students taught across 15+ countries",
           "Specialized in making Korean accessible to all backgrounds",
           "TOPIK preparation expert with high student pass rates",
@@ -817,7 +817,7 @@ export const translations = {
       studentsCount: "👥 200+ students",
       levels: "🇰🇷 A1–C2 levels",
       certifiedTeacher: "Certified Teacher",
-      teacherExp: "5+ years · 300+ students · A1–C2 all levels",
+      teacherExp: "13+ years · 200+ students · A1–C2 all levels",
       teacherQuote: "\"She simplifies everything — you'll notice the difference from day one.\"",
       fileTooLarge: "File too large",
       fileTooLargeDesc: "Receipt must be under 5MB.",
@@ -2645,7 +2645,7 @@ export const translations = {
       studentsCount: "👥 أكثر من 200 طالب",
       levels: "🇰🇷 المستويات A1–C2",
       certifiedTeacher: "معلّمة معتمدة",
-      teacherExp: "أكثر من 5 سنوات · 300+ طالب · جميع المستويات A1–C2",
+      teacherExp: "أكثر من 13 سنة · 200+ طالب · جميع المستويات A1–C2",
       teacherQuote: "\"تبسّط كل شيء — ستلاحظ الفرق من اليوم الأول.\"",
       fileTooLarge: "الملف كبير جداً",
       fileTooLargeDesc: "يجب أن يكون الإيصال أقل من 5 ميجابايت.",
