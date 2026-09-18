@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminShell from "@/components/admin/AdminShell";
 import PrivateClassesToConfirm from "@/components/admin/PrivateClassesToConfirm";
+import RecordedClasses from "@/components/admin/RecordedClasses";
 import GroupsToStart from "@/components/admin/GroupsToStart";
 import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
@@ -552,6 +553,23 @@ const AdminToday = () => {
               />
             </section>
           )}
+
+          {/* PRIVATE CLASSES ALREADY ANSWERED
+              Directly under the strip above, because the correction this exists
+              for is always noticed right after the answer that needs it: a
+              class marked "did not happen" on Monday and then taught on
+              Wednesday. Until this card, that answer was final and the only
+              repairs on record were made by hand in the database. Renders
+              nothing when there are no recorded classes at all. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                PRIVATE CLASSES ALREADY ANSWERED
+              </h2>
+              <p className="text-xs text-muted-foreground">open one to change the date or the answer</p>
+            </div>
+            <RecordedClasses limit={6} />
+          </section>
 
           {/* CLASS ROOMS
               The joining link lived on one column of one table and appeared on
