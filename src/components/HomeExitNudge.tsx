@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
-import { logLeadEvent } from "@/lib/leadTracking";
+import { logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBottomSlot } from "@/lib/bottomLayer";
@@ -45,7 +45,10 @@ const HomeExitNudge = () => {
       if (!shownLogged.current) {
         shownLogged.current = true;
         track.custom("home_exit_intent_shown", {});
-        logLeadEvent({ source_type: "homepage", cta_label: "exit_intent_shown" });
+        // Engagement, not a lead: this fires because the modal rendered, not
+        // because anyone decided anything. It used to go through
+        // logLeadEvent, which mirrors to the Meta Pixel as a `Lead`.
+        logEngagementEvent({ source_type: "homepage", cta_label: "exit_intent_shown" });
       }
     };
 
@@ -80,9 +83,11 @@ const HomeExitNudge = () => {
 
   const allowed = useBottomSlot("exitNudge", visible);
 
+  // This one stays a lead: clicking through to the placement test is a
+  // decision the visitor made.
   const handleClick = () => {
     track.custom("home_exit_intent_clicked", { cta: "placement_test" });
-    logLeadEvent({ source_type: "homepage", cta_label: "exit_intent_placement" });
+    logLeadEvent({ source_type: "placement_test", cta_label: "exit_intent_placement" });
   };
 
   if (!allowed) return null;
