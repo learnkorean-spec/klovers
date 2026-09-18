@@ -16,6 +16,9 @@ import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";
 import type {
   EmailPayload,
 } from "./templates/common.ts";
+// Value import, not a type: the List-Unsubscribe header below is built from
+// it. Same constant the templates use for their footer links.
+import { FUNCTION_BASE } from "./templates/common.ts";
 import {
   buildTrialConfirmedEmail,
   buildTrialAttendanceConfirmationEmail, buildTrialGroupFullEmail,
@@ -55,8 +58,9 @@ import { buildTrialReaskEmail } from "./templates/trialReask.ts";
 // group's own room. Fifth slug absent from that union.
 import { buildClassReminderEmail } from "./templates/classReminder.ts";
 // The trial-day reminder, since 2026-09-17. Sent by send-trial-reminder about
-// two hours before each trial, to every live booking on that day - confirmed
-// or silent, unlike the book. Sixth slug absent from that union.
+// two hours before each trial, to every live booking on that day that has not
+// declined - confirmed or silent, unlike the book. Sixth slug absent from that
+// union.
 import { buildTrialReminderEmail } from "./templates/trialReminder.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
@@ -84,6 +88,26 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 // not a summary of it, the actual email. Blind-copied, not CC'd: the student
 // should not see Re's personal inbox in the header of her own confirmation.
 const TRIAL_BCC_EMAIL = "reham.elshrkawy@gmail.com";
+
+/**
+ * The URL that belongs in the RFC 8058 `List-Unsubscribe` header.
+ *
+ * It points at the EDGE FUNCTION, never at `kloversegy.com/unsubscribe`.
+ * One-click unsubscribe is an unattended POST from Gmail's own servers: it
+ * must reach something that answers without a browser, and the site route is a
+ * single-page app that does nothing until JavaScript has run. The same
+ * reasoning is already written into process-email-campaign,
+ * send-profile-reminders and send-name-collection-email. The visible footer
+ * link the templates render is a separate thing and stays pointed at the page.
+ *
+ * Returns undefined when the caller passed no token, which is how this stays
+ * scoped: see the call site.
+ */
+function listUnsubscribeUrl(token: string | undefined, isAr: boolean): string | undefined {
+  const t = (token ?? "").trim();
+  if (!t) return undefined;
+  return `${FUNCTION_BASE}/unsubscribe-email?token=${t}&lang=${isAr ? "ar" : "en"}`;
+}
 
 async function logEmail(opts: {
   template: string;
@@ -120,7 +144,8 @@ async function logEmail(opts: {
 async function sendEmail(
   to: string, subject: string, html: string,
   attachments?: Array<{ filename: string; content: string; content_type?: string }>,
-  bcc?: string[]
+  bcc?: string[],
+  unsubscribeUrl?: string,
 ) {
   const body: Record<string, unknown> = {
     from: FROM_EMAIL,
@@ -131,6 +156,15 @@ async function sendEmail(
   };
   if (attachments?.length) body.attachments = attachments;
   if (bcc?.length) body.bcc = bcc;
+  // The row Gmail renders next to the sender name. Without it the easiest
+  // exit a reader has is "Report spam", and on a list this size a couple of
+  // complaints moves inbox placement for everybody.
+  if (unsubscribeUrl) {
+    body.headers = {
+      "List-Unsubscribe": `<${unsubscribeUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+  }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -409,7 +443,18 @@ serve(async (req) => {
     // letters, etc.) is unaffected.
     const bccList = (template as string) === "trial_confirmed" ? [TRIAL_BCC_EMAIL] : undefined;
 
-    const result = await sendEmail(email, subject, html, emailAttachments, bccList);
+    // Present only when the CALLER passed an unsubscribe token, and that is
+    // what scopes this correctly without a list of template names to keep in
+    // step: the senders that write to a list (trial followups, the second ask,
+    // the trial-day reminder) resolve a token and pass it, while the
+    // transactional letters — booking confirmed, payment, class link — do not,
+    // and must not. You do not get to opt out of being told your class moved.
+    const unsubscribeUrl = listUnsubscribeUrl(
+      (payload! as { unsubscribe_token?: string }).unsubscribe_token,
+      language === "ar",
+    );
+
+    const result = await sendEmail(email, subject, html, emailAttachments, bccList, unsubscribeUrl);
     console.log(`Email sent to ${email} (${template || "enrollment"}):`, result);
     await logEmail({ template: template || "enrollment", toEmail: email, toName: name, status: "sent", resendId: result.id });
 
