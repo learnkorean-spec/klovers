@@ -19,6 +19,14 @@
  * a roomful of no-shows the moment the page loaded, which is the same mistake —
  * guessing — in a nicer costume.
  *
+ * ORDER. The students who said they were coming sit at the top, then the
+ * silent ones, then the ones who said they couldn't. Alphabetical put the three
+ * confirmed students at rows 2, 4 and 6 of eighteen — the people most likely to
+ * have actually been in the room, scattered through a list that has to be
+ * scrolled. The sort key is her PREDICTION, never the answer already recorded:
+ * sorting on `attended` would make a row jump the instant it is answered and
+ * the next click would land on somebody else's name.
+ *
  * Writes the table directly rather than through an RPC. That matches
  * PrivateClassesToConfirm and TrialAttendanceRoster, and it is safe here
  * because "Admins can manage trial_bookings :: update" already restricts UPDATE
@@ -29,7 +37,7 @@
  * session nobody got to on the day, short enough that the card empties itself
  * and stops asking.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +63,8 @@ type Row = {
 interface TrialAttendanceProps {
   /** How many days back to look. The card empties itself as sessions are marked. */
   days?: number;
+  /** Rows drawn per session before "Show all". */
+  limit?: number;
 }
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -85,8 +95,21 @@ const MARK_LABEL: Record<Mark, string> = {
   no: "Didn't come",
 };
 
-const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
+/**
+ * Sort rank from what she SAID beforehand.
+ *
+ * Said yes first: those are the people most likely to have been in the room, so
+ * they are the rows worth answering first and the ones that should be on screen
+ * without scrolling. Said no last: a seat that was given back is the least
+ * likely thing on this list to need an answer.
+ */
+const responseRank = (r: Row): number =>
+  r.attendance_response === "yes" ? 0 : r.attendance_response === "no" ? 2 : 1;
+
+const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
   const qc = useQueryClient();
+  /** Sessions the admin has opened in full. Collapsed is the default. */
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const { data, error, isLoading } = useQuery({
     queryKey: ["admin", "trial-attendance", days],
@@ -149,9 +172,12 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
       date: rows[0]?.trial_date ?? null,
       time: rows[0]?.start_time ?? null,
       language: rows[0]?.class_language ?? null,
-      rows: [...rows].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
+      rows: [...rows].sort(
+        (a, b) => responseRank(a) - responseRank(b) || (a.name ?? "").localeCompare(b.name ?? ""),
+      ),
       marked: rows.filter(r => r.attended !== null).length,
       came: rows.filter(r => r.attended === true).length,
+      confirmed: rows.filter(r => r.attendance_response === "yes").length,
     }));
   }, [data]);
 
@@ -173,69 +199,93 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
 
   if (sessions.length === 0) return null;
 
+  const toggle = (key: string) =>
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
   return (
     <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
       <div>
         <p className="text-sm font-semibold">Who came</p>
         <p className="text-xs text-muted-foreground">
-          Left as <em>Not decided yet</em> until you say. Nothing reads it as a no-show —
-          undecided and absent are different facts.
+          The ones who said they were coming are at the top. Left as{" "}
+          <em>Not decided yet</em> until you say — nothing reads that as a no-show.
         </p>
       </div>
 
-      {sessions.map(s => (
-        <div key={s.key} className="space-y-1">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-xs font-semibold">
-              {formatSlotDate(s.date)} · {(s.time ?? "TBA").slice(0, 5)}
-              {s.language && (
-                <Badge variant="secondary" className="ml-2 text-[10px] capitalize">
-                  {s.language}
-                </Badge>
-              )}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {s.marked === 0
-                ? `${s.rows.length} booked · none marked yet`
-                : `${s.came} came · ${s.marked} of ${s.rows.length} marked`}
-            </span>
-          </div>
+      {sessions.map(s => {
+        const isOpen = expanded.has(s.key);
+        const shown = isOpen ? s.rows : s.rows.slice(0, limit);
+        const hidden = s.rows.length - shown.length;
 
-          {s.rows.map(r => (
-            <div
-              key={r.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-background px-3 py-2 text-sm"
-            >
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{r.name?.trim() || r.email || "—"}</span>
-                {r.attendance_response === "yes" && (
-                  <span className="text-xs text-muted-foreground">said she was coming</span>
-                )}
-                {r.attendance_response === "no" && (
-                  <span className="text-xs text-muted-foreground">said she couldn't</span>
+        return (
+          <div key={s.key} className="space-y-0.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 pb-0.5">
+              <span className="text-xs font-semibold">
+                {formatSlotDate(s.date)} · {(s.time ?? "TBA").slice(0, 5)}
+                {s.language && (
+                  <Badge variant="secondary" className="ml-2 text-[10px] capitalize">
+                    {s.language}
+                  </Badge>
                 )}
               </span>
-
-              <Select
-                value={markOf(r.attended)}
-                onValueChange={v => setMark.mutate({ id: r.id, mark: v as Mark })}
-                disabled={setMark.isPending}
-              >
-                <SelectTrigger className="h-8 w-[10.5rem] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(["unknown", "yes", "no"] as Mark[]).map(m => (
-                    <SelectItem key={m} value={m} className="text-xs">
-                      {MARK_LABEL[m]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <span className="text-xs text-muted-foreground">
+                {s.marked === 0
+                  ? `${s.rows.length} booked · ${s.confirmed} said yes · none marked`
+                  : `${s.came} came · ${s.marked} of ${s.rows.length} marked`}
+              </span>
             </div>
-          ))}
-        </div>
-      ))}
+
+            {shown.map(r => (
+              <div
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-background px-3 py-1 text-sm"
+              >
+                <span className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="truncate font-medium">{r.name?.trim() || r.email || "—"}</span>
+                  {r.attendance_response === "yes" && (
+                    <span className="text-[11px] text-muted-foreground">said yes</span>
+                  )}
+                  {r.attendance_response === "no" && (
+                    <span className="text-[11px] text-muted-foreground">said she couldn't</span>
+                  )}
+                </span>
+
+                <Select
+                  value={markOf(r.attended)}
+                  onValueChange={v => setMark.mutate({ id: r.id, mark: v as Mark })}
+                  disabled={setMark.isPending}
+                >
+                  <SelectTrigger className="h-7 w-[9.5rem] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(["unknown", "yes", "no"] as Mark[]).map(m => (
+                      <SelectItem key={m} value={m} className="text-xs">
+                        {MARK_LABEL[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+
+            {(hidden > 0 || isOpen) && (
+              <button
+                type="button"
+                className="pt-1 text-xs text-muted-foreground underline underline-offset-2"
+                onClick={() => toggle(s.key)}
+              >
+                {isOpen ? "Show fewer" : `Show all ${s.rows.length}`}
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
