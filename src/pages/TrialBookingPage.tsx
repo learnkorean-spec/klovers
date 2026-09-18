@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -189,13 +190,20 @@ const TrialBookingPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ name: string | null; email: string | null; level: string | null; country: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ name: string | null; email: string | null; level: string | null; country: string | null; phone: string | null } | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>(guessCountryFromTz);
+  // WhatsApp number. Required for a trial booking, and for one reason: on
+  // 18 September two students booked into Friday's class could not be reached
+  // at all, because their address bounced four times and nothing else about
+  // them was stored. Email is the only channel this system has, and it fails
+  // silently. Optional everywhere else - it is asked for here because here it
+  // is about a class that starts in days, not a newsletter.
+  const [phone, setPhone] = useState("");
   const [classLanguage, setClassLanguage] = useState<"arabic" | "english">(() =>
     defaultLanguageForCountry(guessCountryFromTz())
   );
@@ -210,7 +218,7 @@ const TrialBookingPage = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("name, email, level, country")
+      .select("name, email, level, country, phone")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -222,6 +230,10 @@ const TrialBookingPage = () => {
         } else if (metaLevel) {
           setSelectedLevel(metaLevel);
         }
+        // Pre-fill the number we already hold, so a returning student is not
+        // asked twice.
+        const profilePhone = (data as any)?.phone?.trim();
+        if (profilePhone) setPhone(profilePhone);
         // Pre-fill country from profile if available — avoids asking the user again
         const profileCountry = (data as any)?.country?.trim();
         if (profileCountry && ALL_COUNTRIES.includes(profileCountry)) {
@@ -262,6 +274,13 @@ const TrialBookingPage = () => {
     })();
   }, [user]);
 
+  // Loose on purpose: country codes, spaces, dashes and a leading + all pass,
+  // and the only thing rejected is something that cannot be a number at all.
+  // A stricter rule would reject real numbers from countries nobody here
+  // anticipated, and an empty field is what this is actually guarding against.
+  const phoneDigits = phone.replace(/[^0-9]/g, "");
+  const phoneIsValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
+
   // True when neither profile nor user_metadata has a level — we need to ask.
   const needsLevel =
     profileLoaded &&
@@ -279,6 +298,18 @@ const TrialBookingPage = () => {
       toast({
         title: t("trialBooking.pickLevelTitle"),
         description: t("trialBooking.pickLevelDesc"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // No number, no booking. See the comment on the `phone` state above.
+    if (!phoneIsValid) {
+      toast({
+        title: language === "ar" ? "رقم الواتساب مطلوب" : "WhatsApp number required",
+        description: language === "ar"
+          ? "نحتاج رقمك لنرسل لك رابط الحصة إن لم يصلك البريد."
+          : "We need your number so we can send you the class link if email fails.",
         variant: "destructive",
       });
       return;
@@ -313,6 +344,17 @@ const TrialBookingPage = () => {
           .eq("user_id", user.id);
       }
 
+      // Keep the number on the profile too, so the next booking does not ask
+      // again and the admin screens can reach this student without opening the
+      // booking row.
+      const trimmedPhone = phone.trim();
+      if (trimmedPhone && trimmedPhone !== (profile?.phone ?? "").trim()) {
+        await supabase
+          .from("profiles")
+          .update({ phone: trimmedPhone })
+          .eq("user_id", user.id);
+      }
+
       const { data, error } = await supabase.functions.invoke("book-trial", {
         body: {
           // Authenticated path: server pulls name/email/user_id from JWT.
@@ -320,6 +362,7 @@ const TrialBookingPage = () => {
           // for the first few sessions until book-trial is fully migrated.
           name: profile?.name || user.email?.split("@")[0] || "Student",
           email: user.email,
+          phone: phone.trim(),
           level: effectiveLevel || undefined,
           day_of_week: dayOfWeek,
           start_time: startTime,
@@ -892,6 +935,32 @@ const TrialBookingPage = () => {
                   {t("trialBooking.yourLevelIs")} <span className="font-medium text-foreground">{getLevelShortLabel(selectedLevel)}</span>
                 </p>
               )}
+
+              {/* WhatsApp number — always asked, always required. The only
+                  second channel this system has when an address bounces. */}
+              <div className="mb-4 space-y-1.5">
+                <Label htmlFor="trial-phone" className="text-sm font-medium flex items-center gap-1.5">
+                  <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                  {language === "ar" ? "رقم الواتساب" : "WhatsApp number"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="trial-phone"
+                  type="tel"
+                  inputMode="tel"
+                  dir="ltr"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+20 10 0000 0000"
+                  className="text-start"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {language === "ar"
+                    ? "نرسل رابط الحصة على البريد، ونستخدم الواتساب فقط إن لم يصلك."
+                    : "We email the class link, and use WhatsApp only if it does not arrive."}
+                </p>
+              </div>
 
               {/* Country selector — hidden when profile already has a country */}
               {!(profile?.country?.trim() && ALL_COUNTRIES.includes(profile.country.trim())) && (
