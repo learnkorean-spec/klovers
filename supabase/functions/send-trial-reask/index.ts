@@ -65,6 +65,65 @@ function pickLanguage(classLanguage: string | null): "ar" | "en" {
 }
 
 /**
+ * Who this person is to us for mailing purposes: are they unsubscribed, and
+ * which unsubscribe token belongs in their letter?
+ *
+ * This used to read `profiles` alone, keyed on `b.user_id`. Booking a trial
+ * without signing up leaves `user_id` NULL — 12 of the 39 live bookings — so
+ * for those students no token was ever found, their letters went out with NO
+ * unsubscribe link at all, and `leads.email_unsubscribed` was never consulted
+ * even when they had said they wanted out.
+ *
+ * On 18 Sep 2026 that reached Souâd Rahmouni: the only way off the list her
+ * letter offered was the WhatsApp number in the footer, and she does not have
+ * WhatsApp. She had to reply by hand and ask. PR #502 fixed the same gap in
+ * send-trial-followups; this is the other sender.
+ *
+ * Profiles first (an account is the stronger identity), then leads by
+ * lowercased email. Nothing new was needed: `leads` has carried
+ * `unsubscribe_token` / `email_unsubscribed` since migration 20260916113000,
+ * all 111 leads have a token, and `public.unsubscribe_by_token(uuid)` already
+ * resolves profiles first and leads second — so a token from either side
+ * works on the one-click link.
+ */
+async function resolveContactPrefs(
+  supabase: ReturnType<typeof createClient>,
+  userId: string | null,
+  email: string,
+): Promise<{ unsubscribed: boolean; token?: string }> {
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("unsubscribe_token, email_unsubscribed")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profile) {
+      return {
+        unsubscribed: Boolean(profile.email_unsubscribed),
+        token: (profile.unsubscribe_token as string) ?? undefined,
+      };
+    }
+  }
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("unsubscribe_token, email_unsubscribed")
+    .eq("email", email.trim().toLowerCase())
+    .maybeSingle();
+  if (lead) {
+    return {
+      unsubscribed: Boolean(lead.email_unsubscribed),
+      token: (lead.unsubscribe_token as string) ?? undefined,
+    };
+  }
+
+  // Neither side knows them. Not a reason to refuse to write — they asked for
+  // the trial — but the letter goes out without a one-click link, which is
+  // worth seeing rather than swallowing.
+  return { unsubscribed: false };
+}
+
+/**
  * "الجمعة، 18 سبتمبر · 16:30 بتوقيت القاهرة" / "Friday 18 September · 16:30 Cairo"
  *
  * From `trial_date` and the slot's own `start_time`, never from `starts_at`.
@@ -162,6 +221,9 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // A student who already answered - yes OR no - is out of the working set
+    // by this `.is(null)`, so this sender needs no separate decline check.
+    // That is why the decline defect in PR #502 did not reach here.
     const { data, error } = await supabase
       .from("trial_bookings")
       .select(SELECT_COLUMNS)
@@ -198,6 +260,7 @@ Deno.serve(async (req) => {
     const recipients: Array<{ id: string; name: string | null; email: string; language: string; when: string }> = [];
     let sent = 0;
     let skipped = 0;
+    let withoutUnsubscribeLink = 0;
     const errors: string[] = [];
 
     for (const b of rows) {
@@ -205,24 +268,20 @@ Deno.serve(async (req) => {
       const lang = pickLanguage(b.class_language);
       const when = classTimeLabel(b.trial_date, b.slot_id ? slots.get(b.slot_id) : undefined, b.starts_at, lang);
 
-      let unsubscribeToken: string | undefined;
-      if (b.user_id) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("unsubscribe_token, email_unsubscribed")
-          .eq("user_id", b.user_id)
-          .maybeSingle();
-        if (profile?.email_unsubscribed) {
-          if (!dryRun) {
-            await supabase.from("trial_bookings")
-              .update({ attendance_followup_manual_at: new Date().toISOString() })
-              .eq("id", b.id);
-          }
-          skipped++;
-          continue;
+      // Profiles, then leads. An account-less booking used to skip this check
+      // entirely — see resolveContactPrefs.
+      const prefs = await resolveContactPrefs(supabase, b.user_id, b.email);
+      if (prefs.unsubscribed) {
+        if (!dryRun) {
+          await supabase.from("trial_bookings")
+            .update({ attendance_followup_manual_at: new Date().toISOString() })
+            .eq("id", b.id);
         }
-        unsubscribeToken = profile?.unsubscribe_token ?? undefined;
+        skipped++;
+        continue;
       }
+      const unsubscribeToken = prefs.token;
+      if (!unsubscribeToken) withoutUnsubscribeLink++;
 
       recipients.push({ id: b.id, name: b.name, email: b.email, language: lang, when });
       if (dryRun) continue;
@@ -251,9 +310,13 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Reported, not swallowed: a letter with no one-click way out is the
+    // condition that made a student write in by hand. In a dry run it is the
+    // number to look at before passing dry_run: false.
     const result = {
       ok: true, dry_run: dryRun, trial_date: targetDate,
-      matched: rows.length, sent, skipped, recipients, errors,
+      matched: rows.length, sent, skipped, without_unsubscribe_link: withoutUnsubscribeLink,
+      recipients, errors,
     };
     console.log("trial-reask:", JSON.stringify(result));
     return new Response(JSON.stringify(result), {
