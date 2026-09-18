@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { Copy, Video, VideoOff } from "lucide-react";
 
 /**
- * Every room, in one place, with the link that opens it.
+ * Every room, in one place, with the link that opens it — and who is in it.
  *
  * The link lived on one row of one table and appeared on no screen. On 14 Sep
  * six of the eight group classes had none at all — including the one with the
@@ -19,7 +19,17 @@ import { Copy, Video, VideoOff } from "lucide-react";
  *
  * So this lists the rooms and puts the missing ones FIRST. The point of the
  * card is not the links that work; it is the ones that do not.
+ *
+ * A count alone ("1 seated") does not say WHO is let down by a missing link,
+ * and a trial room read 0 forever because bookings were never counted at all.
+ * So each room now carries its people by name.
  */
+
+type Person = {
+  name: string;
+  /** Trial bookings only: this one has confirmed she is coming. */
+  confirmed: boolean;
+};
 
 type Room = {
   key: string;
@@ -30,11 +40,18 @@ type Room = {
   meetingUrl: string | null;
   /** How many people would be let down if this link is missing. */
   people: number;
+  /** Who they are. Confirmed first, so the four that show are the four that matter. */
+  names: Person[];
+  /** "seated" for a group, "booked" for a trial. */
+  countWord: string;
   /** Where to go and fix it. */
   fixHref: string;
 };
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** How many names fit on a card before the rest become a number. */
+const NAMES_SHOWN = 4;
 
 /** "2026-09-18" -> "18 Sep". Parsed as a plain date, never shifted by a timezone. */
 function shortDate(iso: string | null): string {
@@ -46,6 +63,10 @@ function shortDate(iso: string | null): string {
 }
 
 const hhmm = (t: string | null | undefined) => (t ?? "").slice(0, 5);
+
+/** A booking with no name is still a person; show something rather than a blank. */
+const personName = (name: string | null, email: string | null) =>
+  (name || "").trim() || (email || "").trim() || "no name yet";
 
 export default function ClassRooms() {
   const [rooms, setRooms] = useState<Room[] | null>(null);
@@ -71,7 +92,7 @@ export default function ClassRooms() {
             .eq("is_active", true),
           supabase
             .from("pkg_group_members")
-            .select("group_id")
+            .select("group_id, user_id")
             .eq("member_status", "active"),
           supabase
             .from("schedule_packages")
@@ -95,10 +116,67 @@ export default function ClassRooms() {
         if (trialRes.error) throw trialRes.error;
         if (cancelled) return;
 
-        const seated = new Map<string, number>();
-        for (const m of (membersRes.data ?? []) as Array<{ group_id: string }>) {
-          seated.set(m.group_id, (seated.get(m.group_id) ?? 0) + 1);
+        const members = (membersRes.data ?? []) as Array<{ group_id: string; user_id: string | null }>;
+        const slotIds = ((trialRes.data ?? []) as Array<{ id: string }>).map(s => s.id);
+
+        // Names for the seated students, and the trial bookings that were
+        // never counted. Both are looked up by id rather than joined, because
+        // the client's embedded joins depend on a foreign key being declared
+        // and a silently empty embed here would read as "nobody is in this
+        // class" — the exact lie this card exists to prevent.
+        const userIds = Array.from(new Set(members.map(m => m.user_id).filter(Boolean))) as string[];
+
+        const [profilesRes, bookingsRes] = await Promise.all([
+          userIds.length
+            ? supabase.from("profiles").select("user_id, name, email").in("user_id", userIds)
+            : Promise.resolve({ data: [], error: null } as any),
+          slotIds.length
+            ? supabase
+                .from("trial_bookings")
+                .select("slot_id, name, email, status")
+                .in("slot_id", slotIds)
+                .neq("status", "cancelled")
+            : Promise.resolve({ data: [], error: null } as any),
+        ]);
+
+        if (profilesRes.error) throw profilesRes.error;
+        if (bookingsRes.error) throw bookingsRes.error;
+        if (cancelled) return;
+
+        const profileName = new Map<string, string>();
+        for (const p of (profilesRes.data ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>) {
+          profileName.set(p.user_id, personName(p.name, p.email));
         }
+
+        const seated = new Map<string, Person[]>();
+        for (const m of members) {
+          const list = seated.get(m.group_id) ?? [];
+          list.push({
+            name: (m.user_id && profileName.get(m.user_id)) || "no name yet",
+            confirmed: false,
+          });
+          seated.set(m.group_id, list);
+        }
+
+        const booked = new Map<string, Person[]>();
+        for (const b of (bookingsRes.data ?? []) as Array<{
+          slot_id: string | null; name: string | null; email: string | null; status: string | null;
+        }>) {
+          if (!b.slot_id) continue;
+          const list = booked.get(b.slot_id) ?? [];
+          list.push({
+            name: personName(b.name, b.email),
+            confirmed: b.status === "confirmed_attendance",
+          });
+          booked.set(b.slot_id, list);
+        }
+
+        // Confirmed first: on a trial with eighteen bookings, the four names
+        // worth the space are the four who said they are coming.
+        const order = (list: Person[]) =>
+          [...list].sort((a, b) =>
+            a.confirmed === b.confirmed ? a.name.localeCompare(b.name) : a.confirmed ? -1 : 1,
+          );
 
         const packages = new Map(
           ((slotsRes.data ?? []) as Array<{
@@ -119,12 +197,15 @@ export default function ClassRooms() {
           // fact worth keeping is a fact worth showing: if a line here is
           // wrong, it is wrong on the screen Re opens every day.
           const lang = p?.class_language === "english" ? "English" : "Arabic";
+          const people = order(seated.get(g.id) ?? []);
           return {
             key: `group:${g.id}`,
             title: g.name || when || "Group class",
             kind: when ? `Group class · ${when} Cairo · taught in ${lang}` : `Group class · taught in ${lang}`,
             meetingUrl: g.meeting_url,
-            people: seated.get(g.id) ?? 0,
+            people: people.length,
+            names: people,
+            countWord: "seated",
             fixHref: "/admin?tab=groups",
           };
         });
@@ -132,14 +213,19 @@ export default function ClassRooms() {
         const trialRooms: Room[] = ((trialRes.data ?? []) as Array<{
           id: string; trial_date: string | null; start_time: string | null;
           class_language: string | null; meeting_url: string | null;
-        }>).map(s => ({
-          key: `trial:${s.id}`,
-          title: `Trial · ${shortDate(s.trial_date)} ${hhmm(s.start_time)}`,
-          kind: `Trial session · ${s.class_language ?? "any language"}`,
-          meetingUrl: s.meeting_url,
-          people: 0,
-          fixHref: "/admin?tab=trials",
-        }));
+        }>).map(s => {
+          const people = order(booked.get(s.id) ?? []);
+          return {
+            key: `trial:${s.id}`,
+            title: `Trial · ${shortDate(s.trial_date)} ${hhmm(s.start_time)}`,
+            kind: `Trial session · ${s.class_language ?? "any language"}`,
+            meetingUrl: s.meeting_url,
+            people: people.length,
+            names: people,
+            countWord: "booked",
+            fixHref: "/admin?tab=trials",
+          };
+        });
 
         // Missing links first, and within those the ones with people in them.
         // Sorting alphabetically would bury the only row that needs an action.
@@ -216,58 +302,81 @@ export default function ClassRooms() {
       )}
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {rooms.map(r => (
-          <Card key={r.key} className={r.meetingUrl ? undefined : "border-destructive"}>
-            <CardContent className="p-3 flex items-start gap-3">
-              {r.meetingUrl
-                ? <Video className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                : <VideoOff className="h-4 w-4 mt-0.5 shrink-0 text-destructive" />}
+        {rooms.map(r => {
+          const shown = r.names.slice(0, NAMES_SHOWN);
+          const rest = r.people - shown.length;
 
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-sm font-semibold text-foreground">{r.title}</span>
+          return (
+            <Card key={r.key} className={r.meetingUrl ? undefined : "border-destructive"}>
+              <CardContent className="p-3 flex items-start gap-3">
+                {r.meetingUrl
+                  ? <Video className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                  : <VideoOff className="h-4 w-4 mt-0.5 shrink-0 text-destructive" />}
+
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-sm font-semibold text-foreground">{r.title}</span>
+                    {r.people > 0 && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {r.people} {r.countWord}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{r.kind}</p>
+
                   {r.people > 0 && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {r.people} seated
-                    </Badge>
+                    // The names, not just the number. A confirmed attendee is
+                    // marked, because on a trial the two facts Re acts on are
+                    // "how many" and "which of them actually said yes".
+                    <p className="text-[11px] text-foreground/80">
+                      {shown.map((p, i) => (
+                        <span key={`${p.name}-${i}`}>
+                          {i > 0 && <span className="text-muted-foreground">, </span>}
+                          <span className={p.confirmed ? "font-semibold" : undefined}>{p.name}</span>
+                          {p.confirmed && <span className="text-muted-foreground"> ✓</span>}
+                        </span>
+                      ))}
+                      {rest > 0 && (
+                        <span className="text-muted-foreground"> +{rest} more</span>
+                      )}
+                    </p>
+                  )}
+
+                  {r.meetingUrl ? (
+                    <a
+                      href={r.meetingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block truncate text-xs text-muted-foreground underline underline-offset-2"
+                    >
+                      {r.meetingUrl.replace(/^https?:\/\//, "")}
+                    </a>
+                  ) : (
+                    <Link
+                      to={r.fixHref}
+                      className="text-xs font-semibold text-destructive underline underline-offset-2"
+                    >
+                      No link yet — add one
+                    </Link>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground">{r.kind}</p>
 
-                {r.meetingUrl ? (
-                  <a
-                    href={r.meetingUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block truncate text-xs text-muted-foreground underline underline-offset-2"
+                {r.meetingUrl && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 shrink-0"
+                    onClick={() => copy(r.meetingUrl!, r.title)}
+                    title="Copy this room link"
                   >
-                    {r.meetingUrl.replace(/^https?:\/\//, "")}
-                  </a>
-                ) : (
-                  <Link
-                    to={r.fixHref}
-                    className="text-xs font-semibold text-destructive underline underline-offset-2"
-                  >
-                    No link yet — add one
-                  </Link>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
                 )}
-              </div>
-
-              {r.meetingUrl && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 px-2 shrink-0"
-                  onClick={() => copy(r.meetingUrl!, r.title)}
-                  title="Copy this room link"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
