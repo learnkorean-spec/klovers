@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 /**
  * One bottom-anchored overlay at a time.
  *
- * Three components used to pin themselves to the bottom of the viewport with
+ * Four components used to pin themselves to the bottom of the viewport with
  * no knowledge of each other: HomeExitNudge (fixed bottom-0, z-50),
- * StickyEnrollBar (fixed bottom-0, z-40 - directly underneath it) and
- * InterviewBannerChip (fixed bottom-32). On the homepage all three could be
+ * StickyEnrollBar (fixed bottom-0, z-40 - directly underneath it),
+ * InstallPrompt (fixed bottom-20, z-200 - above both) and
+ * InterviewBannerChip (fixed bottom-32). On the homepage all four could be
  * up simultaneously, and the nudge painted straight over the enrol bar with
- * half its text showing. A visitor reading three competing asks generally
+ * half its text showing. A visitor reading four competing asks generally
  * answers none of them.
  *
  * The WhatsApp bubble is deliberately NOT in here. It sits on the right edge
@@ -19,21 +20,30 @@ import { useEffect, useState } from "react";
  * Priority is the array below, highest first:
  *   1. exitNudge     - the visitor is leaving; this is the last ask.
  *   2. stickyBar     - the standing ask while they read.
- *   3. interviewChip - a feature promo, and the one to sacrifice.
+ *   3. installPrompt - useful, but it is not why anyone came to the page.
+ *   4. interviewChip - a feature promo, and the one to sacrifice.
  *
  * In practice the chip now appears only once the enrol bar has been
  * dismissed. That is the intended trade, not an oversight: if the chip should
  * outrank the bar instead, swap the two entries here and nothing else
  * changes.
  *
+ * installPrompt is the one slot whose component is mounted app-wide rather
+ * than on the homepage only (App.tsx). Everywhere except the homepage it is
+ * the sole claimant and so is unaffected by this ordering; on the homepage it
+ * waits for the enrol bar, which the visitor can dismiss. It is ranked below
+ * the bar because the bar is the ask the business is actually making, and
+ * because neither of them times out on its own - whichever wins holds the
+ * slot until dismissed.
+ *
  * Module-level state rather than a React context on purpose - this is a
- * single global layer, the components are mounted in three different places
- * in the tree, and wrapping the app in a provider to coordinate three
+ * single global layer, the components are mounted in four different places
+ * in the tree, and wrapping the app in a provider to coordinate four
  * booleans would be the heavier change.
  */
-export type BottomSlot = "exitNudge" | "stickyBar" | "interviewChip";
+export type BottomSlot = "exitNudge" | "stickyBar" | "installPrompt" | "interviewChip";
 
-const PRIORITY: BottomSlot[] = ["exitNudge", "stickyBar", "interviewChip"];
+const PRIORITY: BottomSlot[] = ["exitNudge", "stickyBar", "installPrompt", "interviewChip"];
 
 const claimed = new Set<BottomSlot>();
 const listeners = new Set<() => void>();
