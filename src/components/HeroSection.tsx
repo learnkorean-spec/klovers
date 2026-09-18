@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 const heroPoster = "/hero-korean.jpg";
+import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
@@ -143,7 +144,7 @@ const HeroSection = () => {
       className="relative min-h-[100svh] flex flex-col items-center justify-center pt-16 overflow-hidden"
       style={{ backgroundColor: "#1a1a1a" }}
     >
-      {/* ── Background layer ──────────────────────────────── */}
+      {/* ── Background layer ──────────────────────────── */}
       <img
         src={heroPoster}
         alt=""
@@ -202,18 +203,41 @@ const HeroSection = () => {
       <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-36">
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
-          {/* Live badge — split pill design */}
-          <div className="inline-flex items-stretch rounded-full overflow-hidden shadow-xl border border-black/30 backdrop-blur-md">
-            <div className="bg-primary px-4 py-2 flex items-center gap-2">
-              <span className="text-black text-xs font-black tracking-[0.15em] uppercase">🇰🇷 KLOVERS</span>
-            </div>
-            <div className="bg-black/50 px-4 py-2 flex items-center gap-2">
-              {/* Static dot — the pulsing "live" signal lives on the next-class
-                  chip below. Two identical ping animations within 40px of each
-                  other read as one urgency claim shown twice, not two facts. */}
-              <span className="relative flex h-2 w-2 shrink-0 rounded-full bg-primary" />
-              <span className="text-white text-xs font-semibold tracking-[0.12em] uppercase">Enrolling Now</span>
-            </div>
+          {/* Teacher chip — the first thing on the page, and the one thing on it
+              no competitor has.
+
+              It replaces a split pill that read "🇰🇷 KLOVERS / Enrolling Now".
+              The left half repeated the logo 40px above it in the header; the
+              right half repeated the next-class chip directly below, which
+              says the same thing with a date attached. "Enrolling Now" also
+              rendered unconditionally - including when trial_slots has nothing
+              upcoming, which is precisely when it is untrue. It is not
+              reinstated anywhere: the next-class chip carries that signal, and
+              only when there is a real class to name.
+
+              The photo is the same asset MeetTeacher.tsx already renders lower
+              down, so this adds no new file - only a 36px avatar, lazily
+              fetched so it stays out of the LCP path. alt="" is deliberate:
+              her name sits immediately beside it as text, so a screen reader
+              announcing the image too would just repeat it. */}
+          <div className="inline-flex items-center gap-3 bg-black/45 border border-white/20 backdrop-blur-md rounded-full py-1.5 ps-1.5 pe-5 shadow-xl">
+            <img
+              src={rehamPhoto}
+              alt=""
+              width={36}
+              height={36}
+              loading="lazy"
+              decoding="async"
+              className="h-9 w-9 rounded-full object-cover object-top shrink-0 ring-1 ring-white/30"
+            />
+            <span className="text-start leading-tight">
+              <span className="block text-white text-xs font-bold">
+                {isAr ? "تدرّسها ريهام الشرقاوي" : "Taught by Reham Elshrkawy"}
+              </span>
+              <span className="block text-white/65 text-[11px] mt-0.5">
+                {isAr ? "معلمة معتمدة TOPIK · ١٣ سنة تدريس" : "TOPIK-certified · 13 years teaching"}
+              </span>
+            </span>
           </div>
 
           {/* Next-class urgency chip — the one pulsing signal in the hero.
@@ -254,10 +278,7 @@ const HeroSection = () => {
           {/* Subtitle — fixed 2026-09-18: used to read "Join 500+ K-drama fans",
               the same inflated figure the honest stats strip below was
               rewritten to move away from. Lives in src/i18n/translations.ts
-              (`hero.subtitle`, both `en` and `ar`).
-              ⚠ Still open, same pattern, different component: `teacher.bio1`
-              and `teacher.highlights` in translations.ts ("500+ Students
-              Taught") — MeetTeacher.tsx wasn't in scope for this pass. */}
+              (`hero.subtitle`, both `en` and `ar`). */}
           <p
             className="text-base sm:text-xl md:text-2xl text-white/85 max-w-xl mx-auto leading-relaxed text-pretty"
             style={{ textShadow: "0 2px 16px rgba(0,0,0,0.9)" }}
@@ -305,13 +326,12 @@ const HeroSection = () => {
             </Button>
           </div>
 
-          {/* Micro trust line — fixed 2026-09-18: "98% satisfaction" was a
-              third unverified figure (no source anywhere in the codebase).
-              Replaced with a claim that's actually true and checkable —
-              TOPIK certification is real (see MeetTeacher/teacher.bio1) —
-              rather than inventing a different number to replace it with. */}
+          {/* Micro trust line — "TOPIK-certified teacher" was dropped 2026-09-18
+              when the teacher chip above took over that claim, with her face
+              and name attached to it. Saying it twice in one screen made it
+              read as a slogan rather than a fact. */}
           <p className="text-white/60 text-xs" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}>
-            {isAr ? "✓ بدون بطاقة بنكية · ✓ معلمة معتمدة TOPIK · ✓ رد خلال دقائق" : "✓ No credit card · ✓ TOPIK-certified teacher · ✓ Reply in minutes"}
+            {isAr ? "✓ بدون بطاقة بنكية · ✓ رد خلال دقائق" : "✓ No credit card · ✓ Reply in minutes"}
           </p>
 
           {/* Upcoming class sessions — live from trial_slots, shown in the
@@ -339,7 +359,7 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* ── Stats strip — absolutely pinned to bottom ────────── */}
+      {/* ── Stats strip — absolutely pinned to bottom ──────── */}
       <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 sm:pb-10 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mb-6" />
