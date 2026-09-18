@@ -76,7 +76,11 @@ const HowItWorks = () => {
           </ul>
         </div>
 
-        {/* CTA */}
+        {/* CTA — one wording for this ask across the page.
+            `howItWorks.cta` said "Try It Free — First Class on Us", one of six
+            different labels for the same button; they now all render
+            hero.startNow. The key stays in translations.ts, unused, rather than
+            deleted — an unused key costs nothing and other pages may want it. */}
         <div className="text-center mt-8">
           <Button
             size="lg"
@@ -85,7 +89,7 @@ const HowItWorks = () => {
             onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "how_it_works_cta" }); } catch {} }}
           >
             <Link to="/free-trial">
-              {t("howItWorks", "cta")}
+              {t("hero", "startNow")}
               <ArrowRight className="h-5 w-5" />
             </Link>
           </Button>

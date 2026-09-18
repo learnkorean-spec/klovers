@@ -122,7 +122,10 @@ const MeetTeacher = () => {
               </div>
             </div>
 
-            {/* CTA */}
+            {/* CTA — one wording for this ask across the page. `teacher.cta` said
+                "Book a Free Class with Reham"; the section it sits in is already
+                entirely about Reham, so the extra words were carried by the
+                context anyway. Renders hero.startNow like the other three. */}
             <div className="pt-2">
               <Button
                 size="lg"
@@ -131,7 +134,7 @@ const MeetTeacher = () => {
                 onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "meet_teacher_cta" }); } catch {} }}
               >
                 <Link to="/free-trial">
-                  {t("teacher", "cta")}
+                  {t("hero", "startNow")}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>

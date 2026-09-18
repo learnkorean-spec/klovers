@@ -29,6 +29,11 @@ import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
  *   was no true number to replace it with. A1–C2 takes its place because it
  *   is simply the level range taught.
  *
+ * A fourth line used to sit lower down: "Join 2,000+ Korean learners in our
+ * Telegram & Facebook community". Removed 2026-09-18 — Re's figure is 200,
+ * and at 200 it repeats the student count a few pixels above it with a
+ * different meaning attached. Do not reinstate it without a checked number.
+ *
  * Labels are now bilingual. All three were English-only on an Arabic-first
  * site, so an Arabic reader got "Active Students" under a Korean-course
  * heading in her own language.
@@ -161,7 +166,10 @@ const FinalCTA = () => {
           })}
         </div>
 
-        {/* CTA buttons */}
+        {/* CTA buttons — the primary one renders hero.startNow, the single
+            wording this ask uses across the page. `finalCta.button` said
+            "Book My Free Korean Class"; the key stays in translations.ts,
+            unused. */}
         <div
           className={`flex flex-col sm:flex-row gap-3 items-center justify-center mb-6 transition-all duration-700 delay-400 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
@@ -175,7 +183,7 @@ const FinalCTA = () => {
             onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "final_cta_free_trial" }); } catch {} }}
           >
             <Link to="/free-trial">
-              {t("finalCta", "button")}
+              {t("hero", "startNow")}
               <ArrowRight className="h-5 w-5" />
             </Link>
           </Button>
@@ -206,17 +214,6 @@ const FinalCTA = () => {
 
         <p className="text-primary-foreground/50 text-xs mb-6">
           {isAr ? "لا بطاقة ائتمان · ٣٠ دقيقة · معلمة حقيقية · نرد خلال دقائق" : "No credit card · 30 minutes · Real teacher · We reply in minutes"}
-        </p>
-
-        {/* Community proof — followers across Telegram and Facebook, which is a
-            different claim from the student count above and is not contradicted
-            by it. Left as-is: unlike the figures above, nothing in this codebase
-            or database can confirm or refute it, so it is Re's to verify against
-            the two channels rather than mine to quietly change. */}
-        <p className="text-primary-foreground/50 text-xs mb-4">
-          {isAr
-            ? "🌍 انضم لأكثر من ٢٠٠٠ متعلم في مجتمعنا على تيليجرام وفيسبوك"
-            : "🌍 Join 2,000+ Korean learners in our Telegram & Facebook community"}
         </p>
 
         {/* Guarantee badge */}
