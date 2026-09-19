@@ -73,6 +73,9 @@ const koreanWord: Record<string, string> = {
  * own. It then briefly held palette HEXES, which went stale the moment Mint
  * and Peach were tuned on 20 Sep. Tokens cannot go stale.
  *
+ * No pink here either, as of the three-colour decision: pink is spent on the
+ * roadmap's final level and the games' "hot" badge, and nowhere else.
+ *
  * The hue is decorative — it tells the reader nothing — which is why the
  * ICON takes the foreground token instead: that is the only thing that stays
  * readable on both the Ivory and the dark back panel.
@@ -80,8 +83,8 @@ const koreanWord: Record<string, string> = {
 const tones: Record<string, string> = {
   study: "hsl(var(--klovers-yellow))",
   career: "hsl(var(--mint-strong))",
-  travel: "hsl(var(--peach-strong))",
-  culture: "hsl(var(--charcoal))",
+  travel: "hsl(var(--charcoal))",
+  culture: "hsl(var(--mint))",
 };
 
 const fallbackTone = "hsl(var(--charcoal))";
