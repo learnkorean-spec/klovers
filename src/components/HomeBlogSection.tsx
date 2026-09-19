@@ -24,12 +24,22 @@ interface BlogPost {
 
 const TYPE_LABEL: Record<string, string> = { howto: "How-To", listicle: "Listicle", longform: "Article", news: "News", review: "Review" };
 const TYPE_LABEL_AR: Record<string, string> = { howto: "كيفية", listicle: "قائمة", longform: "مقال", news: "أخبار", review: "مراجعة" };
+
+/**
+ * Five article types, five chips, five colours — all of them from the board.
+ *
+ * These were blue / green / purple / red / orange, the default Tailwind
+ * palette standing in for a brand that owns exactly five colours. The types
+ * are still told apart at a glance; they are just told apart in Klovers'
+ * colours now. Each pairs Charcoal text with a pale ground, except `news`,
+ * which inverts.
+ */
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
-  listicle: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
-  longform: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
-  news: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
-  review: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
+  howto: "bg-mint text-charcoal border-charcoal/10",
+  listicle: "bg-peach text-charcoal border-charcoal/10",
+  longform: "bg-ivory text-charcoal border-charcoal/20",
+  news: "bg-charcoal text-white border-charcoal",
+  review: "bg-white text-charcoal border-charcoal/25",
 };
 
 function readingTime(desc: string) {
