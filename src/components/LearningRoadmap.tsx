@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { COURSE_CARDS } from "@/constants/courseCards";
 import { LEVEL_KEYS } from "@/constants/levels";
+import { RoadmapScenery } from "./roadmapScenery";
 
 /**
  * The homepage "your journey" ladder.
@@ -19,11 +20,13 @@ import { LEVEL_KEYS } from "@/constants/levels";
  * The roadmap and the levels grid are the same content in two shapes; they
  * should not be able to disagree.
  *
- * 2026-09-20 — it looks like a journey now, not a stack of identical cards.
+ * 2026-09-20 (a) — it looks like a journey, not a stack of identical cards.
  * A rail runs down the side with one node per level, and the full-colour
- * emoji are gone: every one of them brought its own palette to a page that
- * owns three, and a lucide icon in Charcoal says the same thing in the
- * brand's.
+ * emoji are gone.
+ *
+ * 2026-09-20 (b) — Re's mockup: the ladder now stands in a scene, the nodes
+ * are round on a dashed rail, the cards lost their borders for a soft shadow,
+ * and five handwritten notes sit in the margins.
  */
 
 /**
@@ -34,6 +37,10 @@ import { LEVEL_KEYS } from "@/constants/levels";
  * The ramp is Green → Yellow, and Level 6 is the single Pink on this page
  * besides the games' "hot" badge. That is the point of it: the end of the
  * path should not look like another step on it.
+ *
+ * The mockup draws every node Mint. It was drawn before the neon accents
+ * merged (#530) — this ramp is the one Re approved, so only the SHAPE of the
+ * node changed with the redesign, not its colour.
  */
 const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
   hangul: { icon: BookOpen, tile: "bg-mint" },
@@ -62,9 +69,41 @@ const chipsFrom = (eyebrow: string): string[] =>
 
 const chipIcons = [CalendarDays, Clock];
 
+/**
+ * The handwritten notes in the margins.
+ *
+ * These are DECORATION and are marked aria-hidden: a screen reader reading
+ * "Korean, a brighter you" between two course levels is noise. They are also
+ * lg-and-up only — they live in the gutters beside a max-w-2xl list, and a
+ * phone has no gutters.
+ *
+ * 화이팅! is Korean in both languages. It is the cheer itself, not a string to
+ * translate, and it renders as handwriting only because Nanum Pen Script is
+ * now in the script stack; before that it fell back to Cairo.
+ */
+const NOTES = {
+  en: {
+    topStart: "Korean,\na brighter you ♡",
+    topEnd: "Small Steps\nBig Progress ♡",
+    firstCard: "It all starts here!",
+    bottomStart: "Better Korean\nBrighter Tomorrows ♡",
+    bottomEnd: "화이팅! ♡",
+  },
+  ar: {
+    topStart: "الكورية…\nنسخة أحلى منك ♡",
+    topEnd: "خطوات صغيرة\nتقدّم كبير ♡",
+    firstCard: "من هنا تبدأ!",
+    bottomStart: "كورية أحسن\nبكرة أحلى ♡",
+    bottomEnd: "화이팅! ♡",
+  },
+};
+
+const noteClass = "pointer-events-none absolute hidden select-none whitespace-pre-line font-script text-xl leading-tight text-charcoal/55 lg:block xl:text-2xl";
+
 const LearningRoadmap = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
+  const notes = NOTES[isAr ? "ar" : "en"];
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -92,117 +131,156 @@ const LearningRoadmap = () => {
     setActiveStep((prev) => (prev === index ? null : index));
 
   return (
-    <section className="py-20 md:py-28 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="relative overflow-hidden bg-background py-20 md:py-28">
+      <RoadmapScenery />
+
+      <span aria-hidden="true" className={`${noteClass} start-4 top-28 w-36 -rotate-6`}>
+        {notes.topStart}
+      </span>
+      <span aria-hidden="true" className={`${noteClass} end-4 top-24 w-36 rotate-6`}>
+        {notes.topEnd}
+      </span>
+      <span aria-hidden="true" className={`${noteClass} bottom-28 start-4 w-40 -rotate-3`}>
+        {notes.bottomStart}
+      </span>
+      <span aria-hidden="true" className={`${noteClass} bottom-20 end-6 w-28 rotate-3`}>
+        {notes.bottomEnd}
+      </span>
+
+      <div className="container relative mx-auto px-4">
 
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="relative mb-14 text-center">
           <span className="inline-block px-4 py-1.5 rounded-full bg-mint text-charcoal text-xs font-semibold uppercase tracking-widest mb-4 border border-charcoal/10">
             {isAr ? "رحلتك" : "Your Journey"}
           </span>
+
+          {/* A spark beside the heading, as in the mockup. */}
+          <span aria-hidden="true" className="pointer-events-none absolute top-6 end-[16%] hidden text-klovers-yellow md:block">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" className="h-8 w-8">
+              <path d="M20 4v9M33 11l-6 6M8 13l6 5" />
+            </svg>
+          </span>
+
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">
             {t("roadmap", "title")}
           </h2>
-          {/* Yellow as a mark under the heading, never as the heading. */}
-          <span aria-hidden="true" className="mx-auto mt-3 mb-4 block h-2 w-24 rounded-full bg-klovers-yellow" />
+
+          {/* Yellow as a mark under the heading, never as the heading. A brush
+              stroke rather than the old 96px bar — same rule, better hand. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 240 18"
+            fill="none"
+            className="mx-auto mb-4 mt-2 h-4 w-52 text-klovers-yellow md:w-64"
+          >
+            <path d="M7 12C60 4 134 3 197 8c14 1 27 3 36 2" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
+          </svg>
+
           <p className="text-muted-foreground max-w-xl mx-auto text-base md:text-lg">
             {t("roadmap", "subtitle")}
           </p>
         </div>
 
         {/* The rail */}
-        <ol className="max-w-2xl mx-auto">
-          {STAGES.map((stage, index) => {
-            const isActive = activeStep === index;
-            const isVisible = visibleItems.has(index);
-            const meta = getMeta(stage.key);
-            const Icon = meta.icon;
-            const isLast = index === STAGES.length - 1;
-            const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
+        <div className="relative mx-auto max-w-2xl">
+          <span aria-hidden="true" className={`${noteClass} end-[-9rem] top-6 hidden w-32 -rotate-6 xl:block`}>
+            {notes.firstCard}
+          </span>
 
-            return (
-              <li
-                key={stage.key}
-                ref={(el) => { itemRefs.current[index] = el; }}
-                style={{ transitionDelay: `${index * 70}ms` }}
-                className={`flex gap-4 transition-all duration-700 ease-out ${
-                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                }`}
-              >
-                {/* Node column — the rail lives here, so it never crosses a card */}
-                <div className="relative flex w-12 shrink-0 flex-col items-center">
-                  {!isLast && (
-                    <span aria-hidden="true" className="absolute top-12 bottom-0 w-[2px] bg-charcoal/15" />
-                  )}
-                  <span
-                    className={`relative z-10 grid h-12 w-12 place-items-center rounded-2xl border border-charcoal/10 transition-transform duration-300 ${meta.tile} ${
-                      isActive ? "scale-110 shadow-md" : ""
-                    }`}
-                  >
-                    <Icon className="h-5 w-5 text-charcoal" aria-hidden="true" />
-                  </span>
-                  <span className="relative z-10 mt-1.5 text-[11px] font-bold text-charcoal/45">
-                    {index + 1}
-                  </span>
-                </div>
+          <ol>
+            {STAGES.map((stage, index) => {
+              const isActive = activeStep === index;
+              const isVisible = visibleItems.has(index);
+              const meta = getMeta(stage.key);
+              const Icon = meta.icon;
+              const isLast = index === STAGES.length - 1;
+              const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
 
-                {/* Card */}
-                <div className="flex-1 pb-5">
-                  <div
-                    onClick={() => toggle(index)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && toggle(index)}
-                    className={`cursor-pointer rounded-2xl border bg-card p-5 transition-all duration-300 ${
-                      isActive
-                        ? "border-primary shadow-lg"
-                        : "border-border hover:border-primary/40 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
-                        {isAr ? stage.title_ar : stage.title_en}
-                      </h3>
-                      <ChevronDown
-                        className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
-                          isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
-                        }`}
-                        aria-hidden="true"
-                      />
-                    </div>
-
-                    {/* Chips — the two facts a visitor actually weighs */}
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {chips.map((chip, i) => {
-                        const ChipIcon = chipIcons[i] ?? CalendarDays;
-                        return (
-                          <span
-                            key={chip}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
-                          >
-                            <ChipIcon className="h-3 w-3" aria-hidden="true" />
-                            {chip}
-                          </span>
-                        );
-                      })}
-                    </div>
-
-                    {/* Expandable description */}
-                    <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
+              return (
+                <li
+                  key={stage.key}
+                  ref={(el) => { itemRefs.current[index] = el; }}
+                  style={{ transitionDelay: `${index * 70}ms` }}
+                  className={`flex gap-4 transition-all duration-700 ease-out ${
+                    isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                  }`}
+                >
+                  {/* Node column — the rail lives here, so it never crosses a card */}
+                  <div className="relative flex w-14 shrink-0 flex-col items-center">
+                    {!isLast && (
+                      <span aria-hidden="true" className="absolute bottom-0 top-14 w-0 border-s-2 border-dashed border-mint-strong/40" />
+                    )}
+                    <span
+                      className={`relative z-10 grid h-14 w-14 place-items-center rounded-full ring-4 ring-background transition-transform duration-300 ${meta.tile} ${
+                        isActive ? "scale-110 shadow-md" : "shadow-sm"
                       }`}
                     >
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {isAr ? stage.blurb_ar : stage.blurb_en}
-                      </p>
+                      <Icon className="h-6 w-6 text-charcoal" aria-hidden="true" />
+                    </span>
+                    <span className="relative z-10 mt-1.5 text-[11px] font-bold text-charcoal/45">
+                      {index + 1}
+                    </span>
+                  </div>
+
+                  {/* Card */}
+                  <div className="flex-1 pb-5">
+                    <div
+                      onClick={() => toggle(index)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && toggle(index)}
+                      className={`cursor-pointer rounded-3xl bg-card p-5 transition-all duration-300 ${
+                        isActive
+                          ? "shadow-lg ring-2 ring-klovers-yellow"
+                          : "shadow-sm hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
+                          {isAr ? stage.title_ar : stage.title_en}
+                        </h3>
+                        <ChevronDown
+                          className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+                            isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
+                          }`}
+                          aria-hidden="true"
+                        />
+                      </div>
+
+                      {/* Chips — the two facts a visitor actually weighs */}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {chips.map((chip, i) => {
+                          const ChipIcon = chipIcons[i] ?? CalendarDays;
+                          return (
+                            <span
+                              key={chip}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                            >
+                              <ChipIcon className="h-3 w-3" aria-hidden="true" />
+                              {chip}
+                            </span>
+                          );
+                        })}
+                      </div>
+
+                      {/* Expandable description */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {isAr ? stage.blurb_ar : stage.blurb_en}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
 
         {/* CTA */}
         <div className="text-center mt-10">
