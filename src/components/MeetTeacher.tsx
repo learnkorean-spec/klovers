@@ -18,8 +18,8 @@ const MeetTeacher = () => {
 
         {/* Section header */}
         <div className="text-center mb-16">
-          <span className="inline-block bg-amber-100 text-amber-800 text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5 border border-black/15 shadow-sm">
-            Our Educators
+          <span className="inline-block bg-mint text-charcoal text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5 border border-charcoal/10 shadow-sm">
+            {isAr ? "معلمونا" : "Our Educators"}
           </span>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight">
             {t("teacher", "title")}
@@ -32,25 +32,26 @@ const MeetTeacher = () => {
           {/* Photo column */}
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
-              {/* Subtle warm glow backdrop */}
-              <div className="absolute -inset-6 rounded-3xl bg-amber-200/20 blur-3xl" />
-              {/* Decorative border offset */}
-              <div className="absolute -bottom-4 -right-4 w-full h-full rounded-3xl border-2 border-amber-300/50" />
+              {/* Subtle mint glow backdrop */}
+              <div className="absolute -inset-6 rounded-3xl bg-mint/50 blur-3xl" />
+              {/* Decorative border offset — yellow as an edge, not as type */}
+              <div className="absolute -bottom-4 -right-4 w-full h-full rounded-3xl border-2 border-klovers-yellow" />
               {/* Photo card */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-amber-200 ring-1 ring-black/10 w-72 md:w-80 lg:w-96">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white ring-1 ring-charcoal/10 w-72 md:w-80 lg:w-96">
                 <img
                   src={rehamPhoto}
                   alt={t("teacher", "name")}
                   className="w-full aspect-[3/4] object-cover object-top"
                 />
-                {/* Name overlay at bottom */}
+                {/* Name overlay at bottom. Yellow type is correct HERE: it sits
+                    on a near-black scrim, not on a light ground. */}
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-6 py-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <ShieldCheck className="h-4 w-4 text-amber-300 shrink-0" />
-                    <span className="text-amber-300 text-xs font-bold tracking-wider uppercase">TOPIK Certified</span>
+                    <ShieldCheck className="h-4 w-4 text-klovers-yellow shrink-0" />
+                    <span className="text-klovers-yellow text-xs font-bold tracking-wider uppercase">TOPIK Certified</span>
                   </div>
                   <p className="text-white font-bold text-lg leading-tight">{t("teacher", "name")}</p>
-                  <p className="text-amber-300 text-sm font-semibold mt-0.5">{isAr ? "المدرّسة الرئيسية" : "Lead Korean Instructor"}</p>
+                  <p className="text-white/85 text-sm font-semibold mt-0.5">{isAr ? "المدرّسة الرئيسية" : "Lead Korean Instructor"}</p>
                 </div>
               </div>
             </div>
@@ -73,10 +74,10 @@ const MeetTeacher = () => {
                 return (
                   <div
                     key={index}
-                    className="group flex flex-col items-center text-center bg-muted/50 hover:bg-amber-50 border border-border hover:border-amber-300 rounded-2xl p-4 md:p-5 transition-all duration-300 ring-1 ring-black/5"
+                    className="group flex flex-col items-center text-center bg-card hover:bg-mint/40 border border-border hover:border-mint rounded-2xl p-4 md:p-5 transition-all duration-300"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 group-hover:bg-amber-200 flex items-center justify-center mb-3 transition-colors border border-black/10">
-                      <Icon className="h-5 w-5 text-amber-700" />
+                    <div className="w-10 h-10 rounded-xl bg-mint group-hover:bg-mint/80 flex items-center justify-center mb-3 transition-colors border border-charcoal/10">
+                      <Icon className="h-5 w-5 text-charcoal" />
                     </div>
                     <span className="text-foreground font-extrabold text-lg md:text-xl leading-none">
                       {item.label}
@@ -89,8 +90,10 @@ const MeetTeacher = () => {
               })}
             </div>
 
-            {/* Team note */}
-            <p className="text-muted-foreground text-sm md:text-base leading-relaxed border-l-2 border-amber-400 pl-4 italic">
+            {/* Team note. border-s / ps-4 so the rule sits on the reading side
+               in both languages; border-l / pl-4 put it on the far side of the
+               quote in Arabic. */}
+            <p className="text-muted-foreground text-sm md:text-base leading-relaxed border-s-4 border-klovers-yellow ps-4 italic">
               {t("teacher", "bio4")}
             </p>
 
@@ -115,7 +118,7 @@ const MeetTeacher = () => {
                       <div className="w-3 h-3 rounded-full bg-primary border-2 border-background shrink-0" />
                       <div className={`h-px flex-1 bg-border ${i === arr.length - 1 ? "opacity-0" : ""}`} />
                     </div>
-                    <p className="text-[10px] font-bold text-primary">{m}</p>
+                    <p className="text-[10px] font-bold text-charcoal/75">{m}</p>
                     <p className="text-[10px] text-muted-foreground leading-tight">{desc}</p>
                   </div>
                 ))}
@@ -130,12 +133,12 @@ const MeetTeacher = () => {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 text-base font-bold h-12 px-8"
+                className="gap-2 text-base font-bold h-12 px-8 rounded-full"
                 onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "meet_teacher_cta" }); } catch {} }}
               >
                 <Link to="/free-trial">
                   {t("hero", "startNow")}
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
             </div>
