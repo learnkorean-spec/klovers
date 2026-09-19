@@ -25,8 +25,18 @@ import { RoadmapScenery } from "./roadmapScenery";
  * emoji are gone.
  *
  * 2026-09-20 (b) — Re's mockup: the ladder now stands in a scene, the nodes
- * are round on a dashed rail, the cards lost their borders for a soft shadow,
- * and five handwritten notes sit in the margins.
+ * are round on a dashed rail, and the cards lost their borders for a soft
+ * shadow.
+ *
+ * THE MOCKUP'S HANDWRITTEN MARGIN NOTES WERE BUILT AND THEN REMOVED. Five of
+ * them, in the gutters. In English, set in Caveat, they worked. In Arabic
+ * there is no Caveat — the face carries no Arabic glyphs — and the best
+ * available substitute, Aref Ruqaa, is a calligraphic naskh that reads beside
+ * these cards as a thin formal serif rather than as a hand. Re saw it
+ * rendered and cut it. Do not re-propose margin notes on this site until
+ * there is an Arabic face that actually looks handwritten at 20px; the
+ * feature is only as good as its weakest script, and Arabic is the majority
+ * script here.
  */
 
 /**
@@ -69,41 +79,9 @@ const chipsFrom = (eyebrow: string): string[] =>
 
 const chipIcons = [CalendarDays, Clock];
 
-/**
- * The handwritten notes in the margins.
- *
- * These are DECORATION and are marked aria-hidden: a screen reader reading
- * "Korean, a brighter you" between two course levels is noise. They are also
- * lg-and-up only — they live in the gutters beside a max-w-2xl list, and a
- * phone has no gutters.
- *
- * 화이팅! is Korean in both languages. It is the cheer itself, not a string to
- * translate, and it renders as handwriting only because Nanum Pen Script is
- * now in the script stack; before that it fell back to Cairo.
- */
-const NOTES = {
-  en: {
-    topStart: "Korean,\na brighter you ♡",
-    topEnd: "Small Steps\nBig Progress ♡",
-    firstCard: "It all starts here!",
-    bottomStart: "Better Korean\nBrighter Tomorrows ♡",
-    bottomEnd: "화이팅! ♡",
-  },
-  ar: {
-    topStart: "الكورية…\nنسخة أحلى منك ♡",
-    topEnd: "خطوات صغيرة\nتقدّم كبير ♡",
-    firstCard: "من هنا تبدأ!",
-    bottomStart: "كورية أحسن\nبكرة أحلى ♡",
-    bottomEnd: "화이팅! ♡",
-  },
-};
-
-const noteClass = "pointer-events-none absolute hidden select-none whitespace-pre-line font-script text-xl leading-tight text-charcoal/55 lg:block xl:text-2xl";
-
 const LearningRoadmap = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
-  const notes = NOTES[isAr ? "ar" : "en"];
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -133,19 +111,6 @@ const LearningRoadmap = () => {
   return (
     <section className="relative overflow-hidden bg-background py-20 md:py-28">
       <RoadmapScenery />
-
-      <span aria-hidden="true" className={`${noteClass} start-4 top-28 w-36 -rotate-6`}>
-        {notes.topStart}
-      </span>
-      <span aria-hidden="true" className={`${noteClass} end-4 top-24 w-36 rotate-6`}>
-        {notes.topEnd}
-      </span>
-      <span aria-hidden="true" className={`${noteClass} bottom-28 start-4 w-40 -rotate-3`}>
-        {notes.bottomStart}
-      </span>
-      <span aria-hidden="true" className={`${noteClass} bottom-20 end-6 w-28 rotate-3`}>
-        {notes.bottomEnd}
-      </span>
 
       <div className="container relative mx-auto px-4">
 
@@ -183,104 +148,98 @@ const LearningRoadmap = () => {
         </div>
 
         {/* The rail */}
-        <div className="relative mx-auto max-w-2xl">
-          <span aria-hidden="true" className={`${noteClass} end-[-9rem] top-6 hidden w-32 -rotate-6 xl:block`}>
-            {notes.firstCard}
-          </span>
+        <ol className="mx-auto max-w-2xl">
+          {STAGES.map((stage, index) => {
+            const isActive = activeStep === index;
+            const isVisible = visibleItems.has(index);
+            const meta = getMeta(stage.key);
+            const Icon = meta.icon;
+            const isLast = index === STAGES.length - 1;
+            const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
 
-          <ol>
-            {STAGES.map((stage, index) => {
-              const isActive = activeStep === index;
-              const isVisible = visibleItems.has(index);
-              const meta = getMeta(stage.key);
-              const Icon = meta.icon;
-              const isLast = index === STAGES.length - 1;
-              const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
+            return (
+              <li
+                key={stage.key}
+                ref={(el) => { itemRefs.current[index] = el; }}
+                style={{ transitionDelay: `${index * 70}ms` }}
+                className={`flex gap-4 transition-all duration-700 ease-out ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+                }`}
+              >
+                {/* Node column — the rail lives here, so it never crosses a card */}
+                <div className="relative flex w-14 shrink-0 flex-col items-center">
+                  {!isLast && (
+                    <span aria-hidden="true" className="absolute bottom-0 top-14 w-0 border-s-2 border-dashed border-mint-strong/40" />
+                  )}
+                  <span
+                    className={`relative z-10 grid h-14 w-14 place-items-center rounded-full ring-4 ring-background transition-transform duration-300 ${meta.tile} ${
+                      isActive ? "scale-110 shadow-md" : "shadow-sm"
+                    }`}
+                  >
+                    <Icon className="h-6 w-6 text-charcoal" aria-hidden="true" />
+                  </span>
+                  <span className="relative z-10 mt-1.5 text-[11px] font-bold text-charcoal/45">
+                    {index + 1}
+                  </span>
+                </div>
 
-              return (
-                <li
-                  key={stage.key}
-                  ref={(el) => { itemRefs.current[index] = el; }}
-                  style={{ transitionDelay: `${index * 70}ms` }}
-                  className={`flex gap-4 transition-all duration-700 ease-out ${
-                    isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                  }`}
-                >
-                  {/* Node column — the rail lives here, so it never crosses a card */}
-                  <div className="relative flex w-14 shrink-0 flex-col items-center">
-                    {!isLast && (
-                      <span aria-hidden="true" className="absolute bottom-0 top-14 w-0 border-s-2 border-dashed border-mint-strong/40" />
-                    )}
-                    <span
-                      className={`relative z-10 grid h-14 w-14 place-items-center rounded-full ring-4 ring-background transition-transform duration-300 ${meta.tile} ${
-                        isActive ? "scale-110 shadow-md" : "shadow-sm"
-                      }`}
-                    >
-                      <Icon className="h-6 w-6 text-charcoal" aria-hidden="true" />
-                    </span>
-                    <span className="relative z-10 mt-1.5 text-[11px] font-bold text-charcoal/45">
-                      {index + 1}
-                    </span>
-                  </div>
-
-                  {/* Card */}
-                  <div className="flex-1 pb-5">
-                    <div
-                      onClick={() => toggle(index)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && toggle(index)}
-                      className={`cursor-pointer rounded-3xl bg-card p-5 transition-all duration-300 ${
-                        isActive
-                          ? "shadow-lg ring-2 ring-klovers-yellow"
-                          : "shadow-sm hover:shadow-md"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
-                          {isAr ? stage.title_ar : stage.title_en}
-                        </h3>
-                        <ChevronDown
-                          className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
-                            isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
-                          }`}
-                          aria-hidden="true"
-                        />
-                      </div>
-
-                      {/* Chips — the two facts a visitor actually weighs */}
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {chips.map((chip, i) => {
-                          const ChipIcon = chipIcons[i] ?? CalendarDays;
-                          return (
-                            <span
-                              key={chip}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
-                            >
-                              <ChipIcon className="h-3 w-3" aria-hidden="true" />
-                              {chip}
-                            </span>
-                          );
-                        })}
-                      </div>
-
-                      {/* Expandable description */}
-                      <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
+                {/* Card */}
+                <div className="flex-1 pb-5">
+                  <div
+                    onClick={() => toggle(index)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && toggle(index)}
+                    className={`cursor-pointer rounded-3xl bg-card p-5 transition-all duration-300 ${
+                      isActive
+                        ? "shadow-lg ring-2 ring-klovers-yellow"
+                        : "shadow-sm hover:shadow-md"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
+                        {isAr ? stage.title_ar : stage.title_en}
+                      </h3>
+                      <ChevronDown
+                        className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+                          isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
                         }`}
-                      >
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          {isAr ? stage.blurb_ar : stage.blurb_en}
-                        </p>
-                      </div>
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    {/* Chips — the two facts a visitor actually weighs */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {chips.map((chip, i) => {
+                        const ChipIcon = chipIcons[i] ?? CalendarDays;
+                        return (
+                          <span
+                            key={chip}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                          >
+                            <ChipIcon className="h-3 w-3" aria-hidden="true" />
+                            {chip}
+                          </span>
+                        );
+                      })}
+                    </div>
+
+                    {/* Expandable description */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {isAr ? stage.blurb_ar : stage.blurb_en}
+                      </p>
                     </div>
                   </div>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
 
         {/* CTA */}
         <div className="text-center mt-10">
