@@ -21,10 +21,10 @@ import { LEVEL_KEYS } from "@/constants/levels";
  *
  * 2026-09-20 — it looks like a journey now, not a stack of identical cards.
  * A rail runs down the side with one node per level; the nodes climb the
- * palette Mint → Leaf → Yellow → Blush → Rose, which is the same ramp the
- * placement card draws. The full-colour emoji are gone: every one of them
- * brought its own palette to a page that owns five colours, and a lucide
- * icon in Charcoal says the same thing in the brand's.
+ * palette Mint → Leaf → Yellow → Blush → Rose, the same ramp the placement
+ * card draws. The full-colour emoji are gone: every one of them brought its
+ * own palette to a page that owns five colours, and a lucide icon in Charcoal
+ * says the same thing in the brand's.
  */
 
 /**
@@ -47,6 +47,17 @@ const getMeta = (key: string) =>
 
 /** The ladder only — the two special tracks are not steps on it. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
+
+/**
+ * The eyebrow is generated in courseCards.ts as "24 classes · 6 months" (or
+ * "4 حصص · تمهيدي (Pre-A1)"), derived from levels.ts so it cannot drift. Split
+ * on the separator and each half becomes its own chip — no new fields, and
+ * nothing here can contradict the levels grid.
+ */
+const chipsFrom = (eyebrow: string): string[] =>
+  eyebrow.split("·").map((s) => s.trim()).filter(Boolean);
+
+const chipIcons = [CalendarDays, Clock];
 
 const LearningRoadmap = () => {
   const { t, language } = useLanguage();
@@ -104,6 +115,7 @@ const LearningRoadmap = () => {
             const meta = getMeta(stage.key);
             const Icon = meta.icon;
             const isLast = index === STAGES.length - 1;
+            const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
 
             return (
               <li
@@ -145,14 +157,9 @@ const LearningRoadmap = () => {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                          {isAr ? stage.eyebrow_ar : stage.eyebrow_en}
-                        </p>
-                        <h3 className="mt-0.5 text-base md:text-lg font-bold text-foreground leading-tight">
-                          {isAr ? stage.title_ar : stage.title_en}
-                        </h3>
-                      </div>
+                      <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
+                        {isAr ? stage.title_ar : stage.title_en}
+                      </h3>
                       <ChevronDown
                         className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
                           isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
@@ -163,24 +170,24 @@ const LearningRoadmap = () => {
 
                     {/* Chips — the two facts a visitor actually weighs */}
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {stage.sessions && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground">
-                          <CalendarDays className="h-3 w-3" aria-hidden="true" />
-                          {isAr ? stage.sessions_ar ?? stage.sessions : stage.sessions}
-                        </span>
-                      )}
-                      {stage.hours && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground">
-                          <Clock className="h-3 w-3" aria-hidden="true" />
-                          {isAr ? stage.hours_ar ?? stage.hours : stage.hours}
-                        </span>
-                      )}
+                      {chips.map((chip, i) => {
+                        const ChipIcon = chipIcons[i] ?? CalendarDays;
+                        return (
+                          <span
+                            key={chip}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                          >
+                            <ChipIcon className="h-3 w-3" aria-hidden="true" />
+                            {chip}
+                          </span>
+                        );
+                      })}
                     </div>
 
                     {/* Expandable description */}
                     <div
                       className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        isActive ? "mt-3 max-h-52 opacity-100" : "max-h-0 opacity-0"
+                        isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
                       }`}
                     >
                       <p className="text-sm leading-relaxed text-muted-foreground">
