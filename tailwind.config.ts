@@ -34,6 +34,34 @@ export default {
   				DEFAULT: 'hsl(var(--peach))',
   				foreground: 'hsl(var(--peach-foreground))'
   			},
+  			/*
+  			 * amber — RETUNED, not Tailwind's default.
+  			 *
+  			 * Six homepage sections used amber-* as the brand yellow: badges,
+  			 * chips, glows, stat tiles, the community band. Klovers does not own
+  			 * that hue - the board's yellow is #FFFF00 - so amber is pointed at
+  			 * the brand yellow here and every existing call site follows,
+  			 * instead of forty hand edits that drift apart again.
+  			 *
+  			 * 600/700/800 break the ramp on purpose. Every call site of those
+  			 * three is TEXT on a pale chip, where a mid-yellow fails contrast
+  			 * outright; they are dark olive so the text stays readable
+  			 * (700 on amber-100 measures 6.1:1). Do not "fix" them back into
+  			 * the ramp without checking every text use.
+  			 */
+  			amber: {
+  				50: '#FFFEF0',
+  				100: '#FFFAC4',
+  				200: '#FFF28F',
+  				300: '#FFE84D',
+  				400: '#FFDE00',
+  				500: '#EFD000',
+  				600: '#7A6C00',
+  				700: '#6B5E00',
+  				800: '#4F4600',
+  				900: '#3A3300',
+  				950: '#231F00'
+  			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
