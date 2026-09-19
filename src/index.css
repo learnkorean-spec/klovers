@@ -6,12 +6,14 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 
-Klovers brand palette — website concept board, September 2026:
-  Klovers Yellow  #FFFF00  main highlight / CTA
-  Mint Green      #CDEBD7  support colour
-  Ivory           #FFF9EC  background
-  Charcoal        #2E2E2E  text / primary
-  Peach           #FFB7A1  accent colour
+Klovers brand palette — website concept board, September 2026.
+The decimals matter: each value below round-trips to the board's exact hex.
+
+  Klovers Yellow  #FFFF00  60 100% 50%      main highlight / CTA
+  Mint Green      #CDEBD7  140 42.9% 86.3%  support colour
+  Ivory           #FFF9EC  41 100% 96.3%    background
+  Charcoal        #2E2E2E  0 0% 18%         text / primary
+  Peach           #FFB7A1  14 100% 81.6%    accent colour
 
 Type, from the same board (loaded in index.html):
   Poppins  display / headings      Inter   body and UI (Latin)
@@ -22,15 +24,15 @@ Type, from the same board (loaded in index.html):
   :root {
     /* Brand palette — raw tokens */
     --klovers-yellow: 60 100% 50%;
-    --mint: 140 43% 86%;
+    --mint: 140 42.9% 86.3%;
     --mint-foreground: 0 0% 18%;
-    --ivory: 41 100% 96%;
+    --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
-    --peach: 14 100% 82%;
+    --peach: 14 100% 81.6%;
     --peach-foreground: 0 0% 18%;
 
     /* Semantic tokens */
-    --background: 41 100% 96%;
+    --background: 41 100% 96.3%;
     --foreground: 0 0% 18%;
 
     --card: 0 0% 100%;
@@ -48,7 +50,7 @@ Type, from the same board (loaded in index.html):
     --muted: 41 60% 93%;
     --muted-foreground: 0 0% 35%;
 
-    --accent: 140 43% 86%;
+    --accent: 140 42.9% 86.3%;
     --accent-foreground: 0 0% 18%;
 
     --destructive: 0 72% 50%;
@@ -64,14 +66,14 @@ Type, from the same board (loaded in index.html):
     --sidebar-foreground: 0 0% 18%;
     --sidebar-primary: 60 100% 50%;
     --sidebar-primary-foreground: 0 0% 18%;
-    --sidebar-accent: 140 43% 86%;
+    --sidebar-accent: 140 42.9% 86.3%;
     --sidebar-accent-foreground: 0 0% 18%;
     --sidebar-border: 40 25% 88%;
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;
-    --chart-2: 140 43% 86%;
-    --chart-3: 14 100% 82%;
+    --chart-2: 140 42.9% 86.3%;
+    --chart-3: 14 100% 81.6%;
     --chart-4: 0 0% 18%;
     --chart-5: 0 0% 50%;
 
@@ -114,7 +116,7 @@ Type, from the same board (loaded in index.html):
     --klovers-yellow: 60 100% 50%;
     --mint: 140 30% 40%;
     --mint-foreground: 0 0% 100%;
-    --ivory: 41 100% 96%;
+    --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
     --peach: 14 60% 62%;
     --peach-foreground: 0 0% 12%;
