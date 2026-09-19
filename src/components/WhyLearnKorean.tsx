@@ -18,37 +18,38 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * 2026-09-20 - Re sent a mockup of this section and this is it: a dark band,
  * a photograph per card, a coloured badge on the corner of each, the copy
  * underneath, and an arrow. The arrow is the whole point of the change. It
- * is real now:
+ * is real now: each card goes to a published article, in the reader's own
+ * language, and each photograph is that article's own hero.
  *
- *   travel   jeju-travel.jpg        -> korean-transportation-guide-seoul
- *   career   korean-business.jpg    -> korean-job-interview-phrases
- *   study    korean-study-desk.jpg  -> learn-korean-3-months-study-method
- *   culture  kdrama-vocabulary.jpg  -> study-korean-kdramas-method
+ * There is no flip any more because there is nothing left to flip to - the
+ * description is on the front, where it should always have been.
  *
- * Each photograph is the hero_image of a PUBLISHED post, and each card goes
- * to that post in the reader's own language. There is no flip any more
- * because there is nothing left to flip to - the description is on the
- * front, where it should always have been.
+ * ── ON CHOOSING THE PHOTOGRAPHS ───────────────────────────────────────
  *
- * ON THE IMAGES. This file shipped for months with `IMAGES = {}` and a
- * comment: "putting images of unchecked provenance on the homepage is not a
- * thing to do quietly." That comment was right and it has now been answered
- * rather than ignored. The four below were checked against blog_posts: each
- * is the hero of a published ar/en pair, which is exactly the standard
- * CultureHeritageSection already meets. If you add a fifth card, check its
- * image the same way before you add it.
+ * This file shipped for months with `IMAGES = {}` and a comment: "putting
+ * images of unchecked provenance on the homepage is not a thing to do
+ * quietly." That was right, and it has been answered rather than ignored -
+ * every image below is the hero_image of a PUBLISHED post, the same standard
+ * CultureHeritageSection meets.
  *
- * AND CHECK WHAT THE PICTURE ACTUALLY SHOWS, not only where it came from.
- * Culture was korean-music.jpg, the K-pop article's hero, which is a
- * photograph of a traditional percussion troupe in hanbok - under a
- * sentence promising K-Drama and K-Pop. Provenance was fine and the card
- * still argued with itself.
+ * BUT PROVENANCE IS ONLY HALF THE CHECK. The first version of this section
+ * shipped korean-study-desk.jpg and kdrama-vocabulary.jpg, both properly
+ * published, both carrying AI-generated gibberish Hangul printed inside the
+ * picture - "로니 헐치 지", "믹새긴깅", "Heraye 루·착힐 차뭔으럼." On a homepage
+ * that teaches people to read Hangul, that is read by every visitor who has
+ * finished lesson one. korean-reading.jpg and topik-test.jpg carry the same
+ * fault. LOOK AT THE IMAGE, not only at where it came from.
  *
- * ON CONTRAST. The scrim and the white-text rules that governed the old
- * SVG scenes are gone with them: nothing is written over a photograph here.
+ * Known compromise: korean-education.jpg is a classroom of school-age
+ * students under a card about universities and scholarships, where the
+ * audience is adults. It is the best text-free published option in the repo.
+ * A real photograph would beat it.
+ *
+ * ON CONTRAST. The scrim and the white-text rules that governed the old SVG
+ * scenes are gone with them: nothing is written over a photograph here.
  * Titles are Ivory on Charcoal (12.3:1) and the badge icons are Charcoal on
- * four pale tints (all above 9:1). If a future version puts text back on
- * top of the image, the scrim has to come back with it.
+ * four pale tints (all above 9:1). If a future version puts text back on top
+ * of the image, the scrim has to come back with it.
  *
  * ── THREE DEPARTURES FROM THE MOCKUP ──────────────────────────────────────
  *
@@ -79,13 +80,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
  *
  * `href` is a pair because the blog is a pair: every published article has an
  * `-ar` twin, and sending an Arabic reader to the English post is worse than
- * sending them nowhere. Slugs verified against blog_posts on 20 Sep 2026.
- *
- * kdrama-vocabulary.jpg has TWO published Arabic rows - the duplicate-slug
- * problem recorded in docs/ARTICLE_SEO_PLAN.md. `study-korean-kdramas-method-ar`
- * is the original (published 2025-02-10, 10 views, longer body);
- * `ar-study-korean-kdramas-method` is the 2026 duplicate with none. Link the
- * original, and check this before trusting any slug that has a twin.
+ * sending them nowhere. All four destinations were chosen partly BECAUSE they
+ * are clean pairs - exactly one ar row and one en row - so none of them runs
+ * into the duplicate-slug problem recorded in docs/ARTICLE_SEO_PLAN.md, where
+ * an image can have both a `-ar` original and a newer `ar-` copy with no
+ * views. If you swap a destination, check that first.
  *
  * `badge` is a literal class string - Tailwind's scanner only keeps what it
  * can see, so these must never be assembled from fragments.
@@ -117,21 +116,21 @@ const CARDS: Record<
     },
   },
   study: {
-    image: "/assets/blog/korean-study-desk.jpg",
+    image: "/assets/blog/korean-education.jpg",
     badge: "bg-klovers-yellow",
     Icon: BookOpen,
     href: {
-      ar: "/blog/learn-korean-3-months-study-method-ar",
-      en: "/blog/learn-korean-3-months-study-method",
+      ar: "/blog/korean-education-system-hagwon-culture-ar",
+      en: "/blog/korean-education-system-hagwon-culture",
     },
   },
   culture: {
-    image: "/assets/blog/kdrama-vocabulary.jpg",
+    image: "/assets/blog/korean-listening.jpg",
     badge: "bg-peach",
     Icon: Music,
     href: {
-      ar: "/blog/study-korean-kdramas-method-ar",
-      en: "/blog/study-korean-kdramas-method",
+      ar: "/blog/best-kdrama-learn-korean-difficulty-ranked-ar",
+      en: "/blog/best-kdrama-learn-korean-difficulty-ranked",
     },
   },
 };
