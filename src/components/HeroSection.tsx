@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
+import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen, MessagesSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 const heroPoster = "/hero-korean.jpg";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
@@ -10,18 +10,21 @@ import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialSlots";
 
 /**
- * The full-bleed cover hero, repainted on the Klovers concept board.
+ * The first screen: the full-bleed cover Re picked, fused with the concept
+ * board's card row.
  *
- * The layout is the one Re picked: photo/video wall, giant centred headline,
- * proof strip pinned to the bottom. What the board changes is the paint:
+ * Two halves, deliberately:
  *
- * - Ground and scrims are Charcoal #2E2E2E, not pure black.
- * - Text is Ivory #FFF9EC, not pure white.
- * - The headline's second line stays Klovers Yellow. That is not a breach of
- *   the board's yellow rule: yellow is banned as TEXT on a LIGHT ground, and
- *   endorsed on a dark one. This is a dark photo under a scrim.
- * - Mint carries the live-class chip and the slot pills; Caveat carries one
- *   handwritten line, the board's accent.
+ * 1. THE COVER. Photo/video wall, giant centred headline, proof strip pinned
+ *    to the bottom. Repainted on the board - Charcoal #2E2E2E ground and
+ *    scrims instead of pure black, Ivory #FFF9EC text instead of pure white,
+ *    Mint on the live-class chip and the slot pills. The headline's second
+ *    line stays Klovers Yellow: yellow as TYPE is endorsed on a dark ground
+ *    and ruled out only on a light one.
+ *
+ * 2. THE CARD ROW. The board's four promise cards sit at the foot of its
+ *    hero, overlapping the image. They do the same here, on Ivory, raised on
+ *    a shadow. The cover gives up a sliver of height (94svh) to make room.
  *
  * Numbers are static. A count-up renders every intermediate value as a
  * finished claim - "17+ students" is wrong for a moment too.
@@ -101,239 +104,289 @@ const HeroSection = () => {
     { icon: Globe, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
   ];
 
+  /** The board's four promise cards, in the board's colour order. */
+  const cards = [
+    {
+      icon: BookOpen,
+      tone: "bg-mint",
+      title: isAr ? "دروس مرتّبة" : "Structured lessons",
+      body: isAr ? "من الهانغول إلى المحادثة" : "From basics to real conversations",
+    },
+    {
+      icon: MessagesSquare,
+      tone: "bg-white",
+      title: isAr ? "تتدرّب مع ناس" : "Practice together",
+      body: isAr ? "مجموعات صغيرة مباشرة" : "Learn with a supportive community",
+    },
+    {
+      icon: Globe,
+      tone: "bg-peach",
+      title: isAr ? "كورية حقيقية" : "Real-life Korean",
+      body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
+    },
+    {
+      icon: Star,
+      tone: "bg-mint",
+      title: isAr ? "نسخة أفضل منك" : "A brighter you",
+      body: isAr ? "ثقة أكبر، وعالم أوسع" : "More confidence. A bigger world.",
+    },
+  ];
+
   return (
-    <section
-      id="home"
-      className="relative min-h-[100svh] flex flex-col items-center justify-center pt-16 overflow-hidden bg-charcoal"
-    >
-      {/* ── Background layer ───────────────────────────── */}
-      <img
-        src={heroPoster}
-        alt=""
-        aria-hidden="true"
-        loading="eager"
-        fetchPriority="high"
-        decoding="sync"
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
-          videoReady ? "opacity-0" : "opacity-100"
-        }`}
-      />
-      {showVideo && (
-        <video
-          ref={videoRef}
-          poster={heroPoster}
-          preload="none"
-          loop
-          muted
-          playsInline
+    <>
+      <section
+        id="home"
+        className="relative min-h-[94svh] flex flex-col items-center justify-center pt-16 overflow-hidden bg-charcoal"
+      >
+        {/* ── Background layer ──────────────────────────── */}
+        <img
+          src={heroPoster}
+          alt=""
           aria-hidden="true"
-          onCanPlay={() => setVideoReady(true)}
-          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ${
-            videoReady ? "opacity-100" : "opacity-0"
+          loading="eager"
+          fetchPriority="high"
+          decoding="sync"
+          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
+            videoReady ? "opacity-0" : "opacity-100"
           }`}
         />
-      )}
+        {showVideo && (
+          <video
+            ref={videoRef}
+            poster={heroPoster}
+            preload="none"
+            loop
+            muted
+            playsInline
+            aria-hidden="true"
+            onCanPlay={() => setVideoReady(true)}
+            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ${
+              videoReady ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        )}
 
-      {/* Cinematic scrim — Charcoal rather than pure black, so the photo keeps
-          its warmth and the section belongs to the same palette as the rest of
-          the page. Enough density for text contrast, no more. */}
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.15) 45%, rgba(46,46,46,0.62) 100%)" }}
-      />
-      {/* Bottom scrim for the proof strip */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-40"
-        style={{ background: "linear-gradient(to top, rgba(46,46,46,0.55), transparent)" }}
-      />
+        {/* Cinematic scrim — Charcoal rather than pure black, so the photo keeps
+            its warmth and the section belongs to the same palette as the rest
+            of the page. Enough density for text contrast, no more. */}
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.15) 45%, rgba(46,46,46,0.62) 100%)" }}
+        />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-40"
+          style={{ background: "linear-gradient(to top, rgba(46,46,46,0.55), transparent)" }}
+        />
 
-      {/* Brand-yellow glow behind the headline */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.18) 0%, transparent 70%)" }}
-      />
+        {/* Brand-yellow glow behind the headline */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.18) 0%, transparent 70%)" }}
+        />
 
-      {/* ── Decorative large Korean text (backdrop) ────────────── */}
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-        style={{
-          fontSize: "clamp(180px, 30vw, 420px)",
-          fontWeight: 900,
-          color: "rgba(255, 255, 0, 0.035)",
-          letterSpacing: "-0.02em",
-          lineHeight: 1,
-          userSelect: "none",
-        }}
-      >
-        한국어
-      </span>
+        {/* ── Decorative large Korean text (backdrop) ───────────── */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+          style={{
+            fontSize: "clamp(180px, 30vw, 420px)",
+            fontWeight: 900,
+            color: "rgba(255, 255, 0, 0.035)",
+            letterSpacing: "-0.02em",
+            lineHeight: 1,
+            userSelect: "none",
+          }}
+        >
+          한국어
+        </span>
 
-      {/* ── Hero text content ─────────────────────────────── */}
-      <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-36">
-        <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
+        {/* ── Hero text content ────────────────────────────── */}
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-36">
+          <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
-          {/* Teacher chip — the one thing on this page no competitor has. */}
-          <div className="inline-flex items-center gap-3 bg-charcoal/55 border border-ivory/20 backdrop-blur-md rounded-full py-1.5 ps-1.5 pe-5 shadow-xl">
-            <img
-              src={rehamPhoto}
-              alt=""
-              width={36}
-              height={36}
-              loading="lazy"
-              decoding="async"
-              className="h-9 w-9 rounded-full object-cover object-top shrink-0 ring-1 ring-ivory/30"
-            />
-            <span className="text-start leading-tight">
-              <span className="block text-ivory text-xs font-bold">
-                {isAr ? "تدرّسها ريهام الشرقاوي" : "Taught by Reham Elshrkawy"}
+            {/* Teacher chip — the one thing on this page no competitor has. */}
+            <div className="inline-flex items-center gap-3 bg-charcoal/55 border border-ivory/20 backdrop-blur-md rounded-full py-1.5 ps-1.5 pe-5 shadow-xl">
+              <img
+                src={rehamPhoto}
+                alt=""
+                width={36}
+                height={36}
+                loading="lazy"
+                decoding="async"
+                className="h-9 w-9 rounded-full object-cover object-top shrink-0 ring-1 ring-ivory/30"
+              />
+              <span className="text-start leading-tight">
+                <span className="block text-ivory text-xs font-bold">
+                  {isAr ? "تدرّسها ريهام الشرقاوي" : "Taught by Reham Elshrkawy"}
+                </span>
+                <span className="block text-ivory/65 text-[11px] mt-0.5">
+                  {isAr ? "معلمة معتمدة TOPIK · ١٣ سنة تدريس" : "TOPIK-certified · 13 years teaching"}
+                </span>
               </span>
-              <span className="block text-ivory/65 text-[11px] mt-0.5">
-                {isAr ? "معلمة معتمدة TOPIK · ١٣ سنة تدريس" : "TOPIK-certified · 13 years teaching"}
-              </span>
-            </span>
-          </div>
-
-          {/* Next-class chip — rendered only when there is a real class to name;
-              Mint is the board's "live and calm" tone. */}
-          {nextDay && (
-            <div className="inline-flex items-center gap-2 bg-mint/20 border border-mint/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-mint" />
-              </span>
-              {isAr
-                ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
-                : `Next class: ${nextDay.en} — spots filling fast`}
             </div>
-          )}
 
-          {/* Main headline. Yellow as TYPE is correct here and only here: this
-              is a dark photo under a scrim, not a light ground. */}
-          <h1
-            className="font-display font-extrabold text-ivory leading-[1.05] tracking-tighter w-full"
-            style={{ textShadow: "0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8)" }}
-          >
-            <span className="block" style={{ fontSize: "clamp(2rem, 5.5vw, 4.5rem)" }}>
-              {t("hero", "title1")}
-            </span>
-            <span
-              className="block mt-1"
-              style={{
-                fontSize: "clamp(2.4rem, 6.8vw, 5.5rem)",
-                color: "#FFFF00",
-                textShadow: "0 0 80px rgba(255, 255, 0, 0.4), 0 4px 24px rgba(20,20,18,0.7)"
-              }}
-            >
-              {t("hero", "title2")}
-            </span>
-          </h1>
-
-          {/* Subtitle — lives in src/i18n/translations.ts (`hero.subtitle`). */}
-          <p
-            className="text-base sm:text-xl md:text-2xl text-ivory/85 max-w-xl mx-auto leading-relaxed text-pretty"
-            style={{ textShadow: "0 2px 16px rgba(20,20,18,0.9)" }}
-          >
-            {t("hero", "subtitle")}
-          </p>
-
-          {/* The board's handwritten accent — one line, never a paragraph. */}
-          <p className="font-script text-2xl sm:text-3xl text-klovers-yellow -mt-2">
-            {isAr ? "خطوات صغيرة، آفاق أوسع" : "Small steps, bigger horizons"}
-          </p>
-
-          {/* CTA Buttons — 2 max to eliminate choice paralysis */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm sm:max-w-none mx-auto">
-            <Button
-              size="lg"
-              asChild
-              className="gap-2.5 text-base font-bold px-10 rounded-full shadow-2xl"
-              style={{ boxShadow: "0 0 36px hsl(60 100% 50% / 0.3), 0 8px 24px rgba(20,20,18,0.4)" }}
-            >
-              <Link
-                to="/free-trial"
-                onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "homepage_hero_free_trial" }); } catch {} }}
-              >
-                <Gift className="h-5 w-5" />
-                {t("hero", "startNow")}
-                <ArrowRight className="h-5 w-5 rtl:rotate-180" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              asChild
-              variant="outline"
-              // Secondary by design: the free-trial button above is the one
-              // primary action. A border reads as "also available," a solid
-              // fill reads as "do this."
-              className="gap-2.5 text-base font-semibold px-8 rounded-full bg-transparent hover:bg-ivory/10 text-ivory border-2 border-ivory/40 hover:border-ivory/60"
-            >
-              <a
-                href={WHATSAPP_BASE}
-                onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "homepage_hero_whatsapp" }); }}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MessageCircle className="h-5 w-5 text-[#25D366]" />
-                {isAr ? "واتساب" : "WhatsApp Us"}
-              </a>
-            </Button>
-          </div>
-
-          <p className="text-ivory/60 text-xs" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
-            {isAr ? "✓ بدون بطاقة بنكية · ✓ رد خلال دقائق" : "✓ No credit card · ✓ Reply in minutes"}
-          </p>
-
-          {/* Upcoming class sessions — live from trial_slots, in the visitor's
-              own timezone. Renders nothing while loading or when there is
-              genuinely no upcoming slot, which is honest either way. */}
-          <div className="flex flex-wrap gap-2 justify-center">
-            {pills.map((p) => (
-              <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
-                <span className="w-1.5 h-1.5 rounded-full bg-mint shrink-0" />
-                {p.label}
+            {/* Next-class chip — rendered only when there is a real class to
+                name; Mint is the board's "live and calm" tone. */}
+            {nextDay && (
+              <div className="inline-flex items-center gap-2 bg-mint/20 border border-mint/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-mint" />
+                </span>
+                {isAr
+                  ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
+                  : `Next class: ${nextDay.en} — spots filling fast`}
               </div>
-            ))}
+            )}
+
+            {/* Main headline. Yellow as TYPE is correct here and only here:
+                this is a dark photo under a scrim, not a light ground. */}
+            <h1
+              className="font-display font-extrabold text-ivory leading-[1.05] tracking-tighter w-full"
+              style={{ textShadow: "0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8)" }}
+            >
+              <span className="block" style={{ fontSize: "clamp(2rem, 5.5vw, 4.5rem)" }}>
+                {t("hero", "title1")}
+              </span>
+              <span
+                className="block mt-1"
+                style={{
+                  fontSize: "clamp(2.4rem, 6.8vw, 5.5rem)",
+                  color: "#FFFF00",
+                  textShadow: "0 0 80px rgba(255, 255, 0, 0.4), 0 4px 24px rgba(20,20,18,0.7)"
+                }}
+              >
+                {t("hero", "title2")}
+              </span>
+            </h1>
+
+            {/* Subtitle — lives in src/i18n/translations.ts (`hero.subtitle`). */}
+            <p
+              className="text-base sm:text-xl md:text-2xl text-ivory/85 max-w-xl mx-auto leading-relaxed text-pretty"
+              style={{ textShadow: "0 2px 16px rgba(20,20,18,0.9)" }}
+            >
+              {t("hero", "subtitle")}
+            </p>
+
+            {/* The board's handwritten accent — one line, never a paragraph. */}
+            <p className="font-script text-2xl sm:text-3xl text-klovers-yellow -mt-2">
+              {isAr ? "خطوات صغيرة، آفاق أوسع" : "Small steps, bigger horizons"}
+            </p>
+
+            {/* CTA Buttons — 2 max to eliminate choice paralysis */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm sm:max-w-none mx-auto">
+              <Button
+                size="lg"
+                asChild
+                className="gap-2.5 text-base font-bold px-10 rounded-full shadow-2xl"
+                style={{ boxShadow: "0 0 36px hsl(60 100% 50% / 0.3), 0 8px 24px rgba(20,20,18,0.4)" }}
+              >
+                <Link
+                  to="/free-trial"
+                  onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "homepage_hero_free_trial" }); } catch {} }}
+                >
+                  <Gift className="h-5 w-5" />
+                  {t("hero", "startNow")}
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                asChild
+                variant="outline"
+                // Secondary by design: the free-trial button above is the one
+                // primary action. A border reads as "also available," a solid
+                // fill reads as "do this."
+                className="gap-2.5 text-base font-semibold px-8 rounded-full bg-transparent hover:bg-ivory/10 text-ivory border-2 border-ivory/40 hover:border-ivory/60"
+              >
+                <a
+                  href={WHATSAPP_BASE}
+                  onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "homepage_hero_whatsapp" }); }}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="h-5 w-5 text-[#25D366]" />
+                  {isAr ? "واتساب" : "WhatsApp Us"}
+                </a>
+              </Button>
+            </div>
+
+            <p className="text-ivory/60 text-xs" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
+              {isAr ? "✓ بدون بطاقة بنكية · ✓ رد خلال دقائق" : "✓ No credit card · ✓ Reply in minutes"}
+            </p>
+
+            {/* Upcoming class sessions — live from trial_slots, in the visitor's
+                own timezone. Renders nothing while loading or when there is
+                genuinely no upcoming slot, which is honest either way. */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {pills.map((p) => (
+                <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-mint shrink-0" />
+                  {p.label}
+                </div>
+              ))}
+            </div>
+
+            {/* Hangul sheet — reciprocity trigger */}
+            <Link
+              to="/hangul-starter"
+              className="inline-flex items-center gap-2 text-ivory/70 hover:text-ivory transition-colors text-xs underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60"
+              onClick={() => { try { logLeadEvent({ source_type: "free_resource", cta_label: "hero_hangul_sheet" }); } catch {} }}
+            >
+              <BookOpen className="h-3.5 w-3.5 shrink-0" />
+              {isAr ? "احصل على ورقة هانغول المجانية ←" : "Free Hangul starter sheet →"}
+            </Link>
+
           </div>
-
-          {/* Hangul sheet — reciprocity trigger */}
-          <Link
-            to="/hangul-starter"
-            className="inline-flex items-center gap-2 text-ivory/70 hover:text-ivory transition-colors text-xs underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60"
-            onClick={() => { try { logLeadEvent({ source_type: "free_resource", cta_label: "hero_hangul_sheet" }); } catch {} }}
-          >
-            <BookOpen className="h-3.5 w-3.5 shrink-0" />
-            {isAr ? "احصل على ورقة هانغول المجانية ←" : "Free Hangul starter sheet →"}
-          </Link>
-
         </div>
-      </div>
 
-      {/* ── Proof strip — pinned to the bottom, static figures ────── */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 sm:pb-10 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-6" />
-          <div className="grid grid-cols-3 gap-4 md:gap-8">
-            {stats.map(({ icon: Icon, display, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1 text-center">
-                <div className="flex items-center gap-1.5">
-                  <Icon className="h-4 w-4 text-klovers-yellow hidden sm:block" />
-                  <span
-                    className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-ivory"
-                    style={{ textShadow: "0 2px 16px rgba(20,20,18,0.8)" }}
-                  >
-                    {display}
+        {/* ── Proof strip — pinned to the bottom, static figures ────── */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 sm:pb-10 px-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-6" />
+            <div className="grid grid-cols-3 gap-4 md:gap-8">
+              {stats.map(({ icon: Icon, display, label }) => (
+                <div key={label} className="flex flex-col items-center gap-1 text-center">
+                  <div className="flex items-center gap-1.5">
+                    <Icon className="h-4 w-4 text-klovers-yellow hidden sm:block" />
+                    <span
+                      className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-ivory"
+                      style={{ textShadow: "0 2px 16px rgba(20,20,18,0.8)" }}
+                    >
+                      {display}
+                    </span>
+                  </div>
+                  <span className="text-ivory/90 text-xs sm:text-sm font-medium tracking-wide">
+                    {label}
                   </span>
                 </div>
-                <span className="text-ivory/90 text-xs sm:text-sm font-medium tracking-wide">
-                  {label}
-                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── The board's four promise cards, overlapping the cover ───────────
+          On the board these sit at the foot of the hero, half on the image and
+          half off it. -mt-10 reproduces that overlap; the shadow is what makes
+          them read as floating rather than as a new band. */}
+      <div className="relative z-20 bg-ivory pb-14">
+        <div className="mx-auto max-w-6xl px-4 -mt-10">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {cards.map(({ icon: Icon, tone, title, body }) => (
+              <div
+                key={title}
+                className={`rounded-2xl border border-charcoal/10 p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
+              >
+                <Icon className="mb-3 h-6 w-6 text-charcoal" aria-hidden="true" />
+                <h2 className="font-display text-base font-bold text-charcoal">{title}</h2>
+                <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{body}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
-    </section>
+    </>
   );
 };
 
