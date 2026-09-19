@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Users, Star, Globe, MessageCircle } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Star, Globe, MessageCircle, ClipboardCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -37,18 +37,16 @@ import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
  * site, so an Arabic reader got "Active Students" under a Korean-course
  * heading in her own language.
  *
- * This mirrors HeroSection.tsx's stats array exactly. If one of them changes
- * the other has to change with it — same rule SignUpPage, GamesPage and
- * BlogPostPage already carry.
+ * 2026-09-20: the student figure no longer counts up from zero. Same reason
+ * the rating never did — every frame of the animation renders a number the
+ * business does not claim. HeroSection.tsx made the same change; if one of
+ * these three facts changes, the other file has to change with it.
  */
 const SOCIAL_PROOF = [
   { icon: Users, value: "200+", en: "Students in 13 years", ar: "طالب خلال ١٣ عاماً" },
   { icon: Star, value: "5.0 ★", en: "From 7 Google reviews", ar: "من ٧ مراجعات جوجل" },
   { icon: Globe, value: "A1–C2", en: "All Levels", ar: "جميع المستويات" },
 ];
-
-/** The count-up target, and the first tile's real value. Keep in step with SOCIAL_PROOF[0]. */
-const STUDENT_COUNT = 200;
 
 // Floating Korean characters for visual texture
 const KR_CHARS = ["안녕", "한국어", "공부", "화이팅", "수업", "최고"];
@@ -58,7 +56,6 @@ const FinalCTA = () => {
   const isAr = language === "ar";
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
-  const [count, setCount] = useState(0);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -69,26 +66,10 @@ const FinalCTA = () => {
     return () => obs.disconnect();
   }, []);
 
-  // Animate the student count 0 → STUDENT_COUNT. Only the quantity animates:
-  // a ticking number reads as a counter, which is why the rating beside it is
-  // a static string here exactly as it is in the hero.
-  useEffect(() => {
-    if (!visible) return;
-    let start = 0;
-    const target = STUDENT_COUNT;
-    const step = Math.ceil(target / 60);
-    const id = setInterval(() => {
-      start = Math.min(start + step, target);
-      setCount(start);
-      if (start >= target) clearInterval(id);
-    }, 16);
-    return () => clearInterval(id);
-  }, [visible]);
-
   return (
     <section
       ref={sectionRef}
-      className="py-20 md:py-28 relative overflow-hidden bg-primary border-y border-black/25"
+      className="py-20 md:py-28 relative overflow-hidden bg-primary border-y border-charcoal/25"
     >
       {/* Top edge gradient for depth */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
@@ -111,7 +92,7 @@ const FinalCTA = () => {
         {/* Gradient blobs */}
         <div className="absolute top-0 left-0 w-80 h-80 bg-primary-foreground/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full translate-x-1/3 translate-y-1/3" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary-foreground/3 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary-foreground/5 rounded-full" />
       </div>
 
       <div className="container mx-auto px-4 text-center relative z-10">
@@ -143,21 +124,19 @@ const FinalCTA = () => {
           {t("finalCta", "subtitle")}
         </p>
 
-        {/* Animated social proof */}
+        {/* Social proof — static, see the block comment above */}
         <div
           className={`flex items-center justify-center gap-4 flex-wrap mb-10 transition-all duration-700 delay-300 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }, i) => {
+          {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }) => {
             const label = isAr ? ar : en;
             return (
               <div key={en} className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/15 rounded-xl px-4 py-2.5">
                 <Icon className="h-5 w-5 text-primary-foreground/70" />
                 <div className="text-start">
-                  <p className="font-bold text-primary-foreground text-sm leading-none">
-                    {i === 0 ? `${count.toLocaleString("en-US")}+` : value}
-                  </p>
+                  <p className="font-bold text-primary-foreground text-sm leading-none">{value}</p>
                   <p className="text-[11px] text-primary-foreground/60">{label}</p>
                 </div>
               </div>
@@ -165,12 +144,18 @@ const FinalCTA = () => {
           })}
         </div>
 
-        {/* CTA buttons — the primary one renders hero.startNow, the single
-            wording this ask uses across the page. `finalCta.button` said
-            "Book My Free Korean Class"; the key stays in translations.ts,
-            unused. */}
+        {/* ONE action.
+
+            This row used to hold three equally sized buttons - free trial,
+            placement test, and a WhatsApp button in its own brand green on a
+            yellow ground. Three primary-looking choices is the choice
+            paralysis the board and the direction deck both rule out, and the
+            green on yellow was the loudest colour pairing on the page.
+
+            The other two are still here, as links. Same destinations, same
+            cta_labels, so nothing tracked changes. */}
         <div
-          className={`flex flex-col sm:flex-row gap-3 items-center justify-center mb-6 transition-all duration-700 delay-400 ${
+          className={`flex flex-col items-center gap-5 mb-6 transition-all duration-700 delay-400 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
@@ -178,40 +163,37 @@ const FinalCTA = () => {
             size="lg"
             variant="secondary"
             asChild
-            className="gap-2 h-13 px-8 text-base shadow-xl min-w-[200px] font-bold"
+            className="gap-2 h-13 px-10 text-base shadow-xl min-w-[240px] font-bold rounded-full"
             onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "final_cta_free_trial" }); } catch {} }}
           >
             <Link to="/free-trial">
               {t("hero", "startNow")}
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </Button>
 
-          <Button size="lg" variant="outline" asChild className="gap-2 h-12 px-8 text-base bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 min-w-[200px]">
-            <Link to="/placement-test">
-              {isAr ? "اختبار مجاني" : "Free Placement Test"}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <Link
+              to="/placement-test"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/80 underline decoration-primary-foreground/30 underline-offset-4 transition-colors hover:text-primary-foreground hover:decoration-primary-foreground/60"
+            >
+              <ClipboardCheck className="h-4 w-4" />
+              {isAr ? "أو حدد مستواك مجانًا" : "or take the free placement test"}
             </Link>
-          </Button>
-
-          {/* WhatsApp CTA — Egyptian market */}
-          <Button
-            size="lg"
-            asChild
-            className="gap-2 h-12 px-8 text-base bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0 min-w-[200px] font-semibold"
-          >
             <a
               href={WHATSAPP_BASE}
               onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "final_cta_homepage" }); }}
               target="_blank"
               rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/80 underline decoration-primary-foreground/30 underline-offset-4 transition-colors hover:text-primary-foreground hover:decoration-primary-foreground/60"
             >
               <MessageCircle className="h-4 w-4" />
-              {isAr ? "واتساب" : "WhatsApp Us"}
+              {isAr ? "أو كلّمنا على واتساب" : "or talk to us on WhatsApp"}
             </a>
-          </Button>
+          </div>
         </div>
 
-        <p className="text-primary-foreground/50 text-xs mb-6">
+        <p className="text-primary-foreground/60 text-xs mb-6">
           {isAr ? "لا بطاقة ائتمان · ٣٠ دقيقة · معلمة حقيقية · نرد خلال دقائق" : "No credit card · 30 minutes · Real teacher · We reply in minutes"}
         </p>
 
@@ -224,7 +206,7 @@ const FinalCTA = () => {
             it at 4K+, so 2,000+ across Telegram and Facebook is conservative.
             If it is ever raised, raise it against a number someone has just
             looked at. */}
-        <p className="text-primary-foreground/50 text-xs mb-4">
+        <p className="text-primary-foreground/60 text-xs mb-4">
           {isAr
             ? "🌍 انضم لأكثر من ٢٠٠٠ متعلم في مجتمعنا على تيليجرام وفيسبوك"
             : "🌍 Join 2,000+ Korean learners in our Telegram & Facebook community"}
@@ -237,7 +219,7 @@ const FinalCTA = () => {
             <p className="text-primary-foreground font-bold text-sm leading-tight">
               {isAr ? "ضمان الرضا الكامل" : "Satisfaction Guarantee"}
             </p>
-            <p className="text-primary-foreground/60 text-xs mt-0.5">
+            <p className="text-primary-foreground/70 text-xs mt-0.5">
               {isAr ? "إذا ما عجبتكش الحصة الأولى — هنرجعلك فلوسك أو نعيد الحجز." : "If your first class isn't great, we refund or rebook — no questions asked."}
             </p>
           </div>
