@@ -25,7 +25,9 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * 2. THE CARD ROW. On the board these sit at the foot of the hero, half on
  *    the image. They lift 48px on phones and 80px from sm up to do the same
  *    here, and the row carries no background of its own - what shows under
- *    them is the page's own Ivory, so there is no band and no seam.
+ *    them is the page's own Ivory, so there is no band and no seam. The proof
+ *    strip clears that overlap by the same amount; if you change one, change
+ *    the other, or the cards cover the numbers.
  *
  * Numbers are static. A count-up renders every intermediate value as a
  * finished claim - "17+ students" is wrong for a moment too.
@@ -175,8 +177,8 @@ const HeroSection = () => {
           style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.15) 45%, rgba(46,46,46,0.62) 100%)" }}
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-40"
-          style={{ background: "linear-gradient(to top, rgba(46,46,46,0.55), transparent)" }}
+          className="absolute bottom-0 left-0 right-0 h-48"
+          style={{ background: "linear-gradient(to top, rgba(46,46,46,0.6), transparent)" }}
         />
 
         {/* Brand-yellow glow behind the headline */}
@@ -202,7 +204,7 @@ const HeroSection = () => {
         </span>
 
         {/* ── Hero text content ────────────────────────────── */}
-        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-36">
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44">
           <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
             {/* Teacher chip — the one thing on this page no competitor has. */}
@@ -341,8 +343,10 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* ── Proof strip — pinned to the bottom, static figures ────── */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 pb-8 sm:pb-10 px-4">
+        {/* ── Proof strip — pinned above the card overlap ─────────────
+            pb-24/pb-32 is not spacing taste: it is exactly the room the cards
+            below take out of this section when they lift onto the photo. */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 pb-24 sm:pb-32 px-4">
           <div className="max-w-3xl mx-auto">
             <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-6" />
             <div className="grid grid-cols-3 gap-4 md:gap-8">
