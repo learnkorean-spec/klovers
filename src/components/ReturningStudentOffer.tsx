@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { RETURNING_STUDENT_CODE } from "@/lib/siteConfig";
+import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 
 /**
  * 2026-09-20 (a): this section was painted in Tailwind `green-*` - ground,
@@ -24,30 +25,35 @@ import { RETURNING_STUDENT_CODE } from "@/lib/siteConfig";
  * the brand's, one screen away from the brand's. It is Mint now.
  *
  * 2026-09-20 (b): it asked people to invite a friend and showed them three
- * icons. It shows three friends now.
+ * icons. It shows two friends now.
  *
  * WHAT MOVED, AND WHY IT MATTERS MORE THAN THE PAINT
  *
  * The promo code used to sit in the second column, beneath the offer list,
  * two scrolls below the sentence explaining what it is for. A returning
  * student comes to this section for that code. It is now inside the card
- * that sells it, on a dashed outline, next to the photograph.
+ * that sells it, on a dashed outline, beside the characters.
  *
  * The three reward tiles moved from a row under the heading into the card's
  * text column, so the card reads as one argument - here is the offer, here
  * are the three ways it stacks, here is the code - instead of a headline
  * followed by a separate grid.
  *
- * ON THE PHOTOGRAPHS. Both are hero_images of published ar/en pairs, the
- * standard CultureHeritageSection set, and both were opened and LOOKED AT
- * before use: #532 shipped two properly-published photos that turned out to
- * have AI-generated gibberish Hangul printed inside them. korean-slang.jpg
- * has the same fault (a neon sign reading nothing) and is why the obvious
- * choice for this section is not the one here.
+ * WHY THE CHARACTERS AND NOT A PHOTOGRAPH. The first build of this card used
+ * korean-streetwear.jpg: three young Korean women in Seoul, properly
+ * published, no fake Hangul, and wrong. Klovers teaches Arabic speakers, so
+ * a card that says "bring a friend" over three Korean women is picturing
+ * somebody else's friends. Re said so immediately.
  *
- * They are decoration, not navigation: no href, no hover lift, empty alt.
- * The cards in WhyLearnKorean wear link affordances because they ARE links;
- * these must not.
+ * There is no photograph of international learners in this repo - every
+ * candidate was rendered and checked. kpop-global-learning.jpg is a crowd
+ * from behind under a flag map and is not a published hero;
+ * multilingual-brain.jpg is an illustration whose Arabic labels are garbled;
+ * the rest are Korean students or cartoons. So the card uses the two Klovers
+ * characters, which are the school's own faces rather than stock anyone.
+ *
+ * A real photograph of Klovers students, with consent, beats both. Ask for
+ * that before running another stock search.
  */
 
 const STEP_ICONS = [ClipboardCheck, Route, GraduationCap];
@@ -58,11 +64,6 @@ const REFERRAL_META = [
   { Icon: Share2, tint: "bg-mint" },
   { Icon: Shield, tint: "bg-peach" },
 ];
-
-/** Three friends in Seoul — the referral offer, in a picture. */
-const FRIENDS_IMAGE = "/assets/blog/korean-streetwear.jpg";
-/** Two people greeting — heads the welcome-back panel. */
-const WELCOME_IMAGE = "/assets/blog/korean-honorifics.jpg";
 
 const ReturningStudentOffer = () => {
   const { t, tArray, language } = useLanguage();
@@ -144,23 +145,42 @@ const ReturningStudentOffer = () => {
           </p>
         </div>
 
-        {/* HERO: the referral offer, with a face and the code in one card. */}
+        {/* HERO: the referral offer, with faces and the code in one card. */}
         <div
           className={`mb-12 overflow-hidden rounded-3xl bg-charcoal shadow-lg transition-all delay-200 duration-700 ${
             visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
           <div className="grid md:grid-cols-2">
-            <img
-              src={FRIENDS_IMAGE}
-              alt=""
-              aria-hidden="true"
-              width={800}
-              height={600}
-              loading="lazy"
-              decoding="async"
-              className="h-56 w-full object-cover sm:h-72 md:h-full"
-            />
+            {/* Two friends: the Klovers characters, overlapping. */}
+            <div className="relative flex min-h-[15rem] items-center justify-center overflow-hidden bg-mint p-8 sm:min-h-[19rem]">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 50% 42%, hsl(var(--klovers-yellow) / 0.45), transparent 62%)",
+                }}
+              />
+              <div className="relative flex items-center">
+                <img
+                  src={CHARACTER_GIRL}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                  className="h-28 w-28 rounded-full object-cover shadow-lg ring-4 ring-ivory sm:h-36 sm:w-36"
+                />
+                <img
+                  src={CHARACTER_BOY}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                  className="-ms-8 h-28 w-28 rounded-full object-cover shadow-lg ring-4 ring-ivory sm:h-36 sm:w-36"
+                />
+              </div>
+            </div>
 
             <div className="p-6 md:p-8">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-klovers-yellow text-charcoal">
@@ -180,7 +200,7 @@ const ReturningStudentOffer = () => {
                   return (
                     <li key={i} className="flex items-start gap-3">
                       <span className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${meta.tint}`}>
-                        <Icon className="h-4.5 w-4.5 text-charcoal" aria-hidden="true" />
+                        <Icon className="h-4 w-4 text-charcoal" aria-hidden="true" />
                       </span>
                       <span>
                         <span className="block text-sm font-bold text-ivory">{item.label}</span>
@@ -200,11 +220,7 @@ const ReturningStudentOffer = () => {
                   <span className="select-all font-mono text-lg font-bold tracking-wider text-klovers-yellow sm:text-xl">
                     {RETURNING_STUDENT_CODE}
                   </span>
-                  <Button
-                    size="sm"
-                    onClick={handleCopy}
-                    className="gap-1.5 rounded-full"
-                  >
+                  <Button size="sm" onClick={handleCopy} className="gap-1.5 rounded-full">
                     {copied ? (
                       <>
                         <Check className="h-3.5 w-3.5" />
@@ -229,17 +245,7 @@ const ReturningStudentOffer = () => {
             visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <Card className="overflow-hidden border-charcoal/10 bg-white">
-            <img
-              src={WELCOME_IMAGE}
-              alt=""
-              aria-hidden="true"
-              width={800}
-              height={300}
-              loading="lazy"
-              decoding="async"
-              className="h-32 w-full object-cover"
-            />
+          <Card className="border-charcoal/10 bg-white">
             <CardContent className="pt-6">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-charcoal">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-klovers-yellow text-charcoal">
