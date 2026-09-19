@@ -23,7 +23,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
  *   travel   jeju-travel.jpg        -> korean-transportation-guide-seoul
  *   career   korean-business.jpg    -> korean-job-interview-phrases
  *   study    korean-study-desk.jpg  -> learn-korean-3-months-study-method
- *   culture  korean-music.jpg       -> learn-korean-through-kpop-bts-blackpink
+ *   culture  kdrama-vocabulary.jpg  -> study-korean-kdramas-method
  *
  * Each photograph is the hero_image of a PUBLISHED post, and each card goes
  * to that post in the reader's own language. There is no flip any more
@@ -37,6 +37,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * is the hero of a published ar/en pair, which is exactly the standard
  * CultureHeritageSection already meets. If you add a fifth card, check its
  * image the same way before you add it.
+ *
+ * AND CHECK WHAT THE PICTURE ACTUALLY SHOWS, not only where it came from.
+ * Culture was korean-music.jpg, the K-pop article's hero, which is a
+ * photograph of a traditional percussion troupe in hanbok - under a
+ * sentence promising K-Drama and K-Pop. Provenance was fine and the card
+ * still argued with itself.
  *
  * ON CONTRAST. The scrim and the white-text rules that governed the old
  * SVG scenes are gone with them: nothing is written over a photograph here.
@@ -74,6 +80,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * `href` is a pair because the blog is a pair: every published article has an
  * `-ar` twin, and sending an Arabic reader to the English post is worse than
  * sending them nowhere. Slugs verified against blog_posts on 20 Sep 2026.
+ *
+ * kdrama-vocabulary.jpg has TWO published Arabic rows - the duplicate-slug
+ * problem recorded in docs/ARTICLE_SEO_PLAN.md. `study-korean-kdramas-method-ar`
+ * is the original (published 2025-02-10, 10 views, longer body);
+ * `ar-study-korean-kdramas-method` is the 2026 duplicate with none. Link the
+ * original, and check this before trusting any slug that has a twin.
  *
  * `badge` is a literal class string - Tailwind's scanner only keeps what it
  * can see, so these must never be assembled from fragments.
@@ -114,12 +126,12 @@ const CARDS: Record<
     },
   },
   culture: {
-    image: "/assets/blog/korean-music.jpg",
+    image: "/assets/blog/kdrama-vocabulary.jpg",
     badge: "bg-peach",
     Icon: Music,
     href: {
-      ar: "/blog/learn-korean-through-kpop-bts-blackpink-ar",
-      en: "/blog/learn-korean-through-kpop-bts-blackpink",
+      ar: "/blog/study-korean-kdramas-method-ar",
+      en: "/blog/study-korean-kdramas-method",
     },
   },
 };
