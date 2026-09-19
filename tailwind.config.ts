@@ -22,6 +22,18 @@ export default {
   			ring: 'hsl(var(--ring))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
+  			/* Klovers brand palette — concept board, Sep 2026 */
+  			ivory: 'hsl(var(--ivory))',
+  			charcoal: 'hsl(var(--charcoal))',
+  			'klovers-yellow': 'hsl(var(--klovers-yellow))',
+  			mint: {
+  				DEFAULT: 'hsl(var(--mint))',
+  				foreground: 'hsl(var(--mint-foreground))'
+  			},
+  			peach: {
+  				DEFAULT: 'hsl(var(--peach))',
+  				foreground: 'hsl(var(--peach-foreground))'
+  			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
