@@ -18,7 +18,7 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * - The hero is LIGHT. It used to be a full-bleed video wall on #1a1a1a with
  *   white and yellow text over a cinematic scrim. The board's ground is Ivory,
  *   the text is Charcoal, and the photograph sits in a card instead of behind
- *   the words. Text over moving video is also the one place on the site where
+ *   the words. Text over moving video was also the one place on the site where
  *   contrast could not be guaranteed.
  * - The yellow is a SURFACE, never the text colour. The headline's second line
  *   used to be #ffff00 type on a dark photo; it is now charcoal type with a
@@ -30,7 +30,7 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  *
  * Unchanged on purpose: every logLeadEvent / trackAndOpenWhatsApp call and its
  * cta_label, the /free-trial destination, the Hangul-sheet link, and the live
- * trial_slots chips (see the nextDay comment below).
+ * trial_slots chips.
  */
 const HeroSection = () => {
   const { t, language } = useLanguage();
@@ -43,11 +43,11 @@ const HeroSection = () => {
   /**
    * The weekday of the next class, or null when there isn't one to name.
    *
-   * Null covers two cases on purpose - still loading, and genuinely nothing
-   * upcoming - because the honest rendering is the same for both: say
-   * nothing. This used to fall back to "soon"/"قريباً", and since the slots
-   * resolve a moment after first paint, "Next class: soon" above an empty pill
-   * row was the first thing every visitor read, on every load.
+   * Null covers two cases on purpose — still loading, and genuinely nothing
+   * upcoming — because the honest rendering is the same for both: say nothing.
+   * This used to fall back to "soon"/«قريباً», and since the slots resolve a
+   * moment after first paint, "Next class: soon" above an empty pill row was
+   * the first thing every visitor read, on every load.
    */
   const nextDay = useMemo(() => {
     const next = slots[0];
@@ -95,12 +95,12 @@ const HeroSection = () => {
    * Measured on production, 2026-09-08: 102 rows in `profiles`, 76 trial
    * bookings, 25 enrolments. "500+ Students Taught" was not a rounding of
    * anything. Re's call: the 200+ figure is real, but it counts every student
-   * she has taught across 13 years - not this platform. A number is only
+   * she has taught across 13 years — not this platform. A number is only
    * honest with the sentence that scopes it, so the LABEL carries "in 13
    * years" and is part of the claim, not decoration.
    *
    * The stars belong to the GOOGLE Business Profile, which shows 5.0 from 7
-   * reviews - checked signed-in as the owner. Facebook replaced star ratings
+   * reviews — checked signed-in as the owner. Facebook replaced star ratings
    * with Recommendations in 2018, so its "100% recommend" lives in the
    * testimonials summary instead and the two are never averaged.
    */
@@ -154,7 +154,7 @@ const HeroSection = () => {
       <div className="relative z-10 mx-auto max-w-6xl px-4">
         <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
 
-          {/* ── Left: the words ─────────────────────────────────── */}
+          {/* ── Left: the words ─────────────────────────────────────────── */}
           <div className="flex flex-col items-start gap-5 text-start">
 
             {/* Teacher chip — the one thing on this page no competitor has. */}
@@ -235,9 +235,7 @@ const HeroSection = () => {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
                 </span>
-                {isAr
-                  ? `الحصة التالية: ${nextDay.ar}`
-                  : `Next class: ${nextDay.en}`}
+                {isAr ? `الحصة التالية: ${nextDay.ar}` : `Next class: ${nextDay.en}`}
               </div>
             )}
 
@@ -265,7 +263,7 @@ const HeroSection = () => {
             </Link>
           </div>
 
-          {/* ── Right: the picture, in a card ───────────────────────── */}
+          {/* ── Right: the picture, in a card ────────────────────────────── */}
           <div className="relative">
             <div aria-hidden="true" className="absolute -inset-5 rounded-[2.5rem] bg-mint/45 blur-2xl" />
             <div className="relative rounded-[1.75rem] border border-white bg-white p-2 shadow-[0_28px_70px_-28px_rgba(46,46,46,0.45)]">
@@ -303,7 +301,7 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* ── The board's four promise cards ─────────────────────────── */}
+        {/* ── The board's four promise cards ───────────────────────────────── */}
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
           {cards.map(({ icon: Icon, tone, title, body }) => (
             <div
@@ -317,7 +315,7 @@ const HeroSection = () => {
           ))}
         </div>
 
-        {/* ── Proof strip — static, no counters ─────────────────────── */}
+        {/* ── Proof strip — static, no counters ────────────────────────────── */}
         <div className="mt-8 rounded-2xl border border-charcoal/10 bg-white px-4 py-5 sm:px-8">
           <div className="grid grid-cols-3 gap-4">
             {stats.map(({ icon: Icon, display, label }) => (
