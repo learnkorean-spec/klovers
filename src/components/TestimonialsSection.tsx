@@ -19,6 +19,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * metric for the same reason (100% recommend, from 20 reviews); the star
  * rating on this site belongs to the Google Business Profile and is shown in
  * the hero strip, where it is labelled as Google's.
+ *
+ * 2026-09-20: the section no longer borrows Facebook's blue, or the green
+ * ticks. Klovers owns five colours and this page uses only those; the
+ * Facebook icon is what names the platform, not the paint.
  */
 const reviews = [
   {
@@ -150,7 +154,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0 border border-black/10">
+          <div className="w-10 h-10 rounded-full bg-mint flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-charcoal/10">
             {initials}
           </div>
           <div className="min-w-0">
@@ -161,15 +165,15 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
             {/* What Facebook shows beside the name. Not a rating — see the
                 block comment at the top of this file. */}
             <div className="flex items-center gap-1.5 mt-0.5">
-              <ThumbsUp className="h-3.5 w-3.5 text-blue-600 shrink-0" aria-hidden="true" />
-              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+              <ThumbsUp className="h-3.5 w-3.5 text-foreground/70 shrink-0" aria-hidden="true" />
+              <span className="text-xs font-semibold text-foreground/80">
                 {isAr ? "توصية" : "Recommends"}
               </span>
               <span className="text-xs text-muted-foreground">· {review.date}</span>
             </div>
             <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
-              <span className="text-[10px] text-green-600 font-semibold">
+              <CheckCircle2 className="h-3 w-3 text-foreground/45 flex-shrink-0" />
+              <span className="text-[10px] text-muted-foreground font-semibold">
                 {isAr ? "طالبة موثّقة" : "Verified Student"}
               </span>
               {review.duration && (
@@ -178,7 +182,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
             </div>
           </div>
         </div>
-        <Facebook className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+        <Facebook className="h-4 w-4 text-foreground/40 flex-shrink-0 mt-0.5" />
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{review.text}</p>
     </div>
@@ -226,10 +230,10 @@ const TestimonialsSection = () => {
           href="https://www.facebook.com/kloversegy/reviews"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-1.5 mb-5 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          className="inline-flex items-center gap-2 bg-mint border border-charcoal/10 rounded-full px-4 py-1.5 mb-5 hover:bg-mint/80 transition-colors"
         >
-          <Facebook className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+          <Facebook className="h-4 w-4 text-charcoal" />
+          <span className="text-sm font-semibold text-charcoal">
             {t("testimonialsSection.badge")}
           </span>
         </a>
@@ -262,7 +266,7 @@ const TestimonialsSection = () => {
             platform's number moves. `ratingSuffix` is left in translations.ts,
             unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          <ThumbsUp className="h-5 w-5 text-blue-600 shrink-0" aria-hidden="true" />
+          <ThumbsUp className="h-5 w-5 text-foreground/70 shrink-0" aria-hidden="true" />
           <span className="text-lg font-bold text-foreground">
             {isAr ? "١٠٠٪ يوصون بها" : "100% recommend"}
           </span>

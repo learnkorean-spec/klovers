@@ -38,11 +38,8 @@ import { scenery } from "./whyLearnKoreanScenes";
  * you change whether its title is readable; check it.
  *
  * THE BACK stays theme-aware, so it cannot wear the artwork: a pale panel on
- * a dark page is a white blob. It takes its front's saturated hue as a rule
- * along the top edge and a mid-tone of it as the icon. Not the brand yellow -
- * in light mode that face is white, and yellow on white is the P0-3 fault
- * this plan already has open. The first version of this component shipped
- * exactly that bug.
+ * a dark page is a white blob. It carries one palette colour as a rule along
+ * its top edge, and the foreground token as the icon.
  */
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -69,23 +66,23 @@ const koreanWord: Record<string, string> = {
 };
 
 /**
- * Back-face colour only; the front's colour comes from its scene.
+ * Back-face rule colour — the concept board's palette, nothing else.
  *
- * Two values from one hue, because the back renders on both a white and a
- * near-black ground: `deep` for the top rule, decorative so its contrast
- * carries no meaning, and `accent` - a mid-tone - for the icon. `deep` on a
- * dark background is about 2:1, which is why the icon never uses it.
+ * This used to be two values from one saturated hue per card (#0A4DA6,
+ * #0B6E52, #B3122E, #7B1E6A and a slate fallback): four colours the brand
+ * does not own, on a page whose rule is five colours total. The hue was
+ * decorative - it told the reader nothing - so it is now simply one of the
+ * five, and the ICON takes the foreground token instead, which is the only
+ * thing that keeps it readable on both the ivory and the dark back panel.
  */
-type Tone = { deep: string; accent: string };
-
-const tones: Record<string, Tone> = {
-  study: { deep: "#0A4DA6", accent: "#2C74C9" },
-  career: { deep: "#0B6E52", accent: "#0E8F6F" },
-  travel: { deep: "#B3122E", accent: "#CE3350" },
-  culture: { deep: "#7B1E6A", accent: "#A63D96" },
+const tones: Record<string, string> = {
+  study: "#FFFF00",   // Klovers Yellow
+  career: "#CDEBD7",  // Mint
+  travel: "#FFB7A1",  // Peach
+  culture: "#2E2E2E", // Charcoal
 };
 
-const fallbackTone: Tone = { deep: "#334155", accent: "#64748B" };
+const fallbackTone = "#2E2E2E";
 
 /**
  * Photographs, keyed by icon. Empty: there are none in this repo, and putting
@@ -162,7 +159,7 @@ const WhyLearnKorean = () => {
                       className="absolute inset-0"
                       style={{
                         backgroundImage:
-                          "linear-gradient(to bottom, rgba(8,10,20,0.10) 0%, rgba(8,10,20,0.20) 38%, rgba(8,10,20,0.80) 100%)",
+                          "linear-gradient(to bottom, rgba(46,46,46,0.10) 0%, rgba(46,46,46,0.22) 38%, rgba(46,46,46,0.82) 100%)",
                       }}
                     />
 
@@ -171,7 +168,7 @@ const WhyLearnKorean = () => {
                     <div className="relative h-full flex flex-col justify-between p-4 pb-5 md:p-5 md:pb-6">
                       <span
                         aria-hidden="true"
-                        className="text-3xl md:text-[40px] font-extrabold leading-none select-none text-white/[0.34]"
+                        className="text-3xl md:text-[40px] font-extrabold leading-none select-none text-ivory/[0.34]"
                       >
                         {koreanWord[item.icon] || "한국"}
                       </span>
@@ -182,8 +179,8 @@ const WhyLearnKorean = () => {
                           {iconMap[item.icon] || <BookOpen className="h-6 w-6" />}
                         </span>
                         <h3
-                          className="font-bold text-white text-lg md:text-xl leading-snug"
-                          style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
+                          className="font-bold text-ivory text-lg md:text-xl leading-snug"
+                          style={{ textShadow: "0 1px 6px rgba(46,46,46,0.6)" }}
                         >
                           {item.title}
                         </h3>
@@ -196,10 +193,10 @@ const WhyLearnKorean = () => {
                     <div
                       aria-hidden="true"
                       className="absolute inset-x-0 top-0 h-1.5"
-                      style={{ backgroundColor: tone.deep }}
+                      style={{ backgroundColor: tone }}
                     />
                     <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-5">
-                      <span aria-hidden="true" style={{ color: tone.accent }}>
+                      <span aria-hidden="true" className="text-foreground">
                         {backIconMap[item.icon] || <BookOpen className="h-8 w-8" />}
                       </span>
                       <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">

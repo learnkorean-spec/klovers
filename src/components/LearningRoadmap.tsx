@@ -27,22 +27,24 @@ import { LEVEL_KEYS } from "@/constants/levels";
  * Per-level ornament. Keyed by canonical level key, so adding a level cannot
  * shift the palette, and a renamed badge string cannot silently blank it.
  *
- * The accents are the site's own yellow ladder — pale at Hangul, full neon at
- * Level 3, black at Level 6 — matching the levels grid. Written as literal
- * class strings, because Tailwind's scanner only keeps what it can see.
+ * The dots used to be five hand-mixed yellows (hsl 60 100% 85% → 60 80% 25%).
+ * They now climb the concept board's ramp — Mint, Yellow, Peach, Charcoal —
+ * which is the same ladder PlacementTestCTA draws, so the two agree. Written
+ * as literal class strings, because Tailwind's scanner only keeps what it can
+ * see.
  */
 const LEVEL_META: Record<string, { icon: React.ElementType; emoji: string; dot: string }> = {
-  hangul: { icon: BookOpen, emoji: "🇰🇷", dot: "bg-[hsl(60_100%_85%)]" },
-  l1: { icon: MessageCircle, emoji: "🌱", dot: "bg-[hsl(60_100%_75%)]" },
-  l2: { icon: Zap, emoji: "⚡", dot: "bg-[hsl(60_100%_62%)]" },
-  l3: { icon: Star, emoji: "🔥", dot: "bg-primary" },
-  l4: { icon: Flame, emoji: "💪", dot: "bg-[hsl(60_90%_38%)]" },
-  l5: { icon: Trophy, emoji: "🏅", dot: "bg-[hsl(60_80%_25%)]" },
-  l6: { icon: GraduationCap, emoji: "🏆", dot: "bg-foreground" },
+  hangul: { icon: BookOpen, emoji: "🇰🇷", dot: "bg-mint" },
+  l1: { icon: MessageCircle, emoji: "🌱", dot: "bg-mint" },
+  l2: { icon: Zap, emoji: "⚡", dot: "bg-klovers-yellow" },
+  l3: { icon: Star, emoji: "🔥", dot: "bg-klovers-yellow" },
+  l4: { icon: Flame, emoji: "💪", dot: "bg-peach" },
+  l5: { icon: Trophy, emoji: "🏅", dot: "bg-peach" },
+  l6: { icon: GraduationCap, emoji: "🏆", dot: "bg-charcoal" },
 };
 
 const getMeta = (key: string) =>
-  LEVEL_META[key] ?? { icon: Star, emoji: "⭐", dot: "bg-primary" };
+  LEVEL_META[key] ?? { icon: Star, emoji: "⭐", dot: "bg-mint" };
 
 /** The ladder only — the two special tracks are not steps on it. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
@@ -81,8 +83,8 @@ const LearningRoadmap = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary text-black text-xs font-semibold uppercase tracking-widest mb-4 border border-black/25 shadow-sm">
-            Your Journey
+          <span className="inline-block px-4 py-1.5 rounded-full bg-mint text-charcoal text-xs font-semibold uppercase tracking-widest mb-4 border border-charcoal/15 shadow-sm">
+            {isAr ? "رحلتك" : "Your Journey"}
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {t("roadmap", "title")}
@@ -122,7 +124,7 @@ const LearningRoadmap = () => {
                       : "border-border hover:border-primary/30 hover:shadow-md"
                   }`}
                 >
-                  {/* Subtle gradient background when active */}
+                  {/* Subtle wash when active */}
                   {isActive && (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 pointer-events-none" />
                   )}
@@ -135,7 +137,7 @@ const LearningRoadmap = () => {
                     }`}>
                       <span className="text-2xl">{meta.emoji}</span>
                       <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-background ${
-                        isActive ? "bg-primary text-black" : "bg-muted text-muted-foreground"
+                        isActive ? "bg-primary text-charcoal" : "bg-muted text-muted-foreground"
                       }`}>
                         {index + 1}
                       </span>
@@ -192,7 +194,7 @@ const LearningRoadmap = () => {
 
         {/* CTA */}
         <div className="text-center mt-12">
-          <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8">
+          <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8 rounded-full">
             <Link to="/placement-test">
               {t("roadmap", "cta")}
               <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} />

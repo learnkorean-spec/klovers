@@ -29,6 +29,9 @@ import OptimizedImage from "@/components/OptimizedImage";
  * Placement: after CommunityBand, before WhyLearnKorean — "Interest" band in
  * the page's existing AIDA ordering (see comments in Index.tsx), deepening
  * the "K-Culture" motivation card right before it's presented as a reason.
+ *
+ * 2026-09-20: the ground was #141414 and the scrims pure black. Neither is in
+ * the brand's five colours, so both are Charcoal now and the text is Ivory.
  */
 
 interface Tile {
@@ -157,7 +160,7 @@ const CultureHeritageSection = () => {
   const isAr = language === "ar";
 
   return (
-    <section className="py-20 md:py-28 bg-[#141414] relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-charcoal relative overflow-hidden">
       {/* Faint decorative Korean text, echoing the hero's backdrop treatment
           so this section reads as part of the same visual system. */}
       <span
@@ -170,14 +173,14 @@ const CultureHeritageSection = () => {
 
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-12 md:mb-16 space-y-4 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 px-4 py-2 rounded-full text-sm font-medium text-white">
-            <Landmark className="h-4 w-4 text-primary" />
+          <div className="inline-flex items-center gap-2 bg-ivory/10 border border-ivory/15 px-4 py-2 rounded-full text-sm font-medium text-ivory">
+            <Landmark className="h-4 w-4 text-klovers-yellow" />
             {isAr ? "ثقافة وتاريخ" : "Culture & History"}
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-ivory tracking-tight leading-tight">
             {isAr ? "لغة تفتح لك ثقافة كاملة" : "A Language Opens a Culture"}
           </h2>
-          <p className="text-white/70 text-base md:text-lg leading-relaxed">
+          <p className="text-ivory/70 text-base md:text-lg leading-relaxed">
             {isAr
               ? "الكورية مش مجرد قواعد ومفردات، هي تاريخ ممتد وتقاليد حية وثقافة بيحبها ملايين حول العالم. كل درس هنا بيوصّلك بحاجة حقيقية."
               : "Korean isn't just grammar and vocabulary — it's centuries of history, living traditions, and a culture millions of people are falling for. Every lesson here touches something real."}
@@ -196,7 +199,7 @@ const CultureHeritageSection = () => {
               <Link
                 key={tile.slugEn}
                 to={`/blog/${slug}`}
-                className="group relative rounded-2xl overflow-hidden shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#141414]"
+                className="group relative rounded-2xl overflow-hidden shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
                 onClick={() => { try { logLeadEvent({ source_type: "culture_section", cta_label: `culture_${tile.slugEn}` }); } catch {} }}
               >
                 <div className="relative w-full aspect-[3/4] overflow-hidden">
@@ -215,17 +218,17 @@ const CultureHeritageSection = () => {
                     className="absolute inset-0"
                     style={{
                       backgroundImage:
-                        "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.92) 100%)",
+                        "linear-gradient(to bottom, rgba(46,46,46,0.05) 0%, rgba(46,46,46,0.30) 45%, rgba(46,46,46,0.94) 100%)",
                     }}
                   />
                   <div className="absolute inset-0 flex flex-col justify-end p-3 md:p-4">
-                    <span className="inline-block w-fit mb-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wide text-primary bg-black/40 rounded-full px-2 py-0.5">
+                    <span className="inline-block w-fit mb-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wide text-klovers-yellow bg-charcoal/60 rounded-full px-2 py-0.5">
                       {kicker}
                     </span>
-                    <h3 className="text-white font-bold text-sm md:text-base leading-snug mb-1">
+                    <h3 className="text-ivory font-bold text-sm md:text-base leading-snug mb-1">
                       {title}
                     </h3>
-                    <p className="hidden md:block text-white/75 text-xs leading-relaxed line-clamp-2">
+                    <p className="hidden md:block text-ivory/75 text-xs leading-relaxed line-clamp-2">
                       {blurb}
                     </p>
                   </div>
@@ -238,10 +241,10 @@ const CultureHeritageSection = () => {
         <div className="text-center mt-10 md:mt-12">
           <Link
             to="/blog"
-            className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold underline underline-offset-4 decoration-white/30 hover:decoration-white/60 transition-colors"
+            className="inline-flex items-center gap-2 text-ivory/80 hover:text-ivory text-sm font-semibold underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60 transition-colors"
           >
             {isAr ? "اكتشف المزيد عن ثقافة كوريا" : "Discover more of Korean culture"}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </div>
       </div>

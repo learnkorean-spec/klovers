@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
@@ -14,6 +14,7 @@ import HomeExitNudge from "@/components/HomeExitNudge";
 
 // Lazy-load below-fold sections for faster initial paint
 const CultureHeritageSection = lazy(() => import("@/components/CultureHeritageSection"));
+const KoreaTimeSection = lazy(() => import("@/components/KoreaTimeSection"));
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
@@ -28,28 +29,32 @@ const CommunityBand = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   return (
-    <section className="py-10 bg-gradient-to-r from-amber-50 to-yellow-50 border-y border-amber-200/60">
+    <section className="py-10 bg-mint/60 border-y border-charcoal/10">
       <div className="container mx-auto px-4">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-start">
           <div className="flex items-center gap-3">
             <span className="text-3xl" aria-hidden="true">🌍</span>
             <div>
-              <p className="font-extrabold text-foreground text-lg leading-tight">
+              <p className="font-extrabold text-charcoal text-lg leading-tight">
                 {isAr ? "انضم لأكثر من ٢٠٠٠+ متعلم" : "Join 2,000+ Korean Learners"}
               </p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-charcoal/65 text-sm">
                 {isAr ? "في مجتمعنا على تيليغرام وفيسبوك" : "in our Telegram & Facebook community"}
               </p>
             </div>
           </div>
           <div className="flex gap-3">
             {/* These two stay on logLeadEvent: clicking through to the community
-                is something a person chose to do, which is what a Lead is. */}
+                is something a person chose to do, which is what a Lead is.
+
+                They used to wear Telegram's blue and Facebook's blue. Neither
+                is a Klovers colour, and the brand owns exactly five; the icon
+                in each button already names its platform. */}
             <a
               href="https://t.me/+Fu5T7d4wLMsxNDY9"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#229ED9] hover:bg-[#1a8fc0] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-charcoal hover:bg-charcoal/90 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
               onClick={() => { try { logLeadEvent({ source_type: "community", cta_label: "community_band_telegram" }); } catch {} }}
             >
               <span aria-hidden="true">✈️</span>
@@ -59,7 +64,7 @@ const CommunityBand = () => {
               href="https://www.facebook.com/kloversegy"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#1877F2] hover:bg-[#1565d8] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-charcoal hover:bg-charcoal/90 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
               onClick={() => { try { logLeadEvent({ source_type: "community", cta_label: "community_band_facebook" }); } catch {} }}
             >
               <span aria-hidden="true">📘</span>
@@ -255,6 +260,12 @@ const Index = () => {
             placed right before WhyLearnKorean's "K-Culture" reason card */}
         <Suspense fallback={<SectionFallback />}>
           <CultureHeritageSection />
+        </Suspense>
+        {/* Interest — the concept board's "journey through Korea's time":
+            four eras, a timeline, five places. Sits with the culture block
+            because it is the same hook seen from a different angle. */}
+        <Suspense fallback={<SectionFallback />}>
+          <KoreaTimeSection />
         </Suspense>
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
