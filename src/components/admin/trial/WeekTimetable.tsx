@@ -20,12 +20,22 @@
  * next to the hour that class occupies. Both now read from the same rows as the
  * grid, so a link shown here cannot disagree with the link a student was sent.
  *
+ * WHY A TRIAL CARRIES A DATE AND A COHORT DOES NOT
+ * ------------------------------------------------
+ * A cohort repeats every week, so a weekday is the whole truth about it. Since
+ * 19 Sep 2026 trials run ONCE A MONTH, on the first weekend — so drawing them
+ * by weekday alone told the reader there were four free classes every week.
+ * Each trial now carries its own `trial_date`, shown on the block and dimmed
+ * with "not this week" on any week it does not fall in. It is still drawn,
+ * because the grid exists to show what an hour would collide with and that hour
+ * is still spoken for in the pattern.
+ *
  * NOTHING HERE IS HARDCODED
  * -------------------------
  * Every block is read from the row that governs it, so this cannot drift from
  * what the booking guards enforce:
  *
- *   trial_slots                 the free 30-minute sessions, and their rooms
+ *   trial_slots                 the free 30-minute sessions, their dates, rooms
  *   schedule_packages           the paid cohorts (inactive ones shown dashed)
  *   pkg_groups                  a cohort's LANGUAGE and its room
  *   teacher_availability_rules  kind='blocked' — the teacher's private lessons
@@ -63,6 +73,13 @@ interface Block {
   /** The room this class is held in. Null on a private lesson, and on any
    *  class that has not been given one — which is the thing worth seeing. */
   link?: string | null;
+  /**
+   * Trials only. They run once a month, on the first weekend, so the real date
+   * travels with the block; a trial outside the week being viewed is drawn
+   * faint and labelled rather than silently repeated every week.
+   */
+  date?: string | null;
+  offWeek?: boolean;
 }
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -142,6 +159,11 @@ const label = (min: number) => {
   return m ? `${h12}:${String(m).padStart(2, "0")}${ampm}` : `${h12}${ampm}`;
 };
 
+/** "2 Oct" — a date short enough to sit inside a 28px block. */
+const dayMonth = (iso: string) =>
+  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })
+    .format(new Date(iso + "T12:00:00Z"));
+
 /** meet.google.com/abc-defg-hij — the part worth reading at a glance. */
 const roomCode = (url: string) => url.replace(/^https?:\/\//, "").replace(/^meet\.google\.com\//, "");
 
@@ -151,6 +173,8 @@ interface RawRow {
   id: string; weekday: number; start: string; minutes: number;
   tz: string; kind: Kind; title: string; sub?: string;
   link?: string | null;
+  /** Trials carry their real date; cohorts and blocked rules are weekly. */
+  date?: string | null;
   /**
    * Only `teacher_availability_rules` carries these. A rule is drawn on the
    * week being viewed only while it is in effect there — see `inEffect`.
@@ -187,8 +211,8 @@ function useScheduleRows() {
     queryFn: async () => {
       const [slots, packages, groups, rules] = await Promise.all([
         supabase.from("trial_slots")
-          .select("id, day_of_week, start_time, duration_min, timezone, class_language, capacity, meeting_url")
-          .eq("is_active", true),
+          .select("id, day_of_week, start_time, duration_min, timezone, class_language, capacity, meeting_url, trial_date")
+          .eq("is_active", true).eq("lifecycle", "active"),
         supabase.from("schedule_packages")
           .select("id, day_of_week, start_time, duration_min, timezone, level, capacity, is_active")
           .eq("course_type", "group"),
@@ -226,6 +250,7 @@ function useScheduleRows() {
           title: "Trial",
           sub: `${s.class_language === "arabic" ? "Arabic" : "English"} · ${s.capacity ?? "?"} seats`,
           link: (s.meeting_url as string | null) ?? null,
+          date: (s.trial_date as string | null) ?? null,
         });
       }
 
@@ -323,8 +348,13 @@ const WeekTimetable = () => {
       // Dated out of the week being viewed: not drawn here, still in the table.
       if (!inEffect(r, date)) return [];
       const at = readIn(instantOf(date, r.start, r.tz), tz);
+      // A trial belongs to a date, not to every week. Outside the week being
+      // viewed it is still drawn — the hour is still spoken for, and the grid
+      // exists to show collisions — but faint, and labelled with its real day.
+      const offWeek = Boolean(r.date) && (r.date! < anchor || r.date! > addDays(anchor, 6));
       return [{
         id: r.id, kind: r.kind, title: r.title, sub: r.sub, link: r.link ?? null,
+        date: r.date ?? null, offWeek,
         weekday: at.weekday,
         start: at.minutes,
         // Clip anything running past midnight so it cannot draw outside the grid.
@@ -394,8 +424,13 @@ const WeekTimetable = () => {
         <h2 className="text-lg font-bold tracking-tight">The teaching week</h2>
         <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
           Trials, Hangul cohorts, blocked hours and the room each class is held in, read live
-          from the rows that govern them. Klovers classes are anchored to Cairo; private lessons
-          are not — so the two sets move apart when Egypt leaves summer time on 30&nbsp;October.
+          from the rows that govern them. Cohorts repeat every week;{" "}
+          <strong className="font-semibold text-foreground">
+            trials run once a month, on the first weekend
+          </strong>
+          , so a trial carries its own date and is drawn faint on any week it does not fall in.
+          Klovers classes are anchored to Cairo; private lessons are not — so the two sets move
+          apart when Egypt leaves summer time on 30&nbsp;October.
         </p>
       </div>
 
@@ -426,6 +461,9 @@ const WeekTimetable = () => {
           </span>
         ))}
         <span className="flex items-center gap-2"><Link2 className="h-3 w-3 shrink-0" />Has a room</span>
+        <span className="flex items-center gap-2 opacity-50">
+          <span className="h-3 w-3 shrink-0 rounded-sm bg-blue-600" />Trial in another week
+        </span>
       </div>
 
       <div className="overflow-x-auto rounded-xl border bg-card">
@@ -467,7 +505,9 @@ const WeekTimetable = () => {
                   return (
                     <div
                       key={b.id}
-                      className={`absolute overflow-hidden rounded-md px-1.5 py-1 text-[11px] leading-tight ${TONE[b.kind]}`}
+                      className={`absolute overflow-hidden rounded-md px-1.5 py-1 text-[11px] leading-tight ${TONE[b.kind]}${
+                        b.offWeek ? " opacity-50" : ""
+                      }`}
                       style={{
                         top: (b.start - bounds.lo) * PX,
                         height: Math.max(b.minutes * PX, 28),
@@ -476,6 +516,7 @@ const WeekTimetable = () => {
                       }}
                       title={
                         `${b.title}${b.sub ? ` — ${b.sub}` : ""} · ${label(b.start)}–${label(b.start + b.minutes)}` +
+                        (b.date ? ` · ${dayMonth(b.date)}${b.offWeek ? " (not this week)" : ""}` : "") +
                         (b.kind === "blocked" ? "" : b.link ? ` · ${roomCode(b.link)}` : " · no room yet")
                       }
                     >
@@ -500,6 +541,11 @@ const WeekTimetable = () => {
                         <span className="truncate">{b.title}</span>
                       </span>
                       {b.sub && <span className="block opacity-80">{b.sub}</span>}
+                      {b.date && (
+                        <span className="block font-semibold opacity-90">
+                          {dayMonth(b.date)}{b.offWeek ? " · not this week" : ""}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -537,6 +583,7 @@ const WeekTimetable = () => {
                   <p className="text-xs tabular-nums text-muted-foreground">
                     {SHORT[r.weekday]} {label(r.start)}–{label(r.start + r.minutes)} ·{" "}
                     {view === "cairo" ? "Cairo" : "Thailand"}
+                    {r.date && ` · ${dayMonth(r.date)}`}
                   </p>
                 </div>
                 {r.link ? (
