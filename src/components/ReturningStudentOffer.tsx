@@ -19,13 +19,50 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { RETURNING_STUDENT_CODE } from "@/lib/siteConfig";
 
 /**
- * 2026-09-20: this section was painted in Tailwind `green-*` — ground,
- * blobs, badge, hero card, referral tiles, tick marks. A different green
- * from the brand's, one screen away from the brand's. It is Mint now, and
- * the `border-black/25` rings around its yellow circles are Charcoal.
+ * 2026-09-20 (a): this section was painted in Tailwind `green-*` - ground,
+ * blobs, badge, hero card, referral tiles, tick marks. A different green from
+ * the brand's, one screen away from the brand's. It is Mint now.
+ *
+ * 2026-09-20 (b): it asked people to invite a friend and showed them three
+ * icons. It shows three friends now.
+ *
+ * WHAT MOVED, AND WHY IT MATTERS MORE THAN THE PAINT
+ *
+ * The promo code used to sit in the second column, beneath the offer list,
+ * two scrolls below the sentence explaining what it is for. A returning
+ * student comes to this section for that code. It is now inside the card
+ * that sells it, on a dashed outline, next to the photograph.
+ *
+ * The three reward tiles moved from a row under the heading into the card's
+ * text column, so the card reads as one argument - here is the offer, here
+ * are the three ways it stacks, here is the code - instead of a headline
+ * followed by a separate grid.
+ *
+ * ON THE PHOTOGRAPHS. Both are hero_images of published ar/en pairs, the
+ * standard CultureHeritageSection set, and both were opened and LOOKED AT
+ * before use: #532 shipped two properly-published photos that turned out to
+ * have AI-generated gibberish Hangul printed inside them. korean-slang.jpg
+ * has the same fault (a neon sign reading nothing) and is why the obvious
+ * choice for this section is not the one here.
+ *
+ * They are decoration, not navigation: no href, no hover lift, empty alt.
+ * The cards in WhyLearnKorean wear link affordances because they ARE links;
+ * these must not.
  */
+
 const STEP_ICONS = [ClipboardCheck, Route, GraduationCap];
-const REFERRAL_ICONS = [UserPlus, Share2, Shield];
+
+/** Reward tiles: icon plus its tint. Literal class strings for the scanner. */
+const REFERRAL_META = [
+  { Icon: UserPlus, tint: "bg-klovers-yellow" },
+  { Icon: Share2, tint: "bg-mint" },
+  { Icon: Shield, tint: "bg-peach" },
+];
+
+/** Three friends in Seoul — the referral offer, in a picture. */
+const FRIENDS_IMAGE = "/assets/blog/korean-streetwear.jpg";
+/** Two people greeting — heads the welcome-back panel. */
+const WELCOME_IMAGE = "/assets/blog/korean-honorifics.jpg";
 
 const ReturningStudentOffer = () => {
   const { t, tArray, language } = useLanguage();
@@ -67,117 +104,106 @@ const ReturningStudentOffer = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-16 md:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-mint/40 to-mint/70"
+      className="relative overflow-hidden bg-background px-4 py-16 md:py-24"
     >
       {/* Decorative blobs */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden>
-        <div className="absolute -top-20 -start-20 w-72 h-72 bg-mint-strong/25 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -end-20 w-64 h-64 bg-klovers-yellow/15 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -start-20 -top-20 h-72 w-72 rounded-full bg-mint/50 blur-3xl" />
+        <div className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-klovers-yellow/15 blur-3xl" />
       </div>
 
-      <div className="container mx-auto max-w-6xl relative z-10">
+      <div className="container relative z-10 mx-auto max-w-6xl">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="mb-12 text-center">
           <Badge
             variant="outline"
-            className={`mb-4 border-charcoal/20 text-charcoal bg-white transition-all duration-700 ${
-              visible ? "opacity-100 scale-100" : "opacity-0 scale-90"
+            className={`mb-4 border-charcoal/20 bg-white text-charcoal transition-all duration-700 ${
+              visible ? "scale-100 opacity-100" : "scale-90 opacity-0"
             }`}
           >
-            <GraduationCap className="h-3.5 w-3.5 me-1.5" />
+            <GraduationCap className="me-1.5 h-3.5 w-3.5" />
             {t("returningStudents.section.badge")}
           </Badge>
           <h2
-            className={`text-3xl md:text-4xl lg:text-5xl font-extrabold text-charcoal mb-4 transition-all duration-700 delay-100 ${
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            className={`text-3xl font-extrabold text-charcoal transition-all delay-100 duration-700 md:text-4xl lg:text-5xl ${
+              visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
             }`}
           >
             {t("returningStudents.section.title")}
           </h2>
+          {/* Yellow as a mark under the heading, never as the heading. */}
+          <svg aria-hidden="true" viewBox="0 0 240 18" fill="none" className="mx-auto mb-4 mt-2 h-4 w-48 text-klovers-yellow md:w-60">
+            <path d="M7 12C60 4 134 3 197 8c14 1 27 3 36 2" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
+          </svg>
           <p
-            className={`text-charcoal/70 max-w-2xl mx-auto text-base md:text-lg transition-all duration-700 delay-200 ${
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            className={`mx-auto max-w-2xl text-base text-charcoal/70 transition-all delay-200 duration-700 md:text-lg ${
+              visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
             }`}
           >
             {t("returningStudents.section.subtitle")}
           </p>
         </div>
 
-        {/* HERO: Referral program — primary focus */}
+        {/* HERO: the referral offer, with a face and the code in one card. */}
         <div
-          className={`mb-12 transition-all duration-700 delay-200 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          className={`mb-12 overflow-hidden rounded-3xl bg-charcoal shadow-lg transition-all delay-200 duration-700 ${
+            visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <Card className="border-2 border-charcoal/10 bg-white shadow-lg">
-            <CardContent className="pt-8 pb-8">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground border border-charcoal/25 mb-4">
-                  <Share2 className="h-7 w-7" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-charcoal mb-2">{t("returningStudents.section.referralTitle")}</h3>
-                <p className="text-charcoal/65 max-w-lg mx-auto">{t("returningStudents.section.referralSubtitle")}</p>
-              </div>
-              <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2">
+            <img
+              src={FRIENDS_IMAGE}
+              alt=""
+              aria-hidden="true"
+              width={800}
+              height={600}
+              loading="lazy"
+              decoding="async"
+              className="h-56 w-full object-cover sm:h-72 md:h-full"
+            />
+
+            <div className="p-6 md:p-8">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-klovers-yellow text-charcoal">
+                <Share2 className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-2xl font-extrabold text-ivory md:text-3xl">
+                {t("returningStudents.section.referralTitle")}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-ivory/70 md:text-base">
+                {t("returningStudents.section.referralSubtitle")}
+              </p>
+
+              <ul className="mt-6 space-y-3">
                 {referralItems.map((item, i) => {
-                  const Icon = REFERRAL_ICONS[i];
+                  const meta = REFERRAL_META[i] ?? REFERRAL_META[0];
+                  const { Icon } = meta;
                   return (
-                    <div key={i} className="text-center p-4 rounded-xl bg-mint/40 border border-charcoal/10">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-charcoal/25 mb-3">
-                        <Icon className="h-5 w-5" />
+                    <li key={i} className="flex items-start gap-3">
+                      <span className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${meta.tint}`}>
+                        <Icon className="h-4.5 w-4.5 text-charcoal" aria-hidden="true" />
                       </span>
-                      <p className="font-bold text-sm text-charcoal mb-1">{item.label}</p>
-                      <p className="text-xs text-charcoal/65">{item.description}</p>
-                    </div>
+                      <span>
+                        <span className="block text-sm font-bold text-ivory">{item.label}</span>
+                        <span className="block text-xs leading-relaxed text-ivory/60">{item.description}</span>
+                      </span>
+                    </li>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </ul>
 
-        {/* Two-column grid: Offer + Steps */}
-        <div
-          className={`grid md:grid-cols-2 gap-8 mb-12 transition-all duration-700 delay-300 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          {/* Left: Offer details + Promo code */}
-          <div className="space-y-6">
-            <Card className="border-charcoal/10 bg-white">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-bold text-charcoal mb-4 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground border border-charcoal/25">
-                    <GraduationCap className="h-4 w-4" />
-                  </span>
-                  {t("returningStudents.section.offerTitle")}
-                </h3>
-                <ul className="space-y-3">
-                  {offerItems.map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-charcoal/45 shrink-0 mt-0.5" />
-                      <span className="text-sm text-charcoal/70">{item as string}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Promo code block */}
-            <Card className="border-2 border-dashed border-charcoal/25 bg-white">
-              <CardContent className="pt-6 text-center">
-                <p className="text-sm text-charcoal/65 mb-3 font-medium">
+              {/* The code, in the card that sells it. */}
+              <div className="mt-6 rounded-2xl border-2 border-dashed border-ivory/25 p-4">
+                <p className="text-xs font-medium text-ivory/60">
                   {t("returningStudents.section.promoLabel")}
                 </p>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="font-mono text-xl sm:text-2xl font-bold text-charcoal tracking-wider select-all">
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <span className="select-all font-mono text-lg font-bold tracking-wider text-klovers-yellow sm:text-xl">
                     {RETURNING_STUDENT_CODE}
                   </span>
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={handleCopy}
-                    className="gap-1.5 border-charcoal/20 text-charcoal hover:bg-mint"
+                    className="gap-1.5 rounded-full"
                   >
                     {copied ? (
                       <>
@@ -192,68 +218,102 @@ const ReturningStudentOffer = () => {
                     )}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Right: Steps */}
+        {/* Offer + Steps */}
+        <div
+          className={`mb-12 grid gap-8 transition-all delay-300 duration-700 md:grid-cols-2 ${
+            visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+          }`}
+        >
+          <Card className="overflow-hidden border-charcoal/10 bg-white">
+            <img
+              src={WELCOME_IMAGE}
+              alt=""
+              aria-hidden="true"
+              width={800}
+              height={300}
+              loading="lazy"
+              decoding="async"
+              className="h-32 w-full object-cover"
+            />
+            <CardContent className="pt-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-charcoal">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-klovers-yellow text-charcoal">
+                  <GraduationCap className="h-4 w-4" />
+                </span>
+                {t("returningStudents.section.offerTitle")}
+              </h3>
+              <ul className="space-y-3">
+                {offerItems.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-charcoal/45" />
+                    <span className="text-sm text-charcoal/70">{item as string}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Steps — same round node and dashed rail as the roadmap. */}
           <div>
-            <h3 className="text-lg font-bold text-charcoal mb-4">{t("returningStudents.section.stepsTitle")}</h3>
-            <div className="space-y-4">
+            <h3 className="mb-5 text-lg font-bold text-charcoal">{t("returningStudents.section.stepsTitle")}</h3>
+            <ol className="space-y-1">
               {steps.map((step, i) => {
-                const Icon = STEP_ICONS[i];
+                const Icon = STEP_ICONS[i] ?? ClipboardCheck;
+                const isLast = i === steps.length - 1;
                 return (
-                  <div key={i} className="flex items-start gap-4">
-                    <div className="flex flex-col items-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-charcoal/25 font-bold text-sm">
+                  <li key={i} className="flex gap-4">
+                    <div className="relative flex w-11 shrink-0 flex-col items-center">
+                      {!isLast && (
+                        <span aria-hidden="true" className="absolute bottom-0 top-11 w-0 border-s-2 border-dashed border-mint-strong/40" />
+                      )}
+                      <span className="relative z-10 grid h-11 w-11 place-items-center rounded-full bg-klovers-yellow text-sm font-bold text-charcoal ring-4 ring-background">
                         {i + 1}
                       </span>
-                      {i < steps.length - 1 && (
-                        <div className="w-0.5 h-6 bg-charcoal/15 mt-1" />
-                      )}
                     </div>
-                    <div className="pt-1.5">
-                      <p className="font-semibold text-sm text-charcoal flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-charcoal" />
+                    <div className="pb-6 pt-2">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-charcoal">
+                        <Icon className="h-4 w-4 text-charcoal" aria-hidden="true" />
                         {step.title}
                       </p>
-                      <p className="text-sm text-charcoal/65 mt-0.5">{step.description}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{step.description}</p>
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           </div>
         </div>
 
         {/* Mini FAQ */}
         {faqs.length > 0 && (
           <div
-            className={`max-w-3xl mx-auto mb-12 transition-all duration-700 delay-[400ms] ${
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            className={`mx-auto mb-12 max-w-3xl transition-all delay-[400ms] duration-700 ${
+              visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
             }`}
           >
-            <h3 className="text-lg font-bold text-charcoal text-center mb-4">{t("returningStudents.section.faqTitle")}</h3>
+            <h3 className="mb-4 text-center text-lg font-bold text-charcoal">{t("returningStudents.section.faqTitle")}</h3>
             <div className="space-y-2">
               {faqs.map((faq, i) => (
-                <div
-                  key={i}
-                  className="border border-charcoal/10 bg-white rounded-lg overflow-hidden"
-                >
+                <div key={i} className="overflow-hidden rounded-2xl border border-charcoal/10 bg-white">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-start text-sm font-medium text-charcoal hover:bg-mint/40 transition-colors"
+                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-charcoal transition-colors hover:bg-mint/40"
                   >
                     {faq.question}
                     <ChevronDown
-                      className={`h-4 w-4 text-charcoal/50 shrink-0 ms-2 transition-transform duration-200 ${
+                      className={`ms-2 h-4 w-4 shrink-0 text-charcoal/50 transition-transform duration-200 ${
                         openFaq === i ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                   <div
-                    className={`px-4 text-sm text-charcoal/65 overflow-hidden transition-all duration-200 ${
-                      openFaq === i ? "py-3 border-t border-charcoal/10" : "max-h-0 py-0"
+                    className={`overflow-hidden px-4 text-sm text-charcoal/65 transition-all duration-200 ${
+                      openFaq === i ? "border-t border-charcoal/10 py-3" : "max-h-0 py-0"
                     }`}
                   >
                     {faq.answer}
@@ -266,11 +326,11 @@ const ReturningStudentOffer = () => {
 
         {/* CTA */}
         <div
-          className={`text-center transition-all duration-700 delay-500 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          className={`text-center transition-all delay-500 duration-700 ${
+            visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           }`}
         >
-          <Button size="lg" asChild className="gap-2 h-13 px-8 text-base font-bold rounded-full shadow-lg">
+          <Button size="lg" asChild className="h-13 gap-2 rounded-full px-8 text-base font-bold shadow-lg">
             <Link to="/placement-test">
               {t("returningStudents.section.cta")}
               <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} />
