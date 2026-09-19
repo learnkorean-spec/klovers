@@ -171,28 +171,20 @@ export default {
   			/*
   			 * Handwritten accent — one line at a time, never a paragraph.
   			 *
-  			 * THREE FACES, ONE STACK. Caveat carries no Arabic and no Hangul,
-  			 * so until 20 Sep 2026 every handwritten line on this site fell
-  			 * back to Cairo the moment an Arabic reader loaded it - the hero's
-  			 * script line included - and rendered as an ordinary sentence.
+  			 * LATIN ONLY, AND THAT IS A KNOWN GAP. Caveat carries no Arabic and
+  			 * no Hangul, so every handwritten line on this site renders in Cairo
+  			 * for an Arabic reader - the hero's script line included - and looks
+  			 * like an ordinary sentence rather than a hand.
   			 *
-  			 * Font fallback is per CHARACTER, not per element, so listing the
-  			 * three scripts' hands in one stack resolves each one correctly
-  			 * with no per-language branching in any component:
-  			 *
-  			 *   Caveat            Latin
-  			 *   Nanum Pen Script  Hangul
-  			 *   Aref Ruqaa        Arabic - ruq'ah is the everyday Arabic hand,
-  			 *                     which is what Caveat is for Latin
-  			 *
-  			 * Order matters only where two faces cover the same character.
-  			 * They do not overlap here, so this order is also the priority for
-  			 * punctuation and digits: Latin first.
+  			 * Aref Ruqaa was added for this on 20 Sep 2026 and removed the same
+  			 * day: it is a calligraphic naskh and reads as a thin formal serif
+  			 * at these sizes, not as handwriting. Closing the gap needs a face
+  			 * that genuinely looks handwritten in Arabic at ~20px. Until then,
+  			 * do not add handwritten decoration that the Arabic side cannot
+  			 * render - it is the majority script on this site.
   			 */
   			script: [
   				'Caveat',
-  				'Nanum Pen Script',
-  				'Aref Ruqaa',
   				'Segoe Script',
   				'Brush Script MT',
   				'cursive'
