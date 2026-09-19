@@ -15,9 +15,19 @@
  * section links there rather than growing its own buttons: a weekly review
  * that also mutates is a review nobody can skim safely.
  *
+ * ONE SECTION IS COLLAPSED, AND ONLY ONE
+ * --------------------------------------
+ * The admin audit log is the most granular thing here — raw column names and
+ * raw values, one row per field change. Printed in full it was taller than
+ * every other section put together and pushed them off the screen. It now
+ * shows a count and a badge per action type, and the rows themselves on
+ * request. Everything else stays open: a weekly review that hides its own
+ * findings is not a review.
+ *
  * A route of its own, not a `?tab=` deep link, for the same reason Today and
  * The week are: it is not a screen inside AdminDashboard.tsx.
  */
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +35,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import AdminShell from "@/components/admin/AdminShell";
 import { useWeekReview, WEEK_DAYS } from "@/hooks/admin/useWeekReview";
-import { UserPlus, CalendarCheck, Wallet, GraduationCap, ShieldAlert, ArrowRight } from "lucide-react";
+import {
+  UserPlus, CalendarCheck, Wallet, GraduationCap, ShieldAlert, ArrowRight, ChevronDown,
+} from "lucide-react";
 
 /** "13 Sep, 20:38" in whatever zone the person reading this is actually in. */
 function when(iso: string): string {
@@ -98,6 +110,7 @@ const Empty = ({ children }: { children: React.ReactNode }) => (
 
 const AdminActivity = () => {
   const { data, isLoading, error } = useWeekReview();
+  const [showActions, setShowActions] = useState(false);
 
   const totalBooked = (data?.sessions ?? []).reduce((n, s) => n + s.booked, 0);
   const totalAsked = (data?.sessions ?? []).reduce((n, s) => n + s.asked, 0);
@@ -105,6 +118,27 @@ const AdminActivity = () => {
   const totalEmails = (data?.emails ?? []).reduce((n, e) => n + e.count, 0);
   const problems = (data?.warnings ?? []).filter(
     w => w.type === "self_verification" || w.type === "cron_health" || w.type === "pgnet_failure",
+  );
+
+  /**
+   * The audit log, as a shape you can read in one second: what KIND of thing
+   * happened and how often. Six rows of "enrollment deleted · approval_status"
+   * say one thing — six enrolments were deleted — and that sentence is the
+   * summary. The rows themselves answer "which ones", which is a different
+   * question and gets a click.
+   */
+  const actionSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const a of data?.adminActions ?? []) {
+      const key = a.action.replace(/_/g, " ");
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [data]);
+
+  const actorCount = useMemo(
+    () => new Set((data?.adminActions ?? []).map(a => a.by)).size,
+    [data],
   );
 
   return (
@@ -327,34 +361,68 @@ const AdminActivity = () => {
                 </div>
               </Section>
 
-              {/* ADMIN ACTIONS */}
+              {/* ADMIN ACTIONS — a count first, the rows on request. */}
               <Section
                 title="WHAT WAS DONE IN THE ADMIN"
-                note="Approvals, rejections, deletions and status changes — with who did each one. 'The system' means a scheduled job or a trigger, not a person."
+                note="Approvals, rejections, deletions and status changes. 'The system' means a scheduled job or a trigger, not a person."
               >
                 {data.adminActions.length === 0 ? (
                   <Empty>Nothing was changed in the admin this week.</Empty>
                 ) : (
                   <Card>
-                    <CardContent className="p-0 divide-y">
-                      {data.adminActions.map(a => (
-                        <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                          <div className="min-w-0">
-                            <p className="font-medium">
-                              {a.action.replace(/_/g, " ")}
-                              {a.field ? <span className="text-muted-foreground"> · {a.field}</span> : null}
-                            </p>
-                            {(a.old_value || a.new_value) && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {a.old_value || "—"} → {a.new_value || "—"}
-                              </p>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {a.by} · {when(a.created_at)}
-                          </div>
+                    <CardContent className="p-4">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                        <span className="text-sm font-semibold">
+                          {data.adminActions.length} change{data.adminActions.length === 1 ? "" : "s"}
+                          <span className="font-normal text-muted-foreground">
+                            {" "}· {actorCount} {actorCount === 1 ? "person or job" : "people and jobs"}
+                          </span>
+                        </span>
+                        {actionSummary.map(([name, n]) => (
+                          <Badge key={name} variant="outline" className="font-normal">
+                            {name} · <span className="ml-1 font-bold">{n}</span>
+                          </Badge>
+                        ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="ml-auto h-7 shrink-0 text-xs"
+                          aria-expanded={showActions}
+                          onClick={() => setShowActions(v => !v)}
+                        >
+                          {showActions ? "Hide" : `Show all ${data.adminActions.length}`}
+                          <ChevronDown
+                            className={`ml-1 h-3.5 w-3.5 transition-transform ${showActions ? "rotate-180" : ""}`}
+                          />
+                        </Button>
+                      </div>
+
+                      {showActions && (
+                        // Capped and scrollable: opened, it must not take the
+                        // page over again the way the old version did.
+                        <div className="mt-3 max-h-80 divide-y overflow-y-auto rounded-md border">
+                          {data.adminActions.map(a => (
+                            <div
+                              key={a.id}
+                              className="flex flex-wrap items-baseline justify-between gap-x-3 px-3 py-1.5 text-xs"
+                            >
+                              <span className="min-w-0">
+                                <span className="font-medium">{a.action.replace(/_/g, " ")}</span>
+                                {a.field && <span className="text-muted-foreground"> · {a.field}</span>}
+                                {(a.old_value || a.new_value) && (
+                                  <span className="text-muted-foreground">
+                                    {" "}— {a.old_value || "—"} → {a.new_value || "—"}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="shrink-0 text-muted-foreground">
+                                {a.by} · {when(a.created_at)}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </CardContent>
                   </Card>
                 )}
